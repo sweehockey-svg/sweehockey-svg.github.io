@@ -1,12 +1,174 @@
 <!doctype html>
 <html lang="sv">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Svensk eHockey</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SWEEHOCKEY</title>
+  <meta name="description" content="SWEEHOCKEY – svensk eHockey: ECL-statistik, nyheter och Svenska eHockey Cupen (SEC)." />
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <h1>Svensk eHockey</h1>
-  <p><a href="/SEC/">SWEehockey Cup (SEC)</a></p>
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <a class="brand" href="/">
+        <img class="brand__logo" src="logo.png" alt="SWEEHOCKEY" />
+        <span class="brand__text">SWEEHOCKEY</span>
+      </a>
+
+      <nav class="nav" aria-label="Huvudmeny">
+        <a class="nav__link is-active" href="/">Startsida</a>
+
+        <div class="nav__dropdown" data-dropdown>
+          <button class="nav__link nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            ECL 26 Winter <span class="chev">▾</span>
+          </button>
+          <div class="menu" role="menu" aria-label="ECL 26 Winter" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="/ecl-26-winter/byten/">Svenska ECL Byten</a>
+            <a class="menu__item" role="menuitem" href="/ecl-26-winter/statistik/">Svensk statistik ECL 26</a>
+            <a class="menu__item" role="menuitem" href="/ecl-26-winter/topplistor/">Svensk statistik ECL 26 (topplistor)</a>
+          </div>
+        </div>
+
+        <a class="nav__link" href="/nyheter/">Nyheter</a>
+
+        <div class="nav__dropdown" data-dropdown>
+          <button class="nav__link nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            Cuper <span class="chev">▾</span>
+          </button>
+          <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="/SEC/">Svenska eHockey Cupen (SEC)</a>
+            <a class="menu__item" role="menuitem" href="/SEC/anmalan/">SEC Anmälan</a>
+          </div>
+        </div>
+
+        <button class="iconbtn" type="button" aria-label="Sök" title="Sök (kommer snart)">
+          🔍
+        </button>
+      </nav>
+
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>
+        ☰
+      </button>
+    </div>
+
+    <!-- Mobile menu (same links) -->
+    <div class="mobile" data-mobile-menu>
+      <div class="container mobile__inner">
+        <a class="mobile__link is-active" href="/">Startsida</a>
+        <a class="mobile__link" href="/ecl-26-winter/byten/">ECL 26 Winter – Byten</a>
+        <a class="mobile__link" href="/ecl-26-winter/statistik/">ECL 26 Winter – Statistik</a>
+        <a class="mobile__link" href="/nyheter/">Nyheter</a>
+        <a class="mobile__link" href="/SEC/">SEC</a>
+        <a class="mobile__link" href="/SEC/anmalan/">SEC Anmälan</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero" aria-label="Hero">
+    <div class="hero__img" role="img" aria-label="Bakgrund"></div>
+    <div class="hero__overlay"></div>
+  </section>
+
+  <!-- Content -->
+  <main class="container content">
+    <section class="card">
+      <h1>Välkommen till <span class="accent">SWEEHOCKEY!</span> 🏒</h1>
+
+      <p>
+        SWEEHOCKEY är mötesplatsen för alla som följer den svenska eHockeyscenen – från intensiva matcher i
+        <strong>ECL</strong> till turneringar som <strong>Svenska eHockey Cupen (SEC)</strong>.
+      </p>
+
+      <p>
+        Just nu fungerar sidan som <strong>Sveriges samlade lista över alla svenska lagbyten i ECL</strong> – perfekt för
+        dig som vill hålla koll på vilka spelare som bytt lag inför säsongen.
+      </p>
+
+      <p>
+        Det här är bara början – <strong>SWEEHOCKEY är fortfarande under uppbyggnad</strong>, och mer innehåll är på väg!
+      </p>
+
+      <div class="cta">
+        <a class="btn" href="/SEC/">Gå till SEC</a>
+        <a class="btn btn--ghost" href="/ecl-26-winter/byten/">Se ECL-byten</a>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="tile">
+        <h2>SEC</h2>
+        <p>Statistik, tabeller, matcher och topplistor för Svenska eHockey Cupen.</p>
+        <a class="tile__link" href="/SEC/">Öppna</a>
+      </article>
+
+      <article class="tile">
+        <h2>ECL 26 Winter</h2>
+        <p>Lagbyten och svensk statistik för säsongen.</p>
+        <a class="tile__link" href="/ecl-26-winter/byten/">Öppna</a>
+      </article>
+
+      <article class="tile">
+        <h2>Nyheter</h2>
+        <p>Nyheter, uppdateringar och highlights från svensk eHockey.</p>
+        <a class="tile__link" href="/nyheter/">Öppna</a>
+      </article>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span>© <span id="year"></span> SWEEHOCKEY</span>
+      <span class="sep">•</span>
+      <a href="/kontakt/">Kontakt</a>
+    </div>
+  </footer>
+
+  <script>
+    // Year
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Dropdowns
+    const dropdowns = document.querySelectorAll("[data-dropdown]");
+    dropdowns.forEach((dd) => {
+      const btn = dd.querySelector("[data-dropdown-btn]");
+      const menu = dd.querySelector("[data-dropdown-menu]");
+
+      const close = () => {
+        dd.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+      };
+      const open = () => {
+        dd.classList.add("open");
+        btn.setAttribute("aria-expanded", "true");
+      };
+
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dd.classList.contains("open") ? close() : open();
+        // close others
+        dropdowns.forEach((other) => {
+          if (other !== dd) {
+            other.classList.remove("open");
+            other.querySelector("[data-dropdown-btn]")?.setAttribute("aria-expanded", "false");
+          }
+        });
+      });
+
+      document.addEventListener("click", close);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+      });
+    });
+
+    // Mobile menu
+    const mobileBtn = document.querySelector("[data-mobile-toggle]");
+    const mobileMenu = document.querySelector("[data-mobile-menu]");
+    mobileBtn.addEventListener("click", () => {
+      mobileMenu.classList.toggle("open");
+    });
+  </script>
 </body>
 </html>
