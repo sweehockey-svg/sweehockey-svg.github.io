@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Svensk eHockey</title>
   <meta name="description" content="Svensk eHockey – ECL, nyheter och Svenska eHockey Cupen (SEC)." />
+
   <style>
     :root{
       --bg: #0b0f17;
@@ -165,8 +166,7 @@
     .banner::after{
       content:"";
       position:absolute; inset:0;
-      background:
-        linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.35));
+      background: linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.35));
       pointer-events:none;
     }
 
@@ -209,28 +209,6 @@
       border-color: rgba(245,195,75,0.35);
     }
 
-    .grid{
-      margin-top: 18px;
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-    }
-    .tile{
-      background: var(--panel2);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px 16px 14px;
-      box-shadow: var(--shadow);
-    }
-    .tile h2{ margin: 0 0 6px; font-size: 18px; }
-    .tile p{ margin: 0 0 12px; }
-    .tile__link{
-      display:inline-block;
-      font-weight: 650;
-      opacity: .9;
-    }
-    .tile__link:hover{ opacity:1; text-decoration: underline; }
-
     /* Footer */
     footer{
       border-top: 1px solid var(--border);
@@ -248,7 +226,6 @@
     @media (max-width: 860px){
       .nav{ display:none; }
       .hamburger{ display:inline-flex; }
-      .grid{ grid-template-columns: 1fr; }
       .brand__logo{ height: 32px; }
       .brand{ min-width: 160px; }
       .banner{ height: 120px; border-radius: 16px; }
@@ -272,7 +249,7 @@
             ECL 26 Winter <span class="chev">▾</span>
           </button>
           <div class="menu" role="menu" aria-label="ECL 26 Winter" data-dropdown-menu>
-            <a class="menu__item" role="menuitem" href="#">Svenska ECL Byten</a>
+            <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
             <a class="menu__item" role="menuitem" href="#">Svensk statistik ECL 26</a>
             <a class="menu__item" role="menuitem" href="#">Svensk statistik ECL 26 (topplistor)</a>
           </div>
@@ -300,7 +277,7 @@
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link is-active" href="/">Startsida</a>
-        <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
+        <a class="mobile__link" href="/svenskaeclbyten.html">ECL 26 Winter – Byten</a>
         <a class="mobile__link" href="#">ECL 26 Winter – Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
         <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
@@ -325,38 +302,13 @@
       </p>
 
       <p>
-        Just nu fungerar sidan som <strong>Sveriges samlade lista över svenska lagbyten</strong> – perfekt för dig som
-        vill hålla koll på vilka spelare som bytt lag inför säsongen.
-      </p>
-
-      <p>
-        Det här är bara början – <strong>Svensk eHockey är fortfarande under uppbyggnad</strong>, och mer innehåll är på väg!
+        Just nu: svenska spelare som bytt ECL-lag (ECL 26 Winter).
       </p>
 
       <div class="cta">
         <a class="btn btn--primary" href="https://www.svenskehockey.se/SEC/">Gå till SEC</a>
-        <a class="btn" href="#">Se ECL 26 Winter</a>
+        <a class="btn" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
       </div>
-    </section>
-
-    <section class="grid" aria-label="Snabblänkar">
-      <article class="tile">
-        <h2>SEC</h2>
-        <p>Statistik, tabeller, matcher och topplistor för Svenska eHockey Cupen.</p>
-        <a class="tile__link" href="https://www.svenskehockey.se/SEC/">Öppna →</a>
-      </article>
-
-      <article class="tile">
-        <h2>ECL 26 Winter</h2>
-        <p>Lagbyten och svensk statistik för säsongen.</p>
-        <a class="tile__link" href="#">Öppna →</a>
-      </article>
-
-      <article class="tile">
-        <h2>Nyheter</h2>
-        <p>Nyheter, uppdateringar och highlights från svensk eHockey.</p>
-        <a class="tile__link" href="#">Öppna →</a>
-      </article>
     </section>
   </main>
 
