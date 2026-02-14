@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Svensk eHockey</title>
+  <meta name="description" content="Svensk eHockey – ECL, nyheter och Svenska eHockey Cupen (SEC)." />
+
+  <style>
+    :root{
+      --bg: #0b0f17;
+      --panel: rgba(255,255,255,0.06);
+      --panel2: rgba(255,255,255,0.08);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.70);
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(245,195,75,0.12), transparent 60%),
+        radial-gradient(900px 500px at 10% 10%, rgba(120,155,255,0.12), transparent 55%),
+        var(--bg);
+      color: var(--text);
+    }
+    a{ color:inherit; text-decoration:none; }
+    .container{ width:min(1100px, calc(100% - 32px)); margin:0 auto; }
+
+    /* Topbar */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(10px);
+      background: rgba(10,14,22,0.78);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar__inner{
+      display:flex; align-items:center; gap:16px;
+      padding: 14px 0;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      min-width: 220px;
+    }
+    .brand__logo{
+      height: 38px;
+      width: auto;
+      display:block;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      user-select:none;
+    }
+
+    .nav{
+      display:flex; align-items:center; justify-content:flex-end;
+      gap:14px; flex:1;
+    }
+    .nav__link{
+      font-size:14px;
+      color: var(--muted);
+      padding: 10px 10px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .nav__link:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
+    .nav__link.is-active{ color: var(--text); }
+
+    .dropdown{ position:relative; }
+    .nav__button{
+      border:0; background:transparent; cursor:pointer;
+      font: inherit; color: var(--muted);
+      padding: 10px 10px;
+      border-radius: 10px;
+      display:flex; align-items:center; gap:6px;
+      white-space: nowrap;
+    }
+    .nav__button:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
+    .chev{ opacity:.75; }
+
+    .menu{
+      position:absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 270px;
+      padding: 8px;
+      border-radius: 14px;
+      background: rgba(20,26,38,0.96);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display:none;
+    }
+    .dropdown.open .menu{ display:block; }
+
+    .menu__item{
+      display:block;
+      padding: 10px 10px;
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .menu__item:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
+
+    .iconbtn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
+    }
+
+    .hamburger{
+      display:none;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor:pointer;
+      margin-left:auto;
+    }
+    .mobile{
+      display:none;
+      border-top: 1px solid var(--border);
+      background: rgba(10,14,22,0.85);
+    }
+    .mobile.open{ display:block; }
+    .mobile__inner{ padding: 12px 0 16px; display:grid; gap:8px; }
+    .mobile__link{
+      padding: 12px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+    }
+    .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
+    .mobile__link.is-active{ color: var(--text); }
+
+    /* Banner-ruta under navbar (”mellanrummet”) */
+    .banner-strip{
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(900px 220px at 50% 0%, rgba(255,255,255,0.05), transparent 70%),
+        rgba(10,14,22,0.55);
+    }
+    .banner-strip__inner{
+      padding: 18px 0;
+      display:flex;
+      justify-content:center;
+    }
+    .banner{
+      width: 100%;
+      max-width: 980px;
+      height: 160px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: var(--shadow);
+      background-image: url("svenakehocket.jpg"); /* ligger i root */
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .banner::after{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.35));
+      pointer-events:none;
+    }
+
+    /* Content */
+    main{ padding: 28px 0 46px; }
+
+    .card{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px 20px;
+      box-shadow: var(--shadow);
+    }
+    h1{
+      margin: 0 0 10px;
+      font-size: clamp(22px, 3vw, 30px);
+      letter-spacing: .2px;
+    }
+    p{
+      margin: 10px 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .cta{
+      margin-top: 16px;
+      display:flex; gap:12px; flex-wrap:wrap;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding: 11px 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 650;
+    }
+    .btn:hover{ filter: brightness(1.08); }
+    .btn--primary{
+      background: rgba(245,195,75,0.14);
+      border-color: rgba(245,195,75,0.35);
+    }
+
+    /* Footer */
+    footer{
+      border-top: 1px solid var(--border);
+      background: rgba(10,14,22,0.78);
+    }
+    .footer__inner{
+      padding: 16px 0;
+      display:flex; gap:10px;
+      align-items:center; justify-content:center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .sep{ opacity:.5; }
+
+    @media (max-width: 860px){
+      .nav{ display:none; }
+      .hamburger{ display:inline-flex; }
+      .brand__logo{ height: 32px; }
+      .brand{ min-width: 160px; }
+      .banner{ height: 120px; border-radius: 16px; }
+      .banner-strip__inner{ padding: 14px 0; }
+    }
+
+    /* =========================================================
+       ✅ SVENSKA BYTEN (din kod) — inbäddad men färganpassad
+       ========================================================= */
+    .transfers{
+      margin-top: 18px;
+    }
+
+    .header-box {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+      margin: 10px 0 18px; gap: 12px;
+    }
+    .header-box h2 {
+      font-family: Inter, system-ui, Arial, sans-serif;
+      font-size: 22px; font-weight: 800;
+      color: var(--text);
+      margin: 0;
+      text-shadow: 0 2px 10px rgba(0,0,0,.25);
+    }
+    #searchTransfers {
+      padding: 10px 14px; font-size: 15px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 10px; min-width: 240px; outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    #searchTransfers::placeholder{ color: rgba(255,255,255,0.55); }
+    #searchTransfers:focus {
+      border-color: rgba(245,195,75,0.45);
+      box-shadow: 0 0 0 3px rgba(245,195,75,.12);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .wrap {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      overflow-x: auto;
+      box-shadow: var(--shadow);
+    }
+
+    #transfer-stats table {
+      width: 100%; border-collapse: separate; border-spacing: 0;
+      font: 15px/1.4 Inter, system-ui, Arial, sans-serif;
+      color: var(--text);
+    }
+    #transfer-stats thead th {
+      position: sticky; top: 0;
+      background: rgba(16,27,64,0.92);
+      color: rgba(245,195,75,0.95);
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      text-align: left; cursor: pointer; user-select: none;
+      font-weight: 800; letter-spacing: .3px;
+    }
+    #transfer-stats thead th:hover { background: rgba(21,37,95,0.92); }
+    #transfer-stats tbody td {
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      text-align: left;
+      color: rgba(255,255,255,0.88);
+    }
+    #transfer-stats tbody tr:hover {
+      background: rgba(255,255,255,0.05);
+      cursor: pointer; transition: background .2s;
+    }
+    .lastUpdated {
+      font-size: 13px;
+      color: rgba(255,255,255,0.60);
+      margin-top: 8px;
+      text-align: right;
+    }
+
+    @media (max-width: 700px) {
+      .header-box {
+        flex-direction: column; align-items: flex-start; gap: 10px;
+      }
+      #searchTransfers { width: 100%; }
+
+      #transfer-stats thead { display: none; }
+      #transfer-stats table, #transfer-stats tbody, #transfer-stats tr, #transfer-stats td {
+        display: block; width: 100%;
+      }
+
+      #transfer-stats tbody tr {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 14px;
+        margin-bottom: 14px;
+        padding: 10px 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.28);
+        transition: transform .15s ease, background .2s;
+      }
+      #transfer-stats tbody tr:hover {
+        transform: translateY(-3px);
+        background: rgba(255,255,255,0.05);
+      }
+
+      #transfer-stats tbody td {
+        display: block;
+        padding: 6px 4px;
+        border: none;
+      }
+
+      #transfer-stats tbody td:first-child {
+        font-size: 17px;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+
+      #transfer-stats tbody td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: rgba(255,255,255,0.70);
+        display: block;
+        font-size: 13px;
+        margin-bottom: 2px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <a class="brand" href="/" aria-label="Svensk eHockey">
+        <img class="brand__logo" src="svenakehocket.png" alt="Svensk eHockey" />
+      </a>
+
+      <nav class="nav" aria-label="Huvudmeny">
+        <a class="nav__link is-active" href="/">Startsida</a>
+
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            ECL 26 Winter <span class="chev">▾</span>
+          </button>
+          <div class="menu" role="menu" aria-label="ECL 26 Winter" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="#">Svenska ECL Byten</a>
+            <a class="menu__item" role="menuitem" href="#">Svensk statistik ECL 26</a>
+            <a class="menu__item" role="menuitem" href="#">Svensk statistik ECL 26 (topplistor)</a>
+          </div>
+        </div>
+
+        <a class="nav__link" href="#">Nyheter</a>
+
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            Cuper <span class="chev">▾</span>
+          </button>
+          <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
+          </div>
+        </div>
+
+        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">
+          🔍
+        </button>
+      </nav>
+
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
+    </div>
+
+    <div class="mobile" data-mobile-menu>
+      <div class="container mobile__inner">
+        <a class="mobile__link is-active" href="/">Startsida</a>
+        <a class="mobile__link" href="#">ECL 26 Winter – Byten</a>
+        <a class="mobile__link" href="#">ECL 26 Winter – Statistik</a>
+        <a class="mobile__link" href="#">Nyheter</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mellanrummet med banner -->
+  <section class="banner-strip" aria-label="Banner">
+    <div class="container banner-strip__inner">
+      <div class="banner" role="img" aria-label="Svensk eHockey banner"></div>
+    </div>
+  </section>
+
+  <main class="container">
+    <section class="card">
+      <h1>Välkommen till Svensk eHockey! 🏒</h1>
+
+      <p>
+        Svensk eHockey är mötesplatsen för alla som följer den svenska eHockeyscenen – från intensiva matcher i
+        <strong>ECL</strong> till turneringar som <strong>Svenska eHockey Cupen (SEC)</strong>.
+      </p>
+
+      <p>
+        Just nu: <strong>Svenska spelare som bytt ECL-lag</strong> (uppdateras automatiskt från Google Sheet).
+      </p>
+
+      <div class="cta">
+        <a class="btn btn--primary" href="https://www.svenskehockey.se/SEC/">Gå till SEC</a>
+        <a class="btn" href="#byten">Visa Svenska byten</a>
+      </div>
+    </section>
+
+    <!-- ✅ Svenska byten-sektionen -->
+    <section id="byten" class="transfers" aria-label="Svenska byten">
+      <!-- 🔹 RUBRIK + SÖKFÄLT -->
+      <div class="header-box">
+        <h2>📋 Svenska spelare som bytt ECL-lag</h2>
+        <input type="text" id="searchTransfers" placeholder="🔍 Sök spelare eller lag...">
+      </div>
+
+      <!-- 🔹 TABELL -->
+      <div id="transfer-stats"></div>
+      <p id="lastUpdated" class="lastUpdated"></p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer__inner">
+      <span>© <span id="year"></span> Svensk eHockey</span>
+      <span class="sep">•</span>
+      <a href="#">Kontakt</a>
+    </div>
+  </footer>
+
+  <script>
+    // År i footern
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Dropdowns
+    const dropdowns = document.querySelectorAll("[data-dropdown]");
+    dropdowns.forEach((dd) => {
+      const btn = dd.querySelector("[data-dropdown-btn]");
+
+      const close = () => {
+        dd.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+      };
+      const open = () => {
+        dd.classList.add("open");
+        btn.setAttribute("aria-expanded", "true");
+      };
+
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dd.classList.contains("open") ? close() : open();
+
+        dropdowns.forEach((other) => {
+          if (other !== dd) {
+            other.classList.remove("open");
+            other.querySelector("[data-dropdown-btn]")?.setAttribute("aria-expanded", "false");
+          }
+        });
+      });
+
+      document.addEventListener("click", close);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+      });
+    });
+
+    // Mobilmeny
+    const mobileBtn = document.querySelector("[data-mobile-toggle]");
+    const mobileMenu = document.querySelector("[data-mobile-menu]");
+    mobileBtn.addEventListener("click", () => {
+      mobileMenu.classList.toggle("open");
+    });
+
+    // =========================================================
+    // ✅ SVENSKA BYTEN (din script) — oförändrad logik
+    // =========================================================
+    (function(){
+      const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZCNO-QbbfniaDOODJpcE_B8ab6RHunhkSRGuEjYeVlM2TVq6okNMG8JPHHZyWf50RsJFflI6bbAnB/pub?gid=0&single=true&output=csv";
+      const target = document.getElementById("transfer-stats");
+      const search = document.getElementById("searchTransfers");
+      const updated = document.getElementById("lastUpdated");
+
+      if (!target || !search || !updated) return;
+
+      target.innerHTML = '<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">Laddar …</div>';
+
+      fetch(SHEET_URL)
+        .then(r => r.text())
+        .then(csv => {
+          const rows = csv.trim().split("\n").map(r => r.split(","));
+          const headers = rows.shift();
+          rows.sort((a,b) => new Date(b[3]) - new Date(a[3]));
+
+          const table = document.createElement("table");
+          const thead = document.createElement("thead");
+          const trh = document.createElement("tr");
+
+          headers.forEach((h, idx) => {
+            const th = document.createElement("th");
+            th.textContent = h;
+            th.addEventListener("click", () => sortTable(idx));
+            trh.appendChild(th);
+          });
+          thead.appendChild(trh);
+          table.appendChild(thead);
+
+          const tbody = document.createElement("tbody");
+
+          rows.forEach(row => {
+            const tr = document.createElement("tr");
+            row.forEach((v,i) => {
+              const td = document.createElement("td");
+              if (i === 3) {
+                const d = new Date(v);
+                if (!isNaN(d)) {
+                  const months = ['JAN','FEB','MAR','APR','MAJ','JUN','JUL','AUG','SEP','OKT','NOV','DEC'];
+                  v = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+                }
+              }
+              td.textContent = v;
+              td.setAttribute("data-label", headers[i]);
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          });
+
+          table.appendChild(tbody);
+
+          const wrap = document.createElement("div");
+          wrap.className = "wrap";
+          wrap.appendChild(table);
+          target.innerHTML = "";
+          target.appendChild(wrap);
+
+          updated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
+            day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+          });
+
+          // 🔍 Sök
+          search.addEventListener("input", function(){
+            const q = this.value.toLowerCase();
+            [...tbody.rows].forEach(tr => {
+              const match = [...tr.cells].some(td => td.textContent.toLowerCase().includes(q));
+              tr.style.display = match ? "" : "none";
+            });
+          });
+
+          // ↕️ Sortering
+          let sortAsc = true;
+          function sortTable(idx){
+            rows.sort((a,b)=>{
+              const valA = (a[idx] ?? "").toString().toLowerCase();
+              const valB = (b[idx] ?? "").toString().toLowerCase();
+              if (idx === 3) return sortAsc ? new Date(a[idx]) - new Date(a[idx] ? b[idx] : b[idx]) : new Date(b[idx]) - new Date(a[idx]);
+              return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            });
+            sortAsc = !sortAsc;
+            tbody.innerHTML = "";
+            rows.forEach(r=>{
+              const tr = document.createElement("tr");
+              r.forEach((v,i)=>{
+                const td = document.createElement("td");
+                if (i === 3) {
+                  const d = new Date(v);
+                  if (!isNaN(d)) {
+                    const months = ['JAN','FEB','MAR','APR','MAJ','JUN','JUL','AUG','SEP','OKT','NOV','DEC'];
+                    v = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+                  }
+                }
+                td.textContent = v;
+                td.setAttribute("data-label", headers[i]);
+                tr.appendChild(td);
+              });
+              tbody.appendChild(tr);
+            });
+          }
+        })
+        .catch(err => {
+          target.textContent = "Fel vid laddning: " + err.message;
+        });
+    })();
+  </script>
+</body>
+</html>
