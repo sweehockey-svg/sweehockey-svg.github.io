@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
-  <title>Svensk statistik – ECL 26 Winter</title>
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <title>Svensk statistik – ECL 26 Winter</title>
   <meta name="description" content="Svensk statistik för ECL 26 Winter – grundserie och slutspel. Spelare, backar och målvakter per division." />
 
   <style>
     :root{
+      /* ====== INDEX-TEMA (EXAKT) ====== */
       --bg: #0b0f17;
       --panel: rgba(255,255,255,0.06);
       --panel2: rgba(255,255,255,0.08);
@@ -17,7 +17,7 @@
       --border: rgba(255,255,255,0.12);
       --shadow: 0 20px 60px rgba(0,0,0,.45);
 
-      /* Stat-sida tokens */
+      /* ====== STAT-SIDA TOKENS ====== */
       --bg-dark: #04123a;
       --bg-darker: #020718;
       --accent-orange: #f9a64a;
@@ -30,25 +30,20 @@
 
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
-
     body{
       margin:0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
       background:
-        radial-gradient(1200px 600px at 50% -10%, rgba(245,195,75,0.14), transparent 60%),
-        radial-gradient(900px 500px at 10% 10%, rgba(120,155,255,0.14), transparent 55%),
-        radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.05), transparent 60%),
-        radial-gradient(circle at 100% 0, rgba(255, 255, 255, 0.04), transparent 65%),
-        linear-gradient(180deg, #020719, #020414 60%, #000);
-      color: var(--text-main);
-      min-height:100vh;
+        radial-gradient(1200px 600px at 50% -10%, rgba(245,195,75,0.12), transparent 60%),
+        radial-gradient(900px 500px at 10% 10%, rgba(120,155,255,0.12), transparent 55%),
+        var(--bg);
+      color: var(--text);
     }
-
     a{ color:inherit; text-decoration:none; }
     .container{ width:min(1100px, calc(100% - 32px)); margin:0 auto; }
 
     /* =========================
-       TOPBAR (från index)
+       TOPBAR (EXAKT SOM INDEX)
     ========================== */
     .topbar{
       position:sticky; top:0; z-index:50;
@@ -61,28 +56,18 @@
       padding: 14px 0;
     }
     .brand{
-      display:flex; align-items:center; gap:10px;
-      min-width: 190px;
+      display:flex; align-items:center; gap:12px;
+      min-width: 220px;
       font-weight: 900;
       letter-spacing: .6px;
     }
-    .brand__mark{
-      width: 40px; height: 40px; border-radius: 10px;
-      display:grid; place-items:center;
-      background: linear-gradient(135deg, rgba(120,155,255,0.28), rgba(245,195,75,0.16));
-      border: 1px solid rgba(255,255,255,0.14);
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-      user-select:none;
-      overflow:hidden;
-    }
-    .brand__mark img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
+    .brand__logo{
+      height: 38px;
+      width: auto;
       display:block;
-      padding:4px;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      user-select:none;
     }
-    .brand__text{ opacity:.95; }
 
     .nav{
       display:flex; align-items:center; justify-content:flex-end;
@@ -93,6 +78,7 @@
       color: var(--muted);
       padding: 10px 10px;
       border-radius: 10px;
+      white-space: nowrap;
     }
     .nav__link:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
     .nav__link.is-active{ color: var(--text); }
@@ -104,6 +90,7 @@
       padding: 10px 10px;
       border-radius: 10px;
       display:flex; align-items:center; gap:6px;
+      white-space: nowrap;
     }
     .nav__button:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
     .chev{ opacity:.75; }
@@ -112,7 +99,7 @@
       position:absolute;
       top: calc(100% + 10px);
       right: 0;
-      width: 270px;
+      width: 290px;
       padding: 8px;
       border-radius: 14px;
       background: rgba(20,26,38,0.96);
@@ -168,23 +155,60 @@
     .mobile__link.is-active{ color: var(--text); }
 
     /* =========================
-       STAT-SIDANS LAYOUT
+       BANNER STRIP (EXAKT)
     ========================== */
-    .page-wrap{
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 14px 10px 40px;
+    .banner-strip{
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(900px 220px at 50% 0%, rgba(255,255,255,0.05), transparent 70%),
+        rgba(10,14,22,0.55);
+    }
+    .banner-strip__inner{
+      padding: 18px 0;
+      display:flex;
+      justify-content:center;
+    }
+    .banner{
+      width: 100%;
+      max-width: 980px;
+      height: 160px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: var(--shadow);
+      background-image: url("svenakehocket.jpg");
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .banner::after{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.35));
+      pointer-events:none;
     }
 
-    /* Tabs */
+    /* =========================
+       CONTENT (INDEX-UPPLÄGG)
+    ========================== */
+    main{ padding: 28px 0 46px; }
+
+    /* =========================
+       STAT-INNEHÅLL (UNDER MENYN)
+    ========================== */
+    .stats-wrap{
+      width: 100%;
+      padding: 0;
+    }
+
     .ecl-tabs{
       display: inline-flex;
       gap: 8px;
-      margin: 8px 0 16px;
+      margin: 8px 0 14px;
       padding: 6px 8px;
       border-radius: 999px;
-      background: rgba(0, 0, 0, 0.4);
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.35);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
       flex-wrap: wrap;
     }
     .ecl-tab{
@@ -194,8 +218,8 @@
       font-size: 13px;
       cursor: pointer;
       background: rgba(255, 255, 255, 0.06);
-      color: var(--text-muted);
-      font-weight: 600;
+      color: rgba(255,255,255,0.70);
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .08em;
       transition: 0.18s;
@@ -204,59 +228,65 @@
     .ecl-tab.active{
       background: linear-gradient(135deg, var(--accent-orange), var(--accent-yellow));
       color: #141320;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 10px 26px rgba(0,0,0,0.8);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 10px 26px rgba(0,0,0,0.55);
       transform: translateY(-1px);
     }
 
-    /* Title */
     .page-title{
       display:flex;
       align-items:center;
       gap:10px;
-      margin: 10px 0 18px;
+      margin: 8px 0 14px;
       color: var(--text-main);
       text-shadow: 0 3px 18px rgba(0,0,0,0.9);
     }
     .page-title-icon{ font-size: 26px; }
     .page-title-text{
       font-size: 20px;
-      font-weight: 800;
+      font-weight: 900;
       text-transform: uppercase;
       letter-spacing: .08em;
     }
     .page-sub{
       font-size: 12px;
-      color: var(--text-muted);
+      color: rgba(255,255,255,0.70);
       text-transform: uppercase;
       letter-spacing: .16em;
+      margin-top: 2px;
     }
 
-    /* Header / search */
     .header-box{
       display:flex; flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      margin-bottom: 16px;
+      margin: 10px 0 16px;
     }
     .header-box h2{
       font-size: 18px;
-      font-weight: 800;
+      font-weight: 900;
       text-transform: uppercase;
       color: var(--text-main);
       margin: 0;
     }
     .header-box input{
-      padding: 8px 12px;
-      background: #07132f;
+      padding: 9px 12px;
+      background: rgba(255,255,255,0.05);
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.18);
       color: white;
       outline: none;
-      min-width: 230px;
+      min-width: 260px;
     }
 
-    /* Top 3 */
+    #sectionDesc{
+      font-size: 11px;
+      line-height: 1.45;
+      color: rgba(245, 246, 255, 0.75);
+      margin-top: 4px;
+      max-width: 900px;
+    }
+
     .top3-container{
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -269,8 +299,9 @@
       border-radius: 18px;
       padding: 12px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-      background: linear-gradient(180deg, #0a1740, #020716);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+      background: linear-gradient(180deg, rgba(40,70,160,0.22), rgba(0,0,0,0.30));
+      border: 1px solid rgba(255,255,255,0.10);
     }
     .player-card::after{
       content: "";
@@ -291,6 +322,30 @@
     }
     .player-card > *{ position: relative; z-index: 2; }
 
+    .player-ribbon{
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: rgba(0,0,0,0.45);
+      padding: 4px 10px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      border-top-left-radius: 18px;
+      border-bottom-right-radius: 12px;
+      overflow: hidden;
+    }
+
+    .team-logo-wrap{
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
     .team-logo-card{
       width: 46px;
       height: 46px;
@@ -299,19 +354,11 @@
       pointer-events: none;
       opacity: 0.95;
     }
-    .player-ribbon{
-      position: absolute;
-      top: 0;
-      left: 0;
-      background: rgba(0,0,0,0.5);
-      padding: 4px 10px;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .16em;
-      border-top-left-radius: 18px;
-      border-bottom-right-radius: 12px;
-      overflow: hidden;
+    .team-medal{
+      font-size: 18px;
+      line-height: 1;
+      opacity: 0.9;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
     }
 
     .player-top-row{ display:flex; gap:12px; align-items:center; }
@@ -332,24 +379,25 @@
       display: block;
       border-radius: 12px;
     }
+
     .player-name{
       font-size: 16px;
-      font-weight: 800;
+      font-weight: 900;
       text-transform: uppercase;
     }
     .player-team{
       font-size: 12px;
-      color: var(--text-muted);
+      color: rgba(255,255,255,0.70);
       text-transform: uppercase;
     }
     .player-points{ margin-top: 4px; font-size: 13px; }
-    .player-ga{ font-size: 12px; color: #ddd; }
+    .player-ga{ font-size: 12px; color: rgba(255,255,255,0.78); }
 
     .stat-bars{ margin-top: 8px; }
     .bar-row{ margin-bottom: 3px; font-size: 11px; }
-    .bar-label{ display:flex; justify-content:space-between; }
+    .bar-label{ display:flex; justify-content: space-between; }
     .bar-track{
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.10);
       height: 6px;
       border-radius: 999px;
     }
@@ -359,31 +407,30 @@
       background: linear-gradient(90deg, #f7d35f, #f9a64a);
     }
 
-    /* Table */
     .table-shell{
       border-radius: 18px;
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: #030a1d;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.28);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.55);
     }
     .table-header-strip{
       background: linear-gradient(90deg, #f6983f, #f3c34a);
       color: #111;
       padding: 6px 10px;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
       text-transform: uppercase;
       letter-spacing: .16em;
     }
-    .table-container{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .table-container{ overflow-x:auto; -webkit-overflow-scrolling: touch; }
     .table-container table{
-      width:100%;
+      width: 100%;
       border-collapse: collapse;
       font-size: 13px;
       min-width: 700px;
     }
-    thead{ background:#091540; }
+    thead{ background: rgba(9, 21, 64, 0.85); }
     thead th{
       padding: 8px 10px;
       color: #f7d35f;
@@ -394,7 +441,7 @@
     }
     tbody td{
       padding: 8px 10px;
-      border-bottom: 1px solid #0d1430;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
       text-align: center;
     }
     tbody tr:nth-child(even){ background: rgba(255,255,255,0.03); }
@@ -409,59 +456,45 @@
 
     .lastUpdated{
       font-size: 11px;
-      color: var(--text-muted);
+      color: rgba(255,255,255,0.65);
       text-align: right;
-      margin-top: 5px;
+      margin-top: 6px;
     }
 
-    #sectionDesc{
-      font-size: 11px;
-      line-height: 1.45;
-      color: rgba(245, 246, 255, 0.75);
-      margin-top: 4px;
-      max-width: 900px;
+    /* Footer (EXAKT) */
+    footer{
+      border-top: 1px solid var(--border);
+      background: rgba(10,14,22,0.78);
     }
-    @media (max-width: 768px){
-      #sectionDesc{ font-size: 10px; line-height:1.4; }
-      .team-logo-card{ width:32px; height:32px; }
+    .footer__inner{
+      padding: 16px 0;
+      display:flex; gap:10px;
+      align-items:center; justify-content:center;
+      color: var(--muted);
+      font-size: 13px;
     }
+    .sep{ opacity:.5; }
 
-    .team-logo-wrap{
-      position:absolute;
-      top:10px;
-      right:10px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:2px;
-    }
-    .team-medal{
-      font-size: 18px;
-      line-height:1;
-      opacity:0.9;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
-    }
-
-    /* Topbar responsiv */
     @media (max-width: 860px){
       .nav{ display:none; }
       .hamburger{ display:inline-flex; }
+      .brand__logo{ height: 32px; }
+      .brand{ min-width: 160px; }
+      .banner{ height: 120px; border-radius: 16px; }
+      .banner-strip__inner{ padding: 14px 0; }
+      #sectionDesc{ font-size: 10px; line-height: 1.4; }
+      .team-logo-card{ width: 32px; height: 32px; }
+      .header-box input{ width: 100%; min-width: 0; }
     }
   </style>
 </head>
 
 <body>
-  <!-- =========================
-       HEADER / MENY (som index)
-  ========================== -->
+  <!-- ======= MENY (EXAKT) ======= -->
   <header class="topbar">
     <div class="container topbar__inner">
-      <a class="brand" href="/">
-        <span class="brand__mark" aria-label="Svensk eHockey">
-          <!-- om du har en logga i root (t.ex. svenakehocket.png) -->
-          <img src="svenakehocket.png" alt="Svensk eHockey">
-        </span>
-        <span class="brand__text">Svensk eHockey</span>
+      <a class="brand" href="/" aria-label="Svensk eHockey">
+        <img class="brand__logo" src="svenakehocket.png" alt="Svensk eHockey" />
       </a>
 
       <nav class="nav" aria-label="Huvudmeny">
@@ -469,12 +502,11 @@
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            ECL 26 Winter <span class="chev">▾</span>
+            Svensk ECL Statistik <span class="chev">▾</span>
           </button>
-          <div class="menu" role="menu" aria-label="ECL 26 Winter" data-dropdown-menu>
+          <div class="menu" role="menu" aria-label="Svensk EC Statistik" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
-            <a class="menu__item" role="menuitem" href="#">Svensk statistik ECL 26 (topplistor)</a>
           </div>
         </div>
 
@@ -508,111 +540,121 @@
     </div>
   </header>
 
-  <!-- =========================
-       CONTENT
-  ========================== -->
-  <div class="page-wrap">
-
-    <!-- Spelform -->
-    <div class="ecl-tabs" aria-label="Spelform">
-      <button class="ecl-tab active" data-stage="regular">Grundserie</button>
-      <button class="ecl-tab" data-stage="playoffs">Slutspel</button>
+  <!-- ======= BANNER (EXAKT) ======= -->
+  <section class="banner-strip" aria-label="Banner">
+    <div class="container banner-strip__inner">
+      <div class="banner" role="img" aria-label="Svensk eHockey banner"></div>
     </div>
+  </section>
 
-    <!-- Roll -->
-    <div class="ecl-tabs" aria-label="Roll">
-      <button class="ecl-tab active" data-league="skaters">Spelare</button>
-      <button class="ecl-tab" data-league="defenders">Backar</button>
-      <button class="ecl-tab" data-league="goalies">Målvakter</button>
-    </div>
+  <!-- ======= CONTENT (EXAKT UPPLÄGG UNDER) ======= -->
+  <main class="container">
+    <div class="stats-wrap">
 
-    <!-- Division -->
-    <div class="ecl-tabs" aria-label="Division">
-      <button class="ecl-tab active" data-division="elite">Elite</button>
-      <button class="ecl-tab" data-division="pro">Pro</button>
-      <button class="ecl-tab" data-division="lite">Lite</button>
-      <button class="ecl-tab" data-division="core">Core</button>
-      <button class="ecl-tab" data-division="neo">Neo</button>
-    </div>
-
-    <div class="page-title">
-      <div class="page-title-icon" id="titleIcon">🏆</div>
-      <div>
-        <div class="page-title-text" id="titleText">ECL 26 Winter – Svenska poängligor</div>
-        <div class="page-sub" id="titleSub"></div>
+      <!-- Spelform -->
+      <div class="ecl-tabs" aria-label="Spelform">
+        <button class="ecl-tab active" data-stage="regular">Grundserie</button>
+        <button class="ecl-tab" data-stage="playoffs">Slutspel</button>
       </div>
-    </div>
 
-    <div class="header-box">
-      <div>
-        <h2 id="sectionTitle">Elite Poängliga</h2>
-        <div id="sectionDesc" class="page-sub"></div>
+      <!-- Roll -->
+      <div class="ecl-tabs" aria-label="Roll">
+        <button class="ecl-tab active" data-league="skaters">Spelare</button>
+        <button class="ecl-tab" data-league="defenders">Backar</button>
+        <button class="ecl-tab" data-league="goalies">Målvakter</button>
       </div>
-      <input id="searchBox" placeholder="Sök spelare/målvakt eller lag…" />
-    </div>
 
-    <div id="top3" class="top3-container"></div>
+      <!-- Division -->
+      <div class="ecl-tabs" aria-label="Division">
+        <button class="ecl-tab active" data-division="elite">Elite</button>
+        <button class="ecl-tab" data-division="pro">Pro</button>
+        <button class="ecl-tab" data-division="lite">Lite</button>
+        <button class="ecl-tab" data-division="core">Core</button>
+        <button class="ecl-tab" data-division="neo">Neo</button>
+      </div>
 
-    <div class="table-shell">
-      <div class="table-header-strip" id="tableStrip">Topplista</div>
-      <div id="tableHost" class="table-container"></div>
+      <div class="page-title">
+        <div class="page-title-icon" id="titleIcon">🏆</div>
+        <div>
+          <div class="page-title-text" id="titleText">ECL 26 Winter – Svenska poängligor</div>
+          <div class="page-sub" id="titleSub">GRUNDSERIE</div>
+        </div>
+      </div>
+
+      <div class="header-box">
+        <div>
+          <h2 id="sectionTitle">Elite Poängliga</h2>
+          <div id="sectionDesc" class="page-sub"></div>
+        </div>
+        <input id="searchBox" placeholder="Sök spelare/målvakt eller lag…" />
+      </div>
+
+      <div id="top3" class="top3-container"></div>
+
+      <div class="table-shell">
+        <div class="table-header-strip" id="tableStrip">Topplista</div>
+        <div id="tableHost" class="table-container"></div>
+      </div>
+
+      <p id="updated" class="lastUpdated"></p>
     </div>
-    <p id="updated" class="lastUpdated"></p>
-  </div>
+  </main>
+
+  <!-- ======= FOOTER (EXAKT) ======= -->
+  <footer>
+    <div class="container footer__inner">
+      <span>© <span id="year"></span> Svensk eHockey</span>
+      <span class="sep">•</span>
+      <a href="#">Kontakt</a>
+    </div>
+  </footer>
 
   <script>
-    // =========================
-    // MENY-SKRIPT (från index)
-    // =========================
-    (function(){
-      // Dropdowns
-      const dropdowns = document.querySelectorAll("[data-dropdown]");
-      dropdowns.forEach((dd) => {
-        const btn = dd.querySelector("[data-dropdown-btn]");
-        const close = () => {
-          dd.classList.remove("open");
-          btn.setAttribute("aria-expanded", "false");
-        };
-        const open = () => {
-          dd.classList.add("open");
-          btn.setAttribute("aria-expanded", "true");
-        };
+    // År i footern (EXAKT)
+    document.getElementById("year").textContent = new Date().getFullYear();
 
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          dd.classList.contains("open") ? close() : open();
+    // Dropdowns (EXAKT)
+    const dropdowns = document.querySelectorAll("[data-dropdown]");
+    dropdowns.forEach((dd) => {
+      const btn = dd.querySelector("[data-dropdown-btn]");
 
-          dropdowns.forEach((other) => {
-            if (other !== dd) {
-              other.classList.remove("open");
-              other.querySelector("[data-dropdown-btn]")?.setAttribute("aria-expanded", "false");
-            }
-          });
-        });
+      const close = () => {
+        dd.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+      };
+      const open = () => {
+        dd.classList.add("open");
+        btn.setAttribute("aria-expanded", "true");
+      };
 
-        document.addEventListener("click", close);
-        document.addEventListener("keydown", (e) => {
-          if (e.key === "Escape") close();
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dd.classList.contains("open") ? close() : open();
+
+        dropdowns.forEach((other) => {
+          if (other !== dd) {
+            other.classList.remove("open");
+            other.querySelector("[data-dropdown-btn]")?.setAttribute("aria-expanded", "false");
+          }
         });
       });
 
-      // Mobilmeny
-      const mobileBtn = document.querySelector("[data-mobile-toggle]");
-      const mobileMenu = document.querySelector("[data-mobile-menu]");
-      if(mobileBtn && mobileMenu){
-        mobileBtn.addEventListener("click", () => {
-          mobileMenu.classList.toggle("open");
-        });
-      }
-    })();
+      document.addEventListener("click", close);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+      });
+    });
+
+    // Mobilmeny (EXAKT)
+    const mobileBtn = document.querySelector("[data-mobile-toggle]");
+    const mobileMenu = document.querySelector("[data-mobile-menu]");
+    mobileBtn.addEventListener("click", () => {
+      mobileMenu.classList.toggle("open");
+    });
   </script>
 
   <script>
-  // =========================
-  // STAT-SIDANS LOGIK
-  // =========================
   (function(){
-
     const TABLE_SHEET_ID = "1toag5J7vMW0CEmtsrqByPJMJn6e-U5hOzZaKWoXnpxY";
 
     const CARD_CSV =
@@ -626,15 +668,15 @@
     }
 
     const DATA_SHEETS_REGULAR = {
-      skaters:   sheetUrl("Utespelare"),
+      skaters: sheetUrl("Utespelare"),
       defenders: sheetUrl("Backar"),
-      goalies:   sheetUrl("Målvakter")
+      goalies: sheetUrl("Målvakter")
     };
 
     const DATA_SHEETS_PLAYOFFS = {
-      skaters:   sheetUrl("Utespelare slut"),
+      skaters: sheetUrl("Utespelare slut"),
       defenders: sheetUrl("Backar slut"),
-      goalies:   sheetUrl("Målvakter slut")
+      goalies: sheetUrl("Målvakter slut")
     };
 
     const LOGO_SHEET = sheetUrl("Loggor");
@@ -645,18 +687,8 @@
 
     let currentSort = { idx: null, key: null, label: null };
 
-    const divLabels = {
-      elite: "Elite",
-      pro: "Pro",
-      lite: "Lite",
-      core: "Core",
-      neo: "Neo"
-    };
-
-    const stageLabels = {
-      regular: "Grundserie",
-      playoffs: "Slutspel"
-    };
+    const divLabels = { elite:"Elite", pro:"Pro", lite:"Lite", core:"Core", neo:"Neo" };
+    const stageLabels = { regular:"Grundserie", playoffs:"Slutspel" };
 
     const sortTitles = {
       p: "Poängliga",
@@ -1029,7 +1061,6 @@
     }
 
     function renderTableGeneric(header, rows, host, searchEl, rowObjects, top3Host, top3Renderer){
-
       const fullHeader = ["#"].concat(header);
       let data = rows.map((r, i)=>({ rank:i+1, row:r, rowIndex:i }));
 
@@ -1057,7 +1088,7 @@
       const ths = host.querySelectorAll("thead th");
       let sortState = { idx: null, asc: false };
 
-      // Default sort: Poäng → Mål → Matcher (om det finns)
+      // Default sort: Poäng → Mål → Matcher (om finns)
       data.sort((a, b) => {
         const pa = rowObjects[a.rowIndex] || {};
         const pb = rowObjects[b.rowIndex] || {};
@@ -1101,7 +1132,6 @@
         if(activeLeague === "defenders" && currentSort.key === "dim"){
           top3Data = visible.filter(p => (p.games ?? 0) > 4);
         }
-
         if(activeLeague === "goalies"){
           top3Data = visible.filter(p => (p.games ?? 0) > 5);
         }
@@ -1200,9 +1230,7 @@
     const updated = document.getElementById("updated");
     const searchBox = document.getElementById("searchBox");
 
-    function stageSuffix(){
-      return activeStage === "playoffs" ? " – Slutspel" : "";
-    }
+    function stageSuffix(){ return activeStage === "playoffs" ? " – Slutspel" : ""; }
 
     function setTitles(){
       const divName = divLabels[activeDiv];
@@ -1272,7 +1300,7 @@
       }
     }
 
-    function getActiveDataSheets(){
+    function getActiveSheets(){
       return activeStage === "playoffs" ? DATA_SHEETS_PLAYOFFS : DATA_SHEETS_REGULAR;
     }
 
@@ -1282,7 +1310,7 @@
       tableHost.innerHTML = `<div style="padding:10px;color:#fff;">Laddar statistik…</div>`;
       top3.innerHTML = "";
 
-      const url = getActiveDataSheets()[activeLeague];
+      const url = getActiveSheets()[activeLeague];
 
       Promise.all([loadCardImages(), loadTeamLogos()]).then(([map, logos])=>{
         fetch(url)
