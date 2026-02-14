@@ -4,78 +4,305 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SWEEHOCKEY</title>
-  <meta name="description" content="SWEEHOCKEY – svensk eHockey: ECL-statistik, nyheter och Svenska eHockey Cupen (SEC)." />
-  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="SWEEHOCKEY – svensk eHockey: ECL, nyheter och Svenska eHockey Cupen (SEC)." />
+  <style>
+    :root{
+      --bg: #0b0f17;
+      --panel: rgba(255,255,255,0.06);
+      --panel2: rgba(255,255,255,0.08);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.70);
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(245,195,75,0.14), transparent 60%),
+        radial-gradient(900px 500px at 10% 10%, rgba(120,155,255,0.14), transparent 55%),
+        var(--bg);
+      color: var(--text);
+    }
+    a{ color:inherit; text-decoration:none; }
+    .container{ width:min(1100px, calc(100% - 32px)); margin:0 auto; }
+
+    /* Topbar */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(10px);
+      background: rgba(10,14,22,0.78);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar__inner{
+      display:flex; align-items:center; gap:16px;
+      padding: 14px 0;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      min-width: 190px;
+      font-weight: 900;
+      letter-spacing: .6px;
+    }
+    .brand__mark{
+      width: 40px; height: 40px; border-radius: 10px;
+      display:grid; place-items:center;
+      background: linear-gradient(135deg, rgba(120,155,255,0.28), rgba(245,195,75,0.16));
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      user-select:none;
+    }
+    .brand__text{ opacity:.95; }
+    .nav{
+      display:flex; align-items:center; justify-content:flex-end;
+      gap:14px; flex:1;
+    }
+    .nav__link{
+      font-size:14px;
+      color: var(--muted);
+      padding: 10px 10px;
+      border-radius: 10px;
+    }
+    .nav__link:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
+    .nav__link.is-active{ color: var(--text); }
+
+    .dropdown{ position:relative; }
+    .nav__button{
+      border:0; background:transparent; cursor:pointer;
+      font: inherit; color: var(--muted);
+      padding: 10px 10px;
+      border-radius: 10px;
+      display:flex; align-items:center; gap:6px;
+    }
+    .nav__button:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
+    .chev{ opacity:.75; }
+
+    .menu{
+      position:absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 270px;
+      padding: 8px;
+      border-radius: 14px;
+      background: rgba(20,26,38,0.96);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display:none;
+    }
+    .dropdown.open .menu{ display:block; }
+
+    .menu__item{
+      display:block;
+      padding: 10px 10px;
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .menu__item:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
+
+    .iconbtn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
+    }
+
+    .hamburger{
+      display:none;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor:pointer;
+      margin-left:auto;
+    }
+    .mobile{
+      display:none;
+      border-top: 1px solid var(--border);
+      background: rgba(10,14,22,0.85);
+    }
+    .mobile.open{ display:block; }
+    .mobile__inner{ padding: 12px 0 16px; display:grid; gap:8px; }
+    .mobile__link{
+      padding: 12px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+    }
+    .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
+    .mobile__link.is-active{ color: var(--text); }
+
+    /* Hero */
+    .hero{
+      position:relative;
+      height: clamp(240px, 44vh, 440px);
+      overflow:hidden;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero__img{
+      position:absolute; inset:0;
+      /* Byt ut URL:en om du vill ha egen bild */
+      background-image:
+        linear-gradient(to right, rgba(0,0,0,.10), rgba(0,0,0,.30)),
+        url("hero.jpg");
+      background-size: cover;
+      background-position: center;
+      filter: saturate(1.05) contrast(1.05);
+      transform: scale(1.03);
+    }
+    .hero__overlay{
+      position:absolute; inset:0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.18), rgba(11,15,23,0.92));
+    }
+
+    /* Content */
+    main{ padding: 28px 0 46px; }
+    .card{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px 20px;
+      box-shadow: var(--shadow);
+    }
+    h1{
+      margin: 0 0 10px;
+      font-size: clamp(22px, 3vw, 30px);
+      letter-spacing: .2px;
+    }
+    p{
+      margin: 10px 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .cta{
+      margin-top: 16px;
+      display:flex; gap:12px; flex-wrap:wrap;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding: 11px 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 650;
+    }
+    .btn:hover{ filter: brightness(1.08); }
+    .btn--primary{
+      background: rgba(245,195,75,0.14);
+      border-color: rgba(245,195,75,0.35);
+    }
+
+    .grid{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .tile{
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px 16px 14px;
+      box-shadow: var(--shadow);
+    }
+    .tile h2{ margin: 0 0 6px; font-size: 18px; }
+    .tile p{ margin: 0 0 12px; }
+    .tile__link{
+      display:inline-block;
+      font-weight: 650;
+      opacity: .9;
+    }
+    .tile__link:hover{ opacity:1; text-decoration: underline; }
+
+    /* Footer */
+    footer{
+      border-top: 1px solid var(--border);
+      background: rgba(10,14,22,0.78);
+    }
+    .footer__inner{
+      padding: 16px 0;
+      display:flex; gap:10px;
+      align-items:center; justify-content:center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .sep{ opacity:.5; }
+
+    @media (max-width: 860px){
+      .nav{ display:none; }
+      .hamburger{ display:inline-flex; }
+      .grid{ grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 
 <body>
-  <!-- Topbar -->
   <header class="topbar">
     <div class="container topbar__inner">
       <a class="brand" href="/">
-        <img class="brand__logo" src="logo.png" alt="SWEEHOCKEY" />
+        <span class="brand__mark">S</span>
         <span class="brand__text">SWEEHOCKEY</span>
       </a>
 
       <nav class="nav" aria-label="Huvudmeny">
         <a class="nav__link is-active" href="/">Startsida</a>
 
-        <div class="nav__dropdown" data-dropdown>
-          <button class="nav__link nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
             ECL 26 Winter <span class="chev">▾</span>
           </button>
           <div class="menu" role="menu" aria-label="ECL 26 Winter" data-dropdown-menu>
-            <a class="menu__item" role="menuitem" href="/ecl-26-winter/byten/">Svenska ECL Byten</a>
-            <a class="menu__item" role="menuitem" href="/ecl-26-winter/statistik/">Svensk statistik ECL 26</a>
-            <a class="menu__item" role="menuitem" href="/ecl-26-winter/topplistor/">Svensk statistik ECL 26 (topplistor)</a>
+            <a class="menu__item" role="menuitem" href="#">Svenska ECL Byten</a>
+            <a class="menu__item" role="menuitem" href="#">Svensk statistik ECL 26</a>
+            <a class="menu__item" role="menuitem" href="#">Svensk statistik ECL 26 (topplistor)</a>
           </div>
         </div>
 
-        <a class="nav__link" href="/nyheter/">Nyheter</a>
+        <a class="nav__link" href="#">Nyheter</a>
 
-        <div class="nav__dropdown" data-dropdown>
-          <button class="nav__link nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
             Cuper <span class="chev">▾</span>
           </button>
           <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
-            <a class="menu__item" role="menuitem" href="/SEC/">Svenska eHockey Cupen (SEC)</a>
-            <a class="menu__item" role="menuitem" href="/SEC/anmalan/">SEC Anmälan</a>
+            <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
           </div>
         </div>
 
-        <button class="iconbtn" type="button" aria-label="Sök" title="Sök (kommer snart)">
+        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">
           🔍
         </button>
       </nav>
 
-      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>
-        ☰
-      </button>
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
     </div>
 
-    <!-- Mobile menu (same links) -->
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link is-active" href="/">Startsida</a>
-        <a class="mobile__link" href="/ecl-26-winter/byten/">ECL 26 Winter – Byten</a>
-        <a class="mobile__link" href="/ecl-26-winter/statistik/">ECL 26 Winter – Statistik</a>
-        <a class="mobile__link" href="/nyheter/">Nyheter</a>
-        <a class="mobile__link" href="/SEC/">SEC</a>
-        <a class="mobile__link" href="/SEC/anmalan/">SEC Anmälan</a>
+        <a class="mobile__link" href="#">ECL 26 Winter – Byten</a>
+        <a class="mobile__link" href="#">ECL 26 Winter – Statistik</a>
+        <a class="mobile__link" href="#">Nyheter</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
       </div>
     </div>
   </header>
 
-  <!-- Hero -->
   <section class="hero" aria-label="Hero">
     <div class="hero__img" role="img" aria-label="Bakgrund"></div>
     <div class="hero__overlay"></div>
   </section>
 
-  <!-- Content -->
-  <main class="container content">
+  <main class="container">
     <section class="card">
-      <h1>Välkommen till <span class="accent">SWEEHOCKEY!</span> 🏒</h1>
+      <h1>Välkommen till SWEEHOCKEY! 🏒</h1>
 
       <p>
         SWEEHOCKEY är mötesplatsen för alla som följer den svenska eHockeyscenen – från intensiva matcher i
@@ -83,8 +310,8 @@
       </p>
 
       <p>
-        Just nu fungerar sidan som <strong>Sveriges samlade lista över alla svenska lagbyten i ECL</strong> – perfekt för
-        dig som vill hålla koll på vilka spelare som bytt lag inför säsongen.
+        Just nu fungerar sidan som <strong>Sveriges samlade lista över svenska lagbyten</strong> – perfekt för dig som
+        vill hålla koll på vilka spelare som bytt lag inför säsongen.
       </p>
 
       <p>
@@ -92,42 +319,42 @@
       </p>
 
       <div class="cta">
-        <a class="btn" href="/SEC/">Gå till SEC</a>
-        <a class="btn btn--ghost" href="/ecl-26-winter/byten/">Se ECL-byten</a>
+        <a class="btn btn--primary" href="https://www.svenskehockey.se/SEC/">Gå till SEC</a>
+        <a class="btn" href="#">Se ECL 26 Winter</a>
       </div>
     </section>
 
-    <section class="grid">
+    <section class="grid" aria-label="Snabblänkar">
       <article class="tile">
         <h2>SEC</h2>
         <p>Statistik, tabeller, matcher och topplistor för Svenska eHockey Cupen.</p>
-        <a class="tile__link" href="/SEC/">Öppna</a>
+        <a class="tile__link" href="https://www.svenskehockey.se/SEC/">Öppna →</a>
       </article>
 
       <article class="tile">
         <h2>ECL 26 Winter</h2>
         <p>Lagbyten och svensk statistik för säsongen.</p>
-        <a class="tile__link" href="/ecl-26-winter/byten/">Öppna</a>
+        <a class="tile__link" href="#">Öppna →</a>
       </article>
 
       <article class="tile">
         <h2>Nyheter</h2>
         <p>Nyheter, uppdateringar och highlights från svensk eHockey.</p>
-        <a class="tile__link" href="/nyheter/">Öppna</a>
+        <a class="tile__link" href="#">Öppna →</a>
       </article>
     </section>
   </main>
 
-  <footer class="footer">
+  <footer>
     <div class="container footer__inner">
       <span>© <span id="year"></span> SWEEHOCKEY</span>
       <span class="sep">•</span>
-      <a href="/kontakt/">Kontakt</a>
+      <a href="#">Kontakt</a>
     </div>
   </footer>
 
   <script>
-    // Year
+    // År i footern
     document.getElementById("year").textContent = new Date().getFullYear();
 
     // Dropdowns
@@ -148,7 +375,8 @@
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         dd.classList.contains("open") ? close() : open();
-        // close others
+
+        // stäng övriga dropdowns
         dropdowns.forEach((other) => {
           if (other !== dd) {
             other.classList.remove("open");
@@ -163,7 +391,7 @@
       });
     });
 
-    // Mobile menu
+    // Mobilmeny
     const mobileBtn = document.querySelector("[data-mobile-toggle]");
     const mobileMenu = document.querySelector("[data-mobile-menu]");
     mobileBtn.addEventListener("click", () => {
