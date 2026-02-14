@@ -235,9 +235,7 @@
     /* =========================================================
        ✅ SVENSKA BYTEN (din kod) — inbäddad men färganpassad
        ========================================================= */
-    .transfers{
-      margin-top: 18px;
-    }
+    .transfers{ margin-top: 18px; }
 
     .header-box {
       display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
@@ -306,15 +304,11 @@
     }
 
     @media (max-width: 700px) {
-      .header-box {
-        flex-direction: column; align-items: flex-start; gap: 10px;
-      }
+      .header-box { flex-direction: column; align-items: flex-start; gap: 10px; }
       #searchTransfers { width: 100%; }
 
       #transfer-stats thead { display: none; }
-      #transfer-stats table, #transfer-stats tbody, #transfer-stats tr, #transfer-stats td {
-        display: block; width: 100%;
-      }
+      #transfer-stats table, #transfer-stats tbody, #transfer-stats tr, #transfer-stats td { display: block; width: 100%; }
 
       #transfer-stats tbody tr {
         background: rgba(255,255,255,0.04);
@@ -330,11 +324,7 @@
         background: rgba(255,255,255,0.05);
       }
 
-      #transfer-stats tbody td {
-        display: block;
-        padding: 6px 4px;
-        border: none;
-      }
+      #transfer-stats tbody td { display: block; padding: 6px 4px; border: none; }
 
       #transfer-stats tbody td:first-child {
         font-size: 17px;
@@ -356,6 +346,7 @@
 </head>
 
 <body>
+  <!-- ✅ MENY UPPDATERAD TILL SAMMA SOM INDEX -->
   <header class="topbar">
     <div class="container topbar__inner">
       <a class="brand" href="/" aria-label="Svensk eHockey">
@@ -363,16 +354,15 @@
       </a>
 
       <nav class="nav" aria-label="Huvudmeny">
-        <a class="nav__link is-active" href="/">Startsida</a>
+        <a class="nav__link" href="/">Startsida</a>
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            ECL 26 Winter <span class="chev">▾</span>
+            Svensk ECL Statistik <span class="chev">▾</span>
           </button>
-          <div class="menu" role="menu" aria-label="ECL 26 Winter" data-dropdown-menu>
-            <a class="menu__item" role="menuitem" href="#">Svenska ECL Byten</a>
-            <a class="menu__item" role="menuitem" href="#">Svensk statistik ECL 26</a>
-            <a class="menu__item" role="menuitem" href="#">Svensk statistik ECL 26 (topplistor)</a>
+          <div class="menu" role="menu" aria-label="Svensk EC Statistik" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
+            <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
           </div>
         </div>
 
@@ -395,11 +385,12 @@
       <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
     </div>
 
+    <!-- Mobilmeny (matchar index, men med relevanta länkar) -->
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
-        <a class="mobile__link is-active" href="/">Startsida</a>
-        <a class="mobile__link" href="#">ECL 26 Winter – Byten</a>
-        <a class="mobile__link" href="#">ECL 26 Winter – Statistik</a>
+        <a class="mobile__link" href="/">Startsida</a>
+        <a class="mobile__link is-active" href="/svenskaeclbyten.html">ECL 26 Winter – Byten</a>
+        <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
         <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
       </div>
@@ -434,13 +425,11 @@
 
     <!-- ✅ Svenska byten-sektionen -->
     <section id="byten" class="transfers" aria-label="Svenska byten">
-      <!-- 🔹 RUBRIK + SÖKFÄLT -->
       <div class="header-box">
         <h2>📋 Svenska spelare som bytt ECL-lag</h2>
         <input type="text" id="searchTransfers" placeholder="🔍 Sök spelare eller lag...">
       </div>
 
-      <!-- 🔹 TABELL -->
       <div id="transfer-stats"></div>
       <p id="lastUpdated" class="lastUpdated"></p>
     </section>
@@ -577,10 +566,17 @@
             rows.sort((a,b)=>{
               const valA = (a[idx] ?? "").toString().toLowerCase();
               const valB = (b[idx] ?? "").toString().toLowerCase();
-              if (idx === 3) return sortAsc ? new Date(a[idx]) - new Date(a[idx] ? b[idx] : b[idx]) : new Date(b[idx]) - new Date(a[idx]);
+
+              if (idx === 3) {
+                const da = new Date(a[idx]);
+                const db = new Date(b[idx]);
+                return sortAsc ? (da - db) : (db - da);
+              }
+
               return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
             });
             sortAsc = !sortAsc;
+
             tbody.innerHTML = "";
             rows.forEach(r=>{
               const tr = document.createElement("tr");
