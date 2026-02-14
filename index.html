@@ -40,21 +40,23 @@
       display:flex; align-items:center; gap:16px;
       padding: 14px 0;
     }
+
     .brand{
-      display:flex; align-items:center; gap:10px;
-      min-width: 190px;
+      display:flex; align-items:center; gap:12px;
+      min-width: 240px;
       font-weight: 900;
       letter-spacing: .6px;
     }
-    .brand__mark{
-      width: 40px; height: 40px; border-radius: 10px;
-      display:grid; place-items:center;
-      background: linear-gradient(135deg, rgba(120,155,255,0.28), rgba(245,195,75,0.16));
-      border: 1px solid rgba(255,255,255,0.14);
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    /* LOGGA */
+    .brand__logo{
+      height: 40px;
+      width: auto;
+      display:block;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,.35));
       user-select:none;
     }
     .brand__text{ opacity:.95; }
+
     .nav{
       display:flex; align-items:center; justify-content:flex-end;
       gap:14px; flex:1;
@@ -239,6 +241,8 @@
       .nav{ display:none; }
       .hamburger{ display:inline-flex; }
       .grid{ grid-template-columns: 1fr; }
+      .brand__logo{ height: 32px; }
+      .brand{ min-width: 180px; }
     }
   </style>
 </head>
@@ -247,8 +251,8 @@
   <header class="topbar">
     <div class="container topbar__inner">
       <a class="brand" href="/">
-        <span class="brand__mark">S</span>
-        <span class="brand__text">Svensk eHockey</span>
+        <!-- OBS: filen finns i ditt repo som svenakehocket.png -->
+        <img class="brand__logo" src="svenakehocket.png" alt="Svensk eHockey" />
       </a>
 
       <nav class="nav" aria-label="Huvudmeny">
@@ -361,7 +365,6 @@
     const dropdowns = document.querySelectorAll("[data-dropdown]");
     dropdowns.forEach((dd) => {
       const btn = dd.querySelector("[data-dropdown-btn]");
-      const menu = dd.querySelector("[data-dropdown-menu]");
 
       const close = () => {
         dd.classList.remove("open");
