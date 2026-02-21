@@ -1,14 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
-  <title>ECL 26 Winter – Svenska ligor</title>
-  <link rel="icon" type="image/png" href="favicon.png?v=1">
-<link rel="apple-touch-icon" href="favicon.png?v=1">
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Svensk statistik – ECL 26 Winter</title>
+    <link rel="icon" type="image/png" href="favicon.png?v=1">
+<link rel="apple-touch-icon" href="favicon.png?v=1">
+  <meta name="description" content="Svensk statistik för ECL 26 Winter – grundserie och slutspel. Spelare, backar och målvakter per division." />
 
   <style>
-    :root {
+    :root{
+      /* ====== INDEX-TEMA (EXAKT) ====== */
+      --bg: #0b0f17;
+      --panel: rgba(255,255,255,0.06);
+      --panel2: rgba(255,255,255,0.08);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.70);
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+
+      /* ====== STAT-SIDA TOKENS ====== */
       --bg-dark: #04123a;
       --bg-darker: #020718;
       --accent-orange: #f9a64a;
@@ -19,133 +30,325 @@
       --card-bg: #07132f;
     }
 
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, Arial, sans-serif;
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
       background:
-        radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.05), transparent 60%),
-        radial-gradient(circle at 100% 0, rgba(255, 255, 255, 0.04), transparent 65%),
-        linear-gradient(180deg, #020719, #020414 60%, #000);
-      color: var(--text-main);
-      min-height: 100vh;
+        radial-gradient(1200px 600px at 50% -10%, rgba(245,195,75,0.12), transparent 60%),
+        radial-gradient(900px 500px at 10% 10%, rgba(120,155,255,0.12), transparent 55%),
+        var(--bg);
+      color: var(--text);
+    }
+    a{ color:inherit; text-decoration:none; }
+    .container{ width:min(1100px, calc(100% - 32px)); margin:0 auto; }
+
+    /* =========================
+       TOPBAR (EXAKT SOM INDEX)
+    ========================== */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(10px);
+      background: rgba(10,14,22,0.78);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar__inner{
+      display:flex; align-items:center; gap:16px;
+      padding: 14px 0;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      min-width: 220px;
+      font-weight: 900;
+      letter-spacing: .6px;
+    }
+    .brand__logo{
+      height: 38px;
+      width: auto;
+      display:block;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      user-select:none;
     }
 
-    .page-wrap {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 14px 10px 40px;
+    .nav{
+      display:flex; align-items:center; justify-content:flex-end;
+      gap:14px; flex:1;
+    }
+    .nav__link{
+      font-size:14px;
+      color: var(--muted);
+      padding: 10px 10px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .nav__link:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
+    .nav__link.is-active{ color: var(--text); }
+
+    .dropdown{ position:relative; }
+    .nav__button{
+      border:0; background:transparent; cursor:pointer;
+      font: inherit; color: var(--muted);
+      padding: 10px 10px;
+      border-radius: 10px;
+      display:flex; align-items:center; gap:6px;
+      white-space: nowrap;
+    }
+    .nav__button:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
+    .chev{ opacity:.75; }
+
+    .menu{
+      position:absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 290px;
+      padding: 8px;
+      border-radius: 14px;
+      background: rgba(20,26,38,0.96);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display:none;
+    }
+    .dropdown.open .menu{ display:block; }
+
+    .menu__item{
+      display:block;
+      padding: 10px 10px;
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .menu__item:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
+
+    .iconbtn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
     }
 
-    /* -------------------------------------
-       TABS
-    --------------------------------------*/
-    .ecl-tabs {
+    .hamburger{
+      display:none;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor:pointer;
+      margin-left:auto;
+    }
+    .mobile{
+      display:none;
+      border-top: 1px solid var(--border);
+      background: rgba(10,14,22,0.85);
+    }
+    .mobile.open{ display:block; }
+    .mobile__inner{ padding: 12px 0 16px; display:grid; gap:8px; }
+    .mobile__link{
+      padding: 12px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+    }
+    .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
+    .mobile__link.is-active{ color: var(--text); }
+
+    /* =========================
+       BANNER STRIP (EXAKT)
+    ========================== */
+    .banner-strip{
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(900px 220px at 50% 0%, rgba(255,255,255,0.05), transparent 70%),
+        rgba(10,14,22,0.55);
+    }
+    .banner-strip__inner{
+      padding: 18px 0;
+      display:flex;
+      justify-content:center;
+    }
+    .banner{
+      width: 100%;
+      max-width: 980px;
+      height: 160px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: var(--shadow);
+      background-image: url("svenakehocket.jpg");
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .banner::after{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.35));
+      pointer-events:none;
+    }
+
+    /* =========================
+       CONTENT (INDEX-UPPLÄGG)
+    ========================== */
+    main{ padding: 28px 0 46px; }
+
+    /* =========================
+       STAT-INNEHÅLL (UNDER MENYN)
+    ========================== */
+    .stats-wrap{
+      width: 100%;
+      padding: 0;
+    }
+
+    .ecl-tabs{
       display: inline-flex;
       gap: 8px;
-      margin: 8px 0 16px;
+      margin: 8px 0 14px;
       padding: 6px 8px;
       border-radius: 999px;
-      background: rgba(0, 0, 0, 0.4);
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.35);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+      flex-wrap: wrap;
     }
-    .ecl-tab {
+    .ecl-tab{
       border: none;
       padding: 7px 16px;
       border-radius: 999px;
       font-size: 13px;
       cursor: pointer;
       background: rgba(255, 255, 255, 0.06);
-      color: var(--text-muted);
-      font-weight: 600;
+      color: rgba(255,255,255,0.70);
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .08em;
       transition: 0.18s;
+      white-space: nowrap;
     }
-    .ecl-tab.active {
+    .ecl-tab.active{
       background: linear-gradient(135deg, var(--accent-orange), var(--accent-yellow));
       color: #141320;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 10px 26px rgba(0,0,0,0.8);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 10px 26px rgba(0,0,0,0.55);
       transform: translateY(-1px);
     }
 
-    /* -------------------------------------
-       TITEL
-    --------------------------------------*/
-    .page-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 10px 0 18px;
+    .page-title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin: 8px 0 14px;
       color: var(--text-main);
       text-shadow: 0 3px 18px rgba(0,0,0,0.9);
     }
-    .page-title-icon { font-size: 26px; }
-    .page-title-text {
+    .page-title-icon{ font-size: 26px; }
+    .page-title-text{
       font-size: 20px;
-      font-weight: 800;
+      font-weight: 900;
       text-transform: uppercase;
       letter-spacing: .08em;
     }
-    .page-sub {
+    .page-sub{
       font-size: 12px;
-      color: var(--text-muted);
+      color: rgba(255,255,255,0.70);
       text-transform: uppercase;
       letter-spacing: .16em;
+      margin-top: 2px;
     }
 
-    /* -------------------------------------
-       HEADER / SÖK
-    --------------------------------------*/
-    .header-box {
-      display: flex; flex-wrap: wrap;
+    .header-box{
+      display:flex; flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      margin-bottom: 16px;
+      margin: 10px 0 16px;
     }
-    .header-box h2 {
+    .header-box h2{
       font-size: 18px;
-      font-weight: 800;
+      font-weight: 900;
       text-transform: uppercase;
       color: var(--text-main);
       margin: 0;
     }
-    .header-box input {
-      padding: 8px 12px;
-      background: #07132f;
+    .header-box input{
+      padding: 9px 12px;
+      background: rgba(255,255,255,0.05);
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.18);
       color: white;
       outline: none;
-      min-width: 230px;
+      min-width: 260px;
     }
 
-    /* -------------------------------------
-       TOP 3 KORT
-    --------------------------------------*/
-    .top3-container {
+    #sectionDesc{
+      font-size: 11px;
+      line-height: 1.45;
+      color: rgba(245, 246, 255, 0.75);
+      margin-top: 4px;
+      max-width: 900px;
+    }
+
+    .top3-container{
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 14px;
       margin-bottom: 18px;
     }
 
-    .player-card {
+    .player-card{
       position: relative;
-      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent 30%),
-                  linear-gradient(180deg, #0a1740, #020716);
       border-radius: 18px;
       padding: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+      background: linear-gradient(180deg, rgba(40,70,160,0.22), rgba(0,0,0,0.30));
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+    .player-card::after{
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(
+        135deg,
+        rgba(255,255,255,0.08) 0%,
+        rgba(255,255,255,0.04) 25%,
+        transparent 45%
+      );
+      -webkit-mask-image: radial-gradient(white, black);
+              mask-image: radial-gradient(white, black);
+      z-index: 1;
+    }
+    .player-card > *{ position: relative; z-index: 2; }
+
+    .player-ribbon{
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: rgba(0,0,0,0.45);
+      padding: 4px 10px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      border-top-left-radius: 18px;
+      border-bottom-right-radius: 12px;
       overflow: hidden;
     }
 
-    .team-logo-card {
+    .team-logo-wrap{
       position: absolute;
       top: 10px;
       right: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .team-logo-card{
       width: 46px;
       height: 46px;
       object-fit: contain;
@@ -153,110 +356,84 @@
       pointer-events: none;
       opacity: 0.95;
     }
-
-    .player-ribbon {
-      position: absolute;
-      top: 0;
-      left: 0;
-      background: rgba(0,0,0,0.5);
-      padding: 4px 10px;
-      font-size: 10px;
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: .16em;
-    }
-    .player-rank-badge {
-      position: absolute;
-      bottom: 6px;
-      left: 10px;
-      font-size: 40px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.05);
+    .team-medal{
+      font-size: 18px;
+      line-height: 1;
+      opacity: 0.9;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
     }
 
-    .player-top-row {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .player-img-wrap {
+    .player-top-row{ display:flex; gap:12px; align-items:center; }
+    .player-img-wrap{
       flex: 0 0 90px;
       height: 120px;
-      border-radius: 10px;
       overflow: hidden;
-      border: 2px solid rgba(255,255,255,0.8);
       background: #000;
+      border: 2px solid rgba(255,255,255,0.8);
+      border-radius: 12px;
+      clip-path: inset(0 round 12px);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.35);
     }
-    .player-img {
-      width: 100%; height: 100%;
+    .player-img{
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       display: block;
+      border-radius: 12px;
     }
 
-    .player-name {
+    .player-name{
       font-size: 16px;
-      font-weight: 800;
+      font-weight: 900;
       text-transform: uppercase;
     }
-    .player-team {
+    .player-team{
       font-size: 12px;
-      color: var(--text-muted);
+      color: rgba(255,255,255,0.70);
       text-transform: uppercase;
     }
-    .player-points {
-      margin-top: 4px;
-      font-size: 13px;
-    }
-    .player-ga {
-      font-size: 12px;
-      color: #ddd;
-    }
+    .player-points{ margin-top: 4px; font-size: 13px; }
+    .player-ga{ font-size: 12px; color: rgba(255,255,255,0.78); }
 
-    .stat-bars { margin-top: 8px; }
-    .bar-row { margin-bottom: 3px; font-size: 11px; }
-    .bar-label { display: flex; justify-content: space-between; }
-    .bar-track {
-      background: rgba(255,255,255,0.1);
+    .stat-bars{ margin-top: 8px; }
+    .bar-row{ margin-bottom: 3px; font-size: 11px; }
+    .bar-label{ display:flex; justify-content: space-between; }
+    .bar-track{
+      background: rgba(255,255,255,0.10);
       height: 6px;
       border-radius: 999px;
     }
-    .bar-fill {
+    .bar-fill{
       height: 6px;
       border-radius: 999px;
       background: linear-gradient(90deg, #f7d35f, #f9a64a);
     }
 
-    /* -------------------------------------
-       TABELL
-    --------------------------------------*/
-    .table-shell {
+    .table-shell{
       border-radius: 18px;
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: #030a1d;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.28);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.55);
     }
-
-    .table-header-strip {
+    .table-header-strip{
       background: linear-gradient(90deg, #f6983f, #f3c34a);
       color: #111;
       padding: 6px 10px;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
       text-transform: uppercase;
       letter-spacing: .16em;
     }
-
-    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-    .table-container table {
+    .table-container{ overflow-x:auto; -webkit-overflow-scrolling: touch; }
+    .table-container table{
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
       min-width: 700px;
     }
-    thead { background: #091540; }
-    thead th {
+    thead{ background: rgba(9, 21, 64, 0.85); }
+    thead th{
       padding: 8px 10px;
       color: #f7d35f;
       text-transform: uppercase;
@@ -264,314 +441,1000 @@
       cursor: pointer;
       user-select: none;
     }
-    tbody td {
+    tbody td{
       padding: 8px 10px;
-      border-bottom: 1px solid #0d1430;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
       text-align: center;
     }
-    tbody tr:nth-child(even) { background: rgba(255,255,255,0.03); }
-    tbody tr:hover { background: rgba(255, 200, 100, 0.12); }
+    tbody tr:nth-child(even){ background: rgba(255,255,255,0.03); }
+    tbody tr:hover{ background: rgba(255, 200, 100, 0.12); }
 
     thead th:nth-child(1),
     thead th:nth-child(2),
     thead th:nth-child(3),
     tbody td:nth-child(1),
     tbody td:nth-child(2),
-    tbody td:nth-child(3) { text-align: left; }
+    tbody td:nth-child(3){ text-align:left; }
 
-    .lastUpdated {
+    .lastUpdated{
       font-size: 11px;
-      color: var(--text-muted);
+      color: rgba(255,255,255,0.65);
       text-align: right;
-      margin-top: 5px;
+      margin-top: 6px;
     }
 
-    @media (max-width: 768px) {
-      .ecl-tabs { gap: 6px; padding: 4px 6px; }
-      .ecl-tab { padding: 6px 10px; font-size: 11px; letter-spacing: .05em; }
-      .team-logo-card { width: 32px; height: 32px; top: 8px; right: 8px; }
+    /* Footer (EXAKT) */
+    footer{
+      border-top: 1px solid var(--border);
+      background: rgba(10,14,22,0.78);
     }
-
-    .team-cell {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .footer__inner{
+      padding: 16px 0;
+      display:flex; gap:10px;
+      align-items:center; justify-content:center;
+      color: var(--muted);
+      font-size: 13px;
     }
+    .sep{ opacity:.5; }
 
-    .team-logo {
-      width: 22px;
-      height: 22px;
-      object-fit: contain;
-      flex-shrink: 0;
+    @media (max-width: 860px){
+      .nav{ display:none; }
+      .hamburger{ display:inline-flex; }
+      .brand__logo{ height: 32px; }
+      .brand{ min-width: 160px; }
+      .banner{ height: 120px; border-radius: 16px; }
+      .banner-strip__inner{ padding: 14px 0; }
+      #sectionDesc{ font-size: 10px; line-height: 1.4; }
+      .team-logo-card{ width: 32px; height: 32px; }
+      .header-box input{ width: 100%; min-width: 0; }
     }
-#sectionDesc {
-  font-size: 11px;
-  line-height: 1.45;
-  color: rgba(245, 246, 255, 0.75);
-  margin-top: 4px;
-  max-width: 900px;
-}
-@media (max-width: 768px) {
-  #sectionDesc {
-    font-size: 10px;
-    line-height: 1.4;
-  }
-}
-
   </style>
 </head>
+
 <body>
-<div class="page-wrap">
+  <!-- ======= MENY (EXAKT) ======= -->
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <a class="brand" href="/" aria-label="Svensk eHockey">
+        <img class="brand__logo" src="svenakehocket.png" alt="Svensk eHockey" />
+      </a>
 
-  <!-- League tabs -->
-  <div class="ecl-tabs">
-    <button class="ecl-tab active" data-league="skaters">Spelare</button>
-    <button class="ecl-tab" data-league="defenders">Backar</button>
-    <button class="ecl-tab" data-league="goalies">Målvakter</button>
-  </div>
+      <nav class="nav" aria-label="Huvudmeny">
+        <a class="nav__link" href="/">Startsida</a>
 
-  <!-- Division tabs -->
-  <div class="ecl-tabs">
-    <button class="ecl-tab active" data-division="elite">Elite</button>
-    <button class="ecl-tab" data-division="pro">Pro</button>
-    <button class="ecl-tab" data-division="lite">Lite</button>
-    <button class="ecl-tab" data-division="core">Core</button>
-    <button class="ecl-tab" data-division="neo">Neo</button>
-  </div>
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            Svensk ECL Statistik <span class="chev">▾</span>
+          </button>
+          <div class="menu" role="menu" aria-label="Svensk EC Statistik" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
+            <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
+          </div>
+        </div>
 
-  <div class="page-title">
-    <div class="page-title-icon" id="titleIcon">🏆</div>
-    <div>
-      <div class="page-title-text" id="titleText">ECL 26 Winter – Svenska poängligor</div>
-      <div class="page-sub" id="titleSub"></div>
+        <a class="nav__link" href="#">Nyheter</a>
+
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            Cuper <span class="chev">▾</span>
+          </button>
+          <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
+          </div>
+        </div>
+
+        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">
+          🔍
+        </button>
+      </nav>
+
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
     </div>
-  </div>
 
-  <div class="header-box">
-    <h2 id="sectionTitle">Elite Poängliga</h2>
-<div id="sectionDesc" class="page-sub"></div>
-    <input id="searchBox" placeholder="Sök spelare/målvakt eller lag…" />
-  </div>
-
-  <div id="top3" class="top3-container"></div>
-
-  <div class="table-shell">
-    <div class="table-header-strip" id="tableStrip">Topplista</div>
-    <div id="tableHost" class="table-container"></div>
-  </div>
-  <p id="updated" class="lastUpdated"></p>
-
-</div>
-
-<script>
-(function(){
-
-  const TABLE_SHEET_ID = "1toag5J7vMW0CEmtsrqByPJMJn6e-U5hOzZaKWoXnpxY";
-
-  const CARD_CSV =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZCNO-QbbfniaDOODJpcE_B8ab6RHunhkSRGuEjYeVlM2TVq6okNMG8JPHHZyWf50RsJFflI6bbAnB/pub?gid=2047009971&single=true&output=csv";
-
-  const DEFAULT_IMG =
-    "https://drive.google.com/thumbnail?id=1VAa79pJ-QbyeliY60autf914z6SBwmhp&sz=w1000";
-
-  function sheetUrl(sheetName){
-    return `https://docs.google.com/spreadsheets/d/${TABLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-  }
-
-  const DATA_SHEETS = {
-    skaters: sheetUrl("Utespelare"),
-    defenders: sheetUrl("Backar"),
-    goalies: sheetUrl("Målvakter")
-  };
-
-  const LOGO_SHEET = sheetUrl("Loggor");
-
-  let activeLeague = "skaters";
-  let activeDiv = "elite";
-
-  let currentSort = { idx: null, key: null };
-
-  const divLabels = {
-    elite: "Elite",
-    pro: "Pro",
-    lite: "Lite",
-    core: "Core",
-    neo: "Neo"
-  };
-
-  const sortTitles = {
-    p: "Poängliga",
-    m: "Skytteligan",
-    a: "Assistligan",
-    u: "Busligan",
-    ma: "Flest spelade matcher",
-    dim: "Defensiv Impact-ligan",
-    svp: "Räddningsligan",
-    gaa: "GAA-ligan",
-    so: "Nolligan"
-  };
-
-  function parseCSV(txt){
-    const out=[]; let row=[], cur="", q=false;
-    for(let i=0;i<txt.length;i++){
-      const c=txt[i], n=txt[i+1];
-      if(c=='"'&&n=='"'){cur+='"';i++;continue;}
-      if(c=='"'){q=!q;continue;}
-      if(c==","&&!q){row.push(cur);cur="";continue;}
-      if((c=="\n"||c=="\r")&&!q){
-        if(cur||row.length){row.push(cur);out.push(row);}
-        row=[];cur="";continue;
-      }
-      cur+=c;
-    }
-    if(cur||row.length){row.push(cur);out.push(row);}
-    return out;
-  }
-
-  const normalize = s =>
-    String(s||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"")
-    .replace(/[^\w\s]/g,"").toLowerCase().trim();
-
-  const toNum = x => parseFloat(String(x||"").replace(",",".").replace("%","")) || 0;
-
-  const parseSVP = v => {
-    let n=toNum(v);
-    return n>1?n/100:n;
-  };
-
-  const formatSVP = v => (parseSVP(v)*100).toFixed(1)+"%";
-  const formatGAA = v => toNum(v).toFixed(2);
-
-  let cardMap=null, logoMap=null;
-
-  function loadCardImages(){
-    if(cardMap) return Promise.resolve(cardMap);
-    return fetch(CARD_CSV).then(r=>r.text()).then(t=>{
-      const m={}; parseCSV(t).slice(1).forEach(r=>{
-        m[normalize(r[0])] = r[1]
-          ? `https://drive.google.com/thumbnail?id=${r[1]}&sz=w1000`
-          : DEFAULT_IMG;
-      });
-      cardMap=m; return m;
-    });
-  }
-
-  function loadTeamLogos(){
-    if(logoMap) return Promise.resolve(logoMap);
-    return fetch(LOGO_SHEET).then(r=>r.text()).then(t=>{
-      const m={}; parseCSV(t).slice(1).forEach(r=>{
-        if(r[0]&&r[1]) m[normalize(r[0])] = r[1];
-      });
-      logoMap=m; return m;
-    });
-  }
-
-  function renderTop3(players, host){
-    host.innerHTML = players.slice(0,3).map((p,i)=>`
-      <div class="player-card">
-        <div class="player-rank-badge">${i+1}</div>
-        <div class="player-name">${p.name}</div>
-        <div class="player-team">${p.team}</div>
+    <div class="mobile" data-mobile-menu>
+      <div class="container mobile__inner">
+        <a class="mobile__link" href="/">Startsida</a>
+        <a class="mobile__link" href="/svenskaeclbyten.html">ECL 26 Winter – Byten</a>
+        <a class="mobile__link is-active" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
+        <a class="mobile__link" href="#">Nyheter</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
       </div>
-    `).join("");
-  }
+    </div>
+  </header>
 
-  // ✅ Enda ändringen: målvakter default-sort på bästa SV% (högst först)
-  function findGoalieSVPColIndex(header){
-    const candidates = ["SV%", "SVP", "Räddningsprocent", "Räddnings%", "SV"];
-    const norms = header.map(h => normalize(h));
-    for(const c of candidates){
-      const idx = norms.indexOf(normalize(c));
-      if(idx !== -1) return idx + 1; // +1 eftersom th-index 0 är "#"
-    }
-    return null;
-  }
+  <!-- ======= BANNER (EXAKT) ======= -->
+  <section class="banner-strip" aria-label="Banner">
+    <div class="container banner-strip__inner">
+      <div class="banner" role="img" aria-label="Svensk eHockey banner"></div>
+    </div>
+  </section>
 
-  function renderTable(header, rows, host, search, objs, top3){
-    let data = rows.map((r,i)=>({r,i}));
+  <!-- ======= CONTENT (EXAKT UPPLÄGG UNDER) ======= -->
+  <main class="container">
+    <div class="stats-wrap">
 
-    host.innerHTML = `
-      <table>
-        <thead><tr>${["#",...header].map((h,i)=>`<th data-i="${i}">${h}</th>`).join("")}</tr></thead>
-        <tbody></tbody>
-      </table>
-    `;
+      <!-- Spelform -->
+      <div class="ecl-tabs" aria-label="Spelform">
+        <button class="ecl-tab active" data-stage="regular">Grundserie</button>
+        <button class="ecl-tab" data-stage="playoffs">Slutspel</button>
+      </div>
 
-    const tbody = host.querySelector("tbody");
-    const ths = host.querySelectorAll("th");
-    let sortState={i:null,asc:false};
+      <!-- Roll -->
+      <div class="ecl-tabs" aria-label="Roll">
+        <button class="ecl-tab active" data-league="skaters">Spelare</button>
+        <button class="ecl-tab" data-league="defenders">Backar</button>
+        <button class="ecl-tab" data-league="goalies">Målvakter</button>
+      </div>
 
-    // ✅ Default-sort endast för målvakter: bästa SV% först
-    if(activeLeague === "goalies"){
-      const svI = findGoalieSVPColIndex(header);
-      if(svI){
-        sortState.i = svI;
-        sortState.asc = false; // false = desc (högst först)
-        data.sort((a,b)=>{
-          const av=toNum(a.r[svI-1]), bv=toNum(b.r[svI-1]);
-          return (av-bv)*(sortState.asc?1:-1);
-        });
-      }
-    }
+      <!-- Division -->
+      <div class="ecl-tabs" aria-label="Division">
+        <button class="ecl-tab active" data-division="elite">Elite</button>
+        <button class="ecl-tab" data-division="pro">Pro</button>
+        <button class="ecl-tab" data-division="lite">Lite</button>
+        <button class="ecl-tab" data-division="core">Core</button>
+        <button class="ecl-tab" data-division="neo">Neo</button>
+      </div>
 
-    function redraw(){
-      tbody.innerHTML = data.map((d,i)=>`
-        <tr><td>${i+1}</td>${d.r.map(c=>`<td>${c}</td>`).join("")}</tr>
-      `).join("");
+      <div class="page-title">
+        <div class="page-title-icon" id="titleIcon">🏆</div>
+        <div>
+          <div class="page-title-text" id="titleText">ECL 26 Winter – Svenska poängligor</div>
+          <div class="page-sub" id="titleSub">GRUNDSERIE</div>
+        </div>
+      </div>
 
-      let visible = data.map(d=>{
-        const o = objs[d.i];
-        if(sortState.i){
-          o.__v = toNum(d.r[sortState.i-1]);
-        }
-        return o;
-      });
+      <div class="header-box">
+        <div>
+          <h2 id="sectionTitle">Elite Poängliga</h2>
+          <div id="sectionDesc" class="page-sub"></div>
+        </div>
+        <input id="searchBox" placeholder="Sök spelare/målvakt eller lag…" />
+      </div>
 
-      // 🔒 KRITISK FIX – Top-3 följer EXAKT tabellens sort
-      if(sortState.i){
-        const dir = sortState.asc ? 1 : -1;
-        visible.sort((a,b)=> (a.__v-b.__v)*dir);
-      }
+      <div id="top3" class="top3-container"></div>
 
-      renderTop3(visible, top3);
-    }
+      <div class="table-shell">
+        <div class="table-header-strip" id="tableStrip">Topplista</div>
+        <div id="tableHost" class="table-container"></div>
+      </div>
 
-    ths.forEach(th=>{
-      th.onclick=()=>{
-        const i=+th.dataset.i;
-        if(!i) return;
-        sortState.asc = sortState.i===i ? !sortState.asc : false;
-        sortState.i=i;
+      <p id="updated" class="lastUpdated"></p>
+    </div>
+  </main>
 
-        data.sort((a,b)=>{
-          const av=toNum(a.r[i-1]), bv=toNum(b.r[i-1]);
-          return (av-bv)*(sortState.asc?1:-1);
-        });
+  <!-- ======= FOOTER (EXAKT) ======= -->
+  <footer>
+    <div class="container footer__inner">
+      <span>© <span id="year"></span> Svensk eHockey</span>
+      <span class="sep">•</span>
+      <a href="#">Kontakt</a>
+    </div>
+  </footer>
 
-        redraw();
+  <script>
+    // År i footern (EXAKT)
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Dropdowns (EXAKT)
+    const dropdowns = document.querySelectorAll("[data-dropdown]");
+    dropdowns.forEach((dd) => {
+      const btn = dd.querySelector("[data-dropdown-btn]");
+
+      const close = () => {
+        dd.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
       };
-    });
+      const open = () => {
+        dd.classList.add("open");
+        btn.setAttribute("aria-expanded", "true");
+      };
 
-    redraw();
-  }
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dd.classList.contains("open") ? close() : open();
 
-  function load(){
-    Promise.all([loadCardImages(),loadTeamLogos()]).then(()=>{
-      fetch(DATA_SHEETS[activeLeague]).then(r=>r.text()).then(t=>{
-        const rows=parseCSV(t); const h=rows.shift();
-        renderTable(h,rows,tableHost,searchBox,[],top3);
+        dropdowns.forEach((other) => {
+          if (other !== dd) {
+            other.classList.remove("open");
+            other.querySelector("[data-dropdown-btn]")?.setAttribute("aria-expanded", "false");
+          }
+        });
+      });
+
+      document.addEventListener("click", close);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
       });
     });
-  }
 
-  const tableHost=document.getElementById("tableHost");
-  const top3=document.getElementById("top3");
-  const searchBox=document.getElementById("searchBox");
+    // Mobilmeny (EXAKT)
+    const mobileBtn = document.querySelector("[data-mobile-toggle]");
+    const mobileMenu = document.querySelector("[data-mobile-menu]");
+    mobileBtn.addEventListener("click", () => {
+      mobileMenu.classList.toggle("open");
+    });
+  </script>
 
-  load();
+  <script>
+  (function(){
+    const TABLE_SHEET_ID = "1toag5J7vMW0CEmtsrqByPJMJn6e-U5hOzZaKWoXnpxY";
 
-})();
-</script>
+    const CARD_CSV =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZCNO-QbbfniaDOODJpcE_B8ab6RHunhkSRGuEjYeVlM2TVq6okNMG8JPHHZyWf50RsJFflI6bbAnB/pub?gid=2047009971&single=true&output=csv";
 
+    const DEFAULT_IMG =
+      "https://drive.google.com/thumbnail?id=1VAa79pJ-QbyeliY60autf914z6SBwmhp&sz=w1000";
+
+    function sheetUrl(sheetName){
+      return `https://docs.google.com/spreadsheets/d/${TABLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+    }
+
+    const DATA_SHEETS_REGULAR = {
+      skaters: sheetUrl("Utespelare"),
+      defenders: sheetUrl("Backar"),
+      goalies: sheetUrl("Målvakter")
+    };
+
+    const DATA_SHEETS_PLAYOFFS = {
+      skaters: sheetUrl("Utespelare slut"),
+      defenders: sheetUrl("Backar slut"),
+      goalies: sheetUrl("Målvakter slut")
+    };
+
+    const LOGO_SHEET = sheetUrl("Loggor");
+
+    let activeStage  = "regular"; // regular | playoffs
+    let activeLeague = "skaters"; // skaters | defenders | goalies
+    let activeDiv    = "elite";   // elite | pro | lite | core | neo
+
+    let currentSort = { idx: null, key: null, label: null };
+
+    const divLabels = { elite:"Elite", pro:"Pro", lite:"Lite", core:"Core", neo:"Neo" };
+    const stageLabels = { regular:"Grundserie", playoffs:"Slutspel" };
+
+    const sortTitles = {
+      p: "Poängliga",
+      m: "Målligan",
+      a: "Assistligan",
+      u: "Busligan",
+      ma: "Matchligan",
+      dim: "Defensiv Impact-ligan",
+      "sv%": "Bästa räddningsprocent",
+      svp: "Bästa räddningsprocent",
+      gaa: "GAA-ligan",
+      nollor: "Nolligan",
+      so: "Nolligan"
+    };
+
+    function parseCSV(txt){
+      const out = [];
+      let row=[], cur="", q=false;
+
+      for(let i=0;i<txt.length;i++){
+        const c = txt[i], n = txt[i+1];
+        if(c=='"' && n=='"'){ cur+='"'; i++; continue; }
+        if(c=='"'){ q=!q; continue; }
+        if(c=="," && !q){ row.push(cur); cur=""; continue; }
+        if((c=="\n"||c=="\r") && !q){
+          if(cur.length||row.length){ row.push(cur); out.push(row); }
+          row=[]; cur=""; continue;
+        }
+        cur+=c;
+      }
+      if(cur.length||row.length){ row.push(cur); out.push(row); }
+      return out.filter(r => r.some(x => String(x).trim() !== ""));
+    }
+
+    function normalize(str){
+      return String(str||"")
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g,"")
+        .replace(/[^\w\s]/g,"")
+        .replace(/\s+/g," ")
+        .trim()
+        .toLowerCase();
+    }
+
+    function resolveSortKey(colName){
+      const k = normalize(colName);
+
+      if(k === "sv" || k === "svprocent" || k === "raddningsprocent") return "svp";
+      if(k === "sv%") return "svp";
+      if(k === "gaa") return "gaa";
+      if(k === "nollor" || k === "so" || k === "shutouts") return "so";
+
+      if(k === "p") return "p";
+      if(k === "m") return "m";
+      if(k === "a") return "a";
+      if(k === "u") return "u";
+      if(k === "ma" || k === "matcher") return "ma";
+      if(k === "dim") return "dim";
+
+      return k;
+    }
+
+    function findDivIndex(header){
+      const candidates = ["division","div","liga","league","nivå","niva","level"];
+      const norm = header.map(h => normalize(h));
+      for(let i=0;i<norm.length;i++){
+        if(candidates.includes(norm[i])) return i;
+      }
+      return -1;
+    }
+
+    function isRowInDivision(row, divValue){
+      const v = normalize(row || "");
+      const target = normalize(divValue);
+      if(!v) return false;
+      return v === target;
+    }
+
+    function toNum(x){
+      const v = String(x||"").replace(",", ".").replace("%","");
+      const n = parseFloat(v);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function parseSVP(raw){
+      let n = toNum(raw);
+      if(n > 1) n = n / 100;
+      return n;
+    }
+
+    function formatSVP(raw){
+      const n = parseSVP(raw) * 100;
+      return n.toFixed(1) + "%";
+    }
+
+    function formatGAA(raw){
+      const n = toNum(raw);
+      if(!n) return String(raw||"-");
+      return n.toFixed(2);
+    }
+
+    let cardMap=null;
+    let cardPromise=null;
+
+    function loadCardImages(){
+      if(cardMap) return Promise.resolve(cardMap);
+      if(cardPromise) return cardPromise;
+
+      cardPromise = fetch(CARD_CSV)
+        .then(r=>r.text())
+        .then(csv=>{
+          const rows = parseCSV(csv);
+          rows.shift();
+          const map = {};
+          rows.forEach(r=>{
+            const name = normalize(r[0]);
+            const driveId = (r[1]||"").trim();
+            if(!name) return;
+            map[name] = driveId ? `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000` : DEFAULT_IMG;
+          });
+          cardMap = map;
+          return map;
+        })
+        .catch(()=> (cardMap = {}, cardMap));
+
+      return cardPromise;
+    }
+
+    let logoMap=null;
+    let logoPromise=null;
+
+    function loadTeamLogos(){
+      if(logoMap) return Promise.resolve(logoMap);
+      if(logoPromise) return logoPromise;
+
+      logoPromise = fetch(LOGO_SHEET)
+        .then(r=>r.text())
+        .then(csv=>{
+          const rows = parseCSV(csv);
+          rows.shift();
+          const map = {};
+          rows.forEach(r=>{
+            const team = normalize(r[0]);
+            const link = (r[1] || "").trim();
+            if(!team || !link) return;
+            map[team] = link;
+          });
+          logoMap = map;
+          return map;
+        })
+        .catch(()=> (logoMap = {}, logoMap));
+
+      return logoPromise;
+    }
+
+    function metricTextForPlayer(p){
+      const key = currentSort.key;
+
+      if(!key){
+        if(activeLeague === "goalies"){
+          return {
+            main: `${formatSVP(p.svp)} räddningsprocent`,
+            sub:  `M ${p.games} · GAA ${formatGAA(p.gaa)} · Nollor ${p.shutouts}`
+          };
+        }
+        return {
+          main: `${p.points} poäng`,
+          sub:  `GP ${p.games} · G ${p.goals} · A ${p.assists}`
+        };
+      }
+
+      const raw = p.__sortRaw ?? "";
+      const num = p.__sortNum ?? 0;
+
+      if(activeLeague === "goalies"){
+        if(key === "svp" || key === "sv%"){
+          return {
+            main: `${formatSVP(raw)} räddningsprocent`,
+            sub:  `M ${p.games} · GAA ${formatGAA(p.gaa)} · Nollor ${p.shutouts}`
+          };
+        }
+        if(key === "gaa"){
+          return {
+            main: `GAA ${formatGAA(raw)}`,
+            sub:  `M ${p.games} · SV% ${formatSVP(p.svp)} · Nollor ${p.shutouts}`
+          };
+        }
+        if(key === "so" || key === "nollor"){
+          return {
+            main: `Nollor ${toNum(raw)}`,
+            sub:  `M ${p.games} · SV% ${formatSVP(p.svp)} · GAA ${formatGAA(p.gaa)}`
+          };
+        }
+        return {
+          main: `${num}`,
+          sub:  `M ${p.games} · SV% ${formatSVP(p.svp)} · GAA ${formatGAA(p.gaa)}`
+        };
+      }
+
+      if(key === "p"){
+        return { main: `${p.points} poäng`, sub: `GP ${p.games} · G ${p.goals} · A ${p.assists}` };
+      }
+      if(key === "m"){
+        return { main: `${p.goals} mål`, sub: `GP ${p.games} · P ${p.points} · A ${p.assists}` };
+      }
+      if(key === "a"){
+        return { main: `${p.assists} assists`, sub: `GP ${p.games} · P ${p.points} · G ${p.goals}` };
+      }
+      if(key === "u"){
+        return { main: `${toNum(raw)} utv`, sub: `GP ${p.games} · P ${p.points} · G ${p.goals} · A ${p.assists}` };
+      }
+      if(key === "ma"){
+        return { main: `${toNum(raw)} matcher`, sub: `P ${p.points} · G ${p.goals} · A ${p.assists}` };
+      }
+      if(key === "dim"){
+        return { main: `DIM ${raw}`, sub: `GP ${p.games} · P ${p.points} · G ${p.goals} · A ${p.assists}` };
+      }
+
+      return { main: `${raw}`, sub: `GP ${p.games} · P ${p.points} · G ${p.goals} · A ${p.assists}` };
+    }
+
+    function medalForRank(i){
+      if(i === 0) return "🥇";
+      if(i === 1) return "🥈";
+      if(i === 2) return "🥉";
+      return "";
+    }
+
+    function getStatBarsForSkater(p, players){
+      const key = currentSort.key;
+
+      if(key === "u"){
+        const maxU = Math.max(...players.map(x => toNum(x.__sortRaw)), 1);
+        const maxM = Math.max(...players.map(x => x.games), 1);
+        return [
+          { label: "Utvisningsmin", value: toNum(p.__sortRaw), percent: (toNum(p.__sortRaw) / maxU) * 100 },
+          { label: "Matcher", value: p.games, percent: (p.games / maxM) * 100 }
+        ];
+      }
+
+      if(key === "ma"){
+        const maxM = Math.max(...players.map(x => x.games), 1);
+        return [{ label: "Matcher", value: p.games, percent: (p.games / maxM) * 100 }];
+      }
+
+      if(key === "dim"){
+        const maxDIM = Math.max(...players.map(x => toNum(x.__sortRaw)), 1);
+        return [{ label: "DIM", value: p.__sortRaw, percent: (toNum(p.__sortRaw) / maxDIM) * 100 }];
+      }
+
+      const maxG = Math.max(...players.map(x => x.goals), 1);
+      const maxA = Math.max(...players.map(x => x.assists), 1);
+      const maxP = Math.max(...players.map(x => x.points), 1);
+
+      return [
+        { label: "Mål",     value: p.goals,   percent: (p.goals / maxG) * 100 },
+        { label: "Assists", value: p.assists, percent: (p.assists / maxA) * 100 },
+        { label: "Poäng",   value: p.points,  percent: (p.points / maxP) * 100 }
+      ];
+    }
+
+    function renderTop3Skaters(players, host){
+      host.innerHTML = players.slice(0,3).map((p,i)=>{
+        const mt = metricTextForPlayer(p);
+        const bars = getStatBarsForSkater(p, players);
+
+        return `
+          <div class="player-card">
+            <div class="player-ribbon"></div>
+
+            ${p.teamLogo ? `
+              <div class="team-logo-wrap">
+                <img class="team-logo-card" src="${p.teamLogo}" alt="${p.team}">
+                <div class="team-medal">${medalForRank(i)}</div>
+              </div>
+            ` : ""}
+
+            <div class="player-top-row">
+              <div class="player-img-wrap">
+                <img class="player-img"
+                    src="${p.img}"
+                    alt="${p.name}"
+                    onerror="this.onerror=null;this.src='${DEFAULT_IMG}'">
+              </div>
+              <div>
+                <div class="player-name">${p.name}</div>
+                <div class="player-team">${p.team}</div>
+                <div class="player-points">${mt.main}</div>
+                <div class="player-ga">${mt.sub}</div>
+              </div>
+            </div>
+
+            <div class="stat-bars">
+              ${bars.map(b => `
+                <div class="bar-row">
+                  <div class="bar-label">
+                    <span>${b.label}</span>
+                    <span>${b.value}</span>
+                  </div>
+                  <div class="bar-track">
+                    <div class="bar-fill" style="width:${b.percent}%"></div>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderTop3Goalies(players, host){
+      const maxM  = Math.max(...players.map(p => p.games), 1);
+      const maxSV = Math.max(...players.map(p => p.svpVal), 0.0001);
+      const maxSO = Math.max(...players.map(p => p.shutouts), 1);
+
+      host.innerHTML = players.slice(0,3).map((p,i)=>{
+        const mt = metricTextForPlayer(p);
+
+        return `
+          <div class="player-card">
+            <div class="player-ribbon"></div>
+
+            ${p.teamLogo ? `
+              <div class="team-logo-wrap">
+                <img class="team-logo-card" src="${p.teamLogo}" alt="${p.team}">
+                <div class="team-medal">${medalForRank(i)}</div>
+              </div>
+            ` : ""}
+
+            <div class="player-top-row">
+              <div class="player-img-wrap">
+                <img class="player-img"
+                    src="${p.img}"
+                    alt="${p.name}"
+                    onerror="this.onerror=null;this.src='${DEFAULT_IMG}'">
+              </div>
+              <div>
+                <div class="player-name">${p.name}</div>
+                <div class="player-team">${p.team}</div>
+                <div class="player-points">${mt.main}</div>
+                <div class="player-ga">${mt.sub}</div>
+              </div>
+            </div>
+
+            <div class="stat-bars">
+              <div class="bar-row">
+                <div class="bar-label"><span>Matcher</span><span>${p.games}</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width:${(p.games/maxM)*100}%"></div>
+                </div>
+              </div>
+
+              <div class="bar-row">
+                <div class="bar-label"><span>Räddnings%</span><span>${formatSVP(p.svp)}</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width:${(p.svpVal/maxSV)*100}%"></div>
+                </div>
+              </div>
+
+              <div class="bar-row">
+                <div class="bar-label"><span>Nollor</span><span>${p.shutouts}</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width:${(p.shutouts/maxSO)*100}%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderTableGeneric(header, rows, host, searchEl, rowObjects, top3Host, top3Renderer){
+      const fullHeader = ["#"].concat(header);
+      let data = rows.map((r, i)=>({ rank:i+1, row:r, rowIndex:i }));
+
+      function htmlBody(arr){
+        return arr.map((x)=>`
+          <tr>
+            <td>${x.rank}</td>
+            ${x.row.map(c=>`<td>${c ?? ""}</td>`).join("")}
+          </tr>
+        `).join("");
+      }
+
+      host.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              ${fullHeader.map((h, idx)=>`<th data-idx="${idx}">${h}</th>`).join("")}
+            </tr>
+          </thead>
+          <tbody>${htmlBody(data)}</tbody>
+        </table>
+      `;
+
+      const tbody = host.querySelector("tbody");
+      const ths = host.querySelectorAll("thead th");
+      let sortState = { idx: null, asc: false };
+
+      // Default sort: Poäng → Mål → Matcher (om finns)
+      data.sort((a, b) => {
+        const pa = rowObjects[a.rowIndex] || {};
+        const pb = rowObjects[b.rowIndex] || {};
+        if ((pa.points ?? 0) !== (pb.points ?? 0)) return (pb.points ?? 0) - (pa.points ?? 0);
+        if ((pa.goals  ?? 0) !== (pb.goals  ?? 0)) return (pb.goals  ?? 0) - (pa.goals  ?? 0);
+        if ((pa.games  ?? 0) !== (pb.games  ?? 0)) return (pa.games  ?? 0) - (pb.games  ?? 0);
+        return 0;
+      });
+
+      data = data.map((x, i) => ({ ...x, rank: i + 1 }));
+      tbody.innerHTML = htmlBody(data);
+
+      function applySearchAndTop3(){
+        const q = (searchEl && searchEl.value ? searchEl.value.toLowerCase() : "");
+        const visible = [];
+
+        [...tbody.rows].forEach((tr, i)=>{
+          const match = !q || tr.innerText.toLowerCase().includes(q);
+          tr.style.display = match ? "" : "none";
+          if(match){
+            const d = data[i];
+            const obj = rowObjects && d ? rowObjects[d.rowIndex] : null;
+            if(obj){
+              if(sortState.idx && sortState.idx > 0){
+                const colIdx = sortState.idx - 1;
+                obj.__sortRaw = (d.row[colIdx] ?? "");
+                obj.__sortNum = toNum(obj.__sortRaw);
+                obj.__sortKey = currentSort.key;
+              } else {
+                obj.__sortRaw = "";
+                obj.__sortNum = 0;
+                obj.__sortKey = null;
+              }
+              visible.push(obj);
+            }
+          }
+        });
+
+        let top3Data = visible;
+
+        if(activeLeague === "defenders" && currentSort.key === "dim"){
+          top3Data = visible.filter(p => (p.games ?? 0) > 4);
+        }
+        if(activeLeague === "goalies"){
+          top3Data = visible.filter(p => (p.games ?? 0) > 5);
+        }
+
+        if(!sortState.idx){
+          top3Data = top3Data.slice().sort((a,b)=>{
+            if((a.points ?? 0) !== (b.points ?? 0)) return (b.points ?? 0) - (a.points ?? 0);
+            if((a.goals  ?? 0) !== (b.goals  ?? 0)) return (b.goals  ?? 0) - (a.goals  ?? 0);
+            return (a.games ?? 0) - (b.games ?? 0);
+          });
+        }
+
+        if(sortState.idx && sortState.idx > 0){
+          top3Data = top3Data.slice().sort((a,b)=>{
+            const av = a.__sortNum ?? 0;
+            const bv = b.__sortNum ?? 0;
+
+            // GAA: lägst är bäst
+            if(activeLeague === "goalies" && currentSort.key === "gaa"){
+              if(av !== bv) return av - bv;
+              if((a.games ?? 0) !== (b.games ?? 0)) return (a.games ?? 0) - (b.games ?? 0);
+              return 0;
+            }
+
+            if(av !== bv) return bv - av;
+
+            if((b.goals ?? 0) !== (a.goals ?? 0)) return (b.goals ?? 0) - (a.goals ?? 0);
+            if((a.games ?? 0) !== (b.games ?? 0)) return (a.games ?? 0) - (b.games ?? 0);
+            return 0;
+          });
+        }
+
+        top3Renderer(top3Data, top3Host);
+      }
+
+      ths.forEach(th=>{
+        th.addEventListener("click", ()=>{
+          const idx = Number(th.dataset.idx);
+          if(idx === 0) return;
+
+          const colName = header[idx-1] || "";
+          const key = resolveSortKey(colName);
+          currentSort = { idx: idx, key, label: sortTitles[key] || null };
+
+          setSortedTitleByColumn(colName);
+
+          if(sortState.idx === idx){
+            sortState.asc = !sortState.asc;
+          } else {
+            sortState.idx = idx;
+            sortState.asc = (activeLeague === "goalies" && currentSort.key === "gaa") ? true : false;
+          }
+
+          const dir = sortState.asc ? 1 : -1;
+
+          if (currentSort.key === "p") {
+            data.sort((a, b) => {
+              const pa = rowObjects[a.rowIndex] || {};
+              const pb = rowObjects[b.rowIndex] || {};
+              if ((pa.points ?? 0) !== (pb.points ?? 0)) return (pb.points ?? 0) - (pa.points ?? 0);
+              if ((pa.goals  ?? 0) !== (pb.goals  ?? 0)) return (pb.goals  ?? 0) - (pa.goals  ?? 0);
+              if ((pa.games  ?? 0) !== (pb.games  ?? 0)) return (pa.games  ?? 0) - (pb.games  ?? 0);
+              return 0;
+            });
+          } else {
+            data.sort((a, b) => {
+              const va = (a.row[idx - 1] ?? "").toString();
+              const vb = (b.row[idx - 1] ?? "").toString();
+              const na = toNum(va), nb = toNum(vb);
+              const isNum = !(isNaN(na) || isNaN(nb)) && (va.trim() !== "" || vb.trim() !== "");
+              if (isNum) return (na - nb) * dir;
+              return va.localeCompare(vb, "sv") * dir;
+            });
+          }
+
+          data = data.map((x, i) => ({ ...x, rank: i + 1 }));
+          tbody.innerHTML = htmlBody(data);
+          applySearchAndTop3();
+        });
+      });
+
+      if(searchEl){
+        searchEl.oninput = applySearchAndTop3;
+      }
+
+      applySearchAndTop3();
+    }
+
+    const titleIcon = document.getElementById("titleIcon");
+    const titleText = document.getElementById("titleText");
+    const titleSub  = document.getElementById("titleSub");
+    const sectionTitle = document.getElementById("sectionTitle");
+    const tableStrip = document.getElementById("tableStrip");
+    const top3 = document.getElementById("top3");
+    const tableHost = document.getElementById("tableHost");
+    const updated = document.getElementById("updated");
+    const searchBox = document.getElementById("searchBox");
+
+    function stageSuffix(){ return activeStage === "playoffs" ? " – Slutspel" : ""; }
+
+    function setTitles(){
+      const divName = divLabels[activeDiv];
+      const descEl = document.getElementById("sectionDesc");
+      if(descEl) descEl.innerHTML = "";
+
+      currentSort = { idx: null, key: null, label: null };
+
+      titleSub.textContent = (stageLabels[activeStage] || "").toUpperCase();
+
+      if(activeLeague === "skaters"){
+        titleIcon.textContent = "🏆";
+        titleText.textContent = "ECL 26 Winter – Svenska poängligor" + stageSuffix();
+        sectionTitle.textContent = `${divName} Poängliga` + (activeStage === "playoffs" ? " – Slutspel" : "");
+        tableStrip.textContent = `Topplista ${divName}` + (activeStage === "playoffs" ? " – Slutspel" : "");
+      } else if(activeLeague === "defenders"){
+        titleIcon.textContent = "🏒";
+        titleText.textContent = "ECL 26 Winter – Svenska backligan" + stageSuffix();
+        sectionTitle.textContent = `${divName} Backliga` + (activeStage === "playoffs" ? " – Slutspel" : "");
+        tableStrip.textContent = `Topplista ${divName}` + (activeStage === "playoffs" ? " – Slutspel" : "");
+      } else {
+        titleIcon.textContent = "🥅";
+        titleText.textContent = "ECL 26 Winter – Svenska målvaktsligan" + stageSuffix();
+        sectionTitle.textContent = `${divName} Målvaktsliga` + (activeStage === "playoffs" ? " – Slutspel" : "");
+        tableStrip.textContent = `Topplista ${divName}` + (activeStage === "playoffs" ? " – Slutspel" : "");
+      }
+
+      searchBox.value = "";
+    }
+
+    function setSortedTitleByColumn(colName){
+      const key = resolveSortKey(colName);
+      const leagueLabel = sortTitles[key];
+      if(!leagueLabel) return;
+
+      const divName = divLabels[activeDiv];
+      const descEl = document.getElementById("sectionDesc");
+      if(descEl) descEl.innerHTML = "";
+
+      titleSub.textContent = (stageLabels[activeStage] || "").toUpperCase();
+
+      if(activeLeague === "skaters"){
+        titleIcon.textContent = "🏆";
+        titleText.textContent = `ECL 26 Winter – Svenska ${leagueLabel.toLowerCase()}` + stageSuffix();
+        sectionTitle.textContent = `${divName} ${leagueLabel}` + (activeStage === "playoffs" ? " – Slutspel" : "");
+        return;
+      }
+
+      if(activeLeague === "defenders"){
+        titleIcon.textContent = "🏒";
+        titleText.textContent = `ECL 26 Winter – Svenska ${leagueLabel.toLowerCase()}` + stageSuffix();
+        sectionTitle.textContent = `${divName} ${leagueLabel}` + (activeStage === "playoffs" ? " – Slutspel" : "");
+
+        if(key === "dim" && descEl){
+          descEl.innerHTML =
+            `Defensiv Impact per match (DIM) är ett sammansatt nyckeltal som mäter hur mycket en spelare bidrar <br/>` +
+            `defensivt per match, oberoende av offensiv produktion. Fokus ligger på att stoppa anfall, bryta pucktempo och förhindra farliga avslut.`;
+        }
+        return;
+      }
+
+      if(activeLeague === "goalies"){
+        titleIcon.textContent = "🥅";
+        titleText.textContent = `ECL 26 Winter – Svenska ${leagueLabel.toLowerCase()}` + stageSuffix();
+        sectionTitle.textContent = `${divName} ${leagueLabel}` + (activeStage === "playoffs" ? " – Slutspel" : "");
+        return;
+      }
+    }
+
+    function getActiveSheets(){
+      return activeStage === "playoffs" ? DATA_SHEETS_PLAYOFFS : DATA_SHEETS_REGULAR;
+    }
+
+    function load(){
+      setTitles();
+
+      tableHost.innerHTML = `<div style="padding:10px;color:#fff;">Laddar statistik…</div>`;
+      top3.innerHTML = "";
+
+      const url = getActiveSheets()[activeLeague];
+
+      Promise.all([loadCardImages(), loadTeamLogos()]).then(([map, logos])=>{
+        fetch(url)
+          .then(r=>r.text())
+          .then(csv=>{
+            const rows = parseCSV(csv);
+            if(!rows.length){
+              tableHost.innerHTML = `<div style="padding:10px;color:#fff;">Ingen data.</div>`;
+              return;
+            }
+
+            const header = rows.shift();
+            const divIdx = findDivIndex(header);
+
+            const filtered = divIdx >= 0
+              ? rows.filter(r => isRowInDivision(r[divIdx], divLabels[activeDiv]))
+              : rows;
+
+            if(!filtered.length){
+              tableHost.innerHTML = `<div style="padding:10px;color:#fff;">Ingen data för ${divLabels[activeDiv]}.</div>`;
+              return;
+            }
+
+            if(activeLeague === "skaters" || activeLeague === "defenders"){
+              const hn = header.map(h=>normalize(h));
+              const idxName = hn.findIndex(x=>["namn","name","psn"].includes(x));
+              const idxTeam = hn.findIndex(x=>["lag","team"].includes(x));
+              const idxGP   = hn.findIndex(x=>["gp","matcher","games","ma"].includes(x));
+              const idxG    = hn.findIndex(x=>["m","mal","mål","goals","g"].includes(x));
+              const idxA    = hn.findIndex(x=>["a","assists","assist"].includes(x));
+              const idxP    = hn.findIndex(x=>["p","poang","poäng","points"].includes(x));
+
+              const players = filtered.map(r=>{
+                const name = (r[idxName >= 0 ? idxName : 0] || "").trim();
+                const team = (r[idxTeam >= 0 ? idxTeam : 1] || "").trim();
+                const games = toNum(r[idxGP >= 0 ? idxGP : 2]);
+                const goals = toNum(r[idxG  >= 0 ? idxG  : 3]);
+                const assists = toNum(r[idxA >= 0 ? idxA : 4]);
+                const points = toNum(r[idxP >= 0 ? idxP : 5]);
+
+                const key = normalize(name);
+                const img = map[key] || DEFAULT_IMG;
+                const teamLogo = logos[normalize(team)] || "";
+
+                return { name, team, games, goals, assists, points, img, teamLogo };
+              }).filter(p=>p.name);
+
+              const cleanHeader = divIdx >= 0 ? header.filter((_,i)=>i!==divIdx) : header;
+              const cleanRows   = divIdx >= 0 ? filtered.map(r=>r.filter((_,i)=>i!==divIdx)) : filtered;
+
+              renderTableGeneric(cleanHeader, cleanRows, tableHost, searchBox, players, top3, renderTop3Skaters);
+
+            } else {
+              const hn = header.map(h=>normalize(h));
+              const idxName = hn.findIndex(x=>["namn","name"].includes(x));
+              const idxTeam = hn.findIndex(x=>["lag","team"].includes(x));
+              const idxM    = hn.findIndex(x=>["m","ma","matcher","games","gp"].includes(x));
+              const idxGAA  = hn.findIndex(x=>["gaa"].includes(x));
+              const idxSV   = hn.findIndex(x=>["sv","sv%","svp","svprocent","räddningsprocent","save%","savepercentage"].includes(x));
+              const idxSO   = hn.findIndex(x=>["nollor","so","shutouts"].includes(x));
+
+              const goalies = filtered.map(r=>{
+                const name = (r[idxName >= 0 ? idxName : 0] || "").trim();
+                const team = (r[idxTeam >= 0 ? idxTeam : 1] || "").trim();
+                const games = toNum(r[idxM >= 0 ? idxM : 2]);
+                const gaa = (r[idxGAA >= 0 ? idxGAA : 3] || "");
+                const svp = (r[idxSV >= 0 ? idxSV : 4] || "");
+                const shutouts = toNum(r[idxSO >= 0 ? idxSO : 5]);
+
+                const key = normalize(name);
+                const img = map[key] || DEFAULT_IMG;
+                const teamLogo = logos[normalize(team)] || "";
+
+                return { name, team, games, gaa, svp, svpVal: parseSVP(svp), shutouts, img, teamLogo };
+              }).filter(p=>p.name);
+
+              const cleanHeader = divIdx >= 0 ? header.filter((_,i)=>i!==divIdx) : header;
+              const cleanRows   = divIdx >= 0 ? filtered.map(r=>r.filter((_,i)=>i!==divIdx)) : filtered;
+
+              renderTableGeneric(cleanHeader, cleanRows, tableHost, searchBox, goalies, top3, renderTop3Goalies);
+            }
+
+            updated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE");
+          })
+          .catch(err=>{
+            tableHost.innerHTML = `<div style="padding:10px;color:#fff;">Fel vid laddning: ${err.message}</div>`;
+          });
+      });
+    }
+
+    // Tabs: stage
+    document.querySelectorAll(".ecl-tab[data-stage]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        document.querySelectorAll(".ecl-tab[data-stage]").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        activeStage = btn.dataset.stage;
+        load();
+      });
+    });
+
+    // Tabs: league
+    document.querySelectorAll(".ecl-tab[data-league]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        document.querySelectorAll(".ecl-tab[data-league]").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        activeLeague = btn.dataset.league;
+        load();
+      });
+    });
+
+    // Tabs: division
+    document.querySelectorAll(".ecl-tab[data-division]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        document.querySelectorAll(".ecl-tab[data-division]").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        activeDiv = btn.dataset.division;
+        load();
+      });
+    });
+
+    load();
+  })();
+  </script>
 </body>
 </html>
