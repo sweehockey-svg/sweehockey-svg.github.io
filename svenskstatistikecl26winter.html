@@ -476,6 +476,17 @@
     `).join("");
   }
 
+  // ✅ Enda ändringen: målvakter default-sort på bästa SV% (högst först)
+  function findGoalieSVPColIndex(header){
+    const candidates = ["SV%", "SVP", "Räddningsprocent", "Räddnings%", "SV"];
+    const norms = header.map(h => normalize(h));
+    for(const c of candidates){
+      const idx = norms.indexOf(normalize(c));
+      if(idx !== -1) return idx + 1; // +1 eftersom th-index 0 är "#"
+    }
+    return null;
+  }
+
   function renderTable(header, rows, host, search, objs, top3){
     let data = rows.map((r,i)=>({r,i}));
 
@@ -489,6 +500,19 @@
     const tbody = host.querySelector("tbody");
     const ths = host.querySelectorAll("th");
     let sortState={i:null,asc:false};
+
+    // ✅ Default-sort endast för målvakter: bästa SV% först
+    if(activeLeague === "goalies"){
+      const svI = findGoalieSVPColIndex(header);
+      if(svI){
+        sortState.i = svI;
+        sortState.asc = false; // false = desc (högst först)
+        data.sort((a,b)=>{
+          const av=toNum(a.r[svI-1]), bv=toNum(b.r[svI-1]);
+          return (av-bv)*(sortState.asc?1:-1);
+        });
+      }
+    }
 
     function redraw(){
       tbody.innerHTML = data.map((d,i)=>`
