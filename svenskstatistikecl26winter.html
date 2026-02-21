@@ -1090,15 +1090,38 @@
       const ths = host.querySelectorAll("thead th");
       let sortState = { idx: null, asc: false };
 
-      // Default sort: Poäng → Mål → Matcher (om finns)
-      data.sort((a, b) => {
-        const pa = rowObjects[a.rowIndex] || {};
-        const pb = rowObjects[b.rowIndex] || {};
-        if ((pa.points ?? 0) !== (pb.points ?? 0)) return (pb.points ?? 0) - (pa.points ?? 0);
-        if ((pa.goals  ?? 0) !== (pb.goals  ?? 0)) return (pb.goals  ?? 0) - (pa.goals  ?? 0);
-        if ((pa.games  ?? 0) !== (pb.games  ?? 0)) return (pa.games  ?? 0) - (pb.games  ?? 0);
-        return 0;
-      });
+      // Default sort: Målvakter -> bästa SV% (högst), annars Poäng -> Mål -> Matcher (om finns)
+      if(activeLeague === "goalies"){
+        const hn = header.map(h => normalize(h));
+        const svIdx = hn.findIndex(x=>["sv","sv%","svp","svprocent","räddningsprocent","save%","savepercentage"].includes(x));
+
+        if(svIdx >= 0){
+          sortState.idx = svIdx + 1; // +1 pga "#" i fullHeader
+          sortState.asc = false;     // desc
+
+          currentSort = { idx: sortState.idx, key: "svp", label: sortTitles["svp"] || null };
+
+          data.sort((a, b) => {
+            const va = (a.row[svIdx] ?? "").toString();
+            const vb = (b.row[svIdx] ?? "").toString();
+            const na = parseSVP(va), nb = parseSVP(vb);
+            if(na !== nb) return nb - na; // högst först
+            const pa = rowObjects[a.rowIndex] || {};
+            const pb = rowObjects[b.rowIndex] || {};
+            if ((pa.games ?? 0) !== (pb.games ?? 0)) return (pa.games ?? 0) - (pb.games ?? 0);
+            return 0;
+          });
+        }
+      } else {
+        data.sort((a, b) => {
+          const pa = rowObjects[a.rowIndex] || {};
+          const pb = rowObjects[b.rowIndex] || {};
+          if ((pa.points ?? 0) !== (pb.points ?? 0)) return (pb.points ?? 0) - (pa.points ?? 0);
+          if ((pa.goals  ?? 0) !== (pb.goals  ?? 0)) return (pb.goals  ?? 0) - (pa.goals  ?? 0);
+          if ((pa.games  ?? 0) !== (pb.games  ?? 0)) return (pa.games  ?? 0) - (pb.games  ?? 0);
+          return 0;
+        });
+      }
 
       data = data.map((x, i) => ({ ...x, rank: i + 1 }));
       tbody.innerHTML = htmlBody(data);
