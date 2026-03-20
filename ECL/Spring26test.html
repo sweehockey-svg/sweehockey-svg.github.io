@@ -31,9 +31,7 @@
 
     * { box-sizing: border-box; }
 
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     body {
       margin: 0;
@@ -58,9 +56,7 @@
         linear-gradient(135deg, #0b0f4f, #1b005c 55%, #5b001a);
     }
 
-    .login-screen.hidden {
-      display: none;
-    }
+    .login-screen.hidden { display: none; }
 
     .login-card {
       width: 100%;
@@ -91,9 +87,7 @@
       font-weight: 700;
     }
 
-    .login-warning strong {
-      color: #7f1d1d;
-    }
+    .login-warning strong { color: #7f1d1d; }
 
     .login-label {
       display: block;
@@ -163,9 +157,7 @@
       font-weight: 800;
     }
 
-    .site-shell.locked {
-      display: none;
-    }
+    .site-shell.locked { display: none; }
 
     .site-header {
       position: sticky;
@@ -187,9 +179,7 @@
       gap: 18px;
     }
 
-    .site-header-topline {
-      justify-content: flex-start;
-    }
+    .site-header-topline { justify-content: flex-start; }
 
     .brand {
       font-size: 22px;
@@ -200,9 +190,7 @@
       flex-shrink: 0;
     }
 
-    .brand span {
-      opacity: 0.85;
-    }
+    .brand span { opacity: 0.85; }
 
     .site-header-titleblock {
       display: flex;
@@ -261,8 +249,7 @@
     .page-top {
       padding: 18px 18px 12px;
       border-bottom: 1px solid #e7edf6;
-      background:
-        linear-gradient(to bottom, rgba(255,255,255,0.98), rgba(248,250,255,0.98));
+      background: linear-gradient(to bottom, rgba(255,255,255,0.98), rgba(248,250,255,0.98));
     }
 
     h1 {
@@ -321,9 +308,7 @@
       backdrop-filter: blur(2px);
     }
 
-    .mobile-tabs-panel.open {
-      display: block;
-    }
+    .mobile-tabs-panel.open { display: block; }
 
     .mobile-tabs-sheet {
       position: absolute;
@@ -422,7 +407,14 @@
       filter: brightness(0.98);
     }
 
-    .mail-icon-btn {
+    .icon-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mail-icon-btn,
+    .copy-icon-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -430,6 +422,8 @@
       height: 34px;
       border-radius: 10px;
       text-decoration: none;
+      border: 0;
+      cursor: pointer;
       background: linear-gradient(to bottom, #ff6c96, #ff4f84);
       color: white;
       box-shadow: 0 8px 16px rgba(255, 90, 138, 0.24);
@@ -438,7 +432,8 @@
       line-height: 1;
     }
 
-    .mail-icon-btn:hover {
+    .mail-icon-btn:hover,
+    .copy-icon-btn:hover {
       transform: translateY(-1px);
       filter: brightness(0.98);
     }
@@ -646,13 +641,8 @@
       vertical-align: middle;
     }
 
-    .seed-row:last-child td {
-      border-bottom: 0;
-    }
-
-    .seed-row:hover td {
-      background: #f8fbff;
-    }
+    .seed-row:last-child td { border-bottom: 0; }
+    .seed-row:hover td { background: #f8fbff; }
 
     .seed-row td:nth-child(1) {
       width: 56px;
@@ -685,33 +675,13 @@
       font-weight: 800;
     }
 
-    .seed-row.unlisted td {
-      background: #fcfcff !important;
-    }
-
-    .seed-row.unlisted:hover td {
-      background: #f5f9ff !important;
-    }
-
-    .seed-row.missing td {
-      background: #fff4f4 !important;
-    }
-
-    .seed-row.missing:hover td {
-      background: #ffeaea !important;
-    }
-
-    .seed-row.note td:nth-child(5) {
-      color: #92400e;
-    }
-
-    .seed-row.disbanded td {
-      background: #ffe3e3 !important;
-    }
-
-    .seed-row.disbanded:hover td {
-      background: #ffd3d3 !important;
-    }
+    .seed-row.unlisted td { background: #fcfcff !important; }
+    .seed-row.unlisted:hover td { background: #f5f9ff !important; }
+    .seed-row.missing td { background: #fff4f4 !important; }
+    .seed-row.missing:hover td { background: #ffeaea !important; }
+    .seed-row.note td:nth-child(5) { color: #92400e; }
+    .seed-row.disbanded td { background: #ffe3e3 !important; }
+    .seed-row.disbanded:hover td { background: #ffd3d3 !important; }
 
     .seed-status {
       display: inline-flex;
@@ -813,9 +783,7 @@
       border-bottom: 1px solid #e7ebf2;
     }
 
-    .proqual-team:last-child {
-      border-bottom: 0;
-    }
+    .proqual-team:last-child { border-bottom: 0; }
 
     .proqual-team-header {
       width: 100%;
@@ -831,9 +799,7 @@
       font: inherit;
     }
 
-    .proqual-team-header:hover {
-      background: #f8fbff;
-    }
+    .proqual-team-header:hover { background: #f8fbff; }
 
     .proqual-team-left {
       display: flex;
@@ -880,9 +846,7 @@
       transition: transform 0.15s ease;
     }
 
-    .proqual-team.open .proqual-arrow {
-      transform: rotate(90deg);
-    }
+    .proqual-team.open .proqual-arrow { transform: rotate(90deg); }
 
     .proqual-team-body {
       display: none;
@@ -890,9 +854,7 @@
       background: #fcfdff;
     }
 
-    .proqual-team.open .proqual-team-body {
-      display: block;
-    }
+    .proqual-team.open .proqual-team-body { display: block; }
 
     .proqual-player-table {
       width: 100%;
@@ -912,13 +874,8 @@
       white-space: nowrap;
     }
 
-    .proqual-player-table tbody tr:nth-child(even) {
-      background: #f8faff;
-    }
-
-    .proqual-player-table tbody tr:hover {
-      background: #eef4ff;
-    }
+    .proqual-player-table tbody tr:nth-child(even) { background: #f8faff; }
+    .proqual-player-table tbody tr:hover { background: #eef4ff; }
 
     .check-team-btn {
       border: 1px solid #d6def0;
@@ -934,17 +891,10 @@
       min-width: 110px;
     }
 
-    .check-team-btn:hover {
-      background: #eef4ff;
-    }
+    .check-team-btn:hover { background: #eef4ff; }
 
-    .team-detail-row {
-      display: none;
-    }
-
-    .team-detail-row.open {
-      display: table-row;
-    }
+    .team-detail-row { display: none; }
+    .team-detail-row.open { display: table-row; }
 
     .team-detail-cell {
       padding: 0 !important;
@@ -995,9 +945,7 @@
       font-weight: 700;
     }
 
-    .history-cell {
-      min-width: 180px;
-    }
+    .history-cell { min-width: 180px; }
 
     .history-division {
       display: inline-block;
@@ -1072,13 +1020,9 @@
       .page { padding: 0 10px; }
       .content-area { padding: 10px; }
 
-      .tabs {
-        display: none;
-      }
+      .tabs { display: none; }
 
-      .site-header-title {
-        font-size: 18px;
-      }
+      .site-header-title { font-size: 18px; }
 
       .site-header-subtitle {
         font-size: 11px;
@@ -1092,37 +1036,28 @@
         margin-left: auto;
       }
 
-      .page-top {
-        padding: 14px 12px 10px;
-      }
+      .page-top { padding: 14px 12px 10px; }
 
       .topbar {
         align-items: stretch;
         gap: 8px;
       }
 
-      .action-btn {
-        width: 100%;
-      }
-
+      .action-btn,
       .status,
       .small {
         width: 100%;
       }
 
       .table-wrap,
-      .proqual-wrap {
-        border-radius: 12px;
-      }
+      .proqual-wrap { border-radius: 12px; }
 
       .section-wrap {
         padding: 8px;
         border-radius: 12px;
       }
 
-      th, td {
-        padding: 7px 8px;
-      }
+      th, td { padding: 7px 8px; }
 
       .proqual-team-header {
         padding: 12px;
@@ -1139,34 +1074,18 @@
         font-size: 11px;
       }
 
-      .proqual-team-body {
-        padding: 0 12px 12px;
-      }
-
-      .proqual-player-table {
-        min-width: 760px;
-      }
+      .proqual-team-body { padding: 0 12px 12px; }
+      .proqual-player-table { min-width: 760px; }
 
       .section-title-row td {
         font-size: 13px;
         padding: 10px 8px;
       }
 
-      .seed-row td {
-        padding: 9px 8px;
-      }
-
-      .seed-row td:nth-child(2) {
-        width: 150px;
-      }
-
-      .seed-row td:nth-child(3) {
-        min-width: 210px;
-      }
-
-      .seed-row td:nth-child(5) {
-        min-width: 180px;
-      }
+      .seed-row td { padding: 9px 8px; }
+      .seed-row td:nth-child(2) { width: 150px; }
+      .seed-row td:nth-child(3) { min-width: 210px; }
+      .seed-row td:nth-child(5) { min-width: 180px; }
 
       .seed-status {
         min-width: 82px;
@@ -1174,22 +1093,14 @@
         padding: 5px 8px;
       }
 
-      .login-title {
-        font-size: 28px;
-      }
+      .login-title { font-size: 28px; }
 
-      .login-row {
-        flex-direction: column;
-      }
+      .login-row { flex-direction: column; }
 
       .login-btn,
-      .login-input {
-        width: 100%;
-      }
+      .login-input { width: 100%; }
 
-      .brand {
-        font-size: 19px;
-      }
+      .brand { font-size: 19px; }
     }
 
     @media (max-width: 520px) {
@@ -1198,9 +1109,7 @@
         gap: 12px;
       }
 
-      .site-header-title {
-        font-size: 16px;
-      }
+      .site-header-title { font-size: 16px; }
 
       .site-header-subtitle {
         font-size: 10px;
@@ -1217,42 +1126,15 @@
         margin-bottom: 20px;
       }
 
-      .page-card {
-        border-radius: 14px;
-      }
-
-      .status {
-        font-size: 11px;
-      }
-
-      .small {
-        font-size: 10px;
-      }
-
-      .content-area {
-        padding: 8px;
-      }
-
-      .proqual-team-name {
-        font-size: 14px;
-      }
-
-      .proqual-team-meta {
-        font-size: 10px;
-      }
-
-      .mobile-tab-btn {
-        padding: 11px;
-        font-size: 12px;
-      }
-
-      .login-card {
-        padding: 22px 18px;
-      }
-
-      .brand {
-        font-size: 17px;
-      }
+      .page-card { border-radius: 14px; }
+      .status { font-size: 11px; }
+      .small { font-size: 10px; }
+      .content-area { padding: 8px; }
+      .proqual-team-name { font-size: 14px; }
+      .proqual-team-meta { font-size: 10px; }
+      .mobile-tab-btn { padding: 11px; font-size: 12px; }
+      .login-card { padding: 22px 18px; }
+      .brand { font-size: 17px; }
     }
   </style>
 </head>
@@ -1765,6 +1647,15 @@
         .trim();
     }
 
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
     function getSeedingTeamStatus(teamName) {
       const normalizedTeam = normalizeTeamName(teamName);
 
@@ -1936,26 +1827,11 @@
 
     function getDropdownDetailItems(row) {
       return [
-        {
-          label: 'Players With Playoff Games',
-          value: row?.playersWithPlayoffGames ?? ''
-        },
-        {
-          label: 'Elite Player Names',
-          value: row?.elitePlayerNames ?? ''
-        },
-        {
-          label: 'Pro Player Names',
-          value: row?.proPlayerNames ?? ''
-        },
-        {
-          label: 'Lite Player Names',
-          value: row?.litePlayerNames ?? ''
-        },
-        {
-          label: 'Core Player Names',
-          value: row?.corePlayerNames ?? ''
-        }
+        { label: 'Players With Playoff Games', value: row?.playersWithPlayoffGames ?? '' },
+        { label: 'Elite Player Names', value: row?.elitePlayerNames ?? '' },
+        { label: 'Pro Player Names', value: row?.proPlayerNames ?? '' },
+        { label: 'Lite Player Names', value: row?.litePlayerNames ?? '' },
+        { label: 'Core Player Names', value: row?.corePlayerNames ?? '' }
       ].filter(item => String(item.value ?? '').trim() !== '');
     }
 
@@ -2217,9 +2093,7 @@
 
       signUps.forEach(row => {
         const normalized = normalizeTeamName(row.teamName);
-        if (normalized) {
-          map.set(normalized, row);
-        }
+        if (normalized) map.set(normalized, row);
       });
 
       signUpsCache = map;
@@ -2289,8 +2163,7 @@
         if (!Array.isArray(value)) return;
 
         value.forEach(row => {
-          const playerId =
-            row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
+          const playerId = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
 
           if (playerId) {
             ['Player', 'tag', 'playerName', 'player'].forEach(nameKey => {
@@ -2326,9 +2199,7 @@
         }
 
         const ids = map.get(normalizedTeam);
-        if (!ids.includes(userId)) {
-          ids.push(userId);
-        }
+        if (!ids.includes(userId)) ids.push(userId);
       });
 
       captainUserIdMapCache = map;
@@ -2342,9 +2213,7 @@
       const teamName = getTeamNameFromRow(row);
       const normalizedTeam = normalizeTeamName(teamName);
       const captainIds = captainMap.get(normalizedTeam) || [];
-
       const backupUserId = String(getUserIdFromRow(row) || '').trim();
-      if (!backupUserId) return '';
 
       const recipients = [...captainIds, backupUserId]
         .map(id => String(id).trim())
@@ -2354,6 +2223,35 @@
       if (recipients.length === 0) return '';
 
       return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
+    }
+
+    function buildBackupMessage(row) {
+      const teamName = getTeamNameFromRow(row) || 'team';
+      const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
+      const rawGames = getBackupGames(row);
+      const games = isFinite(Number(rawGames)) ? Number(rawGames) : '';
+
+      return `Hi ${teamName},
+
+It has come to our attention that ${playerName} has participated in ${games} games using a Backup Player License. According to league regulations, a player may participate in a maximum of 10 games with a Backup License during the ECL ’26 season (including qualifiers).
+
+Since this limit has now been exceeded, ${playerName} is required to purchase a Full Player License, regardless of whether he plans to play additional matches or not. This step is necessary to update the license status and ensure compliance with league rules.
+
+For your convenience, here is the link to purchase the Full Player License: https://sportsgamer.gg/community/store/
+
+Important
+Please note that exceeding the 10-game limit on a Backup License may already result in consequences if reported by an opponent. Continuing to participate without the correct license will lead to further—and potentially more serious—penalties.
+
+If ${playerName} has already purchased a Full Player License, please send us a copy of the payment receipt so we can investigate why the license is not showing correctly in our system.
+
+If you have any questions or need assistance, feel free to contact us. We are happy to help!
+
+Best regards,`;
+    }
+
+    async function copyBackupMessage(row) {
+      const text = buildBackupMessage(row);
+      await navigator.clipboard.writeText(text);
     }
 
     function getProQualReqCheckRows(allData) {
@@ -2642,12 +2540,8 @@
       const noteTd = document.createElement('td');
 
       const noteParts = [];
-      if (note) {
-        noteParts.push(...note.split(' • ').filter(Boolean));
-      }
-      if (isDisbanded) {
-        noteParts.unshift('DISBANDED');
-      }
+      if (note) noteParts.push(...note.split(' • ').filter(Boolean));
+      if (isDisbanded) noteParts.unshift('DISBANDED');
 
       if (noteParts.length > 0) {
         noteParts.forEach(part => {
@@ -2661,7 +2555,6 @@
       }
 
       tr.appendChild(noteTd);
-
       seedingBody.appendChild(tr);
     }
 
@@ -2755,9 +2648,7 @@
           }
         }
 
-        if (sectionIndex < presetSections.length - 1) {
-          renderSpacer();
-        }
+        if (sectionIndex < presetSections.length - 1) renderSpacer();
       });
     }
 
@@ -2960,13 +2851,8 @@
     async function renderTableCell(td, row, col, forceReload = false) {
       let value = row[col] ?? '';
 
-      if (col === 'fullLicenseCount') {
-        value = getFullLicenseCount(row);
-      }
-
-      if (col === 'signupIssue') {
-        value = getSignupIssueText(row);
-      }
+      if (col === 'fullLicenseCount') value = getFullLicenseCount(row);
+      if (col === 'signupIssue') value = getSignupIssueText(row);
 
       const textValue = String(value ?? '');
 
@@ -2978,11 +2864,8 @@
       const teamLinkMap = await getTeamLinkMap(forceReload);
       const playerLinkMap = await getPlayerLinkMap(forceReload);
 
-      const directTeamID =
-        row?.teamID || row?.teamId || row?.TeamID || row?.team_id;
-
-      const directPlayerID =
-        row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
+      const directTeamID = row?.teamID || row?.teamId || row?.TeamID || row?.team_id;
+      const directPlayerID = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
 
       if (PLAYER_LIST_NAME_KEYS.includes(col)) {
         const parts = parsePlayerList(textValue);
@@ -2999,12 +2882,7 @@
         return null;
       }
 
-      if (col === 'From' || col === 'To') {
-        td.textContent = textValue;
-        return null;
-      }
-
-      if (col === 'history1Team' || col === 'history2Team' || col === 'history3Team') {
+      if (col === 'From' || col === 'To' || col === 'history1Team' || col === 'history2Team' || col === 'history3Team') {
         td.textContent = textValue;
         return null;
       }
@@ -3103,6 +2981,8 @@
 
           if (col === '__sendMail') {
             const mailUrl = await getBackupMessageUrl(row, forceReload);
+            const actions = document.createElement('div');
+            actions.className = 'icon-actions';
 
             if (mailUrl) {
               const btn = document.createElement('a');
@@ -3110,14 +2990,30 @@
               btn.target = '_blank';
               btn.rel = 'noopener noreferrer';
               btn.className = 'mail-icon-btn';
-              btn.title = 'Send message';
-              btn.setAttribute('aria-label', 'Send message');
+              btn.title = 'Open message';
+              btn.setAttribute('aria-label', 'Open message');
               btn.textContent = '✉';
-              td.appendChild(btn);
-            } else {
-              td.textContent = '';
+              actions.appendChild(btn);
             }
 
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.className = 'copy-icon-btn';
+            copyBtn.title = 'Copy preset message';
+            copyBtn.setAttribute('aria-label', 'Copy preset message');
+            copyBtn.textContent = '⧉';
+            copyBtn.addEventListener('click', async () => {
+              try {
+                await copyBackupMessage(row);
+                setStatus('Message copied');
+              } catch (err) {
+                console.error(err);
+                setStatus('Copy failed');
+              }
+            });
+            actions.appendChild(copyBtn);
+
+            td.appendChild(actions);
             tr.appendChild(td);
             continue;
           }
@@ -3175,9 +3071,7 @@
 
         tbody.appendChild(tr);
 
-        if (detailRow) {
-          tbody.appendChild(detailRow);
-        }
+        if (detailRow) tbody.appendChild(detailRow);
       }
     }
 
@@ -3345,15 +3239,11 @@
     mobileCloseBtn.addEventListener('click', closeMobileMenu);
 
     mobileTabsPanel.addEventListener('click', (e) => {
-      if (e.target === mobileTabsPanel) {
-        closeMobileMenu();
-      }
+      if (e.target === mobileTabsPanel) closeMobileMenu();
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeMobileMenu();
-      }
+      if (e.key === 'Escape') closeMobileMenu();
     });
 
     reloadBtn.addEventListener('click', () => {
