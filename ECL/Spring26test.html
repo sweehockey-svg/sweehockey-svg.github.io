@@ -405,13 +405,21 @@
     }
 
     .table-wrap,
-    .section-wrap,
     .proqual-wrap {
       overflow-x: auto;
       background: white;
       border: 1px solid #dfe3ea;
       border-radius: 12px;
       box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+    }
+
+    .section-wrap {
+      overflow-x: auto;
+      background: white;
+      border: 1px solid #dfe3ea;
+      border-radius: 14px;
+      box-shadow: 0 6px 20px rgba(3, 4, 94, 0.06);
+      padding: 10px;
     }
 
     table {
@@ -541,87 +549,160 @@
 
     .section-table {
       width: 100%;
-      border-collapse: collapse;
-      min-width: 950px;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 960px;
       font-size: 12px;
     }
 
     .section-title-row td {
-      background: linear-gradient(to right, #e7c85b, #f2da82);
-      color: #1f2937;
+      background: linear-gradient(90deg, #d8b84a, #ecd67d);
+      color: #0b144f;
       font-weight: 900;
       text-align: center;
-      border-bottom: 1px solid #d1b24b;
-      font-size: 16px;
+      border: 0;
+      font-size: 15px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 10px 8px;
+      letter-spacing: 0.7px;
+      padding: 12px 10px;
     }
 
     .section-title-row.gray td {
-      background: linear-gradient(to right, #d5d7dd, #ececef);
-      border-bottom: 1px solid #c4c7cf;
+      background: linear-gradient(90deg, #cfd3dc, #e9ebf0);
+      color: #0b144f;
     }
 
     .seed-row td {
-      border: 1px solid #e4e7ee;
-      padding: 7px 9px;
+      border-bottom: 1px solid #e8ecf3;
+      padding: 10px 10px;
       background: #fff;
-      line-height: 1.15;
+      line-height: 1.2;
+      vertical-align: middle;
     }
 
-    .seed-row:hover td { background: #f8fbff; }
+    .seed-row:last-child td {
+      border-bottom: 0;
+    }
+
+    .seed-row:hover td {
+      background: #f8fbff;
+    }
 
     .seed-row td:nth-child(1) {
-      width: 52px;
+      width: 56px;
       text-align: center;
-      font-weight: 800;
+      font-weight: 900;
+      color: #0f172a;
     }
 
     .seed-row td:nth-child(2) {
       width: 170px;
-      color: #374151;
+      color: #334155;
       font-weight: 800;
     }
 
     .seed-row td:nth-child(3) {
-      min-width: 250px;
-      font-weight: 800;
+      min-width: 260px;
+      font-weight: 900;
       color: #0b144f;
     }
 
     .seed-row td:nth-child(4) {
-      width: 56px;
+      width: 140px;
       text-align: center;
-      font-size: 18px;
-      font-weight: 900;
     }
 
     .seed-row td:nth-child(5) {
-      min-width: 180px;
+      min-width: 220px;
       white-space: normal;
       color: #7f1d1d;
       font-weight: 800;
     }
 
     .seed-row.unlisted td {
-      background: #fff !important;
-      border-color: #e4e7ee;
+      background: #fcfcff !important;
     }
 
     .seed-row.unlisted:hover td {
-      background: #f8fbff !important;
+      background: #f5f9ff !important;
+    }
+
+    .seed-row.missing td {
+      background: #fff4f4 !important;
+    }
+
+    .seed-row.missing:hover td {
+      background: #ffeaea !important;
+    }
+
+    .seed-row.note td:nth-child(5) {
+      color: #92400e;
+    }
+
+    .seed-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 92px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      border: 1px solid transparent;
+    }
+
+    .seed-status.ok {
+      background: #e8fff1;
+      color: #157347;
+      border-color: #b7efcb;
+    }
+
+    .seed-status.missing {
+      background: #fff1f2;
+      color: #b42318;
+      border-color: #fecdd3;
+    }
+
+    .seed-status.empty {
+      background: #f8fafc;
+      color: #64748b;
+      border-color: #e2e8f0;
+    }
+
+    .seed-note-badge {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #fff4db;
+      color: #92400e;
+      border: 1px solid #f6d38d;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.35px;
+      margin-right: 6px;
+      margin-bottom: 4px;
+    }
+
+    .seed-team-meta {
+      display: block;
+      margin-top: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+    }
+
+    .spacer-row td {
+      height: 12px;
+      background: transparent;
+      border: 0;
+      padding: 0;
     }
 
     .check-ok { color: var(--ok); }
     .check-missing { color: #cbd5e1; }
-
-    .spacer-row td {
-      height: 12px;
-      background: #f7f7f9;
-      border: none;
-      padding: 0;
-    }
 
     .error {
       color: #b00020;
@@ -858,8 +939,12 @@
       }
 
       .table-wrap,
-      .section-wrap,
       .proqual-wrap {
+        border-radius: 10px;
+      }
+
+      .section-wrap {
+        padding: 8px;
         border-radius: 10px;
       }
 
@@ -891,20 +976,30 @@
       }
 
       .section-title-row td {
-        font-size: 14px;
+        font-size: 13px;
+        padding: 10px 8px;
+      }
+
+      .seed-row td {
         padding: 9px 8px;
       }
 
       .seed-row td:nth-child(2) {
-        width: 145px;
+        width: 150px;
       }
 
       .seed-row td:nth-child(3) {
-        min-width: 180px;
+        min-width: 210px;
       }
 
       .seed-row td:nth-child(5) {
-        min-width: 150px;
+        min-width: 180px;
+      }
+
+      .seed-status {
+        min-width: 82px;
+        font-size: 10px;
+        padding: 5px 8px;
       }
 
       .login-title {
@@ -994,7 +1089,7 @@
       <h1 class="login-title">Admin Login</h1>
       <p class="login-warning">
         <strong>For SportsGamer admins only.</strong><br>
-        Do not share this page or the Password with anyone else.
+        Do not share this page or the code with anyone else.
       </p>
 
       <label class="login-label" for="passwordInput">Password</label>
@@ -2042,9 +2137,36 @@
       seedingBody.appendChild(tr);
     }
 
+    function renderSeedHeaderRow() {
+      const tr = document.createElement('tr');
+      tr.className = 'seed-row';
+
+      const labels = ['#', 'Seed', 'Team', 'Status', 'Notes'];
+
+      labels.forEach((label, index) => {
+        const td = document.createElement('td');
+        td.textContent = label;
+        td.style.background = '#f8fafc';
+        td.style.color = '#0b144f';
+        td.style.fontWeight = '900';
+        td.style.textTransform = 'uppercase';
+        td.style.letterSpacing = '0.4px';
+        td.style.fontSize = '11px';
+        if (index === 3) td.style.textAlign = 'center';
+        tr.appendChild(td);
+      });
+
+      seedingBody.appendChild(tr);
+    }
+
     function renderSeedRow(pos, seed, team, exists, note = '', extraClass = '', teamID = '') {
       const tr = document.createElement('tr');
-      tr.className = 'seed-row' + (extraClass ? ' ' + extraClass : '');
+
+      let rowClass = 'seed-row';
+      if (extraClass) rowClass += ' ' + extraClass;
+      if (team && !exists) rowClass += ' missing';
+      if (note) rowClass += ' note';
+      tr.className = rowClass;
 
       const posTd = document.createElement('td');
       posTd.textContent = pos ?? '';
@@ -2060,14 +2182,47 @@
       } else {
         teamTd.textContent = team || '';
       }
+
+      if (extraClass.includes('unlisted')) {
+        const meta = document.createElement('span');
+        meta.className = 'seed-team-meta';
+        meta.textContent = 'Extra registered team';
+        teamTd.appendChild(meta);
+      }
+
       tr.appendChild(teamTd);
 
       const checkTd = document.createElement('td');
-      checkTd.innerHTML = team && exists ? '<span class="check-ok">✅</span>' : '<span class="check-missing"></span>';
+      const statusBadge = document.createElement('span');
+
+      if (!team) {
+        statusBadge.className = 'seed-status empty';
+        statusBadge.textContent = '-';
+      } else if (exists) {
+        statusBadge.className = 'seed-status ok';
+        statusBadge.textContent = 'Registered';
+      } else {
+        statusBadge.className = 'seed-status missing';
+        statusBadge.textContent = 'Missing';
+      }
+
+      checkTd.appendChild(statusBadge);
       tr.appendChild(checkTd);
 
       const noteTd = document.createElement('td');
-      noteTd.textContent = note || '';
+
+      if (note) {
+        const parts = note.split(' • ').filter(Boolean);
+        parts.forEach(part => {
+          const badge = document.createElement('span');
+          badge.className = 'seed-note-badge';
+          badge.textContent = part;
+          noteTd.appendChild(badge);
+        });
+      } else {
+        noteTd.innerHTML = '<span style="color:#94a3b8;font-weight:700;">-</span>';
+      }
+
       tr.appendChild(noteTd);
 
       seedingBody.appendChild(tr);
@@ -2117,6 +2272,7 @@
         }
 
         renderSectionTitle(section.title, count, section.headerClass || '');
+        renderSeedHeaderRow();
 
         section.rows.forEach(row => {
           const [pos, seed, team] = row;
@@ -2151,7 +2307,7 @@
 
               renderSeedRow(
                 startIndex + idx,
-                section.title + ' UNSEEDED',
+                section.title + ' Unseeded',
                 row.teamName || '',
                 true,
                 qualifierNote,
@@ -2162,7 +2318,9 @@
           }
         }
 
-        if (sectionIndex < presetSections.length - 1) renderSpacer();
+        if (sectionIndex < presetSections.length - 1) {
+          renderSpacer();
+        }
       });
     }
 
