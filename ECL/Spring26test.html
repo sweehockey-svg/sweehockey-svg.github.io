@@ -879,6 +879,81 @@
       background: #eef4ff;
     }
 
+    .team-expand-btn {
+      border: 1px solid #d6def0;
+      background: linear-gradient(to bottom, #ffffff, #f7f9fd);
+      color: #07124f;
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.35px;
+      cursor: pointer;
+      min-width: 86px;
+    }
+
+    .team-expand-btn:hover {
+      background: #eef4ff;
+    }
+
+    .team-detail-row {
+      display: none;
+    }
+
+    .team-detail-row.open {
+      display: table-row;
+    }
+
+    .team-detail-cell {
+      padding: 0 !important;
+      background: #f8fbff !important;
+      border-bottom: 1px solid #dfe7f3;
+    }
+
+    .team-detail-box {
+      padding: 14px;
+      border-top: 1px solid #e4ebf5;
+      background: linear-gradient(to bottom, #fcfdff, #f7faff);
+    }
+
+    .team-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .team-detail-card {
+      background: white;
+      border: 1px solid #dfe7f3;
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .team-detail-title {
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #07124f;
+    }
+
+    .team-detail-value {
+      font-size: 13px;
+      font-weight: 800;
+      color: #334155;
+      line-height: 1.45;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .team-detail-empty {
+      color: #94a3b8;
+      font-weight: 700;
+    }
+
     .history-cell {
       min-width: 180px;
     }
@@ -1511,6 +1586,15 @@
       'elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames'
     ];
 
+    const TEAM_DROPDOWN_SOURCES = new Set(['lite', 'core', 'neo']);
+    const TEAM_DROPDOWN_DETAIL_COLUMNS = [
+      'playersWithPlayoffGames',
+      'elitePlayerNames',
+      'proPlayerNames',
+      'litePlayerNames',
+      'corePlayerNames'
+    ];
+
     const tbody = document.querySelector('#results tbody');
     const headerRow = document.getElementById('headerRow');
     const statusEl = document.getElementById('status');
@@ -1633,6 +1717,77 @@
       const rest = [...allKeys].filter(key => !preferred.includes(key) && key !== 'teamID');
 
       return [...presentPreferred, ...rest];
+    }
+
+    function useTeamDropdownRows() {
+      return TEAM_DROPDOWN_SOURCES.has(currentSource.key);
+    }
+
+    function isDropdownDetailColumn(col) {
+      return useTeamDropdownRows() && TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col);
+    }
+
+    function getVisibleColumns() {
+      return currentColumns.filter(col => !isDropdownDetailColumn(col));
+    }
+
+    function getDropdownDetailItems(row) {
+      return [
+        {
+          label: 'Players With Playoff Games',
+          value: row?.playersWithPlayoffGames ?? ''
+        },
+        {
+          label: 'Elite Player Names',
+          value: row?.elitePlayerNames ?? ''
+        },
+        {
+          label: 'Pro Player Names',
+          value: row?.proPlayerNames ?? ''
+        },
+        {
+          label: 'Lite Player Names',
+          value: row?.litePlayerNames ?? ''
+        },
+        {
+          label: 'Core Player Names',
+          value: row?.corePlayerNames ?? ''
+        }
+      ].filter(item => String(item.value ?? '').trim() !== '');
+    }
+
+    function createTeamDetailCard(label, value) {
+      const card = document.createElement('div');
+      card.className = 'team-detail-card';
+
+      const title = document.createElement('div');
+      title.className = 'team-detail-title';
+      title.textContent = label;
+      card.appendChild(title);
+
+      const body = document.createElement('div');
+      body.className = 'team-detail-value';
+      body.textContent = String(value || '');
+      card.appendChild(body);
+
+      return card;
+    }
+
+    function createEmptyTeamDetailCard() {
+      const card = document.createElement('div');
+      card.className = 'team-detail-card';
+
+      const title = document.createElement('div');
+      title.className = 'team-detail-title';
+      title.textContent = 'Details';
+      card.appendChild(title);
+
+      const body = document.createElement('div');
+      body.className = 'team-detail-value team-detail-empty';
+      body.textContent = 'No extra info';
+      card.appendChild(body);
+
+      return card;
     }
 
     function isNotOkRow(row) {
@@ -2670,6 +2825,7 @@
     async function renderTableBody(rows, forceReload = false) {
       tbody.innerHTML = '';
       const hideIndex = currentSource.key === 'signUps';
+      const visibleColumns = getVisibleColumns();
 
       for (const [index, row] of rows.entries()) {
         const tr = document.createElement('tr');
@@ -2683,7 +2839,7 @@
           tr.appendChild(indexTd);
         }
 
-        for (const col of currentColumns) {
+        for (const col of visibleColumns) {
           const td = document.createElement('td');
           if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
           if (col === 'signupIssue') td.style.whiteSpace = 'normal';
@@ -2691,13 +2847,67 @@
           tr.appendChild(td);
         }
 
+        let detailRow = null;
+
+        if (useTeamDropdownRows()) {
+          const detailsTd = document.createElement('td');
+          const detailItems = getDropdownDetailItems(row);
+
+          if (detailItems.length > 0) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'team-expand-btn';
+            btn.textContent = 'Show';
+            detailsTd.appendChild(btn);
+
+            detailRow = document.createElement('tr');
+            detailRow.className = 'team-detail-row';
+
+            const detailCell = document.createElement('td');
+            detailCell.className = 'team-detail-cell';
+            detailCell.colSpan = visibleColumns.length + (hideIndex ? 1 : 2);
+
+            const detailBox = document.createElement('div');
+            detailBox.className = 'team-detail-box';
+
+            const detailGrid = document.createElement('div');
+            detailGrid.className = 'team-detail-grid';
+
+            detailItems.forEach(item => {
+              detailGrid.appendChild(createTeamDetailCard(item.label, item.value));
+            });
+
+            if (detailItems.length === 0) {
+              detailGrid.appendChild(createEmptyTeamDetailCard());
+            }
+
+            detailBox.appendChild(detailGrid);
+            detailCell.appendChild(detailBox);
+            detailRow.appendChild(detailCell);
+
+            btn.addEventListener('click', () => {
+              const isOpen = detailRow.classList.toggle('open');
+              btn.textContent = isOpen ? 'Hide' : 'Show';
+            });
+          } else {
+            detailsTd.innerHTML = '<span class="team-detail-empty">-</span>';
+          }
+
+          tr.appendChild(detailsTd);
+        }
+
         tbody.appendChild(tr);
+
+        if (detailRow) {
+          tbody.appendChild(detailRow);
+        }
       }
     }
 
     function renderSortableHeader() {
       headerRow.innerHTML = '';
       const hideIndex = currentSource.key === 'signUps';
+      const visibleColumns = getVisibleColumns();
 
       if (!hideIndex) {
         const indexTh = document.createElement('th');
@@ -2705,7 +2915,7 @@
         headerRow.appendChild(indexTh);
       }
 
-      currentColumns.forEach(col => {
+      visibleColumns.forEach(col => {
         const th = document.createElement('th');
         th.classList.add('sortable');
 
@@ -2735,6 +2945,12 @@
 
         headerRow.appendChild(th);
       });
+
+      if (useTeamDropdownRows()) {
+        const detailsTh = document.createElement('th');
+        detailsTh.textContent = 'Details';
+        headerRow.appendChild(detailsTh);
+      }
     }
 
     async function renderTable(rows, forceReload = false) {
