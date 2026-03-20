@@ -1131,7 +1131,7 @@
       <h1 class="login-title">Admin Login</h1>
       <p class="login-warning">
         <strong>For SportsGamer admins only.</strong><br>
-        Do not share this page or the code with anyone else.
+        Do not share this page or the password with anyone else.
       </p>
 
       <label class="login-label" for="passwordInput">Password</label>
@@ -2060,7 +2060,7 @@
         signedDivision !== listedDivision &&
         !(listedDivision === 'CORE' && signedDivision === 'NEO')
       ) {
-        notes.push('SIGNED UP AS ' + signedDivision);
+        notes.push('SIGNED UP TO ' + signedDivision);
       }
 
       return notes.join(' • ');
@@ -2212,7 +2212,7 @@
       if (extraClass.includes('unlisted')) {
         const meta = document.createElement('span');
         meta.className = 'seed-team-meta';
-        meta.textContent = 'Extra registered team';
+        meta.textContent = '';
         teamTd.appendChild(meta);
       }
 
