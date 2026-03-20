@@ -7,24 +7,39 @@
   <style>
     :root {
       --navy: #03045e;
+      --navy-2: #0b144f;
       --accent: #ff5a8a;
-      --bg: #efefef;
+      --bg: #eef2f7;
       --panel: #ffffff;
-      --border: #d7d7d7;
+      --panel-soft: #f8fbff;
+      --border: #d9e1ee;
+      --border-strong: #c6d2e3;
       --text: #111827;
-      --muted: #6b7280;
-      --ok: #2fac66;
-      --danger: #ef4444;
-      --warning: #f2c94c;
-      --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      --muted: #64748b;
+      --ok: #198754;
+      --danger: #dc3545;
+      --warning: #c58a00;
+      --gold-1: #d9ba52;
+      --gold-2: #edd983;
+      --gray-1: #d4d8e0;
+      --gray-2: #eceff5;
       --link: #0b57d0;
+      --shadow: 0 10px 28px rgba(7, 18, 79, 0.08);
+      --shadow-soft: 0 4px 14px rgba(7, 18, 79, 0.05);
+      --radius: 16px;
     }
 
     * { box-sizing: border-box; }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
-      background: var(--bg);
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.55), transparent 30%),
+        linear-gradient(180deg, #edf2f8 0%, #edf1f6 100%);
       color: var(--text);
       font-family: Arial, Helvetica, sans-serif;
       font-size: 13px;
@@ -50,11 +65,12 @@
     .login-card {
       width: 100%;
       max-width: 560px;
-      background: white;
-      border: 1px solid #dbe2f0;
-      border-radius: 18px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-      padding: 28px 24px;
+      background: rgba(255,255,255,0.98);
+      border: 1px solid rgba(219, 226, 240, 0.9);
+      border-radius: 22px;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+      padding: 30px 26px;
+      backdrop-filter: blur(4px);
     }
 
     .login-title {
@@ -70,7 +86,7 @@
     .login-warning {
       margin: 0 0 22px;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.55;
       color: #334155;
       font-weight: 700;
     }
@@ -98,13 +114,15 @@
     .login-input {
       flex: 1 1 260px;
       min-width: 0;
-      height: 46px;
+      height: 48px;
       border: 1px solid #cfd7e6;
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 0 14px;
       font-size: 15px;
       font-weight: 700;
       outline: none;
+      background: #fff;
+      transition: 0.15s ease;
     }
 
     .login-input:focus {
@@ -113,9 +131,9 @@
     }
 
     .login-btn {
-      height: 46px;
+      height: 48px;
       border: 0;
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 0 18px;
       background: var(--accent);
       color: white;
@@ -124,18 +142,20 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(255, 90, 138, 0.24);
+      box-shadow: 0 6px 16px rgba(255, 90, 138, 0.28);
+      transition: transform 0.12s ease, filter 0.12s ease;
     }
 
     .login-btn:hover {
-      filter: brightness(0.97);
+      filter: brightness(0.98);
+      transform: translateY(-1px);
     }
 
     .login-error {
       display: none;
       margin-top: 14px;
-      padding: 10px 12px;
-      border-radius: 10px;
+      padding: 11px 12px;
+      border-radius: 12px;
       background: #fff1f2;
       border: 1px solid #fecdd3;
       color: #b91c1c;
@@ -148,16 +168,20 @@
     }
 
     .site-header {
-      background: var(--navy);
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      background: rgba(3, 4, 94, 0.98);
       color: white;
       border-bottom: 3px solid #00113a;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(8px);
     }
 
     .site-header-inner {
-      max-width: 1280px;
+      max-width: 1320px;
       margin: 0 auto;
-      padding: 16px 20px;
+      padding: 16px 22px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -176,11 +200,11 @@
 
     .mobile-menu-btn {
       display: none;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.18);
       background: rgba(255,255,255,0.08);
       color: white;
-      border-radius: 10px;
-      padding: 9px 12px;
+      border-radius: 12px;
+      padding: 10px 13px;
       font-size: 12px;
       font-weight: 900;
       text-transform: uppercase;
@@ -190,15 +214,15 @@
 
     .hero-strip {
       background:
-        linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0)),
-        linear-gradient(90deg, #15003d, #5b001a 50%, #7d0017);
+        linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0)),
+        linear-gradient(90deg, #160041, #520022 48%, #7b0019);
       color: white;
-      padding: 26px 20px;
+      padding: 28px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
     .hero-inner {
-      max-width: 1280px;
+      max-width: 1320px;
       margin: 0 auto;
     }
 
@@ -212,37 +236,38 @@
     }
 
     .hero-subtitle {
-      margin-top: 8px;
-      font-size: 14px;
-      font-weight: 700;
+      margin-top: 9px;
+      font-size: 13px;
+      font-weight: 800;
       letter-spacing: 0.8px;
       text-transform: uppercase;
-      opacity: 0.9;
+      opacity: 0.92;
     }
 
     .page {
-      max-width: 1280px;
-      margin: 20px auto 28px;
+      max-width: 1320px;
+      margin: 22px auto 34px;
       padding: 0 16px;
     }
 
     .page-card {
-      background: var(--panel);
+      background: rgba(255,255,255,0.94);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 20px;
       box-shadow: var(--shadow);
       overflow: hidden;
     }
 
     .page-top {
-      padding: 16px 16px 10px;
-      border-bottom: 1px solid #ececec;
-      background: linear-gradient(to bottom, #ffffff, #fafafa);
+      padding: 18px 18px 12px;
+      border-bottom: 1px solid #e7edf6;
+      background:
+        linear-gradient(to bottom, rgba(255,255,255,0.98), rgba(248,250,255,0.98));
     }
 
     h1 {
-      margin: 0 0 12px 0;
-      font-size: 28px;
+      margin: 0 0 14px 0;
+      font-size: 30px;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.8px;
@@ -254,33 +279,36 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .tabs button {
-      padding: 9px 12px;
-      border: 1px solid #cad2e0;
-      background: #fff;
+      padding: 10px 13px;
+      border: 1px solid #cfd8e8;
+      background: linear-gradient(to bottom, #ffffff, #f7f9fd);
       color: #0b144f;
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.3px;
       line-height: 1.1;
       transition: 0.15s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
     }
 
     .tabs button:hover {
-      background: #f3f6ff;
-      border-color: #9fb0da;
+      background: #f2f6ff;
+      border-color: #aebedf;
+      transform: translateY(-1px);
     }
 
     .tabs button.active {
-      background: var(--navy);
+      background: linear-gradient(to bottom, #0f1c77, #03045e);
       color: white;
       border-color: var(--navy);
+      box-shadow: 0 8px 18px rgba(3, 4, 94, 0.22);
     }
 
     .mobile-tabs-panel {
@@ -290,6 +318,7 @@
       z-index: 1000;
       background: rgba(3, 4, 94, 0.55);
       padding: 0;
+      backdrop-filter: blur(2px);
     }
 
     .mobile-tabs-panel.open {
@@ -330,7 +359,7 @@
       border: 1px solid #d6def0;
       background: white;
       color: #07124f;
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 8px 10px;
       font-size: 12px;
       font-weight: 900;
@@ -370,55 +399,70 @@
       gap: 10px;
       align-items: center;
       flex-wrap: wrap;
+      padding-top: 2px;
     }
 
     .action-btn {
-      padding: 9px 14px;
+      padding: 10px 15px;
       border: 0;
-      background: var(--accent);
+      background: linear-gradient(to bottom, #ff6c96, #ff4f84);
       color: white;
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 12px;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      box-shadow: 0 4px 10px rgba(255, 90, 138, 0.25);
+      box-shadow: 0 8px 16px rgba(255, 90, 138, 0.24);
+      transition: transform 0.12s ease, filter 0.12s ease;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.98);
     }
 
     .status {
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
       color: #334155;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.35px;
+      background: #f8fbff;
+      border: 1px solid #e3eaf5;
+      padding: 8px 10px;
+      border-radius: 10px;
     }
 
     .small {
       font-size: 11px;
       color: var(--muted);
+      background: #f8fbff;
+      border: 1px solid #e3eaf5;
+      padding: 8px 10px;
+      border-radius: 10px;
     }
 
     .content-area {
-      padding: 14px;
-      background: #f7f7f9;
+      padding: 16px;
+      background: linear-gradient(to bottom, #f7f9fd, #f2f6fb);
     }
 
     .table-wrap,
     .proqual-wrap {
       overflow-x: auto;
       background: white;
-      border: 1px solid #dfe3ea;
-      border-radius: 12px;
-      box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+      border: 1px solid #dfe6f1;
+      border-radius: 16px;
+      box-shadow: var(--shadow-soft);
     }
 
     .section-wrap {
       overflow-x: auto;
       background: white;
-      border: 1px solid #dfe3ea;
-      border-radius: 14px;
-      box-shadow: 0 6px 20px rgba(3, 4, 94, 0.06);
+      border: 1px solid #dfe6f1;
+      border-radius: 16px;
+      box-shadow: var(--shadow-soft);
       padding: 10px;
     }
 
@@ -430,13 +474,13 @@
     }
 
     thead {
-      background: var(--navy);
+      background: linear-gradient(to right, #050967, #08105e);
       color: white;
     }
 
     th, td {
-      padding: 8px 10px;
-      border-bottom: 1px solid #eceef2;
+      padding: 9px 10px;
+      border-bottom: 1px solid #ebeff6;
       text-align: left;
       white-space: nowrap;
       line-height: 1.2;
@@ -447,7 +491,7 @@
       font-size: 11px;
       font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.45px;
     }
 
     .abbr-head {
@@ -519,7 +563,7 @@
       opacity: 1;
     }
 
-    tbody tr:nth-child(even) { background: #fbfbfd; }
+    tbody tr:nth-child(even) { background: #fbfcff; }
     tbody tr:hover { background: #eef4ff; }
 
     .num {
@@ -527,9 +571,9 @@
       font-variant-numeric: tabular-nums;
     }
 
-    tbody tr.not-ok { background: #ffe5e5 !important; }
-    tbody tr.not-ok:nth-child(even) { background: #ffdede !important; }
-    tbody tr.not-ok:hover { background: #ffd1d1 !important; }
+    tbody tr.not-ok { background: #ffe7e7 !important; }
+    tbody tr.not-ok:nth-child(even) { background: #ffdfdf !important; }
+    tbody tr.not-ok:hover { background: #ffd2d2 !important; }
 
     tbody tr.backup-warning { background: #fff4c7 !important; }
     tbody tr.backup-warning:nth-child(even) { background: #ffefb0 !important; }
@@ -556,7 +600,7 @@
     }
 
     .section-title-row td {
-      background: linear-gradient(90deg, #d8b84a, #ecd67d);
+      background: linear-gradient(90deg, var(--gold-1), var(--gold-2));
       color: #0b144f;
       font-weight: 900;
       text-align: center;
@@ -565,10 +609,11 @@
       text-transform: uppercase;
       letter-spacing: 0.7px;
       padding: 12px 10px;
+      border-radius: 10px 10px 0 0;
     }
 
     .section-title-row.gray td {
-      background: linear-gradient(90deg, #cfd3dc, #e9ebf0);
+      background: linear-gradient(90deg, var(--gray-1), var(--gray-2));
       color: #0b144f;
     }
 
@@ -701,9 +746,6 @@
       padding: 0;
     }
 
-    .check-ok { color: var(--ok); }
-    .check-missing { color: #cbd5e1; }
-
     .error {
       color: #b00020;
       font-weight: 800;
@@ -711,8 +753,8 @@
       font-size: 12px;
       background: #fff2f4;
       border: 1px solid #ffd4da;
-      padding: 10px 12px;
-      border-radius: 10px;
+      padding: 11px 12px;
+      border-radius: 12px;
     }
 
     .empty {
@@ -737,8 +779,8 @@
     .proqual-team-header {
       width: 100%;
       border: 0;
-      background: #fff;
-      padding: 14px 16px;
+      background: linear-gradient(to bottom, #ffffff, #fbfcff);
+      padding: 15px 16px;
       text-align: left;
       cursor: pointer;
       display: flex;
@@ -782,12 +824,12 @@
 
     .proqual-player-count {
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
       color: #334155;
       background: #eef3ff;
       border: 1px solid #d8e2ff;
       border-radius: 999px;
-      padding: 5px 10px;
+      padding: 6px 10px;
     }
 
     .proqual-arrow {
@@ -878,14 +920,14 @@
 
     .site-footer {
       margin-top: 28px;
-      background: var(--navy);
+      background: linear-gradient(to right, #03045e, #07114f);
       color: white;
     }
 
     .site-footer-inner {
-      max-width: 1280px;
+      max-width: 1320px;
       margin: 0 auto;
-      padding: 24px 20px 30px;
+      padding: 26px 20px 32px;
       text-align: center;
     }
 
@@ -899,7 +941,7 @@
 
     .footer-note {
       font-size: 12px;
-      opacity: 0.8;
+      opacity: 0.82;
       text-transform: uppercase;
       letter-spacing: 0.4px;
     }
@@ -940,12 +982,12 @@
 
       .table-wrap,
       .proqual-wrap {
-        border-radius: 10px;
+        border-radius: 12px;
       }
 
       .section-wrap {
         padding: 8px;
-        border-radius: 10px;
+        border-radius: 12px;
       }
 
       th, td {
@@ -1049,7 +1091,7 @@
       }
 
       .page-card {
-        border-radius: 12px;
+        border-radius: 14px;
       }
 
       .status {
@@ -1756,22 +1798,6 @@
       const keys = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName'];
       for (const key of keys) {
         if (row && row[key]) return String(row[key]);
-      }
-      return '';
-    }
-
-    function getPlayerNameFromRow(row) {
-      const keys = ['Player', 'tag', 'playerName', 'player'];
-      for (const key of keys) {
-        if (row && row[key]) return String(row[key]);
-      }
-      return '';
-    }
-
-    function getTeamIdFromRow(row) {
-      const keys = ['teamID', 'teamId', 'TeamID', 'team_id', 'fromTeamID', 'toTeamID'];
-      for (const key of keys) {
-        if (row && row[key]) return row[key];
       }
       return '';
     }
