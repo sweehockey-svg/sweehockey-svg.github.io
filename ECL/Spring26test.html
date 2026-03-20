@@ -1697,7 +1697,9 @@
         'history2Division', 'history2Team', 'history2Matches',
         'history3Division', 'history3Team', 'history3Matches',
         'currentDivision', 'previousDivision', 'olderDivision', 'history',
-        'teamDivision', 'elitePlayers', 'proPlayers', 'litePlayers', 'corePlayers',
+        'teamDivision',
+        'EP', 'PP', 'LP', 'CP', 'NP',
+        'elitePlayers', 'proPlayers', 'litePlayers', 'corePlayers',
         'neoOrLowerPlayers', 'coreOrLowerPlayers', 'liteOrLowerPlayers',
         'totalPlayers', 'playersWithPlayoffGames',
         'elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames',
@@ -1727,41 +1729,45 @@
       return TEAM_DROPDOWN_SOURCES.has(currentSource.key);
     }
 
+    function firstExistingColumn(candidates) {
+      return candidates.find(col => currentColumns.includes(col)) || null;
+    }
+
     function getTeamTabVisibleColumns() {
       if (currentSource.key === 'lite') {
         return [
-          'teamName',
-          'totalPlayers',
-          'elitePlayers',
-          'proPlayers',
-          'liteOrLowerPlayers',
-          'totalPoints'
-        ];
+          firstExistingColumn(['teamName']),
+          firstExistingColumn(['totalPlayers', 'playerCount']),
+          firstExistingColumn(['EP', 'elitePlayers']),
+          firstExistingColumn(['PP', 'proPlayers']),
+          firstExistingColumn(['LP', 'liteOrLowerPlayers']),
+          firstExistingColumn(['totalPoints'])
+        ].filter(Boolean);
       }
 
       if (currentSource.key === 'core') {
         return [
-          'teamName',
-          'totalPlayers',
-          'elitePlayers',
-          'proPlayers',
-          'litePlayers',
-          'coreOrLowerPlayers',
-          'totalPoints'
-        ];
+          firstExistingColumn(['teamName']),
+          firstExistingColumn(['totalPlayers', 'playerCount']),
+          firstExistingColumn(['EP', 'elitePlayers']),
+          firstExistingColumn(['PP', 'proPlayers']),
+          firstExistingColumn(['LP', 'litePlayers']),
+          firstExistingColumn(['CP', 'coreOrLowerPlayers']),
+          firstExistingColumn(['totalPoints'])
+        ].filter(Boolean);
       }
 
       if (currentSource.key === 'neo') {
         return [
-          'teamName',
-          'totalPlayers',
-          'elitePlayers',
-          'proPlayers',
-          'litePlayers',
-          'corePlayers',
-          'neoOrLowerPlayers',
-          'totalPoints'
-        ];
+          firstExistingColumn(['teamName']),
+          firstExistingColumn(['totalPlayers', 'playerCount']),
+          firstExistingColumn(['EP', 'elitePlayers']),
+          firstExistingColumn(['PP', 'proPlayers']),
+          firstExistingColumn(['LP', 'litePlayers']),
+          firstExistingColumn(['CP', 'corePlayers']),
+          firstExistingColumn(['NP', 'neoOrLowerPlayers']),
+          firstExistingColumn(['totalPoints'])
+        ].filter(Boolean);
       }
 
       return null;
@@ -1769,8 +1775,7 @@
 
     function getVisibleColumns() {
       if (useTeamDropdownRows()) {
-        const wanted = getTeamTabVisibleColumns() || [];
-        return wanted.filter(col => currentColumns.includes(col));
+        return getTeamTabVisibleColumns() || [];
       }
 
       return currentColumns.filter(col => !TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
@@ -1779,39 +1784,54 @@
     function getColumnHeaderLabel(col) {
       if (currentSource.key === 'lite') {
         const labels = {
-          teamName: 'Teamname',
-          totalPlayers: 'Totalplayers',
-          elitePlayers: 'Elite players',
-          proPlayers: 'Pro players',
-          liteOrLowerPlayers: 'Lite or lower',
-          totalPoints: 'Totalpoints'
+          teamName: 'TEAMNAME',
+          totalPlayers: 'TOTALPLAYERS',
+          playerCount: 'TOTALPLAYERS',
+          EP: 'ELITE PLAYERS',
+          elitePlayers: 'ELITE PLAYERS',
+          PP: 'PRO PLAYERS',
+          proPlayers: 'PRO PLAYERS',
+          LP: 'LITE OR LOWER',
+          liteOrLowerPlayers: 'LITE OR LOWER',
+          totalPoints: 'TOTALPOINTS'
         };
         return labels[col] || col;
       }
 
       if (currentSource.key === 'core') {
         const labels = {
-          teamName: 'Teamname',
-          totalPlayers: 'Totalplayers',
-          elitePlayers: 'Elite players',
-          proPlayers: 'Pro players',
-          litePlayers: 'Lite players',
-          coreOrLowerPlayers: 'Core or lower',
-          totalPoints: 'Totalpoints'
+          teamName: 'TEAMNAME',
+          totalPlayers: 'TOTALPLAYERS',
+          playerCount: 'TOTALPLAYERS',
+          EP: 'ELITE PLAYERS',
+          elitePlayers: 'ELITE PLAYERS',
+          PP: 'PRO PLAYERS',
+          proPlayers: 'PRO PLAYERS',
+          LP: 'LITE PLAYERS',
+          litePlayers: 'LITE PLAYERS',
+          CP: 'CORE OR LOWER',
+          coreOrLowerPlayers: 'CORE OR LOWER',
+          totalPoints: 'TOTALPOINTS'
         };
         return labels[col] || col;
       }
 
       if (currentSource.key === 'neo') {
         const labels = {
-          teamName: 'Teamname',
-          totalPlayers: 'Totalplayers',
-          elitePlayers: 'Elite players',
-          proPlayers: 'Pro players',
-          litePlayers: 'Lite players',
-          corePlayers: 'Core players',
-          neoOrLowerPlayers: 'Neo or New',
-          totalPoints: 'Totalpoints'
+          teamName: 'TEAMNAME',
+          totalPlayers: 'TOTALPLAYERS',
+          playerCount: 'TOTALPLAYERS',
+          EP: 'ELITE PLAYERS',
+          elitePlayers: 'ELITE PLAYERS',
+          PP: 'PRO PLAYERS',
+          proPlayers: 'PRO PLAYERS',
+          LP: 'LITE PLAYERS',
+          litePlayers: 'LITE PLAYERS',
+          CP: 'CORE PLAYERS',
+          corePlayers: 'CORE PLAYERS',
+          NP: 'NEO OR NEW',
+          neoOrLowerPlayers: 'NEO OR NEW',
+          totalPoints: 'TOTALPOINTS'
         };
         return labels[col] || col;
       }
@@ -3037,7 +3057,7 @@
 
       if (useTeamDropdownRows()) {
         const checkTh = document.createElement('th');
-        checkTh.textContent = 'Check Team';
+        checkTh.textContent = 'CHECK TEAM';
         headerRow.appendChild(checkTh);
       }
     }
