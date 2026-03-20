@@ -684,6 +684,18 @@
       color: #92400e;
     }
 
+    .seed-row.disbanded td {
+      background: #ffe3e3 !important;
+    }
+
+    .seed-row.disbanded:nth-child(even) td {
+      background: #ffd8d8 !important;
+    }
+
+    .seed-row.disbanded:hover td {
+      background: #ffcfcf !important;
+    }
+
     .seed-status {
       display: inline-flex;
       align-items: center;
@@ -716,6 +728,12 @@
       border-color: #e2e8f0;
     }
 
+    .seed-status.disbanded {
+      background: #b42318;
+      color: #ffffff;
+      border-color: #b42318;
+    }
+
     .seed-note-badge {
       display: inline-block;
       padding: 5px 9px;
@@ -729,6 +747,12 @@
       letter-spacing: 0.35px;
       margin-right: 6px;
       margin-bottom: 4px;
+    }
+
+    .seed-note-badge.disbanded {
+      background: #b42318;
+      color: #ffffff;
+      border-color: #b42318;
     }
 
     .seed-team-meta {
@@ -1335,6 +1359,10 @@
     const TEAM_BASE_URL = `https://sportsgamer.gg/leagues/${LEAGUE_ID}/teams/`;
     const PLAYER_BASE_URL = `https://sportsgamer.gg/players/`;
 
+    const SEEDING_TEAM_STATUSES = {
+      'Kastikekauppa Esports': 'DISBANDED'
+    };
+
     const sources = [
       { key: 'seeding26spring', label: 'Seeding 26 Spring', type: 'preset' },
       { key: 'lite', label: 'Lite 26 Spring Teams', type: 'alla' },
@@ -1586,15 +1614,6 @@
       'elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames'
     ];
 
-    const TEAM_DROPDOWN_SOURCES = new Set(['lite', 'core', 'neo']);
-    const TEAM_DROPDOWN_DETAIL_COLUMNS = [
-      'playersWithPlayoffGames',
-      'elitePlayerNames',
-      'proPlayerNames',
-      'litePlayerNames',
-      'corePlayerNames'
-    ];
-
     const tbody = document.querySelector('#results tbody');
     const headerRow = document.getElementById('headerRow');
     const statusEl = document.getElementById('status');
@@ -1683,8 +1702,35 @@
       );
     }
 
-    function isCompatibilityNotOk(row) {
-      return String(row?.compatibility ?? '').trim().toLowerCase() === 'not ok';
+    function normalizeTeamName(value) {
+      return String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/[^\p{L}\p{N}]+/gu, ' ')
+        .trim();
+    }
+
+    function normalizePlayerName(value) {
+      return String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function getSeedingTeamStatus(teamName) {
+      const normalizedTeam = normalizeTeamName(teamName);
+
+      for (const [name, status] of Object.entries(SEEDING_TEAM_STATUSES)) {
+        if (normalizeTeamName(name) === normalizedTeam) {
+          return String(status || '').trim().toUpperCase();
+        }
+      }
+
+      return '';
     }
 
     function getColumns(rows) {
@@ -1697,15 +1743,13 @@
         'history2Division', 'history2Team', 'history2Matches',
         'history3Division', 'history3Team', 'history3Matches',
         'currentDivision', 'previousDivision', 'olderDivision', 'history',
-        'teamDivision',
-        'EP', 'PP', 'LP', 'CP', 'NP',
-        'elitePlayers', 'proPlayers', 'litePlayers', 'corePlayers',
+        'teamDivision', 'elitePlayers', 'proPlayers', 'litePlayers', 'corePlayers',
         'neoOrLowerPlayers', 'coreOrLowerPlayers', 'liteOrLowerPlayers',
         'totalPlayers', 'playersWithPlayoffGames',
         'elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames',
         'From', 'FromDiv', 'To', 'ToDiv',
         'GroupGames26Winter', 'PlayoffGames26Winter', 'TotalGames26Winter',
-        'totalMatchesPlayed', 'Date', 'Role', 'compatibility', 'totalPoints'
+        'totalMatchesPlayed', 'Date', 'Role', 'compatibility'
       ];
 
       const allKeys = new Set();
@@ -1723,179 +1767,6 @@
       const rest = [...allKeys].filter(key => !preferred.includes(key) && key !== 'teamID');
 
       return [...presentPreferred, ...rest];
-    }
-
-    function useTeamDropdownRows() {
-      return TEAM_DROPDOWN_SOURCES.has(currentSource.key);
-    }
-
-    function firstExistingColumn(candidates) {
-      return candidates.find(col => currentColumns.includes(col)) || null;
-    }
-
-    function getTeamTabVisibleColumns() {
-      if (currentSource.key === 'lite') {
-        return [
-          firstExistingColumn(['teamName']),
-          firstExistingColumn(['totalPlayers', 'playerCount']),
-          firstExistingColumn(['EP', 'elitePlayers']),
-          firstExistingColumn(['PP', 'proPlayers']),
-          firstExistingColumn(['LP', 'liteOrLowerPlayers']),
-          firstExistingColumn(['totalPoints'])
-        ].filter(Boolean);
-      }
-
-      if (currentSource.key === 'core') {
-        return [
-          firstExistingColumn(['teamName']),
-          firstExistingColumn(['totalPlayers', 'playerCount']),
-          firstExistingColumn(['EP', 'elitePlayers']),
-          firstExistingColumn(['PP', 'proPlayers']),
-          firstExistingColumn(['LP', 'litePlayers']),
-          firstExistingColumn(['CP', 'coreOrLowerPlayers']),
-          firstExistingColumn(['totalPoints'])
-        ].filter(Boolean);
-      }
-
-      if (currentSource.key === 'neo') {
-        return [
-          firstExistingColumn(['teamName']),
-          firstExistingColumn(['totalPlayers', 'playerCount']),
-          firstExistingColumn(['EP', 'elitePlayers']),
-          firstExistingColumn(['PP', 'proPlayers']),
-          firstExistingColumn(['LP', 'litePlayers']),
-          firstExistingColumn(['CP', 'corePlayers']),
-          firstExistingColumn(['NP', 'neoOrLowerPlayers']),
-          firstExistingColumn(['totalPoints'])
-        ].filter(Boolean);
-      }
-
-      return null;
-    }
-
-    function getVisibleColumns() {
-      if (useTeamDropdownRows()) {
-        return getTeamTabVisibleColumns() || [];
-      }
-
-      return currentColumns.filter(col => !TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
-    }
-
-    function getColumnHeaderLabel(col) {
-      if (currentSource.key === 'lite') {
-        const labels = {
-          teamName: 'TEAMNAME',
-          totalPlayers: 'TOTALPLAYERS',
-          playerCount: 'TOTALPLAYERS',
-          EP: 'ELITE PLAYERS',
-          elitePlayers: 'ELITE PLAYERS',
-          PP: 'PRO PLAYERS',
-          proPlayers: 'PRO PLAYERS',
-          LP: 'LITE OR LOWER',
-          liteOrLowerPlayers: 'LITE OR LOWER',
-          totalPoints: 'TOTALPOINTS'
-        };
-        return labels[col] || col;
-      }
-
-      if (currentSource.key === 'core') {
-        const labels = {
-          teamName: 'TEAMNAME',
-          totalPlayers: 'TOTALPLAYERS',
-          playerCount: 'TOTALPLAYERS',
-          EP: 'ELITE PLAYERS',
-          elitePlayers: 'ELITE PLAYERS',
-          PP: 'PRO PLAYERS',
-          proPlayers: 'PRO PLAYERS',
-          LP: 'LITE PLAYERS',
-          litePlayers: 'LITE PLAYERS',
-          CP: 'CORE OR LOWER',
-          coreOrLowerPlayers: 'CORE OR LOWER',
-          totalPoints: 'TOTALPOINTS'
-        };
-        return labels[col] || col;
-      }
-
-      if (currentSource.key === 'neo') {
-        const labels = {
-          teamName: 'TEAMNAME',
-          totalPlayers: 'TOTALPLAYERS',
-          playerCount: 'TOTALPLAYERS',
-          EP: 'ELITE PLAYERS',
-          elitePlayers: 'ELITE PLAYERS',
-          PP: 'PRO PLAYERS',
-          proPlayers: 'PRO PLAYERS',
-          LP: 'LITE PLAYERS',
-          litePlayers: 'LITE PLAYERS',
-          CP: 'CORE PLAYERS',
-          corePlayers: 'CORE PLAYERS',
-          NP: 'NEO OR NEW',
-          neoOrLowerPlayers: 'NEO OR NEW',
-          totalPoints: 'TOTALPOINTS'
-        };
-        return labels[col] || col;
-      }
-
-      return col;
-    }
-
-    function getDropdownDetailItems(row) {
-      return [
-        {
-          label: 'Players With Playoff Games',
-          value: row?.playersWithPlayoffGames ?? ''
-        },
-        {
-          label: 'Elite Player Names',
-          value: row?.elitePlayerNames ?? ''
-        },
-        {
-          label: 'Pro Player Names',
-          value: row?.proPlayerNames ?? ''
-        },
-        {
-          label: 'Lite Player Names',
-          value: row?.litePlayerNames ?? ''
-        },
-        {
-          label: 'Core Player Names',
-          value: row?.corePlayerNames ?? ''
-        }
-      ].filter(item => String(item.value ?? '').trim() !== '');
-    }
-
-    function createTeamDetailCard(label, value) {
-      const card = document.createElement('div');
-      card.className = 'team-detail-card';
-
-      const title = document.createElement('div');
-      title.className = 'team-detail-title';
-      title.textContent = label;
-      card.appendChild(title);
-
-      const body = document.createElement('div');
-      body.className = 'team-detail-value';
-      body.textContent = String(value || '');
-      card.appendChild(body);
-
-      return card;
-    }
-
-    function createEmptyTeamDetailCard() {
-      const card = document.createElement('div');
-      card.className = 'team-detail-card';
-
-      const title = document.createElement('div');
-      title.className = 'team-detail-title';
-      title.textContent = 'Details';
-      card.appendChild(title);
-
-      const body = document.createElement('div');
-      body.className = 'team-detail-value team-detail-empty';
-      body.textContent = 'No extra info';
-      card.appendChild(body);
-
-      return card;
     }
 
     function isNotOkRow(row) {
@@ -2036,25 +1907,6 @@
       a.className = className;
       a.textContent = text;
       return a;
-    }
-
-    function normalizeTeamName(value) {
-      return String(value ?? '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, ' ')
-        .replace(/[^\p{L}\p{N}]+/gu, ' ')
-        .trim();
-    }
-
-    function normalizePlayerName(value) {
-      return String(value ?? '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
     }
 
     function getTeamNameFromRow(row) {
@@ -2451,10 +2303,14 @@
     function renderSeedRow(pos, seed, team, exists, note = '', extraClass = '', teamID = '') {
       const tr = document.createElement('tr');
 
+      const seedingStatus = getSeedingTeamStatus(team);
+      const isDisbanded = seedingStatus === 'DISBANDED';
+
       let rowClass = 'seed-row';
       if (extraClass) rowClass += ' ' + extraClass;
-      if (team && !exists) rowClass += ' missing';
-      if (note) rowClass += ' note';
+      if (team && !exists && !isDisbanded) rowClass += ' missing';
+      if (note || isDisbanded) rowClass += ' note';
+      if (isDisbanded) rowClass += ' disbanded';
       tr.className = rowClass;
 
       const posTd = document.createElement('td');
@@ -2487,6 +2343,9 @@
       if (!team) {
         statusBadge.className = 'seed-status empty';
         statusBadge.textContent = '-';
+      } else if (isDisbanded) {
+        statusBadge.className = 'seed-status disbanded';
+        statusBadge.textContent = 'Disbanded';
       } else if (exists) {
         statusBadge.className = 'seed-status ok';
         statusBadge.textContent = 'Registered';
@@ -2500,11 +2359,18 @@
 
       const noteTd = document.createElement('td');
 
+      const noteParts = [];
       if (note) {
-        const parts = note.split(' • ').filter(Boolean);
-        parts.forEach(part => {
+        noteParts.push(...note.split(' • ').filter(Boolean));
+      }
+      if (isDisbanded) {
+        noteParts.unshift('DISBANDED');
+      }
+
+      if (noteParts.length > 0) {
+        noteParts.forEach(part => {
           const badge = document.createElement('span');
-          badge.className = 'seed-note-badge';
+          badge.className = 'seed-note-badge' + (part === 'DISBANDED' ? ' disbanded' : '');
           badge.textContent = part;
           noteTd.appendChild(badge);
         });
@@ -2824,7 +2690,7 @@
 
       if (!textValue) {
         td.textContent = '';
-        return null;
+        return;
       }
 
       const teamLinkMap = await getTeamLinkMap(forceReload);
@@ -2848,34 +2714,34 @@
             td.appendChild(document.createTextNode(', '));
           }
         });
-        return null;
+        return;
       }
 
       if (col === 'From' || col === 'To') {
         td.textContent = textValue;
-        return null;
+        return;
       }
 
       if (col === 'history1Team' || col === 'history2Team' || col === 'history3Team') {
         td.textContent = textValue;
-        return null;
+        return;
       }
 
       if (directTeamID && TEAM_NAME_KEYS.includes(col)) {
         td.appendChild(createLink(TEAM_BASE_URL + directTeamID, textValue));
-        return null;
+        return;
       }
 
       if (directPlayerID && PLAYER_NAME_KEYS.includes(col)) {
         td.appendChild(createLink(PLAYER_BASE_URL + directPlayerID, textValue));
-        return null;
+        return;
       }
 
       if (isTeamColumn(col)) {
         const mappedTeamID = teamLinkMap.get(normalizeTeamName(textValue));
         if (mappedTeamID) {
           td.appendChild(createLink(TEAM_BASE_URL + mappedTeamID, textValue));
-          return null;
+          return;
         }
       }
 
@@ -2883,18 +2749,17 @@
         const mappedPlayerID = playerLinkMap.get(normalizePlayerName(textValue));
         if (mappedPlayerID) {
           td.appendChild(createLink(PLAYER_BASE_URL + mappedPlayerID, textValue));
-          return null;
+          return;
         }
       }
 
       const anyMappedPlayerID = playerLinkMap.get(normalizePlayerName(textValue));
       if (anyMappedPlayerID) {
         td.appendChild(createLink(PLAYER_BASE_URL + anyMappedPlayerID, textValue));
-        return null;
+        return;
       }
 
       td.textContent = textValue;
-      return null;
     }
 
     function getSignUpsHeaderLabel(col) {
@@ -2934,14 +2799,11 @@
     async function renderTableBody(rows, forceReload = false) {
       tbody.innerHTML = '';
       const hideIndex = currentSource.key === 'signUps';
-      const visibleColumns = getVisibleColumns();
 
       for (const [index, row] of rows.entries()) {
         const tr = document.createElement('tr');
         const rowClass = getRowClass(row);
         if (rowClass) tr.classList.add(rowClass);
-
-        let detailRow = null;
 
         if (!hideIndex) {
           const indexTd = document.createElement('td');
@@ -2950,7 +2812,7 @@
           tr.appendChild(indexTd);
         }
 
-        for (const col of visibleColumns) {
+        for (const col of currentColumns) {
           const td = document.createElement('td');
           if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
           if (col === 'signupIssue') td.style.whiteSpace = 'normal';
@@ -2958,63 +2820,13 @@
           tr.appendChild(td);
         }
 
-        if (useTeamDropdownRows()) {
-          const checkTd = document.createElement('td');
-
-          if (isCompatibilityNotOk(row)) {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'check-team-btn';
-            btn.textContent = 'Check Team';
-            checkTd.appendChild(btn);
-
-            const detailItems = getDropdownDetailItems(row);
-            detailRow = document.createElement('tr');
-            detailRow.className = 'team-detail-row';
-
-            const detailCell = document.createElement('td');
-            detailCell.className = 'team-detail-cell';
-            detailCell.colSpan = visibleColumns.length + (hideIndex ? 1 : 2);
-
-            const detailBox = document.createElement('div');
-            detailBox.className = 'team-detail-box';
-
-            const detailGrid = document.createElement('div');
-            detailGrid.className = 'team-detail-grid';
-
-            if (detailItems.length > 0) {
-              detailItems.forEach(item => {
-                detailGrid.appendChild(createTeamDetailCard(item.label, item.value));
-              });
-            } else {
-              detailGrid.appendChild(createEmptyTeamDetailCard());
-            }
-
-            detailBox.appendChild(detailGrid);
-            detailCell.appendChild(detailBox);
-            detailRow.appendChild(detailCell);
-
-            btn.addEventListener('click', () => {
-              const isOpen = detailRow.classList.toggle('open');
-              btn.textContent = isOpen ? 'Hide Team' : 'Check Team';
-            });
-          }
-
-          tr.appendChild(checkTd);
-        }
-
         tbody.appendChild(tr);
-
-        if (detailRow) {
-          tbody.appendChild(detailRow);
-        }
       }
     }
 
     function renderSortableHeader() {
       headerRow.innerHTML = '';
       const hideIndex = currentSource.key === 'signUps';
-      const visibleColumns = getVisibleColumns();
 
       if (!hideIndex) {
         const indexTh = document.createElement('th');
@@ -3022,7 +2834,7 @@
         headerRow.appendChild(indexTh);
       }
 
-      visibleColumns.forEach(col => {
+      currentColumns.forEach(col => {
         const th = document.createElement('th');
         th.classList.add('sortable');
 
@@ -3030,8 +2842,6 @@
           th.textContent = getSignUpsHeaderLabel(col);
           th.classList.add('abbr-head');
           th.setAttribute('data-full-label', getSignUpsHeaderFullLabel(col));
-        } else if (useTeamDropdownRows()) {
-          th.textContent = getColumnHeaderLabel(col);
         } else {
           th.textContent = col;
         }
@@ -3054,12 +2864,6 @@
 
         headerRow.appendChild(th);
       });
-
-      if (useTeamDropdownRows()) {
-        const checkTh = document.createElement('th');
-        checkTh.textContent = 'CHECK TEAM';
-        headerRow.appendChild(checkTh);
-      }
     }
 
     async function renderTable(rows, forceReload = false) {
