@@ -422,6 +422,27 @@
       filter: brightness(0.98);
     }
 
+    .mail-icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      text-decoration: none;
+      background: linear-gradient(to bottom, #ff6c96, #ff4f84);
+      color: white;
+      box-shadow: 0 8px 16px rgba(255, 90, 138, 0.24);
+      transition: transform 0.12s ease, filter 0.12s ease;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .mail-icon-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.98);
+    }
+
     .status {
       font-size: 12px;
       font-weight: 800;
@@ -1613,7 +1634,7 @@
     let signUpsCache = null;
     let teamLinkMapCache = null;
     let playerLinkMapCache = null;
-    let captainIdMapCache = null;
+    let captainUserIdMapCache = null;
     let currentRows = [];
     let currentColumns = [];
     let currentNumericColumns = new Set();
@@ -1763,7 +1784,7 @@
       const preferred = [
         'teamName', 'teamCountry', 'registrationDate', 'divisionName', 'qualifierName',
         'playerCount', 'fullLicenseCount', 'backupLicenseCount', 'unlicensedPlayerCount', 'signupIssue',
-        'playerID', 'Player', 'tag',
+        'userID', 'playerID', 'Player', 'tag',
         'requestType',
         'history1Division', 'history1Team', 'history1Matches',
         'history2Division', 'history2Team', 'history2Matches',
@@ -2131,6 +2152,14 @@
       return '';
     }
 
+    function getUserIdFromRow(row) {
+      const keys = ['userID', 'userId', 'UserID', 'user_id', 'userid'];
+      for (const key of keys) {
+        if (row && row[key]) return row[key];
+      }
+      return '';
+    }
+
     function isTeamColumn(col) {
       return TEAM_NAME_KEYS.includes(col) || TEAM_LIST_NAME_KEYS.includes(col);
     }
@@ -2285,8 +2314,8 @@
       return role === 'c' || role === 'captain' || role === 'cap' || role === 'a/c' || role === 'ac';
     }
 
-    async function getCaptainIdMap(forceReload = false) {
-      if (captainIdMapCache && !forceReload) return captainIdMapCache;
+    async function getCaptainUserIdMap(forceReload = false) {
+      if (captainUserIdMapCache && !forceReload) return captainUserIdMapCache;
 
       const allData = await fetchAllaData(forceReload);
       const map = new Map();
@@ -2297,42 +2326,42 @@
         value.forEach(row => {
           const teamName = getTeamNameFromRow(row);
           const normalizedTeam = normalizeTeamName(teamName);
-          const playerId = getPlayerIdFromRow(row);
+          const userId = getUserIdFromRow(row);
 
           const possibleRoleKeys = ['Role', 'role', 'playerRole'];
           const roleValue = possibleRoleKeys.map(key => row?.[key]).find(v => v !== undefined && v !== null);
 
-          if (!normalizedTeam || !playerId || !isCaptainRole(roleValue)) return;
+          if (!normalizedTeam || !userId || !isCaptainRole(roleValue)) return;
 
           if (!map.has(normalizedTeam)) {
             map.set(normalizedTeam, []);
           }
 
           const ids = map.get(normalizedTeam);
-          const playerIdStr = String(playerId);
+          const userIdStr = String(userId);
 
-          if (!ids.includes(playerIdStr)) {
-            ids.push(playerIdStr);
+          if (!ids.includes(userIdStr)) {
+            ids.push(userIdStr);
           }
         });
       });
 
-      captainIdMapCache = map;
+      captainUserIdMapCache = map;
       return map;
     }
 
     async function getBackupMessageUrl(row, forceReload = false) {
       if (currentSource.key !== 'backups') return '';
 
-      const captainMap = await getCaptainIdMap(forceReload);
+      const captainMap = await getCaptainUserIdMap(forceReload);
       const teamName = getTeamNameFromRow(row);
       const normalizedTeam = normalizeTeamName(teamName);
       const captainIds = captainMap.get(normalizedTeam) || [];
 
-      const playerId = String(getPlayerIdFromRow(row) || '').trim();
-      if (!playerId) return '';
+      const userId = String(getUserIdFromRow(row) || '').trim();
+      if (!userId) return '';
 
-      const recipients = [...captainIds, playerId]
+      const recipients = [...captainIds, userId]
         .map(id => String(id).trim())
         .filter(Boolean)
         .filter((id, index, arr) => arr.indexOf(id) === index);
@@ -3095,14 +3124,10 @@
               btn.href = mailUrl;
               btn.target = '_blank';
               btn.rel = 'noopener noreferrer';
-              btn.className = 'action-btn';
-              btn.textContent = 'Skicka mail';
-              btn.style.display = 'inline-flex';
-              btn.style.alignItems = 'center';
-              btn.style.justifyContent = 'center';
-              btn.style.padding = '8px 12px';
-              btn.style.textDecoration = 'none';
-              btn.style.whiteSpace = 'nowrap';
+              btn.className = 'mail-icon-btn';
+              btn.setAttribute('title', 'Send message');
+              btn.setAttribute('aria-label', 'Send message');
+              btn.textContent = '✉';
               td.appendChild(btn);
             } else {
               td.textContent = '';
@@ -3186,7 +3211,7 @@
         const th = document.createElement('th');
 
         if (col === '__sendMail') {
-          th.textContent = 'SEND MAIL';
+          th.textContent = 'MAIL';
           headerRow.appendChild(th);
           return;
         }
@@ -3285,7 +3310,7 @@
           signUpsCache = null;
           teamLinkMapCache = null;
           playerLinkMapCache = null;
-          captainIdMapCache = null;
+          captainUserIdMapCache = null;
         }
 
         if (currentSource.type === 'preset') {
@@ -3351,7 +3376,7 @@
       signUpsCache = null;
       teamLinkMapCache = null;
       playerLinkMapCache = null;
-      captainIdMapCache = null;
+      captainUserIdMapCache = null;
       loadData(true);
     });
 
