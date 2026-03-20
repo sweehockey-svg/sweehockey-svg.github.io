@@ -684,6 +684,14 @@
       color: #92400e;
     }
 
+    .seed-row.disbanded td {
+      background: #ffe3e3 !important;
+    }
+
+    .seed-row.disbanded:hover td {
+      background: #ffd3d3 !important;
+    }
+
     .seed-status {
       display: inline-flex;
       align-items: center;
@@ -716,6 +724,12 @@
       border-color: #e2e8f0;
     }
 
+    .seed-status.disbanded {
+      background: #b42318;
+      color: white;
+      border-color: #b42318;
+    }
+
     .seed-note-badge {
       display: inline-block;
       padding: 5px 9px;
@@ -729,6 +743,12 @@
       letter-spacing: 0.35px;
       margin-right: 6px;
       margin-bottom: 4px;
+    }
+
+    .seed-note-badge.disbanded {
+      background: #b42318;
+      color: white;
+      border-color: #b42318;
     }
 
     .seed-team-meta {
@@ -1228,7 +1248,7 @@
   <div id="siteShell" class="site-shell locked">
     <header class="site-header">
       <div class="site-header-inner">
-        <div class="brand">Sports<span>Gamer</span></div>
+        <div class="brand">SportsGamer</div>
         <button id="mobileMenuBtn" class="mobile-menu-btn" type="button">Menu</button>
       </div>
       <div class="hero-strip">
@@ -1334,6 +1354,15 @@
     const LEAGUE_ID = 501;
     const TEAM_BASE_URL = `https://sportsgamer.gg/leagues/${LEAGUE_ID}/teams/`;
     const PLAYER_BASE_URL = `https://sportsgamer.gg/players/`;
+
+    const SEEDING_TEAM_STATUSES = {
+      'Kastikekauppa Esports': 'DISBANDED',
+      'Tinted Visors': 'DISBANDED',
+    'Veterankraft': 'DISBANDED'
+      // Lägg till fler här senare:
+      // 'EXEN': 'DISBANDED',
+      // 'Vizio': 'DISBANDED'
+    };
 
     const sources = [
       { key: 'seeding26spring', label: 'Seeding 26 Spring', type: 'preset' },
@@ -1687,6 +1716,37 @@
       return String(row?.compatibility ?? '').trim().toLowerCase() === 'not ok';
     }
 
+    function normalizeTeamName(value) {
+      return String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/[^\p{L}\p{N}]+/gu, ' ')
+        .trim();
+    }
+
+    function normalizePlayerName(value) {
+      return String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function getSeedingTeamStatus(teamName) {
+      const normalizedTeam = normalizeTeamName(teamName);
+
+      for (const [name, status] of Object.entries(SEEDING_TEAM_STATUSES)) {
+        if (normalizeTeamName(name) === normalizedTeam) {
+          return String(status || '').trim().toUpperCase();
+        }
+      }
+
+      return '';
+    }
+
     function getColumns(rows) {
       const preferred = [
         'teamName', 'teamCountry', 'registrationDate', 'divisionName', 'qualifierName',
@@ -1697,8 +1757,7 @@
         'history2Division', 'history2Team', 'history2Matches',
         'history3Division', 'history3Team', 'history3Matches',
         'currentDivision', 'previousDivision', 'olderDivision', 'history',
-        'teamDivision',
-        'EP', 'PP', 'LP', 'CP', 'NP',
+        'teamDivision', 'EP', 'PP', 'LP', 'CP', 'NP',
         'elitePlayers', 'proPlayers', 'litePlayers', 'corePlayers',
         'neoOrLowerPlayers', 'coreOrLowerPlayers', 'liteOrLowerPlayers',
         'totalPlayers', 'playersWithPlayoffGames',
@@ -2036,25 +2095,6 @@
       a.className = className;
       a.textContent = text;
       return a;
-    }
-
-    function normalizeTeamName(value) {
-      return String(value ?? '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, ' ')
-        .replace(/[^\p{L}\p{N}]+/gu, ' ')
-        .trim();
-    }
-
-    function normalizePlayerName(value) {
-      return String(value ?? '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
     }
 
     function getTeamNameFromRow(row) {
@@ -2451,10 +2491,14 @@
     function renderSeedRow(pos, seed, team, exists, note = '', extraClass = '', teamID = '') {
       const tr = document.createElement('tr');
 
+      const seedingStatus = getSeedingTeamStatus(team);
+      const isDisbanded = seedingStatus === 'DISBANDED';
+
       let rowClass = 'seed-row';
       if (extraClass) rowClass += ' ' + extraClass;
-      if (team && !exists) rowClass += ' missing';
-      if (note) rowClass += ' note';
+      if (team && !exists && !isDisbanded) rowClass += ' missing';
+      if (note || isDisbanded) rowClass += ' note';
+      if (isDisbanded) rowClass += ' disbanded';
       tr.className = rowClass;
 
       const posTd = document.createElement('td');
@@ -2487,6 +2531,9 @@
       if (!team) {
         statusBadge.className = 'seed-status empty';
         statusBadge.textContent = '-';
+      } else if (isDisbanded) {
+        statusBadge.className = 'seed-status disbanded';
+        statusBadge.textContent = 'Disbanded';
       } else if (exists) {
         statusBadge.className = 'seed-status ok';
         statusBadge.textContent = 'Registered';
@@ -2500,11 +2547,18 @@
 
       const noteTd = document.createElement('td');
 
+      const noteParts = [];
       if (note) {
-        const parts = note.split(' • ').filter(Boolean);
-        parts.forEach(part => {
+        noteParts.push(...note.split(' • ').filter(Boolean));
+      }
+      if (isDisbanded) {
+        noteParts.unshift('DISBANDED');
+      }
+
+      if (noteParts.length > 0) {
+        noteParts.forEach(part => {
           const badge = document.createElement('span');
-          badge.className = 'seed-note-badge';
+          badge.className = 'seed-note-badge' + (part === 'DISBANDED' ? ' disbanded' : '');
           badge.textContent = part;
           noteTd.appendChild(badge);
         });
