@@ -6,52 +6,43 @@
   <title>26 Spring Checks</title>
   <style>
     :root {
-      --navy: #070f4f;
+      --navy: #03045e;
       --navy-2: #0b144f;
       --accent: #ff5a8a;
-      --accent-dark: #f04478;
-      --bg: #eef1f6;
+      --bg: #eef2f7;
       --panel: #ffffff;
-      --panel-soft: #f8faff;
-      --border: #dbe3ef;
-      --border-strong: #c8d4e5;
-      --text: #0f172a;
+      --panel-soft: #f8fbff;
+      --border: #d9e1ee;
+      --border-strong: #c6d2e3;
+      --text: #111827;
       --muted: #64748b;
-      --ok: #15803d;
-      --ok-bg: #e8fff1;
-      --ok-border: #b7efcb;
-      --danger: #b42318;
-      --danger-bg: #fff1f2;
-      --danger-border: #fecdd3;
-      --warning: #92400e;
-      --warning-bg: #fff7dc;
-      --warning-border: #f6d38d;
-      --info-bg: #eef4ff;
-      --info-border: #d4e0ff;
-      --shadow: 0 14px 40px rgba(7, 15, 79, 0.08);
-      --shadow-soft: 0 6px 20px rgba(7, 15, 79, 0.06);
+      --ok: #198754;
+      --danger: #dc3545;
+      --warning: #c58a00;
+      --gold-1: #d9ba52;
+      --gold-2: #edd983;
+      --gray-1: #d4d8e0;
+      --gray-2: #eceff5;
       --link: #0b57d0;
+      --shadow: 0 10px 28px rgba(7, 18, 79, 0.08);
+      --shadow-soft: 0 4px 14px rgba(7, 18, 79, 0.05);
       --radius: 16px;
     }
 
     * { box-sizing: border-box; }
 
-    html, body {
-      margin: 0;
-      padding: 0;
+    html {
+      scroll-behavior: smooth;
     }
 
     body {
+      margin: 0;
       background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.5), transparent 28%),
-        linear-gradient(180deg, #f3f6fb 0%, #eef1f6 100%);
+        radial-gradient(circle at top left, rgba(255,255,255,0.55), transparent 30%),
+        linear-gradient(180deg, #edf2f8 0%, #edf1f6 100%);
       color: var(--text);
       font-family: Arial, Helvetica, sans-serif;
       font-size: 13px;
-    }
-
-    a {
-      color: inherit;
     }
 
     .login-screen {
@@ -63,8 +54,8 @@
       justify-content: center;
       padding: 20px;
       background:
-        linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0)),
-        linear-gradient(135deg, #09104e, #20005f 55%, #690021);
+        linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0)),
+        linear-gradient(135deg, #0b0f4f, #1b005c 55%, #5b001a);
     }
 
     .login-screen.hidden {
@@ -75,24 +66,11 @@
       width: 100%;
       max-width: 560px;
       background: rgba(255,255,255,0.98);
-      border: 1px solid rgba(219, 226, 240, 0.95);
+      border: 1px solid rgba(219, 226, 240, 0.9);
       border-radius: 22px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
       padding: 30px 26px;
-    }
-
-    .login-kicker {
-      display: inline-block;
-      margin-bottom: 10px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: #edf3ff;
-      border: 1px solid #d6e2ff;
-      color: #0b144f;
-      font-size: 11px;
-      font-weight: 900;
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
+      backdrop-filter: blur(4px);
     }
 
     .login-title {
@@ -143,13 +121,13 @@
       font-size: 15px;
       font-weight: 700;
       outline: none;
-      background: white;
+      background: #fff;
       transition: 0.15s ease;
     }
 
     .login-input:focus {
       border-color: #8ea3d6;
-      box-shadow: 0 0 0 4px rgba(11, 87, 208, 0.08);
+      box-shadow: 0 0 0 3px rgba(11, 87, 208, 0.08);
     }
 
     .login-btn {
@@ -157,28 +135,30 @@
       border: 0;
       border-radius: 12px;
       padding: 0 18px;
-      background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+      background: var(--accent);
       color: white;
       font-size: 12px;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       cursor: pointer;
-      box-shadow: 0 8px 18px rgba(255, 90, 138, 0.22);
+      box-shadow: 0 6px 16px rgba(255, 90, 138, 0.28);
+      transition: transform 0.12s ease, filter 0.12s ease;
     }
 
     .login-btn:hover {
       filter: brightness(0.98);
+      transform: translateY(-1px);
     }
 
     .login-error {
       display: none;
       margin-top: 14px;
-      padding: 11px 13px;
+      padding: 11px 12px;
       border-radius: 12px;
-      background: var(--danger-bg);
-      border: 1px solid var(--danger-border);
-      color: var(--danger);
+      background: #fff1f2;
+      border: 1px solid #fecdd3;
+      color: #b91c1c;
       font-size: 13px;
       font-weight: 800;
     }
@@ -188,10 +168,14 @@
     }
 
     .site-header {
-      background: linear-gradient(180deg, #08104c 0%, #060c3f 100%);
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      background: rgba(3, 4, 94, 0.98);
       color: white;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+      border-bottom: 3px solid #00113a;
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(8px);
     }
 
     .site-header-inner {
@@ -212,15 +196,15 @@
       text-transform: uppercase;
     }
 
-    .brand span { opacity: 0.82; }
+    .brand span { opacity: 0.85; }
 
     .mobile-menu-btn {
       display: none;
       border: 1px solid rgba(255,255,255,0.18);
       background: rgba(255,255,255,0.08);
       color: white;
-      border-radius: 10px;
-      padding: 9px 12px;
+      border-radius: 12px;
+      padding: 10px 13px;
       font-size: 12px;
       font-weight: 900;
       text-transform: uppercase;
@@ -231,10 +215,9 @@
     .hero-strip {
       background:
         linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0)),
-        linear-gradient(90deg, #14003d, #4f0037 48%, #7a0018);
+        linear-gradient(90deg, #160041, #520022 48%, #7b0019);
       color: white;
       padding: 28px 22px;
-      border-top: 1px solid rgba(255,255,255,0.05);
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
@@ -245,7 +228,7 @@
 
     .hero-title {
       margin: 0;
-      font-size: 36px;
+      font-size: 34px;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -253,8 +236,8 @@
     }
 
     .hero-subtitle {
-      margin-top: 8px;
-      font-size: 14px;
+      margin-top: 9px;
+      font-size: 13px;
       font-weight: 800;
       letter-spacing: 0.8px;
       text-transform: uppercase;
@@ -264,23 +247,22 @@
     .page {
       max-width: 1320px;
       margin: 22px auto 34px;
-      padding: 0 18px;
+      padding: 0 16px;
     }
 
     .page-card {
-      background: rgba(255,255,255,0.96);
+      background: rgba(255,255,255,0.94);
       border: 1px solid var(--border);
-      border-radius: 18px;
+      border-radius: 20px;
       box-shadow: var(--shadow);
       overflow: hidden;
-      backdrop-filter: blur(4px);
     }
 
     .page-top {
       padding: 18px 18px 12px;
-      border-bottom: 1px solid #edf1f7;
+      border-bottom: 1px solid #e7edf6;
       background:
-        linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+        linear-gradient(to bottom, rgba(255,255,255,0.98), rgba(248,250,255,0.98));
     }
 
     h1 {
@@ -302,31 +284,31 @@
 
     .tabs button {
       padding: 10px 13px;
-      border: 1px solid #cad6e7;
-      background: #fff;
+      border: 1px solid #cfd8e8;
+      background: linear-gradient(to bottom, #ffffff, #f7f9fd);
       color: #0b144f;
       cursor: pointer;
       border-radius: 10px;
       font-size: 12px;
       font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.32px;
+      letter-spacing: 0.3px;
       line-height: 1.1;
       transition: 0.15s ease;
-      box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
     }
 
     .tabs button:hover {
-      background: #f4f7ff;
-      border-color: #9fb0da;
+      background: #f2f6ff;
+      border-color: #aebedf;
       transform: translateY(-1px);
     }
 
     .tabs button.active {
-      background: linear-gradient(180deg, #0b145d, #070f4f);
+      background: linear-gradient(to bottom, #0f1c77, #03045e);
       color: white;
-      border-color: #09114f;
-      box-shadow: 0 8px 18px rgba(7, 15, 79, 0.18);
+      border-color: var(--navy);
+      box-shadow: 0 8px 18px rgba(3, 4, 94, 0.22);
     }
 
     .mobile-tabs-panel {
@@ -336,6 +318,7 @@
       z-index: 1000;
       background: rgba(3, 4, 94, 0.55);
       padding: 0;
+      backdrop-filter: blur(2px);
     }
 
     .mobile-tabs-panel.open {
@@ -376,7 +359,7 @@
       border: 1px solid #d6def0;
       background: white;
       color: #07124f;
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 8px 10px;
       font-size: 12px;
       font-weight: 900;
@@ -420,9 +403,9 @@
     }
 
     .action-btn {
-      padding: 10px 14px;
+      padding: 10px 15px;
       border: 0;
-      background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+      background: linear-gradient(to bottom, #ff6c96, #ff4f84);
       color: white;
       cursor: pointer;
       border-radius: 10px;
@@ -430,18 +413,13 @@
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      box-shadow: 0 8px 18px rgba(255, 90, 138, 0.18);
+      box-shadow: 0 8px 16px rgba(255, 90, 138, 0.24);
+      transition: transform 0.12s ease, filter 0.12s ease;
     }
 
-    .status,
-    .small {
-      display: inline-flex;
-      align-items: center;
-      min-height: 38px;
-      padding: 0 12px;
-      border-radius: 999px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
+    .action-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.98);
     }
 
     .status {
@@ -449,25 +427,32 @@
       font-weight: 800;
       color: #334155;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.35px;
+      background: #f8fbff;
+      border: 1px solid #e3eaf5;
+      padding: 8px 10px;
+      border-radius: 10px;
     }
 
     .small {
       font-size: 11px;
       color: var(--muted);
-      font-weight: 700;
+      background: #f8fbff;
+      border: 1px solid #e3eaf5;
+      padding: 8px 10px;
+      border-radius: 10px;
     }
 
     .content-area {
       padding: 16px;
-      background: linear-gradient(180deg, #f7f9fd 0%, #f3f6fb 100%);
+      background: linear-gradient(to bottom, #f7f9fd, #f2f6fb);
     }
 
     .table-wrap,
     .proqual-wrap {
       overflow-x: auto;
       background: white;
-      border: 1px solid var(--border);
+      border: 1px solid #dfe6f1;
       border-radius: 16px;
       box-shadow: var(--shadow-soft);
     }
@@ -475,7 +460,7 @@
     .section-wrap {
       overflow-x: auto;
       background: white;
-      border: 1px solid var(--border);
+      border: 1px solid #dfe6f1;
       border-radius: 16px;
       box-shadow: var(--shadow-soft);
       padding: 10px;
@@ -489,13 +474,13 @@
     }
 
     thead {
-      background: linear-gradient(180deg, #0c1660 0%, #08104c 100%);
+      background: linear-gradient(to right, #050967, #08105e);
       color: white;
     }
 
     th, td {
       padding: 9px 10px;
-      border-bottom: 1px solid #edf1f7;
+      border-bottom: 1px solid #ebeff6;
       text-align: left;
       white-space: nowrap;
       line-height: 1.2;
@@ -555,7 +540,7 @@
     }
 
     #results thead th.sortable:hover {
-      background: #0d175f;
+      background: #0b144f;
     }
 
     #results thead th.sortable::after {
@@ -586,9 +571,9 @@
       font-variant-numeric: tabular-nums;
     }
 
-    tbody tr.not-ok { background: #ffe5e5 !important; }
-    tbody tr.not-ok:nth-child(even) { background: #ffdede !important; }
-    tbody tr.not-ok:hover { background: #ffd1d1 !important; }
+    tbody tr.not-ok { background: #ffe7e7 !important; }
+    tbody tr.not-ok:nth-child(even) { background: #ffdfdf !important; }
+    tbody tr.not-ok:hover { background: #ffd2d2 !important; }
 
     tbody tr.backup-warning { background: #fff4c7 !important; }
     tbody tr.backup-warning:nth-child(even) { background: #ffefb0 !important; }
@@ -615,7 +600,7 @@
     }
 
     .section-title-row td {
-      background: linear-gradient(90deg, #d8b84a, #ecd67d);
+      background: linear-gradient(90deg, var(--gold-1), var(--gold-2));
       color: #0b144f;
       font-weight: 900;
       text-align: center;
@@ -624,10 +609,11 @@
       text-transform: uppercase;
       letter-spacing: 0.7px;
       padding: 12px 10px;
+      border-radius: 10px 10px 0 0;
     }
 
     .section-title-row.gray td {
-      background: linear-gradient(90deg, #cfd3dc, #e9ebf0);
+      background: linear-gradient(90deg, var(--gray-1), var(--gray-2));
       color: #0b144f;
     }
 
@@ -713,15 +699,15 @@
     }
 
     .seed-status.ok {
-      background: var(--ok-bg);
-      color: var(--ok);
-      border-color: var(--ok-border);
+      background: #e8fff1;
+      color: #157347;
+      border-color: #b7efcb;
     }
 
     .seed-status.missing {
-      background: var(--danger-bg);
-      color: var(--danger);
-      border-color: var(--danger-border);
+      background: #fff1f2;
+      color: #b42318;
+      border-color: #fecdd3;
     }
 
     .seed-status.empty {
@@ -734,9 +720,9 @@
       display: inline-block;
       padding: 5px 9px;
       border-radius: 999px;
-      background: var(--warning-bg);
-      color: var(--warning);
-      border: 1px solid var(--warning-border);
+      background: #fff4db;
+      color: #92400e;
+      border: 1px solid #f6d38d;
       font-size: 11px;
       font-weight: 900;
       text-transform: uppercase;
@@ -767,8 +753,8 @@
       font-size: 12px;
       background: #fff2f4;
       border: 1px solid #ffd4da;
-      padding: 10px 12px;
-      border-radius: 10px;
+      padding: 11px 12px;
+      border-radius: 12px;
     }
 
     .empty {
@@ -793,8 +779,8 @@
     .proqual-team-header {
       width: 100%;
       border: 0;
-      background: linear-gradient(180deg, #ffffff, #fbfcff);
-      padding: 16px 18px;
+      background: linear-gradient(to bottom, #ffffff, #fbfcff);
+      padding: 15px 16px;
       text-align: left;
       cursor: pointer;
       display: flex;
@@ -843,7 +829,7 @@
       background: #eef3ff;
       border: 1px solid #d8e2ff;
       border-radius: 999px;
-      padding: 6px 11px;
+      padding: 6px 10px;
     }
 
     .proqual-arrow {
@@ -871,18 +857,16 @@
       width: 100%;
       min-width: 900px;
       border-collapse: collapse;
-      border-radius: 12px;
-      overflow: hidden;
     }
 
     .proqual-player-table thead {
-      background: linear-gradient(180deg, #0c1660 0%, #08104c 100%);
+      background: #0b144f;
       color: white;
     }
 
     .proqual-player-table th,
     .proqual-player-table td {
-      padding: 9px 10px;
+      padding: 8px 10px;
       border: 1px solid #e6ebf3;
       white-space: nowrap;
     }
@@ -936,14 +920,14 @@
 
     .site-footer {
       margin-top: 28px;
-      background: linear-gradient(180deg, #08104c 0%, #060c3f 100%);
+      background: linear-gradient(to right, #03045e, #07114f);
       color: white;
     }
 
     .site-footer-inner {
       max-width: 1320px;
       margin: 0 auto;
-      padding: 24px 20px 30px;
+      padding: 26px 20px 32px;
       text-align: center;
     }
 
@@ -994,12 +978,15 @@
       .status,
       .small {
         width: 100%;
-        justify-content: center;
       }
 
       .table-wrap,
-      .proqual-wrap,
+      .proqual-wrap {
+        border-radius: 12px;
+      }
+
       .section-wrap {
+        padding: 8px;
         border-radius: 12px;
       }
 
@@ -1141,7 +1128,6 @@
 <body>
   <div id="loginScreen" class="login-screen">
     <div class="login-card">
-      <div class="login-kicker">SportsGamer Admin Access</div>
       <h1 class="login-title">Admin Login</h1>
       <p class="login-warning">
         <strong>For SportsGamer admins only.</strong><br>
@@ -1812,22 +1798,6 @@
       const keys = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName'];
       for (const key of keys) {
         if (row && row[key]) return String(row[key]);
-      }
-      return '';
-    }
-
-    function getPlayerNameFromRow(row) {
-      const keys = ['Player', 'tag', 'playerName', 'player'];
-      for (const key of keys) {
-        if (row && row[key]) return String(row[key]);
-      }
-      return '';
-    }
-
-    function getTeamIdFromRow(row) {
-      const keys = ['teamID', 'teamId', 'TeamID', 'team_id', 'fromTeamID', 'toTeamID'];
-      for (const key of keys) {
-        if (row && row[key]) return row[key];
       }
       return '';
     }
@@ -2600,4 +2570,299 @@
       const directTeamID =
         row?.teamID || row?.teamId || row?.TeamID || row?.team_id;
 
-      const
+      const directPlayerID =
+        row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
+
+      if (PLAYER_LIST_NAME_KEYS.includes(col)) {
+        const parts = parsePlayerList(textValue);
+
+        parts.forEach((part, index) => {
+          const match = part.match(/^(.*?)(\s*\(\d+\))?$/);
+          const nameOnly = (match?.[1] || part).trim();
+          appendPlainOrLinkedPlayer(td, part, nameOnly, playerLinkMap);
+
+          if (index < parts.length - 1) {
+            td.appendChild(document.createTextNode(', '));
+          }
+        });
+        return;
+      }
+
+      if (col === 'From' || col === 'To') {
+        td.textContent = textValue;
+        return;
+      }
+
+      if (col === 'history1Team' || col === 'history2Team' || col === 'history3Team') {
+        td.textContent = textValue;
+        return;
+      }
+
+      if (directTeamID && TEAM_NAME_KEYS.includes(col)) {
+        td.appendChild(createLink(TEAM_BASE_URL + directTeamID, textValue));
+        return;
+      }
+
+      if (directPlayerID && PLAYER_NAME_KEYS.includes(col)) {
+        td.appendChild(createLink(PLAYER_BASE_URL + directPlayerID, textValue));
+        return;
+      }
+
+      if (isTeamColumn(col)) {
+        const mappedTeamID = teamLinkMap.get(normalizeTeamName(textValue));
+        if (mappedTeamID) {
+          td.appendChild(createLink(TEAM_BASE_URL + mappedTeamID, textValue));
+          return;
+        }
+      }
+
+      if (isPlayerColumn(col)) {
+        const mappedPlayerID = playerLinkMap.get(normalizePlayerName(textValue));
+        if (mappedPlayerID) {
+          td.appendChild(createLink(PLAYER_BASE_URL + mappedPlayerID, textValue));
+          return;
+        }
+      }
+
+      const anyMappedPlayerID = playerLinkMap.get(normalizePlayerName(textValue));
+      if (anyMappedPlayerID) {
+        td.appendChild(createLink(PLAYER_BASE_URL + anyMappedPlayerID, textValue));
+        return;
+      }
+
+      td.textContent = textValue;
+    }
+
+    function getSignUpsHeaderLabel(col) {
+      const labels = {
+        teamName: 'Team',
+        teamCountry: 'Country',
+        registrationDate: 'Reg. Date',
+        divisionName: 'Division',
+        qualifierName: 'Qualifier',
+        playerCount: 'Players',
+        fullLicenseCount: 'Full Lic.',
+        backupLicenseCount: 'Backup Lic.',
+        unlicensedPlayerCount: 'No Lic.',
+        signupIssue: 'Issue'
+      };
+
+      return labels[col] || col;
+    }
+
+    function getSignUpsHeaderFullLabel(col) {
+      const fullLabels = {
+        teamName: 'Team Name',
+        teamCountry: 'Team Country',
+        registrationDate: 'Registration Date',
+        divisionName: 'Division Name',
+        qualifierName: 'Qualifier Name',
+        playerCount: 'Player Count',
+        fullLicenseCount: 'Full License Count',
+        backupLicenseCount: 'Backup License Count',
+        unlicensedPlayerCount: 'Unlicensed Player Count',
+        signupIssue: 'Missing Requirements / Rule Violations'
+      };
+
+      return fullLabels[col] || col;
+    }
+
+    async function renderTableBody(rows, forceReload = false) {
+      tbody.innerHTML = '';
+      const hideIndex = currentSource.key === 'signUps';
+
+      for (const [index, row] of rows.entries()) {
+        const tr = document.createElement('tr');
+        const rowClass = getRowClass(row);
+        if (rowClass) tr.classList.add(rowClass);
+
+        if (!hideIndex) {
+          const indexTd = document.createElement('td');
+          indexTd.className = 'num';
+          indexTd.textContent = index + 1;
+          tr.appendChild(indexTd);
+        }
+
+        for (const col of currentColumns) {
+          const td = document.createElement('td');
+          if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
+          if (col === 'signupIssue') td.style.whiteSpace = 'normal';
+          await renderTableCell(td, row, col, forceReload);
+          tr.appendChild(td);
+        }
+
+        tbody.appendChild(tr);
+      }
+    }
+
+    function renderSortableHeader() {
+      headerRow.innerHTML = '';
+      const hideIndex = currentSource.key === 'signUps';
+
+      if (!hideIndex) {
+        const indexTh = document.createElement('th');
+        indexTh.textContent = '#';
+        headerRow.appendChild(indexTh);
+      }
+
+      currentColumns.forEach(col => {
+        const th = document.createElement('th');
+        th.classList.add('sortable');
+
+        if (currentSource.key === 'signUps') {
+          th.textContent = getSignUpsHeaderLabel(col);
+          th.classList.add('abbr-head');
+          th.setAttribute('data-full-label', getSignUpsHeaderFullLabel(col));
+        } else {
+          th.textContent = col;
+        }
+
+        if (sortState.column === col) {
+          th.classList.add(sortState.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+
+        th.addEventListener('click', async () => {
+          if (sortState.column === col) {
+            sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+          } else {
+            sortState.column = col;
+            sortState.direction = 'asc';
+          }
+
+          renderSortableHeader();
+          await renderTableBody(getSortedRows(currentRows));
+        });
+
+        headerRow.appendChild(th);
+      });
+    }
+
+    async function renderTable(rows, forceReload = false) {
+      showNormalTable();
+
+      if (!Array.isArray(rows) || rows.length === 0) {
+        currentRows = [];
+        currentColumns = [];
+        currentNumericColumns = new Set();
+        tbody.innerHTML = '';
+        headerRow.innerHTML = '';
+        emptyMessage.style.display = 'block';
+        rowCounter.textContent = '';
+        return;
+      }
+
+      emptyMessage.style.display = 'none';
+
+      currentRows = [...rows];
+      currentColumns = getColumns(rows);
+      currentNumericColumns = new Set(
+        currentColumns.filter(col =>
+          col !== 'fullLicenseCount' &&
+          col !== 'signupIssue' &&
+          isNumericColumn(rows.map(r => {
+            if (col === 'fullLicenseCount') return getFullLicenseCount(r);
+            return r[col];
+          }))
+        )
+      );
+      currentNumericColumns.add('fullLicenseCount');
+
+      if (currentSource.key === 'signUps') {
+        rowCounter.textContent = `Anmälda lag: ${rows.length}`;
+      } else {
+        rowCounter.textContent = '';
+      }
+
+      renderSortableHeader();
+      await renderTableBody(getSortedRows(currentRows), forceReload);
+    }
+
+    async function loadRegisteredTeams() {
+      const allData = await fetchAllaData();
+      return getRowsForSource(allData, 'signUps');
+    }
+
+    async function loadData(forceReload = false) {
+      clearError();
+      setStatus('Loading data...');
+      reloadBtn.disabled = true;
+      pageTitle.textContent = currentSource.label;
+
+      try {
+        if (forceReload) {
+          signUpsCache = null;
+          teamLinkMapCache = null;
+          playerLinkMapCache = null;
+        }
+
+        if (currentSource.type === 'preset') {
+          const registeredRows = await loadRegisteredTeams();
+          await renderPresetSections(registeredRows, forceReload);
+          setStatus('Done');
+          lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString('en-GB');
+          return;
+        }
+
+        sortState = { column: null, direction: 'asc' };
+
+        const allData = await fetchAllaData(forceReload);
+
+        if (currentSource.type === 'proqualreqcheck') {
+          const rows = getProQualReqCheckRows(allData);
+          await renderProQualReqCheck(rows, forceReload);
+          setStatus('Done');
+          lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString('en-GB');
+          return;
+        }
+
+        const rows = getRowsForSource(allData, currentSource.key);
+        await renderTable(rows, forceReload);
+        setStatus('Done');
+        lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString('en-GB');
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '';
+        headerRow.innerHTML = '';
+        seedingBody.innerHTML = '';
+        proQualReqWrap.innerHTML = '';
+        currentRows = [];
+        currentColumns = [];
+        currentNumericColumns = new Set();
+        emptyMessage.style.display = 'none';
+        rowCounter.textContent = '';
+        showNormalTable();
+        showError('Could not load data: ' + err.message);
+        setStatus('Error');
+      } finally {
+        reloadBtn.disabled = false;
+      }
+    }
+
+    mobileMenuBtn.addEventListener('click', openMobileMenu);
+    mobileCloseBtn.addEventListener('click', closeMobileMenu);
+
+    mobileTabsPanel.addEventListener('click', (e) => {
+      if (e.target === mobileTabsPanel) {
+        closeMobileMenu();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeMobileMenu();
+      }
+    });
+
+    reloadBtn.addEventListener('click', () => {
+      allaDataCache = null;
+      signUpsCache = null;
+      teamLinkMapCache = null;
+      playerLinkMapCache = null;
+      loadData(true);
+    });
+
+    renderTabs();
+    loadData();
+  </script>
+</body>
+</html>
