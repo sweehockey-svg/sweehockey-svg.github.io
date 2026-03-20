@@ -1703,7 +1703,7 @@
         'elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames',
         'From', 'FromDiv', 'To', 'ToDiv',
         'GroupGames26Winter', 'PlayoffGames26Winter', 'TotalGames26Winter',
-        'totalMatchesPlayed', 'Date', 'Role', 'compatibility'
+        'totalMatchesPlayed', 'Date', 'Role', 'compatibility', 'totalPoints'
       ];
 
       const allKeys = new Set();
@@ -1727,16 +1727,96 @@
       return TEAM_DROPDOWN_SOURCES.has(currentSource.key);
     }
 
-    function isDropdownDetailColumn(col) {
-      return useTeamDropdownRows() && TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col);
+    function getTeamTabVisibleColumns() {
+      if (currentSource.key === 'lite') {
+        return [
+          'teamName',
+          'totalPlayers',
+          'elitePlayers',
+          'proPlayers',
+          'liteOrLowerPlayers',
+          'totalPoints'
+        ];
+      }
+
+      if (currentSource.key === 'core') {
+        return [
+          'teamName',
+          'totalPlayers',
+          'elitePlayers',
+          'proPlayers',
+          'litePlayers',
+          'coreOrLowerPlayers',
+          'totalPoints'
+        ];
+      }
+
+      if (currentSource.key === 'neo') {
+        return [
+          'teamName',
+          'totalPlayers',
+          'elitePlayers',
+          'proPlayers',
+          'litePlayers',
+          'corePlayers',
+          'neoOrLowerPlayers',
+          'totalPoints'
+        ];
+      }
+
+      return null;
     }
 
     function getVisibleColumns() {
-      return currentColumns.filter(col => {
-        if (isDropdownDetailColumn(col)) return false;
-        if (useTeamDropdownRows() && col === 'compatibility') return false;
-        return true;
-      });
+      if (useTeamDropdownRows()) {
+        const wanted = getTeamTabVisibleColumns() || [];
+        return wanted.filter(col => currentColumns.includes(col));
+      }
+
+      return currentColumns.filter(col => !TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
+    }
+
+    function getColumnHeaderLabel(col) {
+      if (currentSource.key === 'lite') {
+        const labels = {
+          teamName: 'Teamname',
+          totalPlayers: 'Totalplayers',
+          elitePlayers: 'Elite players',
+          proPlayers: 'Pro players',
+          liteOrLowerPlayers: 'Lite or lower',
+          totalPoints: 'Totalpoints'
+        };
+        return labels[col] || col;
+      }
+
+      if (currentSource.key === 'core') {
+        const labels = {
+          teamName: 'Teamname',
+          totalPlayers: 'Totalplayers',
+          elitePlayers: 'Elite players',
+          proPlayers: 'Pro players',
+          litePlayers: 'Lite players',
+          coreOrLowerPlayers: 'Core or lower',
+          totalPoints: 'Totalpoints'
+        };
+        return labels[col] || col;
+      }
+
+      if (currentSource.key === 'neo') {
+        const labels = {
+          teamName: 'Teamname',
+          totalPlayers: 'Totalplayers',
+          elitePlayers: 'Elite players',
+          proPlayers: 'Pro players',
+          litePlayers: 'Lite players',
+          corePlayers: 'Core players',
+          neoOrLowerPlayers: 'Neo or New',
+          totalPoints: 'Totalpoints'
+        };
+        return labels[col] || col;
+      }
+
+      return col;
     }
 
     function getDropdownDetailItems(row) {
@@ -2720,15 +2800,6 @@
         value = getSignupIssueText(row);
       }
 
-      if (useTeamDropdownRows() && col === 'compatibility' && isCompatibilityNotOk(row)) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'check-team-btn';
-        btn.textContent = 'Check Team';
-        td.appendChild(btn);
-        return btn;
-      }
-
       const textValue = String(value ?? '');
 
       if (!textValue) {
@@ -2851,7 +2922,6 @@
         if (rowClass) tr.classList.add(rowClass);
 
         let detailRow = null;
-        let checkTeamButton = null;
 
         if (!hideIndex) {
           const indexTd = document.createElement('td');
@@ -2864,55 +2934,53 @@
           const td = document.createElement('td');
           if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
           if (col === 'signupIssue') td.style.whiteSpace = 'normal';
-
-          const result = await renderTableCell(td, row, col, forceReload);
-          if (result instanceof HTMLButtonElement && result.classList.contains('check-team-btn')) {
-            checkTeamButton = result;
-          }
-
+          await renderTableCell(td, row, col, forceReload);
           tr.appendChild(td);
         }
 
-        if (useTeamDropdownRows() && isCompatibilityNotOk(row)) {
-          const compatibilityTd = document.createElement('td');
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'check-team-btn';
-          btn.textContent = 'Check Team';
-          compatibilityTd.appendChild(btn);
-          tr.appendChild(compatibilityTd);
-          checkTeamButton = btn;
+        if (useTeamDropdownRows()) {
+          const checkTd = document.createElement('td');
 
-          const detailItems = getDropdownDetailItems(row);
-          detailRow = document.createElement('tr');
-          detailRow.className = 'team-detail-row';
+          if (isCompatibilityNotOk(row)) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'check-team-btn';
+            btn.textContent = 'Check Team';
+            checkTd.appendChild(btn);
 
-          const detailCell = document.createElement('td');
-          detailCell.className = 'team-detail-cell';
-          detailCell.colSpan = visibleColumns.length + (hideIndex ? 1 : 2);
+            const detailItems = getDropdownDetailItems(row);
+            detailRow = document.createElement('tr');
+            detailRow.className = 'team-detail-row';
 
-          const detailBox = document.createElement('div');
-          detailBox.className = 'team-detail-box';
+            const detailCell = document.createElement('td');
+            detailCell.className = 'team-detail-cell';
+            detailCell.colSpan = visibleColumns.length + (hideIndex ? 1 : 2);
 
-          const detailGrid = document.createElement('div');
-          detailGrid.className = 'team-detail-grid';
+            const detailBox = document.createElement('div');
+            detailBox.className = 'team-detail-box';
 
-          if (detailItems.length > 0) {
-            detailItems.forEach(item => {
-              detailGrid.appendChild(createTeamDetailCard(item.label, item.value));
+            const detailGrid = document.createElement('div');
+            detailGrid.className = 'team-detail-grid';
+
+            if (detailItems.length > 0) {
+              detailItems.forEach(item => {
+                detailGrid.appendChild(createTeamDetailCard(item.label, item.value));
+              });
+            } else {
+              detailGrid.appendChild(createEmptyTeamDetailCard());
+            }
+
+            detailBox.appendChild(detailGrid);
+            detailCell.appendChild(detailBox);
+            detailRow.appendChild(detailCell);
+
+            btn.addEventListener('click', () => {
+              const isOpen = detailRow.classList.toggle('open');
+              btn.textContent = isOpen ? 'Hide Team' : 'Check Team';
             });
-          } else {
-            detailGrid.appendChild(createEmptyTeamDetailCard());
           }
 
-          detailBox.appendChild(detailGrid);
-          detailCell.appendChild(detailBox);
-          detailRow.appendChild(detailCell);
-
-          btn.addEventListener('click', () => {
-            const isOpen = detailRow.classList.toggle('open');
-            btn.textContent = isOpen ? 'Hide Team' : 'Check Team';
-          });
+          tr.appendChild(checkTd);
         }
 
         tbody.appendChild(tr);
@@ -2942,6 +3010,8 @@
           th.textContent = getSignUpsHeaderLabel(col);
           th.classList.add('abbr-head');
           th.setAttribute('data-full-label', getSignUpsHeaderFullLabel(col));
+        } else if (useTeamDropdownRows()) {
+          th.textContent = getColumnHeaderLabel(col);
         } else {
           th.textContent = col;
         }
