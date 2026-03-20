@@ -1391,9 +1391,6 @@
 
     const SEEDING_TEAM_STATUSES = {
       'Kastikekauppa Esports': 'DISBANDED'
-      // Lägg till fler här senare:
-      // 'EXEN': 'DISBANDED',
-      // 'Vizio': 'DISBANDED'
     };
 
     const sources = [
@@ -2155,7 +2152,9 @@
     function getUserIdFromRow(row) {
       const keys = ['userID', 'userId', 'UserID', 'user_id', 'userid'];
       for (const key of keys) {
-        if (row && row[key]) return row[key];
+        if (row && row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== '') {
+          return row[key];
+        }
       }
       return '';
     }
@@ -2309,41 +2308,27 @@
       return map;
     }
 
-    function isCaptainRole(roleValue) {
-      const role = String(roleValue || '').trim().toLowerCase();
-      return role === 'c' || role === 'captain' || role === 'cap' || role === 'a/c' || role === 'ac';
-    }
-
     async function getCaptainUserIdMap(forceReload = false) {
       if (captainUserIdMapCache && !forceReload) return captainUserIdMapCache;
 
       const allData = await fetchAllaData(forceReload);
+      const rows = Array.isArray(allData?.teamCaptains) ? allData.teamCaptains : [];
       const map = new Map();
 
-      Object.values(allData || {}).forEach(value => {
-        if (!Array.isArray(value)) return;
+      rows.forEach(row => {
+        const normalizedTeam = normalizeTeamName(row.teamName);
+        const userId = String(row.userID || '').trim();
 
-        value.forEach(row => {
-          const teamName = getTeamNameFromRow(row);
-          const normalizedTeam = normalizeTeamName(teamName);
-          const userId = getUserIdFromRow(row);
+        if (!normalizedTeam || !userId) return;
 
-          const possibleRoleKeys = ['Role', 'role', 'playerRole'];
-          const roleValue = possibleRoleKeys.map(key => row?.[key]).find(v => v !== undefined && v !== null);
+        if (!map.has(normalizedTeam)) {
+          map.set(normalizedTeam, []);
+        }
 
-          if (!normalizedTeam || !userId || !isCaptainRole(roleValue)) return;
-
-          if (!map.has(normalizedTeam)) {
-            map.set(normalizedTeam, []);
-          }
-
-          const ids = map.get(normalizedTeam);
-          const userIdStr = String(userId);
-
-          if (!ids.includes(userIdStr)) {
-            ids.push(userIdStr);
-          }
-        });
+        const ids = map.get(normalizedTeam);
+        if (!ids.includes(userId)) {
+          ids.push(userId);
+        }
       });
 
       captainUserIdMapCache = map;
@@ -2358,10 +2343,10 @@
       const normalizedTeam = normalizeTeamName(teamName);
       const captainIds = captainMap.get(normalizedTeam) || [];
 
-      const userId = String(getUserIdFromRow(row) || '').trim();
-      if (!userId) return '';
+      const backupUserId = String(getUserIdFromRow(row) || '').trim();
+      if (!backupUserId) return '';
 
-      const recipients = [...captainIds, userId]
+      const recipients = [...captainIds, backupUserId]
         .map(id => String(id).trim())
         .filter(Boolean)
         .filter((id, index, arr) => arr.indexOf(id) === index);
@@ -3125,7 +3110,7 @@
               btn.target = '_blank';
               btn.rel = 'noopener noreferrer';
               btn.className = 'mail-icon-btn';
-              btn.setAttribute('title', 'Send message');
+              btn.title = 'Send message';
               btn.setAttribute('aria-label', 'Send message');
               btn.textContent = '✉';
               td.appendChild(btn);
@@ -3294,8 +3279,8 @@
       await renderTableBody(getSortedRows(currentRows), forceReload);
     }
 
-    async function loadRegisteredTeams() {
-      const allData = await fetchAllaData();
+    async function loadRegisteredTeams(forceReload = false) {
+      const allData = await fetchAllaData(forceReload);
       return getRowsForSource(allData, 'signUps');
     }
 
@@ -3314,7 +3299,7 @@
         }
 
         if (currentSource.type === 'preset') {
-          const registeredRows = await loadRegisteredTeams();
+          const registeredRows = await loadRegisteredTeams(forceReload);
           await renderPresetSections(registeredRows, forceReload);
           setStatus('Done');
           lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString('en-GB');
