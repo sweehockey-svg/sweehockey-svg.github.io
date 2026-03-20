@@ -879,7 +879,7 @@
       background: #eef4ff;
     }
 
-    .team-expand-btn {
+    .check-team-btn {
       border: 1px solid #d6def0;
       background: linear-gradient(to bottom, #ffffff, #f7f9fd);
       color: #07124f;
@@ -890,10 +890,10 @@
       text-transform: uppercase;
       letter-spacing: 0.35px;
       cursor: pointer;
-      min-width: 86px;
+      min-width: 110px;
     }
 
-    .team-expand-btn:hover {
+    .check-team-btn:hover {
       background: #eef4ff;
     }
 
@@ -1683,6 +1683,10 @@
       );
     }
 
+    function isCompatibilityNotOk(row) {
+      return String(row?.compatibility ?? '').trim().toLowerCase() === 'not ok';
+    }
+
     function getColumns(rows) {
       const preferred = [
         'teamName', 'teamCountry', 'registrationDate', 'divisionName', 'qualifierName',
@@ -1728,7 +1732,11 @@
     }
 
     function getVisibleColumns() {
-      return currentColumns.filter(col => !isDropdownDetailColumn(col));
+      return currentColumns.filter(col => {
+        if (isDropdownDetailColumn(col)) return false;
+        if (useTeamDropdownRows() && col === 'compatibility') return false;
+        return true;
+      });
     }
 
     function getDropdownDetailItems(row) {
@@ -2712,11 +2720,20 @@
         value = getSignupIssueText(row);
       }
 
+      if (useTeamDropdownRows() && col === 'compatibility' && isCompatibilityNotOk(row)) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'check-team-btn';
+        btn.textContent = 'Check Team';
+        td.appendChild(btn);
+        return btn;
+      }
+
       const textValue = String(value ?? '');
 
       if (!textValue) {
         td.textContent = '';
-        return;
+        return null;
       }
 
       const teamLinkMap = await getTeamLinkMap(forceReload);
@@ -2740,34 +2757,34 @@
             td.appendChild(document.createTextNode(', '));
           }
         });
-        return;
+        return null;
       }
 
       if (col === 'From' || col === 'To') {
         td.textContent = textValue;
-        return;
+        return null;
       }
 
       if (col === 'history1Team' || col === 'history2Team' || col === 'history3Team') {
         td.textContent = textValue;
-        return;
+        return null;
       }
 
       if (directTeamID && TEAM_NAME_KEYS.includes(col)) {
         td.appendChild(createLink(TEAM_BASE_URL + directTeamID, textValue));
-        return;
+        return null;
       }
 
       if (directPlayerID && PLAYER_NAME_KEYS.includes(col)) {
         td.appendChild(createLink(PLAYER_BASE_URL + directPlayerID, textValue));
-        return;
+        return null;
       }
 
       if (isTeamColumn(col)) {
         const mappedTeamID = teamLinkMap.get(normalizeTeamName(textValue));
         if (mappedTeamID) {
           td.appendChild(createLink(TEAM_BASE_URL + mappedTeamID, textValue));
-          return;
+          return null;
         }
       }
 
@@ -2775,17 +2792,18 @@
         const mappedPlayerID = playerLinkMap.get(normalizePlayerName(textValue));
         if (mappedPlayerID) {
           td.appendChild(createLink(PLAYER_BASE_URL + mappedPlayerID, textValue));
-          return;
+          return null;
         }
       }
 
       const anyMappedPlayerID = playerLinkMap.get(normalizePlayerName(textValue));
       if (anyMappedPlayerID) {
         td.appendChild(createLink(PLAYER_BASE_URL + anyMappedPlayerID, textValue));
-        return;
+        return null;
       }
 
       td.textContent = textValue;
+      return null;
     }
 
     function getSignUpsHeaderLabel(col) {
@@ -2832,6 +2850,9 @@
         const rowClass = getRowClass(row);
         if (rowClass) tr.classList.add(rowClass);
 
+        let detailRow = null;
+        let checkTeamButton = null;
+
         if (!hideIndex) {
           const indexTd = document.createElement('td');
           indexTd.className = 'num';
@@ -2843,57 +2864,55 @@
           const td = document.createElement('td');
           if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
           if (col === 'signupIssue') td.style.whiteSpace = 'normal';
-          await renderTableCell(td, row, col, forceReload);
+
+          const result = await renderTableCell(td, row, col, forceReload);
+          if (result instanceof HTMLButtonElement && result.classList.contains('check-team-btn')) {
+            checkTeamButton = result;
+          }
+
           tr.appendChild(td);
         }
 
-        let detailRow = null;
+        if (useTeamDropdownRows() && isCompatibilityNotOk(row)) {
+          const compatibilityTd = document.createElement('td');
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'check-team-btn';
+          btn.textContent = 'Check Team';
+          compatibilityTd.appendChild(btn);
+          tr.appendChild(compatibilityTd);
+          checkTeamButton = btn;
 
-        if (useTeamDropdownRows()) {
-          const detailsTd = document.createElement('td');
           const detailItems = getDropdownDetailItems(row);
+          detailRow = document.createElement('tr');
+          detailRow.className = 'team-detail-row';
+
+          const detailCell = document.createElement('td');
+          detailCell.className = 'team-detail-cell';
+          detailCell.colSpan = visibleColumns.length + (hideIndex ? 1 : 2);
+
+          const detailBox = document.createElement('div');
+          detailBox.className = 'team-detail-box';
+
+          const detailGrid = document.createElement('div');
+          detailGrid.className = 'team-detail-grid';
 
           if (detailItems.length > 0) {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'team-expand-btn';
-            btn.textContent = 'Show';
-            detailsTd.appendChild(btn);
-
-            detailRow = document.createElement('tr');
-            detailRow.className = 'team-detail-row';
-
-            const detailCell = document.createElement('td');
-            detailCell.className = 'team-detail-cell';
-            detailCell.colSpan = visibleColumns.length + (hideIndex ? 1 : 2);
-
-            const detailBox = document.createElement('div');
-            detailBox.className = 'team-detail-box';
-
-            const detailGrid = document.createElement('div');
-            detailGrid.className = 'team-detail-grid';
-
             detailItems.forEach(item => {
               detailGrid.appendChild(createTeamDetailCard(item.label, item.value));
             });
-
-            if (detailItems.length === 0) {
-              detailGrid.appendChild(createEmptyTeamDetailCard());
-            }
-
-            detailBox.appendChild(detailGrid);
-            detailCell.appendChild(detailBox);
-            detailRow.appendChild(detailCell);
-
-            btn.addEventListener('click', () => {
-              const isOpen = detailRow.classList.toggle('open');
-              btn.textContent = isOpen ? 'Hide' : 'Show';
-            });
           } else {
-            detailsTd.innerHTML = '<span class="team-detail-empty">-</span>';
+            detailGrid.appendChild(createEmptyTeamDetailCard());
           }
 
-          tr.appendChild(detailsTd);
+          detailBox.appendChild(detailGrid);
+          detailCell.appendChild(detailBox);
+          detailRow.appendChild(detailCell);
+
+          btn.addEventListener('click', () => {
+            const isOpen = detailRow.classList.toggle('open');
+            btn.textContent = isOpen ? 'Hide Team' : 'Check Team';
+          });
         }
 
         tbody.appendChild(tr);
@@ -2947,9 +2966,9 @@
       });
 
       if (useTeamDropdownRows()) {
-        const detailsTh = document.createElement('th');
-        detailsTh.textContent = 'Details';
-        headerRow.appendChild(detailsTh);
+        const checkTh = document.createElement('th');
+        checkTh.textContent = 'Check Team';
+        headerRow.appendChild(checkTh);
       }
     }
 
