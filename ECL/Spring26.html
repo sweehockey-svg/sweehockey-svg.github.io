@@ -422,6 +422,27 @@
       filter: brightness(0.98);
     }
 
+    .mail-icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      text-decoration: none;
+      background: linear-gradient(to bottom, #ff6c96, #ff4f84);
+      color: white;
+      box-shadow: 0 8px 16px rgba(255, 90, 138, 0.24);
+      transition: transform 0.12s ease, filter 0.12s ease;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .mail-icon-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.98);
+    }
+
     .status {
       font-size: 12px;
       font-weight: 800;
@@ -1370,9 +1391,6 @@
 
     const SEEDING_TEAM_STATUSES = {
       'Kastikekauppa Esports': 'DISBANDED'
-      // Lägg till fler här senare:
-      // 'EXEN': 'DISBANDED',
-      // 'Vizio': 'DISBANDED'
     };
 
     const sources = [
@@ -1613,6 +1631,7 @@
     let signUpsCache = null;
     let teamLinkMapCache = null;
     let playerLinkMapCache = null;
+    let captainUserIdMapCache = null;
     let currentRows = [];
     let currentColumns = [];
     let currentNumericColumns = new Set();
@@ -1762,7 +1781,7 @@
       const preferred = [
         'teamName', 'teamCountry', 'registrationDate', 'divisionName', 'qualifierName',
         'playerCount', 'fullLicenseCount', 'backupLicenseCount', 'unlicensedPlayerCount', 'signupIssue',
-        'playerID', 'Player', 'tag',
+        'userID', 'playerID', 'Player', 'tag',
         'requestType',
         'history1Division', 'history1Team', 'history1Matches',
         'history2Division', 'history2Team', 'history2Matches',
@@ -1848,7 +1867,13 @@
         return getTeamTabVisibleColumns() || [];
       }
 
-      return currentColumns.filter(col => !TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
+      const cols = currentColumns.filter(col => !TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
+
+      if (currentSource.key === 'backups') {
+        return [...cols, '__sendMail'];
+      }
+
+      return cols;
     }
 
     function getColumnHeaderLabel(col) {
@@ -2124,6 +2149,16 @@
       return '';
     }
 
+    function getUserIdFromRow(row) {
+      const keys = ['userID', 'userId', 'UserID', 'user_id', 'userid'];
+      for (const key of keys) {
+        if (row && row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== '') {
+          return row[key];
+        }
+      }
+      return '';
+    }
+
     function isTeamColumn(col) {
       return TEAM_NAME_KEYS.includes(col) || TEAM_LIST_NAME_KEYS.includes(col);
     }
@@ -2271,6 +2306,54 @@
 
       playerLinkMapCache = map;
       return map;
+    }
+
+    async function getCaptainUserIdMap(forceReload = false) {
+      if (captainUserIdMapCache && !forceReload) return captainUserIdMapCache;
+
+      const allData = await fetchAllaData(forceReload);
+      const rows = Array.isArray(allData?.teamCaptains) ? allData.teamCaptains : [];
+      const map = new Map();
+
+      rows.forEach(row => {
+        const normalizedTeam = normalizeTeamName(row.teamName);
+        const userId = String(row.userID || '').trim();
+
+        if (!normalizedTeam || !userId) return;
+
+        if (!map.has(normalizedTeam)) {
+          map.set(normalizedTeam, []);
+        }
+
+        const ids = map.get(normalizedTeam);
+        if (!ids.includes(userId)) {
+          ids.push(userId);
+        }
+      });
+
+      captainUserIdMapCache = map;
+      return map;
+    }
+
+    async function getBackupMessageUrl(row, forceReload = false) {
+      if (currentSource.key !== 'backups') return '';
+
+      const captainMap = await getCaptainUserIdMap(forceReload);
+      const teamName = getTeamNameFromRow(row);
+      const normalizedTeam = normalizeTeamName(teamName);
+      const captainIds = captainMap.get(normalizedTeam) || [];
+
+      const backupUserId = String(getUserIdFromRow(row) || '').trim();
+      if (!backupUserId) return '';
+
+      const recipients = [...captainIds, backupUserId]
+        .map(id => String(id).trim())
+        .filter(Boolean)
+        .filter((id, index, arr) => arr.indexOf(id) === index);
+
+      if (recipients.length === 0) return '';
+
+      return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
     }
 
     function getProQualReqCheckRows(allData) {
@@ -3017,6 +3100,28 @@
 
         for (const col of visibleColumns) {
           const td = document.createElement('td');
+
+          if (col === '__sendMail') {
+            const mailUrl = await getBackupMessageUrl(row, forceReload);
+
+            if (mailUrl) {
+              const btn = document.createElement('a');
+              btn.href = mailUrl;
+              btn.target = '_blank';
+              btn.rel = 'noopener noreferrer';
+              btn.className = 'mail-icon-btn';
+              btn.title = 'Send message';
+              btn.setAttribute('aria-label', 'Send message');
+              btn.textContent = '✉';
+              td.appendChild(btn);
+            } else {
+              td.textContent = '';
+            }
+
+            tr.appendChild(td);
+            continue;
+          }
+
           if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
           if (col === 'signupIssue') td.style.whiteSpace = 'normal';
           await renderTableCell(td, row, col, forceReload);
@@ -3089,6 +3194,13 @@
 
       visibleColumns.forEach(col => {
         const th = document.createElement('th');
+
+        if (col === '__sendMail') {
+          th.textContent = 'MAIL';
+          headerRow.appendChild(th);
+          return;
+        }
+
         th.classList.add('sortable');
 
         if (currentSource.key === 'signUps') {
@@ -3167,8 +3279,8 @@
       await renderTableBody(getSortedRows(currentRows), forceReload);
     }
 
-    async function loadRegisteredTeams() {
-      const allData = await fetchAllaData();
+    async function loadRegisteredTeams(forceReload = false) {
+      const allData = await fetchAllaData(forceReload);
       return getRowsForSource(allData, 'signUps');
     }
 
@@ -3183,10 +3295,11 @@
           signUpsCache = null;
           teamLinkMapCache = null;
           playerLinkMapCache = null;
+          captainUserIdMapCache = null;
         }
 
         if (currentSource.type === 'preset') {
-          const registeredRows = await loadRegisteredTeams();
+          const registeredRows = await loadRegisteredTeams(forceReload);
           await renderPresetSections(registeredRows, forceReload);
           setStatus('Done');
           lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString('en-GB');
@@ -3248,6 +3361,7 @@
       signUpsCache = null;
       teamLinkMapCache = null;
       playerLinkMapCache = null;
+      captainUserIdMapCache = null;
       loadData(true);
     });
 
