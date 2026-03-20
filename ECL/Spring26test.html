@@ -1613,6 +1613,7 @@
     let signUpsCache = null;
     let teamLinkMapCache = null;
     let playerLinkMapCache = null;
+    let captainIdMapCache = null;
     let currentRows = [];
     let currentColumns = [];
     let currentNumericColumns = new Set();
@@ -1848,7 +1849,13 @@
         return getTeamTabVisibleColumns() || [];
       }
 
-      return currentColumns.filter(col => !TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
+      const cols = currentColumns.filter(col => !TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
+
+      if (currentSource.key === 'backups') {
+        return [...cols, '__sendMail'];
+      }
+
+      return cols;
     }
 
     function getColumnHeaderLabel(col) {
@@ -2271,6 +2278,68 @@
 
       playerLinkMapCache = map;
       return map;
+    }
+
+    function isCaptainRole(roleValue) {
+      const role = String(roleValue || '').trim().toLowerCase();
+      return role === 'c' || role === 'captain' || role === 'cap' || role === 'a/c' || role === 'ac';
+    }
+
+    async function getCaptainIdMap(forceReload = false) {
+      if (captainIdMapCache && !forceReload) return captainIdMapCache;
+
+      const allData = await fetchAllaData(forceReload);
+      const map = new Map();
+
+      Object.values(allData || {}).forEach(value => {
+        if (!Array.isArray(value)) return;
+
+        value.forEach(row => {
+          const teamName = getTeamNameFromRow(row);
+          const normalizedTeam = normalizeTeamName(teamName);
+          const playerId = getPlayerIdFromRow(row);
+
+          const possibleRoleKeys = ['Role', 'role', 'playerRole'];
+          const roleValue = possibleRoleKeys.map(key => row?.[key]).find(v => v !== undefined && v !== null);
+
+          if (!normalizedTeam || !playerId || !isCaptainRole(roleValue)) return;
+
+          if (!map.has(normalizedTeam)) {
+            map.set(normalizedTeam, []);
+          }
+
+          const ids = map.get(normalizedTeam);
+          const playerIdStr = String(playerId);
+
+          if (!ids.includes(playerIdStr)) {
+            ids.push(playerIdStr);
+          }
+        });
+      });
+
+      captainIdMapCache = map;
+      return map;
+    }
+
+    async function getBackupMessageUrl(row, forceReload = false) {
+      if (currentSource.key !== 'backups') return '';
+
+      const captainMap = await getCaptainIdMap(forceReload);
+      const teamName = getTeamNameFromRow(row);
+      const normalizedTeam = normalizeTeamName(teamName);
+      const captainIds = captainMap.get(normalizedTeam) || [];
+
+      const playerId = String(getPlayerIdFromRow(row) || '').trim();
+      if (!playerId) return '';
+
+      const recipients = [...captainIds, playerId]
+        .map(id => String(id).trim())
+        .filter(Boolean)
+        .filter((id, index, arr) => arr.indexOf(id) === index);
+
+      if (recipients.length === 0) return '';
+
+      return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
     }
 
     function getProQualReqCheckRows(allData) {
@@ -3017,6 +3086,32 @@
 
         for (const col of visibleColumns) {
           const td = document.createElement('td');
+
+          if (col === '__sendMail') {
+            const mailUrl = await getBackupMessageUrl(row, forceReload);
+
+            if (mailUrl) {
+              const btn = document.createElement('a');
+              btn.href = mailUrl;
+              btn.target = '_blank';
+              btn.rel = 'noopener noreferrer';
+              btn.className = 'action-btn';
+              btn.textContent = 'Skicka mail';
+              btn.style.display = 'inline-flex';
+              btn.style.alignItems = 'center';
+              btn.style.justifyContent = 'center';
+              btn.style.padding = '8px 12px';
+              btn.style.textDecoration = 'none';
+              btn.style.whiteSpace = 'nowrap';
+              td.appendChild(btn);
+            } else {
+              td.textContent = '';
+            }
+
+            tr.appendChild(td);
+            continue;
+          }
+
           if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
           if (col === 'signupIssue') td.style.whiteSpace = 'normal';
           await renderTableCell(td, row, col, forceReload);
@@ -3089,6 +3184,13 @@
 
       visibleColumns.forEach(col => {
         const th = document.createElement('th');
+
+        if (col === '__sendMail') {
+          th.textContent = 'SEND MAIL';
+          headerRow.appendChild(th);
+          return;
+        }
+
         th.classList.add('sortable');
 
         if (currentSource.key === 'signUps') {
@@ -3183,6 +3285,7 @@
           signUpsCache = null;
           teamLinkMapCache = null;
           playerLinkMapCache = null;
+          captainIdMapCache = null;
         }
 
         if (currentSource.type === 'preset') {
@@ -3248,6 +3351,7 @@
       signUpsCache = null;
       teamLinkMapCache = null;
       playerLinkMapCache = null;
+      captainIdMapCache = null;
       loadData(true);
     });
 
