@@ -19,14 +19,25 @@
       --ok: #198754;
       --danger: #dc3545;
       --warning: #c58a00;
-      --gold-1: #d9ba52;
-      --gold-2: #edd983;
-      --gray-1: #d4d8e0;
-      --gray-2: #eceff5;
       --link: #0b57d0;
       --shadow: 0 10px 28px rgba(7, 18, 79, 0.08);
       --shadow-soft: 0 4px 14px rgba(7, 18, 79, 0.05);
       --radius: 16px;
+
+      --elite-bg: linear-gradient(90deg, #d9ba52, #edd983);
+      --elite-text: #0b144f;
+
+      --pro-bg: linear-gradient(90deg, #d4d8e0, #eceff5);
+      --pro-text: #0b144f;
+
+      --lite-bg: linear-gradient(90deg, #955742, #cd775b);
+      --lite-text: #ffffff;
+
+      --core-bg: linear-gradient(90deg, #903300, #f85900);
+      --core-text: #ffffff;
+
+      --neo-bg: linear-gradient(90deg, #2b7526, #4ed546);
+      --neo-text: #ffffff;
     }
 
     * { box-sizing: border-box; }
@@ -406,36 +417,11 @@
       filter: brightness(0.98);
     }
 
-    .icon-actions {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      min-height: 34px;
-    }
-
-    .mail-icon-btn,
-    .copy-icon-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      text-decoration: none;
-      border: 0;
-      cursor: pointer;
-      background: linear-gradient(to bottom, #ff6c96, #ff4f84);
-      color: white;
-      box-shadow: 0 8px 16px rgba(255, 90, 138, 0.24);
-      transition: transform 0.12s ease, filter 0.12s ease;
-      font-size: 16px;
-      line-height: 1;
-    }
-
-    .mail-icon-btn:hover,
-    .copy-icon-btn:hover {
-      transform: translateY(-1px);
-      filter: brightness(0.98);
+    .action-btn.secondary {
+      background: linear-gradient(to bottom, #ffffff, #f7f9fd);
+      color: #07124f;
+      border: 1px solid #d6def0;
+      box-shadow: none;
     }
 
     .status {
@@ -457,6 +443,48 @@
       border: 1px solid #e3eaf5;
       padding: 8px 10px;
       border-radius: 10px;
+    }
+
+    .filters-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #e8eef6;
+    }
+
+    .search-input {
+      height: 40px;
+      min-width: 260px;
+      border: 1px solid #cfd7e6;
+      border-radius: 10px;
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 700;
+      outline: none;
+      background: #fff;
+    }
+
+    .search-input:focus {
+      border-color: #8ea3d6;
+      box-shadow: 0 0 0 3px rgba(11, 87, 208, 0.08);
+    }
+
+    .toggle-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 11px;
+      background: #f8fbff;
+      border: 1px solid #e3eaf5;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #334155;
+      cursor: pointer;
+      user-select: none;
     }
 
     .content-area {
@@ -649,7 +677,6 @@
     }
 
     .section-title-row td {
-      background: linear-gradient(90deg, var(--gold-1), var(--gold-2));
       color: #0b144f;
       font-weight: 900;
       text-align: center;
@@ -659,11 +686,6 @@
       letter-spacing: 0.7px;
       padding: 12px 10px;
       border-radius: 10px 10px 0 0;
-    }
-
-    .section-title-row.gray td {
-      background: linear-gradient(90deg, var(--gray-1), var(--gray-2));
-      color: #0b144f;
     }
 
     .seed-row td {
@@ -1012,6 +1034,38 @@
       text-decoration: underline;
     }
 
+    .icon-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+    }
+
+    .mail-icon-btn,
+    .copy-icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      text-decoration: none;
+      border: 0;
+      cursor: pointer;
+      background: linear-gradient(to bottom, #ff6c96, #ff4f84);
+      color: white;
+      box-shadow: 0 8px 16px rgba(255, 90, 138, 0.24);
+      transition: transform 0.12s ease, filter 0.12s ease;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .mail-icon-btn:hover,
+    .copy-icon-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.98);
+    }
+
     .site-footer {
       margin-top: 28px;
       background: linear-gradient(to right, #03045e, #07114f);
@@ -1067,14 +1121,16 @@
 
       .page-top { padding: 14px 12px 10px; }
 
-      .topbar {
+      .topbar,
+      .filters-bar {
         align-items: stretch;
         gap: 8px;
       }
 
       .action-btn,
       .status,
-      .small {
+      .small,
+      .search-input {
         width: 100%;
       }
 
@@ -1218,11 +1274,21 @@
         <div class="page-top">
           <h1 id="pageTitle">26 Spring Checks</h1>
           <div class="tabs" id="tabs"></div>
+
           <div class="topbar">
             <button id="reloadBtn" class="action-btn" type="button">Refresh</button>
+            <button id="clearFiltersBtn" class="action-btn secondary" type="button">Clear Filters</button>
             <div class="status" id="status">Ready</div>
             <div class="status" id="rowCounter"></div>
             <div class="small" id="lastUpdated"></div>
+          </div>
+
+          <div class="filters-bar">
+            <input id="searchInput" class="search-input" type="text" placeholder="Search team, player, division..." />
+            <label class="toggle-box">
+              <input id="flaggedOnlyToggle" type="checkbox" />
+              <span>Only flagged</span>
+            </label>
           </div>
         </div>
 
@@ -1258,6 +1324,20 @@
 
   <script>
     const ADMIN_PASSWORD = 'kungkenu';
+    const DATA_FILE = 'alla.json';
+    const LEAGUE_ID = 501;
+    const TEAM_BASE_URL = `https://sportsgamer.gg/leagues/${LEAGUE_ID}/teams/`;
+    const PLAYER_BASE_URL = `https://sportsgamer.gg/players/`;
+
+    const DIVISION_STYLE_MAP = {
+      elite: { bg: 'var(--elite-bg)', text: 'var(--elite-text)' },
+      eliteQual: { bg: 'var(--elite-bg)', text: 'var(--elite-text)' },
+      pro: { bg: 'var(--pro-bg)', text: 'var(--pro-text)' },
+      proQual: { bg: 'var(--pro-bg)', text: 'var(--pro-text)' },
+      lite: { bg: 'var(--lite-bg)', text: 'var(--lite-text)' },
+      core: { bg: 'var(--core-bg)', text: 'var(--core-text)' },
+      neo: { bg: 'var(--neo-bg)', text: 'var(--neo-text)' }
+    };
 
     const TEAM_NAME_CHANGES = [
       { oldName: 'HAVU Gaming', newName: 'Parasite' },
@@ -1274,59 +1354,24 @@
     const BANNED_PLAYERS = [
       { playerName: 'ViSiOnZ97_', aliases: [], banType: 'Captaincy ban', until: 'Indefinitely' },
       { playerName: 'Men-at-work74', aliases: [], banType: 'Captaincy ban', until: 'Indefinitely' },
-      { playerName: 'maatti64', aliases: [], banType: 'Captancy ban', until: 'Undefined' },
-      { playerName: 'OsquuG', aliases: [], banType: 'Captancy ban', until: 'Undefined' },
-      { playerName: 'matadori-_-', aliases: [], banType: 'Captancy ban', until: 'Undefined', notes: 'Previously SirRaittinen' },
-      { playerName: 'xSagwa', aliases: [], banType: 'Captancy ban', until: 'Undefined' },
-      { playerName: 'punt1la98', aliases: [], banType: 'Captancy ban', until: 'Undefined' },
-      { playerName: 'radekbonk111', aliases: [], banType: 'Captancy ban', until: 'Undefined' },
-      { playerName: 'snaasigi', aliases: [], banType: 'Captancy ban', until: 'Undefined' },
-      { playerName: 'Keuschemisch', aliases: [], banType: 'Captainsy ban', until: '3030.02.10' },
+      { playerName: 'maatti64', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+      { playerName: 'OsquuG', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+      { playerName: 'matadori-_-', aliases: [], banType: 'Captaincy ban', until: 'Undefined', notes: 'Previously SirRaittinen' },
+      { playerName: 'xSagwa', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+      { playerName: 'punt1la98', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+      { playerName: 'radekbonk111', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+      { playerName: 'snaasigi', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+      { playerName: 'Keuschemisch', aliases: [], banType: 'Captaincy ban', until: '3030.02.10' },
       { playerName: 'eBjorken97_', aliases: [], banType: 'Suspension', until: '2026.08.13' },
-      { playerName: 'eBjorken97_', aliases: [], banType: 'Captainsy ban', until: '2027.04.09' },
-      { playerName: 'abbelandit__', aliases: [], banType: 'Captainsy ban', until: '2029.04.09' },
-      { playerName: 'Bjorkudd_39', aliases: [], banType: 'Captainsy ban', until: '2027.04.09' },
+      { playerName: 'eBjorken97_', aliases: [], banType: 'Captaincy ban', until: '2027.04.09' },
+      { playerName: 'abbelandit__', aliases: [], banType: 'Captaincy ban', until: '2029.04.09' },
+      { playerName: 'Bjorkudd_39', aliases: [], banType: 'Captaincy ban', until: '2027.04.09' },
       { playerName: 'abbelandit__', aliases: [], banType: 'Suspension', until: '2026.06.28' },
-      { playerName: 'I-MeIIe-l', aliases: [], banType: 'Captainsy ban', until: '2027.04.14' },
+      { playerName: 'I-MeIIe-l', aliases: [], banType: 'Captaincy ban', until: '2027.04.14' },
       { playerName: 'I-MeIIe-l', aliases: [], banType: 'Suspension', until: '2026.04.14' },
-      { playerName: 'Blaze4214', aliases: [], banType: 'Captainsy ban', until: '2027.04.14' },
+      { playerName: 'Blaze4214', aliases: [], banType: 'Captaincy ban', until: '2027.04.14' },
       { playerName: 'Cbatta_-11', aliases: [], banType: 'Suspension', until: '2026.04.14' }
     ];
-
-    const loginScreen = document.getElementById('loginScreen');
-    const siteShell = document.getElementById('siteShell');
-    const passwordInput = document.getElementById('passwordInput');
-    const loginBtn = document.getElementById('loginBtn');
-    const loginError = document.getElementById('loginError');
-
-    function unlockPage() {
-      loginScreen.classList.add('hidden');
-      siteShell.classList.remove('locked');
-    }
-
-    function tryLogin() {
-      const entered = passwordInput.value;
-      if (entered === ADMIN_PASSWORD) {
-        loginError.style.display = 'none';
-        sessionStorage.setItem('sg_admin_access', 'granted');
-        unlockPage();
-      } else {
-        loginError.style.display = 'block';
-      }
-    }
-
-    loginBtn.addEventListener('click', tryLogin);
-
-    passwordInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') tryLogin();
-    });
-
-    if (sessionStorage.getItem('sg_admin_access') === 'granted') unlockPage();
-
-    const DATA_FILE = 'alla.json';
-    const LEAGUE_ID = 501;
-    const TEAM_BASE_URL = `https://sportsgamer.gg/leagues/${LEAGUE_ID}/teams/`;
-    const PLAYER_BASE_URL = `https://sportsgamer.gg/players/`;
 
     const SEEDING_TEAM_STATUSES = {
       'Kastikekauppa Esports': 'DISBANDED',
@@ -1351,7 +1396,6 @@
     const presetSections = [
       {
         title: 'Elite',
-        headerClass: '',
         rows: [
           [1, 'Elite 🏆', 'Tohtorit'],
           [2, 'Elite 🥈', 'vNexs I'],
@@ -1373,7 +1417,6 @@
       },
       {
         title: 'Elite Qualifiers (if needed)',
-        headerClass: '',
         rows: [
           [1, '▼ Elite 13', 'EXEN'],
           [2, '▼ Elite 16', 'VESUVIUS ESPORTS'],
@@ -1387,7 +1430,6 @@
       },
       {
         title: 'Pro',
-        headerClass: 'gray',
         rows: [
           [1, '▼ Elite 13', 'EXEN'],
           [2, '▼ Elite 16', 'VESUVIUS ESPORTS'],
@@ -1418,7 +1460,6 @@
       },
       {
         title: 'Pro Qualifiers',
-        headerClass: '',
         rows: [
           [1, 'Pro 23', 'Golden Sticks'],
           [2, 'Pro 24', 'DEG eSports'],
@@ -1443,7 +1484,6 @@
       },
       {
         title: 'Lite',
-        headerClass: '',
         rows: [
           [1, '▼ Pro 29', 'Saucer Hockey'],
           [2, '▼ Pro 30', 'Sunne IK Esport'],
@@ -1483,7 +1523,6 @@
       },
       {
         title: 'Core',
-        headerClass: 'gray',
         rows: [
           [1, 'Core 9', 'Rampa Bay'],
           [2, 'Core 10', 'eskoetikka esports'],
@@ -1528,7 +1567,6 @@
       },
       {
         title: 'Neo',
-        headerClass: '',
         rows: [
           [1, 'Neo 9', 'Black Wings'],
           [2, 'Neo 10', 'Old but Gold'],
@@ -1569,18 +1607,6 @@
       }
     ];
 
-    let currentSource = sources[0];
-    let allaDataCache = null;
-    let signUpsCache = null;
-    let teamLinkMapCache = null;
-    let playerLinkMapCache = null;
-    let captainUserIdMapCache = null;
-    let bannedPlayersCache = null;
-    let currentRows = [];
-    let currentColumns = [];
-    let currentNumericColumns = new Set();
-    let sortState = { column: null, direction: 'asc' };
-
     const TEAM_NAME_KEYS = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName'];
     const PLAYER_NAME_KEYS = ['Player', 'tag', 'playerName', 'player'];
     const TEAM_LIST_NAME_KEYS = [];
@@ -1595,12 +1621,31 @@
       'corePlayerNames'
     ];
 
+    let currentSource = sources[0];
+    let allaDataCache = null;
+    let signUpsCache = null;
+    let teamLinkMapCache = null;
+    let playerLinkMapCache = null;
+    let captainUserIdMapCache = null;
+    let bannedPlayersCache = null;
+    let currentRows = [];
+    let currentColumns = [];
+    let currentNumericColumns = new Set();
+    let sortState = { column: null, direction: 'asc' };
+
+    const loginScreen = document.getElementById('loginScreen');
+    const siteShell = document.getElementById('siteShell');
+    const passwordInput = document.getElementById('passwordInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginError = document.getElementById('loginError');
+
     const tbody = document.querySelector('#results tbody');
     const headerRow = document.getElementById('headerRow');
     const statusEl = document.getElementById('status');
     const errorBox = document.getElementById('errorBox');
     const emptyMessage = document.getElementById('emptyMessage');
     const reloadBtn = document.getElementById('reloadBtn');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
     const lastUpdated = document.getElementById('lastUpdated');
     const rowCounter = document.getElementById('rowCounter');
     const tabsEl = document.getElementById('tabs');
@@ -1613,10 +1658,42 @@
     const seedingWrap = document.getElementById('seedingWrap');
     const seedingBody = document.getElementById('seedingBody');
     const proQualReqWrap = document.getElementById('proQualReqWrap');
+    const searchInput = document.getElementById('searchInput');
+    const flaggedOnlyToggle = document.getElementById('flaggedOnlyToggle');
 
     function setStatus(text) { statusEl.textContent = text; }
     function showError(text) { errorBox.style.display = 'block'; errorBox.textContent = text; }
     function clearError() { errorBox.style.display = 'none'; errorBox.textContent = ''; }
+
+    function clearCaches() {
+      allaDataCache = null;
+      signUpsCache = null;
+      teamLinkMapCache = null;
+      playerLinkMapCache = null;
+      captainUserIdMapCache = null;
+      bannedPlayersCache = null;
+    }
+
+    function unlockPage() {
+      loginScreen.classList.add('hidden');
+      siteShell.classList.remove('locked');
+    }
+
+    function tryLogin() {
+      if (passwordInput.value === ADMIN_PASSWORD) {
+        loginError.style.display = 'none';
+        sessionStorage.setItem('sg_admin_access', 'granted');
+        unlockPage();
+      } else {
+        loginError.style.display = 'block';
+      }
+    }
+
+    loginBtn.addEventListener('click', tryLogin);
+    passwordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') tryLogin();
+    });
+    if (sessionStorage.getItem('sg_admin_access') === 'granted') unlockPage();
 
     function showNormalTable() {
       normalTableWrap.style.display = 'block';
@@ -1687,11 +1764,6 @@
       return info ? info.newName : String(teamName || '');
     }
 
-    function getOldTeamName(teamName) {
-      const info = getTeamRenameInfo(teamName);
-      return info ? info.oldName : String(teamName || '');
-    }
-
     function getSeedTeamName(teamName) {
       return getCanonicalTeamName(teamName);
     }
@@ -1711,21 +1783,11 @@
       const cloned = { ...row };
 
       TEAM_NAME_KEYS.forEach(key => {
-        if (key in cloned && cloned[key]) {
-          cloned[key] = applyTeamNameChangesToValue(cloned[key]);
-        }
+        if (key in cloned && cloned[key]) cloned[key] = applyTeamNameChangesToValue(cloned[key]);
       });
 
-      ['history1Team', 'history2Team', 'history3Team'].forEach(key => {
-        if (key in cloned && cloned[key]) {
-          cloned[key] = applyTeamNameChangesToValue(cloned[key]);
-        }
-      });
-
-      ['From', 'To'].forEach(key => {
-        if (key in cloned && cloned[key]) {
-          cloned[key] = applyTeamNameChangesToValue(cloned[key]);
-        }
+      ['history1Team', 'history2Team', 'history3Team', 'From', 'To'].forEach(key => {
+        if (key in cloned && cloned[key]) cloned[key] = applyTeamNameChangesToValue(cloned[key]);
       });
 
       return cloned;
@@ -1733,9 +1795,10 @@
 
     function selectSource(source) {
       currentSource = source;
+      sortState = { column: null, direction: 'asc' };
       renderTabs();
       closeMobileMenu();
-      loadData();
+      applyFiltersAndRender();
     }
 
     function renderTabs() {
@@ -1766,10 +1829,6 @@
       );
     }
 
-    function isCompatibilityNotOk(row) {
-      return String(row?.compatibility ?? '').trim().toLowerCase() === 'not ok';
-    }
-
     function normalizeBanType(value) {
       const raw = String(value || '').trim().toLowerCase();
       if (raw.includes('suspension')) return 'Suspension';
@@ -1777,19 +1836,19 @@
       return String(value || '').trim();
     }
 
-    function getBanRole(banType) {
-      const normalized = normalizeBanType(banType);
-      if (normalized === 'Captaincy ban') return 'Captain / Assistant Captain';
-      if (normalized === 'Suspension') return 'Player / Captain / Assistant Captain';
-      return '';
-    }
-
     function parseBanEndDate(value) {
       const text = String(value || '').trim();
-      const match = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+      const match = text.match(/^(\d{4})\.(\d{2})\.(\d{2})$/) || text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+
       if (!match) return null;
-      const [, day, month, year] = match;
-      return new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999);
+
+      if (match[1].length === 4) {
+        const [, year, month, day] = match;
+        return new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999);
+      } else {
+        const [, day, month, year] = match;
+        return new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999);
+      }
     }
 
     function isBanActive(untilValue) {
@@ -1801,45 +1860,29 @@
 
       const endDate = parseBanEndDate(untilValue);
       if (!endDate) return true;
-
       return endDate >= new Date();
     }
 
     function getSeedingTeamStatus(teamName) {
       const normalizedTeam = normalizeTeamName(teamName);
       for (const [name, status] of Object.entries(SEEDING_TEAM_STATUSES)) {
-        if (normalizeTeamName(name) === normalizedTeam) {
-          return String(status || '').trim().toUpperCase();
-        }
+        if (normalizeTeamName(name) === normalizedTeam) return String(status || '').trim().toUpperCase();
       }
       return '';
     }
 
     function getColumns(rows) {
       if (currentSource.key === 'bannedPlayers') {
-        return [
-          'playerName',
-          'banType',
-          'until',
-          'active',
-          'status',
-          'foundAs',
-          'teams',
-          'divisions',
-          'sources',
-          'notes'
-        ];
+        return ['playerName', 'banType', 'until', 'active', 'status', 'foundAs', 'teams', 'divisions', 'sources', 'notes'];
       }
 
       const preferred = [
         'teamName', 'teamCountry', 'registrationDate', 'divisionName', 'qualifierName',
         'playerCount', 'fullLicenseCount', 'backupLicenseCount', 'unlicensedPlayerCount', 'signupIssue',
-        'userID', 'playerID', 'Player', 'tag',
-        'requestType',
+        'userID', 'playerID', 'Player', 'tag', 'requestType',
         'history1Division', 'history1Team', 'history1Matches',
         'history2Division', 'history2Team', 'history2Matches',
         'history3Division', 'history3Team', 'history3Matches',
-        'currentDivision', 'previousDivision', 'olderDivision', 'history',
         'teamDivision', 'EP', 'PP', 'LP', 'CP', 'NP',
         'elitePlayers', 'proPlayers', 'litePlayers', 'corePlayers',
         'neoOrLowerPlayers', 'coreOrLowerPlayers', 'liteOrLowerPlayers',
@@ -1913,13 +1956,9 @@
     }
 
     function getVisibleColumns() {
-      if (currentSource.key === 'bannedPlayers') {
-        return currentColumns;
-      }
+      if (currentSource.key === 'bannedPlayers') return currentColumns;
 
-      if (useTeamDropdownRows()) {
-        return getTeamTabVisibleColumns() || [];
-      }
+      if (useTeamDropdownRows()) return getTeamTabVisibleColumns() || [];
 
       const cols = currentColumns.filter(col => !TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
       if (currentSource.key === 'backups' || currentSource.key === 'licenslosa') return [...cols, '__sendMail'];
@@ -1928,7 +1967,7 @@
 
     function getColumnHeaderLabel(col) {
       if (currentSource.key === 'bannedPlayers') {
-        const labels = {
+        return {
           playerName: 'PLAYER',
           banType: 'BAN TYPE',
           until: 'UNTIL',
@@ -1939,12 +1978,11 @@
           divisions: 'DIVISION',
           sources: 'SOURCE',
           notes: 'NOTES'
-        };
-        return labels[col] || col;
+        }[col] || col;
       }
 
       if (currentSource.key === 'lite') {
-        const labels = {
+        return {
           teamName: 'TEAMNAME',
           totalPlayers: 'TOTALPLAYERS',
           playerCount: 'TOTALPLAYERS',
@@ -1955,12 +1993,11 @@
           LP: 'LITE OR LOWER',
           liteOrLowerPlayers: 'LITE OR LOWER',
           totalPoints: 'TOTALPOINTS'
-        };
-        return labels[col] || col;
+        }[col] || col;
       }
 
       if (currentSource.key === 'core') {
-        const labels = {
+        return {
           teamName: 'TEAMNAME',
           totalPlayers: 'TOTALPLAYERS',
           playerCount: 'TOTALPLAYERS',
@@ -1973,12 +2010,11 @@
           CP: 'CORE OR LOWER',
           coreOrLowerPlayers: 'CORE OR LOWER',
           totalPoints: 'TOTALPOINTS'
-        };
-        return labels[col] || col;
+        }[col] || col;
       }
 
       if (currentSource.key === 'neo') {
-        const labels = {
+        return {
           teamName: 'TEAMNAME',
           totalPlayers: 'TOTALPLAYERS',
           playerCount: 'TOTALPLAYERS',
@@ -1993,8 +2029,7 @@
           NP: 'NEO OR NEW',
           neoOrLowerPlayers: 'NEO OR NEW',
           totalPoints: 'TOTALPOINTS'
-        };
-        return labels[col] || col;
+        }[col] || col;
       }
 
       return col;
@@ -2042,6 +2077,10 @@
       card.appendChild(body);
 
       return card;
+    }
+
+    function isCompatibilityNotOk(row) {
+      return String(row?.compatibility ?? '').trim().toLowerCase() === 'not ok';
     }
 
     function isNotOkRow(row) {
@@ -2102,15 +2141,12 @@
       if (minPlayers > 0 && playerCount < minPlayers) {
         issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
       }
-
       if (playerCount > 13) {
         issues.push(`has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
       }
-
       if (fullLicenseCount < 6) {
         issues.push(`needs ${6 - fullLicenseCount} more full license${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
       }
-
       if (backupLicenseCount > 3) {
         issues.push(`has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
       }
@@ -2130,9 +2166,7 @@
         return '';
       }
 
-      if (currentSource.key === 'signUps' && getSignupIssues(row).length > 0) {
-        return 'signup-rule-error';
-      }
+      if (currentSource.key === 'signUps' && getSignupIssues(row).length > 0) return 'signup-rule-error';
 
       if (currentSource.key === 'backups') {
         const games = getBackupGames(row);
@@ -2145,6 +2179,17 @@
       if (isBigDropTransfer(row)) return 'transfer-danger';
       if (isNotOkRow(row)) return 'not-ok';
       return '';
+    }
+
+    function isFlaggedRow(row) {
+      const cls = getRowClass(row);
+      return [
+        'not-ok',
+        'backup-warning',
+        'backup-danger',
+        'transfer-danger',
+        'signup-rule-error'
+      ].includes(cls);
     }
 
     function compareValues(a, b, isNumeric) {
@@ -2192,8 +2237,7 @@
     }
 
     function getTeamNameFromRow(row) {
-      const keys = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName'];
-      for (const key of keys) {
+      for (const key of TEAM_NAME_KEYS) {
         if (row && row[key]) return String(row[key]);
       }
       return '';
@@ -2201,18 +2245,14 @@
 
     function getPlayerIdFromRow(row) {
       const keys = ['playerID', 'playerId', 'PlayerID', 'player_id'];
-      for (const key of keys) {
-        if (row && row[key]) return row[key];
-      }
+      for (const key of keys) if (row && row[key]) return row[key];
       return '';
     }
 
     function getUserIdFromRow(row) {
       const keys = ['userID', 'userId', 'UserID', 'user_id', 'userid'];
       for (const key of keys) {
-        if (row && row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== '') {
-          return row[key];
-        }
+        if (row && row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== '') return row[key];
       }
       return '';
     }
@@ -2260,9 +2300,7 @@
 
     function getRowsForSource(allData, sourceKey) {
       const rows = allData?.[sourceKey];
-      if (!Array.isArray(rows)) {
-        throw new Error('Key "' + sourceKey + '" is missing or is not an array in ' + DATA_FILE);
-      }
+      if (!Array.isArray(rows)) throw new Error('Key "' + sourceKey + '" is missing or is not an array in ' + DATA_FILE);
       return rows;
     }
 
@@ -2310,16 +2348,13 @@
             possibleTeamNameKeys.forEach(nameKey => {
               const nameValue = row?.[nameKey];
               const normalized = normalizeTeamName(nameValue);
-              if (normalized && !map.has(normalized)) {
-                map.set(normalized, String(idValue));
-              }
+              if (normalized && !map.has(normalized)) map.set(normalized, String(idValue));
             });
           });
 
           const fallbackTeamId = row?.teamID || row?.teamId || row?.TeamID || row?.team_id;
           const fallbackTeamName = getTeamNameFromRow(row);
           const fallbackNormalized = normalizeTeamName(fallbackTeamName);
-
           if (fallbackTeamId && fallbackNormalized && !map.has(fallbackNormalized)) {
             map.set(fallbackNormalized, String(fallbackTeamId));
           }
@@ -2328,9 +2363,7 @@
 
       const signUpsMap = await getSignUpsMap(forceReload);
       signUpsMap.forEach((row, normalized) => {
-        if (row?.teamID && !map.has(normalized)) {
-          map.set(normalized, String(row.teamID));
-        }
+        if (row?.teamID && !map.has(normalized)) map.set(normalized, String(row.teamID));
       });
 
       teamLinkMapCache = map;
@@ -2348,16 +2381,13 @@
 
         value.forEach(row => {
           const playerId = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
+          if (!playerId) return;
 
-          if (playerId) {
-            ['Player', 'tag', 'playerName', 'player'].forEach(nameKey => {
-              const playerName = row?.[nameKey];
-              const normalized = normalizePlayerName(playerName);
-              if (normalized && !map.has(normalized)) {
-                map.set(normalized, String(playerId));
-              }
-            });
-          }
+          ['Player', 'tag', 'playerName', 'player'].forEach(nameKey => {
+            const playerName = row?.[nameKey];
+            const normalized = normalizePlayerName(playerName);
+            if (normalized && !map.has(normalized)) map.set(normalized, String(playerId));
+          });
         });
       });
 
@@ -2471,7 +2501,7 @@ Best regards,`;
 
 Hi ${teamName}
 
-It has come to our attention that ${playerName} has participated in ${games} games without holding either a Full Player License or a Backup Player License. 
+It has come to our attention that ${playerName} has participated in ${games} games without holding either a Full Player License or a Backup Player License.
 
 According to league regulations, every player must have a valid license before participating in any ECL ’26 matches (including qualifiers). Playing without the required license may result in disciplinary consequences if reported by an opponent.
 
@@ -2488,13 +2518,11 @@ Best regards,`;
     }
 
     async function copyBackupMessage(row) {
-      const text = buildBackupMessage(row);
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(buildBackupMessage(row));
     }
 
     async function copyUnlicensedMessage(row) {
-      const text = buildUnlicensedMessage(row);
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(buildUnlicensedMessage(row));
     }
 
     function getProQualReqCheckRows(allData) {
@@ -2526,6 +2554,18 @@ Best regards,`;
       if (title.startsWith('elite qualifiers')) return 'ELITE_QUAL';
       if (title.startsWith('pro qualifiers')) return 'PRO_QUAL';
       return '';
+    }
+
+    function getSectionStyleKey(title) {
+      const normalizedTitle = String(title || '').toLowerCase();
+      if (normalizedTitle === 'elite') return 'elite';
+      if (normalizedTitle.startsWith('elite qualifiers')) return 'eliteQual';
+      if (normalizedTitle === 'pro') return 'pro';
+      if (normalizedTitle === 'pro qualifiers') return 'proQual';
+      if (normalizedTitle === 'lite') return 'lite';
+      if (normalizedTitle === 'core') return 'core';
+      if (normalizedTitle === 'neo') return 'neo';
+      return 'elite';
     }
 
     function collectPresetTeamNames() {
@@ -2697,69 +2737,31 @@ Best regards,`;
     function renderSeedHeaderRow() {
       const tr = document.createElement('tr');
       tr.className = 'seed-header-row';
-
-      const headers = ['#', 'Seed', 'Team', 'Status', 'Notes'];
-
-      headers.forEach(text => {
+      ['#', 'Seed', 'Team', 'Status', 'Notes'].forEach(text => {
         const th = document.createElement('th');
         th.textContent = text;
         tr.appendChild(th);
       });
-
       seedingBody.appendChild(tr);
     }
 
-function renderSectionTitle(title, count, headerClass = '') {
-  const tr = document.createElement('tr');
-  tr.className = 'section-title-row';
+    function renderSectionTitle(title, count) {
+      const tr = document.createElement('tr');
+      tr.className = 'section-title-row';
 
-  const td = document.createElement('td');
-  td.colSpan = 5;
-  td.textContent = `${title} (${count})`;
+      const td = document.createElement('td');
+      td.colSpan = 5;
+      td.textContent = `${title} (${count})`;
 
-  const normalizedTitle = String(title || '').toLowerCase();
+      const styleKey = getSectionStyleKey(title);
+      const styleConfig = DIVISION_STYLE_MAP[styleKey] || DIVISION_STYLE_MAP.elite;
 
-  if (
-    normalizedTitle === 'elite' ||
-    normalizedTitle.startsWith('elite qualifiers')
-  ) {
-    td.style.background = 'linear-gradient(90deg, #d9ba52, #edd983)';
-    td.style.color = '#0b144f';
-  } else if (
-    normalizedTitle === 'pro' ||
-    normalizedTitle === 'pro qualifiers'
-  ) {
-    td.style.background = 'linear-gradient(90deg, #d4d8e0, #eceff5)';
-    td.style.color = '#0b144f';
-  } else if (normalizedTitle === 'lite') {
-    td.style.background = 'linear-gradient(90deg, #955742, #cd775b)';
-    td.style.color = '#ffffff';
-  } else if (normalizedTitle === 'core') {
-    td.style.background = 'linear-gradient(90deg, #903300, #f85900)';
-    td.style.color = '#ffffff';
-  } else if (normalizedTitle === 'neo') {
-    td.style.background = 'linear-gradient(90deg, #2b7526, #4ed546)';
-    td.style.color = '#ffffff';
-  } else if (headerClass === 'gray') {
-    td.style.background = 'linear-gradient(90deg, #d4d8e0, #eceff5)';
-    td.style.color = '#0b144f';
-  } else {
-    td.style.background = 'linear-gradient(90deg, #d9ba52, #edd983)';
-    td.style.color = '#0b144f';
-  }
+      td.style.background = styleConfig.bg;
+      td.style.color = styleConfig.text;
 
-  td.style.fontWeight = '900';
-  td.style.textAlign = 'center';
-  td.style.border = '0';
-  td.style.fontSize = '15px';
-  td.style.textTransform = 'uppercase';
-  td.style.letterSpacing = '0.7px';
-  td.style.padding = '12px 10px';
-  td.style.borderRadius = '10px 10px 0 0';
-
-  tr.appendChild(td);
-  seedingBody.appendChild(tr);
-}
+      tr.appendChild(td);
+      seedingBody.appendChild(tr);
+    }
 
     function renderSeedRow(pos, seed, team, exists, note = '', extraClass = '', teamID = '') {
       const tr = document.createElement('tr');
@@ -2881,7 +2883,7 @@ function renderSectionTitle(title, count, headerClass = '') {
           count = listedProQualCount + proQualifierExtraRows.length;
         }
 
-        renderSectionTitle(section.title, count, section.headerClass || '');
+        renderSectionTitle(section.title, count);
         renderSeedHeaderRow();
 
         section.rows.forEach(row => {
@@ -3121,24 +3123,15 @@ function renderSectionTitle(title, count, headerClass = '') {
     }
 
     function parsePlayerList(value) {
-      return String(value || '')
-        .split(',')
-        .map(part => part.trim())
-        .filter(Boolean);
+      return String(value || '').split(',').map(part => part.trim()).filter(Boolean);
     }
 
     function getPlayerAliases(entry) {
-      return [entry.playerName, ...(entry.aliases || [])]
-        .map(name => String(name || '').trim())
-        .filter(Boolean);
+      return [entry.playerName, ...(entry.aliases || [])].map(name => String(name || '').trim()).filter(Boolean);
     }
 
     function getUniqueJoined(values) {
-      return [...new Set(
-        values
-          .map(v => String(v || '').trim())
-          .filter(Boolean)
-      )].join(' | ');
+      return [...new Set(values.map(v => String(v || '').trim()).filter(Boolean))].join(' | ');
     }
 
     function findTeamIDForName(teamName, teamLinkMap) {
@@ -3207,15 +3200,10 @@ function renderSectionTitle(title, count, headerClass = '') {
 
       return presenceRows.filter(match => {
         if (!aliases.includes(match.normalizedPlayer)) return false;
-
         if (normalizedType === 'Captaincy ban') {
           return match.matchRole === 'Captain' || match.matchRole === 'Assistant Captain';
         }
-
-        if (normalizedType === 'Suspension') {
-          return true;
-        }
-
+        if (normalizedType === 'Suspension') return true;
         return false;
       });
     }
@@ -3281,15 +3269,13 @@ function renderSectionTitle(title, count, headerClass = '') {
 
     async function renderTableCell(td, row, col, forceReload = false) {
       let value = row[col] ?? '';
-
       if (col === 'fullLicenseCount') value = getFullLicenseCount(row);
       if (col === 'signupIssue') value = getSignupIssueText(row);
 
       const textValue = String(value ?? '');
-
       if (!textValue) {
         td.textContent = '';
-        return null;
+        return;
       }
 
       const teamLinkMap = await getTeamLinkMap(forceReload);
@@ -3316,16 +3302,11 @@ function renderSectionTitle(title, count, headerClass = '') {
             alias.textContent = 'Alias: ' + row.playerAliases;
             td.appendChild(alias);
           }
-          return null;
+          return;
         }
 
         if (col === 'teams') {
           const parts = textValue.split('|').map(part => part.trim()).filter(Boolean);
-          if (parts.length === 0) {
-            td.textContent = '';
-            return null;
-          }
-
           parts.forEach((part, index) => {
             const [teamName, teamID] = part.split('|||');
             if (teamID) {
@@ -3335,51 +3316,45 @@ function renderSectionTitle(title, count, headerClass = '') {
             }
             if (index < parts.length - 1) td.appendChild(document.createTextNode(' | '));
           });
-          return null;
+          return;
         }
 
-        if (col === 'notes') {
-          td.style.whiteSpace = 'normal';
-          td.textContent = textValue;
-          return null;
-        }
-
+        if (col === 'notes') td.style.whiteSpace = 'normal';
         td.textContent = textValue;
-        return null;
+        return;
       }
 
       if (PLAYER_LIST_NAME_KEYS.includes(col)) {
         const parts = parsePlayerList(textValue);
-
         parts.forEach((part, index) => {
           const match = part.match(/^(.*?)(\s*\(\d+\))?$/);
           const nameOnly = (match?.[1] || part).trim();
           appendPlainOrLinkedPlayer(td, part, nameOnly, playerLinkMap);
           if (index < parts.length - 1) td.appendChild(document.createTextNode(', '));
         });
-        return null;
+        return;
       }
 
       if (col === 'From' || col === 'To' || col === 'history1Team' || col === 'history2Team' || col === 'history3Team') {
         td.textContent = textValue;
-        return null;
+        return;
       }
 
       if (directTeamID && TEAM_NAME_KEYS.includes(col)) {
         td.appendChild(createLink(TEAM_BASE_URL + directTeamID, textValue));
-        return null;
+        return;
       }
 
       if (directPlayerID && PLAYER_NAME_KEYS.includes(col)) {
         td.appendChild(createLink(PLAYER_BASE_URL + directPlayerID, textValue));
-        return null;
+        return;
       }
 
       if (isTeamColumn(col)) {
         const mappedTeamID = teamLinkMap.get(normalizeTeamName(textValue));
         if (mappedTeamID) {
           td.appendChild(createLink(TEAM_BASE_URL + mappedTeamID, textValue));
-          return null;
+          return;
         }
       }
 
@@ -3387,22 +3362,21 @@ function renderSectionTitle(title, count, headerClass = '') {
         const mappedPlayerID = playerLinkMap.get(normalizePlayerName(textValue));
         if (mappedPlayerID) {
           td.appendChild(createLink(PLAYER_BASE_URL + mappedPlayerID, textValue));
-          return null;
+          return;
         }
       }
 
       const anyMappedPlayerID = playerLinkMap.get(normalizePlayerName(textValue));
       if (anyMappedPlayerID) {
         td.appendChild(createLink(PLAYER_BASE_URL + anyMappedPlayerID, textValue));
-        return null;
+        return;
       }
 
       td.textContent = textValue;
-      return null;
     }
 
     function getSignUpsHeaderLabel(col) {
-      const labels = {
+      return {
         teamName: 'Team',
         teamCountry: 'Country',
         registrationDate: 'Reg. Date',
@@ -3413,12 +3387,11 @@ function renderSectionTitle(title, count, headerClass = '') {
         backupLicenseCount: 'Backup Lic.',
         unlicensedPlayerCount: 'No Lic.',
         signupIssue: 'Issue'
-      };
-      return labels[col] || col;
+      }[col] || col;
     }
 
     function getSignUpsHeaderFullLabel(col) {
-      const fullLabels = {
+      return {
         teamName: 'Team Name',
         teamCountry: 'Team Country',
         registrationDate: 'Registration Date',
@@ -3429,8 +3402,24 @@ function renderSectionTitle(title, count, headerClass = '') {
         backupLicenseCount: 'Backup License Count',
         unlicensedPlayerCount: 'Unlicensed Player Count',
         signupIssue: 'Missing Requirements / Rule Violations'
-      };
-      return fullLabels[col] || col;
+      }[col] || col;
+    }
+
+    function getSearchableText(row) {
+      return Object.values(row || {})
+        .map(value => String(value ?? '').toLowerCase())
+        .join(' ');
+    }
+
+    function getFilteredRows(rows) {
+      const query = searchInput.value.trim().toLowerCase();
+      const flaggedOnly = flaggedOnlyToggle.checked;
+
+      return rows.filter(row => {
+        if (flaggedOnly && !isFlaggedRow(row)) return false;
+        if (!query) return true;
+        return getSearchableText(row).includes(query);
+      });
     }
 
     async function renderTableBody(rows, forceReload = false) {
@@ -3461,39 +3450,36 @@ function renderSectionTitle(title, count, headerClass = '') {
             const actions = document.createElement('div');
             actions.className = 'icon-actions';
 
-            if (currentSource.key === 'backups') {
-              if (games !== null) {
-                const mailUrl = await getBackupMessageUrl(row, forceReload);
+            if (currentSource.key === 'backups' && games !== null) {
+              const mailUrl = await getBackupMessageUrl(row, forceReload);
 
-                if (mailUrl) {
-                  const btn = document.createElement('a');
-                  btn.href = mailUrl;
-                  btn.target = '_blank';
-                  btn.rel = 'noopener noreferrer';
-                  btn.className = 'mail-icon-btn';
-                  btn.title = 'Open message';
-                  btn.setAttribute('aria-label', 'Open message');
-                  btn.textContent = '✉';
-                  actions.appendChild(btn);
-                }
-
-                const copyBtn = document.createElement('button');
-                copyBtn.type = 'button';
-                copyBtn.className = 'copy-icon-btn';
-                copyBtn.title = 'Copy preset message';
-                copyBtn.setAttribute('aria-label', 'Copy preset message');
-                copyBtn.textContent = '⧉';
-                copyBtn.addEventListener('click', async () => {
-                  try {
-                    await copyBackupMessage(row);
-                    setStatus('Message copied');
-                  } catch (err) {
-                    console.error(err);
-                    setStatus('Copy failed');
-                  }
-                });
-                actions.appendChild(copyBtn);
+              if (mailUrl) {
+                const btn = document.createElement('a');
+                btn.href = mailUrl;
+                btn.target = '_blank';
+                btn.rel = 'noopener noreferrer';
+                btn.className = 'mail-icon-btn';
+                btn.title = 'Open message';
+                btn.setAttribute('aria-label', 'Open message');
+                btn.textContent = '✉';
+                actions.appendChild(btn);
               }
+
+              const copyBtn = document.createElement('button');
+              copyBtn.type = 'button';
+              copyBtn.className = 'copy-icon-btn';
+              copyBtn.title = 'Copy preset message';
+              copyBtn.setAttribute('aria-label', 'Copy preset message');
+              copyBtn.textContent = '⧉';
+              copyBtn.addEventListener('click', async () => {
+                try {
+                  await copyBackupMessage(row);
+                  setStatus('Message copied');
+                } catch {
+                  setStatus('Copy failed');
+                }
+              });
+              actions.appendChild(copyBtn);
             }
 
             if (currentSource.key === 'licenslosa') {
@@ -3521,8 +3507,7 @@ function renderSectionTitle(title, count, headerClass = '') {
                 try {
                   await copyUnlicensedMessage(row);
                   setStatus('Message copied');
-                } catch (err) {
-                  console.error(err);
+                } catch {
                   setStatus('Copy failed');
                 }
               });
@@ -3536,6 +3521,7 @@ function renderSectionTitle(title, count, headerClass = '') {
 
           if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
           if (col === 'signupIssue' || col === 'notes') td.style.whiteSpace = 'normal';
+
           await renderTableCell(td, row, col, forceReload);
           tr.appendChild(td);
         }
@@ -3631,7 +3617,7 @@ function renderSectionTitle(title, count, headerClass = '') {
           }
 
           renderSortableHeader();
-          await renderTableBody(getSortedRows(currentRows));
+          await applyFiltersAndRender();
         });
 
         headerRow.appendChild(th);
@@ -3677,18 +3663,22 @@ function renderSectionTitle(title, count, headerClass = '') {
       );
       currentNumericColumns.add('fullLicenseCount');
 
+      renderSortableHeader();
+
+      const filtered = getFilteredRows(getSortedRows(currentRows));
+      emptyMessage.style.display = filtered.length === 0 ? 'block' : 'none';
+
       if (currentSource.key === 'signUps') {
-        rowCounter.textContent = `Anmälda lag: ${currentRows.length}`;
+        rowCounter.textContent = `Anmälda lag: ${filtered.length} / ${currentRows.length}`;
       } else if (currentSource.key === 'bannedPlayers') {
-        const activeCount = currentRows.filter(row => row.active === 'Yes').length;
-        const violationCount = currentRows.filter(row => row.status === 'Violation').length;
-        rowCounter.textContent = `Bans: ${currentRows.length} • Active: ${activeCount} • Violations: ${violationCount}`;
+        const activeCount = filtered.filter(row => row.active === 'Yes').length;
+        const violationCount = filtered.filter(row => row.status === 'Violation').length;
+        rowCounter.textContent = `Bans: ${filtered.length} / ${currentRows.length} • Active: ${activeCount} • Violations: ${violationCount}`;
       } else {
-        rowCounter.textContent = '';
+        rowCounter.textContent = `${filtered.length} row${filtered.length === 1 ? '' : 's'}`;
       }
 
-      renderSortableHeader();
-      await renderTableBody(getSortedRows(currentRows), forceReload);
+      await renderTableBody(filtered, forceReload);
     }
 
     async function loadRegisteredTeams(forceReload = false) {
@@ -3696,50 +3686,44 @@ function renderSectionTitle(title, count, headerClass = '') {
       return getRowsForSource(allData, 'signUps').map(applyTeamNameChangesToRow);
     }
 
-    async function loadData(forceReload = false) {
+    async function loadSourceData(forceReload = false) {
+      if (currentSource.type === 'preset') {
+        return await loadRegisteredTeams(forceReload);
+      }
+
+      const allData = await fetchAllaData(forceReload);
+
+      if (currentSource.type === 'proqualreqcheck') {
+        return getProQualReqCheckRows(allData);
+      }
+
+      if (currentSource.type === 'banned') {
+        return await buildBannedPlayersRows(forceReload);
+      }
+
+      return getRowsForSource(allData, currentSource.key).map(applyTeamNameChangesToRow);
+    }
+
+    async function applyFiltersAndRender(forceReload = false) {
       clearError();
       setStatus('Loading data...');
       reloadBtn.disabled = true;
       pageTitle.textContent = currentSource.label;
 
       try {
-        if (forceReload) {
-          signUpsCache = null;
-          teamLinkMapCache = null;
-          playerLinkMapCache = null;
-          captainUserIdMapCache = null;
-          bannedPlayersCache = null;
-        }
+        const data = await loadSourceData(forceReload);
 
         if (currentSource.type === 'preset') {
-          const registeredRows = await loadRegisteredTeams(forceReload);
-          await renderPresetSections(registeredRows, forceReload);
-          setStatus('Done');
-          lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString('en-GB');
-          return;
+          await renderPresetSections(data, forceReload);
+          rowCounter.textContent = '';
+        } else if (currentSource.type === 'proqualreqcheck') {
+          const filtered = getFilteredRows(data);
+          await renderProQualReqCheck(filtered, forceReload);
+          rowCounter.textContent = `${filtered.length} player row${filtered.length === 1 ? '' : 's'}`;
+        } else {
+          await renderTable(data, forceReload);
         }
 
-        sortState = { column: null, direction: 'asc' };
-        const allData = await fetchAllaData(forceReload);
-
-        if (currentSource.type === 'proqualreqcheck') {
-          const rows = getProQualReqCheckRows(allData);
-          await renderProQualReqCheck(rows, forceReload);
-          setStatus('Done');
-          lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString('en-GB');
-          return;
-        }
-
-        if (currentSource.type === 'banned') {
-          const rows = await buildBannedPlayersRows(forceReload);
-          await renderTable(rows, forceReload);
-          setStatus('Done');
-          lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString('en-GB');
-          return;
-        }
-
-        const rows = getRowsForSource(allData, currentSource.key).map(applyTeamNameChangesToRow);
-        await renderTable(rows, forceReload);
         setStatus('Done');
         lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString('en-GB');
       } catch (err) {
@@ -3772,18 +3756,29 @@ function renderSectionTitle(title, count, headerClass = '') {
       if (e.key === 'Escape') closeMobileMenu();
     });
 
-    reloadBtn.addEventListener('click', () => {
-      allaDataCache = null;
-      signUpsCache = null;
-      teamLinkMapCache = null;
-      playerLinkMapCache = null;
-      captainUserIdMapCache = null;
-      bannedPlayersCache = null;
-      loadData(true);
+    reloadBtn.addEventListener('click', async () => {
+      clearCaches();
+      await applyFiltersAndRender(true);
+    });
+
+    clearFiltersBtn.addEventListener('click', async () => {
+      searchInput.value = '';
+      flaggedOnlyToggle.checked = false;
+      await applyFiltersAndRender();
+    });
+
+    searchInput.addEventListener('input', async () => {
+      if (currentSource.type === 'preset') return;
+      await applyFiltersAndRender();
+    });
+
+    flaggedOnlyToggle.addEventListener('change', async () => {
+      if (currentSource.type === 'preset') return;
+      await applyFiltersAndRender();
     });
 
     renderTabs();
-    loadData();
+    applyFiltersAndRender();
   </script>
 </body>
 </html>
