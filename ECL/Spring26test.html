@@ -2194,6 +2194,22 @@
       const rawGames = getBackupGames(row);
       const games = isFinite(Number(rawGames)) ? Number(rawGames) : 0;
 
+      if (games < 10) {
+        return `Upcoming License Upgrade Reminder for ${playerName}
+
+Hi ${teamName}
+
+This is a friendly reminder that ${playerName} has now played ${games} matches using a Backup Player License and is approaching the 10-game limit.
+
+According to league rules, a Backup Player License covers a maximum of 10 games across the entire ECL ’26 season — including Winter and Spring qualifiers, group stages, and playoffs.
+
+If ${playerName} is expected to continue playing beyond that limit, the license will need to be upgraded to a Full Player License.
+
+If you have any questions or need assistance with the process, feel free to reach out.
+
+Best regards,`;
+      }
+
       if (games > 10) {
         return `License Status Update – Action Required for ${playerName}
 
@@ -2603,13 +2619,12 @@ Best regards,`;
           if (extraRows.length > 0) {
             const startIndex = section.rows.length + 1;
             extraRows.forEach((row, idx) => {
-              const qualifierNote = getQualifierNote(row);
               renderSeedRow(
                 startIndex + idx,
                 section.title + ' Unseeded',
                 row.teamName || '',
                 true,
-                qualifierNote,
+                getQualifierNote(row),
                 'unlisted',
                 row.teamID || ''
               );
@@ -2948,7 +2963,7 @@ Best regards,`;
             const actions = document.createElement('div');
             actions.className = 'icon-actions';
 
-            if (games !== null && games >= 10) {
+            if (games !== null) {
               const mailUrl = await getBackupMessageUrl(row, forceReload);
 
               if (mailUrl) {
