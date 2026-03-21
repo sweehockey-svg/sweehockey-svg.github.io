@@ -2939,43 +2939,6 @@ Best regards,`;
           const td = document.createElement('td');
 
           if (col === '__sendMail') {
-            const mailUrl = await getBackupMessageUrl(row, forceReload);
-            const actions = document.createElement('div');
-            actions.className = 'icon-actions';
-
-            if (mailUrl) {
-              const btn = document.createElement('a');
-              btn.href = mailUrl;
-              btn.target = '_blank';
-              btn.rel = 'noopener noreferrer';
-              btn.className = 'mail-icon-btn';
-              btn.title = 'Open message';
-              btn.setAttribute('aria-label', 'Open message');
-              btn.textContent = '✉';
-              actions.appendChild(btn);
-            }
-
-            const copyBtn = document.createElement('button');
-            copyBtn.type = 'button';
-            copyBtn.className = 'copy-icon-btn';
-            copyBtn.title = 'Copy preset message';
-            copyBtn.setAttribute('aria-label', 'Copy preset message');
-            copyBtn.textContent = '⧉';
-            copyBtn.addEventListener('click', async () => {
-              try {
-                await copyBackupMessage(row);
-                setStatus('Message copied');
-              } catch (err) {
-                console.error(err);
-                setStatus('Copy failed');
-              }
-            });
-            actions.appendChild(copyBtn);
-
-            td.appendChild(actions);
-            tr.appendChild(td);
-            continue;
-          }
 
           if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
           if (col === 'signupIssue') td.style.whiteSpace = 'normal';
