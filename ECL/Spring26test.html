@@ -605,13 +605,13 @@
     tbody tr.signup-rule-error:nth-child(even) { background: #ffd7d7 !important; }
     tbody tr.signup-rule-error:hover { background: #ffcaca !important; }
 
-    tbody tr.ban-clear { background: #f6fffa !important; }
-    tbody tr.ban-clear:nth-child(even) { background: #effdf6 !important; }
-    tbody tr.ban-clear:hover { background: #e4fbef !important; }
+    tbody tr.ban-clear { background: #f3fff8 !important; }
+    tbody tr.ban-clear:nth-child(even) { background: #ecfdf4 !important; }
+    tbody tr.ban-clear:hover { background: #e2f8eb !important; }
 
     tbody tr.ban-expired { background: #f8fafc !important; }
     tbody tr.ban-expired:nth-child(even) { background: #f1f5f9 !important; }
-    tbody tr.ban-expired:hover { background: #e8eef5 !important; }
+    tbody tr.ban-expired:hover { background: #e7eef6 !important; }
 
     .section-table {
       width: 100%;
@@ -1246,22 +1246,22 @@
     const BANNED_PLAYERS = [
       { playerName: 'ViSiOnZ97_', aliases: [], banType: 'Captaincy ban', until: 'Indefinitely' },
       { playerName: 'Men-at-work74', aliases: [], banType: 'Captaincy ban', until: 'Indefinitely' },
-      { playerName: 'maatti64', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'OsquuG', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'matadori-_-', aliases: ['SirRaittinen'], banType: 'Captaincy ban', until: 'Undefined', notes: 'Previously SirRaittinen' },
-      { playerName: 'xSagwa', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'punt1la98', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'radekbonk111', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'snaasigi', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'Keuschemisch', aliases: [], banType: 'Captaincy ban', until: '10.2.2030' },
+      { playerName: 'maatti64', aliases: [], banType: 'Captancy ban', until: 'Undefined' },
+      { playerName: 'OsquuG', aliases: [], banType: 'Captancy ban', until: 'Undefined' },
+      { playerName: 'matadori-_-', aliases: ['SirRaittinen'], banType: 'Captancy ban', until: 'Undefined', notes: 'Previously SirRaittinen' },
+      { playerName: 'xSagwa', aliases: [], banType: 'Captancy ban', until: 'Undefined' },
+      { playerName: 'punt1la98', aliases: [], banType: 'Captancy ban', until: 'Undefined' },
+      { playerName: 'radekbonk111', aliases: [], banType: 'Captancy ban', until: 'Undefined' },
+      { playerName: 'snaasigi', aliases: [], banType: 'Captancy ban', until: 'Undefined' },
+      { playerName: 'Keuschemisch', aliases: [], banType: 'Captainsy ban', until: '10.2.2030' },
       { playerName: 'eBjorken97_', aliases: [], banType: 'Suspension', until: '13.8.2026' },
-      { playerName: 'eBjorken97_', aliases: [], banType: 'Captaincy ban', until: '9.4.2027' },
-      { playerName: 'abbelandit__', aliases: [], banType: 'Captaincy ban', until: '9.4.2029' },
-      { playerName: 'Bjorkudd_39', aliases: [], banType: 'Captaincy ban', until: '9.4.2027' },
+      { playerName: 'eBjorken97_', aliases: [], banType: 'Captainsy ban', until: '9.4.2027' },
+      { playerName: 'abbelandit__', aliases: [], banType: 'Captainsy ban', until: '9.4.2029' },
+      { playerName: 'Bjorkudd_39', aliases: [], banType: 'Captainsy ban', until: '9.4.2027' },
       { playerName: 'abbelandit__', aliases: [], banType: 'Suspension', until: 'until the End of ECL ’26: Spring' },
-      { playerName: 'I-MeIIe-l', aliases: [], banType: 'Captaincy ban', until: '14.4.2027' },
+      { playerName: 'I-MeIIe-l', aliases: [], banType: 'Captainsy ban', until: '14.4.2027' },
       { playerName: 'I-MeIIe-l', aliases: [], banType: 'Suspension', until: '14.4.2026' },
-      { playerName: 'Blaze4214', aliases: [], banType: 'Captaincy ban', until: '14.4.2027' },
+      { playerName: 'Blaze4214', aliases: [], banType: 'Captainsy ban', until: '14.4.2027' },
       { playerName: 'Cbatta_-11', aliases: [], banType: 'Suspension', until: '14.4.2026' }
     ];
 
@@ -1554,7 +1554,7 @@
     let sortState = { column: null, direction: 'asc' };
 
     const TEAM_NAME_KEYS = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName'];
-    const PLAYER_NAME_KEYS = ['Player', 'tag', 'playerName', 'player', 'psn', 'PSN', 'captainName', 'Captain', 'username', 'userName'];
+    const PLAYER_NAME_KEYS = ['Player', 'tag', 'playerName', 'player'];
     const TEAM_LIST_NAME_KEYS = [];
     const PLAYER_LIST_NAME_KEYS = ['elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames'];
 
@@ -1751,8 +1751,8 @@
 
     function getBanRole(banType) {
       const normalized = normalizeBanType(banType);
-      if (normalized === 'Captaincy ban') return 'Captain';
-      if (normalized === 'Suspension') return 'Player / Captain';
+      if (normalized === 'Captaincy ban') return 'Captain / Assistant Captain';
+      if (normalized === 'Suspension') return 'Player / Captain / Assistant Captain';
       return '';
     }
 
@@ -1774,8 +1774,7 @@
       const endDate = parseBanEndDate(untilValue);
       if (!endDate) return true;
 
-      const now = new Date();
-      return endDate >= now;
+      return endDate >= new Date();
     }
 
     function getSeedingTeamStatus(teamName) {
@@ -2192,13 +2191,6 @@
       return '';
     }
 
-    function getPlayerNameFromRow(row) {
-      for (const key of PLAYER_NAME_KEYS) {
-        if (row && row[key]) return String(row[key]).trim();
-      }
-      return '';
-    }
-
     function isTeamColumn(col) {
       return TEAM_NAME_KEYS.includes(col) || TEAM_LIST_NAME_KEYS.includes(col);
     }
@@ -2279,10 +2271,11 @@
 
           const possibleTeamIdKeys = [
             'teamID', 'teamId', 'TeamID', 'team_id',
-            'fromTeamID', 'fromTeamId', 'toTeamID', 'toTeamId'
+            'fromTeamID', 'fromTeamId', 'toTeamID', 'toTeamId',
+            'FromTeamID', 'ToTeamID'
           ];
 
-          const possibleTeamNameKeys = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName'];
+          const possibleTeamNameKeys = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName', 'From', 'To'];
 
           possibleTeamIdKeys.forEach(idKey => {
             const idValue = row?.[idKey];
@@ -2331,7 +2324,7 @@
           const playerId = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
 
           if (playerId) {
-            ['Player', 'tag', 'playerName', 'player', 'psn', 'PSN', 'captainName', 'Captain', 'username', 'userName'].forEach(nameKey => {
+            ['Player', 'tag', 'playerName', 'player'].forEach(nameKey => {
               const playerName = row?.[nameKey];
               const normalized = normalizePlayerName(playerName);
               if (normalized && !map.has(normalized)) {
@@ -3090,70 +3083,75 @@ Best regards,`;
       return teamLinkMap.get(normalizeTeamName(teamName)) || '';
     }
 
-    function buildMatchDescriptor(match) {
-      const parts = [];
-      if (match.matchRole) parts.push(match.matchRole);
-      if (match.teamName) parts.push(match.teamName);
-      if (match.divisionName) parts.push(match.divisionName);
-      if (match.sourceKey) parts.push(match.sourceKey);
-      return parts.join(' • ');
+    function buildRoleDisplay(role) {
+      const r = String(role || '').trim();
+      if (!r) return '';
+      if (r === 'Assistant Captain') return 'Assistant Captain';
+      if (r === 'Captain') return 'Captain';
+      return r;
     }
 
-    function extractPlayerMatchesFromAllData(allData) {
-      const matches = [];
+    function buildBannedPlayerPresenceRows(allData) {
+      const rows = [];
 
-      Object.entries(allData || {}).forEach(([sourceKey, rows]) => {
-        if (!Array.isArray(rows)) return;
+      const teamCaptains = Array.isArray(allData?.teamCaptains) ? allData.teamCaptains : [];
+      teamCaptains.forEach(originalRow => {
+        const row = applyTeamNameChangesToRow(originalRow);
+        const playerName = String(row.tag || '').trim();
+        if (!playerName) return;
 
-        rows.forEach(originalRow => {
+        rows.push({
+          normalizedPlayer: normalizePlayerName(playerName),
+          playerName,
+          playerID: row.playerID || '',
+          teamName: row.teamName || '',
+          teamID: row.teamID || '',
+          divisionName: '',
+          sourceKey: 'teamCaptains',
+          matchRole: buildRoleDisplay(row.Role || 'Captain')
+        });
+      });
+
+      const playerSources = ['backups', 'licenslosa', 'overgangar', 'proQualReqCheck'];
+      playerSources.forEach(sourceKey => {
+        const sourceRows = Array.isArray(allData?.[sourceKey]) ? allData[sourceKey] : [];
+        sourceRows.forEach(originalRow => {
           const row = applyTeamNameChangesToRow(originalRow);
-          const playerName = getPlayerNameFromRow(row);
-          const teamName = getTeamNameFromRow(row);
+          const playerName = String(row.Player || row.tag || '').trim();
+          if (!playerName) return;
 
-          if (!playerName || !teamName) return;
-
-          const divisionName = String(
-            row?.divisionName ||
-            row?.teamDivision ||
-            row?.division ||
-            row?.currentDivision ||
-            ''
-          ).trim();
-
-          const teamID =
-            row?.teamID || row?.teamId || row?.TeamID || row?.team_id || '';
-
-          matches.push({
+          rows.push({
             normalizedPlayer: normalizePlayerName(playerName),
             playerName,
-            teamName,
-            divisionName,
-            teamID: String(teamID || ''),
+            playerID: row.playerID || '',
+            teamName: row.teamName || row.To || '',
+            teamID: row.teamID || '',
+            divisionName: row.divisionName || row.ToDiv || '',
             sourceKey,
-            matchRole: sourceKey === 'teamCaptains' ? 'Captain' : 'Player'
+            matchRole: 'Player'
           });
         });
       });
 
-      return matches;
+      return rows;
     }
 
-    function getRelevantBanMatches(entry, allMatches) {
+    function getRelevantBanMatches(entry, presenceRows) {
       const aliases = getPlayerAliases(entry).map(normalizePlayerName);
       const active = isBanActive(entry.until);
       if (!active) return [];
 
       const normalizedType = normalizeBanType(entry.banType);
 
-      return allMatches.filter(match => {
+      return presenceRows.filter(match => {
         if (!aliases.includes(match.normalizedPlayer)) return false;
 
         if (normalizedType === 'Captaincy ban') {
-          return match.matchRole === 'Captain';
+          return match.matchRole === 'Captain' || match.matchRole === 'Assistant Captain';
         }
 
         if (normalizedType === 'Suspension') {
-          return match.matchRole === 'Captain' || match.matchRole === 'Player';
+          return true;
         }
 
         return false;
@@ -3164,12 +3162,13 @@ Best regards,`;
       if (bannedPlayersCache && !forceReload) return bannedPlayersCache;
 
       const allData = await fetchAllaData(forceReload);
-      const allMatches = extractPlayerMatchesFromAllData(allData);
+      const presenceRows = buildBannedPlayerPresenceRows(allData);
       const teamLinkMap = await getTeamLinkMap(forceReload);
 
       const rows = BANNED_PLAYERS.map(entry => {
         const active = isBanActive(entry.until);
-        const matches = getRelevantBanMatches(entry, allMatches);
+        const matches = getRelevantBanMatches(entry, presenceRows);
+
         const uniqueMatches = [];
         const seen = new Set();
 
@@ -3177,9 +3176,9 @@ Best regards,`;
           const key = [
             match.normalizedPlayer,
             normalizeTeamName(match.teamName),
-            match.divisionName,
+            match.matchRole,
             match.sourceKey,
-            match.matchRole
+            match.divisionName
           ].join('__');
 
           if (!seen.has(key)) {
@@ -3193,7 +3192,7 @@ Best regards,`;
           return id ? `${match.teamName}|||${id}` : match.teamName;
         });
 
-        const row = {
+        return {
           playerName: entry.playerName,
           playerAliases: getPlayerAliases(entry).slice(1).join(', '),
           banType: normalizeBanType(entry.banType),
@@ -3207,11 +3206,12 @@ Best regards,`;
           sources: getUniqueJoined(uniqueMatches.map(match => match.sourceKey)),
           notes: getUniqueJoined([
             entry.notes || '',
-            uniqueMatches.map(buildMatchDescriptor).join(' | ')
+            uniqueMatches.map(match => {
+              const parts = [match.matchRole, match.teamName, match.divisionName, match.sourceKey].filter(Boolean);
+              return parts.join(' • ');
+            }).join(' | ')
           ])
         };
-
-        return row;
       });
 
       bannedPlayersCache = rows;
