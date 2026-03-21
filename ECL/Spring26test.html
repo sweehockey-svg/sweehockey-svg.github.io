@@ -510,6 +510,33 @@
       letter-spacing: 0.45px;
     }
 
+    .seed-header-row th {
+      background: linear-gradient(to right, #050967, #08105e);
+      color: white;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+      padding: 9px 10px;
+      text-align: left;
+      border-bottom: 1px solid #ebeff6;
+      white-space: nowrap;
+    }
+
+    .seed-header-row th:first-child {
+      width: 56px;
+      text-align: center;
+    }
+
+    .seed-header-row th:nth-child(2) {
+      width: 170px;
+    }
+
+    .seed-header-row th:nth-child(4) {
+      width: 140px;
+      text-align: center;
+    }
+
     .abbr-head {
       position: relative;
       cursor: help;
@@ -1790,19 +1817,19 @@
 
     function getColumns(rows) {
       if (currentSource.key === 'bannedPlayers') {
-  return [
-    'playerName',
-    'banType',
-    'until',
-    'active',
-    'status',
-    'foundAs',
-    'teams',
-    'divisions',
-    'sources',
-    'notes'
-  ];
-}
+        return [
+          'playerName',
+          'banType',
+          'until',
+          'active',
+          'status',
+          'foundAs',
+          'teams',
+          'divisions',
+          'sources',
+          'notes'
+        ];
+      }
 
       const preferred = [
         'teamName', 'teamCountry', 'registrationDate', 'divisionName', 'qualifierName',
@@ -2667,55 +2694,70 @@ Best regards,`;
       return counts;
     }
 
-function renderSectionTitle(title, count, headerClass = '') {
-  const tr = document.createElement('tr');
-  tr.className = 'section-title-row';
+    function renderSeedHeaderRow() {
+      const tr = document.createElement('tr');
+      tr.className = 'seed-header-row';
 
-  const td = document.createElement('td');
-  td.colSpan = 5;
-  td.textContent = `${title} (${count})`;
+      const headers = ['#', 'Seed', 'Team', 'Status', 'Notes'];
 
-  const normalizedTitle = String(title || '').toLowerCase();
+      headers.forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        tr.appendChild(th);
+      });
 
-  if (
-    normalizedTitle === 'elite' ||
-    normalizedTitle.startsWith('elite qualifiers') ||
-    normalizedTitle === 'pro'
-  ) {
-    td.style.background = 'linear-gradient(90deg, #d9ba52, #edd983)';
-    td.style.color = '#0b144f';
-  } else if (normalizedTitle === 'pro qualifiers') {
-    td.style.background = 'linear-gradient(90deg, #d4d8e0, #eceff5)';
-    td.style.color = '#0b144f';
-  } else if (normalizedTitle === 'lite') {
-    td.style.background = 'linear-gradient(90deg, #955742, #cd775b)';
-    td.style.color = '#ffffff';
-  } else if (normalizedTitle === 'core') {
-    td.style.background = 'linear-gradient(90deg, #903300, #f85900)';
-    td.style.color = '#ffffff';
-  } else if (normalizedTitle === 'neo') {
-    td.style.background = 'linear-gradient(90deg, #2b7526, #4ed546)';
-    td.style.color = '#ffffff';
-  } else if (headerClass === 'gray') {
-    td.style.background = 'linear-gradient(90deg, #d4d8e0, #eceff5)';
-    td.style.color = '#0b144f';
-  } else {
-    td.style.background = 'linear-gradient(90deg, #d9ba52, #edd983)';
-    td.style.color = '#0b144f';
-  }
+      seedingBody.appendChild(tr);
+    }
 
-  td.style.fontWeight = '900';
-  td.style.textAlign = 'center';
-  td.style.border = '0';
-  td.style.fontSize = '15px';
-  td.style.textTransform = 'uppercase';
-  td.style.letterSpacing = '0.7px';
-  td.style.padding = '12px 10px';
-  td.style.borderRadius = '10px 10px 0 0';
+    function renderSectionTitle(title, count, headerClass = '') {
+      const tr = document.createElement('tr');
+      tr.className = 'section-title-row';
 
-  tr.appendChild(td);
-  seedingBody.appendChild(tr);
-}
+      const td = document.createElement('td');
+      td.colSpan = 5;
+      td.textContent = `${title} (${count})`;
+
+      const normalizedTitle = String(title || '').toLowerCase();
+
+      if (
+        normalizedTitle === 'elite' ||
+        normalizedTitle.startsWith('elite qualifiers') ||
+        normalizedTitle === 'pro'
+      ) {
+        td.style.background = 'linear-gradient(90deg, #d9ba52, #edd983)';
+        td.style.color = '#0b144f';
+      } else if (normalizedTitle === 'pro qualifiers') {
+        td.style.background = 'linear-gradient(90deg, #d4d8e0, #eceff5)';
+        td.style.color = '#0b144f';
+      } else if (normalizedTitle === 'lite') {
+        td.style.background = 'linear-gradient(90deg, #955742, #cd775b)';
+        td.style.color = '#ffffff';
+      } else if (normalizedTitle === 'core') {
+        td.style.background = 'linear-gradient(90deg, #903300, #f85900)';
+        td.style.color = '#ffffff';
+      } else if (normalizedTitle === 'neo') {
+        td.style.background = 'linear-gradient(90deg, #2b7526, #4ed546)';
+        td.style.color = '#ffffff';
+      } else if (headerClass === 'gray') {
+        td.style.background = 'linear-gradient(90deg, #d4d8e0, #eceff5)';
+        td.style.color = '#0b144f';
+      } else {
+        td.style.background = 'linear-gradient(90deg, #d9ba52, #edd983)';
+        td.style.color = '#0b144f';
+      }
+
+      td.style.fontWeight = '900';
+      td.style.textAlign = 'center';
+      td.style.border = '0';
+      td.style.fontSize = '15px';
+      td.style.textTransform = 'uppercase';
+      td.style.letterSpacing = '0.7px';
+      td.style.padding = '12px 10px';
+      td.style.borderRadius = '10px 10px 0 0';
+
+      tr.appendChild(td);
+      seedingBody.appendChild(tr);
+    }
 
     function renderSeedRow(pos, seed, team, exists, note = '', extraClass = '', teamID = '') {
       const tr = document.createElement('tr');
@@ -3214,7 +3256,6 @@ function renderSectionTitle(title, count, headerClass = '') {
           playerName: entry.playerName,
           playerAliases: getPlayerAliases(entry).slice(1).join(', '),
           banType: normalizeBanType(entry.banType),
-    
           until: entry.until,
           active: active ? 'Yes' : 'No',
           status: !active ? 'Expired' : uniqueMatches.length > 0 ? 'Violation' : 'Clear',
