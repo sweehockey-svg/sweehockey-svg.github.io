@@ -2719,16 +2719,19 @@ Best regards,`;
 
       const normalizedTitle = String(title || '').toLowerCase();
 
-      if (
-        normalizedTitle === 'elite' ||
-        normalizedTitle.startsWith('elite qualifiers') ||
-        normalizedTitle === 'pro'
-      ) {
-        td.style.background = 'linear-gradient(90deg, #d9ba52, #edd983)';
-        td.style.color = '#0b144f';
-      } else if (normalizedTitle === 'pro qualifiers') {
-        td.style.background = 'linear-gradient(90deg, #d4d8e0, #eceff5)';
-        td.style.color = '#0b144f';
+if (
+  normalizedTitle === 'elite' ||
+  normalizedTitle.startsWith('elite qualifiers')
+) {
+  td.style.background = 'linear-gradient(90deg, #d9ba52, #edd983)';
+  td.style.color = '#0b144f';
+} else if (
+  normalizedTitle === 'pro' ||
+  normalizedTitle === 'pro qualifiers'
+) {
+  td.style.background = 'linear-gradient(90deg, #d4d8e0, #eceff5)';
+  td.style.color = '#0b144f';
+}
       } else if (normalizedTitle === 'lite') {
         td.style.background = 'linear-gradient(90deg, #955742, #cd775b)';
         td.style.color = '#ffffff';
