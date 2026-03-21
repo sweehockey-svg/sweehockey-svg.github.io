@@ -1224,6 +1224,17 @@
   <script>
     const ADMIN_PASSWORD = 'kungkenu';
 
+    const TEAM_NAME_CHANGES = [
+      { oldName: 'HAVU Gaming', newName: 'Parasite' },
+      { oldName: 'VESUVIUS ESPORTS', newName: 'Golden Buffalos' },
+      { oldName: 'GREATEST', newName: 'Unwanted' },
+      { oldName: 'Mythix', newName: 'INCOACH' },
+      { oldName: 'MoDo Hockey', newName: 'Västerås IK' },
+      { oldName: 'ROBE Esports', newName: 'MSK Esports' },
+       { oldName: 'Polski Boys', newName: 'Tunnel Vision' },
+      { oldName: 'Vesuvius Academy', newName: 'Grim Reapers HC' }
+    ];
+
     const loginScreen = document.getElementById('loginScreen');
     const siteShell = document.getElementById('siteShell');
     const passwordInput = document.getElementById('passwordInput');
@@ -1577,6 +1588,80 @@
       document.body.style.overflow = '';
     }
 
+    function normalizeTeamName(value) {
+      return String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/[^\p{L}\p{N}]+/gu, ' ')
+        .trim();
+    }
+
+    const TEAM_NAME_CHANGE_MAP = new Map(
+      TEAM_NAME_CHANGES.flatMap(item => {
+        const oldNormalized = normalizeTeamName(item.oldName);
+        const newNormalized = normalizeTeamName(item.newName);
+        return [
+          [oldNormalized, { oldName: item.oldName, newName: item.newName }],
+          [newNormalized, { oldName: item.oldName, newName: item.newName }]
+        ];
+      })
+    );
+
+    function getTeamRenameInfo(teamName) {
+      return TEAM_NAME_CHANGE_MAP.get(normalizeTeamName(teamName)) || null;
+    }
+
+    function getCanonicalTeamName(teamName) {
+      const info = getTeamRenameInfo(teamName);
+      return info ? info.newName : String(teamName || '');
+    }
+
+    function getOldTeamName(teamName) {
+      const info = getTeamRenameInfo(teamName);
+      return info ? info.oldName : String(teamName || '');
+    }
+
+function getSeedTeamName(teamName) {
+  return getCanonicalTeamName(teamName);
+}
+
+function getSeedRenameNote(teamName) {
+  const info = getTeamRenameInfo(teamName);
+  return info ? `Old name ${info.oldName}` : '';
+}
+
+    function applyTeamNameChangesToValue(value) {
+      const info = getTeamRenameInfo(value);
+      return info ? info.newName : String(value || '');
+    }
+
+    function applyTeamNameChangesToRow(row) {
+      if (!row || typeof row !== 'object') return row;
+      const cloned = { ...row };
+
+      TEAM_NAME_KEYS.forEach(key => {
+        if (key in cloned && cloned[key]) {
+          cloned[key] = applyTeamNameChangesToValue(cloned[key]);
+        }
+      });
+
+      ['history1Team', 'history2Team', 'history3Team'].forEach(key => {
+        if (key in cloned && cloned[key]) {
+          cloned[key] = applyTeamNameChangesToValue(cloned[key]);
+        }
+      });
+
+      ['From', 'To'].forEach(key => {
+        if (key in cloned && cloned[key]) {
+          cloned[key] = applyTeamNameChangesToValue(cloned[key]);
+        }
+      });
+
+      return cloned;
+    }
+
     function selectSource(source) {
       currentSource = source;
       renderTabs();
@@ -1614,16 +1699,6 @@
 
     function isCompatibilityNotOk(row) {
       return String(row?.compatibility ?? '').trim().toLowerCase() === 'not ok';
-    }
-
-    function normalizeTeamName(value) {
-      return String(value ?? '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, ' ')
-        .replace(/[^\p{L}\p{N}]+/gu, ' ')
-        .trim();
     }
 
     function normalizePlayerName(value) {
@@ -2061,8 +2136,9 @@
       const signUps = getRowsForSource(allData, 'signUps');
       const map = new Map();
 
-      signUps.forEach(row => {
-        const normalized = normalizeTeamName(row.teamName);
+      signUps.forEach(originalRow => {
+        const row = applyTeamNameChangesToRow(originalRow);
+        const normalized = normalizeTeamName(getTeamNameFromRow(row));
         if (normalized) map.set(normalized, row);
       });
 
@@ -2079,7 +2155,9 @@
       Object.values(allData || {}).forEach(value => {
         if (!Array.isArray(value)) return;
 
-        value.forEach(row => {
+        value.forEach(originalRow => {
+          const row = applyTeamNameChangesToRow(originalRow);
+
           const possibleTeamIdKeys = [
             'teamID', 'teamId', 'TeamID', 'team_id',
             'fromTeamID', 'fromTeamId', 'toTeamID', 'toTeamId'
@@ -2156,7 +2234,8 @@
       const rows = Array.isArray(allData?.teamCaptains) ? allData.teamCaptains : [];
       const map = new Map();
 
-      rows.forEach(row => {
+      rows.forEach(originalRow => {
+        const row = applyTeamNameChangesToRow(originalRow);
         const normalizedTeam = normalizeTeamName(row.teamName);
         const userId = String(row.userID || '').trim();
         if (!normalizedTeam || !userId) return;
@@ -2281,10 +2360,13 @@ Best regards,`;
     }
 
     function getProQualReqCheckRows(allData) {
-      if (Array.isArray(allData?.proQualReqCheck)) return allData.proQualReqCheck;
+      if (Array.isArray(allData?.proQualReqCheck)) {
+        return allData.proQualReqCheck.map(applyTeamNameChangesToRow);
+      }
 
       const signUps = getRowsForSource(allData, 'signUps');
       return signUps
+        .map(applyTeamNameChangesToRow)
         .filter(row => String(row?.qualifierName || '').trim().toUpperCase().includes('WILDCARD'))
         .map(row => ({
           teamID: row.teamID ?? '',
@@ -2312,7 +2394,7 @@ Best regards,`;
       const set = new Set();
       presetSections.forEach(section => {
         section.rows.forEach(row => {
-          const normalized = normalizeTeamName(row[2]);
+          const normalized = normalizeTeamName(getCanonicalTeamName(row[2]));
           if (normalized) set.add(normalized);
         });
       });
@@ -2324,7 +2406,7 @@ Best regards,`;
       const liteSection = presetSections.find(section => section.title === 'Lite');
       if (!liteSection) return set;
       liteSection.rows.forEach(row => {
-        const normalized = normalizeTeamName(row[2]);
+        const normalized = normalizeTeamName(getCanonicalTeamName(row[2]));
         if (normalized) set.add(normalized);
       });
       return set;
@@ -2335,7 +2417,7 @@ Best regards,`;
       const proQualSection = presetSections.find(section => section.title === 'Pro Qualifiers');
       if (!proQualSection) return set;
       proQualSection.rows.forEach(row => {
-        const normalized = normalizeTeamName(row[2]);
+        const normalized = normalizeTeamName(getCanonicalTeamName(row[2]));
         if (normalized) set.add(normalized);
       });
       return set;
@@ -2359,15 +2441,20 @@ Best regards,`;
     }
 
     function getSeedRowNote(section, teamName, registeredInfoMap) {
-      const normalized = normalizeTeamName(teamName);
+      const canonicalTeamName = getCanonicalTeamName(teamName);
+      const normalized = normalizeTeamName(canonicalTeamName);
       if (!normalized) return '';
 
       const row = registeredInfoMap.get(normalized);
-      if (!row) return '';
+      const notes = [];
+
+      const renameNote = getSeedRenameNote(teamName);
+      if (renameNote) notes.push(renameNote);
+
+      if (!row) return notes.join(' • ');
 
       const listedDivision = detectSectionDivision(section.title);
       const signedDivision = String(row.divisionName || '').trim().toUpperCase();
-      const notes = [];
 
       const qualifierNote = getQualifierNote(row);
       if (qualifierNote) notes.push(qualifierNote);
@@ -2502,12 +2589,14 @@ Best regards,`;
 
     function renderSeedRow(pos, seed, team, exists, note = '', extraClass = '', teamID = '') {
       const tr = document.createElement('tr');
-      const seedingStatus = getSeedingTeamStatus(team);
+      const seedDisplayTeam = getSeedTeamName(team);
+      const canonicalTeam = getCanonicalTeamName(team);
+      const seedingStatus = getSeedingTeamStatus(seedDisplayTeam);
       const isDisbanded = seedingStatus === 'DISBANDED';
 
       let rowClass = 'seed-row';
       if (extraClass) rowClass += ' ' + extraClass;
-      if (team && !exists && !isDisbanded) rowClass += ' missing';
+      if (seedDisplayTeam && !exists && !isDisbanded) rowClass += ' missing';
       if (note || isDisbanded) rowClass += ' note';
       if (isDisbanded) rowClass += ' disbanded';
       tr.className = rowClass;
@@ -2521,16 +2610,16 @@ Best regards,`;
       tr.appendChild(seedTd);
 
       const teamTd = document.createElement('td');
-      if (team && teamID) {
-        teamTd.appendChild(createLink(TEAM_BASE_URL + teamID, team, 'seed-link'));
+      if (seedDisplayTeam && teamID) {
+        teamTd.appendChild(createLink(TEAM_BASE_URL + teamID, seedDisplayTeam, 'seed-link'));
       } else {
-        teamTd.textContent = team || '';
+        teamTd.textContent = seedDisplayTeam || '';
       }
 
       if (extraClass.includes('unlisted')) {
         const meta = document.createElement('span');
         meta.className = 'seed-team-meta';
-        meta.textContent = '';
+        meta.textContent = canonicalTeam !== seedDisplayTeam ? canonicalTeam : '';
         teamTd.appendChild(meta);
       }
 
@@ -2539,7 +2628,7 @@ Best regards,`;
       const checkTd = document.createElement('td');
       const statusBadge = document.createElement('span');
 
-      if (!team) {
+      if (!seedDisplayTeam) {
         statusBadge.className = 'seed-status empty';
         statusBadge.textContent = '-';
       } else if (isDisbanded) {
@@ -2609,7 +2698,7 @@ Best regards,`;
 
         if (section.title === 'Pro Qualifiers') {
           const listedProQualCount = section.rows.filter(row => {
-            const team = row[2];
+            const team = getCanonicalTeamName(row[2]);
             const normalized = normalizeTeamName(team);
             const info = registeredInfoMap.get(normalized);
             const note = info ? getQualifierNote(info) : '';
@@ -2623,7 +2712,8 @@ Best regards,`;
 
         section.rows.forEach(row => {
           const [pos, seed, team] = row;
-          const normalized = normalizeTeamName(team);
+          const canonicalTeam = getCanonicalTeamName(team);
+          const normalized = normalizeTeamName(canonicalTeam);
           const exists = team ? registeredTeamSet.has(normalized) : false;
           const note = team ? getSeedRowNote(section, team, registeredInfoMap) : '';
           const teamInfo = signUpsMap.get(normalized);
@@ -2638,7 +2728,7 @@ Best regards,`;
               'Pro Qualifiers',
               row.teamName || '',
               true,
-              getQualifierNote(row),
+              getSeedRowNote(section, row.teamName || '', registeredInfoMap),
               'unlisted',
               row.teamID || ''
             );
@@ -2655,7 +2745,7 @@ Best regards,`;
                 section.title + ' Unseeded',
                 row.teamName || '',
                 true,
-                getQualifierNote(row),
+                getSeedRowNote(section, row.teamName || '', registeredInfoMap),
                 'unlisted',
                 row.teamID || ''
               );
@@ -2972,7 +3062,8 @@ Best regards,`;
       const hideIndex = currentSource.key === 'signUps';
       const visibleColumns = getVisibleColumns();
 
-      for (const [index, row] of rows.entries()) {
+      for (const [index, originalRow] of rows.entries()) {
+        const row = applyTeamNameChangesToRow(originalRow);
         const tr = document.createElement('tr');
         const rowClass = getRowClass(row);
         if (rowClass) tr.classList.add(rowClass);
@@ -3195,13 +3286,13 @@ Best regards,`;
 
       emptyMessage.style.display = 'none';
 
-      currentRows = [...rows];
-      currentColumns = getColumns(rows);
+      currentRows = rows.map(applyTeamNameChangesToRow);
+      currentColumns = getColumns(currentRows);
       currentNumericColumns = new Set(
         currentColumns.filter(col =>
           col !== 'fullLicenseCount' &&
           col !== 'signupIssue' &&
-          isNumericColumn(rows.map(r => {
+          isNumericColumn(currentRows.map(r => {
             if (col === 'fullLicenseCount') return getFullLicenseCount(r);
             return r[col];
           }))
@@ -3210,7 +3301,7 @@ Best regards,`;
       currentNumericColumns.add('fullLicenseCount');
 
       if (currentSource.key === 'signUps') {
-        rowCounter.textContent = `Anmälda lag: ${rows.length}`;
+        rowCounter.textContent = `Anmälda lag: ${currentRows.length}`;
       } else {
         rowCounter.textContent = '';
       }
@@ -3221,7 +3312,7 @@ Best regards,`;
 
     async function loadRegisteredTeams(forceReload = false) {
       const allData = await fetchAllaData(forceReload);
-      return getRowsForSource(allData, 'signUps');
+      return getRowsForSource(allData, 'signUps').map(applyTeamNameChangesToRow);
     }
 
     async function loadData(forceReload = false) {
@@ -3257,7 +3348,7 @@ Best regards,`;
           return;
         }
 
-        const rows = getRowsForSource(allData, currentSource.key);
+        const rows = getRowsForSource(allData, currentSource.key).map(applyTeamNameChangesToRow);
         await renderTable(rows, forceReload);
         setStatus('Done');
         lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString('en-GB');
