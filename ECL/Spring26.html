@@ -510,6 +510,33 @@
       letter-spacing: 0.45px;
     }
 
+    .seed-header-row th {
+      background: linear-gradient(to right, #050967, #08105e);
+      color: white;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+      padding: 9px 10px;
+      text-align: left;
+      border-bottom: 1px solid #ebeff6;
+      white-space: nowrap;
+    }
+
+    .seed-header-row th:first-child {
+      width: 56px;
+      text-align: center;
+    }
+
+    .seed-header-row th:nth-child(2) {
+      width: 170px;
+    }
+
+    .seed-header-row th:nth-child(4) {
+      width: 140px;
+      text-align: center;
+    }
+
     .abbr-head {
       position: relative;
       cursor: help;
@@ -1236,6 +1263,7 @@
       { oldName: 'HAVU Gaming', newName: 'Parasite' },
       { oldName: 'VESUVIUS ESPORTS', newName: 'Golden Buffalos' },
       { oldName: 'GREATEST', newName: 'Unwanted' },
+      { oldName: 'Jagrs in Paradise', newName: 'Cityboys' },
       { oldName: 'Mythix', newName: 'INCOACH' },
       { oldName: 'MoDo Hockey', newName: 'Västerås IK' },
       { oldName: 'ROBE Esports', newName: 'MSK Esports' },
@@ -1789,19 +1817,19 @@
 
     function getColumns(rows) {
       if (currentSource.key === 'bannedPlayers') {
-  return [
-    'playerName',
-    'banType',
-    'until',
-    'active',
-    'status',
-    'foundAs',
-    'teams',
-    'divisions',
-    'sources',
-    'notes'
-  ];
-}
+        return [
+          'playerName',
+          'banType',
+          'until',
+          'active',
+          'status',
+          'foundAs',
+          'teams',
+          'divisions',
+          'sources',
+          'notes'
+        ];
+      }
 
       const preferred = [
         'teamName', 'teamCountry', 'registrationDate', 'divisionName', 'qualifierName',
@@ -2666,36 +2694,72 @@ Best regards,`;
       return counts;
     }
 
-    function renderSectionTitle(title, count, headerClass = '') {
-      const tr = document.createElement('tr');
-      tr.className = 'section-title-row' + (headerClass ? ' ' + headerClass : '');
-      const td = document.createElement('td');
-      td.colSpan = 5;
-      td.textContent = `${title} (${count})`;
-      tr.appendChild(td);
-      seedingBody.appendChild(tr);
-    }
-
     function renderSeedHeaderRow() {
       const tr = document.createElement('tr');
-      tr.className = 'seed-row';
+      tr.className = 'seed-header-row';
 
-      const labels = ['#', 'Seed', 'Team', 'Status', 'Notes'];
-      labels.forEach((label, index) => {
-        const td = document.createElement('td');
-        td.textContent = label;
-        td.style.background = '#f8fafc';
-        td.style.color = '#0b144f';
-        td.style.fontWeight = '900';
-        td.style.textTransform = 'uppercase';
-        td.style.letterSpacing = '0.4px';
-        td.style.fontSize = '11px';
-        if (index === 3) td.style.textAlign = 'center';
-        tr.appendChild(td);
+      const headers = ['#', 'Seed', 'Team', 'Status', 'Notes'];
+
+      headers.forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        tr.appendChild(th);
       });
 
       seedingBody.appendChild(tr);
     }
+
+function renderSectionTitle(title, count, headerClass = '') {
+  const tr = document.createElement('tr');
+  tr.className = 'section-title-row';
+
+  const td = document.createElement('td');
+  td.colSpan = 5;
+  td.textContent = `${title} (${count})`;
+
+  const normalizedTitle = String(title || '').toLowerCase();
+
+  if (
+    normalizedTitle === 'elite' ||
+    normalizedTitle.startsWith('elite qualifiers')
+  ) {
+    td.style.background = 'linear-gradient(90deg, #d9ba52, #edd983)';
+    td.style.color = '#0b144f';
+  } else if (
+    normalizedTitle === 'pro' ||
+    normalizedTitle === 'pro qualifiers'
+  ) {
+    td.style.background = 'linear-gradient(90deg, #d4d8e0, #eceff5)';
+    td.style.color = '#0b144f';
+  } else if (normalizedTitle === 'lite') {
+    td.style.background = 'linear-gradient(90deg, #955742, #cd775b)';
+    td.style.color = '#ffffff';
+  } else if (normalizedTitle === 'core') {
+    td.style.background = 'linear-gradient(90deg, #903300, #f85900)';
+    td.style.color = '#ffffff';
+  } else if (normalizedTitle === 'neo') {
+    td.style.background = 'linear-gradient(90deg, #2b7526, #4ed546)';
+    td.style.color = '#ffffff';
+  } else if (headerClass === 'gray') {
+    td.style.background = 'linear-gradient(90deg, #d4d8e0, #eceff5)';
+    td.style.color = '#0b144f';
+  } else {
+    td.style.background = 'linear-gradient(90deg, #d9ba52, #edd983)';
+    td.style.color = '#0b144f';
+  }
+
+  td.style.fontWeight = '900';
+  td.style.textAlign = 'center';
+  td.style.border = '0';
+  td.style.fontSize = '15px';
+  td.style.textTransform = 'uppercase';
+  td.style.letterSpacing = '0.7px';
+  td.style.padding = '12px 10px';
+  td.style.borderRadius = '10px 10px 0 0';
+
+  tr.appendChild(td);
+  seedingBody.appendChild(tr);
+}
 
     function renderSeedRow(pos, seed, team, exists, note = '', extraClass = '', teamID = '') {
       const tr = document.createElement('tr');
@@ -3194,7 +3258,6 @@ Best regards,`;
           playerName: entry.playerName,
           playerAliases: getPlayerAliases(entry).slice(1).join(', '),
           banType: normalizeBanType(entry.banType),
-    
           until: entry.until,
           active: active ? 'Yes' : 'No',
           status: !active ? 'Expired' : uniqueMatches.length > 0 ? 'Violation' : 'Clear',
