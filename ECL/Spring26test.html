@@ -605,6 +605,14 @@
     tbody tr.signup-rule-error:nth-child(even) { background: #ffd7d7 !important; }
     tbody tr.signup-rule-error:hover { background: #ffcaca !important; }
 
+    tbody tr.ban-clear { background: #f6fffa !important; }
+    tbody tr.ban-clear:nth-child(even) { background: #effdf6 !important; }
+    tbody tr.ban-clear:hover { background: #e4fbef !important; }
+
+    tbody tr.ban-expired { background: #f8fafc !important; }
+    tbody tr.ban-expired:nth-child(even) { background: #f1f5f9 !important; }
+    tbody tr.ban-expired:hover { background: #e8eef5 !important; }
+
     .section-table {
       width: 100%;
       border-collapse: separate;
@@ -1231,8 +1239,30 @@
       { oldName: 'Mythix', newName: 'INCOACH' },
       { oldName: 'MoDo Hockey', newName: 'Västerås IK' },
       { oldName: 'ROBE Esports', newName: 'MSK Esports' },
-       { oldName: 'Polski Boys', newName: 'Tunnel Vision' },
+      { oldName: 'Polski Boys', newName: 'Tunnel Vision' },
       { oldName: 'Vesuvius Academy', newName: 'Grim Reapers HC' }
+    ];
+
+    const BANNED_PLAYERS = [
+      { playerName: 'ViSiOnZ97_', aliases: [], banType: 'Captaincy ban', until: 'Indefinitely' },
+      { playerName: 'Men-at-work74', aliases: [], banType: 'Captaincy ban', until: 'Indefinitely' },
+      { playerName: 'maatti64', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+      { playerName: 'OsquuG', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+      { playerName: 'matadori-_-', aliases: ['SirRaittinen'], banType: 'Captaincy ban', until: 'Undefined', notes: 'Previously SirRaittinen' },
+      { playerName: 'xSagwa', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+      { playerName: 'punt1la98', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+      { playerName: 'radekbonk111', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+      { playerName: 'snaasigi', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+      { playerName: 'Keuschemisch', aliases: [], banType: 'Captaincy ban', until: '10.2.2030' },
+      { playerName: 'eBjorken97_', aliases: [], banType: 'Suspension', until: '13.8.2026' },
+      { playerName: 'eBjorken97_', aliases: [], banType: 'Captaincy ban', until: '9.4.2027' },
+      { playerName: 'abbelandit__', aliases: [], banType: 'Captaincy ban', until: '9.4.2029' },
+      { playerName: 'Bjorkudd_39', aliases: [], banType: 'Captaincy ban', until: '9.4.2027' },
+      { playerName: 'abbelandit__', aliases: [], banType: 'Suspension', until: 'until the End of ECL ’26: Spring' },
+      { playerName: 'I-MeIIe-l', aliases: [], banType: 'Captaincy ban', until: '14.4.2027' },
+      { playerName: 'I-MeIIe-l', aliases: [], banType: 'Suspension', until: '14.4.2026' },
+      { playerName: 'Blaze4214', aliases: [], banType: 'Captaincy ban', until: '14.4.2027' },
+      { playerName: 'Cbatta_-11', aliases: [], banType: 'Suspension', until: '14.4.2026' }
     ];
 
     const loginScreen = document.getElementById('loginScreen');
@@ -1286,7 +1316,8 @@
       { key: 'backups', label: 'Backups 26 Spring Teams', type: 'alla' },
       { key: 'licenslosa', label: 'Unlicensed 26 Spring Teams', type: 'alla' },
       { key: 'signUps', label: 'Registered Teams 26 Spring', type: 'alla' },
-      { key: 'proQualReqCheck', label: 'PRO QUAL REQ CHECK', type: 'proqualreqcheck' }
+      { key: 'proQualReqCheck', label: 'PRO QUAL REQ CHECK', type: 'proqualreqcheck' },
+      { key: 'bannedPlayers', label: 'Banned Players', type: 'banned' }
     ];
 
     const presetSections = [
@@ -1516,13 +1547,14 @@
     let teamLinkMapCache = null;
     let playerLinkMapCache = null;
     let captainUserIdMapCache = null;
+    let bannedPlayersCache = null;
     let currentRows = [];
     let currentColumns = [];
     let currentNumericColumns = new Set();
     let sortState = { column: null, direction: 'asc' };
 
     const TEAM_NAME_KEYS = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName'];
-    const PLAYER_NAME_KEYS = ['Player', 'tag', 'playerName', 'player'];
+    const PLAYER_NAME_KEYS = ['Player', 'tag', 'playerName', 'player', 'psn', 'PSN', 'captainName', 'Captain', 'username', 'userName'];
     const TEAM_LIST_NAME_KEYS = [];
     const PLAYER_LIST_NAME_KEYS = ['elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames'];
 
@@ -1598,6 +1630,15 @@
         .trim();
     }
 
+    function normalizePlayerName(value) {
+      return String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
     const TEAM_NAME_CHANGE_MAP = new Map(
       TEAM_NAME_CHANGES.flatMap(item => {
         const oldNormalized = normalizeTeamName(item.oldName);
@@ -1623,14 +1664,14 @@
       return info ? info.oldName : String(teamName || '');
     }
 
-function getSeedTeamName(teamName) {
-  return getCanonicalTeamName(teamName);
-}
+    function getSeedTeamName(teamName) {
+      return getCanonicalTeamName(teamName);
+    }
 
-function getSeedRenameNote(teamName) {
-  const info = getTeamRenameInfo(teamName);
-  return info ? `Old name ${info.oldName}` : '';
-}
+    function getSeedRenameNote(teamName) {
+      const info = getTeamRenameInfo(teamName);
+      return info ? `Old name ${info.oldName}` : '';
+    }
 
     function applyTeamNameChangesToValue(value) {
       const info = getTeamRenameInfo(value);
@@ -1701,13 +1742,40 @@ function getSeedRenameNote(teamName) {
       return String(row?.compatibility ?? '').trim().toLowerCase() === 'not ok';
     }
 
-    function normalizePlayerName(value) {
-      return String(value ?? '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
+    function normalizeBanType(value) {
+      const raw = String(value || '').trim().toLowerCase();
+      if (raw.includes('suspension')) return 'Suspension';
+      if (raw.includes('capt')) return 'Captaincy ban';
+      return String(value || '').trim();
+    }
+
+    function getBanRole(banType) {
+      const normalized = normalizeBanType(banType);
+      if (normalized === 'Captaincy ban') return 'Captain';
+      if (normalized === 'Suspension') return 'Player / Captain';
+      return '';
+    }
+
+    function parseBanEndDate(value) {
+      const text = String(value || '').trim();
+      const match = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+      if (!match) return null;
+      const [, day, month, year] = match;
+      return new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999);
+    }
+
+    function isBanActive(untilValue) {
+      const text = String(untilValue || '').trim().toLowerCase();
+      if (!text) return true;
+      if (text.includes('indefinitely')) return true;
+      if (text.includes('undefined')) return true;
+      if (text.includes('until the end')) return true;
+
+      const endDate = parseBanEndDate(untilValue);
+      if (!endDate) return true;
+
+      const now = new Date();
+      return endDate >= now;
     }
 
     function getSeedingTeamStatus(teamName) {
@@ -1721,6 +1789,22 @@ function getSeedRenameNote(teamName) {
     }
 
     function getColumns(rows) {
+      if (currentSource.key === 'bannedPlayers') {
+        return [
+          'playerName',
+          'banType',
+          'bannedRole',
+          'until',
+          'active',
+          'status',
+          'foundAs',
+          'teams',
+          'divisions',
+          'sources',
+          'notes'
+        ];
+      }
+
       const preferred = [
         'teamName', 'teamCountry', 'registrationDate', 'divisionName', 'qualifierName',
         'playerCount', 'fullLicenseCount', 'backupLicenseCount', 'unlicensedPlayerCount', 'signupIssue',
@@ -1803,6 +1887,10 @@ function getSeedRenameNote(teamName) {
     }
 
     function getVisibleColumns() {
+      if (currentSource.key === 'bannedPlayers') {
+        return currentColumns;
+      }
+
       if (useTeamDropdownRows()) {
         return getTeamTabVisibleColumns() || [];
       }
@@ -1813,6 +1901,23 @@ function getSeedRenameNote(teamName) {
     }
 
     function getColumnHeaderLabel(col) {
+      if (currentSource.key === 'bannedPlayers') {
+        const labels = {
+          playerName: 'PLAYER',
+          banType: 'BAN TYPE',
+          bannedRole: 'BANNED ROLE',
+          until: 'UNTIL',
+          active: 'ACTIVE',
+          status: 'STATUS',
+          foundAs: 'FOUND AS',
+          teams: 'TEAM',
+          divisions: 'DIVISION',
+          sources: 'SOURCE',
+          notes: 'NOTES'
+        };
+        return labels[col] || col;
+      }
+
       if (currentSource.key === 'lite') {
         const labels = {
           teamName: 'TEAMNAME',
@@ -1993,6 +2098,13 @@ function getSeedRenameNote(teamName) {
     }
 
     function getRowClass(row) {
+      if (currentSource.key === 'bannedPlayers') {
+        if (String(row?.status || '').toLowerCase() === 'violation') return 'not-ok';
+        if (String(row?.status || '').toLowerCase() === 'clear') return 'ban-clear';
+        if (String(row?.status || '').toLowerCase() === 'expired') return 'ban-expired';
+        return '';
+      }
+
       if (currentSource.key === 'signUps' && getSignupIssues(row).length > 0) {
         return 'signup-rule-error';
       }
@@ -2080,12 +2192,19 @@ function getSeedRenameNote(teamName) {
       return '';
     }
 
+    function getPlayerNameFromRow(row) {
+      for (const key of PLAYER_NAME_KEYS) {
+        if (row && row[key]) return String(row[key]).trim();
+      }
+      return '';
+    }
+
     function isTeamColumn(col) {
       return TEAM_NAME_KEYS.includes(col) || TEAM_LIST_NAME_KEYS.includes(col);
     }
 
     function isPlayerColumn(col) {
-      return PLAYER_NAME_KEYS.includes(col) || PLAYER_LIST_NAME_KEYS.includes(col);
+      return PLAYER_NAME_KEYS.includes(col) || PLAYER_LIST_NAME_KEYS.includes(col) || col === 'playerName';
     }
 
     function unwrapAllaData(data) {
@@ -2212,7 +2331,7 @@ function getSeedRenameNote(teamName) {
           const playerId = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
 
           if (playerId) {
-            ['Player', 'tag', 'playerName', 'player'].forEach(nameKey => {
+            ['Player', 'tag', 'playerName', 'player', 'psn', 'PSN', 'captainName', 'Captain', 'username', 'userName'].forEach(nameKey => {
               const playerName = row?.[nameKey];
               const normalized = normalizePlayerName(playerName);
               if (normalized && !map.has(normalized)) {
@@ -2620,7 +2739,7 @@ Best regards,`;
         const meta = document.createElement('span');
         meta.className = 'seed-team-meta';
         meta.textContent = canonicalTeam !== seedDisplayTeam ? canonicalTeam : '';
-        teamTd.appendChild(meta);
+        if (meta.textContent) teamTd.appendChild(meta);
       }
 
       tr.appendChild(teamTd);
@@ -2953,6 +3072,152 @@ Best regards,`;
         .filter(Boolean);
     }
 
+    function getPlayerAliases(entry) {
+      return [entry.playerName, ...(entry.aliases || [])]
+        .map(name => String(name || '').trim())
+        .filter(Boolean);
+    }
+
+    function getUniqueJoined(values) {
+      return [...new Set(
+        values
+          .map(v => String(v || '').trim())
+          .filter(Boolean)
+      )].join(' | ');
+    }
+
+    function findTeamIDForName(teamName, teamLinkMap) {
+      return teamLinkMap.get(normalizeTeamName(teamName)) || '';
+    }
+
+    function buildMatchDescriptor(match) {
+      const parts = [];
+      if (match.matchRole) parts.push(match.matchRole);
+      if (match.teamName) parts.push(match.teamName);
+      if (match.divisionName) parts.push(match.divisionName);
+      if (match.sourceKey) parts.push(match.sourceKey);
+      return parts.join(' • ');
+    }
+
+    function extractPlayerMatchesFromAllData(allData) {
+      const matches = [];
+
+      Object.entries(allData || {}).forEach(([sourceKey, rows]) => {
+        if (!Array.isArray(rows)) return;
+
+        rows.forEach(originalRow => {
+          const row = applyTeamNameChangesToRow(originalRow);
+          const playerName = getPlayerNameFromRow(row);
+          const teamName = getTeamNameFromRow(row);
+
+          if (!playerName || !teamName) return;
+
+          const divisionName = String(
+            row?.divisionName ||
+            row?.teamDivision ||
+            row?.division ||
+            row?.currentDivision ||
+            ''
+          ).trim();
+
+          const teamID =
+            row?.teamID || row?.teamId || row?.TeamID || row?.team_id || '';
+
+          matches.push({
+            normalizedPlayer: normalizePlayerName(playerName),
+            playerName,
+            teamName,
+            divisionName,
+            teamID: String(teamID || ''),
+            sourceKey,
+            matchRole: sourceKey === 'teamCaptains' ? 'Captain' : 'Player'
+          });
+        });
+      });
+
+      return matches;
+    }
+
+    function getRelevantBanMatches(entry, allMatches) {
+      const aliases = getPlayerAliases(entry).map(normalizePlayerName);
+      const active = isBanActive(entry.until);
+      if (!active) return [];
+
+      const normalizedType = normalizeBanType(entry.banType);
+
+      return allMatches.filter(match => {
+        if (!aliases.includes(match.normalizedPlayer)) return false;
+
+        if (normalizedType === 'Captaincy ban') {
+          return match.matchRole === 'Captain';
+        }
+
+        if (normalizedType === 'Suspension') {
+          return match.matchRole === 'Captain' || match.matchRole === 'Player';
+        }
+
+        return false;
+      });
+    }
+
+    async function buildBannedPlayersRows(forceReload = false) {
+      if (bannedPlayersCache && !forceReload) return bannedPlayersCache;
+
+      const allData = await fetchAllaData(forceReload);
+      const allMatches = extractPlayerMatchesFromAllData(allData);
+      const teamLinkMap = await getTeamLinkMap(forceReload);
+
+      const rows = BANNED_PLAYERS.map(entry => {
+        const active = isBanActive(entry.until);
+        const matches = getRelevantBanMatches(entry, allMatches);
+        const uniqueMatches = [];
+        const seen = new Set();
+
+        matches.forEach(match => {
+          const key = [
+            match.normalizedPlayer,
+            normalizeTeamName(match.teamName),
+            match.divisionName,
+            match.sourceKey,
+            match.matchRole
+          ].join('__');
+
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueMatches.push(match);
+          }
+        });
+
+        const teamValues = uniqueMatches.map(match => {
+          const id = match.teamID || findTeamIDForName(match.teamName, teamLinkMap);
+          return id ? `${match.teamName}|||${id}` : match.teamName;
+        });
+
+        const row = {
+          playerName: entry.playerName,
+          playerAliases: getPlayerAliases(entry).slice(1).join(', '),
+          banType: normalizeBanType(entry.banType),
+          bannedRole: getBanRole(entry.banType),
+          until: entry.until,
+          active: active ? 'Yes' : 'No',
+          status: !active ? 'Expired' : uniqueMatches.length > 0 ? 'Violation' : 'Clear',
+          foundAs: getUniqueJoined(uniqueMatches.map(match => match.matchRole)),
+          teams: getUniqueJoined(teamValues),
+          divisions: getUniqueJoined(uniqueMatches.map(match => match.divisionName || '-')),
+          sources: getUniqueJoined(uniqueMatches.map(match => match.sourceKey)),
+          notes: getUniqueJoined([
+            entry.notes || '',
+            uniqueMatches.map(buildMatchDescriptor).join(' | ')
+          ])
+        };
+
+        return row;
+      });
+
+      bannedPlayersCache = rows;
+      return rows;
+    }
+
     async function renderTableCell(td, row, col, forceReload = false) {
       let value = row[col] ?? '';
 
@@ -2971,6 +3236,56 @@ Best regards,`;
 
       const directTeamID = row?.teamID || row?.teamId || row?.TeamID || row?.team_id;
       const directPlayerID = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
+
+      if (currentSource.key === 'bannedPlayers') {
+        if (col === 'playerName') {
+          const mappedPlayerID = playerLinkMap.get(normalizePlayerName(textValue));
+          if (mappedPlayerID) {
+            td.appendChild(createLink(PLAYER_BASE_URL + mappedPlayerID, textValue));
+          } else {
+            td.textContent = textValue;
+          }
+
+          if (row.playerAliases) {
+            const alias = document.createElement('div');
+            alias.style.marginTop = '4px';
+            alias.style.fontSize = '11px';
+            alias.style.color = '#64748b';
+            alias.style.whiteSpace = 'normal';
+            alias.textContent = 'Alias: ' + row.playerAliases;
+            td.appendChild(alias);
+          }
+          return null;
+        }
+
+        if (col === 'teams') {
+          const parts = textValue.split('|').map(part => part.trim()).filter(Boolean);
+          if (parts.length === 0) {
+            td.textContent = '';
+            return null;
+          }
+
+          parts.forEach((part, index) => {
+            const [teamName, teamID] = part.split('|||');
+            if (teamID) {
+              td.appendChild(createLink(TEAM_BASE_URL + teamID, teamName));
+            } else {
+              td.appendChild(document.createTextNode(teamName));
+            }
+            if (index < parts.length - 1) td.appendChild(document.createTextNode(' | '));
+          });
+          return null;
+        }
+
+        if (col === 'notes') {
+          td.style.whiteSpace = 'normal';
+          td.textContent = textValue;
+          return null;
+        }
+
+        td.textContent = textValue;
+        return null;
+      }
 
       if (PLAYER_LIST_NAME_KEYS.includes(col)) {
         const parts = parsePlayerList(textValue);
@@ -3063,7 +3378,7 @@ Best regards,`;
       const visibleColumns = getVisibleColumns();
 
       for (const [index, originalRow] of rows.entries()) {
-        const row = applyTeamNameChangesToRow(originalRow);
+        const row = currentSource.key === 'bannedPlayers' ? originalRow : applyTeamNameChangesToRow(originalRow);
         const tr = document.createElement('tr');
         const rowClass = getRowClass(row);
         if (rowClass) tr.classList.add(rowClass);
@@ -3159,7 +3474,7 @@ Best regards,`;
           }
 
           if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
-          if (col === 'signupIssue') td.style.whiteSpace = 'normal';
+          if (col === 'signupIssue' || col === 'notes') td.style.whiteSpace = 'normal';
           await renderTableCell(td, row, col, forceReload);
           tr.appendChild(td);
         }
@@ -3238,10 +3553,8 @@ Best regards,`;
           th.textContent = getSignUpsHeaderLabel(col);
           th.classList.add('abbr-head');
           th.setAttribute('data-full-label', getSignUpsHeaderFullLabel(col));
-        } else if (useTeamDropdownRows()) {
-          th.textContent = getColumnHeaderLabel(col);
         } else {
-          th.textContent = col;
+          th.textContent = getColumnHeaderLabel(col);
         }
 
         if (sortState.column === col) {
@@ -3286,7 +3599,10 @@ Best regards,`;
 
       emptyMessage.style.display = 'none';
 
-      currentRows = rows.map(applyTeamNameChangesToRow);
+      currentRows = currentSource.key === 'bannedPlayers'
+        ? rows
+        : rows.map(applyTeamNameChangesToRow);
+
       currentColumns = getColumns(currentRows);
       currentNumericColumns = new Set(
         currentColumns.filter(col =>
@@ -3302,6 +3618,10 @@ Best regards,`;
 
       if (currentSource.key === 'signUps') {
         rowCounter.textContent = `Anmälda lag: ${currentRows.length}`;
+      } else if (currentSource.key === 'bannedPlayers') {
+        const activeCount = currentRows.filter(row => row.active === 'Yes').length;
+        const violationCount = currentRows.filter(row => row.status === 'Violation').length;
+        rowCounter.textContent = `Bans: ${currentRows.length} • Active: ${activeCount} • Violations: ${violationCount}`;
       } else {
         rowCounter.textContent = '';
       }
@@ -3327,6 +3647,7 @@ Best regards,`;
           teamLinkMapCache = null;
           playerLinkMapCache = null;
           captainUserIdMapCache = null;
+          bannedPlayersCache = null;
         }
 
         if (currentSource.type === 'preset') {
@@ -3343,6 +3664,14 @@ Best regards,`;
         if (currentSource.type === 'proqualreqcheck') {
           const rows = getProQualReqCheckRows(allData);
           await renderProQualReqCheck(rows, forceReload);
+          setStatus('Done');
+          lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString('en-GB');
+          return;
+        }
+
+        if (currentSource.type === 'banned') {
+          const rows = await buildBannedPlayersRows(forceReload);
+          await renderTable(rows, forceReload);
           setStatus('Done');
           lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString('en-GB');
           return;
@@ -3388,6 +3717,7 @@ Best regards,`;
       teamLinkMapCache = null;
       playerLinkMapCache = null;
       captainUserIdMapCache = null;
+      bannedPlayersCache = null;
       loadData(true);
     });
 
