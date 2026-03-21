@@ -1733,7 +1733,7 @@
       }
 
       const cols = currentColumns.filter(col => !TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
-      if (currentSource.key === 'backups') return [...cols, '__sendMail'];
+      if (currentSource.key === 'backups' || currentSource.key === 'licenslosa') return [...cols, '__sendMail'];
       return cols;
     }
 
@@ -2171,7 +2171,7 @@
     }
 
     async function getBackupMessageUrl(row, forceReload = false) {
-      if (currentSource.key !== 'backups') return '';
+      if (currentSource.key !== 'backups' && currentSource.key !== 'licenslosa') return '';
 
       const captainMap = await getCaptainUserIdMap(forceReload);
       const teamName = getTeamNameFromRow(row);
@@ -2244,8 +2244,39 @@ If you have any questions or need assistance with the process, feel free to reac
 Best regards,`;
     }
 
+    function buildUnlicensedMessage(row) {
+      const teamName = getTeamNameFromRow(row) || 'team';
+      const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
+      const rawGames = getBackupGames(row);
+      const games = isFinite(Number(rawGames)) ? Number(rawGames) : 0;
+
+      return `License Status Update – Action Required for ${playerName}
+
+Hi ${teamName}
+
+It has come to our attention that ${playerName} has participated in ${games} games without holding either a Full Player License or a Backup Player License. 
+
+According to league regulations, every player must have a valid license before participating in any ECL ’26 matches (including qualifiers). Playing without the required license may result in disciplinary consequences if reported by an opponent.
+
+To avoid further issues, please ensure that the player purchases the appropriate license immediately — either a Full Player License, One Season License, or a Backup License.
+
+For your convenience, here is the link to the license store:
+https://sportsgamer.gg/community/store/
+
+If ${playerName} already bought any of these licenses, please reply with your receipt(s), and we’ll make sure they are activated correctly in our system.
+
+If you have any questions or need assistance, feel free to contact us — we are happy to help.
+
+Best regards,`;
+    }
+
     async function copyBackupMessage(row) {
       const text = buildBackupMessage(row);
+      await navigator.clipboard.writeText(text);
+    }
+
+    async function copyUnlicensedMessage(row) {
+      const text = buildUnlicensedMessage(row);
       await navigator.clipboard.writeText(text);
     }
 
@@ -2963,7 +2994,42 @@ Best regards,`;
             const actions = document.createElement('div');
             actions.className = 'icon-actions';
 
-            if (games !== null) {
+            if (currentSource.key === 'backups') {
+              if (games !== null) {
+                const mailUrl = await getBackupMessageUrl(row, forceReload);
+
+                if (mailUrl) {
+                  const btn = document.createElement('a');
+                  btn.href = mailUrl;
+                  btn.target = '_blank';
+                  btn.rel = 'noopener noreferrer';
+                  btn.className = 'mail-icon-btn';
+                  btn.title = 'Open message';
+                  btn.setAttribute('aria-label', 'Open message');
+                  btn.textContent = '✉';
+                  actions.appendChild(btn);
+                }
+
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'copy-icon-btn';
+                copyBtn.title = 'Copy preset message';
+                copyBtn.setAttribute('aria-label', 'Copy preset message');
+                copyBtn.textContent = '⧉';
+                copyBtn.addEventListener('click', async () => {
+                  try {
+                    await copyBackupMessage(row);
+                    setStatus('Message copied');
+                  } catch (err) {
+                    console.error(err);
+                    setStatus('Copy failed');
+                  }
+                });
+                actions.appendChild(copyBtn);
+              }
+            }
+
+            if (currentSource.key === 'licenslosa') {
               const mailUrl = await getBackupMessageUrl(row, forceReload);
 
               if (mailUrl) {
@@ -2986,7 +3052,7 @@ Best regards,`;
               copyBtn.textContent = '⧉';
               copyBtn.addEventListener('click', async () => {
                 try {
-                  await copyBackupMessage(row);
+                  await copyUnlicensedMessage(row);
                   setStatus('Message copied');
                 } catch (err) {
                   console.error(err);
