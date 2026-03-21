@@ -1789,20 +1789,19 @@
 
     function getColumns(rows) {
       if (currentSource.key === 'bannedPlayers') {
-        return [
-          'playerName',
-          'banType',
-          'bannedRole',
-          'until',
-          'active',
-          'status',
-          'foundAs',
-          'teams',
-          'divisions',
-          'sources',
-          'notes'
-        ];
-      }
+  return [
+    'playerName',
+    'banType',
+    'until',
+    'active',
+    'status',
+    'foundAs',
+    'teams',
+    'divisions',
+    'sources',
+    'notes'
+  ];
+}
 
       const preferred = [
         'teamName', 'teamCountry', 'registrationDate', 'divisionName', 'qualifierName',
@@ -1904,7 +1903,6 @@
         const labels = {
           playerName: 'PLAYER',
           banType: 'BAN TYPE',
-          bannedRole: 'BANNED ROLE',
           until: 'UNTIL',
           active: 'ACTIVE',
           status: 'STATUS',
@@ -3196,7 +3194,7 @@ Best regards,`;
           playerName: entry.playerName,
           playerAliases: getPlayerAliases(entry).slice(1).join(', '),
           banType: normalizeBanType(entry.banType),
-          bannedRole: getBanRole(entry.banType),
+    
           until: entry.until,
           active: active ? 'Yes' : 'No',
           status: !active ? 'Expired' : uniqueMatches.length > 0 ? 'Violation' : 'Clear',
