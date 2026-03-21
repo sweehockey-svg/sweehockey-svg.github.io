@@ -1623,14 +1623,14 @@
       return info ? info.oldName : String(teamName || '');
     }
 
-    function getSeedTeamName(teamName) {
-      return getOldTeamName(teamName);
-    }
+function getSeedTeamName(teamName) {
+  return getCanonicalTeamName(teamName);
+}
 
-    function getSeedRenameNote(teamName) {
-      const info = getTeamRenameInfo(teamName);
-      return info ? `${info.oldName} = ${info.newName}` : '';
-    }
+function getSeedRenameNote(teamName) {
+  const info = getTeamRenameInfo(teamName);
+  return info ? `Old name ${info.oldName}` : '';
+}
 
     function applyTeamNameChangesToValue(value) {
       const info = getTeamRenameInfo(value);
