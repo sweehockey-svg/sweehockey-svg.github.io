@@ -410,6 +410,7 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      min-height: 34px;
     }
 
     .mail-icon-btn,
@@ -1013,7 +1014,6 @@
       h1 { font-size: 22px; }
       .page { padding: 0 10px; }
       .content-area { padding: 10px; }
-
       .tabs { display: none; }
 
       .site-header-title { font-size: 18px; }
@@ -1088,7 +1088,6 @@
       }
 
       .login-title { font-size: 28px; }
-
       .login-row { flex-direction: column; }
 
       .login-btn,
@@ -1636,7 +1635,9 @@
     function getSeedingTeamStatus(teamName) {
       const normalizedTeam = normalizeTeamName(teamName);
       for (const [name, status] of Object.entries(SEEDING_TEAM_STATUSES)) {
-        if (normalizeTeamName(name) === normalizedTeam) return String(status || '').trim().toUpperCase();
+        if (normalizeTeamName(name) === normalizedTeam) {
+          return String(status || '').trim().toUpperCase();
+        }
       }
       return '';
     }
@@ -2837,7 +2838,6 @@ Best regards,`;
           const match = part.match(/^(.*?)(\s*\(\d+\))?$/);
           const nameOnly = (match?.[1] || part).trim();
           appendPlainOrLinkedPlayer(td, part, nameOnly, playerLinkMap);
-
           if (index < parts.length - 1) td.appendChild(document.createTextNode(', '));
         });
         return null;
@@ -2939,6 +2939,47 @@ Best regards,`;
           const td = document.createElement('td');
 
           if (col === '__sendMail') {
+            const games = getBackupGames(row);
+            const actions = document.createElement('div');
+            actions.className = 'icon-actions';
+
+            if (games !== null && games >= 10) {
+              const mailUrl = await getBackupMessageUrl(row, forceReload);
+
+              if (mailUrl) {
+                const btn = document.createElement('a');
+                btn.href = mailUrl;
+                btn.target = '_blank';
+                btn.rel = 'noopener noreferrer';
+                btn.className = 'mail-icon-btn';
+                btn.title = 'Open message';
+                btn.setAttribute('aria-label', 'Open message');
+                btn.textContent = '✉';
+                actions.appendChild(btn);
+              }
+
+              const copyBtn = document.createElement('button');
+              copyBtn.type = 'button';
+              copyBtn.className = 'copy-icon-btn';
+              copyBtn.title = 'Copy preset message';
+              copyBtn.setAttribute('aria-label', 'Copy preset message');
+              copyBtn.textContent = '⧉';
+              copyBtn.addEventListener('click', async () => {
+                try {
+                  await copyBackupMessage(row);
+                  setStatus('Message copied');
+                } catch (err) {
+                  console.error(err);
+                  setStatus('Copy failed');
+                }
+              });
+              actions.appendChild(copyBtn);
+            }
+
+            td.appendChild(actions);
+            tr.appendChild(td);
+            continue;
+          }
 
           if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
           if (col === 'signupIssue') td.style.whiteSpace = 'normal';
