@@ -2667,16 +2667,7 @@ Best regards,`;
       return counts;
     }
 
-    function renderSectionTitle(title, count, headerClass = '') {
-      const tr = document.createElement('tr');
-      tr.className = 'section-title-row' + (headerClass ? ' ' + headerClass : '');
-      const td = document.createElement('td');
-      td.colSpan = 5;
-      td.textContent = `${title} (${count})`;
-      tr.appendChild(td);
-      seedingBody.appendChild(tr);
-    }
-
+function renderSectionTitle(title, count, headerClass = '') {
     function renderSeedHeaderRow() {
       const tr = document.createElement('tr');
       tr.className = 'seed-row';
