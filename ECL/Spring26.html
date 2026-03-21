@@ -30,7 +30,6 @@
     }
 
     * { box-sizing: border-box; }
-
     html { scroll-behavior: smooth; }
 
     body {
@@ -411,6 +410,7 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      min-height: 34px;
     }
 
     .mail-icon-btn,
@@ -555,9 +555,7 @@
       padding-right: 22px;
     }
 
-    #results thead th.sortable:hover {
-      background: #0b144f;
-    }
+    #results thead th.sortable:hover { background: #0b144f; }
 
     #results thead th.sortable::after {
       content: "↕";
@@ -779,10 +777,7 @@
       padding: 0;
     }
 
-    .proqual-team {
-      border-bottom: 1px solid #e7ebf2;
-    }
-
+    .proqual-team { border-bottom: 1px solid #e7ebf2; }
     .proqual-team:last-child { border-bottom: 0; }
 
     .proqual-team-header {
@@ -1019,7 +1014,6 @@
       h1 { font-size: 22px; }
       .page { padding: 0 10px; }
       .content-area { padding: 10px; }
-
       .tabs { display: none; }
 
       .site-header-title { font-size: 18px; }
@@ -1094,7 +1088,6 @@
       }
 
       .login-title { font-size: 28px; }
-
       .login-row { flex-direction: column; }
 
       .login-btn,
@@ -1244,7 +1237,6 @@
 
     function tryLogin() {
       const entered = passwordInput.value;
-
       if (entered === ADMIN_PASSWORD) {
         loginError.style.display = 'none';
         sessionStorage.setItem('sg_admin_access', 'granted');
@@ -1257,14 +1249,10 @@
     loginBtn.addEventListener('click', tryLogin);
 
     passwordInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        tryLogin();
-      }
+      if (e.key === 'Enter') tryLogin();
     });
 
-    if (sessionStorage.getItem('sg_admin_access') === 'granted') {
-      unlockPage();
-    }
+    if (sessionStorage.getItem('sg_admin_access') === 'granted') unlockPage();
 
     const DATA_FILE = 'alla.json';
     const LEAGUE_ID = 501;
@@ -1272,7 +1260,10 @@
     const PLAYER_BASE_URL = `https://sportsgamer.gg/players/`;
 
     const SEEDING_TEAM_STATUSES = {
-      'Kastikekauppa Esports': 'DISBANDED'
+      'Kastikekauppa Esports': 'DISBANDED',
+      'POGGERS': 'DISBANDED',
+      'Tinted Visors': 'DISBANDED',
+      'Veterankraft': 'DISBANDED'
     };
 
     const sources = [
@@ -1521,11 +1512,8 @@
 
     const TEAM_NAME_KEYS = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName'];
     const PLAYER_NAME_KEYS = ['Player', 'tag', 'playerName', 'player'];
-
     const TEAM_LIST_NAME_KEYS = [];
-    const PLAYER_LIST_NAME_KEYS = [
-      'elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames'
-    ];
+    const PLAYER_LIST_NAME_KEYS = ['elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames'];
 
     const TEAM_DROPDOWN_SOURCES = new Set(['lite', 'core', 'neo']);
     const TEAM_DROPDOWN_DETAIL_COLUMNS = [
@@ -1647,24 +1635,13 @@
         .trim();
     }
 
-    function escapeHtml(str) {
-      return String(str ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#39;');
-    }
-
     function getSeedingTeamStatus(teamName) {
       const normalizedTeam = normalizeTeamName(teamName);
-
       for (const [name, status] of Object.entries(SEEDING_TEAM_STATUSES)) {
         if (normalizeTeamName(name) === normalizedTeam) {
           return String(status || '').trim().toUpperCase();
         }
       }
-
       return '';
     }
 
@@ -1694,14 +1671,11 @@
         if ('playerCount' in (row || {}) || 'backupLicenseCount' in (row || {}) || 'unlicensedPlayerCount' in (row || {})) {
           allKeys.add('fullLicenseCount');
         }
-        if (currentSource.key === 'signUps') {
-          allKeys.add('signupIssue');
-        }
+        if (currentSource.key === 'signUps') allKeys.add('signupIssue');
       });
 
       const presentPreferred = preferred.filter(key => allKeys.has(key));
       const rest = [...allKeys].filter(key => !preferred.includes(key) && key !== 'teamID');
-
       return [...presentPreferred, ...rest];
     }
 
@@ -1759,11 +1733,7 @@
       }
 
       const cols = currentColumns.filter(col => !TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
-
-      if (currentSource.key === 'backups') {
-        return [...cols, '__sendMail'];
-      }
-
+      if (currentSource.key === 'backups') return [...cols, '__sendMail'];
       return cols;
     }
 
@@ -2115,9 +2085,7 @@
             'fromTeamID', 'fromTeamId', 'toTeamID', 'toTeamId'
           ];
 
-          const possibleTeamNameKeys = [
-            'teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName'
-          ];
+          const possibleTeamNameKeys = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName'];
 
           possibleTeamIdKeys.forEach(idKey => {
             const idValue = row?.[idKey];
@@ -2191,13 +2159,9 @@
       rows.forEach(row => {
         const normalizedTeam = normalizeTeamName(row.teamName);
         const userId = String(row.userID || '').trim();
-
         if (!normalizedTeam || !userId) return;
 
-        if (!map.has(normalizedTeam)) {
-          map.set(normalizedTeam, []);
-        }
-
+        if (!map.has(normalizedTeam)) map.set(normalizedTeam, []);
         const ids = map.get(normalizedTeam);
         if (!ids.includes(userId)) ids.push(userId);
       });
@@ -2221,7 +2185,6 @@
         .filter((id, index, arr) => arr.indexOf(id) === index);
 
       if (recipients.length === 0) return '';
-
       return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
     }
 
@@ -2229,15 +2192,18 @@
       const teamName = getTeamNameFromRow(row) || 'team';
       const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
       const rawGames = getBackupGames(row);
-      const games = isFinite(Number(rawGames)) ? Number(rawGames) : '';
+      const games = isFinite(Number(rawGames)) ? Number(rawGames) : 0;
 
-      return `Hi ${teamName},
+      if (games > 10) {
+        return `License Status Update – Action Required for ${playerName}
+
+Hi ${teamName},
 
 It has come to our attention that ${playerName} has participated in ${games} games using a Backup Player License. According to league regulations, a player may participate in a maximum of 10 games with a Backup License during the ECL ’26 season (including qualifiers).
 
 Since this limit has now been exceeded, ${playerName} is required to purchase a Full Player License, regardless of whether he plans to play additional matches or not. This step is necessary to update the license status and ensure compliance with league rules.
 
-For your convenience, here is the link to purchase the Full Player License: https://sportsgamer.gg/community/store/
+For your convenience, here is the link to purchase the Full Player License: https://sportsgamer.gg/community/store
 
 Important
 Please note that exceeding the 10-game limit on a Backup License may already result in consequences if reported by an opponent. Continuing to participate without the correct license will lead to further—and potentially more serious—penalties.
@@ -2245,6 +2211,19 @@ Please note that exceeding the 10-game limit on a Backup License may already res
 If ${playerName} has already purchased a Full Player License, please send us a copy of the payment receipt so we can investigate why the license is not showing correctly in our system.
 
 If you have any questions or need assistance, feel free to contact us. We are happy to help!
+
+Best regards,`;
+      }
+
+      return `License Status Reminder – Action Required for ${playerName}
+
+Hi ${teamName}
+
+This is a reminder that ${playerName} has now played 10 matches using a Backup Player License. According to league rules, a Backup License covers a maximum of 10 games across the entire ECL ’26 season — including Winter and Spring qualifiers, group stages, and playoffs.
+
+If ${playerName} is to continue playing, a Full Player License is required.
+
+If you have any questions or need assistance with the process, feel free to reach out.
 
 Best regards,`;
     }
@@ -2255,12 +2234,9 @@ Best regards,`;
     }
 
     function getProQualReqCheckRows(allData) {
-      if (Array.isArray(allData?.proQualReqCheck)) {
-        return allData.proQualReqCheck;
-      }
+      if (Array.isArray(allData?.proQualReqCheck)) return allData.proQualReqCheck;
 
       const signUps = getRowsForSource(allData, 'signUps');
-
       return signUps
         .filter(row => String(row?.qualifierName || '').trim().toUpperCase().includes('WILDCARD'))
         .map(row => ({
@@ -2449,12 +2425,10 @@ Best regards,`;
     function renderSectionTitle(title, count, headerClass = '') {
       const tr = document.createElement('tr');
       tr.className = 'section-title-row' + (headerClass ? ' ' + headerClass : '');
-
       const td = document.createElement('td');
       td.colSpan = 5;
       td.textContent = `${title} (${count})`;
       tr.appendChild(td);
-
       seedingBody.appendChild(tr);
     }
 
@@ -2463,7 +2437,6 @@ Best regards,`;
       tr.className = 'seed-row';
 
       const labels = ['#', 'Seed', 'Team', 'Status', 'Notes'];
-
       labels.forEach((label, index) => {
         const td = document.createElement('td');
         td.textContent = label;
@@ -2482,7 +2455,6 @@ Best regards,`;
 
     function renderSeedRow(pos, seed, team, exists, note = '', extraClass = '', teamID = '') {
       const tr = document.createElement('tr');
-
       const seedingStatus = getSeedingTeamStatus(team);
       const isDisbanded = seedingStatus === 'DISBANDED';
 
@@ -2538,7 +2510,6 @@ Best regards,`;
       tr.appendChild(checkTd);
 
       const noteTd = document.createElement('td');
-
       const noteParts = [];
       if (note) noteParts.push(...note.split(' • ').filter(Boolean));
       if (isDisbanded) noteParts.unshift('DISBANDED');
@@ -2597,7 +2568,6 @@ Best regards,`;
             const note = info ? getQualifierNote(info) : '';
             return note === 'PRO QUAL SIGNUP' || note === 'PRO QUAL REQ';
           }).length;
-
           count = listedProQualCount + proQualifierExtraRows.length;
         }
 
@@ -2634,7 +2604,6 @@ Best regards,`;
             const startIndex = section.rows.length + 1;
             extraRows.forEach((row, idx) => {
               const qualifierNote = getQualifierNote(row);
-
               renderSeedRow(
                 startIndex + idx,
                 section.title + ' Unseeded',
@@ -2874,10 +2843,7 @@ Best regards,`;
           const match = part.match(/^(.*?)(\s*\(\d+\))?$/);
           const nameOnly = (match?.[1] || part).trim();
           appendPlainOrLinkedPlayer(td, part, nameOnly, playerLinkMap);
-
-          if (index < parts.length - 1) {
-            td.appendChild(document.createTextNode(', '));
-          }
+          if (index < parts.length - 1) td.appendChild(document.createTextNode(', '));
         });
         return null;
       }
@@ -2936,7 +2902,6 @@ Best regards,`;
         unlicensedPlayerCount: 'No Lic.',
         signupIssue: 'Issue'
       };
-
       return labels[col] || col;
     }
 
@@ -2953,7 +2918,6 @@ Best regards,`;
         unlicensedPlayerCount: 'Unlicensed Player Count',
         signupIssue: 'Missing Requirements / Rule Violations'
       };
-
       return fullLabels[col] || col;
     }
 
@@ -2980,38 +2944,42 @@ Best regards,`;
           const td = document.createElement('td');
 
           if (col === '__sendMail') {
-            const mailUrl = await getBackupMessageUrl(row, forceReload);
+            const games = getBackupGames(row);
             const actions = document.createElement('div');
             actions.className = 'icon-actions';
 
-            if (mailUrl) {
-              const btn = document.createElement('a');
-              btn.href = mailUrl;
-              btn.target = '_blank';
-              btn.rel = 'noopener noreferrer';
-              btn.className = 'mail-icon-btn';
-              btn.title = 'Open message';
-              btn.setAttribute('aria-label', 'Open message');
-              btn.textContent = '✉';
-              actions.appendChild(btn);
-            }
+            if (games !== null && games >= 10) {
+              const mailUrl = await getBackupMessageUrl(row, forceReload);
 
-            const copyBtn = document.createElement('button');
-            copyBtn.type = 'button';
-            copyBtn.className = 'copy-icon-btn';
-            copyBtn.title = 'Copy preset message';
-            copyBtn.setAttribute('aria-label', 'Copy preset message');
-            copyBtn.textContent = '⧉';
-            copyBtn.addEventListener('click', async () => {
-              try {
-                await copyBackupMessage(row);
-                setStatus('Message copied');
-              } catch (err) {
-                console.error(err);
-                setStatus('Copy failed');
+              if (mailUrl) {
+                const btn = document.createElement('a');
+                btn.href = mailUrl;
+                btn.target = '_blank';
+                btn.rel = 'noopener noreferrer';
+                btn.className = 'mail-icon-btn';
+                btn.title = 'Open message';
+                btn.setAttribute('aria-label', 'Open message');
+                btn.textContent = '✉';
+                actions.appendChild(btn);
               }
-            });
-            actions.appendChild(copyBtn);
+
+              const copyBtn = document.createElement('button');
+              copyBtn.type = 'button';
+              copyBtn.className = 'copy-icon-btn';
+              copyBtn.title = 'Copy preset message';
+              copyBtn.setAttribute('aria-label', 'Copy preset message');
+              copyBtn.textContent = '⧉';
+              copyBtn.addEventListener('click', async () => {
+                try {
+                  await copyBackupMessage(row);
+                  setStatus('Message copied');
+                } catch (err) {
+                  console.error(err);
+                  setStatus('Copy failed');
+                }
+              });
+              actions.appendChild(copyBtn);
+            }
 
             td.appendChild(actions);
             tr.appendChild(td);
@@ -3049,9 +3017,7 @@ Best regards,`;
             detailGrid.className = 'team-detail-grid';
 
             if (detailItems.length > 0) {
-              detailItems.forEach(item => {
-                detailGrid.appendChild(createTeamDetailCard(item.label, item.value));
-              });
+              detailItems.forEach(item => detailGrid.appendChild(createTeamDetailCard(item.label, item.value)));
             } else {
               detailGrid.appendChild(createEmptyTeamDetailCard());
             }
@@ -3070,7 +3036,6 @@ Best regards,`;
         }
 
         tbody.appendChild(tr);
-
         if (detailRow) tbody.appendChild(detailRow);
       }
     }
@@ -3201,7 +3166,6 @@ Best regards,`;
         }
 
         sortState = { column: null, direction: 'asc' };
-
         const allData = await fetchAllaData(forceReload);
 
         if (currentSource.type === 'proqualreqcheck') {
