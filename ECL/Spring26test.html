@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>26 Spring Checks V2</title>
+  <title>26 Spring Checks V2.1</title>
   <style>
     :root {
       --navy: #03045e;
@@ -852,7 +852,7 @@
     <main class="page">
       <div class="page-card">
         <div class="page-top">
-          <h1 id="pageTitle">26 Spring Checks V2</h1>
+          <h1 id="pageTitle">26 Spring Checks V2.1</h1>
           <div class="tabs" id="tabs"></div>
 
           <div class="topbar">
@@ -906,7 +906,7 @@
     <footer class="site-footer">
       <div class="site-footer-inner">
         <div class="footer-brand">SportsGamer</div>
-        <div class="footer-note">ECL Tools • 26 Spring V2</div>
+        <div class="footer-note">ECL Tools • 26 Spring V2.1</div>
       </div>
     </footer>
   </div>
@@ -1356,38 +1356,42 @@
       ),
 
       getRenameInfo(teamName) {
-        return this.map.get(Utils.normalizeTeamName(teamName)) || null;
+        return Rename.map.get(Utils.normalizeTeamName(teamName)) || null;
       },
 
       getCanonicalTeamName(teamName) {
-        const info = this.getRenameInfo(teamName);
+        const info = Rename.getRenameInfo(teamName);
         return info ? info.newName : String(teamName || '');
       },
 
       getSeedRenameNote(teamName) {
-        const info = this.getRenameInfo(teamName);
+        const info = Rename.getRenameInfo(teamName);
         return info ? `Old name ${info.oldName}` : '';
       },
 
       applyToValue(value) {
-        const info = this.getRenameInfo(value);
+        const info = Rename.getRenameInfo(value);
         return info ? info.newName : String(value || '');
       },
 
-applyToRow(row) {
-  if (!row || typeof row !== 'object') return row;
-  const cloned = { ...row };
+      applyToRow(row) {
+        if (!row || typeof row !== 'object') return row;
+        const cloned = { ...row };
 
-  TEAM_NAME_KEYS.forEach(key => {
-    if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
-  });
+        TEAM_NAME_KEYS.forEach(key => {
+          if (key in cloned && cloned[key]) {
+            cloned[key] = Rename.applyToValue(cloned[key]);
+          }
+        });
 
-  ['history1Team', 'history2Team', 'history3Team', 'From', 'To'].forEach(key => {
-    if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
-  });
+        ['history1Team', 'history2Team', 'history3Team', 'From', 'To'].forEach(key => {
+          if (key in cloned && cloned[key]) {
+            cloned[key] = Rename.applyToValue(cloned[key]);
+          }
+        });
 
-  return cloned;
-}
+        return cloned;
+      }
     };
 
     const DataService = {
@@ -2222,18 +2226,18 @@ applyToRow(row) {
 
       async buildSeedingSections(registeredRows, forceReload = false) {
         const registeredTeamSet = new Set(
-          registeredRows.map(RowAccess.getTeamName).map(Utils.normalizeTeamName).filter(Boolean)
+          registeredRows.map(row => RowAccess.getTeamName(row)).map(name => Utils.normalizeTeamName(name)).filter(Boolean)
         );
+
         const registeredInfoMap = this.buildRegisteredTeamInfoMap(registeredRows);
         const signUpsMap = await DataService.getSignUpsMap(forceReload);
         const unseededByDivision = this.buildUnseededByDivision(registeredRows);
         const proQualifierExtraRows = this.buildProQualifierExtraRows(registeredRows);
         const signupCounts = this.buildSignupCounts(registeredRows, registeredInfoMap, proQualifierExtraRows);
 
-        const sections = PRESET_SECTIONS.map(section => {
+        return PRESET_SECTIONS.map(section => {
           const sectionKey = this.detectSectionDivision(section.title);
           let count = signupCounts[sectionKey] ?? 0;
-
           const items = [];
 
           section.rows.forEach(row => {
@@ -2270,6 +2274,7 @@ applyToRow(row) {
               const note = info ? this.getQualifierNote(info) : '';
               return note === 'PRO QUAL SIGNUP' || note === 'PRO QUAL REQ';
             }).length;
+
             count = listedProQualCount + proQualifierExtraRows.length;
 
             const startIndex = section.rows.length + 1;
@@ -2319,8 +2324,6 @@ applyToRow(row) {
             items
           };
         });
-
-        return sections;
       }
     };
 
@@ -2407,7 +2410,7 @@ applyToRow(row) {
       },
 
       getRelevantBanMatches(entry, presenceRows) {
-        const aliases = this.getPlayerAliases(entry).map(Utils.normalizePlayerName);
+        const aliases = this.getPlayerAliases(entry).map(name => Utils.normalizePlayerName(name));
         const active = Rules.isBanActive(entry.until);
         if (!active) return [];
 
@@ -2627,6 +2630,7 @@ Best regards,`;
 
       setCsvButtonVisibility() {
         DOM.csvExportBtn.style.display = Exporter.canExportCurrentSource() ? 'inline-block' : 'none';
+        DOM.csvExportBtn.disabled = !Exporter.canExportCurrentSource();
       },
 
       renderTabs() {
@@ -3013,7 +3017,7 @@ Best regards,`;
 
         STATE.currentRows = STATE.currentSource.key === 'bannedPlayers'
           ? rows
-          : rows.map(Rename.applyToRow);
+          : rows.map(row => Rename.applyToRow(row));
 
         STATE.currentColumns = TableConfig.getColumns(STATE.currentRows);
         STATE.currentNumericColumns = new Set(
@@ -3161,17 +3165,19 @@ Best regards,`;
 
         const sections = await SeedingService.buildSeedingSections(registeredRows, forceReload);
         let visibleRows = 0;
+        let renderedSections = 0;
 
-        sections.forEach((section, index) => {
+        sections.forEach(section => {
           const filteredItems = Filters.getFilteredSeedingRows(section.title, section.items);
           if (filteredItems.length === 0) return;
 
+          if (renderedSections > 0) this.renderSpacer();
+          renderedSections += 1;
           visibleRows += filteredItems.length;
+
           this.renderSectionTitle(section.title, section.count, section.styleKey);
           this.renderSeedingHeaderRow();
           filteredItems.forEach(item => this.renderSeedRow(item));
-
-          if (index < sections.length - 1) this.renderSpacer();
         });
 
         if (visibleRows === 0) {
@@ -3263,8 +3269,11 @@ Best regards,`;
           name.style.fontWeight = '900';
           name.style.color = '#07124f';
 
-          if (teamGroup.teamID) name.appendChild(Utils.createLink(TEAM_BASE_URL + teamGroup.teamID, teamGroup.teamName, 'proqual-link'));
-          else name.textContent = teamGroup.teamName;
+          if (teamGroup.teamID) {
+            name.appendChild(Utils.createLink(TEAM_BASE_URL + teamGroup.teamID, teamGroup.teamName, 'proqual-link'));
+          } else {
+            name.textContent = teamGroup.teamName;
+          }
 
           const meta = document.createElement('div');
           meta.style.fontSize = '11px';
@@ -3374,12 +3383,13 @@ Best regards,`;
     const Loader = {
       getProQualReqCheckRows(allData) {
         if (Array.isArray(allData?.proQualReqCheck)) {
-          return allData.proQualReqCheck.map(Rename.applyToRow);
+          return allData.proQualReqCheck.map(row => Rename.applyToRow(row));
         }
 
         const signUps = DataService.getRowsForSource(allData, 'signUps');
+
         return signUps
-          .map(Rename.applyToRow)
+          .map(row => Rename.applyToRow(row))
           .filter(row => String(row?.qualifierName || '').trim().toUpperCase().includes('WILDCARD'))
           .map(row => ({
             teamID: row.teamID ?? '',
@@ -3393,7 +3403,7 @@ Best regards,`;
 
       async loadRegisteredTeams(forceReload = false) {
         const allData = await DataService.fetchAllaData(forceReload);
-        return DataService.getRowsForSource(allData, 'signUps').map(Rename.applyToRow);
+        return DataService.getRowsForSource(allData, 'signUps').map(row => Rename.applyToRow(row));
       },
 
       async loadSourceData(forceReload = false) {
@@ -3411,7 +3421,9 @@ Best regards,`;
           return await BannedPlayersService.buildRows(forceReload);
         }
 
-        return DataService.getRowsForSource(allData, STATE.currentSource.key).map(Rename.applyToRow);
+        return DataService
+          .getRowsForSource(allData, STATE.currentSource.key)
+          .map(row => Rename.applyToRow(row));
       }
     };
 
@@ -3446,6 +3458,11 @@ Best regards,`;
       selectSource(source) {
         STATE.currentSource = source;
         STATE.sortState = { column: null, direction: 'asc' };
+
+        if (STATE.currentSource.type !== 'preset') {
+          DOM.seedingFilterSelect.value = 'all';
+        }
+
         Render.renderTabs();
         Render.setCsvButtonVisibility();
         this.closeMobileMenu();
@@ -3475,16 +3492,27 @@ Best regards,`;
           DOM.lastUpdated.textContent = 'Last updated: ' + Utils.toDisplayDate();
         } catch (err) {
           console.error(err);
+
           DOM.tbody.innerHTML = '';
           DOM.headerRow.innerHTML = '';
           DOM.seedingBody.innerHTML = '';
           DOM.proQualReqWrap.innerHTML = '';
+
           STATE.currentRows = [];
           STATE.currentColumns = [];
           STATE.currentNumericColumns = new Set();
+
           DOM.emptyMessage.style.display = 'none';
           DOM.rowCounter.textContent = '';
-          Render.showNormalTable();
+
+          if (STATE.currentSource.type === 'preset') {
+            Render.showSeeding();
+          } else if (STATE.currentSource.type === 'proqualreqcheck') {
+            Render.showProQualReq();
+          } else {
+            Render.showNormalTable();
+          }
+
           Utils.showError('Could not load data: ' + err.message);
           Utils.setStatus('Error');
         } finally {
