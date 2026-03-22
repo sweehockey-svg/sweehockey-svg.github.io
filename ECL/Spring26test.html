@@ -22,7 +22,6 @@
       --link: #0b57d0;
       --shadow: 0 10px 28px rgba(7, 18, 79, 0.08);
       --shadow-soft: 0 4px 14px rgba(7, 18, 79, 0.05);
-      --radius: 16px;
 
       --elite-bg: linear-gradient(90deg, #d9ba52, #edd983);
       --elite-text: #0b144f;
@@ -314,7 +313,6 @@
       inset: 0;
       z-index: 1000;
       background: rgba(3, 4, 94, 0.55);
-      padding: 0;
       backdrop-filter: blur(2px);
     }
 
@@ -397,6 +395,16 @@
       padding-top: 2px;
     }
 
+    .filters-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #e8eef6;
+    }
+
     .action-btn {
       padding: 10px 15px;
       border: 0;
@@ -422,37 +430,6 @@
       color: #07124f;
       border: 1px solid #d6def0;
       box-shadow: none;
-    }
-
-    .status {
-      font-size: 12px;
-      font-weight: 800;
-      color: #334155;
-      text-transform: uppercase;
-      letter-spacing: 0.35px;
-      background: #f8fbff;
-      border: 1px solid #e3eaf5;
-      padding: 8px 10px;
-      border-radius: 10px;
-    }
-
-    .small {
-      font-size: 11px;
-      color: var(--muted);
-      background: #f8fbff;
-      border: 1px solid #e3eaf5;
-      padding: 8px 10px;
-      border-radius: 10px;
-    }
-
-    .filters-bar {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid #e8eef6;
     }
 
     .search-input {
@@ -485,6 +462,27 @@
       color: #334155;
       cursor: pointer;
       user-select: none;
+    }
+
+    .status {
+      font-size: 12px;
+      font-weight: 800;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.35px;
+      background: #f8fbff;
+      border: 1px solid #e3eaf5;
+      padding: 8px 10px;
+      border-radius: 10px;
+    }
+
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+      background: #f8fbff;
+      border: 1px solid #e3eaf5;
+      padding: 8px 10px;
+      border-radius: 10px;
     }
 
     .content-area {
@@ -1356,21 +1354,21 @@
       { playerName: 'Men-at-work74', aliases: [], banType: 'Captaincy ban', until: 'Indefinitely' },
       { playerName: 'maatti64', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
       { playerName: 'OsquuG', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'matadori-_-', aliases: [], banType: 'Captaincy ban', until: 'Undefined', notes: 'Previously SirRaittinen' },
+      { playerName: 'matadori-_-', aliases: ['SirRaittinen'], banType: 'Captaincy ban', until: 'Undefined', notes: 'Previously SirRaittinen' },
       { playerName: 'xSagwa', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
       { playerName: 'punt1la98', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
       { playerName: 'radekbonk111', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
       { playerName: 'snaasigi', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'Keuschemisch', aliases: [], banType: 'Captaincy ban', until: '3030.02.10' },
-      { playerName: 'eBjorken97_', aliases: [], banType: 'Suspension', until: '2026.08.13' },
-      { playerName: 'eBjorken97_', aliases: [], banType: 'Captaincy ban', until: '2027.04.09' },
-      { playerName: 'abbelandit__', aliases: [], banType: 'Captaincy ban', until: '2029.04.09' },
-      { playerName: 'Bjorkudd_39', aliases: [], banType: 'Captaincy ban', until: '2027.04.09' },
-      { playerName: 'abbelandit__', aliases: [], banType: 'Suspension', until: '2026.06.28' },
-      { playerName: 'I-MeIIe-l', aliases: [], banType: 'Captaincy ban', until: '2027.04.14' },
-      { playerName: 'I-MeIIe-l', aliases: [], banType: 'Suspension', until: '2026.04.14' },
-      { playerName: 'Blaze4214', aliases: [], banType: 'Captaincy ban', until: '2027.04.14' },
-      { playerName: 'Cbatta_-11', aliases: [], banType: 'Suspension', until: '2026.04.14' }
+      { playerName: 'Keuschemisch', aliases: [], banType: 'Captaincy ban', until: '10.2.2030' },
+      { playerName: 'eBjorken97_', aliases: [], banType: 'Suspension', until: '13.8.2026' },
+      { playerName: 'eBjorken97_', aliases: [], banType: 'Captaincy ban', until: '9.4.2027' },
+      { playerName: 'abbelandit__', aliases: [], banType: 'Captaincy ban', until: '9.4.2029' },
+      { playerName: 'Bjorkudd_39', aliases: [], banType: 'Captaincy ban', until: '9.4.2027' },
+      { playerName: 'abbelandit__', aliases: [], banType: 'Suspension', until: 'until the End of ECL ’26: Spring' },
+      { playerName: 'I-MeIIe-l', aliases: [], banType: 'Captaincy ban', until: '14.4.2027' },
+      { playerName: 'I-MeIIe-l', aliases: [], banType: 'Suspension', until: '14.4.2026' },
+      { playerName: 'Blaze4214', aliases: [], banType: 'Captaincy ban', until: '14.4.2027' },
+      { playerName: 'Cbatta_-11', aliases: [], banType: 'Suspension', until: '14.4.2026' }
     ];
 
     const SEEDING_TEAM_STATUSES = {
@@ -1693,6 +1691,7 @@
     passwordInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') tryLogin();
     });
+
     if (sessionStorage.getItem('sg_admin_access') === 'granted') unlockPage();
 
     function showNormalTable() {
@@ -1838,17 +1837,20 @@
 
     function parseBanEndDate(value) {
       const text = String(value || '').trim();
-      const match = text.match(/^(\d{4})\.(\d{2})\.(\d{2})$/) || text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+      const dmy = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+      const ymd = text.match(/^(\d{4})\.(\d{1,2})\.(\d{1,2})$/);
 
-      if (!match) return null;
-
-      if (match[1].length === 4) {
-        const [, year, month, day] = match;
-        return new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999);
-      } else {
-        const [, day, month, year] = match;
+      if (dmy) {
+        const [, day, month, year] = dmy;
         return new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999);
       }
+
+      if (ymd) {
+        const [, year, month, day] = ymd;
+        return new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999);
+      }
+
+      return null;
     }
 
     function isBanActive(untilValue) {
@@ -1860,6 +1862,7 @@
 
       const endDate = parseBanEndDate(untilValue);
       if (!endDate) return true;
+
       return endDate >= new Date();
     }
 
@@ -1920,9 +1923,9 @@
         return [
           firstExistingColumn(['teamName']),
           firstExistingColumn(['totalPlayers', 'playerCount']),
-          firstExistingColumn(['EP', 'elitePlayers']),
-          firstExistingColumn(['PP', 'proPlayers']),
-          firstExistingColumn(['LP', 'liteOrLowerPlayers']),
+          firstExistingColumn(['EP']),
+          firstExistingColumn(['PP']),
+          firstExistingColumn(['LP']),
           firstExistingColumn(['totalPoints'])
         ].filter(Boolean);
       }
@@ -1931,10 +1934,10 @@
         return [
           firstExistingColumn(['teamName']),
           firstExistingColumn(['totalPlayers', 'playerCount']),
-          firstExistingColumn(['EP', 'elitePlayers']),
-          firstExistingColumn(['PP', 'proPlayers']),
-          firstExistingColumn(['LP', 'litePlayers']),
-          firstExistingColumn(['CP', 'coreOrLowerPlayers']),
+          firstExistingColumn(['EP']),
+          firstExistingColumn(['PP']),
+          firstExistingColumn(['LP']),
+          firstExistingColumn(['CP']),
           firstExistingColumn(['totalPoints'])
         ].filter(Boolean);
       }
@@ -1943,11 +1946,11 @@
         return [
           firstExistingColumn(['teamName']),
           firstExistingColumn(['totalPlayers', 'playerCount']),
-          firstExistingColumn(['EP', 'elitePlayers']),
-          firstExistingColumn(['PP', 'proPlayers']),
-          firstExistingColumn(['LP', 'litePlayers']),
-          firstExistingColumn(['CP', 'corePlayers']),
-          firstExistingColumn(['NP', 'neoOrLowerPlayers']),
+          firstExistingColumn(['EP']),
+          firstExistingColumn(['PP']),
+          firstExistingColumn(['LP']),
+          firstExistingColumn(['CP']),
+          firstExistingColumn(['NP']),
           firstExistingColumn(['totalPoints'])
         ].filter(Boolean);
       }
@@ -1987,11 +1990,8 @@
           totalPlayers: 'TOTALPLAYERS',
           playerCount: 'TOTALPLAYERS',
           EP: 'ELITE PLAYERS',
-          elitePlayers: 'ELITE PLAYERS',
           PP: 'PRO PLAYERS',
-          proPlayers: 'PRO PLAYERS',
           LP: 'LITE OR LOWER',
-          liteOrLowerPlayers: 'LITE OR LOWER',
           totalPoints: 'TOTALPOINTS'
         }[col] || col;
       }
@@ -2002,13 +2002,9 @@
           totalPlayers: 'TOTALPLAYERS',
           playerCount: 'TOTALPLAYERS',
           EP: 'ELITE PLAYERS',
-          elitePlayers: 'ELITE PLAYERS',
           PP: 'PRO PLAYERS',
-          proPlayers: 'PRO PLAYERS',
           LP: 'LITE PLAYERS',
-          litePlayers: 'LITE PLAYERS',
           CP: 'CORE OR LOWER',
-          coreOrLowerPlayers: 'CORE OR LOWER',
           totalPoints: 'TOTALPOINTS'
         }[col] || col;
       }
@@ -2019,15 +2015,10 @@
           totalPlayers: 'TOTALPLAYERS',
           playerCount: 'TOTALPLAYERS',
           EP: 'ELITE PLAYERS',
-          elitePlayers: 'ELITE PLAYERS',
           PP: 'PRO PLAYERS',
-          proPlayers: 'PRO PLAYERS',
           LP: 'LITE PLAYERS',
-          litePlayers: 'LITE PLAYERS',
           CP: 'CORE PLAYERS',
-          corePlayers: 'CORE PLAYERS',
           NP: 'NEO OR NEW',
-          neoOrLowerPlayers: 'NEO OR NEW',
           totalPoints: 'TOTALPOINTS'
         }[col] || col;
       }
@@ -2141,12 +2132,15 @@
       if (minPlayers > 0 && playerCount < minPlayers) {
         issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
       }
+
       if (playerCount > 13) {
         issues.push(`has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
       }
+
       if (fullLicenseCount < 6) {
         issues.push(`needs ${6 - fullLicenseCount} more full license${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
       }
+
       if (backupLicenseCount > 3) {
         issues.push(`has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
       }
@@ -2183,13 +2177,7 @@
 
     function isFlaggedRow(row) {
       const cls = getRowClass(row);
-      return [
-        'not-ok',
-        'backup-warning',
-        'backup-danger',
-        'transfer-danger',
-        'signup-rule-error'
-      ].includes(cls);
+      return ['not-ok', 'backup-warning', 'backup-danger', 'transfer-danger', 'signup-rule-error'].includes(cls);
     }
 
     function compareValues(a, b, isNumeric) {
@@ -2267,6 +2255,7 @@
 
     function unwrapAllaData(data) {
       if (data && typeof data === 'object' && Array.isArray(data.backups)) return data;
+
       const wrappedJsonString = data?.rows?.[0]?.json_result;
       if (typeof wrappedJsonString === 'string') {
         try {
@@ -2276,6 +2265,7 @@
           throw new Error('json_result in ' + DATA_FILE + ' is not valid JSON');
         }
       }
+
       return data;
     }
 
@@ -2355,6 +2345,7 @@
           const fallbackTeamId = row?.teamID || row?.teamId || row?.TeamID || row?.team_id;
           const fallbackTeamName = getTeamNameFromRow(row);
           const fallbackNormalized = normalizeTeamName(fallbackTeamName);
+
           if (fallbackTeamId && fallbackNormalized && !map.has(fallbackNormalized)) {
             map.set(fallbackNormalized, String(fallbackTeamId));
           }
@@ -2424,9 +2415,9 @@
       const teamName = getTeamNameFromRow(row);
       const normalizedTeam = normalizeTeamName(teamName);
       const captainIds = captainMap.get(normalizedTeam) || [];
-      const backupUserId = String(getUserIdFromRow(row) || '').trim();
+      const playerUserId = String(getUserIdFromRow(row) || '').trim();
 
-      const recipients = [...captainIds, backupUserId]
+      const recipients = [...captainIds, playerUserId]
         .map(id => String(id).trim())
         .filter(Boolean)
         .filter((id, index, arr) => arr.indexOf(id) === index);
@@ -3200,9 +3191,11 @@ Best regards,`;
 
       return presenceRows.filter(match => {
         if (!aliases.includes(match.normalizedPlayer)) return false;
+
         if (normalizedType === 'Captaincy ban') {
           return match.matchRole === 'Captain' || match.matchRole === 'Assistant Captain';
         }
+
         if (normalizedType === 'Suspension') return true;
         return false;
       });
@@ -3687,9 +3680,7 @@ Best regards,`;
     }
 
     async function loadSourceData(forceReload = false) {
-      if (currentSource.type === 'preset') {
-        return await loadRegisteredTeams(forceReload);
-      }
+      if (currentSource.type === 'preset') return await loadRegisteredTeams(forceReload);
 
       const allData = await fetchAllaData(forceReload);
 
