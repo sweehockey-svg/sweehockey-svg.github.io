@@ -1374,20 +1374,20 @@
         return info ? info.newName : String(value || '');
       },
 
-      applyToRow(row) {
-        if (!row || typeof row !== 'object') return row;
-        const cloned = { ...row };
+applyToRow(row) {
+  if (!row || typeof row !== 'object') return row;
+  const cloned = { ...row };
 
-        TEAM_NAME_KEYS.forEach(key => {
-          if (key in cloned && cloned[key]) cloned[key] = this.applyToValue(cloned[key]);
-        });
+  TEAM_NAME_KEYS.forEach(key => {
+    if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
+  });
 
-        ['history1Team', 'history2Team', 'history3Team', 'From', 'To'].forEach(key => {
-          if (key in cloned && cloned[key]) cloned[key] = this.applyToValue(cloned[key]);
-        });
+  ['history1Team', 'history2Team', 'history3Team', 'From', 'To'].forEach(key => {
+    if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
+  });
 
-        return cloned;
-      }
+  return cloned;
+}
     };
 
     const DataService = {
