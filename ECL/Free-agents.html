@@ -870,30 +870,36 @@
       renderDetail(filteredPlayers.find(player => Number(player.playerID) === selectedId) || null);
     }
 
-    async function loadPlayers() {
-      try {
-        const response = await fetch('./FA.json', { cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error(`Failed to load FA.json (${response.status})`);
-        }
-
-        const data = await response.json();
-        allPlayers = Array.isArray(data?.players) ? data.players : [];
-        filteredPlayers = [...allPlayers];
-        selectedId = filteredPlayers[0] ? Number(filteredPlayers[0].playerID) : null;
-        applyFilters();
-      } catch (error) {
-        playerList.innerHTML = `<div class="error">${escapeHtml(error.message || 'Unable to load FA.json.')}</div>`;
-        detailView.innerHTML = `
-          <div class="empty-state">
-            <div>
-              <h2 style="margin:0 0 10px; font-size: 30px; letter-spacing:-0.03em;">Could not load data</h2>
-              <p style="margin:0; line-height:1.7; color: var(--muted);">Make sure FA.json is in the same folder as this HTML file and contains a root players array.</p>
-            </div>
-          </div>
-        `;
-      }
+async function loadPlayers() {
+  try {
+    const response = await fetch('./FA.json', { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`Failed to load FA.json (${response.status})`);
     }
+
+    const raw = await response.json();
+    let data = raw;
+
+    if (!Array.isArray(raw?.players) && Array.isArray(raw?.rows) && raw.rows.length && raw.rows[0]?.json_result) {
+      data = JSON.parse(raw.rows[0].json_result);
+    }
+
+    allPlayers = Array.isArray(data?.players) ? data.players : [];
+    filteredPlayers = [...allPlayers];
+    selectedId = filteredPlayers[0] ? Number(filteredPlayers[0].playerID) : null;
+    applyFilters();
+  } catch (error) {
+    playerList.innerHTML = `<div class="error">${escapeHtml(error.message || 'Unable to load FA.json.')}</div>`;
+    detailView.innerHTML = `
+      <div class="empty-state">
+        <div>
+          <h2 style="margin:0 0 10px; font-size: 30px; letter-spacing:-0.03em;">Could not load data</h2>
+          <p style="margin:0; line-height:1.7; color: var(--muted);">Make sure FA.json is valid and contains player data.</p>
+        </div>
+      </div>
+    `;
+  }
+}
 
     [searchInput, divisionFilter, positionFilter, sortFilter].forEach(el => {
       el.addEventListener('input', applyFilters);
