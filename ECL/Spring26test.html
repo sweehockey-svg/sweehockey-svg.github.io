@@ -3101,6 +3101,12 @@ if (!STATE.sortState.column) {
       const bDate = new Date(b?.Date || 0).getTime();
       return bDate - aDate;
     });
+  } else if (STATE.currentSource.key === 'signUps') {
+    baseRows = [...STATE.currentRows].sort((a, b) => {
+      const aDate = new Date(a?.registrationDate || 0).getTime();
+      const bDate = new Date(b?.registrationDate || 0).getTime();
+      return bDate - aDate;
+    });
   }
 }
 
