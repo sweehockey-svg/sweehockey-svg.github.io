@@ -747,6 +747,45 @@
       line-height: 1;
     }
 
+    .team-detail-card {
+      background: #ffffff;
+      border: 1px solid #dfe6f1;
+      border-radius: 12px;
+      padding: 10px 12px;
+      min-width: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .team-detail-title {
+      margin-bottom: 6px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.35px;
+      color: #64748b;
+      white-space: normal;
+    }
+
+    .team-detail-value {
+      font-size: 12px;
+      line-height: 1.45;
+      color: #111827;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .team-detail-value > div {
+      padding: 2px 0;
+      border-bottom: 1px dashed #e5ebf5;
+    }
+
+    .team-detail-value > div:last-child {
+      border-bottom: 0;
+    }
+
     .site-footer {
       margin-top: 28px;
       background: linear-gradient(to right, #03045e, #07114f);
@@ -914,7 +953,7 @@
   <script>
     const CONFIG = {
       ADMIN_PASSWORD: 'kungkenu',
-      DATA_FILE: 'alla.json',
+      DATA_FILE: 'alla2.json',
       LEAGUE_ID: 501
     };
 
@@ -1788,7 +1827,261 @@
         Utils.setStatus('CSV exported');
       }
     };
-        const TableConfig = {
+
+    const TableConfig = {
+      TEAM_DROPDOWN_SOURCES: new Set(['lite', 'core', 'neo']),
+      TEAM_DROPDOWN_DETAIL_COLUMNS: [
+        'playersWithPlayoffGames',
+        'elitePlayerNames',
+        'proPlayerNames',
+        'litePlayerNames',
+        'corePlayerNames'
+      ],
+
+      useTeamDropdownRows() {
+        return this.TEAM_DROPDOWN_SOURCES.has(STATE.currentSource.key);
+      },
+
+      isNumericColumn(values) {
+        return values.every(v =>
+          v === null || v === '' || v === undefined ||
+          (!isNaN(Number(v)) && isFinite(Number(v)))
+        );
+      },
+
+      getColumns(rows) {
+        if (STATE.currentSource.key === 'bannedPlayers') {
+          return ['playerName', 'banType', 'until', 'active', 'status', 'foundAs', 'teams', 'divisions', 'sources', 'notes'];
+        }
+
+        const preferred = [
+          'teamName', 'teamCountry', 'registrationDate', 'divisionName', 'qualifierName',
+          'playerCount', 'fullLicenseCount', 'backupLicenseCount', 'unlicensedPlayerCount', 'signupIssue',
+          'userID', 'playerID', 'Player', 'tag', 'requestType',
+          'history1Division', 'history1Team', 'history1Matches',
+          'history2Division', 'history2Team', 'history2Matches',
+          'history3Division', 'history3Team', 'history3Matches',
+          'teamDivision', 'EP', 'PP', 'LP', 'CP', 'NP',
+          'elitePlayers', 'proPlayers', 'litePlayers', 'corePlayers',
+          'neoOrLowerPlayers', 'coreOrLowerPlayers', 'liteOrLowerPlayers',
+          'totalPlayers', 'playersWithPlayoffGames',
+          'elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames',
+          'From', 'FromDiv', 'To', 'ToDiv',
+          'GroupGames26Winter', 'PlayoffGames26Winter', 'TotalGames26Winter',
+          'totalMatchesPlayed', 'Date', 'Role', 'compatibility', 'totalPoints'
+        ];
+
+        const allKeys = new Set();
+        rows.forEach(row => {
+          Object.keys(row || {}).forEach(key => allKeys.add(key));
+          if ('playerCount' in (row || {}) || 'backupLicenseCount' in (row || {}) || 'unlicensedPlayerCount' in (row || {})) {
+            allKeys.add('fullLicenseCount');
+          }
+          if (STATE.currentSource.key === 'signUps') allKeys.add('signupIssue');
+        });
+
+        const presentPreferred = preferred.filter(key => allKeys.has(key));
+        const rest = [...allKeys].filter(key => !preferred.includes(key) && key !== 'teamID');
+        return [...presentPreferred, ...rest];
+      },
+
+      firstExistingColumn(candidates) {
+        return candidates.find(col => STATE.currentColumns.includes(col)) || null;
+      },
+
+      getTeamTabVisibleColumns() {
+        if (STATE.currentSource.key === 'lite') {
+          return [
+            this.firstExistingColumn(['teamName']),
+            this.firstExistingColumn(['totalPlayers', 'playerCount']),
+            this.firstExistingColumn(['EP']),
+            this.firstExistingColumn(['PP']),
+            this.firstExistingColumn(['LP']),
+            this.firstExistingColumn(['totalPoints'])
+          ].filter(Boolean);
+        }
+
+        if (STATE.currentSource.key === 'core') {
+          return [
+            this.firstExistingColumn(['teamName']),
+            this.firstExistingColumn(['totalPlayers', 'playerCount']),
+            this.firstExistingColumn(['EP']),
+            this.firstExistingColumn(['PP']),
+            this.firstExistingColumn(['LP']),
+            this.firstExistingColumn(['CP']),
+            this.firstExistingColumn(['totalPoints'])
+          ].filter(Boolean);
+        }
+
+        if (STATE.currentSource.key === 'neo') {
+          return [
+            this.firstExistingColumn(['teamName']),
+            this.firstExistingColumn(['totalPlayers', 'playerCount']),
+            this.firstExistingColumn(['EP']),
+            this.firstExistingColumn(['PP']),
+            this.firstExistingColumn(['LP']),
+            this.firstExistingColumn(['CP']),
+            this.firstExistingColumn(['NP']),
+            this.firstExistingColumn(['totalPoints'])
+          ].filter(Boolean);
+        }
+
+        return null;
+      },
+
+      getVisibleColumns() {
+        if (STATE.currentSource.key === 'bannedPlayers') return STATE.currentColumns;
+
+        if (this.useTeamDropdownRows()) return this.getTeamTabVisibleColumns() || [];
+
+        const cols = STATE.currentColumns.filter(col => !this.TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
+        if (STATE.currentSource.key === 'backups' || STATE.currentSource.key === 'licenslosa') {
+          return [...cols, '__sendMail'];
+        }
+        return cols;
+      },
+
+      getColumnHeaderLabel(col) {
+        if (STATE.currentSource.key === 'bannedPlayers') {
+          return {
+            playerName: 'PLAYER',
+            banType: 'BAN TYPE',
+            until: 'UNTIL',
+            active: 'ACTIVE',
+            status: 'STATUS',
+            foundAs: 'FOUND AS',
+            teams: 'TEAM',
+            divisions: 'DIVISION',
+            sources: 'SOURCE',
+            notes: 'NOTES'
+          }[col] || col;
+        }
+
+        if (STATE.currentSource.key === 'lite') {
+          return {
+            teamName: 'TEAMNAME',
+            totalPlayers: 'TOTALPLAYERS',
+            playerCount: 'TOTALPLAYERS',
+            EP: 'ELITE PLAYERS',
+            PP: 'PRO PLAYERS',
+            LP: 'LITE OR LOWER',
+            totalPoints: 'TOTALPOINTS'
+          }[col] || col;
+        }
+
+        if (STATE.currentSource.key === 'core') {
+          return {
+            teamName: 'TEAMNAME',
+            totalPlayers: 'TOTALPLAYERS',
+            playerCount: 'TOTALPLAYERS',
+            EP: 'ELITE PLAYERS',
+            PP: 'PRO PLAYERS',
+            LP: 'LITE PLAYERS',
+            CP: 'CORE OR LOWER',
+            totalPoints: 'TOTALPOINTS'
+          }[col] || col;
+        }
+
+        if (STATE.currentSource.key === 'neo') {
+          return {
+            teamName: 'TEAMNAME',
+            totalPlayers: 'TOTALPLAYERS',
+            playerCount: 'TOTALPLAYERS',
+            EP: 'ELITE PLAYERS',
+            PP: 'PRO PLAYERS',
+            LP: 'LITE PLAYERS',
+            CP: 'CORE PLAYERS',
+            NP: 'NEO OR NEW',
+            totalPoints: 'TOTALPOINTS'
+          }[col] || col;
+        }
+
+        return col;
+      },
+
+      getSignUpsHeaderLabel(col) {
+        return {
+          teamName: 'Team',
+          teamCountry: 'Country',
+          registrationDate: 'Reg. Date',
+          divisionName: 'Division',
+          qualifierName: 'Qualifier',
+          playerCount: 'Players',
+          fullLicenseCount: 'Full Lic.',
+          backupLicenseCount: 'Backup Lic.',
+          unlicensedPlayerCount: 'No Lic.',
+          signupIssue: 'Issue'
+        }[col] || col;
+      },
+
+      getSignUpsHeaderFullLabel(col) {
+        return {
+          teamName: 'Team Name',
+          teamCountry: 'Team Country',
+          registrationDate: 'Registration Date',
+          divisionName: 'Division Name',
+          qualifierName: 'Qualifier Name',
+          playerCount: 'Player Count',
+          fullLicenseCount: 'Full License Count',
+          backupLicenseCount: 'Backup License Count',
+          unlicensedPlayerCount: 'Unlicensed Player Count',
+          signupIssue: 'Missing Requirements / Rule Violations'
+        }[col] || col;
+      },
+
+      getDropdownDetailItems(row) {
+        return [
+          { label: 'Players With Playoff Games', value: row?.playersWithPlayoffGames ?? '' },
+          { label: 'Elite Player Names', value: row?.elitePlayerNames ?? '' },
+          { label: 'Pro Player Names', value: row?.proPlayerNames ?? '' },
+          { label: 'Lite Player Names', value: row?.litePlayerNames ?? '' },
+          { label: 'Core Player Names', value: row?.corePlayerNames ?? '' }
+        ].filter(item => String(item.value ?? '').trim() !== '');
+      }
+    };
+        const Exporter = {
+      canExportCurrentSource() {
+        return !!STATE.currentSource.csv;
+      },
+
+      getExportableRows() {
+        if (!this.canExportCurrentSource()) return [];
+        const sorted = Sorting.getSortedRows(STATE.currentRows);
+        return Filters.getFilteredRows(sorted);
+      },
+
+      getExportableColumns() {
+        return TableConfig.getVisibleColumns().filter(col => col !== '__sendMail');
+      },
+
+      getExportValue(row, col) {
+        if (col === 'fullLicenseCount') return RowAccess.getFullLicenseCount(row);
+        if (col === 'signupIssue') return Rules.getSignupIssueText(row);
+        return row?.[col] ?? '';
+      },
+
+      exportCurrentTableCsv() {
+        if (!this.canExportCurrentSource()) {
+          Utils.setStatus('CSV not available for this tab');
+          return;
+        }
+
+        const rows = this.getExportableRows();
+        const cols = this.getExportableColumns();
+        const headers = cols.map(col => TableConfig.getColumnHeaderLabel(col));
+        const lines = [headers.map(Utils.escapeCsv).join(',')];
+
+        rows.forEach(row => {
+          lines.push(cols.map(col => Utils.escapeCsv(this.getExportValue(row, col))).join(','));
+        });
+
+        const filename = `${STATE.currentSource.key}-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
+        Utils.downloadFile(filename, lines.join('\n'));
+        Utils.setStatus('CSV exported');
+      }
+    };
+
+    const TableConfig = {
       TEAM_DROPDOWN_SOURCES: new Set(['lite', 'core', 'neo']),
       TEAM_DROPDOWN_DETAIL_COLUMNS: [
         'playersWithPlayoffGames',
@@ -2720,9 +3013,22 @@ Best regards,`;
 
         const body = document.createElement('div');
         body.className = 'team-detail-value';
-        body.textContent = String(value || '');
-        card.appendChild(body);
 
+        const rawValue = String(value || '');
+        const parts = rawValue.split(',').map(v => v.trim()).filter(Boolean);
+
+        if (parts.length > 1) {
+          parts.forEach(part => {
+            const line = document.createElement('div');
+            line.textContent = part;
+            line.style.marginBottom = '4px';
+            body.appendChild(line);
+          });
+        } else {
+          body.textContent = rawValue;
+        }
+
+        card.appendChild(body);
         return card;
       },
 
@@ -2947,49 +3253,47 @@ Best regards,`;
           if (TableConfig.useTeamDropdownRows()) {
             const checkTd = document.createElement('td');
 
-            if (Rules.isCompatibilityNotOk(row)) {
-              const btn = document.createElement('button');
-              btn.type = 'button';
-              btn.className = 'action-btn secondary';
-              btn.style.padding = '7px 10px';
-              btn.style.fontSize = '11px';
-              btn.textContent = 'Check Team';
-              checkTd.appendChild(btn);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'action-btn secondary';
+            btn.style.padding = '7px 10px';
+            btn.style.fontSize = '11px';
+            btn.textContent = 'Check Team';
+            checkTd.appendChild(btn);
 
-              const detailItems = TableConfig.getDropdownDetailItems(row);
-              detailRow = document.createElement('tr');
-              detailRow.style.display = 'none';
+            const detailItems = TableConfig.getDropdownDetailItems(row);
+            detailRow = document.createElement('tr');
+            detailRow.style.display = 'none';
 
-              const detailCell = document.createElement('td');
-              detailCell.colSpan = visibleColumns.length + (hideIndex ? 1 : 2);
-              detailCell.style.padding = '0';
-              detailCell.style.background = '#f8fbff';
+            const detailCell = document.createElement('td');
+            detailCell.colSpan = visibleColumns.length + (hideIndex ? 1 : 2);
+            detailCell.style.padding = '0';
+            detailCell.style.background = '#f8fbff';
 
-              const detailBox = document.createElement('div');
-              detailBox.style.padding = '14px';
-              detailBox.style.borderTop = '1px solid #e4ebf5';
+            const detailBox = document.createElement('div');
+            detailBox.style.padding = '14px';
+            detailBox.style.borderTop = '1px solid #e4ebf5';
 
-              const detailGrid = document.createElement('div');
-              detailGrid.style.display = 'grid';
-              detailGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(240px, 1fr))';
-              detailGrid.style.gap = '12px';
+            const detailGrid = document.createElement('div');
+            detailGrid.style.display = 'grid';
+            detailGrid.style.gridTemplateColumns = '1fr';
+            detailGrid.style.gap = '12px';
 
-              if (detailItems.length > 0) {
-                detailItems.forEach(item => detailGrid.appendChild(this.createTeamDetailCard(item.label, item.value)));
-              } else {
-                detailGrid.appendChild(this.createEmptyTeamDetailCard());
-              }
-
-              detailBox.appendChild(detailGrid);
-              detailCell.appendChild(detailBox);
-              detailRow.appendChild(detailCell);
-
-              btn.addEventListener('click', () => {
-                const open = detailRow.style.display !== 'table-row';
-                detailRow.style.display = open ? 'table-row' : 'none';
-                btn.textContent = open ? 'Hide Team' : 'Check Team';
-              });
+            if (detailItems.length > 0) {
+              detailItems.forEach(item => detailGrid.appendChild(this.createTeamDetailCard(item.label, item.value)));
+            } else {
+              detailGrid.appendChild(this.createEmptyTeamDetailCard());
             }
+
+            detailBox.appendChild(detailGrid);
+            detailCell.appendChild(detailBox);
+            detailRow.appendChild(detailCell);
+
+            btn.addEventListener('click', () => {
+              const open = detailRow.style.display !== 'table-row';
+              detailRow.style.display = open ? 'table-row' : 'none';
+              btn.textContent = open ? 'Hide Team' : 'Check Team';
+            });
 
             tr.appendChild(checkTd);
           }
