@@ -3266,47 +3266,30 @@ const filtered = Filters.getFilteredRows(baseRows);
         DOM.rowCounter.textContent = `${visibleRows} seeding row${visibleRows === 1 ? '' : 's'}`;
       },
 
-groupProQualReqRows(rows) {
-  const map = new Map();
+      groupProQualReqRows(rows) {
+        const map = new Map();
 
-  rows.forEach(row => {
-    const teamID = row.teamID ?? '';
-    const teamName = row.teamName ?? 'Unknown team';
-    const key = `${teamID}__${teamName}`;
+        rows.forEach(row => {
+          const teamID = row.teamID ?? '';
+          const teamName = row.teamName ?? 'Unknown team';
+          const key = `${teamID}__${teamName}`;
 
-    if (!map.has(key)) {
-      map.set(key, {
-        teamID,
-        teamName,
-        qualifierName: row.qualifierName || 'WILDCARD',
-        playerCount: Number(row.playerCount) || 0,
-        fullLicenseCount: Number(row.fullLicenseCount) || 0,
-        backupLicenseCount: Number(row.backupLicenseCount) || 0,
-        unlicensedPlayerCount: Number(row.unlicensedPlayerCount) || 0,
-        players: []
-      });
-    }
+          if (!map.has(key)) {
+            map.set(key, {
+              teamID,
+              teamName,
+              qualifierName: row.qualifierName || 'WILDCARD',
+              players: []
+            });
+          }
 
-    const group = map.get(key);
+          map.get(key).players.push(row);
+        });
 
-    const playerName = String(row.Player || row.tag || '').trim();
-    const normalizedPlayer = Utils.normalizePlayerName(playerName);
-
-    if (!normalizedPlayer) return;
-
-    const alreadyExists = group.players.some(existing =>
-      Utils.normalizePlayerName(existing.Player || existing.tag || '') === normalizedPlayer
-    );
-
-    if (!alreadyExists) {
-      group.players.push(row);
-    }
-  });
-
-  return [...map.values()].sort((a, b) =>
-    String(a.teamName).localeCompare(String(b.teamName), 'en', { sensitivity: 'base' })
-  );
-}
+        return [...map.values()].sort((a, b) =>
+          String(a.teamName).localeCompare(String(b.teamName), 'en', { sensitivity: 'base' })
+        );
+      },
 
       createHistoryCell(division, team, matches) {
         const td = document.createElement('td');
@@ -3345,13 +3328,7 @@ groupProQualReqRows(rows) {
           const teamBox = document.createElement('div');
           teamBox.style.borderBottom = '1px solid #e7ebf2';
           if (teamIndex === teams.length - 1) teamBox.style.borderBottom = '0';
-const teamPlayerCount = Number(teamGroup.playerCount) || 0;
-const teamFullLicenseCount = Number(teamGroup.fullLicenseCount) || 0;
-const hasSignupIssue = teamPlayerCount < 7 || teamFullLicenseCount < 6;
 
-if (hasSignupIssue) {
-  teamBox.style.background = '#fff1f2';
-}
           const headerBtn = document.createElement('button');
           headerBtn.type = 'button';
           headerBtn.style.width = '100%';
@@ -3377,22 +3354,12 @@ if (hasSignupIssue) {
             name.textContent = teamGroup.teamName;
           }
 
-const meta = document.createElement('div');
-meta.style.fontSize = '11px';
-meta.style.color = '#64748b';
-meta.style.textTransform = 'uppercase';
-meta.style.letterSpacing = '0.4px';
-
-const playerCount = Number(teamGroup.playerCount) || 0;
-const fullLicenseCount = Number(teamGroup.fullLicenseCount) || 0;
-const issueParts = [];
-
-if (playerCount < 7) issueParts.push(`NEEDS ${7 - playerCount} MORE PLAYER${7 - playerCount === 1 ? '' : 'S'}`);
-if (fullLicenseCount < 6) issueParts.push(`NEEDS ${6 - fullLicenseCount} MORE FULL LICENSE${6 - fullLicenseCount === 1 ? '' : 'S'}`);
-
-meta.textContent =
-  `${teamGroup.qualifierName || 'WILDCARD'}${teamGroup.teamID ? ' • TEAM ID ' + teamGroup.teamID : ''}` +
-  `${issueParts.length ? ' • ' + issueParts.join(' • ') : ' • OK'}`;
+          const meta = document.createElement('div');
+          meta.style.fontSize = '11px';
+          meta.style.color = '#64748b';
+          meta.style.textTransform = 'uppercase';
+          meta.style.letterSpacing = '0.4px';
+          meta.textContent = `${teamGroup.qualifierName || 'WILDCARD'}${teamGroup.teamID ? ' • TEAM ID ' + teamGroup.teamID : ''}`;
 
           left.appendChild(name);
           left.appendChild(meta);
@@ -3403,7 +3370,7 @@ meta.textContent =
           right.style.gap = '10px';
 
           const count = document.createElement('div');
-          count.textContent = `${Number(teamGroup.playerCount) || 0} players`;
+          count.textContent = `${teamGroup.players.length} players`;
           count.style.fontSize = '12px';
           count.style.fontWeight = '900';
           count.style.color = '#334155';
@@ -3413,7 +3380,7 @@ meta.textContent =
           count.style.padding = '6px 10px';
 
           const arrow = document.createElement('div');
-          arrow.textContent = '▶';
+          arrow.textContent = teamIndex === 0 ? '▼' : '▶';
           arrow.style.fontWeight = '900';
 
           right.appendChild(count);
@@ -3423,7 +3390,7 @@ meta.textContent =
           headerBtn.appendChild(right);
 
           const body = document.createElement('div');
-          body.style.display = 'none';
+          body.style.display = teamIndex === 0 ? 'block' : 'none';
           body.style.padding = '0 16px 16px';
           body.style.background = '#fcfdff';
 
@@ -3494,50 +3461,24 @@ meta.textContent =
 
     const Loader = {
       getProQualReqCheckRows(allData) {
+        if (Array.isArray(allData?.proQualReqCheck)) {
+          return allData.proQualReqCheck.map(row => Rename.applyToRow(row));
+        }
 
+        const signUps = DataService.getRowsForSource(allData, 'signUps');
 
-  const signUps = DataService.getRowsForSource(allData, 'signUps');
-  const wildcardTeams = signUps
-    .map(row => Rename.applyToRow(row))
-    .filter(row => String(row?.qualifierName || '').trim().toUpperCase().includes('WILDCARD'));
-
-  const wildcardMap = new Map();
-  wildcardTeams.forEach(team => {
-    const normalized = Utils.normalizeTeamName(team.teamName);
-    if (normalized) wildcardMap.set(normalized, team);
-  });
-
-  const playerSources = ['backups', 'licenslosa', 'overgangar'];
-  const rows = [];
-
-  playerSources.forEach(sourceKey => {
-    const sourceRows = Array.isArray(allData?.[sourceKey]) ? allData[sourceKey] : [];
-    sourceRows.forEach(originalRow => {
-      const row = Rename.applyToRow(originalRow);
-      const teamName = row.teamName || row.To || '';
-      const normalized = Utils.normalizeTeamName(teamName);
-      const teamSignup = wildcardMap.get(normalized);
-
-      if (!teamSignup) return;
-
-      rows.push({
-        ...row,
-        teamID: row.teamID ?? teamSignup.teamID ?? '',
-        teamName: teamName || teamSignup.teamName || '',
-        qualifierName: teamSignup.qualifierName ?? '',
-        divisionName: teamSignup.divisionName ?? '',
-        teamCountry: teamSignup.teamCountry ?? '',
-        registrationDate: teamSignup.registrationDate ?? '',
-        playerCount: Number(teamSignup.playerCount) || 0,
-        backupLicenseCount: Number(teamSignup.backupLicenseCount) || 0,
-        unlicensedPlayerCount: Number(teamSignup.unlicensedPlayerCount) || 0,
-        fullLicenseCount: RowAccess.getFullLicenseCount(teamSignup)
-      });
-    });
-  });
-
-  return rows;
-},
+        return signUps
+          .map(row => Rename.applyToRow(row))
+          .filter(row => String(row?.qualifierName || '').trim().toUpperCase().includes('WILDCARD'))
+          .map(row => ({
+            teamID: row.teamID ?? '',
+            teamName: row.teamName ?? '',
+            qualifierName: row.qualifierName ?? '',
+            divisionName: row.divisionName ?? '',
+            teamCountry: row.teamCountry ?? '',
+            registrationDate: row.registrationDate ?? ''
+          }));
+      },
 
       async loadRegisteredTeams(forceReload = false) {
         const allData = await DataService.fetchAllaData(forceReload);
