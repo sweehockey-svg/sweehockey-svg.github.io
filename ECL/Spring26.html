@@ -3274,14 +3274,18 @@ const filtered = Filters.getFilteredRows(baseRows);
           const teamName = row.teamName ?? 'Unknown team';
           const key = `${teamID}__${teamName}`;
 
-          if (!map.has(key)) {
-            map.set(key, {
-              teamID,
-              teamName,
-              qualifierName: row.qualifierName || 'WILDCARD',
-              players: []
-            });
-          }
+         if (!map.has(key)) {
+  map.set(key, {
+    teamID,
+    teamName,
+    qualifierName: row.qualifierName || 'WILDCARD',
+    playerCount: Number(row.playerCount) || 0,
+    fullLicenseCount: Number(row.fullLicenseCount) || 0,
+    backupLicenseCount: Number(row.backupLicenseCount) || 0,
+    unlicensedPlayerCount: Number(row.unlicensedPlayerCount) || 0,
+    players: []
+  });
+}
 
           map.get(key).players.push(row);
         });
@@ -3328,8 +3332,8 @@ const filtered = Filters.getFilteredRows(baseRows);
           const teamBox = document.createElement('div');
           teamBox.style.borderBottom = '1px solid #e7ebf2';
           if (teamIndex === teams.length - 1) teamBox.style.borderBottom = '0';
-const teamPlayerCount = Number(teamGroup.players?.[0]?.playerCount) || 0;
-const teamFullLicenseCount = Number(teamGroup.players?.[0]?.fullLicenseCount) || 0;
+const teamPlayerCount = Number(teamGroup.playerCount) || 0;
+const teamFullLicenseCount = Number(teamGroup.fullLicenseCount) || 0;
 const hasSignupIssue = teamPlayerCount < 7 || teamFullLicenseCount < 6;
 
 if (hasSignupIssue) {
@@ -3366,8 +3370,8 @@ meta.style.color = '#64748b';
 meta.style.textTransform = 'uppercase';
 meta.style.letterSpacing = '0.4px';
 
-const playerCount = Number(teamGroup.players?.[0]?.playerCount) || 0;
-const fullLicenseCount = Number(teamGroup.players?.[0]?.fullLicenseCount) || 0;
+const playerCount = Number(teamGroup.playerCount) || 0;
+const fullLicenseCount = Number(teamGroup.fullLicenseCount) || 0;
 const issueParts = [];
 
 if (playerCount < 7) issueParts.push(`NEEDS ${7 - playerCount} MORE PLAYER${7 - playerCount === 1 ? '' : 'S'}`);
@@ -3386,7 +3390,7 @@ meta.textContent =
           right.style.gap = '10px';
 
           const count = document.createElement('div');
-          count.textContent = `${teamGroup.players.length} players`;
+          count.textContent = `${Number(teamGroup.playerCount) || 0} players`;
           count.style.fontSize = '12px';
           count.style.fontWeight = '900';
           count.style.color = '#334155';
