@@ -3088,15 +3088,20 @@ Best regards,`;
 
 let baseRows = Sorting.getSortedRows(STATE.currentRows);
 
-if (
-  TableConfig.useTeamDropdownRows() &&
-  !STATE.sortState.column
-) {
-  baseRows = [...STATE.currentRows].sort((a, b) => {
-    const aPoints = Number(a?.totalPoints) || 0;
-    const bPoints = Number(b?.totalPoints) || 0;
-    return bPoints - aPoints;
-  });
+if (!STATE.sortState.column) {
+  if (TableConfig.useTeamDropdownRows()) {
+    baseRows = [...STATE.currentRows].sort((a, b) => {
+      const aPoints = Number(a?.totalPoints) || 0;
+      const bPoints = Number(b?.totalPoints) || 0;
+      return bPoints - aPoints;
+    });
+  } else if (STATE.currentSource.key === 'overgangar') {
+    baseRows = [...STATE.currentRows].sort((a, b) => {
+      const aDate = new Date(a?.Date || 0).getTime();
+      const bDate = new Date(b?.Date || 0).getTime();
+      return bDate - aDate;
+    });
+  }
 }
 
 const filtered = Filters.getFilteredRows(baseRows);
