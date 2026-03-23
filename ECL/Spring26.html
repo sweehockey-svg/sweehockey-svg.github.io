@@ -3477,9 +3477,7 @@ meta.textContent =
 
     const Loader = {
       getProQualReqCheckRows(allData) {
-  if (Array.isArray(allData?.proQualReqCheck) && allData.proQualReqCheck.length > 0) {
-    return allData.proQualReqCheck.map(row => Rename.applyToRow(row));
-  }
+
 
   const signUps = DataService.getRowsForSource(allData, 'signUps');
   const wildcardTeams = signUps
