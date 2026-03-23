@@ -3266,34 +3266,47 @@ const filtered = Filters.getFilteredRows(baseRows);
         DOM.rowCounter.textContent = `${visibleRows} seeding row${visibleRows === 1 ? '' : 's'}`;
       },
 
-      groupProQualReqRows(rows) {
-        const map = new Map();
+groupProQualReqRows(rows) {
+  const map = new Map();
 
-        rows.forEach(row => {
-          const teamID = row.teamID ?? '';
-          const teamName = row.teamName ?? 'Unknown team';
-          const key = `${teamID}__${teamName}`;
+  rows.forEach(row => {
+    const teamID = row.teamID ?? '';
+    const teamName = row.teamName ?? 'Unknown team';
+    const key = `${teamID}__${teamName}`;
 
-         if (!map.has(key)) {
-  map.set(key, {
-    teamID,
-    teamName,
-    qualifierName: row.qualifierName || 'WILDCARD',
-    playerCount: Number(row.playerCount) || 0,
-    fullLicenseCount: Number(row.fullLicenseCount) || 0,
-    backupLicenseCount: Number(row.backupLicenseCount) || 0,
-    unlicensedPlayerCount: Number(row.unlicensedPlayerCount) || 0,
-    players: []
+    if (!map.has(key)) {
+      map.set(key, {
+        teamID,
+        teamName,
+        qualifierName: row.qualifierName || 'WILDCARD',
+        playerCount: Number(row.playerCount) || 0,
+        fullLicenseCount: Number(row.fullLicenseCount) || 0,
+        backupLicenseCount: Number(row.backupLicenseCount) || 0,
+        unlicensedPlayerCount: Number(row.unlicensedPlayerCount) || 0,
+        players: []
+      });
+    }
+
+    const group = map.get(key);
+
+    const playerName = String(row.Player || row.tag || '').trim();
+    const normalizedPlayer = Utils.normalizePlayerName(playerName);
+
+    if (!normalizedPlayer) return;
+
+    const alreadyExists = group.players.some(existing =>
+      Utils.normalizePlayerName(existing.Player || existing.tag || '') === normalizedPlayer
+    );
+
+    if (!alreadyExists) {
+      group.players.push(row);
+    }
   });
+
+  return [...map.values()].sort((a, b) =>
+    String(a.teamName).localeCompare(String(b.teamName), 'en', { sensitivity: 'base' })
+  );
 }
-
-          map.get(key).players.push(row);
-        });
-
-        return [...map.values()].sort((a, b) =>
-          String(a.teamName).localeCompare(String(b.teamName), 'en', { sensitivity: 'base' })
-        );
-      },
 
       createHistoryCell(division, team, matches) {
         const td = document.createElement('td');
