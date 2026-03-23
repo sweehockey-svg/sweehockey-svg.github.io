@@ -3084,9 +3084,22 @@ Best regards,`;
         );
         STATE.currentNumericColumns.add('fullLicenseCount');
 
-        this.renderSortableHeader();
+       this.renderSortableHeader();
 
-        const filtered = Filters.getFilteredRows(Sorting.getSortedRows(STATE.currentRows));
+let baseRows = Sorting.getSortedRows(STATE.currentRows);
+
+if (
+  TableConfig.useTeamDropdownRows() &&
+  !STATE.sortState.column
+) {
+  baseRows = [...STATE.currentRows].sort((a, b) => {
+    const aPoints = Number(a?.totalPoints) || 0;
+    const bPoints = Number(b?.totalPoints) || 0;
+    return bPoints - aPoints;
+  });
+}
+
+const filtered = Filters.getFilteredRows(baseRows);
         DOM.emptyMessage.style.display = filtered.length === 0 ? 'block' : 'none';
 
         if (STATE.currentSource.key === 'signUps') {
