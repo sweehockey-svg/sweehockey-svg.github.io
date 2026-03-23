@@ -3328,7 +3328,13 @@ const filtered = Filters.getFilteredRows(baseRows);
           const teamBox = document.createElement('div');
           teamBox.style.borderBottom = '1px solid #e7ebf2';
           if (teamIndex === teams.length - 1) teamBox.style.borderBottom = '0';
+const teamPlayerCount = Number(teamGroup.players?.[0]?.playerCount) || 0;
+const teamFullLicenseCount = Number(teamGroup.players?.[0]?.fullLicenseCount) || 0;
+const hasSignupIssue = teamPlayerCount < 7 || teamFullLicenseCount < 6;
 
+if (hasSignupIssue) {
+  teamBox.style.background = '#fff1f2';
+}
           const headerBtn = document.createElement('button');
           headerBtn.type = 'button';
           headerBtn.style.width = '100%';
@@ -3354,12 +3360,22 @@ const filtered = Filters.getFilteredRows(baseRows);
             name.textContent = teamGroup.teamName;
           }
 
-          const meta = document.createElement('div');
-          meta.style.fontSize = '11px';
-          meta.style.color = '#64748b';
-          meta.style.textTransform = 'uppercase';
-          meta.style.letterSpacing = '0.4px';
-          meta.textContent = `${teamGroup.qualifierName || 'WILDCARD'}${teamGroup.teamID ? ' • TEAM ID ' + teamGroup.teamID : ''}`;
+const meta = document.createElement('div');
+meta.style.fontSize = '11px';
+meta.style.color = '#64748b';
+meta.style.textTransform = 'uppercase';
+meta.style.letterSpacing = '0.4px';
+
+const playerCount = Number(teamGroup.players?.[0]?.playerCount) || 0;
+const fullLicenseCount = Number(teamGroup.players?.[0]?.fullLicenseCount) || 0;
+const issueParts = [];
+
+if (playerCount < 7) issueParts.push(`NEEDS ${7 - playerCount} MORE PLAYER${7 - playerCount === 1 ? '' : 'S'}`);
+if (fullLicenseCount < 6) issueParts.push(`NEEDS ${6 - fullLicenseCount} MORE FULL LICENSE${6 - fullLicenseCount === 1 ? '' : 'S'}`);
+
+meta.textContent =
+  `${teamGroup.qualifierName || 'WILDCARD'}${teamGroup.teamID ? ' • TEAM ID ' + teamGroup.teamID : ''}` +
+  `${issueParts.length ? ' • ' + issueParts.join(' • ') : ' • OK'}`;
 
           left.appendChild(name);
           left.appendChild(meta);
@@ -3461,24 +3477,52 @@ const filtered = Filters.getFilteredRows(baseRows);
 
     const Loader = {
       getProQualReqCheckRows(allData) {
-        if (Array.isArray(allData?.proQualReqCheck)) {
-          return allData.proQualReqCheck.map(row => Rename.applyToRow(row));
-        }
+  if (Array.isArray(allData?.proQualReqCheck) && allData.proQualReqCheck.length > 0) {
+    return allData.proQualReqCheck.map(row => Rename.applyToRow(row));
+  }
 
-        const signUps = DataService.getRowsForSource(allData, 'signUps');
+  const signUps = DataService.getRowsForSource(allData, 'signUps');
+  const wildcardTeams = signUps
+    .map(row => Rename.applyToRow(row))
+    .filter(row => String(row?.qualifierName || '').trim().toUpperCase().includes('WILDCARD'));
 
-        return signUps
-          .map(row => Rename.applyToRow(row))
-          .filter(row => String(row?.qualifierName || '').trim().toUpperCase().includes('WILDCARD'))
-          .map(row => ({
-            teamID: row.teamID ?? '',
-            teamName: row.teamName ?? '',
-            qualifierName: row.qualifierName ?? '',
-            divisionName: row.divisionName ?? '',
-            teamCountry: row.teamCountry ?? '',
-            registrationDate: row.registrationDate ?? ''
-          }));
-      },
+  const wildcardMap = new Map();
+  wildcardTeams.forEach(team => {
+    const normalized = Utils.normalizeTeamName(team.teamName);
+    if (normalized) wildcardMap.set(normalized, team);
+  });
+
+  const playerSources = ['backups', 'licenslosa', 'overgangar'];
+  const rows = [];
+
+  playerSources.forEach(sourceKey => {
+    const sourceRows = Array.isArray(allData?.[sourceKey]) ? allData[sourceKey] : [];
+    sourceRows.forEach(originalRow => {
+      const row = Rename.applyToRow(originalRow);
+      const teamName = row.teamName || row.To || '';
+      const normalized = Utils.normalizeTeamName(teamName);
+      const teamSignup = wildcardMap.get(normalized);
+
+      if (!teamSignup) return;
+
+      rows.push({
+        ...row,
+        teamID: row.teamID ?? teamSignup.teamID ?? '',
+        teamName: teamName || teamSignup.teamName || '',
+        qualifierName: teamSignup.qualifierName ?? '',
+        divisionName: teamSignup.divisionName ?? '',
+        teamCountry: teamSignup.teamCountry ?? '',
+        registrationDate: teamSignup.registrationDate ?? '',
+        playerCount: Number(teamSignup.playerCount) || 0,
+        backupLicenseCount: Number(teamSignup.backupLicenseCount) || 0,
+        unlicensedPlayerCount: Number(teamSignup.unlicensedPlayerCount) || 0,
+        fullLicenseCount: RowAccess.getFullLicenseCount(teamSignup)
+      });
+    });
+  });
+
+  return rows;
+}
 
       async loadRegisteredTeams(forceReload = false) {
         const allData = await DataService.fetchAllaData(forceReload);
