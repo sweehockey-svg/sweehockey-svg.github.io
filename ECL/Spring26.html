@@ -3380,7 +3380,7 @@ const filtered = Filters.getFilteredRows(baseRows);
           count.style.padding = '6px 10px';
 
           const arrow = document.createElement('div');
-          arrow.textContent = teamIndex === 0 ? '▼' : '▶';
+          arrow.textContent = '▶';
           arrow.style.fontWeight = '900';
 
           right.appendChild(count);
@@ -3390,7 +3390,7 @@ const filtered = Filters.getFilteredRows(baseRows);
           headerBtn.appendChild(right);
 
           const body = document.createElement('div');
-          body.style.display = teamIndex === 0 ? 'block' : 'none';
+          body.style.display = 'none';
           body.style.padding = '0 16px 16px';
           body.style.background = '#fcfdff';
 
