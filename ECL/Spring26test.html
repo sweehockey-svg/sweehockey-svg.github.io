@@ -2778,42 +2778,48 @@ Best regards,`;
         }
       },
 
-      createTeamDetailCard(label, value) {
-        const card = document.createElement('div');
-        card.className = 'team-detail-card';
+      createTeamDetailSection(label, value) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'team-detail-card';
 
-        const title = document.createElement('div');
-        title.className = 'team-detail-title';
-        title.textContent = label;
-        card.appendChild(title);
+  const title = document.createElement('div');
+  title.className = 'team-detail-title';
+  title.textContent = label.toUpperCase();
+  wrapper.appendChild(title);
 
-        const body = document.createElement('div');
-        body.className = 'team-detail-value';
+  const body = document.createElement('div');
+  body.className = 'team-detail-value';
 
-        const rawValue = String(value || '');
-        const parts = rawValue.includes('||')
-          ? rawValue.split('||').map(v => v.trim()).filter(Boolean)
-          : rawValue.includes('|')
-            ? rawValue.split('|').map(v => v.trim()).filter(Boolean)
-            : rawValue.split(',').map(v => v.trim()).filter(Boolean);
+  const rawValue = String(value || '').trim();
 
-        if (parts.length > 1) {
-          parts.forEach(part => {
-            const line = document.createElement('div');
-            line.textContent = part;
-            body.appendChild(line);
-          });
-        } else {
-          body.textContent = rawValue;
-        }
+  let parts = [];
+  if (rawValue.includes('||')) {
+    parts = rawValue.split('||').map(v => v.trim()).filter(Boolean);
+  } else if (rawValue.includes('|')) {
+    parts = rawValue.split('|').map(v => v.trim()).filter(Boolean);
+  } else if (rawValue.includes(',')) {
+    parts = rawValue.split(',').map(v => v.trim()).filter(Boolean);
+  } else if (rawValue) {
+    parts = [rawValue];
+  }
 
-        card.appendChild(body);
-        return card;
-      },
+  if (parts.length === 0) {
+    body.textContent = '-';
+  } else {
+    parts.forEach(part => {
+      const row = document.createElement('div');
+      row.textContent = part;
+      body.appendChild(row);
+    });
+  }
 
-      createEmptyTeamDetailCard() {
-        return this.createTeamDetailCard('Details', 'No extra info');
-      },
+  wrapper.appendChild(body);
+  return wrapper;
+},
+
+createEmptyTeamDetailSection() {
+  return this.createTeamDetailSection('Details', '-');
+},
 
       parsePlayerList(value) {
         return String(value || '').split(',').map(part => part.trim()).filter(Boolean);
@@ -3053,16 +3059,16 @@ Best regards,`;
             detailBox.style.padding = '14px';
             detailBox.style.borderTop = '1px solid #e4ebf5';
 
-            const detailGrid = document.createElement('div');
-            detailGrid.style.display = 'grid';
-            detailGrid.style.gridTemplateColumns = '1fr';
-            detailGrid.style.gap = '12px';
+const detailGrid = document.createElement('div');
+detailGrid.style.display = 'flex';
+detailGrid.style.flexDirection = 'column';
+detailGrid.style.gap = '12px';
 
-            if (detailItems.length > 0) {
-              detailItems.forEach(item => detailGrid.appendChild(this.createTeamDetailCard(item.label, item.value)));
-            } else {
-              detailGrid.appendChild(this.createEmptyTeamDetailCard());
-            }
+if (detailItems.length > 0) {
+  detailItems.forEach(item => detailGrid.appendChild(this.createTeamDetailSection(item.label, item.value)));
+} else {
+  detailGrid.appendChild(this.createEmptyTeamDetailSection());
+}
 
             detailBox.appendChild(detailGrid);
             detailCell.appendChild(detailBox);
