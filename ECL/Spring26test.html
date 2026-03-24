@@ -2847,37 +2847,36 @@ Best regards,`;
         }
       },
 
-      createTeamDetailCard(label, value) {
-        const card = document.createElement('div');
-        card.className = 'team-detail-card';
+     createTeamDetailCard(label, value) {
+  const card = document.createElement('div');
+  card.className = 'team-detail-card';
 
-        const title = document.createElement('div');
-        title.className = 'team-detail-title';
-        title.textContent = label;
-        card.appendChild(title);
+  const title = document.createElement('div');
+  title.className = 'team-detail-title';
+  title.textContent = label;
+  card.appendChild(title);
 
-        const body = document.createElement('div');
-        body.className = 'team-detail-value';
+  const body = document.createElement('div');
+  body.className = 'team-detail-value';
 
-        const rawValue = String(value || '');
-        const blocks = rawValue.includes('||')
-          ? rawValue.split('||').map(v => v.trim()).filter(Boolean)
-          : rawValue.split(',').map(v => v.trim()).filter(Boolean);
+  const rawValue = String(value || '');
+  const parts = rawValue.includes('|')
+    ? rawValue.split('|').map(v => v.trim()).filter(Boolean)
+    : rawValue.split(',').map(v => v.trim()).filter(Boolean);
 
-        if (blocks.length > 1) {
-          blocks.forEach(part => {
-            const line = document.createElement('div');
-            line.textContent = part;
-            line.style.marginBottom = '4px';
-            body.appendChild(line);
-          });
-        } else {
-          body.textContent = rawValue;
-        }
+  if (parts.length > 1) {
+    parts.forEach(part => {
+      const line = document.createElement('div');
+      line.textContent = part;
+      body.appendChild(line);
+    });
+  } else {
+    body.textContent = rawValue;
+  }
 
-        card.appendChild(body);
-        return card;
-      },
+  card.appendChild(body);
+  return card;
+}
 
       createEmptyTeamDetailCard() {
         return this.createTeamDetailCard('Details', 'No extra info');
