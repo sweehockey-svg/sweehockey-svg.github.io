@@ -1009,7 +1009,6 @@
     ];
 
     const SEEDING_TEAM_STATUSES = {
-
       'POGGERS': 'DISBANDED',
       'NOVA': 'DISBANDED',
       'M3 Esports': 'DISBANDED',
@@ -1789,8 +1788,7 @@
       }
     };
 
-
-        const Exporter = {
+    const Exporter = {
       canExportCurrentSource() {
         return !!STATE.currentSource.csv;
       },
@@ -1839,7 +1837,16 @@
         'elitePlayerNames',
         'proPlayerNames',
         'litePlayerNames',
-        'corePlayerNames'
+        'corePlayerNames',
+        'history1Division',
+        'history1Team',
+        'history1Matches',
+        'history2Division',
+        'history2Team',
+        'history2Matches',
+        'history3Division',
+        'history3Team',
+        'history3Matches'
       ],
 
       useTeamDropdownRows() {
@@ -2033,18 +2040,38 @@
         }[col] || col;
       },
 
+      getHistoryDisplay(team, division, matches) {
+        if (!team && !division && !matches) return '';
+        const parts = [];
+        if (team) parts.push(team);
+        if (division) parts.push(`(${division})`);
+        if (Number(matches) > 0) parts.push(`- ${Number(matches)} matches`);
+        return parts.join(' ');
+      },
+
       getDropdownDetailItems(row) {
         return [
-          { label: 'Players With Playoff Games', value: row?.playersWithPlayoffGames ?? '' },
-          { label: 'Elite Player Names', value: row?.elitePlayerNames ?? '' },
-          { label: 'Pro Player Names', value: row?.proPlayerNames ?? '' },
-          { label: 'Lite Player Names', value: row?.litePlayerNames ?? '' },
-          { label: 'Core Player Names', value: row?.corePlayerNames ?? '' }
+          {
+            label: 'Senast spelade klubb',
+            value: this.getHistoryDisplay(row?.history1Team, row?.history1Division, row?.history1Matches)
+          },
+          {
+            label: 'Näst senaste klubb',
+            value: this.getHistoryDisplay(row?.history2Team, row?.history2Division, row?.history2Matches)
+          },
+          {
+            label: 'Tredje senaste klubb',
+            value: this.getHistoryDisplay(row?.history3Team, row?.history3Division, row?.history3Matches)
+          },
+          { label: 'Elite-klubb', value: row?.elitePlayerNames ?? '' },
+          { label: 'Pro-klubb', value: row?.proPlayerNames ?? '' },
+          { label: 'Lite-klubb', value: row?.litePlayerNames ?? '' },
+          { label: 'Core-klubb', value: row?.corePlayerNames ?? '' },
+          { label: 'Players With Playoff Games', value: row?.playersWithPlayoffGames ?? '' }
         ].filter(item => String(item.value ?? '').trim() !== '');
       }
     };
-
-    const Sorting = {
+        const Sorting = {
       getSortedRows(rows) {
         if (!STATE.sortState.column) return [...rows];
         const isNumeric = STATE.currentNumericColumns.has(STATE.sortState.column) || STATE.sortState.column === 'fullLicenseCount';
@@ -3087,33 +3114,33 @@ Best regards,`;
         );
         STATE.currentNumericColumns.add('fullLicenseCount');
 
-       this.renderSortableHeader();
+        this.renderSortableHeader();
 
-let baseRows = Sorting.getSortedRows(STATE.currentRows);
+        let baseRows = Sorting.getSortedRows(STATE.currentRows);
 
-if (!STATE.sortState.column) {
-  if (TableConfig.useTeamDropdownRows()) {
-    baseRows = [...STATE.currentRows].sort((a, b) => {
-      const aPoints = Number(a?.totalPoints) || 0;
-      const bPoints = Number(b?.totalPoints) || 0;
-      return bPoints - aPoints;
-    });
-  } else if (STATE.currentSource.key === 'overgangar') {
-    baseRows = [...STATE.currentRows].sort((a, b) => {
-      const aDate = new Date(a?.Date || 0).getTime();
-      const bDate = new Date(b?.Date || 0).getTime();
-      return bDate - aDate;
-    });
-  } else if (STATE.currentSource.key === 'signUps') {
-    baseRows = [...STATE.currentRows].sort((a, b) => {
-      const aDate = new Date(a?.registrationDate || 0).getTime();
-      const bDate = new Date(b?.registrationDate || 0).getTime();
-      return bDate - aDate;
-    });
-  }
-}
+        if (!STATE.sortState.column) {
+          if (TableConfig.useTeamDropdownRows()) {
+            baseRows = [...STATE.currentRows].sort((a, b) => {
+              const aPoints = Number(a?.totalPoints) || 0;
+              const bPoints = Number(b?.totalPoints) || 0;
+              return bPoints - aPoints;
+            });
+          } else if (STATE.currentSource.key === 'overgangar') {
+            baseRows = [...STATE.currentRows].sort((a, b) => {
+              const aDate = new Date(a?.Date || 0).getTime();
+              const bDate = new Date(b?.Date || 0).getTime();
+              return bDate - aDate;
+            });
+          } else if (STATE.currentSource.key === 'signUps') {
+            baseRows = [...STATE.currentRows].sort((a, b) => {
+              const aDate = new Date(a?.registrationDate || 0).getTime();
+              const bDate = new Date(b?.registrationDate || 0).getTime();
+              return bDate - aDate;
+            });
+          }
+        }
 
-const filtered = Filters.getFilteredRows(baseRows);
+        const filtered = Filters.getFilteredRows(baseRows);
         DOM.emptyMessage.style.display = filtered.length === 0 ? 'block' : 'none';
 
         if (STATE.currentSource.key === 'signUps') {
