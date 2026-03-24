@@ -2099,30 +2099,38 @@
           .join(' || ');
       },
 
-getHistoryDisplayFull(row, index) {
-  const team = row?.[`history${index}Team`] ?? '';
-  const division = row?.[`history${index}Division`] ?? '';
-  const year = row?.[`history${index}Year`] ?? '';
-  const season = row?.[`history${index}Season`] ?? '';
-  const groupMatches = Number(row?.[`history${index}GroupMatches`] ?? 0);
-  const playoffMatches = Number(row?.[`history${index}PlayoffMatches`] ?? 0);
-  const totalMatches = Number(row?.[`history${index}Matches`] ?? 0);
+      getHistoryDisplayFull(row, index) {
+        const team = String(row?.[`history${index}Team`] ?? '').trim();
+        const division = String(row?.[`history${index}Division`] ?? '').trim();
+        const year = String(row?.[`history${index}Year`] ?? '').trim();
+        const season = String(row?.[`history${index}Season`] ?? '').trim();
 
-  if (!team && !division && !year && !season && totalMatches === 0) return '';
+        const groupMatches = Number(row?.[`history${index}GroupMatches`] ?? 0) || 0;
+        const playoffMatches = Number(row?.[`history${index}PlayoffMatches`] ?? 0) || 0;
 
-  const topLineParts = [];
-  if (team) topLineParts.push(team);
-  if (division) topLineParts.push(`(${division})`);
-  if (year) topLineParts.push(String(year));
-  if (season) topLineParts.push(season);
+        const totalRaw = row?.[`history${index}Matches`];
+        const totalMatches =
+          totalRaw !== undefined && totalRaw !== null && totalRaw !== ''
+            ? Number(totalRaw) || 0
+            : groupMatches + playoffMatches;
 
-  return [
-    topLineParts.join(' '),
-    `Gruppspel: ${groupMatches}`,
-    `Slutspel: ${playoffMatches}`,
-    `Totalt: ${totalMatches}`
-  ].join(' | ');
-},
+        if (!team && !division && !year && !season && totalMatches === 0 && groupMatches === 0 && playoffMatches === 0) {
+          return '';
+        }
+
+        const topLineParts = [];
+        if (team) topLineParts.push(team);
+        if (division) topLineParts.push(`(${division})`);
+        if (year) topLineParts.push(year);
+        if (season) topLineParts.push(season);
+
+        return [
+          topLineParts.join(' '),
+          `Gruppspel: ${groupMatches}`,
+          `Slutspel: ${playoffMatches}`,
+          `Totalt: ${totalMatches}`
+        ].join(' || ');
+      },
 
 getDropdownDetailItems(row) {
   return [
@@ -2847,38 +2855,42 @@ Best regards,`;
         }
       },
 
-     createTeamDetailCard(label, value) {
-  const card = document.createElement('div');
-  card.className = 'team-detail-card';
+      createTeamDetailCard(label, value) {
+        const card = document.createElement('div');
+        card.className = 'team-detail-card';
 
-  const title = document.createElement('div');
-  title.className = 'team-detail-title';
-  title.textContent = label;
-  card.appendChild(title);
+        const title = document.createElement('div');
+        title.className = 'team-detail-title';
+        title.textContent = label;
+        card.appendChild(title);
 
-  const body = document.createElement('div');
-  body.className = 'team-detail-value';
+        const body = document.createElement('div');
+        body.className = 'team-detail-value';
 
-  const rawValue = String(value || '');
-  const parts = rawValue.includes('|')
-    ? rawValue.split('|').map(v => v.trim()).filter(Boolean)
-    : rawValue.split(',').map(v => v.trim()).filter(Boolean);
+        const rawValue = String(value || '');
+        const parts = rawValue.includes('||')
+          ? rawValue.split('||').map(v => v.trim()).filter(Boolean)
+          : rawValue.includes('|')
+            ? rawValue.split('|').map(v => v.trim()).filter(Boolean)
+            : rawValue.split(',').map(v => v.trim()).filter(Boolean);
 
-  if (parts.length > 1) {
-    parts.forEach(part => {
-      const line = document.createElement('div');
-      line.textContent = part;
-      body.appendChild(line);
-    });
-  } else {
-    body.textContent = rawValue;
-  }
+        if (parts.length > 1) {
+          parts.forEach(part => {
+            const line = document.createElement('div');
+            line.textContent = part;
+            body.appendChild(line);
+          });
+        } else {
+          body.textContent = rawValue;
+        }
 
-  card.appendChild(body);
-  return card;
-}
+        card.appendChild(body);
+        return card;
+      },
 
       createEmptyTeamDetailCard() {
+        return this.createTeamDetailCard('Details', 'No extra info');
+      },
         return this.createTeamDetailCard('Details', 'No extra info');
       },
 
