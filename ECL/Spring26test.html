@@ -2099,38 +2099,44 @@
           .join(' || ');
       },
 
-      getDropdownDetailItems(row) {
-        return [
-          {
-            label: 'Senaste klubb',
-            value: this.getHistoryDisplay(row, 'history1')
-          },
-          {
-            label: 'Tidigare år',
-            value: this.getHistoryClubLines(row, ['history2', 'history3'])
-          },
-          {
-            label: 'Elite-klubb',
-            value: row?.elitePlayerNames ?? ''
-          },
-          {
-            label: 'Pro-klubb',
-            value: row?.proPlayerNames ?? ''
-          },
-          {
-            label: 'Lite-klubb',
-            value: row?.litePlayerNames ?? ''
-          },
-          {
-            label: 'Core-klubb',
-            value: row?.corePlayerNames ?? ''
-          },
-          {
-            label: 'Players With Playoff Games',
-            value: row?.playersWithPlayoffGames ?? ''
-          }
-        ].filter(item => String(item.value ?? '').trim() !== '');
-      }
+getHistoryDisplayFull(row, index) {
+  const team = row?.[`history${index}Team`] ?? '';
+  const division = row?.[`history${index}Division`] ?? '';
+  const year = row?.[`history${index}Year`] ?? '';
+  const season = row?.[`history${index}Season`] ?? '';
+  const groupMatches = Number(row?.[`history${index}GroupMatches`] ?? 0);
+  const playoffMatches = Number(row?.[`history${index}PlayoffMatches`] ?? 0);
+  const totalMatches = Number(row?.[`history${index}Matches`] ?? 0);
+
+  if (!team && !division && !year && !season && totalMatches === 0) return '';
+
+  const topLineParts = [];
+  if (team) topLineParts.push(team);
+  if (division) topLineParts.push(`(${division})`);
+  if (year) topLineParts.push(String(year));
+  if (season) topLineParts.push(season);
+
+  return [
+    topLineParts.join(' '),
+    `Gruppspel: ${groupMatches}`,
+    `Slutspel: ${playoffMatches}`,
+    `Totalt: ${totalMatches}`
+  ].join(' | ');
+},
+
+getDropdownDetailItems(row) {
+  return [
+    { label: 'Elite-klubb', value: row?.elitePlayerNames ?? '' },
+    { label: 'Pro-klubb', value: row?.proPlayerNames ?? '' },
+    { label: 'Lite-klubb', value: row?.litePlayerNames ?? '' },
+    { label: 'Core-klubb', value: row?.corePlayerNames ?? '' },
+    { label: 'Players With Playoff Games', value: row?.playersWithPlayoffGames ?? '' },
+
+    { label: 'Senaste klubb', value: this.getHistoryDisplayFull(row, 1) },
+    { label: 'Tidigare klubb 1', value: this.getHistoryDisplayFull(row, 2) },
+    { label: 'Tidigare klubb 2', value: this.getHistoryDisplayFull(row, 3) }
+  ].filter(item => String(item.value ?? '').trim() !== '');
+}
     };
         const Sorting = {
       getSortedRows(rows) {
