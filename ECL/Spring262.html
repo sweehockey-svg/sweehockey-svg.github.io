@@ -747,6 +747,45 @@
       line-height: 1;
     }
 
+    .team-detail-card {
+      background: #ffffff;
+      border: 1px solid #dfe6f1;
+      border-radius: 12px;
+      padding: 10px 12px;
+      min-width: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .team-detail-title {
+      margin-bottom: 6px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.35px;
+      color: #64748b;
+      white-space: normal;
+    }
+
+    .team-detail-value {
+      font-size: 12px;
+      line-height: 1.45;
+      color: #111827;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .team-detail-value > div {
+      padding: 2px 0;
+      border-bottom: 1px dashed #e5ebf5;
+    }
+
+    .team-detail-value > div:last-child {
+      border-bottom: 0;
+    }
+
     .site-footer {
       margin-top: 28px;
       background: linear-gradient(to right, #03045e, #07114f);
@@ -914,7 +953,7 @@
   <script>
     const CONFIG = {
       ADMIN_PASSWORD: 'kungkenu',
-      DATA_FILE: 'alla2.json',
+      DATA_FILE: 'alla.json',
       LEAGUE_ID: 501
     };
 
@@ -972,6 +1011,9 @@
     const SEEDING_TEAM_STATUSES = {
       'Kastikekauppa Esports': 'DISBANDED',
       'POGGERS': 'DISBANDED',
+      'NOVA': 'DISBANDED',
+      'M3 Esports': 'DISBANDED',
+      'Including Me': 'DISBANDED',
       'Tinted Visors': 'DISBANDED',
       'Veterankraft': 'DISBANDED'
     };
@@ -1747,7 +1789,8 @@
       }
     };
 
-    const Exporter = {
+
+        const Exporter = {
       canExportCurrentSource() {
         return !!STATE.currentSource.csv;
       },
@@ -1788,7 +1831,8 @@
         Utils.setStatus('CSV exported');
       }
     };
-        const TableConfig = {
+
+    const TableConfig = {
       TEAM_DROPDOWN_SOURCES: new Set(['lite', 'core', 'neo']),
       TEAM_DROPDOWN_DETAIL_COLUMNS: [
         'playersWithPlayoffGames',
@@ -2720,9 +2764,22 @@ Best regards,`;
 
         const body = document.createElement('div');
         body.className = 'team-detail-value';
-        body.textContent = String(value || '');
-        card.appendChild(body);
 
+        const rawValue = String(value || '');
+        const parts = rawValue.split(',').map(v => v.trim()).filter(Boolean);
+
+        if (parts.length > 1) {
+          parts.forEach(part => {
+            const line = document.createElement('div');
+            line.textContent = part;
+            line.style.marginBottom = '4px';
+            body.appendChild(line);
+          });
+        } else {
+          body.textContent = rawValue;
+        }
+
+        card.appendChild(body);
         return card;
       },
 
@@ -2947,49 +3004,47 @@ Best regards,`;
           if (TableConfig.useTeamDropdownRows()) {
             const checkTd = document.createElement('td');
 
-            if (Rules.isCompatibilityNotOk(row)) {
-              const btn = document.createElement('button');
-              btn.type = 'button';
-              btn.className = 'action-btn secondary';
-              btn.style.padding = '7px 10px';
-              btn.style.fontSize = '11px';
-              btn.textContent = 'Check Team';
-              checkTd.appendChild(btn);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'action-btn secondary';
+            btn.style.padding = '7px 10px';
+            btn.style.fontSize = '11px';
+            btn.textContent = 'Check Team';
+            checkTd.appendChild(btn);
 
-              const detailItems = TableConfig.getDropdownDetailItems(row);
-              detailRow = document.createElement('tr');
-              detailRow.style.display = 'none';
+            const detailItems = TableConfig.getDropdownDetailItems(row);
+            detailRow = document.createElement('tr');
+            detailRow.style.display = 'none';
 
-              const detailCell = document.createElement('td');
-              detailCell.colSpan = visibleColumns.length + (hideIndex ? 1 : 2);
-              detailCell.style.padding = '0';
-              detailCell.style.background = '#f8fbff';
+            const detailCell = document.createElement('td');
+            detailCell.colSpan = visibleColumns.length + (hideIndex ? 1 : 2);
+            detailCell.style.padding = '0';
+            detailCell.style.background = '#f8fbff';
 
-              const detailBox = document.createElement('div');
-              detailBox.style.padding = '14px';
-              detailBox.style.borderTop = '1px solid #e4ebf5';
+            const detailBox = document.createElement('div');
+            detailBox.style.padding = '14px';
+            detailBox.style.borderTop = '1px solid #e4ebf5';
 
-              const detailGrid = document.createElement('div');
-              detailGrid.style.display = 'grid';
-              detailGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(240px, 1fr))';
-              detailGrid.style.gap = '12px';
+            const detailGrid = document.createElement('div');
+            detailGrid.style.display = 'grid';
+            detailGrid.style.gridTemplateColumns = '1fr';
+            detailGrid.style.gap = '12px';
 
-              if (detailItems.length > 0) {
-                detailItems.forEach(item => detailGrid.appendChild(this.createTeamDetailCard(item.label, item.value)));
-              } else {
-                detailGrid.appendChild(this.createEmptyTeamDetailCard());
-              }
-
-              detailBox.appendChild(detailGrid);
-              detailCell.appendChild(detailBox);
-              detailRow.appendChild(detailCell);
-
-              btn.addEventListener('click', () => {
-                const open = detailRow.style.display !== 'table-row';
-                detailRow.style.display = open ? 'table-row' : 'none';
-                btn.textContent = open ? 'Hide Team' : 'Check Team';
-              });
+            if (detailItems.length > 0) {
+              detailItems.forEach(item => detailGrid.appendChild(this.createTeamDetailCard(item.label, item.value)));
+            } else {
+              detailGrid.appendChild(this.createEmptyTeamDetailCard());
             }
+
+            detailBox.appendChild(detailGrid);
+            detailCell.appendChild(detailBox);
+            detailRow.appendChild(detailCell);
+
+            btn.addEventListener('click', () => {
+              const open = detailRow.style.display !== 'table-row';
+              detailRow.style.display = open ? 'table-row' : 'none';
+              btn.textContent = open ? 'Hide Team' : 'Check Team';
+            });
 
             tr.appendChild(checkTd);
           }
@@ -3032,9 +3087,33 @@ Best regards,`;
         );
         STATE.currentNumericColumns.add('fullLicenseCount');
 
-        this.renderSortableHeader();
+       this.renderSortableHeader();
 
-        const filtered = Filters.getFilteredRows(Sorting.getSortedRows(STATE.currentRows));
+let baseRows = Sorting.getSortedRows(STATE.currentRows);
+
+if (!STATE.sortState.column) {
+  if (TableConfig.useTeamDropdownRows()) {
+    baseRows = [...STATE.currentRows].sort((a, b) => {
+      const aPoints = Number(a?.totalPoints) || 0;
+      const bPoints = Number(b?.totalPoints) || 0;
+      return bPoints - aPoints;
+    });
+  } else if (STATE.currentSource.key === 'overgangar') {
+    baseRows = [...STATE.currentRows].sort((a, b) => {
+      const aDate = new Date(a?.Date || 0).getTime();
+      const bDate = new Date(b?.Date || 0).getTime();
+      return bDate - aDate;
+    });
+  } else if (STATE.currentSource.key === 'signUps') {
+    baseRows = [...STATE.currentRows].sort((a, b) => {
+      const aDate = new Date(a?.registrationDate || 0).getTime();
+      const bDate = new Date(b?.registrationDate || 0).getTime();
+      return bDate - aDate;
+    });
+  }
+}
+
+const filtered = Filters.getFilteredRows(baseRows);
         DOM.emptyMessage.style.display = filtered.length === 0 ? 'block' : 'none';
 
         if (STATE.currentSource.key === 'signUps') {
@@ -3301,7 +3380,7 @@ Best regards,`;
           count.style.padding = '6px 10px';
 
           const arrow = document.createElement('div');
-          arrow.textContent = teamIndex === 0 ? '▼' : '▶';
+          arrow.textContent = '▶';
           arrow.style.fontWeight = '900';
 
           right.appendChild(count);
@@ -3311,7 +3390,7 @@ Best regards,`;
           headerBtn.appendChild(right);
 
           const body = document.createElement('div');
-          body.style.display = teamIndex === 0 ? 'block' : 'none';
+          body.style.display = 'none';
           body.style.padding = '0 16px 16px';
           body.style.background = '#fcfdff';
 
