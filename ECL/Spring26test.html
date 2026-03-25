@@ -747,43 +747,58 @@
       line-height: 1;
     }
 
-    .team-detail-card {
-      background: #ffffff;
-      border: 1px solid #dfe6f1;
-      border-radius: 12px;
-      padding: 10px 12px;
-      min-width: 0;
-      white-space: normal;
-      overflow-wrap: anywhere;
-      word-break: break-word;
+    .team-dropdown-panel {
+      padding: 16px;
+      background: #f4f7fb;
+      border-top: 1px solid #dfe7f2;
     }
 
-    .team-detail-title {
-      margin-bottom: 6px;
-      font-size: 11px;
+    .team-info-box {
+      background: #ffffff;
+      border: 1px solid #d7e1ee;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 8px rgba(7, 18, 79, 0.03);
+    }
+
+    .team-info-box:last-child {
+      margin-bottom: 0;
+    }
+
+    .team-info-title {
+      margin: 0 0 10px;
+      font-size: 12px;
       font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.35px;
+      letter-spacing: 0.5px;
       color: #64748b;
-      white-space: normal;
     }
 
-    .team-detail-value {
-      font-size: 12px;
-      line-height: 1.45;
+    .team-info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .team-info-line {
+      padding: 4px 0;
+      line-height: 1.5;
       color: #111827;
+      border-bottom: 1px dashed #e5ebf5;
       white-space: normal;
-      overflow-wrap: anywhere;
       word-break: break-word;
     }
 
-    .team-detail-value > div {
-      padding: 2px 0;
-      border-bottom: 1px dashed #e5ebf5;
+    .team-info-line:last-child {
+      border-bottom: 0;
     }
 
-    .team-detail-value > div:last-child {
-      border-bottom: 0;
+    .team-info-text {
+      line-height: 1.6;
+      white-space: normal;
+      word-break: break-word;
+      color: #111827;
     }
 
     .site-footer {
@@ -1009,8 +1024,12 @@
     ];
 
     const SEEDING_TEAM_STATUSES = {
-      '': 'DISBANDED',
-      '': 'DISBANDED'
+      'POGGERS': 'DISBANDED',
+      'NOVA': 'DISBANDED',
+      'M3 Esports': 'DISBANDED',
+      'Including Me': 'DISBANDED',
+      'Tinted Visors': 'DISBANDED',
+      'Veterankraft': 'DISBANDED'
     };
 
     const SOURCES = [
@@ -1854,10 +1873,7 @@
         'history3Season',
         'history3GroupMatches',
         'history3PlayoffMatches',
-        'history3Matches',
-        'history1Summary',
-        'history2Summary',
-        'history3Summary'
+        'history3Matches'
       ],
 
       useTeamDropdownRows() {
@@ -1883,7 +1899,6 @@
           'history1Division', 'history1Team', 'history1Year', 'history1Season', 'history1GroupMatches', 'history1PlayoffMatches', 'history1Matches',
           'history2Division', 'history2Team', 'history2Year', 'history2Season', 'history2GroupMatches', 'history2PlayoffMatches', 'history2Matches',
           'history3Division', 'history3Team', 'history3Year', 'history3Season', 'history3GroupMatches', 'history3PlayoffMatches', 'history3Matches',
-          'history1Summary', 'history2Summary', 'history3Summary',
           'teamDivision', 'EP', 'PP', 'LP', 'CP', 'NP',
           'elitePlayers', 'proPlayers', 'litePlayers', 'corePlayers',
           'neoOrLowerPlayers', 'coreOrLowerPlayers', 'liteOrLowerPlayers',
@@ -2052,20 +2067,64 @@
         }[col] || col;
       },
 
-      getDropdownDetailItems(row) {
+      getHistoryDisplayFull(row, index) {
+        const team = String(row?.[`history${index}Team`] ?? '').trim();
+        const division = String(row?.[`history${index}Division`] ?? '').trim();
+        const year = String(row?.[`history${index}Year`] ?? '').trim();
+        const season = String(row?.[`history${index}Season`] ?? '').trim();
+
+        const groupMatches = Number(row?.[`history${index}GroupMatches`] ?? 0) || 0;
+        const playoffMatches = Number(row?.[`history${index}PlayoffMatches`] ?? 0) || 0;
+        const totalRaw = row?.[`history${index}Matches`];
+        const totalMatches =
+          totalRaw !== undefined && totalRaw !== null && totalRaw !== ''
+            ? Number(totalRaw) || 0
+            : groupMatches + playoffMatches;
+
+        if (!team && !division && !year && !season && totalMatches === 0 && groupMatches === 0 && playoffMatches === 0) {
+          return '';
+        }
+
+        const firstLine = [
+          team || '',
+          division ? `(${division})` : '',
+          year || '',
+          season || ''
+        ].filter(Boolean).join(' ');
+
         return [
-          { label: 'Elite-klubb', value: row?.elitePlayerNames ?? '' },
-          { label: 'Pro-klubb', value: row?.proPlayerNames ?? '' },
-          { label: 'Lite-klubb', value: row?.litePlayerNames ?? '' },
-          { label: 'Core-klubb', value: row?.corePlayerNames ?? '' },
-          { label: 'Players With Playoff Games', value: row?.playersWithPlayoffGames ?? '' },
-          { label: 'Senaste klubb', value: row?.history1Summary ?? '' },
-          { label: 'Tidigare klubb 1', value: row?.history2Summary ?? '' },
-          { label: 'Tidigare klubb 2', value: row?.history3Summary ?? '' }
-        ].filter(item => String(item.value ?? '').trim() !== '');
+          firstLine,
+          `Gruppspel: ${groupMatches}`,
+          `Slutspel: ${playoffMatches}`,
+          `Totalt: ${totalMatches}`
+        ].join('||');
+      },
+
+      getDropdownDetailItems(row) {
+        const items = [];
+
+        if (row?.elitePlayerNames) items.push({ label: 'Elite-klubb', value: row.elitePlayerNames });
+        if (row?.proPlayerNames) items.push({ label: 'Pro-klubb', value: row.proPlayerNames });
+        if (row?.litePlayerNames) items.push({ label: 'Lite-klubb', value: row.litePlayerNames });
+        if (row?.corePlayerNames) items.push({ label: 'Core-klubb', value: row.corePlayerNames });
+
+        if (row?.playersWithPlayoffGames !== undefined && row?.playersWithPlayoffGames !== null && row?.playersWithPlayoffGames !== '') {
+          items.push({ label: 'Players With Playoff Games', value: String(row.playersWithPlayoffGames) });
+        }
+
+        const history1 = this.getHistoryDisplayFull(row, 1);
+        const history2 = this.getHistoryDisplayFull(row, 2);
+        const history3 = this.getHistoryDisplayFull(row, 3);
+
+        if (history1) items.push({ label: 'Senaste klubb', value: history1 });
+        if (history2) items.push({ label: 'Tidigare klubb 1', value: history2 });
+        if (history3) items.push({ label: 'Tidigare klubb 2', value: history3 });
+
+        return items;
       }
     };
-        const Sorting = {
+
+    const Sorting = {
       getSortedRows(rows) {
         if (!STATE.sortState.column) return [...rows];
         const isNumeric = STATE.currentNumericColumns.has(STATE.sortState.column) || STATE.sortState.column === 'fullLicenseCount';
@@ -2089,8 +2148,7 @@
         });
       }
     };
-
-    const SeedingService = {
+        const SeedingService = {
       getSeedingTeamStatus(teamName) {
         const normalizedTeam = Utils.normalizeTeamName(teamName);
         for (const [name, status] of Object.entries(SEEDING_TEAM_STATUSES)) {
@@ -2774,51 +2832,68 @@ Best regards,`;
         }
       },
 
-      createTeamDetailSection(label, value) {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'team-detail-card';
+      createTeamInfoBox(label, value) {
+        const box = document.createElement('div');
+        box.className = 'team-info-box';
 
-  const title = document.createElement('div');
-  title.className = 'team-detail-title';
-  title.textContent = label.toUpperCase();
-  wrapper.appendChild(title);
+        const title = document.createElement('h3');
+        title.className = 'team-info-title';
+        title.textContent = label;
+        box.appendChild(title);
 
-  const body = document.createElement('div');
-  body.className = 'team-detail-value';
+        const rawValue = String(value || '').trim();
 
-  const rawValue = String(value || '').trim();
+        if (!rawValue) {
+          const empty = document.createElement('div');
+          empty.className = 'team-info-text';
+          empty.textContent = '-';
+          box.appendChild(empty);
+          return box;
+        }
 
-  let parts = [];
-  if (rawValue.includes('||')) {
-    parts = rawValue.split('||').map(v => v.trim()).filter(Boolean);
-  } else if (rawValue.includes('|')) {
-    parts = rawValue.split('|').map(v => v.trim()).filter(Boolean);
-  } else if (rawValue.includes(',')) {
-    parts = rawValue.split(',').map(v => v.trim()).filter(Boolean);
-  } else if (rawValue) {
-    parts = [rawValue];
-  }
+        if (rawValue.includes('||')) {
+          const list = document.createElement('div');
+          list.className = 'team-info-list';
 
-  if (parts.length === 0) {
-    body.textContent = '-';
-  } else {
-    parts.forEach(part => {
-      const row = document.createElement('div');
-      row.textContent = part;
-      body.appendChild(row);
-    });
-  }
+          rawValue
+            .split('||')
+            .map(v => v.trim())
+            .filter(Boolean)
+            .forEach(part => {
+              const line = document.createElement('div');
+              line.className = 'team-info-line';
+              line.textContent = part;
+              list.appendChild(line);
+            });
 
-  wrapper.appendChild(body);
-  return wrapper;
-},
+          box.appendChild(list);
+          return box;
+        }
 
-createEmptyTeamDetailSection() {
-  return this.createTeamDetailSection('Details', '-');
-},
+        if (rawValue.includes(',')) {
+          const list = document.createElement('div');
+          list.className = 'team-info-list';
 
-      parsePlayerList(value) {
-        return String(value || '').split(',').map(part => part.trim()).filter(Boolean);
+          rawValue
+            .split(',')
+            .map(v => v.trim())
+            .filter(Boolean)
+            .forEach(part => {
+              const line = document.createElement('div');
+              line.className = 'team-info-line';
+              line.textContent = part;
+              list.appendChild(line);
+            });
+
+          box.appendChild(list);
+          return box;
+        }
+
+        const text = document.createElement('div');
+        text.className = 'team-info-text';
+        text.textContent = rawValue;
+        box.appendChild(text);
+        return box;
       },
 
       async renderTableCell(td, row, col, forceReload = false) {
@@ -2876,7 +2951,7 @@ createEmptyTeamDetailSection() {
         }
 
         if (PLAYER_LIST_NAME_KEYS.includes(col)) {
-          const parts = this.parsePlayerList(textValue);
+          const parts = textValue.split(',').map(part => part.trim()).filter(Boolean);
           parts.forEach((part, index) => {
             const match = part.match(/^(.*?)(\s*\(\d+\))?$/);
             const nameOnly = (match?.[1] || part).trim();
@@ -3051,23 +3126,18 @@ createEmptyTeamDetailSection() {
             detailCell.style.padding = '0';
             detailCell.style.background = '#f8fbff';
 
-            const detailBox = document.createElement('div');
-            detailBox.style.padding = '14px';
-            detailBox.style.borderTop = '1px solid #e4ebf5';
+            const panel = document.createElement('div');
+            panel.className = 'team-dropdown-panel';
 
-const detailGrid = document.createElement('div');
-detailGrid.style.display = 'flex';
-detailGrid.style.flexDirection = 'column';
-detailGrid.style.gap = '12px';
+            if (detailItems.length > 0) {
+              detailItems.forEach(item => {
+                panel.appendChild(this.createTeamInfoBox(item.label, item.value));
+              });
+            } else {
+              panel.appendChild(this.createTeamInfoBox('Details', 'No extra info'));
+            }
 
-if (detailItems.length > 0) {
-  detailItems.forEach(item => detailGrid.appendChild(this.createTeamDetailSection(item.label, item.value)));
-} else {
-  detailGrid.appendChild(this.createEmptyTeamDetailSection());
-}
-
-            detailBox.appendChild(detailGrid);
-            detailCell.appendChild(detailBox);
+            detailCell.appendChild(panel);
             detailRow.appendChild(detailCell);
 
             btn.addEventListener('click', () => {
@@ -3322,36 +3392,34 @@ if (detailItems.length > 0) {
       },
 
       createHistoryCell(player, prefix) {
-        const summary = String(player?.[`${prefix}Summary`] || '').trim();
+        const division = player?.[`${prefix}Division`];
+        const team = player?.[`${prefix}Team`];
+        const year = player?.[`${prefix}Year`];
+        const season = player?.[`${prefix}Season`];
+        const groupMatches = Number(player?.[`${prefix}GroupMatches`] ?? 0) || 0;
+        const playoffMatches = Number(player?.[`${prefix}PlayoffMatches`] ?? 0) || 0;
+
+        const totalMatchesRaw = player?.[`${prefix}Matches`];
+        const totalMatches = totalMatchesRaw !== undefined && totalMatchesRaw !== null && totalMatchesRaw !== ''
+          ? Number(totalMatchesRaw) || 0
+          : groupMatches + playoffMatches;
+
         const td = document.createElement('td');
 
-        if (!summary) {
+        if (!division && !team && !year && !season && totalMatches === 0 && groupMatches === 0 && playoffMatches === 0) {
           td.textContent = '';
           return td;
         }
 
-        td.style.whiteSpace = 'normal';
-        td.style.minWidth = '260px';
+        const metaParts = [division, year, season].filter(Boolean);
 
-        const parts = summary.split(' || ').map(part => part.trim()).filter(Boolean);
-
-        parts.forEach((part, index) => {
-          const div = document.createElement('div');
-          div.textContent = part;
-          if (index === 0) {
-            div.style.fontWeight = '900';
-            div.style.color = '#0b144f';
-          } else if (index === 1) {
-            div.style.color = '#334155';
-            div.style.fontWeight = '700';
-          } else {
-            div.style.fontSize = '11px';
-            div.style.color = '#64748b';
-            div.style.marginTop = '2px';
-          }
-          td.appendChild(div);
-        });
-
+        td.innerHTML = `
+          ${team ? `<div style="font-weight:900;color:#0b144f;white-space:normal;">${team}</div>` : ''}
+          ${metaParts.length ? `<div style="color:#334155;font-weight:700;white-space:normal;">${metaParts.join(' • ')}</div>` : ''}
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">
+            Gruppspel: ${groupMatches} • Slutspel: ${playoffMatches} • Totalt: ${totalMatches}
+          </div>
+        `;
         return td;
       },
 
@@ -3508,45 +3576,9 @@ if (detailItems.length > 0) {
     };
 
     const Loader = {
-      buildHistorySummary(row, index) {
-        const team = String(row?.[`history${index}Team`] ?? '').trim();
-        const division = String(row?.[`history${index}Division`] ?? '').trim();
-        const year = String(row?.[`history${index}Year`] ?? '').trim();
-        const season = String(row?.[`history${index}Season`] ?? '').trim();
-
-        const groupMatches = Number(row?.[`history${index}GroupMatches`] ?? 0) || 0;
-        const playoffMatches = Number(row?.[`history${index}PlayoffMatches`] ?? 0) || 0;
-
-        const totalRaw = row?.[`history${index}Matches`];
-        const totalMatches =
-          totalRaw !== undefined && totalRaw !== null && totalRaw !== ''
-            ? Number(totalRaw) || 0
-            : groupMatches + playoffMatches;
-
-        if (!team && !division && !year && !season && totalMatches === 0 && groupMatches === 0 && playoffMatches === 0) {
-          return '';
-        }
-
-        const topLine = [team, division ? `(${division})` : '', year, season].filter(Boolean).join(' ');
-        const bottomLine = `Gruppspel: ${groupMatches} • Slutspel: ${playoffMatches} • Totalt: ${totalMatches}`;
-
-        return [topLine, bottomLine].filter(Boolean).join(' || ');
-      },
-
-      addHistorySummaries(row) {
-        return {
-          ...row,
-          history1Summary: this.buildHistorySummary(row, 1),
-          history2Summary: this.buildHistorySummary(row, 2),
-          history3Summary: this.buildHistorySummary(row, 3)
-        };
-      },
-
       getProQualReqCheckRows(allData) {
         if (Array.isArray(allData?.proQualReqCheck)) {
-          return allData.proQualReqCheck
-            .map(row => Rename.applyToRow(row))
-            .map(row => this.addHistorySummaries(row));
+          return allData.proQualReqCheck.map(row => Rename.applyToRow(row));
         }
 
         const signUps = DataService.getRowsForSource(allData, 'signUps');
@@ -3560,10 +3592,7 @@ if (detailItems.length > 0) {
             qualifierName: row.qualifierName ?? '',
             divisionName: row.divisionName ?? '',
             teamCountry: row.teamCountry ?? '',
-            registrationDate: row.registrationDate ?? '',
-            history1Summary: '',
-            history2Summary: '',
-            history3Summary: ''
+            registrationDate: row.registrationDate ?? ''
           }));
       },
 
@@ -3589,8 +3618,7 @@ if (detailItems.length > 0) {
 
         return DataService
           .getRowsForSource(allData, STATE.currentSource.key)
-          .map(row => Rename.applyToRow(row))
-          .map(row => this.addHistorySummaries(row));
+          .map(row => Rename.applyToRow(row));
       }
     };
 
