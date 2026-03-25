@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>26 Spring Checks V2.1</title>
+  <title>26 Spring Checks V2.2</title>
   <style>
     :root {
       --navy: #03045e;
@@ -753,6 +753,186 @@
       border-top: 1px solid #dfe7f2;
     }
 
+    .team-rich-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .team-rich-summary {
+      background: #ffffff;
+      border: 1px solid #d7e1ee;
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(7, 18, 79, 0.03);
+    }
+
+    .team-rich-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .team-rich-stat {
+      background: #f8fbff;
+      border: 1px solid #dfe8f4;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .team-rich-stat-label {
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+      color: #64748b;
+      margin-bottom: 5px;
+    }
+
+    .team-rich-stat-value {
+      font-size: 16px;
+      font-weight: 900;
+      color: #07124f;
+      line-height: 1.2;
+    }
+
+    .team-rich-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .team-rich-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.35px;
+      border: 1px solid #d8e3f2;
+      background: #f8fbff;
+      color: #334155;
+    }
+
+    .team-rich-badge.flag {
+      background: #fff4db;
+      color: #92400e;
+      border-color: #f6d38d;
+    }
+
+    .team-rich-badge.good {
+      background: #e8fff1;
+      color: #157347;
+      border-color: #b7efcb;
+    }
+
+    .team-rich-section {
+      background: #ffffff;
+      border: 1px solid #d7e1ee;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(7, 18, 79, 0.03);
+    }
+
+    .team-rich-section-head {
+      padding: 12px 14px;
+      background: linear-gradient(to right, #050967, #08105e);
+      color: white;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+    }
+
+    .team-rich-table-wrap {
+      overflow-x: auto;
+    }
+
+    .team-rich-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1180px;
+      font-size: 12px;
+    }
+
+    .team-rich-table thead {
+      background: #eef3ff;
+      color: #07124f;
+    }
+
+    .team-rich-table thead th {
+      background: #eef3ff;
+      color: #07124f;
+      border-bottom: 1px solid #dbe5f3;
+    }
+
+    .team-rich-table td,
+    .team-rich-table th {
+      padding: 9px 10px;
+      border-bottom: 1px solid #e9eef6;
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    .team-rich-table tbody tr:nth-child(even) {
+      background: #fbfcff;
+    }
+
+    .team-rich-table tbody tr:hover {
+      background: #eef4ff;
+    }
+
+    .team-rich-player {
+      min-width: 180px;
+      white-space: normal;
+    }
+
+    .team-rich-player-name {
+      font-weight: 900;
+      color: #07124f;
+      line-height: 1.25;
+    }
+
+    .team-rich-player-sub {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.35;
+    }
+
+    .team-rich-history-main {
+      font-weight: 900;
+      color: #0b144f;
+      line-height: 1.3;
+      white-space: normal;
+    }
+
+    .team-rich-history-meta {
+      margin-top: 4px;
+      color: #334155;
+      font-weight: 700;
+      line-height: 1.35;
+      white-space: normal;
+    }
+
+    .team-rich-history-games {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.35;
+      white-space: normal;
+    }
+
+    .team-rich-empty {
+      color: #94a3b8;
+      font-weight: 700;
+    }
+
     .team-info-box {
       background: #ffffff;
       border: 1px solid #d7e1ee;
@@ -853,6 +1033,16 @@
       .filter-select {
         width: 100%;
       }
+
+      .team-rich-summary-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .team-rich-summary-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -906,7 +1096,7 @@
     <main class="page">
       <div class="page-card">
         <div class="page-top">
-          <h1 id="pageTitle">26 Spring Checks V2.1</h1>
+          <h1 id="pageTitle">26 Spring Checks V2.2</h1>
           <div class="tabs" id="tabs"></div>
 
           <div class="topbar">
@@ -960,7 +1150,7 @@
     <footer class="site-footer">
       <div class="site-footer-inner">
         <div class="footer-brand">SportsGamer</div>
-        <div class="footer-note">ECL Tools • 26 Spring V2.1</div>
+        <div class="footer-note">ECL Tools • 26 Spring V2.2</div>
       </div>
     </footer>
   </div>
@@ -1396,6 +1586,22 @@
           numeric: true,
           sensitivity: 'base'
         });
+      },
+
+      safeNumber(value) {
+        const num = Number(value);
+        return Number.isFinite(num) ? num : 0;
+      },
+
+      joinNonEmpty(parts, separator = ' • ') {
+        return parts.filter(Boolean).join(separator);
+      },
+
+      createEmptyValueNode() {
+        const span = document.createElement('span');
+        span.className = 'team-rich-empty';
+        span.textContent = '-';
+        return span;
       }
     };
 
@@ -1435,15 +1641,11 @@
         const cloned = { ...row };
 
         TEAM_NAME_KEYS.forEach(key => {
-          if (key in cloned && cloned[key]) {
-            cloned[key] = Rename.applyToValue(cloned[key]);
-          }
+          if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
         });
 
         ['history1Team', 'history2Team', 'history3Team', 'From', 'To'].forEach(key => {
-          if (key in cloned && cloned[key]) {
-            cloned[key] = Rename.applyToValue(cloned[key]);
-          }
+          if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
         });
 
         return cloned;
@@ -1761,6 +1963,25 @@
       isFlaggedRow(row) {
         const cls = this.getRowClass(row);
         return ['not-ok', 'backup-warning', 'backup-danger', 'transfer-danger', 'signup-rule-error'].includes(cls);
+      },
+
+      getTeamCheckBadges(row) {
+        const badges = [];
+
+        const division = String(row?.divisionName || '').trim().toUpperCase();
+        if (division) badges.push({ text: division, className: 'team-rich-badge' });
+
+        const qualifier = String(row?.qualifierName || '').trim();
+        if (qualifier) badges.push({ text: qualifier, className: 'team-rich-badge' });
+
+        const totalPlayers = Number(row?.totalPlayers ?? row?.playerCount ?? 0) || 0;
+        if (totalPlayers < 6) {
+          badges.push({ text: 'Low player count', className: 'team-rich-badge flag' });
+        } else {
+          badges.push({ text: 'Roster loaded', className: 'team-rich-badge good' });
+        }
+
+        return badges;
       }
     };
 
@@ -2121,6 +2342,98 @@
         if (history3) items.push({ label: 'Tidigare klubb 2', value: history3 });
 
         return items;
+      },
+
+      getTeamCheckSummaryStats(row) {
+        const totalPlayers = Utils.safeNumber(row?.totalPlayers ?? row?.playerCount);
+        const totalPoints = Utils.safeNumber(row?.totalPoints);
+        const ep = Utils.safeNumber(row?.EP);
+        const pp = Utils.safeNumber(row?.PP);
+        const lp = Utils.safeNumber(row?.LP);
+        const cp = Utils.safeNumber(row?.CP);
+        const np = Utils.safeNumber(row?.NP);
+        const playoffPlayers = Utils.safeNumber(row?.playersWithPlayoffGames);
+
+        const stats = [
+          { label: 'Totalt spelare', value: String(totalPlayers) },
+          { label: 'Totalpoäng', value: String(totalPoints) },
+          { label: 'Elite', value: String(ep) },
+          { label: 'Pro', value: String(pp) },
+          { label: 'Lite', value: String(lp) }
+        ];
+
+        if (STATE.currentSource.key === 'core' || STATE.currentSource.key === 'neo') {
+          stats.push({ label: 'Core', value: String(cp) });
+        }
+
+        if (STATE.currentSource.key === 'neo') {
+          stats.push({ label: 'Neo / nya', value: String(np) });
+        }
+
+        stats.push({ label: 'Spelare med slutspel', value: String(playoffPlayers) });
+
+        return stats;
+      },
+
+      buildTeamCheckPlayers(row) {
+        const players = [];
+        const used = new Set();
+
+        const listConfigs = [
+          { sourceKey: 'elitePlayerNames', bucket: 'Elite' },
+          { sourceKey: 'proPlayerNames', bucket: 'Pro' },
+          { sourceKey: 'litePlayerNames', bucket: 'Lite' },
+          { sourceKey: 'corePlayerNames', bucket: 'Core' }
+        ];
+
+        listConfigs.forEach(config => {
+          const raw = String(row?.[config.sourceKey] || '').trim();
+          if (!raw) return;
+
+          raw.split(',')
+            .map(name => name.trim())
+            .filter(Boolean)
+            .forEach(nameWithMaybeCount => {
+              const match = nameWithMaybeCount.match(/^(.*?)(?:\s*\((\d+)\))?$/);
+              const playerName = (match?.[1] || nameWithMaybeCount).trim();
+              const count = match?.[2] ? Number(match[2]) : null;
+              const normalized = Utils.normalizePlayerName(playerName);
+              if (!playerName || used.has(normalized)) return;
+
+              used.add(normalized);
+
+              players.push({
+                playerName,
+                bucket: config.bucket,
+                bucketCount: count,
+                history1Team: row?.history1Team || '',
+                history1Division: row?.history1Division || '',
+                history1Year: row?.history1Year || '',
+                history1Season: row?.history1Season || '',
+                history1GroupMatches: row?.history1GroupMatches || '',
+                history1PlayoffMatches: row?.history1PlayoffMatches || '',
+                history1Matches: row?.history1Matches || '',
+                history2Team: row?.history2Team || '',
+                history2Division: row?.history2Division || '',
+                history2Year: row?.history2Year || '',
+                history2Season: row?.history2Season || '',
+                history2GroupMatches: row?.history2GroupMatches || '',
+                history2PlayoffMatches: row?.history2PlayoffMatches || '',
+                history2Matches: row?.history2Matches || '',
+                history3Team: row?.history3Team || '',
+                history3Division: row?.history3Division || '',
+                history3Year: row?.history3Year || '',
+                history3Season: row?.history3Season || '',
+                history3GroupMatches: row?.history3GroupMatches || '',
+                history3PlayoffMatches: row?.history3PlayoffMatches || '',
+                history3Matches: row?.history3Matches || ''
+              });
+            });
+        });
+
+        return players.sort((a, b) =>
+          String(a.playerName).localeCompare(String(b.playerName), 'en', { sensitivity: 'base' })
+        );
       }
     };
 
@@ -2148,7 +2461,8 @@
         });
       }
     };
-        const SeedingService = {
+
+    const SeedingService = {
       getSeedingTeamStatus(teamName) {
         const normalizedTeam = Utils.normalizeTeamName(teamName);
         for (const [name, status] of Object.entries(SEEDING_TEAM_STATUSES)) {
@@ -2728,8 +3042,7 @@ Best regards,`;
         await navigator.clipboard.writeText(this.buildUnlicensedMessage(row));
       }
     };
-
-    const Render = {
+        const Render = {
       showNormalTable() {
         DOM.normalTableWrap.style.display = 'block';
         DOM.seedingWrap.style.display = 'none';
@@ -2894,6 +3207,223 @@ Best regards,`;
         text.textContent = rawValue;
         box.appendChild(text);
         return box;
+      },
+
+      createHistoryCell(player, prefix) {
+        const division = player?.[`${prefix}Division`];
+        const team = player?.[`${prefix}Team`];
+        const year = player?.[`${prefix}Year`];
+        const season = player?.[`${prefix}Season`];
+        const groupMatches = Number(player?.[`${prefix}GroupMatches`] ?? 0) || 0;
+        const playoffMatches = Number(player?.[`${prefix}PlayoffMatches`] ?? 0) || 0;
+
+        const totalMatchesRaw = player?.[`${prefix}Matches`];
+        const totalMatches = totalMatchesRaw !== undefined && totalMatchesRaw !== null && totalMatchesRaw !== ''
+          ? Number(totalMatchesRaw) || 0
+          : groupMatches + playoffMatches;
+
+        const td = document.createElement('td');
+
+        if (!division && !team && !year && !season && totalMatches === 0 && groupMatches === 0 && playoffMatches === 0) {
+          td.appendChild(Utils.createEmptyValueNode());
+          return td;
+        }
+
+        const main = document.createElement('div');
+        main.className = 'team-rich-history-main';
+        main.textContent = team || '-';
+        td.appendChild(main);
+
+        const metaParts = [division, year, season].filter(Boolean);
+        const meta = document.createElement('div');
+        meta.className = 'team-rich-history-meta';
+        meta.textContent = metaParts.length ? metaParts.join(' • ') : '-';
+        td.appendChild(meta);
+
+        const games = document.createElement('div');
+        games.className = 'team-rich-history-games';
+        games.textContent = `Gruppspel: ${groupMatches} • Slutspel: ${playoffMatches} • Totalt: ${totalMatches}`;
+        td.appendChild(games);
+
+        return td;
+      },
+
+      async createTeamCheckRichPanel(row, forceReload = false) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'team-rich-panel';
+
+        const teamLinkMap = await DataService.getTeamLinkMap(forceReload);
+        const playerLinkMap = await DataService.getPlayerLinkMap(forceReload);
+
+        const summary = document.createElement('div');
+        summary.className = 'team-rich-summary';
+
+        const summaryTitle = document.createElement('div');
+        summaryTitle.className = 'team-rich-history-main';
+
+        const teamName = RowAccess.getTeamName(row);
+        const directTeamID = row?.teamID || row?.teamId || row?.TeamID || row?.team_id;
+        const mappedTeamID = directTeamID || teamLinkMap.get(Utils.normalizeTeamName(teamName));
+
+        if (mappedTeamID) {
+          summaryTitle.appendChild(Utils.createLink(TEAM_BASE_URL + mappedTeamID, teamName || '-', 'proqual-link'));
+        } else {
+          summaryTitle.textContent = teamName || '-';
+        }
+
+        summary.appendChild(summaryTitle);
+
+        const subtitle = document.createElement('div');
+        subtitle.className = 'team-rich-history-meta';
+        subtitle.textContent = Utils.joinNonEmpty([
+          row?.divisionName || '',
+          row?.qualifierName || '',
+          row?.teamCountry || ''
+        ]) || '-';
+        summary.appendChild(subtitle);
+
+        const badgeWrap = document.createElement('div');
+        badgeWrap.className = 'team-rich-badges';
+        Rules.getTeamCheckBadges(row).forEach(item => {
+          const badge = document.createElement('span');
+          badge.className = item.className;
+          badge.textContent = item.text;
+          badgeWrap.appendChild(badge);
+        });
+        summary.appendChild(badgeWrap);
+
+        const statGrid = document.createElement('div');
+        statGrid.className = 'team-rich-summary-grid';
+
+        TableConfig.getTeamCheckSummaryStats(row).forEach(stat => {
+          const statBox = document.createElement('div');
+          statBox.className = 'team-rich-stat';
+
+          const label = document.createElement('div');
+          label.className = 'team-rich-stat-label';
+          label.textContent = stat.label;
+
+          const value = document.createElement('div');
+          value.className = 'team-rich-stat-value';
+          value.textContent = stat.value;
+
+          statBox.appendChild(label);
+          statBox.appendChild(value);
+          statGrid.appendChild(statBox);
+        });
+
+        summary.appendChild(statGrid);
+        wrapper.appendChild(summary);
+
+        const players = TableConfig.buildTeamCheckPlayers(row);
+
+        const playersSection = document.createElement('div');
+        playersSection.className = 'team-rich-section';
+
+        const playersHead = document.createElement('div');
+        playersHead.className = 'team-rich-section-head';
+        playersHead.textContent = 'Player history check';
+        playersSection.appendChild(playersHead);
+
+        const playersWrap = document.createElement('div');
+        playersWrap.className = 'team-rich-table-wrap';
+
+        if (players.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = 'No extra player info found for this team.';
+          playersWrap.appendChild(empty);
+        } else {
+          const table = document.createElement('table');
+          table.className = 'team-rich-table';
+
+          table.innerHTML = `
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th>Bucket</th>
+                <th>Senaste klubb</th>
+                <th>Tidigare år 1</th>
+                <th>Tidigare år 2</th>
+              </tr>
+            </thead>
+          `;
+
+          const tbody = document.createElement('tbody');
+
+          players.forEach((player, index) => {
+            const tr = document.createElement('tr');
+
+            const idx = document.createElement('td');
+            idx.className = 'num';
+            idx.textContent = index + 1;
+            tr.appendChild(idx);
+
+            const playerTd = document.createElement('td');
+            playerTd.className = 'team-rich-player';
+
+            const playerNameEl = document.createElement('div');
+            playerNameEl.className = 'team-rich-player-name';
+
+            const mappedPlayerID = playerLinkMap.get(Utils.normalizePlayerName(player.playerName));
+            if (mappedPlayerID) {
+              playerNameEl.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, player.playerName, 'proqual-link'));
+            } else {
+              playerNameEl.textContent = player.playerName;
+            }
+
+            playerTd.appendChild(playerNameEl);
+
+            const playerSub = document.createElement('div');
+            playerSub.className = 'team-rich-player-sub';
+            playerSub.textContent = player.bucketCount !== null && player.bucketCount !== undefined
+              ? `${player.bucket} • ${player.bucketCount} matcher`
+              : player.bucket;
+            playerTd.appendChild(playerSub);
+
+            tr.appendChild(playerTd);
+
+            const bucketTd = document.createElement('td');
+            bucketTd.textContent = player.bucket || '-';
+            tr.appendChild(bucketTd);
+
+            tr.appendChild(this.createHistoryCell(player, 'history1'));
+            tr.appendChild(this.createHistoryCell(player, 'history2'));
+            tr.appendChild(this.createHistoryCell(player, 'history3'));
+
+            tbody.appendChild(tr);
+          });
+
+          table.appendChild(tbody);
+          playersWrap.appendChild(table);
+        }
+
+        playersSection.appendChild(playersWrap);
+        wrapper.appendChild(playersSection);
+
+        const rawInfoItems = TableConfig.getDropdownDetailItems(row);
+        if (rawInfoItems.length > 0) {
+          const extraSection = document.createElement('div');
+          extraSection.className = 'team-rich-section';
+
+          const extraHead = document.createElement('div');
+          extraHead.className = 'team-rich-section-head';
+          extraHead.textContent = 'Extra info';
+          extraSection.appendChild(extraHead);
+
+          const extraBody = document.createElement('div');
+          extraBody.style.padding = '14px';
+
+          rawInfoItems.forEach(item => {
+            extraBody.appendChild(this.createTeamInfoBox(item.label, item.value));
+          });
+
+          extraSection.appendChild(extraBody);
+          wrapper.appendChild(extraSection);
+        }
+
+        return wrapper;
       },
 
       async renderTableCell(td, row, col, forceReload = false) {
@@ -3117,7 +3647,6 @@ Best regards,`;
             btn.textContent = 'Check Team';
             checkTd.appendChild(btn);
 
-            const detailItems = TableConfig.getDropdownDetailItems(row);
             detailRow = document.createElement('tr');
             detailRow.style.display = 'none';
 
@@ -3128,14 +3657,7 @@ Best regards,`;
 
             const panel = document.createElement('div');
             panel.className = 'team-dropdown-panel';
-
-            if (detailItems.length > 0) {
-              detailItems.forEach(item => {
-                panel.appendChild(this.createTeamInfoBox(item.label, item.value));
-              });
-            } else {
-              panel.appendChild(this.createTeamInfoBox('Details', 'No extra info'));
-            }
+            panel.appendChild(await this.createTeamCheckRichPanel(row, forceReload));
 
             detailCell.appendChild(panel);
             detailRow.appendChild(detailCell);
@@ -3389,38 +3911,6 @@ Best regards,`;
         return [...map.values()].sort((a, b) =>
           String(a.teamName).localeCompare(String(b.teamName), 'en', { sensitivity: 'base' })
         );
-      },
-
-      createHistoryCell(player, prefix) {
-        const division = player?.[`${prefix}Division`];
-        const team = player?.[`${prefix}Team`];
-        const year = player?.[`${prefix}Year`];
-        const season = player?.[`${prefix}Season`];
-        const groupMatches = Number(player?.[`${prefix}GroupMatches`] ?? 0) || 0;
-        const playoffMatches = Number(player?.[`${prefix}PlayoffMatches`] ?? 0) || 0;
-
-        const totalMatchesRaw = player?.[`${prefix}Matches`];
-        const totalMatches = totalMatchesRaw !== undefined && totalMatchesRaw !== null && totalMatchesRaw !== ''
-          ? Number(totalMatchesRaw) || 0
-          : groupMatches + playoffMatches;
-
-        const td = document.createElement('td');
-
-        if (!division && !team && !year && !season && totalMatches === 0 && groupMatches === 0 && playoffMatches === 0) {
-          td.textContent = '';
-          return td;
-        }
-
-        const metaParts = [division, year, season].filter(Boolean);
-
-        td.innerHTML = `
-          ${team ? `<div style="font-weight:900;color:#0b144f;white-space:normal;">${team}</div>` : ''}
-          ${metaParts.length ? `<div style="color:#334155;font-weight:700;white-space:normal;">${metaParts.join(' • ')}</div>` : ''}
-          <div style="font-size:11px;color:#64748b;margin-top:2px;">
-            Gruppspel: ${groupMatches} • Slutspel: ${playoffMatches} • Totalt: ${totalMatches}
-          </div>
-        `;
-        return td;
       },
 
       async renderProQualReqCheck(rows, forceReload = false) {
