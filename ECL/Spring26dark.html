@@ -1668,6 +1668,17 @@
           if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
         });
 
+        if (Array.isArray(cloned.players)) {
+          cloned.players = cloned.players.map(player => {
+            if (!player || typeof player !== 'object') return player;
+            const playerClone = { ...player };
+            ['history1Team', 'history2Team', 'history3Team'].forEach(key => {
+              if (playerClone[key]) playerClone[key] = Rename.applyToValue(playerClone[key]);
+            });
+            return playerClone;
+          });
+        }
+
         return cloned;
       }
     };
@@ -1800,6 +1811,17 @@
               const normalized = Utils.normalizePlayerName(playerName);
               if (normalized && !map.has(normalized)) map.set(normalized, String(playerId));
             });
+
+            if (Array.isArray(row?.players)) {
+              row.players.forEach(player => {
+                const playerIdInner = player?.playerID || player?.playerId || '';
+                const playerNameInner = player?.playerName || player?.Player || player?.tag || '';
+                const normalizedInner = Utils.normalizePlayerName(playerNameInner);
+                if (playerIdInner && normalizedInner && !map.has(normalizedInner)) {
+                  map.set(normalizedInner, String(playerIdInner));
+                }
+              });
+            }
           });
         });
 
@@ -1847,9 +1869,18 @@
       },
 
       getSearchableText(row) {
-        return Object.values(row || {})
+        const baseText = Object.values(row || {})
+          .filter(value => !Array.isArray(value) && typeof value !== 'object')
           .map(value => String(value ?? '').toLowerCase())
           .join(' ');
+
+        const playerText = Array.isArray(row?.players)
+          ? row.players.map(player =>
+              Object.values(player || {}).map(value => String(value ?? '').toLowerCase()).join(' ')
+            ).join(' ')
+          : '';
+
+        return `${baseText} ${playerText}`.trim();
       }
     };
 
@@ -1985,21 +2016,6 @@
         return ['not-ok', 'backup-warning', 'backup-danger', 'transfer-danger', 'signup-rule-error'].includes(cls);
       },
 
-      getTeamCheckBadges(row) {
-        const badges = [];
-        const division = String(row?.divisionName || '').trim().toUpperCase();
-        if (division) badges.push({ text: division, className: 'team-rich-badge' });
-
-        const totalPlayers = Number(row?.totalPlayers ?? row?.playerCount ?? 0) || 0;
-        if (totalPlayers < 6) {
-          badges.push({ text: 'Low player count', className: 'team-rich-badge flag' });
-        } else {
-          badges.push({ text: 'Roster loaded', className: 'team-rich-badge good' });
-        }
-
-        return badges;
-      },
-
       getAllowedHistoryMaxLevel() {
         if (STATE.currentSource.key === 'lite') return 2;
         if (STATE.currentSource.key === 'core') return 1;
@@ -2013,10 +2029,30 @@
         return level > this.getAllowedHistoryMaxLevel();
       },
 
-      getHistoryFlagLabel(divisionName) {
-        if (!divisionName) return '';
-        if (!this.isFlaggedHistoryDivision(divisionName)) return '';
-        return 'Flaggad division';
+      getTeamCheckBadges(row) {
+        const badges = [];
+        const division = String(row?.divisionName || '').trim().toUpperCase();
+        if (division) badges.push({ text: division, className: 'team-rich-badge' });
+
+        const totalPlayers = Number(row?.totalPlayers ?? row?.playerCount ?? 0) || 0;
+        if (totalPlayers < 6) {
+          badges.push({ text: 'Low player count', className: 'team-rich-badge flag' });
+        } else {
+          badges.push({ text: 'Roster loaded', className: 'team-rich-badge good' });
+        }
+
+        const players = Array.isArray(row?.players) ? row.players : [];
+        const hasFlaggedHistory = players.some(player => {
+          return ['history1Division', 'history2Division', 'history3Division'].some(key => {
+            return Rules.isFlaggedHistoryDivision(player?.[key]);
+          });
+        });
+
+        if (hasFlaggedHistory) {
+          badges.push({ text: 'Flaggad historik finns', className: 'team-rich-badge danger' });
+        }
+
+        return badges;
       }
     };
 
@@ -2360,66 +2396,57 @@
       },
 
       buildTeamCheckPlayers(row) {
-        const players = [];
-        const used = new Set();
+        const rawPlayers = Array.isArray(row?.players) ? row.players : [];
 
-        const listConfigs = [
-          { sourceKey: 'elitePlayerNames', bucket: 'Elite' },
-          { sourceKey: 'proPlayerNames', bucket: 'Pro' },
-          { sourceKey: 'litePlayerNames', bucket: 'Lite' },
-          { sourceKey: 'corePlayerNames', bucket: 'Core' }
-        ];
+        return rawPlayers
+          .map(player => {
+            const renamedPlayer = Rename.applyToRow(player);
 
-        listConfigs.forEach(config => {
-          const raw = String(row?.[config.sourceKey] || '').trim();
-          if (!raw) return;
+            return {
+              playerID: renamedPlayer?.playerID || '',
+              userID: renamedPlayer?.userID || '',
+              playerName: String(
+                renamedPlayer?.playerName ||
+                renamedPlayer?.Player ||
+                renamedPlayer?.tag ||
+                ''
+              ).trim(),
+              bucket: String(renamedPlayer?.bucket || '').trim(),
+              matchCount: renamedPlayer?.playoffGames !== undefined && renamedPlayer?.playoffGames !== null
+                ? Number(renamedPlayer.playoffGames) || 0
+                : null,
 
-          raw.split(',')
-            .map(name => name.trim())
-            .filter(Boolean)
-            .forEach(nameWithMaybeCount => {
-              const match = nameWithMaybeCount.match(/^(.*?)(?:\s*\((\d+)\))?$/);
-              const playerName = (match?.[1] || nameWithMaybeCount).trim();
-              const matchCount = match?.[2] ? Number(match[2]) : null;
-              const normalized = Utils.normalizePlayerName(playerName);
+              history1Team: renamedPlayer?.history1Team || '',
+              history1Division: renamedPlayer?.history1Division || '',
+              history1Year: renamedPlayer?.history1Year || '',
+              history1Season: renamedPlayer?.history1Season || '',
+              history1GroupMatches: renamedPlayer?.history1GroupMatches || '',
+              history1PlayoffMatches: renamedPlayer?.history1PlayoffMatches || '',
+              history1Matches: renamedPlayer?.history1Matches || '',
 
-              if (!playerName || used.has(normalized)) return;
-              used.add(normalized);
+              history2Team: renamedPlayer?.history2Team || '',
+              history2Division: renamedPlayer?.history2Division || '',
+              history2Year: renamedPlayer?.history2Year || '',
+              history2Season: renamedPlayer?.history2Season || '',
+              history2GroupMatches: renamedPlayer?.history2GroupMatches || '',
+              history2PlayoffMatches: renamedPlayer?.history2PlayoffMatches || '',
+              history2Matches: renamedPlayer?.history2Matches || '',
 
-              players.push({
-                playerName,
-                bucket: config.bucket,
-                matchCount,
-                history1Team: row?.history1Team || '',
-                history1Division: row?.history1Division || '',
-                history1Year: row?.history1Year || '',
-                history1Season: row?.history1Season || '',
-                history1GroupMatches: row?.history1GroupMatches || '',
-                history1PlayoffMatches: row?.history1PlayoffMatches || '',
-                history1Matches: row?.history1Matches || '',
-                history2Team: row?.history2Team || '',
-                history2Division: row?.history2Division || '',
-                history2Year: row?.history2Year || '',
-                history2Season: row?.history2Season || '',
-                history2GroupMatches: row?.history2GroupMatches || '',
-                history2PlayoffMatches: row?.history2PlayoffMatches || '',
-                history2Matches: row?.history2Matches || '',
-                history3Team: row?.history3Team || '',
-                history3Division: row?.history3Division || '',
-                history3Year: row?.history3Year || '',
-                history3Season: row?.history3Season || '',
-                history3GroupMatches: row?.history3GroupMatches || '',
-                history3PlayoffMatches: row?.history3PlayoffMatches || '',
-                history3Matches: row?.history3Matches || ''
-              });
-            });
-        });
-
-        return players.sort((a, b) => {
-          const bucketDiff = this.getPlayerBucketOrder(a.bucket) - this.getPlayerBucketOrder(b.bucket);
-          if (bucketDiff !== 0) return bucketDiff;
-          return String(a.playerName).localeCompare(String(b.playerName), 'en', { sensitivity: 'base' });
-        });
+              history3Team: renamedPlayer?.history3Team || '',
+              history3Division: renamedPlayer?.history3Division || '',
+              history3Year: renamedPlayer?.history3Year || '',
+              history3Season: renamedPlayer?.history3Season || '',
+              history3GroupMatches: renamedPlayer?.history3GroupMatches || '',
+              history3PlayoffMatches: renamedPlayer?.history3PlayoffMatches || '',
+              history3Matches: renamedPlayer?.history3Matches || ''
+            };
+          })
+          .filter(player => player.playerName)
+          .sort((a, b) => {
+            const bucketDiff = this.getPlayerBucketOrder(a.bucket) - this.getPlayerBucketOrder(b.bucket);
+            if (bucketDiff !== 0) return bucketDiff;
+            return String(a.playerName).localeCompare(String(b.playerName), 'en', { sensitivity: 'base' });
+          });
       }
     };
 
@@ -2447,7 +2474,8 @@
         });
       }
     };
-        const SeedingService = {
+
+    const SeedingService = {
       getSeedingTeamStatus(teamName) {
         const normalizedTeam = Utils.normalizeTeamName(teamName);
         for (const [name, status] of Object.entries(SEEDING_TEAM_STATUSES)) {
@@ -3027,8 +3055,7 @@ Best regards,`;
         await navigator.clipboard.writeText(this.buildUnlicensedMessage(row));
       }
     };
-
-    const Render = {
+        const Render = {
       showNormalTable() {
         DOM.normalTableWrap.style.display = 'block';
         DOM.seedingWrap.style.display = 'none';
@@ -3145,6 +3172,7 @@ Best regards,`;
           : groupMatches + playoffMatches;
 
         const isFlagged = Rules.isFlaggedHistoryDivision(division);
+
         return {
           division,
           team,
@@ -3169,7 +3197,12 @@ Best regards,`;
         if (history.isFlagged) {
           const badge = document.createElement('div');
           badge.className = 'history-flag-badge flagged';
-          badge.textContent = 'Flaggad division';
+          badge.textContent = `Flaggad: ${history.division}`;
+          td.appendChild(badge);
+        } else {
+          const badge = document.createElement('div');
+          badge.className = 'history-flag-badge ok';
+          badge.textContent = history.division || 'Historik';
           td.appendChild(badge);
         }
 
@@ -3335,7 +3368,9 @@ Best regards,`;
             const playerNameMain = document.createElement('div');
             playerNameMain.className = 'team-player-name-main';
 
-            const mappedPlayerID = playerLinkMap.get(Utils.normalizePlayerName(player.playerName));
+            const directPlayerID = player.playerID || '';
+            const mappedPlayerID = directPlayerID || playerLinkMap.get(Utils.normalizePlayerName(player.playerName));
+
             if (mappedPlayerID) {
               playerNameMain.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, player.playerName, 'proqual-link'));
             } else {
@@ -3346,8 +3381,8 @@ Best regards,`;
             const sub = document.createElement('div');
             sub.className = 'team-player-name-sub';
             sub.textContent = player.matchCount !== null && player.matchCount !== undefined
-              ? `${player.bucket} • ${player.matchCount} matcher`
-              : player.bucket;
+              ? `${player.bucket || 'Okänd bucket'} • ${player.matchCount} slutspelsmatcher`
+              : (player.bucket || 'Okänd bucket');
             playerTd.appendChild(sub);
 
             tr.appendChild(playerTd);
