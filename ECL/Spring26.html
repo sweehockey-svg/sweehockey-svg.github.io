@@ -1182,7 +1182,6 @@
       LEAGUE_ID: 501
     };
 
-    const TEAM_BASE_URL = `https://sportsgamer.gg/leagues/${CONFIG.LEAGUE_ID}/teams/`;
     const PLAYER_BASE_URL = `https://sportsgamer.gg/players/`;
 
     const DIVISION_STYLE_MAP = {
@@ -1222,11 +1221,11 @@
       { playerName: 'radekbonk111', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
       { playerName: 'snaasigi', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
       { playerName: 'Keuschemisch', aliases: [], banType: 'Captaincy ban', until: '2030.02.10' },
-      { playerName: 'eBjorken97_', aliases: [], banType: 'Suspension', until: '2026.08.13' },
-      { playerName: 'eBjorken97_', aliases: [], banType: 'Captaincy ban', until: '2027.04.09' },
-      { playerName: 'abbelandit__', aliases: [], banType: 'Captaincy ban', until: '2029.04.09' },
+      { playerName: 'nhlbot9878', aliases: ['eBjorken97_'], banType: 'Suspension', until: '2026.08.13' },
+      { playerName: 'nhlbot9878', aliases: ['eBjorken97_'], banType: 'Captaincy ban', until: '2027.04.09' },
+      { playerName: 'Ggwp87', aliases: ['abbelandit__'], banType: 'Captaincy ban', until: '2029.04.09' },
       { playerName: 'Bjorkudd_39', aliases: [], banType: 'Captaincy ban', until: '2027.04.09' },
-      { playerName: 'abbelandit__', aliases: [], banType: 'Suspension', until: 'until the End of ECL ’26: Spring' },
+      { playerName: 'Ggwp87', aliases: ['abbelandit__'], banType: 'Suspension', until: 'until the End of ECL ’26: Spring' },
       { playerName: 'I-MeIIe-l', aliases: [], banType: 'Captaincy ban', until: '2027.04.14' },
       { playerName: 'I-MeIIe-l', aliases: [], banType: 'Suspension', until: '2026.04.14' },
       { playerName: 'Blaze4214', aliases: [], banType: 'Captaincy ban', until: '2027.04.14' },
@@ -1622,6 +1621,76 @@
       }
     };
 
+    const TeamLinks = {
+      getLeagueId(row, column = null) {
+        if (!row || typeof row !== 'object') return '';
+
+        if (column === 'From') {
+          return String(
+            row.FromLeagueID ??
+            row.fromLeagueID ??
+            row.fromLeagueId ??
+            ''
+          ).trim();
+        }
+
+        if (column === 'To') {
+          return String(
+            row.ToLeagueID ??
+            row.toLeagueID ??
+            row.toLeagueId ??
+            ''
+          ).trim();
+        }
+
+        return String(
+          row.leagueID ??
+          row.leagueId ??
+          row.LeagueID ??
+          row.league_id ??
+          row.ToLeagueID ??
+          row.toLeagueID ??
+          row.toLeagueId ??
+          ''
+        ).trim();
+      },
+
+      getTeamId(row, column = null) {
+        if (!row || typeof row !== 'object') return '';
+
+        if (column === 'From') {
+          return String(
+            row.FromTeamID ??
+            row.fromTeamID ??
+            row.fromTeamId ??
+            ''
+          ).trim();
+        }
+
+        if (column === 'To') {
+          return String(
+            row.ToTeamID ??
+            row.toTeamID ??
+            row.toTeamId ??
+            ''
+          ).trim();
+        }
+
+        return String(
+          row.teamID ??
+          row.teamId ??
+          row.TeamID ??
+          row.team_id ??
+          ''
+        ).trim();
+      },
+
+      buildTeamUrl(teamId, leagueId) {
+        if (!teamId || !leagueId) return '';
+        return `https://sportsgamer.gg/leagues/${leagueId}/teams/${teamId}`;
+      }
+    };
+
     const Rename = {
       map: new Map(
         TEAM_NAME_CHANGES.flatMap(item => {
@@ -1752,38 +1821,36 @@
           value.forEach(originalRow => {
             const row = Rename.applyToRow(originalRow);
 
-            const possibleTeamIdKeys = [
-              'teamID', 'teamId', 'TeamID', 'team_id',
-              'fromTeamID', 'fromTeamId', 'toTeamID', 'toTeamId',
-              'FromTeamID', 'ToTeamID'
+            const entries = [
+              {
+                name: RowAccess.getTeamName(row),
+                teamId: TeamLinks.getTeamId(row),
+                leagueId: TeamLinks.getLeagueId(row)
+              },
+              {
+                name: row?.From,
+                teamId: TeamLinks.getTeamId(row, 'From'),
+                leagueId: TeamLinks.getLeagueId(row, 'From')
+              },
+              {
+                name: row?.To,
+                teamId: TeamLinks.getTeamId(row, 'To'),
+                leagueId: TeamLinks.getLeagueId(row, 'To')
+              }
             ];
 
-            const possibleTeamNameKeys = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName', 'From', 'To'];
+            entries.forEach(entry => {
+              const normalized = Utils.normalizeTeamName(entry.name);
+              if (!normalized || !entry.teamId || !entry.leagueId) return;
 
-            possibleTeamIdKeys.forEach(idKey => {
-              const idValue = row?.[idKey];
-              if (!idValue) return;
-
-              possibleTeamNameKeys.forEach(nameKey => {
-                const nameValue = row?.[nameKey];
-                const normalized = Utils.normalizeTeamName(nameValue);
-                if (normalized && !map.has(normalized)) map.set(normalized, String(idValue));
-              });
+              if (!map.has(normalized)) {
+                map.set(normalized, {
+                  teamId: String(entry.teamId),
+                  leagueId: String(entry.leagueId)
+                });
+              }
             });
-
-            const fallbackTeamId = row?.teamID || row?.teamId || row?.TeamID || row?.team_id;
-            const fallbackTeamName = RowAccess.getTeamName(row);
-            const fallbackNormalized = Utils.normalizeTeamName(fallbackTeamName);
-
-            if (fallbackTeamId && fallbackNormalized && !map.has(fallbackNormalized)) {
-              map.set(fallbackNormalized, String(fallbackTeamId));
-            }
           });
-        });
-
-        const signUpsMap = await this.getSignUpsMap(forceReload);
-        signUpsMap.forEach((row, normalized) => {
-          if (row?.teamID && !map.has(normalized)) map.set(normalized, String(row.teamID));
         });
 
         STATE.cache.teamLinkMap = map;
@@ -1995,20 +2062,20 @@
 
         if (STATE.currentSource.key === 'signUps' && this.getSignupIssues(row).length > 0) return 'signup-rule-error';
 
-if (STATE.currentSource.key === 'backups') {
-  const games = RowAccess.getBackupGames(row);
-  if (games !== null) {
-    if (games > 10) return 'backup-danger';
-    if (games === 10) return 'backup-warning';
-  }
-}
+        if (STATE.currentSource.key === 'backups') {
+          const games = RowAccess.getBackupGames(row);
+          if (games !== null) {
+            if (games > 10) return 'backup-danger';
+            if (games === 10) return 'backup-warning';
+          }
+        }
 
-if (STATE.currentSource.key === 'licenslosa') {
-  const games = RowAccess.getBackupGames(row);
-  if (games !== null && games >= 1) {
-    return 'not-ok';
-  }
-}
+        if (STATE.currentSource.key === 'licenslosa') {
+          const games = RowAccess.getBackupGames(row);
+          if (games !== null && games >= 1) {
+            return 'not-ok';
+          }
+        }
 
         if (this.isBigDropTransfer(row)) return 'transfer-danger';
         if (this.isNotOkRow(row)) return 'not-ok';
@@ -2200,9 +2267,10 @@ if (STATE.currentSource.key === 'licenslosa') {
           'neoOrLowerPlayers', 'coreOrLowerPlayers', 'liteOrLowerPlayers',
           'totalPlayers', 'playersWithPlayoffGames',
           'elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames',
-          'From', 'FromDiv', 'To', 'ToDiv',
+          'From', 'FromDiv', 'FromTeamID', 'FromLeagueID',
+          'To', 'ToDiv', 'ToTeamID', 'ToLeagueID',
           'GroupGames26Winter', 'PlayoffGames26Winter', 'TotalGames26Winter',
-          'totalMatchesPlayed', 'Date', 'Role', 'compatibility', 'totalPoints'
+          'totalMatchesPlayed', 'Date', 'Role', 'compatibility', 'totalPoints', 'leagueID'
         ];
 
         const allKeys = new Set();
@@ -2712,7 +2780,8 @@ if (STATE.currentSource.key === 'licenslosa') {
               exists,
               note,
               extraClass: '',
-              teamID: teamInfo?.teamID || '',
+              teamID: teamInfo?.teamID || teamInfo?.teamId || '',
+              leagueID: teamInfo?.leagueID || teamInfo?.leagueId || '',
               statusText: isDisbanded ? 'Disbanded' : exists ? 'Registered' : canonicalTeam ? 'Missing' : '-',
               isMissing: !!canonicalTeam && !exists && !isDisbanded,
               isDisbanded,
@@ -2742,6 +2811,7 @@ if (STATE.currentSource.key === 'licenslosa') {
                 note: this.getSeedRowNote(section, row.teamName || '', registeredInfoMap),
                 extraClass: 'unlisted',
                 teamID: row.teamID || '',
+                leagueID: row.leagueID || '',
                 statusText: 'Registered',
                 isMissing: false,
                 isDisbanded: false,
@@ -2763,6 +2833,7 @@ if (STATE.currentSource.key === 'licenslosa') {
                 note: this.getSeedRowNote(section, row.teamName || '', registeredInfoMap),
                 extraClass: 'unlisted',
                 teamID: row.teamID || '',
+                leagueID: row.leagueID || '',
                 statusText: 'Registered',
                 isMissing: false,
                 isDisbanded: false,
@@ -2827,6 +2898,7 @@ if (STATE.currentSource.key === 'licenslosa') {
             playerID: row.playerID || '',
             teamName: row.teamName || '',
             teamID: row.teamID || '',
+            leagueID: row.leagueID || '',
             divisionName: '',
             sourceKey: 'teamCaptains',
             matchRole: this.buildRoleDisplay(row.Role || 'Captain')
@@ -2846,7 +2918,8 @@ if (STATE.currentSource.key === 'licenslosa') {
               playerName,
               playerID: row.playerID || '',
               teamName: row.teamName || row.To || '',
-              teamID: row.teamID || '',
+              teamID: row.teamID || row.ToTeamID || '',
+              leagueID: row.leagueID || row.ToLeagueID || '',
               divisionName: row.divisionName || row.ToDiv || '',
               sourceKey,
               matchRole: 'Player'
@@ -2886,8 +2959,8 @@ if (STATE.currentSource.key === 'licenslosa') {
         return [...new Set(values.map(v => String(v || '').trim()).filter(Boolean))].join(' | ');
       },
 
-      findTeamIDForName(teamName, teamLinkMap) {
-        return teamLinkMap.get(Utils.normalizeTeamName(teamName)) || '';
+      findTeamInfoForName(teamName, teamLinkMap) {
+        return teamLinkMap.get(Utils.normalizeTeamName(teamName)) || null;
       },
 
       async buildRows(forceReload = false) {
@@ -2920,8 +2993,13 @@ if (STATE.currentSource.key === 'licenslosa') {
           });
 
           const teamValues = uniqueMatches.map(match => {
-            const id = match.teamID || this.findTeamIDForName(match.teamName, teamLinkMap);
-            return id ? `${match.teamName}|||${id}` : match.teamName;
+            const info = this.findTeamInfoForName(match.teamName, teamLinkMap);
+            const teamId = match.teamID || info?.teamId || '';
+            const leagueId = match.leagueID || info?.leagueId || '';
+
+            return (teamId && leagueId)
+              ? `${match.teamName}|||${teamId}|||${leagueId}`
+              : match.teamName;
           });
 
           return {
@@ -3250,11 +3328,17 @@ Best regards,`;
         summaryTitle.className = 'team-history-main';
 
         const teamName = RowAccess.getTeamName(row);
-        const directTeamID = row?.teamID || row?.teamId || row?.TeamID || row?.team_id;
-        const mappedTeamID = directTeamID || teamLinkMap.get(Utils.normalizeTeamName(teamName));
+        const mappedTeamInfo = teamLinkMap.get(Utils.normalizeTeamName(teamName));
+        const directTeamID = TeamLinks.getTeamId(row);
+        const directLeagueID = TeamLinks.getLeagueId(row);
 
-        if (mappedTeamID) {
-          summaryTitle.appendChild(Utils.createLink(TEAM_BASE_URL + mappedTeamID, teamName || '-', 'proqual-link'));
+        const teamId = directTeamID || mappedTeamInfo?.teamId || '';
+        const leagueId = directLeagueID || mappedTeamInfo?.leagueId || '';
+
+        if (teamId && leagueId) {
+          summaryTitle.appendChild(
+            Utils.createLink(TeamLinks.buildTeamUrl(teamId, leagueId), teamName || '-', 'proqual-link')
+          );
         } else {
           summaryTitle.textContent = teamName || '-';
         }
@@ -3422,9 +3506,6 @@ Best regards,`;
         const teamLinkMap = await DataService.getTeamLinkMap(forceReload);
         const playerLinkMap = await DataService.getPlayerLinkMap(forceReload);
 
-        const directTeamID = row?.teamID || row?.teamId || row?.TeamID || row?.team_id;
-        const directPlayerID = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
-
         if (STATE.currentSource.key === 'bannedPlayers') {
           if (col === 'playerName') {
             const mappedPlayerID = playerLinkMap.get(Utils.normalizePlayerName(textValue));
@@ -3449,9 +3530,12 @@ Best regards,`;
           if (col === 'teams') {
             const parts = textValue.split('|').map(part => part.trim()).filter(Boolean);
             parts.forEach((part, index) => {
-              const [teamName, teamID] = part.split('|||');
-              if (teamID) td.appendChild(Utils.createLink(TEAM_BASE_URL + teamID, teamName));
-              else td.appendChild(document.createTextNode(teamName));
+              const [teamName, teamID, leagueID] = part.split('|||');
+              if (teamID && leagueID) {
+                td.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamID, leagueID), teamName));
+              } else {
+                td.appendChild(document.createTextNode(teamName));
+              }
               if (index < parts.length - 1) td.appendChild(document.createTextNode(' | '));
             });
             return;
@@ -3478,31 +3562,28 @@ Best regards,`;
           return;
         }
 
-        if (['From', 'To', 'history1Team', 'history2Team', 'history3Team'].includes(col)) {
+        if (['history1Team', 'history2Team', 'history3Team'].includes(col)) {
           td.textContent = textValue;
           return;
         }
 
-        if (directTeamID && TEAM_NAME_KEYS.includes(col)) {
-          td.appendChild(Utils.createLink(TEAM_BASE_URL + directTeamID, textValue));
-          return;
-        }
+        if (TEAM_NAME_KEYS.includes(col) || col === 'From' || col === 'To') {
+          const mappedTeamInfo = teamLinkMap.get(Utils.normalizeTeamName(textValue));
+          const directTeamID = TeamLinks.getTeamId(row, col);
+          const directLeagueID = TeamLinks.getLeagueId(row, col);
 
-        if (directPlayerID && PLAYER_NAME_KEYS.includes(col)) {
-          td.appendChild(Utils.createLink(PLAYER_BASE_URL + directPlayerID, textValue));
-          return;
-        }
+          const teamId = directTeamID || mappedTeamInfo?.teamId || '';
+          const leagueId = directLeagueID || mappedTeamInfo?.leagueId || '';
 
-        if (TEAM_NAME_KEYS.includes(col)) {
-          const mappedTeamID = teamLinkMap.get(Utils.normalizeTeamName(textValue));
-          if (mappedTeamID) {
-            td.appendChild(Utils.createLink(TEAM_BASE_URL + mappedTeamID, textValue));
+          if (teamId && leagueId) {
+            td.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamId, leagueId), textValue));
             return;
           }
         }
 
         if (PLAYER_NAME_KEYS.includes(col) || col === 'playerName') {
-          const mappedPlayerID = playerLinkMap.get(Utils.normalizePlayerName(textValue));
+          const directPlayerID = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
+          const mappedPlayerID = directPlayerID || playerLinkMap.get(Utils.normalizePlayerName(textValue));
           if (mappedPlayerID) {
             td.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, textValue));
             return;
@@ -3779,8 +3860,14 @@ Best regards,`;
         tr.appendChild(seedTd);
 
         const teamTd = document.createElement('td');
-        if (item.displayTeam && item.teamID) {
-          teamTd.appendChild(Utils.createLink(TEAM_BASE_URL + item.teamID, item.displayTeam, 'seed-link'));
+        if (item.displayTeam && item.teamID && item.leagueID) {
+          teamTd.appendChild(
+            Utils.createLink(
+              TeamLinks.buildTeamUrl(item.teamID, item.leagueID),
+              item.displayTeam,
+              'seed-link'
+            )
+          );
         } else {
           teamTd.textContent = item.displayTeam || '';
         }
@@ -3882,6 +3969,7 @@ Best regards,`;
             map.set(key, {
               teamID,
               teamName,
+              leagueID: row.leagueID || row.leagueId || row.league_id || '',
               qualifierName: row.qualifierName || 'WILDCARD',
               players: []
             });
@@ -3967,8 +4055,14 @@ Best regards,`;
           name.style.fontWeight = '900';
           name.style.color = '#f4f7ff';
 
-          if (teamGroup.teamID) {
-            name.appendChild(Utils.createLink(TEAM_BASE_URL + teamGroup.teamID, teamGroup.teamName, 'proqual-link'));
+          if (teamGroup.teamID && teamGroup.leagueID) {
+            name.appendChild(
+              Utils.createLink(
+                TeamLinks.buildTeamUrl(teamGroup.teamID, teamGroup.leagueID),
+                teamGroup.teamName,
+                'proqual-link'
+              )
+            );
           } else {
             name.textContent = teamGroup.teamName;
           }
@@ -4091,6 +4185,7 @@ Best regards,`;
           .map(row => Rename.applyToRow(row))
           .filter(row => String(row?.qualifierName || '').trim().toUpperCase().includes('WILDCARD'))
           .map(row => ({
+            leagueID: row.leagueID ?? '',
             teamID: row.teamID ?? '',
             teamName: row.teamName ?? '',
             qualifierName: row.qualifierName ?? '',
