@@ -1995,13 +1995,20 @@
 
         if (STATE.currentSource.key === 'signUps' && this.getSignupIssues(row).length > 0) return 'signup-rule-error';
 
-        if (STATE.currentSource.key === 'backups') {
-          const games = RowAccess.getBackupGames(row);
-          if (games !== null) {
-            if (games > 10) return 'backup-danger';
-            if (games === 10) return 'backup-warning';
-          }
-        }
+if (STATE.currentSource.key === 'backups') {
+  const games = RowAccess.getBackupGames(row);
+  if (games !== null) {
+    if (games > 10) return 'backup-danger';
+    if (games === 10) return 'backup-warning';
+  }
+}
+
+if (STATE.currentSource.key === 'licenslosa') {
+  const games = RowAccess.getBackupGames(row);
+  if (games !== null && games >= 1) {
+    return 'not-ok';
+  }
+}
 
         if (this.isBigDropTransfer(row)) return 'transfer-danger';
         if (this.isNotOkRow(row)) return 'not-ok';
