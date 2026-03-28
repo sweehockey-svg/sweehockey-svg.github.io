@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>26 Spring Checks V2.4 — Dark Mode</title>
+  <title>ECL '26: Spring Admin Checks V3.0</title>
   <style>
     :root {
       --navy: #050b2b;
@@ -79,7 +79,7 @@
 
     .login-card {
       width: 100%;
-      max-width: 560px;
+      max-width: 580px;
       background: rgba(12, 22, 45, 0.97);
       border: 1px solid var(--border-strong);
       border-radius: 22px;
@@ -99,7 +99,7 @@
     }
 
     .login-warning {
-      margin: 0 0 22px;
+      margin: 0 0 10px;
       font-size: 14px;
       line-height: 1.55;
       color: var(--muted);
@@ -107,6 +107,13 @@
     }
 
     .login-warning strong { color: #ffd47c; }
+
+    .login-note {
+      margin: 0 0 22px;
+      font-size: 12px;
+      line-height: 1.55;
+      color: #95a8cb;
+    }
 
     .login-label {
       display: block;
@@ -165,6 +172,13 @@
     .login-btn:hover {
       filter: brightness(1.03);
       transform: translateY(-1px);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
     }
 
     .login-error {
@@ -440,6 +454,13 @@
     .action-btn:hover {
       transform: translateY(-1px);
       filter: brightness(1.03);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
     }
 
     .action-btn.secondary {
@@ -773,6 +794,12 @@
       line-height: 1;
     }
 
+    .mail-icon-btn:hover,
+    .copy-icon-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.03);
+    }
+
     .team-dropdown-panel {
       padding: 16px;
       background: #0b1630;
@@ -1074,6 +1101,9 @@
         <strong>For SportsGamer admins only.</strong><br>
         Do not share this page or the password with anyone else.
       </p>
+      <p class="login-note">
+        This is still a frontend-only placeholder gate. Real protection should be handled server-side.
+      </p>
 
       <label class="login-label" for="passwordInput">Password</label>
       <div class="login-row">
@@ -1087,7 +1117,7 @@
         <button id="loginBtn" class="login-btn" type="button">Login</button>
       </div>
 
-      <div id="loginError" class="login-error">Wrong password.</div>
+      <div id="loginError" class="login-error" aria-live="assertive">Wrong password.</div>
     </div>
   </div>
 
@@ -1096,15 +1126,23 @@
       <div class="site-header-inner site-header-topline">
         <div class="brand">Sports<span>Gamer</span></div>
         <div class="site-header-titleblock">
-          <div class="site-header-title">ECL ’26: Spring</div>
+          <div class="site-header-title">ECL '26: Spring</div>
           <div class="site-header-subtitle">Registration • Seeding • Team Checks</div>
         </div>
-        <button id="mobileMenuBtn" class="mobile-menu-btn" type="button">Menu</button>
+        <button
+          id="mobileMenuBtn"
+          class="mobile-menu-btn"
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+        >
+          Menu
+        </button>
       </div>
     </header>
 
     <div id="mobileTabsPanel" class="mobile-tabs-panel" aria-hidden="true">
-      <div class="mobile-tabs-sheet">
+      <div class="mobile-tabs-sheet" role="dialog" aria-modal="true" aria-label="Sections">
         <div class="mobile-tabs-head">
           <div class="mobile-tabs-title">Sections</div>
           <button id="mobileCloseBtn" class="mobile-close-btn" type="button">Close</button>
@@ -1116,14 +1154,14 @@
     <main class="page">
       <div class="page-card">
         <div class="page-top">
-          <h1 id="pageTitle">26 Spring Checks V2.4</h1>
-          <div class="tabs" id="tabs"></div>
+          <h1 id="pageTitle">ECL '26: Spring Admin Checks</h1>
+          <div class="tabs" id="tabs" role="tablist" aria-label="Data sections"></div>
 
           <div class="topbar">
             <button id="reloadBtn" class="action-btn" type="button">Refresh</button>
             <button id="clearFiltersBtn" class="action-btn secondary" type="button">Clear Filters</button>
             <button id="csvExportBtn" class="action-btn secondary" type="button">Export CSV</button>
-            <div class="status" id="status">Ready</div>
+            <div class="status" id="status" aria-live="polite">Ready</div>
             <div class="status" id="rowCounter"></div>
             <div class="small" id="lastUpdated"></div>
           </div>
@@ -1170,7 +1208,7 @@
     <footer class="site-footer">
       <div class="site-footer-inner">
         <div class="footer-brand">SportsGamer</div>
-        <div class="footer-note">ECL Tools • 26 Spring V2.4</div>
+        <div class="footer-note">ECL Tools • Spring 2026 • Admin Checks V3.0</div>
       </div>
     </footer>
   </div>
@@ -1179,10 +1217,11 @@
     const CONFIG = {
       ADMIN_PASSWORD: 'kungkenu',
       DATA_FILE: 'alla.json',
-      LEAGUE_ID: 501
+      LEAGUE_ID: 501,
+      APP_VERSION: '3.0'
     };
 
-    const PLAYER_BASE_URL = `https://sportsgamer.gg/players/`;
+    const PLAYER_BASE_URL = 'https://sportsgamer.gg/players/';
 
     const DIVISION_STYLE_MAP = {
       elite: { bg: 'var(--elite-bg)', text: 'var(--elite-text)' },
@@ -1210,46 +1249,24 @@
       { oldName: 'Vesuvius Academy', newName: 'Grim Reapers HC' }
     ];
 
-    const BANNED_PLAYERS = [
-      { playerName: 'ViSiOnZ97_', aliases: [], banType: 'Captaincy ban', until: 'Indefinitely' },
-      { playerName: 'Men-at-work74', aliases: [], banType: 'Captaincy ban', until: 'Indefinitely' },
-      { playerName: 'maatti64', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'OsquuG', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'matadori-_-', aliases: ['SirRaittinen'], banType: 'Captaincy ban', until: 'Undefined', notes: 'Previously SirRaittinen' },
-      { playerName: 'xSagwa', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'punt1la98', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'radekbonk111', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'snaasigi', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
-      { playerName: 'Keuschemisch', aliases: [], banType: 'Captaincy ban', until: '2030.02.10' },
-      { playerName: 'nhlbot9878', aliases: ['eBjorken97_'], banType: 'Suspension', until: '2026.08.13' },
-      { playerName: 'nhlbot9878', aliases: ['eBjorken97_'], banType: 'Captaincy ban', until: '2027.04.09' },
-      { playerName: 'Ggwp87', aliases: ['abbelandit__'], banType: 'Captaincy ban', until: '2029.04.09' },
-      { playerName: 'Bjorkudd_39', aliases: [], banType: 'Captaincy ban', until: '2027.04.09' },
-      { playerName: 'Ggwp87', aliases: ['abbelandit__'], banType: 'Suspension', until: 'until the End of ECL ’26: Spring' },
-      { playerName: 'I-MeIIe-l', aliases: [], banType: 'Captaincy ban', until: '2027.04.14' },
-      { playerName: 'I-MeIIe-l', aliases: [], banType: 'Suspension', until: '2026.04.14' },
-      { playerName: 'Blaze4214', aliases: [], banType: 'Captaincy ban', until: '2027.04.14' },
-      { playerName: 'Cbatta_-11', aliases: [], banType: 'Suspension', until: '2026.04.14' }
-    ];
-
     const SEEDING_TEAM_STATUSES = {
       '': 'DISBANDED',
-      '': 'DISBANDED',
-      '': 'DISBANDED'
+      ' ': 'DISBANDED',
+      '  ': 'DISBANDED'
     };
 
     const SOURCES = [
-      { key: 'seeding26spring', label: 'Seeding 26 Spring', type: 'preset', csv: false },
-      { key: 'lite', label: 'Lite 26 Spring Teams', type: 'alla', csv: true },
-      { key: 'core', label: 'Core 26 Spring Teams', type: 'alla', csv: true },
-      { key: 'neo', label: 'Neo 26 Spring Teams', type: 'alla', csv: true },
-      { key: 'overgangar', label: 'Transfers 26 Spring Teams', type: 'alla', csv: true },
-      { key: 'backups', label: 'Backups 26 Spring Teams', type: 'alla', csv: true },
-      { key: 'licenslosa', label: 'Unlicensed 26 Spring Teams', type: 'alla', csv: true },
-      { key: 'inMoreThan1Teams', label: 'Players In Multiple Teams', type: 'alla', csv: true },
-      { key: 'signUps', label: 'Registered Teams 26 Spring', type: 'alla', csv: true },
-      { key: 'proQualReqCheck', label: 'PRO QUAL REQ CHECK', type: 'proqualreqcheck', csv: false },
-      { key: 'bannedPlayers', label: 'Banned Players', type: 'banned', csv: true }
+      { key: 'seeding26spring', label: 'Seeding 26 Spring', type: 'preset', csv: false, mode: 'seeding' },
+      { key: 'lite', label: 'Lite 26 Spring Teams', type: 'alla', csv: true, mode: 'teamCheck' },
+      { key: 'core', label: 'Core 26 Spring Teams', type: 'alla', csv: true, mode: 'teamCheck' },
+      { key: 'neo', label: 'Neo 26 Spring Teams', type: 'alla', csv: true, mode: 'teamCheck' },
+      { key: 'overgangar', label: 'Transfers 26 Spring Teams', type: 'alla', csv: true, mode: 'table' },
+      { key: 'backups', label: 'Backups 26 Spring Teams', type: 'alla', csv: true, mode: 'table' },
+      { key: 'licenslosa', label: 'Unlicensed 26 Spring Teams', type: 'alla', csv: true, mode: 'table' },
+      { key: 'inMoreThan1Teams', label: 'Players In Multiple Teams', type: 'alla', csv: true, mode: 'table' },
+      { key: 'signUps', label: 'Registered Teams 26 Spring', type: 'alla', csv: true, mode: 'table' },
+      { key: 'proQualReqCheck', label: 'PRO QUAL REQ CHECK', type: 'proqualreqcheck', csv: false, mode: 'proQual' },
+      { key: 'bannedPlayers', label: 'Banned Players', type: 'banned', csv: true, mode: 'table' }
     ];
 
     const PRESET_SECTIONS = [
@@ -1503,6 +1520,11 @@
       currentColumns: [],
       currentNumericColumns: new Set(),
       sortState: { column: null, direction: 'asc' },
+      searchDebounceTimer: null,
+      renderContext: {
+        teamLinkMap: new Map(),
+        playerLinkMap: new Map()
+      },
       cache: {
         allaData: null,
         signUpsMap: null,
@@ -1619,6 +1641,17 @@
         span.className = 'team-history-empty';
         span.textContent = '-';
         return span;
+      },
+
+      debounce(fn, delay = 200) {
+        return (...args) => {
+          clearTimeout(STATE.searchDebounceTimer);
+          STATE.searchDebounceTimer = window.setTimeout(() => fn(...args), delay);
+        };
+      },
+
+      getSourceConfig(key) {
+        return SOURCES.find(source => source.key === key) || null;
       }
     };
 
@@ -1770,15 +1803,15 @@
       async fetchAllaData(forceReload = false) {
         if (STATE.cache.allaData && !forceReload) return STATE.cache.allaData;
 
-        const res = await fetch(CONFIG.DATA_FILE + '?ts=' + Date.now(), { cache: 'no-store' });
-        if (!res.ok) throw new Error('HTTP error ' + res.status + ' for ' + CONFIG.DATA_FILE);
+        const res = await fetch(`${CONFIG.DATA_FILE}?ts=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP error ${res.status} for ${CONFIG.DATA_FILE}`);
 
         const text = await res.text();
         let data;
         try {
           data = JSON.parse(text);
         } catch {
-          throw new Error('Invalid JSON in ' + CONFIG.DATA_FILE);
+          throw new Error(`Invalid JSON in ${CONFIG.DATA_FILE}`);
         }
 
         STATE.cache.allaData = this.unwrapAllaData(data);
@@ -1869,13 +1902,13 @@
 
           value.forEach(row => {
             const playerId = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
-            if (!playerId) return;
-
-            ['Player', 'tag', 'playerName', 'player'].forEach(nameKey => {
-              const playerName = row?.[nameKey];
-              const normalized = Utils.normalizePlayerName(playerName);
-              if (normalized && !map.has(normalized)) map.set(normalized, String(playerId));
-            });
+            if (playerId) {
+              ['Player', 'tag', 'playerName', 'player'].forEach(nameKey => {
+                const playerName = row?.[nameKey];
+                const normalized = Utils.normalizePlayerName(playerName);
+                if (normalized && !map.has(normalized)) map.set(normalized, String(playerId));
+              });
+            }
 
             if (Array.isArray(row?.players)) {
               row.players.forEach(player => {
@@ -1887,15 +1920,21 @@
                 }
               });
             }
-
-            if (Array.isArray(row?.teams)) {
-              row.teams.forEach(() => {});
-            }
           });
         });
 
         STATE.cache.playerLinkMap = map;
         return map;
+      },
+
+      async buildRenderContext(forceReload = false) {
+        const [teamLinkMap, playerLinkMap] = await Promise.all([
+          this.getTeamLinkMap(forceReload),
+          this.getPlayerLinkMap(forceReload)
+        ]);
+
+        STATE.renderContext = { teamLinkMap, playerLinkMap };
+        return STATE.renderContext;
       }
     };
 
@@ -2041,19 +2080,19 @@
         const minPlayers = this.getMinimumPlayersForDivision(division);
 
         if (minPlayers > 0 && playerCount < minPlayers) {
-          issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
+          issues.push(`Needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
         }
 
         if (playerCount > 13) {
-          issues.push(`has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
+          issues.push(`Has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
         }
 
         if (fullLicenseCount < 6) {
-          issues.push(`needs ${6 - fullLicenseCount} more full license${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
+          issues.push(`Needs ${6 - fullLicenseCount} more full license${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
         }
 
         if (backupLicenseCount > 3) {
-          issues.push(`has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
+          issues.push(`Has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
         }
 
         return issues;
@@ -2085,9 +2124,7 @@
 
         if (STATE.currentSource.key === 'licenslosa') {
           const games = RowAccess.getBackupGames(row);
-          if (games !== null && games >= 1) {
-            return 'not-ok';
-          }
+          if (games !== null && games >= 1) return 'not-ok';
         }
 
         if (this.isBigDropTransfer(row)) return 'transfer-danger';
@@ -2133,7 +2170,7 @@
         });
 
         if (hasFlaggedHistory) {
-          badges.push({ text: 'Flaggad historik finns', className: 'team-rich-badge danger' });
+          badges.push({ text: 'Flagged history found', className: 'team-rich-badge danger' });
         }
 
         return badges;
@@ -2226,7 +2263,7 @@
 
         const filename = `${STATE.currentSource.key}-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
         Utils.downloadFile(filename, lines.join('\n'));
-        Utils.setStatus('CSV exported');
+        Utils.setStatus(`CSV exported (${rows.length} rows)`);
       }
     };
 
@@ -2401,40 +2438,40 @@
 
         if (STATE.currentSource.key === 'lite') {
           return {
-            teamName: 'TEAMNAME',
-            totalPlayers: 'TOTALPLAYERS',
-            playerCount: 'TOTALPLAYERS',
+            teamName: 'TEAM NAME',
+            totalPlayers: 'TOTAL PLAYERS',
+            playerCount: 'TOTAL PLAYERS',
             EP: 'ELITE PLAYERS',
             PP: 'PRO PLAYERS',
             LP: 'LITE OR LOWER',
-            totalPoints: 'TOTALPOINTS'
+            totalPoints: 'TOTAL POINTS'
           }[col] || col;
         }
 
         if (STATE.currentSource.key === 'core') {
           return {
-            teamName: 'TEAMNAME',
-            totalPlayers: 'TOTALPLAYERS',
-            playerCount: 'TOTALPLAYERS',
+            teamName: 'TEAM NAME',
+            totalPlayers: 'TOTAL PLAYERS',
+            playerCount: 'TOTAL PLAYERS',
             EP: 'ELITE PLAYERS',
             PP: 'PRO PLAYERS',
             LP: 'LITE PLAYERS',
             CP: 'CORE OR LOWER',
-            totalPoints: 'TOTALPOINTS'
+            totalPoints: 'TOTAL POINTS'
           }[col] || col;
         }
 
         if (STATE.currentSource.key === 'neo') {
           return {
-            teamName: 'TEAMNAME',
-            totalPlayers: 'TOTALPLAYERS',
-            playerCount: 'TOTALPLAYERS',
+            teamName: 'TEAM NAME',
+            totalPlayers: 'TOTAL PLAYERS',
+            playerCount: 'TOTAL PLAYERS',
             EP: 'ELITE PLAYERS',
             PP: 'PRO PLAYERS',
             LP: 'LITE PLAYERS',
             CP: 'CORE PLAYERS',
             NP: 'NEO OR NEW',
-            totalPoints: 'TOTALPOINTS'
+            totalPoints: 'TOTAL POINTS'
           }[col] || col;
         }
 
@@ -2481,8 +2518,8 @@
         const np = Utils.safeNumber(row?.NP);
 
         const stats = [
-          { label: 'Totalt spelare', value: String(totalPlayers) },
-          { label: 'Totalpoäng', value: String(totalPoints) },
+          { label: 'Total players', value: String(totalPlayers) },
+          { label: 'Total points', value: String(totalPoints) },
           { label: 'Elite', value: String(ep) },
           { label: 'Pro', value: String(pp) },
           { label: 'Lite', value: String(lp) }
@@ -2500,10 +2537,10 @@
       },
 
       getPlayerBucketOrder(bucket) {
-        if (bucket === 'Elite') return 0;
-        if (bucket === 'Pro') return 1;
-        if (bucket === 'Lite') return 2;
-        if (bucket === 'Core') return 3;
+        if (bucket === 'ELITE') return 0;
+        if (bucket === 'PRO') return 1;
+        if (bucket === 'LITE') return 2;
+        if (bucket === 'CORE') return 3;
         return 9;
       },
 
@@ -2561,7 +2598,8 @@
           });
       }
     };
-        const Sorting = {
+
+    const Sorting = {
       getSortedRows(rows) {
         if (!STATE.sortState.column) return [...rows];
         const isNumeric = STATE.currentNumericColumns.has(STATE.sortState.column) || STATE.sortState.column === 'fullLicenseCount';
@@ -2703,7 +2741,7 @@
           signedDivision !== listedDivision &&
           !(listedDivision === 'CORE' && signedDivision === 'NEO')
         ) {
-          notes.push('SIGNED UP TO ' + signedDivision);
+          notes.push(`SIGNED UP TO ${signedDivision}`);
         }
 
         return notes.join(' • ');
@@ -2792,21 +2830,22 @@
         counts.PRO_QUAL = proQualifierExtraRows.length;
 
         return counts;
-      },
-
+      }
+    };
+        const SeedingServiceContinued = {
       async buildSeedingSections(registeredRows, forceReload = false) {
         const registeredTeamSet = new Set(
           registeredRows.map(row => RowAccess.getTeamName(row)).map(name => Utils.normalizeTeamName(name)).filter(Boolean)
         );
 
-        const registeredInfoMap = this.buildRegisteredTeamInfoMap(registeredRows);
+        const registeredInfoMap = SeedingService.buildRegisteredTeamInfoMap(registeredRows);
         const signUpsMap = await DataService.getSignUpsMap(forceReload);
-        const unseededByDivision = this.buildUnseededByDivision(registeredRows);
-        const proQualifierExtraRows = this.buildProQualifierExtraRows(registeredRows);
-        const signupCounts = this.buildSignupCounts(registeredRows, registeredInfoMap, proQualifierExtraRows);
+        const unseededByDivision = SeedingService.buildUnseededByDivision(registeredRows);
+        const proQualifierExtraRows = SeedingService.buildProQualifierExtraRows(registeredRows);
+        const signupCounts = SeedingService.buildSignupCounts(registeredRows, registeredInfoMap, proQualifierExtraRows);
 
         return PRESET_SECTIONS.map(section => {
-          const sectionKey = this.detectSectionDivision(section.title);
+          const sectionKey = SeedingService.detectSectionDivision(section.title);
           let count = signupCounts[sectionKey] ?? 0;
           const items = [];
 
@@ -2815,9 +2854,9 @@
             const canonicalTeam = Rename.getCanonicalTeamName(team);
             const normalized = Utils.normalizeTeamName(canonicalTeam);
             const exists = team ? registeredTeamSet.has(normalized) : false;
-            const note = team ? this.getSeedRowNote(section, team, registeredInfoMap) : '';
+            const note = team ? SeedingService.getSeedRowNote(section, team, registeredInfoMap) : '';
             const teamInfo = signUpsMap.get(normalized);
-            const seedingStatus = this.getSeedingTeamStatus(canonicalTeam);
+            const seedingStatus = SeedingService.getSeedingTeamStatus(canonicalTeam);
             const isDisbanded = seedingStatus === 'DISBANDED';
 
             items.push({
@@ -2842,7 +2881,7 @@
               const team = Rename.getCanonicalTeamName(row[2]);
               const normalized = Utils.normalizeTeamName(team);
               const info = registeredInfoMap.get(normalized);
-              const note = info ? this.getQualifierNote(info) : '';
+              const note = info ? SeedingService.getQualifierNote(info) : '';
               return note === 'PRO QUAL SIGNUP' || note === 'PRO QUAL REQ';
             }).length;
 
@@ -2856,7 +2895,7 @@
                 team: row.teamName || '',
                 displayTeam: Rename.getCanonicalTeamName(row.teamName || ''),
                 exists: true,
-                note: this.getSeedRowNote(section, row.teamName || '', registeredInfoMap),
+                note: SeedingService.getSeedRowNote(section, row.teamName || '', registeredInfoMap),
                 extraClass: 'unlisted',
                 teamID: row.teamID || '',
                 leagueID: row.leagueID || '',
@@ -2867,18 +2906,18 @@
               });
             });
           } else {
-            const division = this.detectSectionDivision(section.title);
+            const division = SeedingService.detectSectionDivision(section.title);
             const extraRows = ['LITE', 'CORE', 'NEO'].includes(division) ? unseededByDivision[division] : [];
 
             const startIndex = section.rows.length + 1;
             extraRows.forEach((row, idx) => {
               items.push({
                 pos: startIndex + idx,
-                seed: section.title + ' Unseeded',
+                seed: `${section.title} Unseeded`,
                 team: row.teamName || '',
                 displayTeam: Rename.getCanonicalTeamName(row.teamName || ''),
                 exists: true,
-                note: this.getSeedRowNote(section, row.teamName || '', registeredInfoMap),
+                note: SeedingService.getSeedRowNote(section, row.teamName || '', registeredInfoMap),
                 extraClass: 'unlisted',
                 teamID: row.teamID || '',
                 leagueID: row.leagueID || '',
@@ -2893,12 +2932,14 @@
           return {
             title: section.title,
             count,
-            styleKey: this.getSectionStyleKey(section.title),
+            styleKey: SeedingService.getSectionStyleKey(section.title),
             items
           };
         });
       }
     };
+
+    Object.assign(SeedingService, SeedingServiceContinued);
 
     const BannedPlayersService = {
       async getCaptainUserIdMap(forceReload = false) {
@@ -2949,7 +2990,7 @@
             leagueID: row.leagueID || '',
             divisionName: '',
             sourceKey: 'teamCaptains',
-            matchRole: this.buildRoleDisplay(row.Role || 'Captain')
+            matchRole: BannedPlayersService.buildRoleDisplay(row.Role || 'Captain')
           });
         });
 
@@ -3018,7 +3059,29 @@
         const presenceRows = this.buildPresenceRows(allData);
         const teamLinkMap = await DataService.getTeamLinkMap(forceReload);
 
-        const rows = BANNED_PLAYERS.map(entry => {
+        const bannedEntries = [
+          { playerName: 'ViSiOnZ97_', aliases: [], banType: 'Captaincy ban', until: 'Indefinitely' },
+          { playerName: 'Men-at-work74', aliases: [], banType: 'Captaincy ban', until: 'Indefinitely' },
+          { playerName: 'maatti64', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+          { playerName: 'OsquuG', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+          { playerName: 'matadori-_-', aliases: ['SirRaittinen'], banType: 'Captaincy ban', until: 'Undefined', notes: 'Previously SirRaittinen' },
+          { playerName: 'xSagwa', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+          { playerName: 'punt1la98', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+          { playerName: 'radekbonk111', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+          { playerName: 'snaasigi', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
+          { playerName: 'Keuschemisch', aliases: [], banType: 'Captaincy ban', until: '2030.02.10' },
+          { playerName: 'nhlbot9878', aliases: ['eBjorken97_'], banType: 'Suspension', until: '2026.08.13' },
+          { playerName: 'nhlbot9878', aliases: ['eBjorken97_'], banType: 'Captaincy ban', until: '2027.04.09' },
+          { playerName: 'Ggwp87', aliases: ['abbelandit__'], banType: 'Captaincy ban', until: '2029.04.09' },
+          { playerName: 'Bjorkudd_39', aliases: [], banType: 'Captaincy ban', until: '2027.04.09' },
+          { playerName: 'Ggwp87', aliases: ['abbelandit__'], banType: 'Suspension', until: 'until the End of ECL ’26: Spring' },
+          { playerName: 'I-MeIIe-l', aliases: [], banType: 'Captaincy ban', until: '2027.04.14' },
+          { playerName: 'I-MeIIe-l', aliases: [], banType: 'Suspension', until: '2026.04.14' },
+          { playerName: 'Blaze4214', aliases: [], banType: 'Captaincy ban', until: '2027.04.14' },
+          { playerName: 'Cbatta_-11', aliases: [], banType: 'Suspension', until: '2026.04.14' }
+        ];
+
+        const rows = bannedEntries.map(entry => {
           const active = Rules.isBanActive(entry.until);
           const matches = this.getRelevantBanMatches(entry, presenceRows);
 
@@ -3078,10 +3141,7 @@
 
     const MessagingService = {
       async getBackupMessageUrl(row, forceReload = false) {
-        if (
-          STATE.currentSource.key !== 'backups' &&
-          STATE.currentSource.key !== 'licenslosa'
-        ) return '';
+        if (STATE.currentSource.key !== 'backups' && STATE.currentSource.key !== 'licenslosa') return '';
 
         const captainMap = await BannedPlayersService.getCaptainUserIdMap(forceReload);
         const teamName = RowAccess.getTeamName(row);
@@ -3162,16 +3222,16 @@
         const teamName = RowAccess.getTeamName(row) || 'team';
         const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
         const rawGames = RowAccess.getBackupGames(row);
-        const games = isFinite(Number(rawGames)) ? Number(rawGames) : 0;
+        const games = Number.isFinite(Number(rawGames)) ? Number(rawGames) : 0;
 
         if (games < 10) {
           return `Upcoming License Upgrade Reminder for ${playerName}
 
-Hi ${teamName}
+Hi ${teamName},
 
 This is a friendly reminder that ${playerName} has now played ${games} matches using a Backup Player License and is approaching the 10-game limit.
 
-According to league rules, a Backup Player License covers a maximum of 10 games across the entire ECL ’26 season — including Winter and Spring qualifiers, group stages, and playoffs.
+According to league rules, a Backup Player License covers a maximum of 10 games across the entire ECL '26 season — including Winter and Spring qualifiers, group stages, and playoffs.
 
 If ${playerName} is expected to continue playing beyond that limit, the license will need to be upgraded to a Full Player License.
 
@@ -3185,29 +3245,30 @@ Best regards,`;
 
 Hi ${teamName},
 
-It has come to our attention that ${playerName} has participated in ${games} games using a Backup Player License. According to league regulations, a player may participate in a maximum of 10 games with a Backup License during the ECL ’26 season (including qualifiers).
+It has come to our attention that ${playerName} has participated in ${games} games using a Backup Player License. According to league regulations, a player may participate in a maximum of 10 games with a Backup License during the ECL '26 season (including qualifiers).
 
-Since this limit has now been exceeded, ${playerName} is required to purchase a Full Player License, regardless of whether he plans to play additional matches or not. This step is necessary to update the license status and ensure compliance with league rules.
+Since this limit has now been exceeded, ${playerName} is required to purchase a Full Player License, regardless of whether the player plans to play additional matches or not. This step is necessary to update the license status and ensure compliance with league rules.
 
-For your convenience, here is the link to purchase the Full Player License: https://sportsgamer.gg/community/store
+For your convenience, here is the link to purchase the Full Player License:
+https://sportsgamer.gg/community/store
 
-Important
+Important:
 Please note that exceeding the 10-game limit on a Backup License may already result in consequences if reported by an opponent. Continuing to participate without the correct license will lead to further—and potentially more serious—penalties.
 
 If ${playerName} has already purchased a Full Player License, please send us a copy of the payment receipt so we can investigate why the license is not showing correctly in our system.
 
-If you have any questions or need assistance, feel free to contact us. We are happy to help!
+If you have any questions or need assistance, feel free to contact us.
 
 Best regards,`;
         }
 
         return `License Status Reminder – Action Required for ${playerName}
 
-Hi ${teamName}
+Hi ${teamName},
 
-This is a reminder that ${playerName} has now played 10 matches using a Backup Player License. According to league rules, a Backup License covers a maximum of 10 games across the entire ECL ’26 season — including Winter and Spring qualifiers, group stages, and playoffs.
+This is a reminder that ${playerName} has now played 10 matches using a Backup Player License. According to league rules, a Backup License covers a maximum of 10 games across the entire ECL '26 season — including Winter and Spring qualifiers, group stages, and playoffs.
 
-If ${playerName} is to continue playing, a Full Player License is required.
+If ${playerName} is going to continue playing, a Full Player License is required.
 
 If you have any questions or need assistance with the process, feel free to reach out.
 
@@ -3218,24 +3279,24 @@ Best regards,`;
         const teamName = RowAccess.getTeamName(row) || 'team';
         const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
         const rawGames = RowAccess.getBackupGames(row);
-        const games = isFinite(Number(rawGames)) ? Number(rawGames) : 0;
+        const games = Number.isFinite(Number(rawGames)) ? Number(rawGames) : 0;
 
         return `License Status Update – Action Required for ${playerName}
 
-Hi ${teamName}
+Hi ${teamName},
 
 It has come to our attention that ${playerName} has participated in ${games} games without holding either a Full Player License or a Backup Player License.
 
-According to league regulations, every player must have a valid license before participating in any ECL ’26 matches (including qualifiers). Playing without the required license may result in disciplinary consequences if reported by an opponent.
+According to league regulations, every player must have a valid license before participating in any ECL '26 matches, including qualifiers. Playing without the required license may result in disciplinary consequences if reported by an opponent.
 
 To avoid further issues, please ensure that the player purchases the appropriate license immediately — either a Full Player License, One Season License, or a Backup License.
 
 For your convenience, here is the link to the license store:
 https://sportsgamer.gg/community/store/
 
-If ${playerName} already bought any of these licenses, please reply with your receipt(s), and we’ll make sure they are activated correctly in our system.
+If ${playerName} already bought any of these licenses, please reply with the receipt and we will make sure the license is activated correctly in our system.
 
-If you have any questions or need assistance, feel free to contact us — we are happy to help.
+If you have any questions or need assistance, feel free to contact us.
 
 Best regards,`;
       },
@@ -3282,9 +3343,9 @@ Best regards,`;
 
         return `Registration Requirements – Action Required for ${teamName}
 
-Hi ${teamName}
+Hi ${teamName},
 
-We have reviewed your registration for ECL ’26: Spring and noticed that your team currently does not meet all requirements for ${divisionName}.
+We have reviewed your registration for ECL '26: Spring and noticed that your team currently does not meet all requirements for ${divisionName}.
 
 The following issues need to be fixed:
 ${issueText}
@@ -3349,6 +3410,8 @@ Best regards,`;
           btn.type = 'button';
           btn.textContent = source.label;
           btn.className = source.key === STATE.currentSource.key ? 'active' : '';
+          btn.setAttribute('role', 'tab');
+          btn.setAttribute('aria-selected', source.key === STATE.currentSource.key ? 'true' : 'false');
           btn.addEventListener('click', () => App.selectSource(source));
           DOM.tabsEl.appendChild(btn);
 
@@ -3411,7 +3474,7 @@ Best regards,`;
 
         if (TableConfig.useTeamDropdownRows()) {
           const checkTh = document.createElement('th');
-          checkTh.textContent = 'CHECK TEAM';
+          checkTh.textContent = 'TEAM CHECK';
           DOM.headerRow.appendChild(checkTh);
         }
       },
@@ -3455,12 +3518,12 @@ Best regards,`;
         if (history.isFlagged) {
           const badge = document.createElement('div');
           badge.className = 'history-flag-badge flagged';
-          badge.textContent = `Flaggad: ${history.division}`;
+          badge.textContent = `Flagged: ${history.division}`;
           td.appendChild(badge);
         } else {
           const badge = document.createElement('div');
           badge.className = 'history-flag-badge ok';
-          badge.textContent = history.division || 'Historik';
+          badge.textContent = history.division || 'History';
           td.appendChild(badge);
         }
 
@@ -3480,7 +3543,7 @@ Best regards,`;
 
         const games = document.createElement('div');
         games.className = 'team-history-games';
-        games.textContent = `Gruppspel: ${history.groupMatches} • Slutspel: ${history.playoffMatches} • Totalt: ${history.totalMatches}`;
+        games.textContent = `Group: ${history.groupMatches} • Playoffs: ${history.playoffMatches} • Total: ${history.totalMatches}`;
         td.appendChild(games);
 
         return td;
@@ -3490,12 +3553,11 @@ Best regards,`;
         return ['history1', 'history2', 'history3'].some(prefix => this.buildHistoryData(player, prefix).isFlagged);
       },
 
-      async createTeamPlayerCheckPanel(row, forceReload = false) {
+      async createTeamPlayerCheckPanel(row) {
         const wrapper = document.createElement('div');
         wrapper.className = 'team-rich-panel';
 
-        const teamLinkMap = await DataService.getTeamLinkMap(forceReload);
-        const playerLinkMap = await DataService.getPlayerLinkMap(forceReload);
+        const { teamLinkMap, playerLinkMap } = STATE.renderContext;
 
         const summary = document.createElement('div');
         summary.className = 'team-rich-summary';
@@ -3540,11 +3602,11 @@ Best regards,`;
         });
 
         const flaggedRuleText = STATE.currentSource.key === 'lite'
-          ? 'Flaggar Elite/Pro-historik'
+          ? 'Flags Elite/Pro history'
           : STATE.currentSource.key === 'core'
-            ? 'Flaggar Elite/Pro/Lite-historik'
+            ? 'Flags Elite/Pro/Lite history'
             : STATE.currentSource.key === 'neo'
-              ? 'Flaggar Elite/Pro/Lite/Core-historik'
+              ? 'Flags Elite/Pro/Lite/Core history'
               : '';
 
         if (flaggedRuleText) {
@@ -3605,9 +3667,9 @@ Best regards,`;
               <tr>
                 <th>#</th>
                 <th>Player</th>
-                <th>Senaste klubb</th>
-                <th>Tidigare år 1</th>
-                <th>Tidigare år 2</th>
+                <th>Most recent team</th>
+                <th>Previous season 1</th>
+                <th>Previous season 2</th>
               </tr>
             </thead>
           `;
@@ -3645,8 +3707,8 @@ Best regards,`;
             const sub = document.createElement('div');
             sub.className = 'team-player-name-sub';
             sub.textContent = player.matchCount !== null && player.matchCount !== undefined
-              ? `${player.bucket || 'Okänd bucket'} • ${player.matchCount} slutspelsmatcher`
-              : (player.bucket || 'Okänd bucket');
+              ? `${player.bucket || 'Unknown bucket'} • ${player.matchCount} playoff games`
+              : (player.bucket || 'Unknown bucket');
             playerTd.appendChild(sub);
 
             tr.appendChild(playerTd);
@@ -3704,15 +3766,15 @@ Best regards,`;
         return td;
       },
 
-      async renderTableCell(td, row, col, forceReload = false) {
+      renderTableCell(td, row, col) {
+        const { teamLinkMap, playerLinkMap } = STATE.renderContext;
+
         let value = row[col] ?? '';
         if (col === 'fullLicenseCount') value = RowAccess.getFullLicenseCount(row);
         if (col === 'signupIssue') value = Rules.getSignupIssueText(row);
 
         if (STATE.currentSource.key === 'inMoreThan1Teams' && col === 'teams') {
-          const builtTd = this.createTeamsListCell(row?.teams);
-          td.replaceWith(builtTd);
-          return builtTd;
+          return this.createTeamsListCell(row?.teams);
         }
 
         const textValue = String(value ?? '');
@@ -3720,9 +3782,6 @@ Best regards,`;
           td.textContent = '';
           return td;
         }
-
-        const teamLinkMap = await DataService.getTeamLinkMap(forceReload);
-        const playerLinkMap = await DataService.getPlayerLinkMap(forceReload);
 
         if (STATE.currentSource.key === 'bannedPlayers') {
           if (col === 'playerName') {
@@ -3974,8 +4033,8 @@ Best regards,`;
             if (STATE.currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
             if (col === 'signupIssue' || col === 'notes' || col === 'teams') td.style.whiteSpace = 'normal';
 
-            const maybeTd = await this.renderTableCell(td, row, col, forceReload);
-            tr.appendChild(maybeTd || td);
+            const renderedTd = this.renderTableCell(td, row, col);
+            tr.appendChild(renderedTd || td);
           }
 
           if (TableConfig.useTeamDropdownRows()) {
@@ -3987,6 +4046,7 @@ Best regards,`;
             btn.style.padding = '7px 10px';
             btn.style.fontSize = '11px';
             btn.textContent = 'Check Team';
+            btn.setAttribute('aria-expanded', 'false');
             checkTd.appendChild(btn);
 
             detailRow = document.createElement('tr');
@@ -3999,7 +4059,7 @@ Best regards,`;
 
             const panel = document.createElement('div');
             panel.className = 'team-dropdown-panel';
-            panel.appendChild(await this.createTeamPlayerCheckPanel(row, forceReload));
+            panel.appendChild(await this.createTeamPlayerCheckPanel(row));
 
             detailCell.appendChild(panel);
             detailRow.appendChild(detailCell);
@@ -4008,6 +4068,7 @@ Best regards,`;
               const open = detailRow.style.display !== 'table-row';
               detailRow.style.display = open ? 'table-row' : 'none';
               btn.textContent = open ? 'Hide Team' : 'Check Team';
+              btn.setAttribute('aria-expanded', open ? 'true' : 'false');
             });
 
             tr.appendChild(checkTd);
@@ -4089,7 +4150,7 @@ Best regards,`;
         DOM.emptyMessage.style.display = filtered.length === 0 ? 'block' : 'none';
 
         if (STATE.currentSource.key === 'signUps') {
-          DOM.rowCounter.textContent = `Anmälda lag: ${filtered.length} / ${STATE.currentRows.length}`;
+          DOM.rowCounter.textContent = `Registered teams: ${filtered.length} / ${STATE.currentRows.length}`;
         } else if (STATE.currentSource.key === 'bannedPlayers') {
           const activeCount = filtered.filter(row => row.active === 'Yes').length;
           const violationCount = filtered.filter(row => row.status === 'Violation').length;
@@ -4263,13 +4324,13 @@ Best regards,`;
           ${team ? `<div style="font-weight:900;color:#f3f7ff;white-space:normal;">${team}</div>` : ''}
           ${[division, year, season].filter(Boolean).length ? `<div style="color:#c3d0ea;font-weight:700;white-space:normal;">${[division, year, season].filter(Boolean).join(' • ')}</div>` : ''}
           <div style="font-size:11px;color:#8ea2c7;margin-top:2px;">
-            Gruppspel: ${groupMatches} • Slutspel: ${playoffMatches} • Totalt: ${totalMatches}
+            Group: ${groupMatches} • Playoffs: ${playoffMatches} • Total: ${totalMatches}
           </div>
         `;
         return td;
       },
 
-      async renderProQualReqCheck(rows, forceReload = false) {
+      async renderProQualReqCheck(rows) {
         this.showProQualReq();
         DOM.emptyMessage.style.display = 'none';
         DOM.tbody.innerHTML = '';
@@ -4284,7 +4345,7 @@ Best regards,`;
         }
 
         const teams = this.groupProQualReqRows(rows);
-        const playerLinkMap = await DataService.getPlayerLinkMap(forceReload);
+        const { playerLinkMap } = STATE.renderContext;
 
         teams.forEach((teamGroup, teamIndex) => {
           const teamBox = document.createElement('div');
@@ -4371,9 +4432,9 @@ Best regards,`;
               <tr>
                 <th>#</th>
                 <th>Player</th>
-                <th>Senaste klubb</th>
-                <th>Tidigare år 1</th>
-                <th>Tidigare år 2</th>
+                <th>Most recent team</th>
+                <th>Previous season 1</th>
+                <th>Previous season 2</th>
               </tr>
             </thead>
           `;
@@ -4529,12 +4590,14 @@ Best regards,`;
       openMobileMenu() {
         DOM.mobileTabsPanel.classList.add('open');
         DOM.mobileTabsPanel.setAttribute('aria-hidden', 'false');
+        DOM.mobileMenuBtn.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
       },
 
       closeMobileMenu() {
         DOM.mobileTabsPanel.classList.remove('open');
         DOM.mobileTabsPanel.setAttribute('aria-hidden', 'true');
+        DOM.mobileMenuBtn.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
       },
 
@@ -4560,18 +4623,19 @@ Best regards,`;
         Render.setCsvButtonVisibility();
 
         try {
+          await DataService.buildRenderContext(forceReload);
           const data = await Loader.loadSourceData(forceReload);
 
           if (STATE.currentSource.type === 'preset') {
             await Render.renderSeeding(data, forceReload);
           } else if (STATE.currentSource.type === 'proqualreqcheck') {
             const filtered = Filters.getFilteredRows(data);
-            await Render.renderProQualReqCheck(filtered, forceReload);
+            await Render.renderProQualReqCheck(filtered);
           } else {
             await Render.renderTable(data, forceReload);
           }
 
-          Utils.setStatus('Done');
+          Utils.setStatus(`Loaded ${STATE.currentSource.label}`);
           DOM.lastUpdated.textContent = 'Last updated: ' + Utils.toDisplayDate();
         } catch (err) {
           console.error(err);
@@ -4636,9 +4700,11 @@ Best regards,`;
           Exporter.exportCurrentTableCsv();
         });
 
-        DOM.searchInput.addEventListener('input', async () => {
+        const debouncedSearch = Utils.debounce(async () => {
           await this.applyFiltersAndRender();
-        });
+        }, 180);
+
+        DOM.searchInput.addEventListener('input', debouncedSearch);
 
         DOM.flaggedOnlyToggle.addEventListener('change', async () => {
           if (STATE.currentSource.type === 'preset') return;
