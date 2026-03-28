@@ -2360,12 +2360,15 @@
 
       getVisibleColumns() {
         if (STATE.currentSource.key === 'bannedPlayers') return STATE.currentColumns;
-        if (STATE.currentSource.key === 'inMoreThan1Teams') return ['playerName', 'teamCount', 'teams'];
+        if (STATE.currentSource.key === 'inMoreThan1Teams') return ['playerName', 'teamCount', 'teams', '__sendMail'];
 
         if (this.useTeamDropdownRows()) return this.getTeamTabVisibleColumns() || [];
 
         const cols = STATE.currentColumns.filter(col => !this.TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
-        if (STATE.currentSource.key === 'backups' || STATE.currentSource.key === 'licenslosa') {
+        if (
+          STATE.currentSource.key === 'backups' ||
+          STATE.currentSource.key === 'licenslosa'
+        ) {
           return [...cols, '__sendMail'];
         }
         return cols;
@@ -2436,7 +2439,8 @@
 
         return col;
       },
-            getSignUpsHeaderLabel(col) {
+
+      getSignUpsHeaderLabel(col) {
         return {
           teamName: 'Team',
           teamCountry: 'Country',
@@ -3091,6 +3095,40 @@
         return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
       },
 
+      async getMultipleTeamsMessageUrl(row, forceReload = false) {
+        if (STATE.currentSource.key !== 'inMoreThan1Teams') return '';
+
+        const captainMap = await BannedPlayersService.getCaptainUserIdMap(forceReload);
+        const recipients = new Set();
+
+        const playerUserId = String(RowAccess.getUserId(row) || '').trim();
+        if (playerUserId) recipients.add(playerUserId);
+
+        const teams = Array.isArray(row?.teams) ? row.teams : [];
+        teams.forEach(team => {
+          const normalizedTeam = Utils.normalizeTeamName(team?.teamName || '');
+          const captainIds = captainMap.get(normalizedTeam) || [];
+          captainIds.forEach(id => {
+            const cleaned = String(id || '').trim();
+            if (cleaned) recipients.add(cleaned);
+          });
+
+          const possibleUserId = String(
+            team?.userID ??
+            team?.userId ??
+            team?.UserID ??
+            ''
+          ).trim();
+
+          if (possibleUserId) recipients.add(possibleUserId);
+        });
+
+        const recipientList = [...recipients];
+        if (recipientList.length === 0) return '';
+
+        return `https://sportsgamer.gg/community/messenger/compose/?to=${recipientList.join(',')}`;
+      },
+
       buildBackupMessage(row) {
         const teamName = RowAccess.getTeamName(row) || 'team';
         const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
@@ -3173,16 +3211,55 @@ If you have any questions or need assistance, feel free to contact us — we are
 Best regards,`;
       },
 
+      buildMultipleTeamsMessage(row) {
+        const playerName = String(
+          row?.playerName ||
+          row?.Player ||
+          row?.tag ||
+          'player'
+        ).trim() || 'player';
+
+        const teams = Array.isArray(row?.teams) ? row.teams : [];
+        const teamCount = Number(row?.teamCount) || teams.length || 2;
+
+        const teamLines = teams
+          .map(team => {
+            const leagueName = String(team?.leagueName || '').trim();
+            const teamName = String(team?.teamName || '').trim();
+            return [leagueName, teamName].filter(Boolean).join(' — ');
+          })
+          .filter(Boolean)
+          .join('\n');
+
+        return `Multiple Team Registration – Action Required for ${playerName}
+
+Hi,
+
+We can see that ${playerName} is currently registered in ${teamCount} teams for ECL ’26: Spring.
+
+This needs to be corrected immediately. A player cannot be registered in multiple teams at the same time.
+
+Please make sure this is resolved as soon as possible and confirm once it has been fixed.
+
+Teams currently connected to this player:
+${teamLines || '-'}
+
+Best regards,`;
+      },
+
       async copyBackupMessage(row) {
         await navigator.clipboard.writeText(this.buildBackupMessage(row));
       },
 
       async copyUnlicensedMessage(row) {
         await navigator.clipboard.writeText(this.buildUnlicensedMessage(row));
+      },
+
+      async copyMultipleTeamsMessage(row) {
+        await navigator.clipboard.writeText(this.buildMultipleTeamsMessage(row));
       }
     };
-
-    const Render = {
+        const Render = {
       showNormalTable() {
         DOM.normalTableWrap.style.display = 'block';
         DOM.seedingWrap.style.display = 'none';
@@ -3767,6 +3844,36 @@ Best regards,`;
                 copyBtn.addEventListener('click', async () => {
                   try {
                     await MessagingService.copyUnlicensedMessage(row);
+                    Utils.setStatus('Message copied');
+                  } catch {
+                    Utils.setStatus('Copy failed');
+                  }
+                });
+                actions.appendChild(copyBtn);
+              }
+
+              if (STATE.currentSource.key === 'inMoreThan1Teams') {
+                const mailUrl = await MessagingService.getMultipleTeamsMessageUrl(row, forceReload);
+
+                if (mailUrl) {
+                  const btn = document.createElement('a');
+                  btn.href = mailUrl;
+                  btn.target = '_blank';
+                  btn.rel = 'noopener noreferrer';
+                  btn.className = 'mail-icon-btn';
+                  btn.title = 'Open message';
+                  btn.textContent = '✉';
+                  actions.appendChild(btn);
+                }
+
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'copy-icon-btn';
+                copyBtn.title = 'Copy preset message';
+                copyBtn.textContent = '⧉';
+                copyBtn.addEventListener('click', async () => {
+                  try {
+                    await MessagingService.copyMultipleTeamsMessage(row);
                     Utils.setStatus('Message copied');
                   } catch {
                     Utils.setStatus('Copy failed');
