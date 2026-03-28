@@ -1246,6 +1246,7 @@
       { key: 'overgangar', label: 'Transfers 26 Spring Teams', type: 'alla', csv: true },
       { key: 'backups', label: 'Backups 26 Spring Teams', type: 'alla', csv: true },
       { key: 'licenslosa', label: 'Unlicensed 26 Spring Teams', type: 'alla', csv: true },
+      { key: 'inMoreThan2Teams', label: 'Players In More Than 2 Teams', type: 'alla', csv: true },
       { key: 'signUps', label: 'Registered Teams 26 Spring', type: 'alla', csv: true },
       { key: 'proQualReqCheck', label: 'PRO QUAL REQ CHECK', type: 'proqualreqcheck', csv: false },
       { key: 'bannedPlayers', label: 'Banned Players', type: 'banned', csv: true }
@@ -1886,6 +1887,10 @@
                 }
               });
             }
+
+            if (Array.isArray(row?.teams)) {
+              row.teams.forEach(() => {});
+            }
           });
         });
 
@@ -1944,7 +1949,13 @@
             ).join(' ')
           : '';
 
-        return `${baseText} ${playerText}`.trim();
+        const teamsText = Array.isArray(row?.teams)
+          ? row.teams.map(team =>
+              Object.values(team || {}).map(value => String(value ?? '').toLowerCase()).join(' ')
+            ).join(' ')
+          : '';
+
+        return `${baseText} ${playerText} ${teamsText}`.trim();
       }
     };
 
@@ -2053,6 +2064,8 @@
       },
 
       getRowClass(row) {
+        if (STATE.currentSource.key === 'inMoreThan2Teams') return 'not-ok';
+
         if (STATE.currentSource.key === 'bannedPlayers') {
           if (String(row?.status || '').toLowerCase() === 'violation') return 'not-ok';
           if (String(row?.status || '').toLowerCase() === 'clear') return 'ban-clear';
@@ -2184,6 +2197,15 @@
       getExportValue(row, col) {
         if (col === 'fullLicenseCount') return RowAccess.getFullLicenseCount(row);
         if (col === 'signupIssue') return Rules.getSignupIssueText(row);
+
+        if (col === 'teams' && Array.isArray(row?.teams)) {
+          return row.teams.map(team => {
+            const leagueName = String(team?.leagueName || '').trim();
+            const teamName = String(team?.teamName || '').trim();
+            return [leagueName, teamName].filter(Boolean).join(' — ');
+          }).join(' | ');
+        }
+
         return row?.[col] ?? '';
       },
 
@@ -2251,6 +2273,10 @@
       },
 
       getColumns(rows) {
+        if (STATE.currentSource.key === 'inMoreThan2Teams') {
+          return ['playerName', 'teamCount', 'teams'];
+        }
+
         if (STATE.currentSource.key === 'bannedPlayers') {
           return ['playerName', 'banType', 'until', 'active', 'status', 'foundAs', 'teams', 'divisions', 'sources', 'notes'];
         }
@@ -2270,7 +2296,8 @@
           'From', 'FromDiv', 'FromTeamID', 'FromLeagueID',
           'To', 'ToDiv', 'ToTeamID', 'ToLeagueID',
           'GroupGames26Winter', 'PlayoffGames26Winter', 'TotalGames26Winter',
-          'totalMatchesPlayed', 'Date', 'Role', 'compatibility', 'totalPoints', 'leagueID'
+          'totalMatchesPlayed', 'Date', 'Role', 'compatibility', 'totalPoints', 'leagueID',
+          'teamCount', 'teams'
         ];
 
         const allKeys = new Set();
@@ -2333,6 +2360,7 @@
 
       getVisibleColumns() {
         if (STATE.currentSource.key === 'bannedPlayers') return STATE.currentColumns;
+        if (STATE.currentSource.key === 'inMoreThan2Teams') return ['playerName', 'teamCount', 'teams'];
 
         if (this.useTeamDropdownRows()) return this.getTeamTabVisibleColumns() || [];
 
@@ -2344,6 +2372,14 @@
       },
 
       getColumnHeaderLabel(col) {
+        if (STATE.currentSource.key === 'inMoreThan2Teams') {
+          return {
+            playerName: 'PLAYER',
+            teamCount: 'TEAM COUNT',
+            teams: 'TEAMS'
+          }[col] || col;
+        }
+
         if (STATE.currentSource.key === 'bannedPlayers') {
           return {
             playerName: 'PLAYER',
@@ -2400,8 +2436,7 @@
 
         return col;
       },
-
-      getSignUpsHeaderLabel(col) {
+            getSignUpsHeaderLabel(col) {
         return {
           teamName: 'Team',
           teamCountry: 'Country',
@@ -2539,6 +2574,15 @@
           if (STATE.sortState.column === 'signupIssue') {
             aValue = Rules.getSignupIssueText(a);
             bValue = Rules.getSignupIssueText(b);
+          }
+
+          if (STATE.sortState.column === 'teams') {
+            aValue = Array.isArray(a?.teams)
+              ? a.teams.map(team => `${team?.leagueName || ''} ${team?.teamName || ''}`).join(' | ')
+              : '';
+            bValue = Array.isArray(b?.teams)
+              ? b.teams.map(team => `${team?.leagueName || ''} ${team?.teamName || ''}`).join(' | ')
+              : '';
           }
 
           const result = Utils.compareValues(aValue, bValue, isNumeric);
@@ -3137,7 +3181,8 @@ Best regards,`;
         await navigator.clipboard.writeText(this.buildUnlicensedMessage(row));
       }
     };
-        const Render = {
+
+    const Render = {
       showNormalTable() {
         DOM.normalTableWrap.style.display = 'block';
         DOM.seedingWrap.style.display = 'none';
@@ -3492,15 +3537,57 @@ Best regards,`;
         return wrapper;
       },
 
+      createTeamsListCell(teams) {
+        const td = document.createElement('td');
+        td.style.whiteSpace = 'normal';
+
+        if (!Array.isArray(teams) || teams.length === 0) {
+          td.textContent = '';
+          return td;
+        }
+
+        teams.forEach((team, index) => {
+          const row = document.createElement('div');
+          row.style.marginBottom = index === teams.length - 1 ? '0' : '6px';
+
+          const teamName = String(team?.teamName || '').trim();
+          const leagueName = String(team?.leagueName || '').trim();
+          const teamID = String(team?.teamID || '').trim();
+          const leagueID = String(team?.leagueID || '').trim();
+
+          if (teamName && teamID && leagueID) {
+            row.appendChild(
+              Utils.createLink(
+                TeamLinks.buildTeamUrl(teamID, leagueID),
+                `${leagueName ? leagueName + ' — ' : ''}${teamName}`,
+                'cell-link'
+              )
+            );
+          } else {
+            row.textContent = `${leagueName ? leagueName + ' — ' : ''}${teamName}`;
+          }
+
+          td.appendChild(row);
+        });
+
+        return td;
+      },
+
       async renderTableCell(td, row, col, forceReload = false) {
         let value = row[col] ?? '';
         if (col === 'fullLicenseCount') value = RowAccess.getFullLicenseCount(row);
         if (col === 'signupIssue') value = Rules.getSignupIssueText(row);
 
+        if (STATE.currentSource.key === 'inMoreThan2Teams' && col === 'teams') {
+          const builtTd = this.createTeamsListCell(row?.teams);
+          td.replaceWith(builtTd);
+          return builtTd;
+        }
+
         const textValue = String(value ?? '');
         if (!textValue) {
           td.textContent = '';
-          return;
+          return td;
         }
 
         const teamLinkMap = await DataService.getTeamLinkMap(forceReload);
@@ -3524,7 +3611,7 @@ Best regards,`;
               alias.textContent = 'Alias: ' + row.playerAliases;
               td.appendChild(alias);
             }
-            return;
+            return td;
           }
 
           if (col === 'teams') {
@@ -3538,12 +3625,12 @@ Best regards,`;
               }
               if (index < parts.length - 1) td.appendChild(document.createTextNode(' | '));
             });
-            return;
+            return td;
           }
 
           if (col === 'notes') td.style.whiteSpace = 'normal';
           td.textContent = textValue;
-          return;
+          return td;
         }
 
         if (PLAYER_LIST_NAME_KEYS.includes(col)) {
@@ -3559,12 +3646,12 @@ Best regards,`;
 
             if (index < parts.length - 1) td.appendChild(document.createTextNode(', '));
           });
-          return;
+          return td;
         }
 
         if (['history1Team', 'history2Team', 'history3Team'].includes(col)) {
           td.textContent = textValue;
-          return;
+          return td;
         }
 
         if (TEAM_NAME_KEYS.includes(col) || col === 'From' || col === 'To') {
@@ -3577,7 +3664,7 @@ Best regards,`;
 
           if (teamId && leagueId) {
             td.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamId, leagueId), textValue));
-            return;
+            return td;
           }
         }
 
@@ -3586,17 +3673,18 @@ Best regards,`;
           const mappedPlayerID = directPlayerID || playerLinkMap.get(Utils.normalizePlayerName(textValue));
           if (mappedPlayerID) {
             td.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, textValue));
-            return;
+            return td;
           }
         }
 
         const anyMappedPlayerID = playerLinkMap.get(Utils.normalizePlayerName(textValue));
         if (anyMappedPlayerID) {
           td.appendChild(Utils.createLink(PLAYER_BASE_URL + anyMappedPlayerID, textValue));
-          return;
+          return td;
         }
 
         td.textContent = textValue;
+        return td;
       },
 
       async renderTableBody(rows, forceReload = false) {
@@ -3693,10 +3781,10 @@ Best regards,`;
             }
 
             if (STATE.currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
-            if (col === 'signupIssue' || col === 'notes') td.style.whiteSpace = 'normal';
+            if (col === 'signupIssue' || col === 'notes' || col === 'teams') td.style.whiteSpace = 'normal';
 
-            await this.renderTableCell(td, row, col, forceReload);
-            tr.appendChild(td);
+            const maybeTd = await this.renderTableCell(td, row, col, forceReload);
+            tr.appendChild(maybeTd || td);
           }
 
           if (TableConfig.useTeamDropdownRows()) {
@@ -3764,6 +3852,7 @@ Best regards,`;
           STATE.currentColumns.filter(col =>
             col !== 'fullLicenseCount' &&
             col !== 'signupIssue' &&
+            col !== 'teams' &&
             TableConfig.isNumericColumn(STATE.currentRows.map(r => {
               if (col === 'fullLicenseCount') return RowAccess.getFullLicenseCount(r);
               return r[col];
@@ -3795,6 +3884,13 @@ Best regards,`;
               const bDate = new Date(b?.registrationDate || 0).getTime();
               return bDate - aDate;
             });
+          } else if (STATE.currentSource.key === 'inMoreThan2Teams') {
+            baseRows = [...STATE.currentRows].sort((a, b) => {
+              const aCount = Number(a?.teamCount) || 0;
+              const bCount = Number(b?.teamCount) || 0;
+              if (bCount !== aCount) return bCount - aCount;
+              return String(a?.playerName || '').localeCompare(String(b?.playerName || ''), 'en', { sensitivity: 'base' });
+            });
           }
         }
 
@@ -3807,6 +3903,8 @@ Best regards,`;
           const activeCount = filtered.filter(row => row.active === 'Yes').length;
           const violationCount = filtered.filter(row => row.status === 'Violation').length;
           DOM.rowCounter.textContent = `Bans: ${filtered.length} / ${STATE.currentRows.length} • Active: ${activeCount} • Violations: ${violationCount}`;
+        } else if (STATE.currentSource.key === 'inMoreThan2Teams') {
+          DOM.rowCounter.textContent = `${filtered.length} flagged player${filtered.length === 1 ? '' : 's'}`;
         } else {
           DOM.rowCounter.textContent = `${filtered.length} row${filtered.length === 1 ? '' : 's'}`;
         }
