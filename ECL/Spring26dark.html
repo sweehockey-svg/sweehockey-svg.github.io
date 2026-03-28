@@ -3,31 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>eHockey Admin Tool</title>
+  <title>eHockey Admin Tool v2</title>
   <style>
     :root {
-      --bg: #0b1220;
-      --panel: #121a2b;
-      --panel-2: #182235;
+      --bg: #09111d;
+      --panel: #10192a;
+      --panel-2: #162238;
+      --panel-3: #1b2942;
       --border: #2a3752;
-      --text: #e8eefc;
+      --text: #edf3ff;
       --muted: #96a3c0;
       --accent: #4f8cff;
-      --accent-2: #6ee7b7;
-      --danger: #ff6b6b;
-      --warning: #f5c451;
-      --shadow: 0 12px 30px rgba(0,0,0,.28);
+      --accent-soft: rgba(79, 140, 255, .14);
+      --ok: #6ee7b7;
+      --warn: #f5c451;
+      --danger: #ff7a7a;
       --radius: 18px;
+      --shadow: 0 14px 40px rgba(0,0,0,.28);
     }
 
     * { box-sizing: border-box; }
 
-    body {
+    html, body {
       margin: 0;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: linear-gradient(180deg, #09101c 0%, #0b1220 100%);
+      background: linear-gradient(180deg, #07101b 0%, #09111d 100%);
       color: var(--text);
     }
+
+    a { color: inherit; }
 
     .app {
       display: grid;
@@ -36,47 +40,45 @@
     }
 
     .sidebar {
-      background: rgba(12, 18, 31, 0.92);
-      border-right: 1px solid var(--border);
-      padding: 24px 18px;
       position: sticky;
       top: 0;
       height: 100vh;
+      overflow: auto;
+      padding: 22px 16px;
+      border-right: 1px solid var(--border);
+      background: rgba(10, 17, 29, .95);
+      backdrop-filter: blur(10px);
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 28px;
+      margin-bottom: 26px;
+      padding: 0 8px;
     }
 
     .logo {
       width: 42px;
       height: 42px;
       border-radius: 12px;
-      background: linear-gradient(135deg, var(--accent), #7aa8ff);
       display: grid;
       place-items: center;
       font-weight: 800;
-      color: white;
+      background: linear-gradient(135deg, var(--accent), #7aa8ff);
       box-shadow: var(--shadow);
     }
 
     .brand h1 {
       margin: 0;
       font-size: 18px;
-      line-height: 1.1;
+      line-height: 1.05;
     }
 
     .brand p {
       margin: 4px 0 0;
       color: var(--muted);
       font-size: 12px;
-    }
-
-    .nav-group {
-      margin-bottom: 20px;
     }
 
     .nav-title {
@@ -91,81 +93,94 @@
     .nav {
       display: grid;
       gap: 8px;
+      margin-bottom: 18px;
     }
 
-    .nav a {
-      text-decoration: none;
-      color: var(--text);
-      padding: 12px 14px;
-      border-radius: 12px;
+    .nav-btn {
+      width: 100%;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
+      gap: 10px;
       border: 1px solid transparent;
       background: transparent;
-      transition: .2s ease;
+      color: var(--text);
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: .18s ease;
       font-size: 14px;
     }
 
-    .nav a:hover,
-    .nav a.active {
-      background: rgba(79, 140, 255, .12);
-      border-color: rgba(79, 140, 255, .28);
+    .nav-btn:hover {
+      background: rgba(255,255,255,.03);
+      border-color: rgba(255,255,255,.05);
+    }
+
+    .nav-btn.active {
+      background: var(--accent-soft);
+      border-color: rgba(79, 140, 255, .34);
     }
 
     .badge {
-      font-size: 12px;
-      color: var(--muted);
-      background: rgba(255,255,255,.05);
       padding: 3px 8px;
       border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
     }
 
-    .content {
+    .main {
       padding: 28px;
     }
 
     .topbar {
       display: flex;
-      gap: 16px;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
       flex-wrap: wrap;
     }
 
-    .topbar h2 {
+    .title-wrap h2 {
       margin: 0;
       font-size: 28px;
     }
 
-    .topbar p {
+    .title-wrap p {
       margin: 6px 0 0;
       color: var(--muted);
     }
 
-    .top-actions {
+    .actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
     }
 
+    .input,
     .btn,
-    .search input,
-    select {
+    .select {
+      height: 44px;
       border-radius: 12px;
       border: 1px solid var(--border);
       background: var(--panel);
       color: var(--text);
-      height: 44px;
       padding: 0 14px;
       font-size: 14px;
     }
 
+    .input {
+      min-width: 260px;
+    }
+
     .btn {
       cursor: pointer;
-      background: var(--panel-2);
       font-weight: 600;
+      background: var(--panel-2);
     }
 
     .btn.primary {
@@ -174,50 +189,79 @@
       color: white;
     }
 
-    .search input {
-      min-width: 260px;
+    .page {
+      display: none;
+      animation: fade .18s ease;
     }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
+    .page.active {
+      display: block;
     }
 
-    .stat-card,
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero,
+    .card,
     .table-card {
-      background: rgba(18, 26, 43, 0.9);
+      background: rgba(16, 25, 42, .92);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
 
-    .stat-card {
+    .hero {
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .hero h3 {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .metric,
+    .card {
       padding: 18px;
     }
 
-    .stat-label {
+    .metric-label {
       color: var(--muted);
       font-size: 13px;
       margin-bottom: 10px;
     }
 
-    .stat-value {
+    .metric-value {
       font-size: 28px;
       font-weight: 800;
       margin-bottom: 6px;
     }
 
-    .stat-meta {
-      font-size: 13px;
+    .metric-meta {
       color: var(--muted);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
+      font-size: 13px;
     }
 
     .table-card {
@@ -229,7 +273,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      padding: 18px 18px 14px;
+      padding: 18px;
       border-bottom: 1px solid var(--border);
       flex-wrap: wrap;
     }
@@ -258,25 +302,22 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 980px;
+      min-width: 900px;
     }
 
-    th,
-    td {
-      text-align: left;
+    th, td {
       padding: 14px 18px;
+      text-align: left;
       border-bottom: 1px solid rgba(255,255,255,.05);
       font-size: 14px;
     }
 
     th {
+      background: rgba(255,255,255,.02);
       color: var(--muted);
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: .06em;
-      background: rgba(255,255,255,.02);
-      position: sticky;
-      top: 0;
     }
 
     tr:hover td {
@@ -286,27 +327,51 @@
     .pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
       padding: 5px 10px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: 700;
     }
 
-    .pill.ok { background: rgba(110, 231, 183, .12); color: var(--accent-2); }
-    .pill.warn { background: rgba(245, 196, 81, .12); color: var(--warning); }
-    .pill.danger { background: rgba(255, 107, 107, .12); color: var(--danger); }
-    .pill.info { background: rgba(79, 140, 255, .12); color: #8ab1ff; }
+    .ok { background: rgba(110, 231, 183, .12); color: var(--ok); }
+    .warn { background: rgba(245, 196, 81, .12); color: var(--warn); }
+    .danger { background: rgba(255, 122, 122, .12); color: var(--danger); }
+    .info { background: rgba(79, 140, 255, .12); color: #8ab1ff; }
 
-    .section-anchor {
-      scroll-margin-top: 24px;
+    .mini-list {
+      display: grid;
+      gap: 12px;
     }
 
-    .footer-space {
-      height: 40px;
+    .mini-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.05);
     }
 
-    @media (max-width: 1100px) {
+    .mini-item strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .mini-item span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 18px;
+    }
+
+    @media (max-width: 1150px) {
       .app { grid-template-columns: 1fr; }
       .sidebar {
         position: relative;
@@ -314,14 +379,19 @@
         border-right: 0;
         border-bottom: 1px solid var(--border);
       }
-      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hero-grid,
+      .split {
+        grid-template-columns: 1fr;
+      }
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
-    @media (max-width: 700px) {
-      .content { padding: 18px; }
-      .stats { grid-template-columns: 1fr; }
-      .search input { min-width: 100%; }
-      .topbar { align-items: flex-start; }
+    @media (max-width: 720px) {
+      .main { padding: 18px; }
+      .metrics { grid-template-columns: 1fr; }
+      .input { min-width: 100%; }
     }
   </style>
 </head>
@@ -332,347 +402,192 @@
         <div class="logo">EH</div>
         <div>
           <h1>eHockey Admin</h1>
-          <p>Spring 26 kontrollpanel</p>
+          <p>v2 • separata sidor per flik</p>
         </div>
       </div>
 
-      <div class="nav-group">
-        <p class="nav-title">Kontroller</p>
-        <nav class="nav">
-          <a href="#seeding" class="active"><span>Seeding 26 Spring</span><span class="badge">26</span></a>
-          <a href="#registered"><span>Registered Teams</span><span class="badge">26</span></a>
-          <a href="#lite"><span>Lite Teams</span><span class="badge">L</span></a>
-          <a href="#core"><span>Core Teams</span><span class="badge">C</span></a>
-          <a href="#neo"><span>Neo Teams</span><span class="badge">N</span></a>
-          <a href="#transfers"><span>Transfers</span><span class="badge">12</span></a>
-          <a href="#backups"><span>Backups</span><span class="badge">8</span></a>
-          <a href="#unlicensed"><span>Unlicensed</span><span class="badge">5</span></a>
-          <a href="#multiple"><span>Multiple Teams</span><span class="badge">3</span></a>
-          <a href="#banned"><span>Banned Players</span><span class="badge">2</span></a>
-        </nav>
-      </div>
+      <p class="nav-title">Sidor</p>
+      <nav class="nav">
+        <button class="nav-btn active" data-page="dashboard"><span>Overview</span><span class="badge">Start</span></button>
+        <button class="nav-btn" data-page="seeding"><span>Seeding 26 Spring</span><span class="badge">26</span></button>
+        <button class="nav-btn" data-page="registered"><span>Registered Teams</span><span class="badge">64</span></button>
+        <button class="nav-btn" data-page="lite"><span>Lite Teams</span><span class="badge">L</span></button>
+        <button class="nav-btn" data-page="core"><span>Core Teams</span><span class="badge">C</span></button>
+        <button class="nav-btn" data-page="neo"><span>Neo Teams</span><span class="badge">N</span></button>
+        <button class="nav-btn" data-page="transfers"><span>Transfers</span><span class="badge">12</span></button>
+        <button class="nav-btn" data-page="backups"><span>Backups</span><span class="badge">8</span></button>
+        <button class="nav-btn" data-page="unlicensed"><span>Unlicensed</span><span class="badge">5</span></button>
+        <button class="nav-btn" data-page="multiple"><span>Multiple Teams</span><span class="badge">3</span></button>
+        <button class="nav-btn" data-page="banned"><span>Banned Players</span><span class="badge">2</span></button>
+      </nav>
     </aside>
 
-    <main class="content">
-      <section class="topbar">
-        <div>
-          <h2>Admin Tool Overview</h2>
-          <p>Designförslag för att snabbt kunna granska lag, spelare, licenser, transfers och regelbrott.</p>
+    <main class="main">
+      <div class="topbar">
+        <div class="title-wrap">
+          <h2 id="page-title">Overview</h2>
+          <p id="page-subtitle">Adminförslag där varje område öppnas som en egen sida.</p>
         </div>
-        <div class="top-actions">
-          <div class="search"><input type="text" placeholder="Sök lag, spelare eller PSN/Xbox..." /></div>
-          <select>
+        <div class="actions">
+          <input class="input" type="text" placeholder="Sök spelare, lag eller ID..." />
+          <select class="select">
             <option>26 Spring</option>
             <option>25 Winter</option>
-            <option>25 Fall</option>
           </select>
           <button class="btn">Exportera</button>
-          <button class="btn primary">Uppdatera data</button>
+          <button class="btn primary">Synka data</button>
+        </div>
+      </div>
+
+      <section class="page active" id="page-dashboard" data-title="Overview" data-subtitle="Startvy med snabbstatus och genvägar till varje kontrollsida.">
+        <div class="hero hero-grid">
+          <div>
+            <h3>Överblick för 26 Spring</h3>
+            <p>Den här versionen är uppbyggd mer som ett riktigt adminverktyg: vänstermenyn öppnar en separat sida för varje kontrollområde. Det gör det lättare att fokusera på en tabell i taget, lägga till egna filter och senare koppla varje sida till en egen endpoint eller datakälla.</p>
+          </div>
+          <div class="card">
+            <div class="mini-list">
+              <div class="mini-item"><div><strong>Högst prioritet</strong><span>Unlicensed / Multiple Teams / Banned</span></div><span class="pill danger">Risk</span></div>
+              <div class="mini-item"><div><strong>Normal prioritet</strong><span>Transfers / Backups</span></div><span class="pill warn">Review</span></div>
+              <div class="mini-item"><div><strong>Grunddata</strong><span>Seeding / Registrerade lag / Divisioner</span></div><span class="pill info">Data</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <article class="metric hero">
+            <div class="metric-label">Registrerade lag</div>
+            <div class="metric-value">64</div>
+            <div class="metric-meta">Totalt för säsongen</div>
+          </article>
+          <article class="metric hero">
+            <div class="metric-label">Flaggade spelare</div>
+            <div class="metric-value">10</div>
+            <div class="metric-meta">Banned, flera lag eller utan licens</div>
+          </article>
+          <article class="metric hero">
+            <div class="metric-label">Aktiva transfers</div>
+            <div class="metric-value">12</div>
+            <div class="metric-meta">Senaste perioden</div>
+          </article>
+        </div>
+
+        <div class="split">
+          <section class="table-card">
+            <div class="table-head">
+              <div>
+                <h3>Snabbgenvägar</h3>
+                <p>Klicka vidare till en egen sida per kontroll.</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Sida</th>
+                    <th>Syfte</th>
+                    <th>Prioritet</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Unlicensed</td><td>Spelare utan giltig licens</td><td>Hög</td><td><span class="pill danger">Åtgärda</span></td></tr>
+                  <tr><td>Players In Multiple Teams</td><td>Dubbelregistreringar</td><td>Hög</td><td><span class="pill danger">Utred</span></td></tr>
+                  <tr><td>Banned Players</td><td>Avstängningar</td><td>Hög</td><td><span class="pill danger">Blockera</span></td></tr>
+                  <tr><td>Transfers</td><td>Spelarbyten</td><td>Medel</td><td><span class="pill warn">Review</span></td></tr>
+                  <tr><td>Backups</td><td>Reservspelare</td><td>Medel</td><td><span class="pill info">Kontroll</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <aside class="card">
+            <h3 style="margin-top:0;">Designidé</h3>
+            <p style="color: var(--muted); line-height:1.6;">Varje flik kan senare bli en riktig egen route, till exempel <code>/admin/transfers</code> eller <code>/admin/unlicensed</code>. Den här prototypen visar känslan redan nu utan att behöva bygga backend först.</p>
+          </aside>
         </div>
       </section>
 
-      <section class="stats">
-        <article class="stat-card">
-          <div class="stat-label">Registrerade lag</div>
-          <div class="stat-value">64</div>
-          <div class="stat-meta">Totalt i systemet för 26 Spring</div>
-        </article>
-        <article class="stat-card">
-          <div class="stat-label">Flaggade spelare</div>
-          <div class="stat-value">10</div>
-          <div class="stat-meta">Multiple teams, unlicensed eller banned</div>
-        </article>
-        <article class="stat-card">
-          <div class="stat-label">Transfers</div>
-          <div class="stat-value">12</div>
-          <div class="stat-meta">Senaste 7 dagarna</div>
-        </article>
-        <article class="stat-card">
-          <div class="stat-label">Backups</div>
-          <div class="stat-value">8</div>
-          <div class="stat-meta">Tillfälliga ersättare registrerade</div>
-        </article>
+      <section class="page" id="page-seeding" data-title="Seeding 26 Spring" data-subtitle="Egen sida för seedning, ranking och föregående resultat.">
+        <div class="metrics">
+          <article class="metric hero"><div class="metric-label">Totala seedade lag</div><div class="metric-value">26</div><div class="metric-meta">Aktiva i listan</div></article>
+          <article class="metric hero"><div class="metric-label">Behöver review</div><div class="metric-value">3</div><div class="metric-meta">Avvikande placeringar</div></article>
+          <article class="metric hero"><div class="metric-label">Bekräftade seeds</div><div class="metric-value">23</div><div class="metric-meta">Klara för publicering</div></article>
+        </div>
+        <section class="table-card">
+          <div class="table-head"><div><h3>Seedingtabell</h3><p>Full sida med fokus på seedning.</p></div><div class="table-tools"><button class="btn">Sortera seed</button><button class="btn">Visa avvikelser</button></div></div>
+          <div class="table-wrap"><table><thead><tr><th>#</th><th>Lag</th><th>Seed</th><th>Förra division</th><th>Senaste resultat</th><th>Status</th></tr></thead><tbody><tr><td>1</td><td>Nordic Wolves</td><td>1</td><td>Lite</td><td>Top 4</td><td><span class="pill ok">Bekräftad</span></td></tr><tr><td>2</td><td>Arctic Blades</td><td>2</td><td>Lite</td><td>Top 8</td><td><span class="pill ok">Bekräftad</span></td></tr><tr><td>3</td><td>Stockholm Storm</td><td>3</td><td>Core</td><td>Final</td><td><span class="pill info">Review</span></td></tr></tbody></table></div>
+        </section>
       </section>
 
-      <div class="grid">
-        <section id="seeding" class="table-card section-anchor">
-          <div class="table-head">
-            <div>
-              <h3>Seeding 26 Spring</h3>
-              <p>Översikt av rank, föregående resultat och divisionstillhörighet.</p>
-            </div>
-            <div class="table-tools">
-              <button class="btn">Filter</button>
-              <button class="btn">Sortera</button>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Lag</th>
-                  <th>Seed</th>
-                  <th>Förra division</th>
-                  <th>Senaste resultat</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>1</td><td>Nordic Wolves</td><td>1</td><td>Lite</td><td>Top 4</td><td><span class="pill ok">Bekräftad</span></td></tr>
-                <tr><td>2</td><td>Arctic Blades</td><td>2</td><td>Lite</td><td>Top 8</td><td><span class="pill ok">Bekräftad</span></td></tr>
-                <tr><td>3</td><td>Stockholm Storm</td><td>3</td><td>Core</td><td>Final</td><td><span class="pill info">Review</span></td></tr>
-              </tbody>
-            </table>
-          </div>
+      <section class="page" id="page-registered" data-title="Registered Teams 26 Spring" data-subtitle="Egen sida för alla registrerade lag och rosterstatus.">
+        <section class="table-card">
+          <div class="table-head"><div><h3>Registrerade lag</h3><p>Samlad tabell för anmälda lag, kapten och licensläge.</p></div><div class="table-tools"><button class="btn">Endast problem</button><button class="btn">Exportera CSV</button></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Lag</th><th>Division</th><th>Kapten</th><th>Spelare</th><th>Licenser</th><th>Status</th></tr></thead><tbody><tr><td>Nordic Wolves</td><td>Lite</td><td>IGurrAI</td><td>6</td><td>6/6</td><td><span class="pill ok">Klar</span></td></tr><tr><td>Icebreakers</td><td>Core</td><td>Rexx</td><td>5</td><td>4/5</td><td><span class="pill warn">Saknar licens</span></td></tr><tr><td>Frozen Unit</td><td>Neo</td><td>Hedman</td><td>6</td><td>6/6</td><td><span class="pill ok">Klar</span></td></tr></tbody></table></div>
         </section>
+      </section>
 
-        <section id="registered" class="table-card section-anchor">
-          <div class="table-head">
-            <div>
-              <h3>Registered Teams 26 Spring</h3>
-              <p>Alla anmälda lag med kontaktperson, licensstatus och division.</p>
-            </div>
-            <div class="table-tools">
-              <button class="btn">Visa alla</button>
-              <button class="btn">Endast flaggade</button>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Lag</th>
-                  <th>Division</th>
-                  <th>Kapten</th>
-                  <th>Spelare</th>
-                  <th>Licenser</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>Nordic Wolves</td><td>Lite</td><td>IGurrAI</td><td>6</td><td>6/6</td><td><span class="pill ok">Klar</span></td></tr>
-                <tr><td>Icebreakers</td><td>Core</td><td>Rexx</td><td>5</td><td>4/5</td><td><span class="pill warn">Saknar licens</span></td></tr>
-                <tr><td>Frozen Unit</td><td>Neo</td><td>Hedman</td><td>6</td><td>6/6</td><td><span class="pill ok">Klar</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+      <section class="page" id="page-lite" data-title="Lite 26 Spring Teams" data-subtitle="Egen sida för Lite-lagen.">
+        <section class="table-card"><div class="table-head"><div><h3>Lite-lag</h3><p>Roster, backups, transfers och licensläge.</p></div></div><div class="table-wrap"><table><thead><tr><th>Lag</th><th>Roster</th><th>Backups</th><th>Transfers</th><th>Licensläge</th></tr></thead><tbody><tr><td>Nordic Wolves</td><td>6</td><td>1</td><td>0</td><td><span class="pill ok">Godkänd</span></td></tr><tr><td>Arctic Blades</td><td>6</td><td>0</td><td>1</td><td><span class="pill ok">Godkänd</span></td></tr></tbody></table></div></section>
+      </section>
 
-        <section id="lite" class="table-card section-anchor">
-          <div class="table-head">
-            <div>
-              <h3>Lite 26 Spring Teams</h3>
-              <p>Laglista för Lite med roster, licenser och senaste ändringar.</p>
-            </div>
-            <div class="table-tools">
-              <button class="btn">Importera</button>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Lag</th>
-                  <th>Roster</th>
-                  <th>Backups</th>
-                  <th>Transfers</th>
-                  <th>Licensläge</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>Nordic Wolves</td><td>6</td><td>1</td><td>0</td><td><span class="pill ok">Godkänd</span></td></tr>
-                <tr><td>Arctic Blades</td><td>6</td><td>0</td><td>1</td><td><span class="pill ok">Godkänd</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+      <section class="page" id="page-core" data-title="Core 26 Spring Teams" data-subtitle="Egen sida för Core-lagen.">
+        <section class="table-card"><div class="table-head"><div><h3>Core-lag</h3><p>Spelare, kapten och obekräftade profiler.</p></div></div><div class="table-wrap"><table><thead><tr><th>Lag</th><th>Kapten</th><th>Spelare</th><th>Obekräftade</th><th>Status</th></tr></thead><tbody><tr><td>Icebreakers</td><td>Rexx</td><td>5</td><td>1</td><td><span class="pill warn">Behöver åtgärd</span></td></tr><tr><td>Blue Meteors</td><td>Lundqvist</td><td>6</td><td>0</td><td><span class="pill ok">Klar</span></td></tr></tbody></table></div></section>
+      </section>
 
-        <section id="core" class="table-card section-anchor">
-          <div class="table-head">
-            <div>
-              <h3>Core 26 Spring Teams</h3>
-              <p>Separat vy för Core-lag och spelarstatus.</p>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Lag</th>
-                  <th>Kapten</th>
-                  <th>Spelare</th>
-                  <th>Obekräftade</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>Icebreakers</td><td>Rexx</td><td>5</td><td>1</td><td><span class="pill warn">Behöver åtgärd</span></td></tr>
-                <tr><td>Blue Meteors</td><td>Lundqvist</td><td>6</td><td>0</td><td><span class="pill ok">Klar</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+      <section class="page" id="page-neo" data-title="Neo 26 Spring Teams" data-subtitle="Egen sida för Neo-lagen.">
+        <section class="table-card"><div class="table-head"><div><h3>Neo-lag</h3><p>Lag som behöver kompletteras eller är redo för start.</p></div></div><div class="table-wrap"><table><thead><tr><th>Lag</th><th>Spelare</th><th>För få spelare</th><th>Senast uppdaterad</th><th>Status</th></tr></thead><tbody><tr><td>Frozen Unit</td><td>6</td><td>Nej</td><td>Idag</td><td><span class="pill ok">Redo</span></td></tr><tr><td>Rookie Puckers</td><td>4</td><td>Ja</td><td>Igår</td><td><span class="pill warn">Komplettera</span></td></tr></tbody></table></div></section>
+      </section>
 
-        <section id="neo" class="table-card section-anchor">
-          <div class="table-head">
-            <div>
-              <h3>Neo 26 Spring Teams</h3>
-              <p>Nybörjar- eller instegslag med enkel kontrollpanel.</p>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Lag</th>
-                  <th>Spelare</th>
-                  <th>För få spelare</th>
-                  <th>Senast uppdaterad</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>Frozen Unit</td><td>6</td><td>Nej</td><td>Idag</td><td><span class="pill ok">Redo</span></td></tr>
-                <tr><td>Rookie Puckers</td><td>4</td><td>Ja</td><td>Igår</td><td><span class="pill warn">Komplettera</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+      <section class="page" id="page-transfers" data-title="Transfers 26 Spring Teams" data-subtitle="Egen sida för alla spelartransfers.">
+        <section class="table-card"><div class="table-head"><div><h3>Transfers</h3><p>Historik och godkännandestatus.</p></div><div class="table-tools"><button class="btn">Pending först</button></div></div><div class="table-wrap"><table><thead><tr><th>Spelare</th><th>Från lag</th><th>Till lag</th><th>Datum</th><th>Godkänd</th></tr></thead><tbody><tr><td>PlayerOne</td><td>Icebreakers</td><td>Blue Meteors</td><td>2026-03-26</td><td><span class="pill ok">Ja</span></td></tr><tr><td>Snipz</td><td>Rookie Puckers</td><td>Frozen Unit</td><td>2026-03-25</td><td><span class="pill info">Pending</span></td></tr></tbody></table></div></section>
+      </section>
 
-        <section id="transfers" class="table-card section-anchor">
-          <div class="table-head">
-            <div>
-              <h3>Transfers 26 Spring Teams</h3>
-              <p>Spårning av in/utgående spelare mellan lag.</p>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Spelare</th>
-                  <th>Från lag</th>
-                  <th>Till lag</th>
-                  <th>Datum</th>
-                  <th>Godkänd</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>PlayerOne</td><td>Icebreakers</td><td>Blue Meteors</td><td>2026-03-26</td><td><span class="pill ok">Ja</span></td></tr>
-                <tr><td>Snipz</td><td>Rookie Puckers</td><td>Frozen Unit</td><td>2026-03-25</td><td><span class="pill info">Pending</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+      <section class="page" id="page-backups" data-title="Backups 26 Spring Teams" data-subtitle="Egen sida för reservspelare och backup-roller.">
+        <section class="table-card"><div class="table-head"><div><h3>Backups</h3><p>Reservspelare kopplade till lag och licensstatus.</p></div></div><div class="table-wrap"><table><thead><tr><th>Spelare</th><th>Primärt lag</th><th>Backup för</th><th>Licens</th><th>Status</th></tr></thead><tbody><tr><td>BackupKing</td><td>Nordic Wolves</td><td>Arctic Blades</td><td>Aktiv</td><td><span class="pill ok">Godkänd</span></td></tr><tr><td>ColdHands</td><td>Blue Meteors</td><td>Icebreakers</td><td>Aktiv</td><td><span class="pill info">Kontroll</span></td></tr></tbody></table></div></section>
+      </section>
 
-        <section id="backups" class="table-card section-anchor">
-          <div class="table-head">
-            <div>
-              <h3>Backups 26 Spring Teams</h3>
-              <p>Överblick över reservspelare och vilka lag de täcker upp för.</p>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Spelare</th>
-                  <th>Primärt lag</th>
-                  <th>Backup för</th>
-                  <th>Licens</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>BackupKing</td><td>Nordic Wolves</td><td>Arctic Blades</td><td>Aktiv</td><td><span class="pill ok">Godkänd</span></td></tr>
-                <tr><td>ColdHands</td><td>Blue Meteors</td><td>Icebreakers</td><td>Aktiv</td><td><span class="pill info">Kontroll</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+      <section class="page" id="page-unlicensed" data-title="Unlicensed 26 Spring Teams" data-subtitle="Egen sida för spelare utan giltig licens.">
+        <div class="metrics">
+          <article class="metric hero"><div class="metric-label">Totalt utan licens</div><div class="metric-value">5</div><div class="metric-meta">Måste lösas före start</div></article>
+          <article class="metric hero"><div class="metric-label">Berörda lag</div><div class="metric-value">3</div><div class="metric-meta">Minst ett licensproblem</div></article>
+          <article class="metric hero"><div class="metric-label">Hög risk</div><div class="metric-value">2</div><div class="metric-meta">Matchspärr nära</div></article>
+        </div>
+        <section class="table-card"><div class="table-head"><div><h3>Unlicensed players</h3><p>Den här sidan bör ligga högt i adminflödet.</p></div><div class="table-tools"><button class="btn">Kontakta kaptener</button><button class="btn">Visa endast aktiva lag</button></div></div><div class="table-wrap"><table><thead><tr><th>Spelare</th><th>Lag</th><th>Division</th><th>Plattform</th><th>Status</th></tr></thead><tbody><tr><td>GhostPuck</td><td>Icebreakers</td><td>Core</td><td>PS5</td><td><span class="pill danger">Ingen licens</span></td></tr><tr><td>HattyHero</td><td>Rookie Puckers</td><td>Neo</td><td>Xbox</td><td><span class="pill danger">Ingen licens</span></td></tr></tbody></table></div></section>
+      </section>
 
-        <section id="unlicensed" class="table-card section-anchor">
-          <div class="table-head">
-            <div>
-              <h3>Unlicensed 26 Spring Teams</h3>
-              <p>Alla spelare utan giltig licens, sorterat per lag.</p>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Spelare</th>
-                  <th>Lag</th>
-                  <th>Division</th>
-                  <th>Plattform</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>GhostPuck</td><td>Icebreakers</td><td>Core</td><td>PS5</td><td><span class="pill danger">Ingen licens</span></td></tr>
-                <tr><td>HattyHero</td><td>Rookie Puckers</td><td>Neo</td><td>Xbox</td><td><span class="pill danger">Ingen licens</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+      <section class="page" id="page-multiple" data-title="Players In Multiple Teams" data-subtitle="Egen sida för dubbelregistreringar och konfliktfall.">
+        <section class="table-card"><div class="table-head"><div><h3>Multiple teams</h3><p>Spelare som förekommer i fler än ett roster.</p></div><div class="table-tools"><button class="btn">Visa konflikter</button></div></div><div class="table-wrap"><table><thead><tr><th>Spelare</th><th>Lag 1</th><th>Lag 2</th><th>Typ</th><th>Status</th></tr></thead><tbody><tr><td>DualStick</td><td>Nordic Wolves</td><td>Arctic Blades</td><td>Misstänkt dubbelregistrering</td><td><span class="pill danger">Utred</span></td></tr><tr><td>ShiftMaster</td><td>Blue Meteors</td><td>Icebreakers</td><td>Backup/aktiv konflikt</td><td><span class="pill warn">Review</span></td></tr></tbody></table></div></section>
+      </section>
 
-        <section id="multiple" class="table-card section-anchor">
-          <div class="table-head">
-            <div>
-              <h3>Players In Multiple Teams</h3>
-              <p>Visar spelare som förekommer i fler än ett roster.</p>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Spelare</th>
-                  <th>Lag 1</th>
-                  <th>Lag 2</th>
-                  <th>Typ</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>DualStick</td><td>Nordic Wolves</td><td>Arctic Blades</td><td>Misstänkt dubbelregistrering</td><td><span class="pill danger">Utred</span></td></tr>
-                <tr><td>ShiftMaster</td><td>Blue Meteors</td><td>Icebreakers</td><td>Backup/aktiv konflikt</td><td><span class="pill warn">Review</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section id="banned" class="table-card section-anchor">
-          <div class="table-head">
-            <div>
-              <h3>Banned Players</h3>
-              <p>Avstängda spelare med orsak, period och blockerad registrering.</p>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Spelare</th>
-                  <th>Orsak</th>
-                  <th>Från</th>
-                  <th>Till</th>
-                  <th>Blockera signup</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>PenaltyBox</td><td>Toxic behavior</td><td>2026-03-01</td><td>2026-05-01</td><td><span class="pill danger">Ja</span></td></tr>
-                <tr><td>OffsidePro</td><td>Rule violation</td><td>2026-02-15</td><td>2026-04-15</td><td><span class="pill danger">Ja</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-
-      <div class="footer-space"></div>
+      <section class="page" id="page-banned" data-title="Banned Players" data-subtitle="Egen sida för avstängda spelare och blockerad registrering.">
+        <section class="table-card"><div class="table-head"><div><h3>Banned players</h3><p>Administrativ kontroll för spärrade spelare.</p></div><div class="table-tools"><button class="btn">Visa aktiva bans</button></div></div><div class="table-wrap"><table><thead><tr><th>Spelare</th><th>Orsak</th><th>Från</th><th>Till</th><th>Blockera signup</th></tr></thead><tbody><tr><td>PenaltyBox</td><td>Toxic behavior</td><td>2026-03-01</td><td>2026-05-01</td><td><span class="pill danger">Ja</span></td></tr><tr><td>OffsidePro</td><td>Rule violation</td><td>2026-02-15</td><td>2026-04-15</td><td><span class="pill danger">Ja</span></td></tr></tbody></table></div></section>
+      </section>
     </main>
   </div>
+
+  <script>
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const pages = document.querySelectorAll('.page');
+    const pageTitle = document.getElementById('page-title');
+    const pageSubtitle = document.getElementById('page-subtitle');
+
+    function openPage(pageKey) {
+      navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.page === pageKey));
+      pages.forEach(page => {
+        const active = page.id === `page-${pageKey}`;
+        page.classList.toggle('active', active);
+        if (active) {
+          pageTitle.textContent = page.dataset.title;
+          pageSubtitle.textContent = page.dataset.subtitle;
+        }
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', () => openPage(btn.dataset.page));
+    });
+  </script>
 </body>
 </html>
