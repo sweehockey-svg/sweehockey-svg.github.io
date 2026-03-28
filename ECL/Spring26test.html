@@ -3101,6 +3101,7 @@
       async getMultipleTeamsMessageUrl(row, forceReload = false) {
         if (STATE.currentSource.key !== 'inMoreThan1Teams') return '';
 
+        const captainMap = await BannedPlayersService.getCaptainUserIdMap(forceReload);
         const recipients = [];
         const teams = Array.isArray(row?.teams) ? row.teams : [];
 
@@ -3109,20 +3110,28 @@
           row?.userId ??
           row?.UserID ??
           row?.user_id ??
+          row?.userid ??
           ''
         ).trim();
 
         if (playerUserId) recipients.push(playerUserId);
 
         teams.forEach(team => {
-          const captainId = String(
+          const directCaptainId = String(
             team?.captainUserID ??
             team?.captainUserId ??
             team?.CaptainUserID ??
             ''
           ).trim();
 
-          if (captainId) recipients.push(captainId);
+          if (directCaptainId) {
+            recipients.push(directCaptainId);
+            return;
+          }
+
+          const normalizedTeam = Utils.normalizeTeamName(team?.teamName || '');
+          const mappedCaptainIds = captainMap.get(normalizedTeam) || [];
+          mappedCaptainIds.forEach(id => recipients.push(String(id).trim()));
         });
 
         const uniqueRecipients = recipients.filter((id, index, arr) => id && arr.indexOf(id) === index);
