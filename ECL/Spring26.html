@@ -1246,6 +1246,7 @@
       { key: 'overgangar', label: 'Transfers 26 Spring Teams', type: 'alla', csv: true },
       { key: 'backups', label: 'Backups 26 Spring Teams', type: 'alla', csv: true },
       { key: 'licenslosa', label: 'Unlicensed 26 Spring Teams', type: 'alla', csv: true },
+      { key: 'inMoreThan1Teams', label: 'Players In Multiple Teams', type: 'alla', csv: true },
       { key: 'signUps', label: 'Registered Teams 26 Spring', type: 'alla', csv: true },
       { key: 'proQualReqCheck', label: 'PRO QUAL REQ CHECK', type: 'proqualreqcheck', csv: false },
       { key: 'bannedPlayers', label: 'Banned Players', type: 'banned', csv: true }
@@ -1886,6 +1887,10 @@
                 }
               });
             }
+
+            if (Array.isArray(row?.teams)) {
+              row.teams.forEach(() => {});
+            }
           });
         });
 
@@ -1944,7 +1949,13 @@
             ).join(' ')
           : '';
 
-        return `${baseText} ${playerText}`.trim();
+        const teamsText = Array.isArray(row?.teams)
+          ? row.teams.map(team =>
+              Object.values(team || {}).map(value => String(value ?? '').toLowerCase()).join(' ')
+            ).join(' ')
+          : '';
+
+        return `${baseText} ${playerText} ${teamsText}`.trim();
       }
     };
 
@@ -2053,6 +2064,8 @@
       },
 
       getRowClass(row) {
+        if (STATE.currentSource.key === 'inMoreThan1Teams') return 'not-ok';
+
         if (STATE.currentSource.key === 'bannedPlayers') {
           if (String(row?.status || '').toLowerCase() === 'violation') return 'not-ok';
           if (String(row?.status || '').toLowerCase() === 'clear') return 'ban-clear';
@@ -2184,6 +2197,15 @@
       getExportValue(row, col) {
         if (col === 'fullLicenseCount') return RowAccess.getFullLicenseCount(row);
         if (col === 'signupIssue') return Rules.getSignupIssueText(row);
+
+        if (col === 'teams' && Array.isArray(row?.teams)) {
+          return row.teams.map(team => {
+            const leagueName = String(team?.leagueName || '').trim();
+            const teamName = String(team?.teamName || '').trim();
+            return [leagueName, teamName].filter(Boolean).join(' — ');
+          }).join(' | ');
+        }
+
         return row?.[col] ?? '';
       },
 
@@ -2251,6 +2273,10 @@
       },
 
       getColumns(rows) {
+        if (STATE.currentSource.key === 'inMoreThan1Teams') {
+          return ['playerName', 'teamCount', 'teams'];
+        }
+
         if (STATE.currentSource.key === 'bannedPlayers') {
           return ['playerName', 'banType', 'until', 'active', 'status', 'foundAs', 'teams', 'divisions', 'sources', 'notes'];
         }
@@ -2270,7 +2296,8 @@
           'From', 'FromDiv', 'FromTeamID', 'FromLeagueID',
           'To', 'ToDiv', 'ToTeamID', 'ToLeagueID',
           'GroupGames26Winter', 'PlayoffGames26Winter', 'TotalGames26Winter',
-          'totalMatchesPlayed', 'Date', 'Role', 'compatibility', 'totalPoints', 'leagueID'
+          'totalMatchesPlayed', 'Date', 'Role', 'compatibility', 'totalPoints', 'leagueID',
+          'teamCount', 'teams'
         ];
 
         const allKeys = new Set();
@@ -2333,17 +2360,30 @@
 
       getVisibleColumns() {
         if (STATE.currentSource.key === 'bannedPlayers') return STATE.currentColumns;
+        if (STATE.currentSource.key === 'inMoreThan1Teams') return ['playerName', 'teamCount', 'teams', '__sendMail'];
 
         if (this.useTeamDropdownRows()) return this.getTeamTabVisibleColumns() || [];
 
         const cols = STATE.currentColumns.filter(col => !this.TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
-        if (STATE.currentSource.key === 'backups' || STATE.currentSource.key === 'licenslosa') {
+        if (
+          STATE.currentSource.key === 'backups' ||
+          STATE.currentSource.key === 'licenslosa' ||
+          STATE.currentSource.key === 'signUps'
+        ) {
           return [...cols, '__sendMail'];
         }
         return cols;
       },
 
       getColumnHeaderLabel(col) {
+        if (STATE.currentSource.key === 'inMoreThan1Teams') {
+          return {
+            playerName: 'PLAYER',
+            teamCount: 'TEAM COUNT',
+            teams: 'TEAMS'
+          }[col] || col;
+        }
+
         if (STATE.currentSource.key === 'bannedPlayers') {
           return {
             playerName: 'PLAYER',
@@ -2521,8 +2561,7 @@
           });
       }
     };
-
-    const Sorting = {
+        const Sorting = {
       getSortedRows(rows) {
         if (!STATE.sortState.column) return [...rows];
         const isNumeric = STATE.currentNumericColumns.has(STATE.sortState.column) || STATE.sortState.column === 'fullLicenseCount';
@@ -2539,6 +2578,15 @@
           if (STATE.sortState.column === 'signupIssue') {
             aValue = Rules.getSignupIssueText(a);
             bValue = Rules.getSignupIssueText(b);
+          }
+
+          if (STATE.sortState.column === 'teams') {
+            aValue = Array.isArray(a?.teams)
+              ? a.teams.map(team => `${team?.leagueName || ''} ${team?.teamName || ''}`).join(' | ')
+              : '';
+            bValue = Array.isArray(b?.teams)
+              ? b.teams.map(team => `${team?.leagueName || ''} ${team?.teamName || ''}`).join(' | ')
+              : '';
           }
 
           const result = Utils.compareValues(aValue, bValue, isNumeric);
@@ -3030,7 +3078,10 @@
 
     const MessagingService = {
       async getBackupMessageUrl(row, forceReload = false) {
-        if (STATE.currentSource.key !== 'backups' && STATE.currentSource.key !== 'licenslosa') return '';
+        if (
+          STATE.currentSource.key !== 'backups' &&
+          STATE.currentSource.key !== 'licenslosa'
+        ) return '';
 
         const captainMap = await BannedPlayersService.getCaptainUserIdMap(forceReload);
         const teamName = RowAccess.getTeamName(row);
@@ -3039,6 +3090,66 @@
         const playerUserId = String(RowAccess.getUserId(row) || '').trim();
 
         const recipients = [...captainIds, playerUserId]
+          .map(id => String(id).trim())
+          .filter(Boolean)
+          .filter((id, index, arr) => arr.indexOf(id) === index);
+
+        if (recipients.length === 0) return '';
+        return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
+      },
+
+      async getMultipleTeamsMessageUrl(row, forceReload = false) {
+        if (STATE.currentSource.key !== 'inMoreThan1Teams') return '';
+
+        const captainMap = await BannedPlayersService.getCaptainUserIdMap(forceReload);
+        const recipients = [];
+        const teams = Array.isArray(row?.teams) ? row.teams : [];
+
+        const playerUserId = String(
+          row?.userID ??
+          row?.userId ??
+          row?.UserID ??
+          row?.user_id ??
+          row?.userid ??
+          ''
+        ).trim();
+
+        if (playerUserId) recipients.push(playerUserId);
+
+        teams.forEach(team => {
+          const directCaptainId = String(
+            team?.captainUserID ??
+            team?.captainUserId ??
+            team?.CaptainUserID ??
+            ''
+          ).trim();
+
+          if (directCaptainId) {
+            recipients.push(directCaptainId);
+            return;
+          }
+
+          const normalizedTeam = Utils.normalizeTeamName(team?.teamName || '');
+          const mappedCaptainIds = captainMap.get(normalizedTeam) || [];
+          mappedCaptainIds.forEach(id => recipients.push(String(id).trim()));
+        });
+
+        const uniqueRecipients = recipients.filter((id, index, arr) => id && arr.indexOf(id) === index);
+
+        if (uniqueRecipients.length === 0) return '';
+        return `https://sportsgamer.gg/community/messenger/compose/?to=${uniqueRecipients.join(',')}`;
+      },
+
+      async getSignUpsMessageUrl(row, forceReload = false) {
+        if (STATE.currentSource.key !== 'signUps') return '';
+
+        const captainMap = await BannedPlayersService.getCaptainUserIdMap(forceReload);
+        const teamName = RowAccess.getTeamName(row);
+        const normalizedTeam = Utils.normalizeTeamName(teamName);
+        const captainIds = captainMap.get(normalizedTeam) || [];
+        const teamUserId = String(RowAccess.getUserId(row) || '').trim();
+
+        const recipients = [...captainIds, teamUserId]
           .map(id => String(id).trim())
           .filter(Boolean)
           .filter((id, index, arr) => arr.indexOf(id) === index);
@@ -3129,15 +3240,80 @@ If you have any questions or need assistance, feel free to contact us — we are
 Best regards,`;
       },
 
+      buildMultipleTeamsMessage(row) {
+        const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
+        const teamCount = Number(row?.teamCount) || 0;
+        const teams = Array.isArray(row?.teams) ? row.teams : [];
+
+        const teamLines = teams.length
+          ? teams.map(team => {
+              const leagueName = String(team?.leagueName || '').trim();
+              const teamName = String(team?.teamName || '').trim();
+              return `- ${leagueName ? leagueName + ' — ' : ''}${teamName}`;
+            }).join('\n')
+          : '- Team information missing';
+
+        return `Multiple Team Registration – Action Required for ${playerName}
+
+Hi,
+
+It has come to our attention that ${playerName} is currently registered in ${teamCount} teams.
+
+This needs to be fixed immediately, as a player cannot be registered in multiple teams at the same time.
+
+Teams connected to this player:
+${teamLines}
+
+Please resolve this issue as soon as possible and confirm once it has been corrected.
+
+If you have any questions or need assistance, feel free to reach out.
+
+Best regards,`;
+      },
+
+      buildSignUpsMessage(row) {
+        const teamName = RowAccess.getTeamName(row) || 'team';
+        const divisionName = String(row?.divisionName || '').trim() || 'this division';
+        const issues = Rules.getSignupIssues(row);
+
+        const issueText = issues.length
+          ? issues.map(issue => `- ${issue}`).join('\n')
+          : '- Missing requirements detected';
+
+        return `Registration Requirements – Action Required for ${teamName}
+
+Hi ${teamName}
+
+We have reviewed your registration for ECL ’26: Spring and noticed that your team currently does not meet all requirements for ${divisionName}.
+
+The following issues need to be fixed:
+${issueText}
+
+Please correct these issues as soon as possible and confirm once everything has been updated.
+
+If you have any questions or need assistance, feel free to reach out.
+
+Best regards,`;
+      },
+
       async copyBackupMessage(row) {
         await navigator.clipboard.writeText(this.buildBackupMessage(row));
       },
 
       async copyUnlicensedMessage(row) {
         await navigator.clipboard.writeText(this.buildUnlicensedMessage(row));
+      },
+
+      async copyMultipleTeamsMessage(row) {
+        await navigator.clipboard.writeText(this.buildMultipleTeamsMessage(row));
+      },
+
+      async copySignUpsMessage(row) {
+        await navigator.clipboard.writeText(this.buildSignUpsMessage(row));
       }
     };
-        const Render = {
+
+    const Render = {
       showNormalTable() {
         DOM.normalTableWrap.style.display = 'block';
         DOM.seedingWrap.style.display = 'none';
@@ -3492,15 +3668,57 @@ Best regards,`;
         return wrapper;
       },
 
+      createTeamsListCell(teams) {
+        const td = document.createElement('td');
+        td.style.whiteSpace = 'normal';
+
+        if (!Array.isArray(teams) || teams.length === 0) {
+          td.textContent = '';
+          return td;
+        }
+
+        teams.forEach((team, index) => {
+          const row = document.createElement('div');
+          row.style.marginBottom = index === teams.length - 1 ? '0' : '6px';
+
+          const teamName = String(team?.teamName || '').trim();
+          const leagueName = String(team?.leagueName || '').trim();
+          const teamID = String(team?.teamID || '').trim();
+          const leagueID = String(team?.leagueID || '').trim();
+
+          if (teamName && teamID && leagueID) {
+            row.appendChild(
+              Utils.createLink(
+                TeamLinks.buildTeamUrl(teamID, leagueID),
+                `${leagueName ? leagueName + ' — ' : ''}${teamName}`,
+                'cell-link'
+              )
+            );
+          } else {
+            row.textContent = `${leagueName ? leagueName + ' — ' : ''}${teamName}`;
+          }
+
+          td.appendChild(row);
+        });
+
+        return td;
+      },
+
       async renderTableCell(td, row, col, forceReload = false) {
         let value = row[col] ?? '';
         if (col === 'fullLicenseCount') value = RowAccess.getFullLicenseCount(row);
         if (col === 'signupIssue') value = Rules.getSignupIssueText(row);
 
+        if (STATE.currentSource.key === 'inMoreThan1Teams' && col === 'teams') {
+          const builtTd = this.createTeamsListCell(row?.teams);
+          td.replaceWith(builtTd);
+          return builtTd;
+        }
+
         const textValue = String(value ?? '');
         if (!textValue) {
           td.textContent = '';
-          return;
+          return td;
         }
 
         const teamLinkMap = await DataService.getTeamLinkMap(forceReload);
@@ -3524,7 +3742,7 @@ Best regards,`;
               alias.textContent = 'Alias: ' + row.playerAliases;
               td.appendChild(alias);
             }
-            return;
+            return td;
           }
 
           if (col === 'teams') {
@@ -3538,12 +3756,12 @@ Best regards,`;
               }
               if (index < parts.length - 1) td.appendChild(document.createTextNode(' | '));
             });
-            return;
+            return td;
           }
 
           if (col === 'notes') td.style.whiteSpace = 'normal';
           td.textContent = textValue;
-          return;
+          return td;
         }
 
         if (PLAYER_LIST_NAME_KEYS.includes(col)) {
@@ -3559,12 +3777,12 @@ Best regards,`;
 
             if (index < parts.length - 1) td.appendChild(document.createTextNode(', '));
           });
-          return;
+          return td;
         }
 
         if (['history1Team', 'history2Team', 'history3Team'].includes(col)) {
           td.textContent = textValue;
-          return;
+          return td;
         }
 
         if (TEAM_NAME_KEYS.includes(col) || col === 'From' || col === 'To') {
@@ -3577,7 +3795,7 @@ Best regards,`;
 
           if (teamId && leagueId) {
             td.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamId, leagueId), textValue));
-            return;
+            return td;
           }
         }
 
@@ -3586,17 +3804,18 @@ Best regards,`;
           const mappedPlayerID = directPlayerID || playerLinkMap.get(Utils.normalizePlayerName(textValue));
           if (mappedPlayerID) {
             td.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, textValue));
-            return;
+            return td;
           }
         }
 
         const anyMappedPlayerID = playerLinkMap.get(Utils.normalizePlayerName(textValue));
         if (anyMappedPlayerID) {
           td.appendChild(Utils.createLink(PLAYER_BASE_URL + anyMappedPlayerID, textValue));
-          return;
+          return td;
         }
 
         td.textContent = textValue;
+        return td;
       },
 
       async renderTableBody(rows, forceReload = false) {
@@ -3687,16 +3906,76 @@ Best regards,`;
                 actions.appendChild(copyBtn);
               }
 
+              if (STATE.currentSource.key === 'inMoreThan1Teams') {
+                const mailUrl = await MessagingService.getMultipleTeamsMessageUrl(row, forceReload);
+
+                if (mailUrl) {
+                  const btn = document.createElement('a');
+                  btn.href = mailUrl;
+                  btn.target = '_blank';
+                  btn.rel = 'noopener noreferrer';
+                  btn.className = 'mail-icon-btn';
+                  btn.title = 'Open message';
+                  btn.textContent = '✉';
+                  actions.appendChild(btn);
+                }
+
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'copy-icon-btn';
+                copyBtn.title = 'Copy preset message';
+                copyBtn.textContent = '⧉';
+                copyBtn.addEventListener('click', async () => {
+                  try {
+                    await MessagingService.copyMultipleTeamsMessage(row);
+                    Utils.setStatus('Message copied');
+                  } catch {
+                    Utils.setStatus('Copy failed');
+                  }
+                });
+                actions.appendChild(copyBtn);
+              }
+
+              if (STATE.currentSource.key === 'signUps' && Rules.getSignupIssues(row).length > 0) {
+                const mailUrl = await MessagingService.getSignUpsMessageUrl(row, forceReload);
+
+                if (mailUrl) {
+                  const btn = document.createElement('a');
+                  btn.href = mailUrl;
+                  btn.target = '_blank';
+                  btn.rel = 'noopener noreferrer';
+                  btn.className = 'mail-icon-btn';
+                  btn.title = 'Open message';
+                  btn.textContent = '✉';
+                  actions.appendChild(btn);
+                }
+
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'copy-icon-btn';
+                copyBtn.title = 'Copy preset message';
+                copyBtn.textContent = '⧉';
+                copyBtn.addEventListener('click', async () => {
+                  try {
+                    await MessagingService.copySignUpsMessage(row);
+                    Utils.setStatus('Message copied');
+                  } catch {
+                    Utils.setStatus('Copy failed');
+                  }
+                });
+                actions.appendChild(copyBtn);
+              }
+
               td.appendChild(actions);
               tr.appendChild(td);
               continue;
             }
 
             if (STATE.currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
-            if (col === 'signupIssue' || col === 'notes') td.style.whiteSpace = 'normal';
+            if (col === 'signupIssue' || col === 'notes' || col === 'teams') td.style.whiteSpace = 'normal';
 
-            await this.renderTableCell(td, row, col, forceReload);
-            tr.appendChild(td);
+            const maybeTd = await this.renderTableCell(td, row, col, forceReload);
+            tr.appendChild(maybeTd || td);
           }
 
           if (TableConfig.useTeamDropdownRows()) {
@@ -3764,6 +4043,7 @@ Best regards,`;
           STATE.currentColumns.filter(col =>
             col !== 'fullLicenseCount' &&
             col !== 'signupIssue' &&
+            col !== 'teams' &&
             TableConfig.isNumericColumn(STATE.currentRows.map(r => {
               if (col === 'fullLicenseCount') return RowAccess.getFullLicenseCount(r);
               return r[col];
@@ -3795,6 +4075,13 @@ Best regards,`;
               const bDate = new Date(b?.registrationDate || 0).getTime();
               return bDate - aDate;
             });
+          } else if (STATE.currentSource.key === 'inMoreThan1Teams') {
+            baseRows = [...STATE.currentRows].sort((a, b) => {
+              const aCount = Number(a?.teamCount) || 0;
+              const bCount = Number(b?.teamCount) || 0;
+              if (bCount !== aCount) return bCount - aCount;
+              return String(a?.playerName || '').localeCompare(String(b?.playerName || ''), 'en', { sensitivity: 'base' });
+            });
           }
         }
 
@@ -3807,6 +4094,8 @@ Best regards,`;
           const activeCount = filtered.filter(row => row.active === 'Yes').length;
           const violationCount = filtered.filter(row => row.status === 'Violation').length;
           DOM.rowCounter.textContent = `Bans: ${filtered.length} / ${STATE.currentRows.length} • Active: ${activeCount} • Violations: ${violationCount}`;
+        } else if (STATE.currentSource.key === 'inMoreThan1Teams') {
+          DOM.rowCounter.textContent = `${filtered.length} flagged player${filtered.length === 1 ? '' : 's'}`;
         } else {
           DOM.rowCounter.textContent = `${filtered.length} row${filtered.length === 1 ? '' : 's'}`;
         }
@@ -3922,39 +4211,6 @@ Best regards,`;
         td.style.padding = '0';
         tr.appendChild(td);
         DOM.seedingBody.appendChild(tr);
-      },
-
-      async renderSeeding(registeredRows, forceReload = false) {
-        this.showSeeding();
-        DOM.emptyMessage.style.display = 'none';
-        DOM.tbody.innerHTML = '';
-        DOM.headerRow.innerHTML = '';
-        DOM.proQualReqWrap.innerHTML = '';
-        DOM.seedingBody.innerHTML = '';
-        DOM.rowCounter.textContent = '';
-
-        const sections = await SeedingService.buildSeedingSections(registeredRows, forceReload);
-        let visibleRows = 0;
-        let renderedSections = 0;
-
-        sections.forEach(section => {
-          const filteredItems = Filters.getFilteredSeedingRows(section.title, section.items);
-          if (filteredItems.length === 0) return;
-
-          if (renderedSections > 0) this.renderSpacer();
-          renderedSections += 1;
-          visibleRows += filteredItems.length;
-
-          this.renderSectionTitle(section.title, section.count, section.styleKey);
-          this.renderSeedingHeaderRow();
-          filteredItems.forEach(item => this.renderSeedRow(item));
-        });
-
-        if (visibleRows === 0) {
-          DOM.seedingBody.innerHTML = '<tr><td colspan="5" class="empty">No seeding results found.</td></tr>';
-        }
-
-        DOM.rowCounter.textContent = `${visibleRows} seeding row${visibleRows === 1 ? '' : 's'}`;
       },
 
       groupProQualReqRows(rows) {
@@ -4170,6 +4426,39 @@ Best regards,`;
         });
 
         DOM.rowCounter.textContent = `${rows.length} player row${rows.length === 1 ? '' : 's'}`;
+      },
+
+      async renderSeeding(registeredRows, forceReload = false) {
+        this.showSeeding();
+        DOM.emptyMessage.style.display = 'none';
+        DOM.tbody.innerHTML = '';
+        DOM.headerRow.innerHTML = '';
+        DOM.proQualReqWrap.innerHTML = '';
+        DOM.seedingBody.innerHTML = '';
+        DOM.rowCounter.textContent = '';
+
+        const sections = await SeedingService.buildSeedingSections(registeredRows, forceReload);
+        let visibleRows = 0;
+        let renderedSections = 0;
+
+        sections.forEach(section => {
+          const filteredItems = Filters.getFilteredSeedingRows(section.title, section.items);
+          if (filteredItems.length === 0) return;
+
+          if (renderedSections > 0) this.renderSpacer();
+          renderedSections += 1;
+          visibleRows += filteredItems.length;
+
+          this.renderSectionTitle(section.title, section.count, section.styleKey);
+          this.renderSeedingHeaderRow();
+          filteredItems.forEach(item => this.renderSeedRow(item));
+        });
+
+        if (visibleRows === 0) {
+          DOM.seedingBody.innerHTML = '<tr><td colspan="5" class="empty">No seeding results found.</td></tr>';
+        }
+
+        DOM.rowCounter.textContent = `${visibleRows} seeding row${visibleRows === 1 ? '' : 's'}`;
       }
     };
 
