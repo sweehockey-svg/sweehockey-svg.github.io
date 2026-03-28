@@ -2360,7 +2360,8 @@
 
       getVisibleColumns() {
         if (STATE.currentSource.key === 'bannedPlayers') return STATE.currentColumns;
-        if (STATE.currentSource.key === 'inMoreThan1Teams') return ['playerName', 'teamCount', 'teams'];
+        if (STATE.currentSource.key === 'inMoreThan1Teams') return ['playerName', 'teamCount', 'teams', '__sendMail'];
+
         if (this.useTeamDropdownRows()) return this.getTeamTabVisibleColumns() || [];
 
         const cols = STATE.currentColumns.filter(col => !this.TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
@@ -2560,8 +2561,7 @@
           });
       }
     };
-
-    const Sorting = {
+        const Sorting = {
       getSortedRows(rows) {
         if (!STATE.sortState.column) return [...rows];
         const isNumeric = STATE.currentNumericColumns.has(STATE.sortState.column) || STATE.sortState.column === 'fullLicenseCount';
@@ -2836,7 +2836,8 @@
               isUnlisted: false
             });
           });
-                    if (section.title === 'Pro Qualifiers') {
+
+          if (section.title === 'Pro Qualifiers') {
             const listedProQualCount = section.rows.filter(row => {
               const team = Rename.getCanonicalTeamName(row[2]);
               const normalized = Utils.normalizeTeamName(team);
@@ -3097,6 +3098,39 @@
         return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
       },
 
+      async getMultipleTeamsMessageUrl(row, forceReload = false) {
+        if (STATE.currentSource.key !== 'inMoreThan1Teams') return '';
+
+        const recipients = [];
+        const teams = Array.isArray(row?.teams) ? row.teams : [];
+
+        const playerUserId = String(
+          row?.userID ??
+          row?.userId ??
+          row?.UserID ??
+          row?.user_id ??
+          ''
+        ).trim();
+
+        if (playerUserId) recipients.push(playerUserId);
+
+        teams.forEach(team => {
+          const captainId = String(
+            team?.captainUserID ??
+            team?.captainUserId ??
+            team?.CaptainUserID ??
+            ''
+          ).trim();
+
+          if (captainId) recipients.push(captainId);
+        });
+
+        const uniqueRecipients = recipients.filter((id, index, arr) => id && arr.indexOf(id) === index);
+
+        if (uniqueRecipients.length === 0) return '';
+        return `https://sportsgamer.gg/community/messenger/compose/?to=${uniqueRecipients.join(',')}`;
+      },
+
       async getSignUpsMessageUrl(row, forceReload = false) {
         if (STATE.currentSource.key !== 'signUps') return '';
 
@@ -3197,6 +3231,37 @@ If you have any questions or need assistance, feel free to contact us — we are
 Best regards,`;
       },
 
+      buildMultipleTeamsMessage(row) {
+        const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
+        const teamCount = Number(row?.teamCount) || 0;
+        const teams = Array.isArray(row?.teams) ? row.teams : [];
+
+        const teamLines = teams.length
+          ? teams.map(team => {
+              const leagueName = String(team?.leagueName || '').trim();
+              const teamName = String(team?.teamName || '').trim();
+              return `- ${leagueName ? leagueName + ' — ' : ''}${teamName}`;
+            }).join('\n')
+          : '- Team information missing';
+
+        return `Multiple Team Registration – Action Required for ${playerName}
+
+Hi,
+
+It has come to our attention that ${playerName} is currently registered in ${teamCount} teams.
+
+This needs to be fixed immediately, as a player cannot be registered in multiple teams at the same time.
+
+Teams connected to this player:
+${teamLines}
+
+Please resolve this issue as soon as possible and confirm once it has been corrected.
+
+If you have any questions or need assistance, feel free to reach out.
+
+Best regards,`;
+      },
+
       buildSignUpsMessage(row) {
         const teamName = RowAccess.getTeamName(row) || 'team';
         const divisionName = String(row?.divisionName || '').trim() || 'this division';
@@ -3228,6 +3293,10 @@ Best regards,`;
 
       async copyUnlicensedMessage(row) {
         await navigator.clipboard.writeText(this.buildUnlicensedMessage(row));
+      },
+
+      async copyMultipleTeamsMessage(row) {
+        await navigator.clipboard.writeText(this.buildMultipleTeamsMessage(row));
       },
 
       async copySignUpsMessage(row) {
@@ -3820,6 +3889,36 @@ Best regards,`;
                 copyBtn.addEventListener('click', async () => {
                   try {
                     await MessagingService.copyUnlicensedMessage(row);
+                    Utils.setStatus('Message copied');
+                  } catch {
+                    Utils.setStatus('Copy failed');
+                  }
+                });
+                actions.appendChild(copyBtn);
+              }
+
+              if (STATE.currentSource.key === 'inMoreThan1Teams') {
+                const mailUrl = await MessagingService.getMultipleTeamsMessageUrl(row, forceReload);
+
+                if (mailUrl) {
+                  const btn = document.createElement('a');
+                  btn.href = mailUrl;
+                  btn.target = '_blank';
+                  btn.rel = 'noopener noreferrer';
+                  btn.className = 'mail-icon-btn';
+                  btn.title = 'Open message';
+                  btn.textContent = '✉';
+                  actions.appendChild(btn);
+                }
+
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'copy-icon-btn';
+                copyBtn.title = 'Copy preset message';
+                copyBtn.textContent = '⧉';
+                copyBtn.addEventListener('click', async () => {
+                  try {
+                    await MessagingService.copyMultipleTeamsMessage(row);
                     Utils.setStatus('Message copied');
                   } catch {
                     Utils.setStatus('Copy failed');
