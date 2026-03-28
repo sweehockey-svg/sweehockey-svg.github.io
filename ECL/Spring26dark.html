@@ -971,10 +971,28 @@
 
     async function loadAllJson() {
       loadError = null;
+      const candidatePaths = ['./alla.json', './alla (1).json'];
+
       try {
-        const response = await fetch('./alla.json', { cache: 'no-store' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        rawJsonData = await response.json();
+        let loaded = null;
+        let lastError = null;
+
+        for (const path of candidatePaths) {
+          try {
+            const response = await fetch(path, { cache: 'no-store' });
+            if (!response.ok) throw new Error(`HTTP ${response.status} for ${path}`);
+            loaded = await response.json();
+            break;
+          } catch (error) {
+            lastError = error;
+          }
+        }
+
+        if (!loaded) {
+          throw lastError || new Error('Kunde inte hitta någon JSON-fil');
+        }
+
+        rawJsonData = loaded;
         allData = normalizeAllData(rawJsonData);
       } catch (error) {
         loadError = error;
