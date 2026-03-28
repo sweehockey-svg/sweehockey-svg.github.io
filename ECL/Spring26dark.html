@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>eHockey Admin Tool v2</title>
+  <title>eHockey Admin Tool v3</title>
   <style>
     :root {
       --bg: #09111d;
@@ -402,23 +402,23 @@
         <div class="logo">EH</div>
         <div>
           <h1>eHockey Admin</h1>
-          <p>v2 • separata sidor per flik</p>
+          <p>v3 • byggd för alla.json</p>
         </div>
       </div>
 
       <p class="nav-title">Sidor</p>
       <nav class="nav">
         <button class="nav-btn active" data-page="dashboard"><span>Overview</span><span class="badge">Start</span></button>
-        <button class="nav-btn" data-page="seeding"><span>Seeding 26 Spring</span><span class="badge">26</span></button>
-        <button class="nav-btn" data-page="registered"><span>Registered Teams</span><span class="badge">64</span></button>
-        <button class="nav-btn" data-page="lite"><span>Lite Teams</span><span class="badge">L</span></button>
-        <button class="nav-btn" data-page="core"><span>Core Teams</span><span class="badge">C</span></button>
-        <button class="nav-btn" data-page="neo"><span>Neo Teams</span><span class="badge">N</span></button>
-        <button class="nav-btn" data-page="transfers"><span>Transfers</span><span class="badge">12</span></button>
-        <button class="nav-btn" data-page="backups"><span>Backups</span><span class="badge">8</span></button>
-        <button class="nav-btn" data-page="unlicensed"><span>Unlicensed</span><span class="badge">5</span></button>
-        <button class="nav-btn" data-page="multiple"><span>Multiple Teams</span><span class="badge">3</span></button>
-        <button class="nav-btn" data-page="banned"><span>Banned Players</span><span class="badge">2</span></button>
+        <button class="nav-btn" data-page="seeding"><span>Seeding 26 Spring</span><span class="badge">Manual</span></button>
+        <button class="nav-btn" data-page="registered"><span>Registered Teams</span><span class="badge">signUps</span></button>
+        <button class="nav-btn" data-page="lite"><span>Lite 26 Spring Teams</span><span class="badge">lite</span></button>
+        <button class="nav-btn" data-page="core"><span>Core 26 Spring Teams</span><span class="badge">core</span></button>
+        <button class="nav-btn" data-page="neo"><span>Neo 26 Spring Teams</span><span class="badge">neo</span></button>
+        <button class="nav-btn" data-page="transfers"><span>Transfers 26 Spring Teams</span><span class="badge">overgangar</span></button>
+        <button class="nav-btn" data-page="backups"><span>Backups 26 Spring Teams</span><span class="badge">backups</span></button>
+        <button class="nav-btn" data-page="unlicensed"><span>Unlicensed 26 Spring Teams</span><span class="badge">licenslosa</span></button>
+        <button class="nav-btn" data-page="multiple"><span>Players In Multiple Teams</span><span class="badge">inMoreThan1Teams</span></button>
+        <button class="nav-btn" data-page="banned"><span>Banned Players</span><span class="badge">bannedPlayers</span></button>
       </nav>
     </aside>
 
@@ -439,36 +439,36 @@
         </div>
       </div>
 
-      <section class="page active" id="page-dashboard" data-title="Overview" data-subtitle="Startvy med snabbstatus och genvägar till varje kontrollsida.">
+      <section class="page active" id="page-dashboard" data-title="Overview" data-subtitle="Startvy med datakällor från alla.json och snabbstatus per kontrollsida.">
         <div class="hero hero-grid">
           <div>
             <h3>Överblick för 26 Spring</h3>
-            <p>Den här versionen är uppbyggd mer som ett riktigt adminverktyg: vänstermenyn öppnar en separat sida för varje kontrollområde. Det gör det lättare att fokusera på en tabell i taget, lägga till egna filter och senare koppla varje sida till en egen endpoint eller datakälla.</p>
+            <p>Den här versionen är anpassad efter strukturen i <code>alla.json</code>. Varje sida motsvarar en nyckel i JSON-filen eller en manuell kontrollvy. Tanken är att frontend bara laddar filen en gång och sedan renderar rätt tabell beroende på vald sida.</p>
           </div>
           <div class="card">
             <div class="mini-list">
-              <div class="mini-item"><div><strong>Högst prioritet</strong><span>Unlicensed / Multiple Teams / Banned</span></div><span class="pill danger">Risk</span></div>
-              <div class="mini-item"><div><strong>Normal prioritet</strong><span>Transfers / Backups</span></div><span class="pill warn">Review</span></div>
-              <div class="mini-item"><div><strong>Grunddata</strong><span>Seeding / Registrerade lag / Divisioner</span></div><span class="pill info">Data</span></div>
+              <div class="mini-item"><div><strong>Direkt från JSON</strong><span>signUps, lite, core, neo, overgangar, backups</span></div><span class="pill ok">Live</span></div>
+              <div class="mini-item"><div><strong>Riskvyer</strong><span>licenslosa, inMoreThan1Teams, bannedPlayers</span></div><span class="pill danger">Flaggad</span></div>
+              <div class="mini-item"><div><strong>Specialfall</strong><span>Seeding är separat/manuell tills egen key finns</span></div><span class="pill warn">Manual</span></div>
             </div>
           </div>
         </div>
 
         <div class="metrics">
           <article class="metric hero">
-            <div class="metric-label">Registrerade lag</div>
-            <div class="metric-value">64</div>
-            <div class="metric-meta">Totalt för säsongen</div>
+            <div class="metric-label">Primär datakälla</div>
+            <div class="metric-value">alla.json</div>
+            <div class="metric-meta">En fetch, flera sidor</div>
           </article>
           <article class="metric hero">
-            <div class="metric-label">Flaggade spelare</div>
-            <div class="metric-value">10</div>
-            <div class="metric-meta">Banned, flera lag eller utan licens</div>
+            <div class="metric-label">Vyer från JSON</div>
+            <div class="metric-value">9</div>
+            <div class="metric-meta">Matchar nuvarande adminbehov</div>
           </article>
           <article class="metric hero">
-            <div class="metric-label">Aktiva transfers</div>
-            <div class="metric-value">12</div>
-            <div class="metric-meta">Senaste perioden</div>
+            <div class="metric-label">Manuell vy</div>
+            <div class="metric-value">1</div>
+            <div class="metric-meta">Seeding tills egen output finns</div>
           </article>
         </div>
 
@@ -476,36 +476,91 @@
           <section class="table-card">
             <div class="table-head">
               <div>
-                <h3>Snabbgenvägar</h3>
-                <p>Klicka vidare till en egen sida per kontroll.</p>
+                <h3>Mapping mellan UI och alla.json</h3>
+                <p>Det här är kopplingen som frontend bör använda.</p>
               </div>
             </div>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Sida</th>
-                    <th>Syfte</th>
-                    <th>Prioritet</th>
-                    <th>Status</th>
+                    <th>UI-sida</th>
+                    <th>JSON-nyckel</th>
+                    <th>Typ</th>
+                    <th>Kommentar</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td>Unlicensed</td><td>Spelare utan giltig licens</td><td>Hög</td><td><span class="pill danger">Åtgärda</span></td></tr>
-                  <tr><td>Players In Multiple Teams</td><td>Dubbelregistreringar</td><td>Hög</td><td><span class="pill danger">Utred</span></td></tr>
-                  <tr><td>Banned Players</td><td>Avstängningar</td><td>Hög</td><td><span class="pill danger">Blockera</span></td></tr>
-                  <tr><td>Transfers</td><td>Spelarbyten</td><td>Medel</td><td><span class="pill warn">Review</span></td></tr>
-                  <tr><td>Backups</td><td>Reservspelare</td><td>Medel</td><td><span class="pill info">Kontroll</span></td></tr>
+                  <tr><td>Registered Teams</td><td>signUps</td><td>Array</td><td>Lag, division, land, kaptens-userID, rosterstatus</td></tr>
+                  <tr><td>Lite 26 Spring Teams</td><td>lite</td><td>Array</td><td>Kompatibilitet, poäng, spelare, historik</td></tr>
+                  <tr><td>Core 26 Spring Teams</td><td>core</td><td>Array</td><td>Kompatibilitet, poäng, buckets, historik</td></tr>
+                  <tr><td>Neo 26 Spring Teams</td><td>neo</td><td>Array</td><td>Kompatibilitet, poäng, buckets, historik</td></tr>
+                  <tr><td>Transfers</td><td>overgangar</td><td>Array</td><td>From/To, divisioner, vintermatcher, datum, roll</td></tr>
+                  <tr><td>Backups</td><td>backups</td><td>Array</td><td>Backuplicens utan ordinarie licens</td></tr>
+                  <tr><td>Unlicensed</td><td>licenslosa</td><td>Array</td><td>Licenslösa spelare och spelade matcher</td></tr>
+                  <tr><td>Players In Multiple Teams</td><td>inMoreThan1Teams</td><td>Array</td><td>Spelare i flera lag, full team-lista i JSON</td></tr>
+                  <tr><td>Banned Players</td><td>bannedPlayers</td><td>Array</td><td>Banstatus, active, violation, foundAs</td></tr>
+                  <tr><td>Seeding 26 Spring</td><td>—</td><td>Manual</td><td>Finns inte i nuvarande JSON-output</td></tr>
                 </tbody>
               </table>
             </div>
           </section>
 
           <aside class="card">
-            <h3 style="margin-top:0;">Designidé</h3>
-            <p style="color: var(--muted); line-height:1.6;">Varje flik kan senare bli en riktig egen route, till exempel <code>/admin/transfers</code> eller <code>/admin/unlicensed</code>. Den här prototypen visar känslan redan nu utan att behöva bygga backend först.</p>
+            <h3 style="margin-top:0;">Frontend-idé</h3>
+            <p style="color: var(--muted); line-height:1.6;">Ladda <code>alla.json</code> vid start, spara i en global state och rendera sidor utifrån nyckelnamn. Då slipper ni separata requests per flik.</p>
           </aside>
         </div>
+      </section>
+
+      <section class="page" id="page-seeding" data-title="Seeding 26 Spring" data-subtitle="Manuell sida tills seeding läggs in som egen nyckel i alla.json.">
+        <div class="hero">
+          <h3>Seeding behöver egen datakälla</h3>
+          <p>Just nu finns ingen tydlig <code>seeding</code>-nyckel i JSON-outputen du skickade. Den här sidan bör därför behandlas som en separat vy tills ni antingen lägger till en egen JSON-array för seedning eller bygger den från annan källa.</p>
+        </div>
+        <section class="table-card">
+          <div class="table-head"><div><h3>Seedingtabell</h3><p>Placeholder-design för framtida data.</p></div><div class="table-tools"><button class="btn">Importera seed</button><button class="btn">Sortera</button></div></div>
+          <div class="table-wrap"><table><thead><tr><th>#</th><th>Lag</th><th>Seed</th><th>Förra division</th><th>Senaste resultat</th><th>Status</th></tr></thead><tbody><tr><td>1</td><td>Team Example</td><td>1</td><td>Lite</td><td>Top 4</td><td><span class="pill info">Extern data</span></td></tr><tr><td>2</td><td>Team Example 2</td><td>2</td><td>Core</td><td>Final</td><td><span class="pill info">Extern data</span></td></tr></tbody></table></div>
+        </section>
+      </section>
+
+      <section class="page" id="page-registered" data-title="Registered Teams 26 Spring" data-subtitle="Byggs från signUps i alla.json.">
+        <section class="table-card">
+          <div class="table-head"><div><h3>signUps</h3><p>Laglista från <code>signUps</code> med registrering, division, antal spelare och licensstatus.</p></div><div class="table-tools"><button class="btn">Filter division</button><button class="btn">Visa problem</button></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Lag</th><th>Division</th><th>Qualifier</th><th>Land</th><th>Registrerad</th><th>Spelare</th><th>Backuplicenser</th><th>Licenslösa</th><th>Captain userID</th></tr></thead><tbody><tr><td>Team från signUps</td><td>LITE</td><td>—</td><td>SE</td><td>2026-03-20</td><td>6</td><td>1</td><td>0</td><td>123456</td></tr></tbody></table></div>
+        </section>
+      </section>
+
+      <section class="page" id="page-lite" data-title="Lite 26 Spring Teams" data-subtitle="Byggs från lite i alla.json.">
+        <section class="table-card"><div class="table-head"><div><h3>lite</h3><p>Kompatibilitetskontroll för Lite-lag med bucket-poäng och spelardata.</p></div></div><div class="table-wrap"><table><thead><tr><th>Lag</th><th>EP</th><th>PP</th><th>LP</th><th>Spelare</th><th>Playoffspelare</th><th>Poäng</th><th>Kompatibilitet</th></tr></thead><tbody><tr><td>Team från lite</td><td>0</td><td>2</td><td>4</td><td>6</td><td>2</td><td>4.0</td><td><span class="pill ok">OK</span></td></tr></tbody></table></div></section>
+      </section>
+
+      <section class="page" id="page-core" data-title="Core 26 Spring Teams" data-subtitle="Byggs från core i alla.json.">
+        <section class="table-card"><div class="table-head"><div><h3>core</h3><p>Core-lag med EP/PP/LP/CP, totalpoäng och kompatibilitet.</p></div></div><div class="table-wrap"><table><thead><tr><th>Lag</th><th>EP</th><th>PP</th><th>LP</th><th>CP</th><th>Spelare</th><th>Poäng</th><th>Kompatibilitet</th></tr></thead><tbody><tr><td>Team från core</td><td>0</td><td>1</td><td>1</td><td>4</td><td>6</td><td>3.0</td><td><span class="pill ok">OK</span></td></tr></tbody></table></div></section>
+      </section>
+
+      <section class="page" id="page-neo" data-title="Neo 26 Spring Teams" data-subtitle="Byggs från neo i alla.json.">
+        <section class="table-card"><div class="table-head"><div><h3>neo</h3><p>Neo-lag med EP/PP/LP/CP/NP och kompatibilitetsregel.</p></div></div><div class="table-wrap"><table><thead><tr><th>Lag</th><th>EP</th><th>PP</th><th>LP</th><th>CP</th><th>NP</th><th>Poäng</th><th>Kompatibilitet</th></tr></thead><tbody><tr><td>Team från neo</td><td>0</td><td>0</td><td>1</td><td>2</td><td>3</td><td>2.0</td><td><span class="pill ok">OK</span></td></tr></tbody></table></div></section>
+      </section>
+
+      <section class="page" id="page-transfers" data-title="Transfers 26 Spring Teams" data-subtitle="Byggs från overgangar i alla.json.">
+        <section class="table-card"><div class="table-head"><div><h3>overgangar</h3><p>Transfers med från/till-lag, divisioner, vintermatcher, datum och roll.</p></div><div class="table-tools"><button class="btn">Nyast först</button><button class="btn">Filter division</button></div></div><div class="table-wrap"><table><thead><tr><th>Spelare</th><th>Från</th><th>Från div</th><th>Till</th><th>Till div</th><th>26 Winter matcher</th><th>Datum</th><th>Roll</th></tr></thead><tbody><tr><td>Player Example</td><td>Old Team (26W)</td><td>PRO</td><td>New Team</td><td>LITE</td><td>12</td><td>2026-03-22</td><td>Captain</td></tr></tbody></table></div></section>
+      </section>
+
+      <section class="page" id="page-backups" data-title="Backups 26 Spring Teams" data-subtitle="Byggs från backups i alla.json.">
+        <section class="table-card"><div class="table-head"><div><h3>backups</h3><p>Spelare med backuplicens men utan ordinarie licens.</p></div></div><div class="table-wrap"><table><thead><tr><th>Tag</th><th>Lag</th><th>LeagueID</th><th>userID</th><th>Spelade matcher</th></tr></thead><tbody><tr><td>BackupExample</td><td>Example Team</td><td>501</td><td>12345</td><td>4</td></tr></tbody></table></div></section>
+      </section>
+
+      <section class="page" id="page-unlicensed" data-title="Unlicensed 26 Spring Teams" data-subtitle="Byggs från licenslosa i alla.json.">
+        <section class="table-card"><div class="table-head"><div><h3>licenslosa</h3><p>Alla spelare utan vanlig licens eller backuplicens i aktuell vårsäsong.</p></div><div class="table-tools"><button class="btn">Sortera matcher</button></div></div><div class="table-wrap"><table><thead><tr><th>Tag</th><th>Lag</th><th>LeagueID</th><th>userID</th><th>Spelade matcher</th><th>Status</th></tr></thead><tbody><tr><td>LicenseLess</td><td>Example Team</td><td>504</td><td>99999</td><td>3</td><td><span class="pill danger">Ingen licens</span></td></tr></tbody></table></div></section>
+      </section>
+
+      <section class="page" id="page-multiple" data-title="Players In Multiple Teams" data-subtitle="Byggs från inMoreThan1Teams i alla.json.">
+        <section class="table-card"><div class="table-head"><div><h3>inMoreThan1Teams</h3><p>Spelare som finns i flera lag samtidigt. Varje rad kan öppna en detaljpanel med full <code>teams</code>-array.</p></div></div><div class="table-wrap"><table><thead><tr><th>Spelare</th><th>userID</th><th>Antal lag</th><th>Primär vy</th><th>Status</th></tr></thead><tbody><tr><td>DualPlayer</td><td>55555</td><td>2</td><td>Visa teams[] i drawer</td><td><span class="pill danger">Utred</span></td></tr></tbody></table></div></section>
+      </section>
+
+      <section class="page" id="page-banned" data-title="Banned Players" data-subtitle="Byggs från bannedPlayers i alla.json.">
+        <section class="table-card"><div class="table-head"><div><h3>bannedPlayers</h3><p>Ban- och suspensionskontroll med active/status/foundAs.</p></div><div class="table-tools"><button class="btn">Visa violation</button><button class="btn">Visa aktiva</button></div></div><div class="table-wrap"><table><thead><tr><th>Spelare</th><th>Ban typ</th><th>Till</th><th>Aktiv</th><th>Status</th><th>Found as</th><th>Lag</th><th>Division</th></tr></thead><tbody><tr><td>BannedExample</td><td>Suspension</td><td>13.8.2026</td><td>Yes</td><td><span class="pill danger">Violation</span></td><td>Player</td><td>Example Team</td><td>PRO</td></tr></tbody></table></div></section>
       </section>
 
       <section class="page" id="page-seeding" data-title="Seeding 26 Spring" data-subtitle="Egen sida för seedning, ranking och föregående resultat.">
