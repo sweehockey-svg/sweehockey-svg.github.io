@@ -576,6 +576,7 @@
 
     let currentPage = 'dashboard';
     let allData = null;
+    let rawJsonData = null;
     let loadError = null;
 
     const navEl = document.getElementById('nav');
@@ -654,6 +655,68 @@
       out.sort((a, b) => String(a?.[key] ?? '').localeCompare(String(b?.[key] ?? ''), 'sv'));
       if (sortMode === 'name-desc') out.reverse();
       return out;
+    }
+
+    function normalizeAllData(payload) {
+      if (!payload || typeof payload !== 'object') return {};
+
+      const expectedKeys = [
+        'signUps',
+        'lite',
+        'core',
+        'neo',
+        'overgangar',
+        'backups',
+        'licenslosa',
+        'inMoreThan1Teams',
+        'bannedPlayers',
+        'duplicatePlayers',
+        'teamCaptains',
+        'proQualReqCheck'
+      ];
+
+      if (expectedKeys.some(key => Array.isArray(payload[key]))) {
+        return payload;
+      }
+
+      if (Array.isArray(payload.rows) && payload.rows.length && typeof payload.rows[0] === 'object') {
+        const firstRow = payload.rows[0];
+
+        if (typeof firstRow.json_result === 'string') {
+          try {
+            const parsed = JSON.parse(firstRow.json_result);
+            if (expectedKeys.some(key => Array.isArray(parsed[key]))) {
+              return parsed;
+            }
+          } catch (error) {
+            console.warn('Kunde inte parsa rows[0].json_result', error);
+          }
+        }
+
+        if (expectedKeys.some(key => Array.isArray(firstRow[key]))) {
+          return firstRow;
+        }
+      }
+
+      if (payload.json_result && typeof payload.json_result === 'string') {
+        try {
+          const parsed = JSON.parse(payload.json_result);
+          if (expectedKeys.some(key => Array.isArray(parsed[key]))) {
+            return parsed;
+          }
+        } catch (error) {
+          console.warn('Kunde inte parsa json_result', error);
+        }
+      }
+
+      if (payload.json_result && typeof payload.json_result === 'object') {
+        const resultObj = payload.json_result;
+        if (expectedKeys.some(key => Array.isArray(resultObj[key]))) {
+          return resultObj;
+        }
+      }
+
+      return payload;
     }
 
     function getRowsForPage(pageKey) {
@@ -741,7 +804,7 @@
       const available = dataKeys.filter(key => Array.isArray(allData?.[key]));
 
       overviewMetricsEl.innerHTML = renderMetrics([
-        { label: 'Datakälla', value: loadError ? 'Fel' : 'alla.json', meta: loadError ? 'Kunde inte laddas' : 'Laddad i frontend' },
+        { label: 'Datakälla', value: loadError ? 'Fel' : 'alla.json', meta: loadError ? 'Kunde inte laddas' : (rawJsonData && Array.isArray(rawJsonData.rows) ? 'Wrapper med rows[] / json_result upptäckt' : 'Laddad i frontend') },
         { label: 'Tillgängliga arrays', value: available.length, meta: `${dataKeys.length} förväntade nycklar` },
         { label: 'Seeding', value: 'Extern', meta: 'Ingen egen key i nuvarande JSON' }
       ]);
@@ -911,9 +974,11 @@
       try {
         const response = await fetch('./alla.json', { cache: 'no-store' });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        allData = await response.json();
+        rawJsonData = await response.json();
+        allData = normalizeAllData(rawJsonData);
       } catch (error) {
         loadError = error;
+        rawJsonData = null;
         allData = {
           signUps: [], lite: [], core: [], neo: [], overgangar: [], backups: [], licenslosa: [], inMoreThan1Teams: [], bannedPlayers: []
         };
@@ -924,7 +989,14 @@
     document.getElementById('reloadBtn').addEventListener('click', loadAllJson);
     document.getElementById('drawerClose').addEventListener('click', () => drawerEl.classList.remove('open'));
     document.getElementById('openJsonBtn').addEventListener('click', () => {
-      const keys = Object.keys(allData || {});
+      const source = rawJsonData || allData || {};
+      const keys = Object.keys(source);
+      openDrawer('alla.json', 'Tillgängliga toppnivå-nycklar', keys.map(key => ({
+        key,
+        type: Array.isArray(source[key]) ? 'array' : typeof source[key],
+        length: Array.isArray(source[key]) ? source[key].length : '—'
+      })));
+    });
       openDrawer('alla.json', 'Tillgängliga toppnivå-nycklar', keys.map(key => ({ key, type: Array.isArray(allData[key]) ? 'array' : typeof allData[key], length: Array.isArray(allData[key]) ? allData[key].length : '—' })));
     });
     document.getElementById('showColumnsBtn').addEventListener('click', () => {
