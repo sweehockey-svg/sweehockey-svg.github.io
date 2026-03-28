@@ -1246,7 +1246,7 @@
       { key: 'overgangar', label: 'Transfers 26 Spring Teams', type: 'alla', csv: true },
       { key: 'backups', label: 'Backups 26 Spring Teams', type: 'alla', csv: true },
       { key: 'licenslosa', label: 'Unlicensed 26 Spring Teams', type: 'alla', csv: true },
-      { key: 'inMoreThan2Teams', label: 'Players In More Than 2 Teams', type: 'alla', csv: true },
+      { key: 'inMoreThan1Teams', label: 'Players In Multiple Teams', type: 'alla', csv: true },
       { key: 'signUps', label: 'Registered Teams 26 Spring', type: 'alla', csv: true },
       { key: 'proQualReqCheck', label: 'PRO QUAL REQ CHECK', type: 'proqualreqcheck', csv: false },
       { key: 'bannedPlayers', label: 'Banned Players', type: 'banned', csv: true }
@@ -2064,7 +2064,7 @@
       },
 
       getRowClass(row) {
-        if (STATE.currentSource.key === 'inMoreThan2Teams') return 'not-ok';
+        if (STATE.currentSource.key === 'inMoreThan1Teams') return 'not-ok';
 
         if (STATE.currentSource.key === 'bannedPlayers') {
           if (String(row?.status || '').toLowerCase() === 'violation') return 'not-ok';
@@ -2273,7 +2273,7 @@
       },
 
       getColumns(rows) {
-        if (STATE.currentSource.key === 'inMoreThan2Teams') {
+        if (STATE.currentSource.key === 'inMoreThan1Teams') {
           return ['playerName', 'teamCount', 'teams'];
         }
 
@@ -2360,7 +2360,7 @@
 
       getVisibleColumns() {
         if (STATE.currentSource.key === 'bannedPlayers') return STATE.currentColumns;
-        if (STATE.currentSource.key === 'inMoreThan2Teams') return ['playerName', 'teamCount', 'teams'];
+        if (STATE.currentSource.key === 'inMoreThan1Teams') return ['playerName', 'teamCount', 'teams'];
 
         if (this.useTeamDropdownRows()) return this.getTeamTabVisibleColumns() || [];
 
@@ -2372,7 +2372,7 @@
       },
 
       getColumnHeaderLabel(col) {
-        if (STATE.currentSource.key === 'inMoreThan2Teams') {
+        if (STATE.currentSource.key === 'inMoreThan1Teams') {
           return {
             playerName: 'PLAYER',
             teamCount: 'TEAM COUNT',
@@ -3578,7 +3578,7 @@ Best regards,`;
         if (col === 'fullLicenseCount') value = RowAccess.getFullLicenseCount(row);
         if (col === 'signupIssue') value = Rules.getSignupIssueText(row);
 
-        if (STATE.currentSource.key === 'inMoreThan2Teams' && col === 'teams') {
+        if (STATE.currentSource.key === 'inMoreThan1Teams' && col === 'teams') {
           const builtTd = this.createTeamsListCell(row?.teams);
           td.replaceWith(builtTd);
           return builtTd;
@@ -3884,7 +3884,7 @@ Best regards,`;
               const bDate = new Date(b?.registrationDate || 0).getTime();
               return bDate - aDate;
             });
-          } else if (STATE.currentSource.key === 'inMoreThan2Teams') {
+          } else if (STATE.currentSource.key === 'inMoreThan1Teams') {
             baseRows = [...STATE.currentRows].sort((a, b) => {
               const aCount = Number(a?.teamCount) || 0;
               const bCount = Number(b?.teamCount) || 0;
@@ -3903,7 +3903,7 @@ Best regards,`;
           const activeCount = filtered.filter(row => row.active === 'Yes').length;
           const violationCount = filtered.filter(row => row.status === 'Violation').length;
           DOM.rowCounter.textContent = `Bans: ${filtered.length} / ${STATE.currentRows.length} • Active: ${activeCount} • Violations: ${violationCount}`;
-        } else if (STATE.currentSource.key === 'inMoreThan2Teams') {
+        } else if (STATE.currentSource.key === 'inMoreThan1Teams') {
           DOM.rowCounter.textContent = `${filtered.length} flagged player${filtered.length === 1 ? '' : 's'}`;
         } else {
           DOM.rowCounter.textContent = `${filtered.length} row${filtered.length === 1 ? '' : 's'}`;
