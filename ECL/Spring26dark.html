@@ -963,13 +963,27 @@ async getMultipleTeamsMessageUrl(row) {
         const games = Number(RowAccess.getBackupGames(row) || 0);
         return `License Status Update – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has participated in ${games} games without a valid license.\n\nBest regards,`;
       },
-      buildMultipleTeamsMessage(row) {
-        const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
-        const teamCount = Number(row?.teamCount) || 0;
-        const teams = Array.isArray(row?.teams) ? row.teams : [];
-        const teamLines = teams.length ? teams.map(team => `- ${team?.leagueName ? team.leagueName + ' — ' : ''}${team?.teamName || ''}`).join('\n') : '- Team information missing';
-        return `Multiple Team Registration – Action Required for ${playerName}\n\nHi,\n\n${playerName} is currently registered in ${teamCount} teams.\n\n${teamLines}\n\nBest regards,`;
-      },
+buildMultipleTeamsMessage(row) {
+  const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
+  const teamCount = Number(row?.teamCount) || 0;
+  const teams = Array.isArray(row?.teams) ? row.teams : [];
+
+  const teamLines = teams.length
+    ? teams.map(team => `- ${team?.leagueName ? team.leagueName + ' — ' : ''}${team?.teamName || ''}`).join('\n')
+    : '- Team information missing';
+
+  return `Multiple Team Registration – Action Required for ${playerName}
+
+Hi,
+
+${playerName} is currently registered in ${teamCount} teams.
+
+This message is being sent to the player and the captains of all listed teams.
+
+${teamLines}
+
+Best regards,`;
+},
       buildSignUpsMessage(row) {
         const teamName = RowAccess.getTeamName(row) || 'team';
         const divisionName = String(row?.divisionName || '').trim() || 'this division';
