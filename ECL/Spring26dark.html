@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>eHockey Admin Tool v4</title>
+  <title>eHockey Admin Tool v4.1</title>
   <style>
     :root {
-      --bg: #09111d;
+      --bg: #07101b;
       --panel: #10192a;
       --panel-2: #162238;
-      --panel-3: #1b2942;
       --border: #2a3752;
       --text: #edf3ff;
       --muted: #96a3c0;
@@ -39,27 +38,22 @@
 
     .app {
       display: grid;
-      grid-template-columns: 290px 1fr;
+      grid-template-columns: 260px 1fr;
       min-height: 100vh;
     }
 
     .sidebar {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: auto;
-      padding: 22px 16px;
       border-right: 1px solid var(--border);
       background: rgba(10, 17, 29, .95);
-      backdrop-filter: blur(10px);
+      padding: 20px 14px;
     }
 
     .brand {
       display: flex;
-      align-items: center;
       gap: 12px;
-      margin-bottom: 26px;
-      padding: 0 8px;
+      align-items: center;
+      margin-bottom: 24px;
+      padding: 0 6px;
     }
 
     .logo {
@@ -73,17 +67,8 @@
       box-shadow: var(--shadow);
     }
 
-    .brand h1 {
-      margin: 0;
-      font-size: 18px;
-      line-height: 1.05;
-    }
-
-    .brand p {
-      margin: 4px 0 0;
-      color: var(--muted);
-      font-size: 12px;
-    }
+    .brand h1 { margin: 0; font-size: 18px; }
+    .brand p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 
     .nav-title {
       color: var(--muted);
@@ -91,14 +76,10 @@
       text-transform: uppercase;
       letter-spacing: .08em;
       margin: 0 0 10px;
-      padding: 0 10px;
+      padding: 0 8px;
     }
 
-    .nav {
-      display: grid;
-      gap: 8px;
-      margin-bottom: 18px;
-    }
+    .nav { display: grid; gap: 8px; }
 
     .nav-btn {
       width: 100%;
@@ -106,25 +87,24 @@
       justify-content: space-between;
       align-items: center;
       gap: 10px;
+      padding: 12px 14px;
+      border-radius: 14px;
       border: 1px solid transparent;
       background: transparent;
       color: var(--text);
-      text-align: left;
-      padding: 12px 14px;
-      border-radius: 14px;
       cursor: pointer;
-      transition: .18s ease;
+      text-align: left;
       font-size: 14px;
     }
 
-    .nav-btn:hover { background: rgba(255,255,255,.03); border-color: rgba(255,255,255,.05); }
-    .nav-btn.active { background: var(--accent-soft); border-color: rgba(79, 140, 255, .34); }
+    .nav-btn:hover { background: rgba(255,255,255,.03); }
+    .nav-btn.active { background: var(--accent-soft); border-color: rgba(79,140,255,.35); }
 
     .badge {
-      padding: 3px 8px;
-      border-radius: 999px;
       background: rgba(255,255,255,.06);
       color: var(--muted);
+      border-radius: 999px;
+      padding: 3px 8px;
       font-size: 12px;
       white-space: nowrap;
     }
@@ -140,15 +120,15 @@
       line-height: 1.6;
     }
 
-    .main { padding: 28px; }
+    .main { padding: 26px; }
 
     .topbar {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 18px;
-      margin-bottom: 20px;
+      align-items: center;
+      gap: 16px;
       flex-wrap: wrap;
+      margin-bottom: 20px;
     }
 
     .title-wrap h2 { margin: 0; font-size: 28px; }
@@ -161,7 +141,7 @@
     }
 
     .input, .btn, .select {
-      height: 44px;
+      height: 42px;
       border-radius: 12px;
       border: 1px solid var(--border);
       background: var(--panel);
@@ -172,10 +152,10 @@
 
     .input { min-width: 260px; }
     .btn { cursor: pointer; font-weight: 600; background: var(--panel-2); }
-    .btn.primary { background: var(--accent); border-color: transparent; color: white; }
+    .btn.primary { background: var(--accent); color: white; border-color: transparent; }
 
-    .hero, .card, .table-card {
-      background: rgba(16, 25, 42, .92);
+    .card, .hero, .table-card {
+      background: rgba(16,25,42,.92);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
@@ -184,23 +164,22 @@
     .hero { padding: 20px; margin-bottom: 18px; }
     .hero-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
     .hero h3 { margin: 0 0 8px; font-size: 22px; }
-    .hero p { margin: 0; color: var(--muted); line-height: 1.55; }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.6; }
 
     .metrics {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0,1fr));
       gap: 14px;
       margin-bottom: 18px;
     }
 
-    .metric, .card { padding: 18px; }
-    .metric-label { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+    .metric { padding: 18px; }
+    .metric-label { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
     .metric-value { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
     .metric-meta { color: var(--muted); font-size: 13px; }
 
-    .page { display: none; animation: fade .18s ease; }
+    .page { display: none; }
     .page.active { display: block; }
-    @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
     .table-card { overflow: hidden; }
     .table-head {
@@ -215,10 +194,14 @@
 
     .table-head h3 { margin: 0; font-size: 18px; }
     .table-head p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
-    .table-tools { display: flex; gap: 10px; flex-wrap: wrap; }
-
     .table-wrap { overflow: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 980px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+
     th, td {
       padding: 14px 18px;
       text-align: left;
@@ -228,15 +211,12 @@
     }
 
     th {
-      background: rgba(255,255,255,.02);
       color: var(--muted);
+      background: rgba(255,255,255,.02);
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: .06em;
-      white-space: nowrap;
     }
-
-    tr:hover td { background: rgba(255,255,255,.02); }
 
     .pill {
       display: inline-flex;
@@ -245,18 +225,19 @@
       border-radius: 999px;
       font-size: 12px;
       font-weight: 700;
-      white-space: nowrap;
     }
 
-    .ok { background: rgba(110, 231, 183, .12); color: var(--ok); }
-    .warn { background: rgba(245, 196, 81, .12); color: var(--warn); }
-    .danger { background: rgba(255, 122, 122, .12); color: var(--danger); }
-    .info { background: rgba(79, 140, 255, .12); color: #8ab1ff; }
+    .ok { background: rgba(110,231,183,.12); color: var(--ok); }
+    .warn { background: rgba(245,196,81,.12); color: var(--warn); }
+    .danger { background: rgba(255,122,122,.12); color: var(--danger); }
+    .info { background: rgba(79,140,255,.12); color: #8ab1ff; }
+
+    .muted { color: var(--muted); }
+    .empty-state { padding: 28px; text-align: center; color: var(--muted); }
 
     .mini-list { display: grid; gap: 12px; }
     .mini-item {
       display: flex;
-      align-items: center;
       justify-content: space-between;
       gap: 12px;
       padding: 12px 14px;
@@ -264,25 +245,12 @@
       background: rgba(255,255,255,.03);
       border: 1px solid rgba(255,255,255,.05);
     }
-    .mini-item strong { display: block; margin-bottom: 4px; font-size: 14px; }
+    .mini-item strong { display: block; margin-bottom: 4px; }
     .mini-item span { color: var(--muted); font-size: 12px; }
 
     .split { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+    .meta-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; margin-bottom: 18px; }
 
-    .meta-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-      margin-bottom: 18px;
-    }
-
-    .empty-state {
-      padding: 28px;
-      color: var(--muted);
-      text-align: center;
-    }
-
-    .muted { color: var(--muted); }
     .detail-btn {
       border: 1px solid var(--border);
       background: rgba(255,255,255,.03);
@@ -297,15 +265,14 @@
     .drawer {
       position: fixed;
       top: 0;
-      right: -540px;
-      width: 540px;
+      right: -560px;
+      width: 560px;
       max-width: 100%;
       height: 100vh;
       background: #0c1524;
       border-left: 1px solid var(--border);
-      box-shadow: -10px 0 30px rgba(0,0,0,.35);
       transition: right .2s ease;
-      z-index: 20;
+      z-index: 30;
       display: flex;
       flex-direction: column;
     }
@@ -317,13 +284,18 @@
       display: flex;
       justify-content: space-between;
       gap: 12px;
-      align-items: flex-start;
     }
     .drawer-body { padding: 18px; overflow: auto; }
     .drawer-close {
-      width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
-      border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      cursor: pointer;
     }
+
     .json-card {
       background: rgba(255,255,255,.03);
       border: 1px solid rgba(255,255,255,.06);
@@ -332,25 +304,19 @@
       margin-bottom: 12px;
     }
     .json-card h4 { margin: 0 0 10px; font-size: 14px; }
-    .json-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-      font-size: 13px;
-    }
     .json-row {
       display: grid;
       grid-template-columns: 150px 1fr;
       gap: 10px;
-      align-items: start;
+      margin-bottom: 8px;
+      font-size: 13px;
     }
-    .json-key { color: var(--muted); }
 
     @media (max-width: 1150px) {
       .app { grid-template-columns: 1fr; }
-      .sidebar { position: relative; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+      .sidebar { border-right: 0; border-bottom: 1px solid var(--border); }
       .hero-grid, .split, .meta-grid { grid-template-columns: 1fr; }
-      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
 
     @media (max-width: 720px) {
@@ -369,28 +335,28 @@
         <div class="logo">EH</div>
         <div>
           <h1>eHockey Admin</h1>
-          <p>v4 • dynamisk från alla.json</p>
+          <p>v4.1 • stabil JSON-loader</p>
         </div>
       </div>
 
       <p class="nav-title">Sidor</p>
       <nav class="nav" id="nav"></nav>
 
-      <div class="side-meta">
+      <div class="side-meta" id="sideMeta">
         <div><strong>Datakälla:</strong> <code>alla.json</code></div>
         <div><strong>Seeding:</strong> separat/manuell tills egen key finns</div>
-        <div><strong>Detaljvyer:</strong> <code>players[]</code> och <code>teams[]</code> öppnas i sidopanel</div>
+        <div><strong>Detaljvyer:</strong> <code>players[]</code> och <code>teams[]</code></div>
       </div>
     </aside>
 
     <main class="main">
       <div class="topbar">
         <div class="title-wrap">
-          <h2 id="page-title">Overview</h2>
-          <p id="page-subtitle">Laddar data från alla.json och renderar varje adminvy dynamiskt.</p>
+          <h2 id="pageTitle">Overview</h2>
+          <p id="pageSubtitle">Laddar data från alla.json och renderar varje adminvy dynamiskt.</p>
         </div>
         <div class="actions">
-          <input class="input" id="searchInput" type="text" placeholder="Sök spelare, lag, userID eller division..." />
+          <input class="input" id="searchInput" type="text" placeholder="Sök spelare, lag, userID eller division" />
           <select class="select" id="sortSelect">
             <option value="default">Standard</option>
             <option value="name-asc">Namn A–Ö</option>
@@ -405,9 +371,9 @@
         <div class="hero hero-grid">
           <div>
             <h3>Överblick för 26 Spring</h3>
-            <p>Det här är nu en riktig prototyp för frontendlogiken. Filen försöker hämta <code>alla.json</code>, läser rätt array för vald sida och bygger tabellen automatiskt. För nested data som <code>players</code> och <code>teams</code> finns en sidopanel med detaljer.</p>
+            <p>Den här versionen använder en enklare och stabilare loader. Den försöker läsa både platt JSON, <code>rows[0]</code> och <code>rows[0].json_result</code> som sträng.</p>
           </div>
-          <div class="card">
+          <div class="card" style="padding:18px;">
             <div class="mini-list" id="overviewStatusList"></div>
           </div>
         </div>
@@ -419,7 +385,7 @@
             <div class="table-head">
               <div>
                 <h3>Mapping mellan UI och alla.json</h3>
-                <p>Frontend använder den här konfigurationen för varje sida.</p>
+                <p>Frontend renderar dessa sidor från respektive JSON-nyckel.</p>
               </div>
             </div>
             <div class="table-wrap">
@@ -437,22 +403,22 @@
             </div>
           </section>
 
-          <aside class="card">
+          <aside class="card" style="padding:18px;">
             <h3 style="margin-top:0;">Teknisk idé</h3>
-            <p style="color: var(--muted); line-height:1.6;">Bygg vidare genom att låta backend exportera <code>alla.json</code> regelbundet. Frontend behöver då bara en fetch och ett gemensamt render-system för tabeller, filter och detaljpaneler.</p>
+            <p class="muted" style="line-height:1.7;">När detta fungerar stabilt är nästa steg CSV-export, filter per kolumn och fler sidor som <code>teamCaptains</code> och <code>proQualReqCheck</code>.</p>
           </aside>
         </div>
       </section>
 
-      <section class="page" id="page-data-view">
+      <section class="page" id="page-data">
         <div class="meta-grid" id="pageMetrics"></div>
         <section class="table-card">
           <div class="table-head">
             <div>
               <h3 id="dataSectionTitle">Data</h3>
-              <p id="dataSectionSubtitle">Dynamisk tabell från vald JSON-nyckel.</p>
+              <p id="dataSectionSubtitle">Dynamisk tabell.</p>
             </div>
-            <div class="table-tools">
+            <div class="actions">
               <button class="btn" id="showColumnsBtn">Kolumner</button>
               <button class="btn" id="exportHintBtn">Export</button>
             </div>
@@ -476,126 +442,45 @@
 
   <script>
     const PAGE_CONFIG = {
-      dashboard: {
-        title: 'Overview',
-        subtitle: 'Startvy med snabbstatus och mapping för alla.json.',
-        type: 'dashboard'
-      },
-      seeding: {
-        title: 'Seeding 26 Spring',
-        subtitle: 'Manuell sida tills seeding finns som egen nyckel i alla.json.',
-        type: 'manual',
-        jsonKey: null,
-        label: 'Seeding 26 Spring',
-        badge: 'Manual'
-      },
-      registered: {
-        title: 'Registered Teams 26 Spring',
-        subtitle: 'Byggs från signUps i alla.json.',
-        type: 'data',
-        jsonKey: 'signUps',
-        label: 'Registered Teams',
-        badge: 'signUps',
-        columns: ['teamName', 'divisionName', 'qualifierName', 'teamCountry', 'registrationDate', 'playerCount', 'backupLicenseCount', 'unlicensedPlayerCount', 'userID']
-      },
-      lite: {
-        title: 'Lite 26 Spring Teams',
-        subtitle: 'Byggs från lite i alla.json.',
-        type: 'data',
-        jsonKey: 'lite',
-        label: 'Lite 26 Spring Teams',
-        badge: 'lite',
-        columns: ['teamName', 'EP', 'PP', 'LP', 'totalPlayers', 'playersWithPlayoffGames', 'totalPoints', 'compatibility', 'players']
-      },
-      core: {
-        title: 'Core 26 Spring Teams',
-        subtitle: 'Byggs från core i alla.json.',
-        type: 'data',
-        jsonKey: 'core',
-        label: 'Core 26 Spring Teams',
-        badge: 'core',
-        columns: ['teamName', 'EP', 'PP', 'LP', 'CP', 'totalPlayers', 'playersWithPlayoffGames', 'totalPoints', 'compatibility', 'players']
-      },
-      neo: {
-        title: 'Neo 26 Spring Teams',
-        subtitle: 'Byggs från neo i alla.json.',
-        type: 'data',
-        jsonKey: 'neo',
-        label: 'Neo 26 Spring Teams',
-        badge: 'neo',
-        columns: ['teamName', 'EP', 'PP', 'LP', 'CP', 'NP', 'totalPlayers', 'playersWithPlayoffGames', 'totalPoints', 'compatibility', 'players']
-      },
-      transfers: {
-        title: 'Transfers 26 Spring Teams',
-        subtitle: 'Byggs från overgangar i alla.json.',
-        type: 'data',
-        jsonKey: 'overgangar',
-        label: 'Transfers 26 Spring Teams',
-        badge: 'overgangar',
-        columns: ['Player', 'From', 'FromDiv', 'To', 'ToDiv', 'GroupGames26Winter', 'PlayoffGames26Winter', 'TotalGames26Winter', 'Date', 'Role']
-      },
-      backups: {
-        title: 'Backups 26 Spring Teams',
-        subtitle: 'Byggs från backups i alla.json.',
-        type: 'data',
-        jsonKey: 'backups',
-        label: 'Backups 26 Spring Teams',
-        badge: 'backups',
-        columns: ['tag', 'teamName', 'leagueID', 'userID', 'totalMatchesPlayed']
-      },
-      unlicensed: {
-        title: 'Unlicensed 26 Spring Teams',
-        subtitle: 'Byggs från licenslosa i alla.json.',
-        type: 'data',
-        jsonKey: 'licenslosa',
-        label: 'Unlicensed 26 Spring Teams',
-        badge: 'licenslosa',
-        columns: ['tag', 'teamName', 'leagueID', 'userID', 'totalMatchesPlayed']
-      },
-      multiple: {
-        title: 'Players In Multiple Teams',
-        subtitle: 'Byggs från inMoreThan1Teams i alla.json.',
-        type: 'data',
-        jsonKey: 'inMoreThan1Teams',
-        label: 'Players In Multiple Teams',
-        badge: 'inMoreThan1Teams',
-        columns: ['playerName', 'userID', 'teamCount', 'teams']
-      },
-      banned: {
-        title: 'Banned Players',
-        subtitle: 'Byggs från bannedPlayers i alla.json.',
-        type: 'data',
-        jsonKey: 'bannedPlayers',
-        label: 'Banned Players',
-        badge: 'bannedPlayers',
-        columns: ['playerName', 'banType', 'untilText', 'active', 'status', 'foundAs', 'teamName', 'divisionName', 'notes']
-      }
+      dashboard: { title: 'Overview', subtitle: 'Laddar data från alla.json och renderar varje adminvy dynamiskt.', type: 'dashboard', label: 'Overview', badge: 'Start' },
+      seeding: { title: 'Seeding 26 Spring', subtitle: 'Manuell sida tills seeding finns som egen key.', type: 'manual', label: 'Seeding 26 Spring', badge: 'Manual' },
+      registered: { title: 'Registered Teams 26 Spring', subtitle: 'Byggs från signUps.', type: 'data', jsonKey: 'signUps', label: 'Registered Teams', badge: 'signUps', columns: ['teamName','divisionName','qualifierName','teamCountry','registrationDate','playerCount','backupLicenseCount','unlicensedPlayerCount','userID'] },
+      lite: { title: 'Lite 26 Spring Teams', subtitle: 'Byggs från lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', columns: ['teamName','EP','PP','LP','totalPlayers','playersWithPlayoffGames','totalPoints','compatibility','players'] },
+      core: { title: 'Core 26 Spring Teams', subtitle: 'Byggs från core.', type: 'data', jsonKey: 'core', label: 'Core 26 Spring Teams', badge: 'core', columns: ['teamName','EP','PP','LP','CP','totalPlayers','playersWithPlayoffGames','totalPoints','compatibility','players'] },
+      neo: { title: 'Neo 26 Spring Teams', subtitle: 'Byggs från neo.', type: 'data', jsonKey: 'neo', label: 'Neo 26 Spring Teams', badge: 'neo', columns: ['teamName','EP','PP','LP','CP','NP','totalPlayers','playersWithPlayoffGames','totalPoints','compatibility','players'] },
+      transfers: { title: 'Transfers 26 Spring Teams', subtitle: 'Byggs från overgangar.', type: 'data', jsonKey: 'overgangar', label: 'Transfers 26 Spring Teams', badge: 'overgangar', columns: ['Player','From','FromDiv','To','ToDiv','GroupGames26Winter','PlayoffGames26Winter','TotalGames26Winter','Date','Role'] },
+      backups: { title: 'Backups 26 Spring Teams', subtitle: 'Byggs från backups.', type: 'data', jsonKey: 'backups', label: 'Backups 26 Spring Teams', badge: 'backups', columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed'] },
+      unlicensed: { title: 'Unlicensed 26 Spring Teams', subtitle: 'Byggs från licenslosa.', type: 'data', jsonKey: 'licenslosa', label: 'Unlicensed 26 Spring Teams', badge: 'licenslosa', columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed'] },
+      multiple: { title: 'Players In Multiple Teams', subtitle: 'Byggs från inMoreThan1Teams.', type: 'data', jsonKey: 'inMoreThan1Teams', label: 'Players In Multiple Teams', badge: 'inMoreThan1Teams', columns: ['playerName','userID','teamCount','teams'] },
+      banned: { title: 'Banned Players', subtitle: 'Byggs från bannedPlayers.', type: 'data', jsonKey: 'bannedPlayers', label: 'Banned Players', badge: 'bannedPlayers', columns: ['playerName','banType','untilText','active','status','foundAs','teamName','divisionName','notes'] }
     };
 
-    const PAGE_ORDER = ['dashboard', 'seeding', 'registered', 'lite', 'core', 'neo', 'transfers', 'backups', 'unlicensed', 'multiple', 'banned'];
+    const PAGE_ORDER = ['dashboard','seeding','registered','lite','core','neo','transfers','backups','unlicensed','multiple','banned'];
+    const EXPECTED_KEYS = ['signUps','lite','core','neo','overgangar','backups','licenslosa','inMoreThan1Teams','bannedPlayers','duplicatePlayers','teamCaptains','proQualReqCheck'];
 
     let currentPage = 'dashboard';
-    let allData = null;
     let rawJsonData = null;
+    let allData = {};
     let loadError = null;
+    let loadedPath = null;
 
     const navEl = document.getElementById('nav');
-    const pageTitleEl = document.getElementById('page-title');
-    const pageSubtitleEl = document.getElementById('page-subtitle');
+    const pageTitleEl = document.getElementById('pageTitle');
+    const pageSubtitleEl = document.getElementById('pageSubtitle');
     const searchInputEl = document.getElementById('searchInput');
     const sortSelectEl = document.getElementById('sortSelect');
-    const tableWrapEl = document.getElementById('tableWrap');
-    const pageMetricsEl = document.getElementById('pageMetrics');
-    const dataSectionTitleEl = document.getElementById('dataSectionTitle');
-    const dataSectionSubtitleEl = document.getElementById('dataSectionSubtitle');
     const overviewMetricsEl = document.getElementById('overviewMetrics');
     const overviewStatusListEl = document.getElementById('overviewStatusList');
     const mappingTableBodyEl = document.getElementById('mappingTableBody');
-
+    const pageMetricsEl = document.getElementById('pageMetrics');
+    const dataSectionTitleEl = document.getElementById('dataSectionTitle');
+    const dataSectionSubtitleEl = document.getElementById('dataSectionSubtitle');
+    const tableWrapEl = document.getElementById('tableWrap');
     const drawerEl = document.getElementById('drawer');
-    const drawerBodyEl = document.getElementById('drawerBody');
     const drawerTitleEl = document.getElementById('drawerTitle');
     const drawerSubtitleEl = document.getElementById('drawerSubtitle');
+    const drawerBodyEl = document.getElementById('drawerBody');
+    const sideMetaEl = document.getElementById('sideMeta');
 
     function escapeHtml(value) {
       return String(value ?? '')
@@ -606,25 +491,65 @@
         .replace(/'/g, '&#039;');
     }
 
-    function getStatusPill(value) {
+    function pillHtml(value) {
       if (value == null || value === '') return '<span class="muted">—</span>';
-      const text = String(value);
-      const lower = text.toLowerCase();
+      const t = String(value);
+      const lower = t.toLowerCase();
       let cls = 'info';
-      if (['ok', 'clear', 'yes', 'godkänd'].includes(lower)) cls = 'ok';
-      else if (lower.includes('violation') || lower.includes('not ok') || lower.includes('danger') || lower.includes('ingen licens')) cls = 'danger';
-      else if (lower.includes('warn') || lower.includes('review') || lower.includes('manual') || lower.includes('expired')) cls = 'warn';
-      else if (lower.includes('active')) cls = 'info';
-      return `<span class="pill ${cls}">${escapeHtml(text)}</span>`;
+      if (lower === 'ok' || lower === 'yes' || lower === 'clear') cls = 'ok';
+      else if (lower.includes('not ok') || lower.includes('violation') || lower.includes('expired')) cls = 'danger';
+      else if (lower.includes('manual') || lower.includes('warn') || lower.includes('review')) cls = 'warn';
+      return `<span class="pill ${cls}">${escapeHtml(t)}</span>`;
+    }
+
+    function normalizeAllData(payload) {
+      if (!payload || typeof payload !== 'object') return {};
+
+      if (EXPECTED_KEYS.some(key => Array.isArray(payload[key]))) {
+        return payload;
+      }
+
+      if (typeof payload.json_result === 'string') {
+        try {
+          const parsed = JSON.parse(payload.json_result);
+          if (EXPECTED_KEYS.some(key => Array.isArray(parsed[key]))) return parsed;
+        } catch (e) {}
+      }
+
+      if (payload.json_result && typeof payload.json_result === 'object') {
+        if (EXPECTED_KEYS.some(key => Array.isArray(payload.json_result[key]))) return payload.json_result;
+      }
+
+      if (Array.isArray(payload.rows) && payload.rows.length) {
+        const row0 = payload.rows[0];
+        if (row0 && typeof row0 === 'object') {
+          if (EXPECTED_KEYS.some(key => Array.isArray(row0[key]))) return row0;
+          if (typeof row0.json_result === 'string') {
+            try {
+              const parsed = JSON.parse(row0.json_result);
+              if (EXPECTED_KEYS.some(key => Array.isArray(parsed[key]))) return parsed;
+            } catch (e) {}
+          }
+          if (row0.json_result && typeof row0.json_result === 'object') {
+            if (EXPECTED_KEYS.some(key => Array.isArray(row0.json_result[key]))) return row0.json_result;
+          }
+        }
+      }
+
+      return payload;
+    }
+
+    function getRowsForPage(pageKey) {
+      const cfg = PAGE_CONFIG[pageKey];
+      if (!cfg || !cfg.jsonKey) return [];
+      const value = allData[cfg.jsonKey];
+      return Array.isArray(value) ? value : [];
     }
 
     function renderNav() {
       navEl.innerHTML = PAGE_ORDER.map(pageKey => {
         const cfg = PAGE_CONFIG[pageKey];
-        const isActive = pageKey === currentPage ? 'active' : '';
-        const label = cfg.label || cfg.title;
-        const badge = cfg.badge || 'Start';
-        return `<button class="nav-btn ${isActive}" data-page="${pageKey}"><span>${escapeHtml(label)}</span><span class="badge">${escapeHtml(badge)}</span></button>`;
+        return `<button class="nav-btn ${pageKey === currentPage ? 'active' : ''}" data-page="${pageKey}"><span>${escapeHtml(cfg.label)}</span><span class="badge">${escapeHtml(cfg.badge)}</span></button>`;
       }).join('');
 
       navEl.querySelectorAll('.nav-btn').forEach(btn => {
@@ -635,101 +560,14 @@
       });
     }
 
-    function showPage(pageId) {
-      document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-      document.getElementById(pageId).classList.add('active');
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
     }
 
-    function filterRows(rows, query) {
-      if (!query) return rows;
-      const q = query.trim().toLowerCase();
-      if (!q) return rows;
-      return rows.filter(row => JSON.stringify(row).toLowerCase().includes(q));
-    }
-
-    function sortRows(rows, sortMode, nameKeyCandidates = []) {
-      const out = [...rows];
-      if (sortMode === 'default') return out;
-      const key = nameKeyCandidates.find(k => out.some(row => row && row[k] != null)) || Object.keys(out[0] || {})[0];
-      if (!key) return out;
-      out.sort((a, b) => String(a?.[key] ?? '').localeCompare(String(b?.[key] ?? ''), 'sv'));
-      if (sortMode === 'name-desc') out.reverse();
-      return out;
-    }
-
-    function normalizeAllData(payload) {
-      if (!payload || typeof payload !== 'object') return {};
-
-      const expectedKeys = [
-        'signUps',
-        'lite',
-        'core',
-        'neo',
-        'overgangar',
-        'backups',
-        'licenslosa',
-        'inMoreThan1Teams',
-        'bannedPlayers',
-        'duplicatePlayers',
-        'teamCaptains',
-        'proQualReqCheck'
-      ];
-
-      if (expectedKeys.some(key => Array.isArray(payload[key]))) {
-        return payload;
-      }
-
-      if (Array.isArray(payload.rows) && payload.rows.length && typeof payload.rows[0] === 'object') {
-        const firstRow = payload.rows[0];
-
-        if (typeof firstRow.json_result === 'string') {
-          try {
-            const parsed = JSON.parse(firstRow.json_result);
-            if (expectedKeys.some(key => Array.isArray(parsed[key]))) {
-              return parsed;
-            }
-          } catch (error) {
-            console.warn('Kunde inte parsa rows[0].json_result', error);
-          }
-        }
-
-        if (expectedKeys.some(key => Array.isArray(firstRow[key]))) {
-          return firstRow;
-        }
-      }
-
-      if (payload.json_result && typeof payload.json_result === 'string') {
-        try {
-          const parsed = JSON.parse(payload.json_result);
-          if (expectedKeys.some(key => Array.isArray(parsed[key]))) {
-            return parsed;
-          }
-        } catch (error) {
-          console.warn('Kunde inte parsa json_result', error);
-        }
-      }
-
-      if (payload.json_result && typeof payload.json_result === 'object') {
-        const resultObj = payload.json_result;
-        if (expectedKeys.some(key => Array.isArray(resultObj[key]))) {
-          return resultObj;
-        }
-      }
-
-      return payload;
-    }
-
-    function getRowsForPage(pageKey) {
-      const cfg = PAGE_CONFIG[pageKey];
-      if (!cfg || !cfg.jsonKey || !allData) return [];
-      const value = allData[cfg.jsonKey];
-      return Array.isArray(value) ? value : [];
-    }
-
-    function renderMetrics(items) {
-      if (!items.length) return '<div class="hero"><div class="muted">Ingen statistik att visa.</div></div>';
-      return items.map(item => `
-        <article class="metric hero">
+    function renderMetricCards(items, target) {
+      target.innerHTML = items.map(item => `
+        <article class="card metric">
           <div class="metric-label">${escapeHtml(item.label)}</div>
           <div class="metric-value">${escapeHtml(item.value)}</div>
           <div class="metric-meta">${escapeHtml(item.meta || '')}</div>
@@ -737,221 +575,204 @@
       `).join('');
     }
 
-    function getPageMetrics(pageKey, rows) {
-      if (pageKey === 'registered') {
-        const totalPlayers = rows.reduce((sum, r) => sum + Number(r.playerCount || 0), 0);
-        const totalUnlicensed = rows.reduce((sum, r) => sum + Number(r.unlicensedPlayerCount || 0), 0);
-        return [
-          { label: 'Lag', value: rows.length, meta: 'Från signUps' },
-          { label: 'Spelare', value: totalPlayers, meta: 'Summerat från playerCount' },
-          { label: 'Licenslösa', value: totalUnlicensed, meta: 'Summerat från unlicensedPlayerCount' }
-        ];
-      }
-      if (['lite', 'core', 'neo'].includes(pageKey)) {
-        const flagged = rows.filter(r => String(r.compatibility || '').toUpperCase() !== 'OK').length;
-        const players = rows.reduce((sum, r) => sum + Number(r.totalPlayers || 0), 0);
-        const playoff = rows.reduce((sum, r) => sum + Number(r.playersWithPlayoffGames || 0), 0);
-        return [
-          { label: 'Lag', value: rows.length, meta: `Från ${PAGE_CONFIG[pageKey].jsonKey}` },
-          { label: 'Flaggade lag', value: flagged, meta: 'compatibility ≠ OK' },
-          { label: 'Playoffspelare', value: playoff, meta: `Av totalt ${players} rosterplatser` }
-        ];
-      }
-      if (pageKey === 'transfers') {
-        const roleCount = rows.filter(r => r.Role).length;
-        return [
-          { label: 'Transfers', value: rows.length, meta: 'Från overgangar' },
-          { label: 'Med roll', value: roleCount, meta: 'Captain / Assistant' },
-          { label: 'Nyaste rad', value: rows[0]?.Date || '—', meta: 'Sortera gärna på datum i backend' }
-        ];
-      }
-      if (pageKey === 'backups' || pageKey === 'unlicensed') {
-        const totalMatches = rows.reduce((sum, r) => sum + Number(r.totalMatchesPlayed || 0), 0);
-        return [
-          { label: 'Spelare', value: rows.length, meta: `Från ${PAGE_CONFIG[pageKey].jsonKey}` },
-          { label: 'Matcher', value: totalMatches, meta: 'Summerat totalMatchesPlayed' },
-          { label: 'Snitt', value: rows.length ? (totalMatches / rows.length).toFixed(1) : '0.0', meta: 'Matcher per spelare' }
-        ];
-      }
-      if (pageKey === 'multiple') {
-        const maxTeams = Math.max(0, ...rows.map(r => Number(r.teamCount || 0)));
-        return [
-          { label: 'Spelare', value: rows.length, meta: 'I fler än ett lag' },
-          { label: 'Max teamCount', value: maxTeams, meta: 'Högsta upptäckta värde' },
-          { label: 'Detaljvy', value: 'teams[]', meta: 'Öppnas i sidopanel' }
-        ];
-      }
-      if (pageKey === 'banned') {
-        const active = rows.filter(r => String(r.active).toLowerCase() === 'yes').length;
-        const violations = rows.filter(r => String(r.status).toLowerCase() === 'violation').length;
-        return [
-          { label: 'Ban-rader', value: rows.length, meta: 'Från bannedPlayers' },
-          { label: 'Aktiva', value: active, meta: 'active = Yes' },
-          { label: 'Violations', value: violations, meta: 'status = Violation' }
-        ];
-      }
-      return [
-        { label: 'Rader', value: rows.length, meta: 'Dynamiskt laddade' },
-        { label: 'Datakälla', value: PAGE_CONFIG[pageKey]?.jsonKey || '—', meta: 'alla.json' },
-        { label: 'Sök/filter', value: 'På', meta: 'Frontendfilter aktivt' }
-      ];
-    }
-
     function renderOverview() {
       showPage('page-dashboard');
+      const availableKeys = EXPECTED_KEYS.filter(key => Array.isArray(allData[key]));
 
-      const dataKeys = ['signUps', 'lite', 'core', 'neo', 'overgangar', 'backups', 'licenslosa', 'inMoreThan1Teams', 'bannedPlayers'];
-      const available = dataKeys.filter(key => Array.isArray(allData?.[key]));
-
-      overviewMetricsEl.innerHTML = renderMetrics([
-        { label: 'Datakälla', value: loadError ? 'Fel' : 'alla.json', meta: loadError ? 'Kunde inte laddas' : (rawJsonData && Array.isArray(rawJsonData.rows) ? 'Wrapper med rows[] / json_result upptäckt' : 'Laddad i frontend') },
-        { label: 'Tillgängliga arrays', value: available.length, meta: `${dataKeys.length} förväntade nycklar` },
-        { label: 'Seeding', value: 'Extern', meta: 'Ingen egen key i nuvarande JSON' }
-      ]);
+      renderMetricCards([
+        { label: 'Datakälla', value: loadedPath || 'Ingen', meta: loadError ? 'Fel vid laddning' : 'Aktiv fil' },
+        { label: 'Hittade arrays', value: availableKeys.length, meta: 'Toppnivånycklar som kan renderas' },
+        { label: 'Status', value: loadError ? 'Fel' : 'OK', meta: loadError ? String(loadError.message || loadError) : 'Loader körs' }
+      ], overviewMetricsEl);
 
       overviewStatusListEl.innerHTML = [
-        { title: 'Live från JSON', subtitle: available.join(', ') || 'Inga arrays hittades', pill: 'OK', cls: 'ok' },
-        { title: 'Riskvyer', subtitle: 'licenslosa, inMoreThan1Teams, bannedPlayers', pill: 'Risk', cls: 'danger' },
-        { title: 'Manual vy', subtitle: 'Seeding kräver separat data', pill: 'Manual', cls: 'warn' }
+        { t: 'Laddad fil', s: loadedPath || 'Ingen fil hittades', p: loadError ? 'Fel' : 'OK', c: loadError ? 'danger' : 'ok' },
+        { t: 'Normalisering', s: availableKeys.join(', ') || 'Inga kända keys hittades', p: 'JSON', c: 'info' },
+        { t: 'Seeding', s: 'Fortfarande separat/manuell', p: 'Manual', c: 'warn' }
       ].map(item => `
         <div class="mini-item">
-          <div><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.subtitle)}</span></div>
-          <span class="pill ${item.cls}">${escapeHtml(item.pill)}</span>
+          <div><strong>${escapeHtml(item.t)}</strong><span>${escapeHtml(item.s)}</span></div>
+          <span class="pill ${item.c}">${escapeHtml(item.p)}</span>
         </div>
       `).join('');
 
       mappingTableBodyEl.innerHTML = [
-        ['Registered Teams', 'signUps', 'Lag, division, registrering, licensstatus', 'Live'],
-        ['Lite 26 Spring Teams', 'lite', 'Kompatibilitet och players[]', 'Live'],
-        ['Core 26 Spring Teams', 'core', 'Kompatibilitet och players[]', 'Live'],
-        ['Neo 26 Spring Teams', 'neo', 'Kompatibilitet och players[]', 'Live'],
-        ['Transfers 26 Spring Teams', 'overgangar', 'From/To, matcher, datum, roll', 'Live'],
-        ['Backups 26 Spring Teams', 'backups', 'Backuplicens utan ordinarie licens', 'Live'],
-        ['Unlicensed 26 Spring Teams', 'licenslosa', 'Licenslösa spelare', 'Live'],
-        ['Players In Multiple Teams', 'inMoreThan1Teams', 'Flera lag + teams[]', 'Live'],
-        ['Banned Players', 'bannedPlayers', 'Banstatus och violations', 'Live'],
-        ['Seeding 26 Spring', '—', 'Extern eller framtida key', 'Manual']
+        ['Registered Teams','signUps','Lag, division, registrering, licensstatus','Live'],
+        ['Lite 26 Spring Teams','lite','Kompatibilitet och players[]','Live'],
+        ['Core 26 Spring Teams','core','Kompatibilitet och players[]','Live'],
+        ['Neo 26 Spring Teams','neo','Kompatibilitet och players[]','Live'],
+        ['Transfers 26 Spring Teams','overgangar','From/To, matcher, datum, roll','Live'],
+        ['Backups 26 Spring Teams','backups','Backuplicens','Live'],
+        ['Unlicensed 26 Spring Teams','licenslosa','Licenslösa spelare','Live'],
+        ['Players In Multiple Teams','inMoreThan1Teams','Flera lag + teams[]','Live'],
+        ['Banned Players','bannedPlayers','Banstatus och violations','Live'],
+        ['Seeding 26 Spring','—','Extern eller framtida key','Manual']
       ].map(row => `
         <tr>
           <td>${escapeHtml(row[0])}</td>
           <td><code>${escapeHtml(row[1])}</code></td>
           <td>${escapeHtml(row[2])}</td>
-          <td>${getStatusPill(row[3])}</td>
+          <td>${pillHtml(row[3])}</td>
         </tr>
       `).join('');
+
+      sideMetaEl.innerHTML = `
+        <div><strong>Datakälla:</strong> <code>${escapeHtml(loadedPath || 'ingen')}</code></div>
+        <div><strong>Keys:</strong> ${escapeHtml(String(availableKeys.length))} hittade</div>
+        <div><strong>Seeding:</strong> separat/manuell tills egen key finns</div>
+      `;
     }
 
     function openDrawer(title, subtitle, items) {
       drawerTitleEl.textContent = title;
       drawerSubtitleEl.textContent = subtitle;
-
       if (!Array.isArray(items) || !items.length) {
-        drawerBodyEl.innerHTML = '<div class="empty-state">Ingen nested data att visa.</div>';
+        drawerBodyEl.innerHTML = '<div class="empty-state">Ingen data att visa.</div>';
       } else {
         drawerBodyEl.innerHTML = items.map((item, index) => {
-          const rows = Object.entries(item).map(([key, value]) => `
+          const rows = Object.entries(item).map(([k,v]) => `
             <div class="json-row">
-              <div class="json-key">${escapeHtml(key)}</div>
-              <div>${Array.isArray(value) ? escapeHtml(JSON.stringify(value)) : escapeHtml(value ?? '—')}</div>
+              <div class="muted">${escapeHtml(k)}</div>
+              <div>${escapeHtml(Array.isArray(v) || typeof v === 'object' ? JSON.stringify(v) : v ?? '—')}</div>
             </div>
           `).join('');
-          return `<div class="json-card"><h4>Rad ${index + 1}</h4><div class="json-grid">${rows}</div></div>`;
+          return `<div class="json-card"><h4>Rad ${index + 1}</h4>${rows}</div>`;
         }).join('');
       }
-
       drawerEl.classList.add('open');
     }
 
-    function renderValueCell(value, key, row) {
+    function filterRows(rows, query) {
+      const q = String(query || '').trim().toLowerCase();
+      if (!q) return rows;
+      return rows.filter(row => JSON.stringify(row).toLowerCase().includes(q));
+    }
+
+    function sortRows(rows, mode) {
+      if (mode === 'default') return [...rows];
+      const out = [...rows];
+      const key = ['teamName','playerName','Player','tag'].find(k => out.some(r => r && r[k] != null)) || Object.keys(out[0] || {})[0];
+      out.sort((a,b) => String(a?.[key] ?? '').localeCompare(String(b?.[key] ?? ''), 'sv'));
+      if (mode === 'name-desc') out.reverse();
+      return out;
+    }
+
+    function valueCell(value, key, row) {
       if (Array.isArray(value)) {
-        return `<button class="detail-btn" data-detail-title="${escapeHtml(row.teamName || row.playerName || row.Player || 'Detaljer')}" data-detail-key="${escapeHtml(key)}">Visa ${escapeHtml(key)} (${value.length})</button>`;
+        return `<button class="detail-btn" data-key="${escapeHtml(key)}" data-title="${escapeHtml(row.teamName || row.playerName || row.Player || 'Detaljer')}">Visa ${escapeHtml(key)} (${value.length})</button>`;
       }
-      if (key === 'compatibility' || key === 'status' || key === 'active') {
-        return getStatusPill(value);
-      }
+      if (key === 'compatibility' || key === 'status' || key === 'active') return pillHtml(value);
       if (value == null || value === '') return '<span class="muted">—</span>';
       return escapeHtml(value);
     }
 
-    function attachDetailButtons(rows, columns) {
-      tableWrapEl.querySelectorAll('.detail-btn').forEach((btn, index) => {
+    function attachDetailButtons(rows) {
+      tableWrapEl.querySelectorAll('.detail-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          const rowIndex = Number(btn.closest('tr')?.dataset?.rowIndex ?? index);
-          const row = rows[rowIndex];
-          const key = btn.dataset.detailKey;
-          openDrawer(btn.dataset.detailTitle, `Nested array: ${key}`, row?.[key] || []);
+          const tr = btn.closest('tr');
+          const index = Number(tr.dataset.rowIndex || 0);
+          const key = btn.dataset.key;
+          const row = rows[index];
+          openDrawer(btn.dataset.title, `Nested array: ${key}`, row[key] || []);
         });
       });
     }
 
+    function pageMetricsFor(pageKey, rows) {
+      if (pageKey === 'registered') {
+        return [
+          { label: 'Lag', value: rows.length, meta: 'Från signUps' },
+          { label: 'Spelare', value: rows.reduce((s,r) => s + Number(r.playerCount || 0), 0), meta: 'Summerat playerCount' },
+          { label: 'Licenslösa', value: rows.reduce((s,r) => s + Number(r.unlicensedPlayerCount || 0), 0), meta: 'Summerat unlicensedPlayerCount' }
+        ];
+      }
+      if (['lite','core','neo'].includes(pageKey)) {
+        return [
+          { label: 'Lag', value: rows.length, meta: `Från ${PAGE_CONFIG[pageKey].jsonKey}` },
+          { label: 'Flaggade lag', value: rows.filter(r => String(r.compatibility || '').toUpperCase() !== 'OK').length, meta: 'compatibility ≠ OK' },
+          { label: 'Spelare', value: rows.reduce((s,r) => s + Number(r.totalPlayers || 0), 0), meta: 'Summerat totalPlayers' }
+        ];
+      }
+      if (pageKey === 'transfers') {
+        return [
+          { label: 'Transfers', value: rows.length, meta: 'Från overgangar' },
+          { label: 'Med roll', value: rows.filter(r => r.Role).length, meta: 'Captain / Assistant / etc' },
+          { label: 'Nyaste datum', value: rows[0]?.Date || '—', meta: 'Beror på sortering i källan' }
+        ];
+      }
+      if (pageKey === 'backups' || pageKey === 'unlicensed') {
+        return [
+          { label: 'Spelare', value: rows.length, meta: 'Antal rader' },
+          { label: 'Matcher', value: rows.reduce((s,r) => s + Number(r.totalMatchesPlayed || 0), 0), meta: 'Summerat totalMatchesPlayed' },
+          { label: 'Snitt', value: rows.length ? (rows.reduce((s,r) => s + Number(r.totalMatchesPlayed || 0), 0) / rows.length).toFixed(1) : '0.0', meta: 'Matcher per spelare' }
+        ];
+      }
+      if (pageKey === 'multiple') {
+        return [
+          { label: 'Spelare', value: rows.length, meta: 'I flera lag' },
+          { label: 'Max teamCount', value: Math.max(0, ...rows.map(r => Number(r.teamCount || 0))), meta: 'Högsta värdet' },
+          { label: 'Detaljer', value: 'teams[]', meta: 'Öppnas i drawer' }
+        ];
+      }
+      if (pageKey === 'banned') {
+        return [
+          { label: 'Ban-rader', value: rows.length, meta: 'Från bannedPlayers' },
+          { label: 'Aktiva', value: rows.filter(r => String(r.active).toLowerCase() === 'yes').length, meta: 'active = Yes' },
+          { label: 'Violations', value: rows.filter(r => String(r.status).toLowerCase() === 'violation').length, meta: 'status = Violation' }
+        ];
+      }
+      return [
+        { label: 'Datakälla', value: 'Extern', meta: 'Seeding saknar egen key' },
+        { label: 'Status', value: 'Manual', meta: 'Placeholder' },
+        { label: 'Nästa steg', value: 'Skapa seeding[]', meta: 'I backend-exporten' }
+      ];
+    }
+
     function renderManualPage() {
-      showPage('page-data-view');
-      pageMetricsEl.innerHTML = renderMetrics([
-        { label: 'Datakälla', value: 'Extern', meta: 'Finns inte i alla.json ännu' },
-        { label: 'Status', value: 'Manual', meta: 'Placeholder tills egen array finns' },
-        { label: 'Rekommendation', value: 'Skapa key', meta: 'Exempelvis seeding[]' }
-      ]);
+      showPage('page-data');
+      renderMetricCards(pageMetricsFor('seeding', []), pageMetricsEl);
       dataSectionTitleEl.textContent = 'Seeding 26 Spring';
-      dataSectionSubtitleEl.textContent = 'Den här sidan är förberedd men väntar på riktig data.';
+      dataSectionSubtitleEl.textContent = 'Manuell placeholder tills seeding finns som egen JSON-key.';
       tableWrapEl.innerHTML = `
         <table>
           <thead>
-            <tr>
-              <th>#</th>
-              <th>Lag</th>
-              <th>Seed</th>
-              <th>Förra division</th>
-              <th>Status</th>
-            </tr>
+            <tr><th>#</th><th>Lag</th><th>Seed</th><th>Förra division</th><th>Status</th></tr>
           </thead>
           <tbody>
-            <tr><td>1</td><td>Exempel Team</td><td>1</td><td>LITE</td><td>${getStatusPill('Manual')}</td></tr>
-            <tr><td>2</td><td>Exempel Team 2</td><td>2</td><td>CORE</td><td>${getStatusPill('Manual')}</td></tr>
+            <tr><td>1</td><td>Exempel Team</td><td>1</td><td>LITE</td><td>${pillHtml('Manual')}</td></tr>
+            <tr><td>2</td><td>Exempel Team 2</td><td>2</td><td>CORE</td><td>${pillHtml('Manual')}</td></tr>
           </tbody>
         </table>
       `;
     }
 
     function renderDataPage(pageKey) {
-      showPage('page-data-view');
+      showPage('page-data');
       const cfg = PAGE_CONFIG[pageKey];
-      const query = searchInputEl.value || '';
-      const sortMode = sortSelectEl.value || 'default';
-      let rows = getRowsForPage(pageKey);
-      const nameCandidates = ['teamName', 'playerName', 'Player', 'tag'];
-      rows = filterRows(rows, query);
-      rows = sortRows(rows, sortMode, nameCandidates);
-
-      pageMetricsEl.innerHTML = renderMetrics(getPageMetrics(pageKey, rows));
+      const rows = sortRows(filterRows(getRowsForPage(pageKey), searchInputEl.value), sortSelectEl.value);
+      renderMetricCards(pageMetricsFor(pageKey, rows), pageMetricsEl);
       dataSectionTitleEl.textContent = cfg.jsonKey;
       dataSectionSubtitleEl.textContent = `${cfg.subtitle} Rader efter filter: ${rows.length}.`;
 
       if (!rows.length) {
-        tableWrapEl.innerHTML = `<div class="empty-state">${loadError ? 'Kunde inte läsa alla.json. Lägg HTML-filen och alla.json i samma mapp eller justera fetch-sökvägen.' : 'Inga rader matchar nuvarande filter.'}</div>`;
+        tableWrapEl.innerHTML = `<div class="empty-state">${loadError ? `Kunde inte ladda JSON: ${escapeHtml(loadError.message || loadError)}` : 'Inga rader matchar nuvarande filter eller så saknas data för den här nyckeln.'}</div>`;
         return;
       }
 
-      const columns = cfg.columns?.length ? cfg.columns : Object.keys(rows[0]);
-
-      const tableHtml = `
+      const columns = cfg.columns || Object.keys(rows[0]);
+      tableWrapEl.innerHTML = `
         <table>
-          <thead>
-            <tr>
-              ${columns.map(col => `<th>${escapeHtml(col)}</th>`).join('')}
-            </tr>
-          </thead>
+          <thead><tr>${columns.map(col => `<th>${escapeHtml(col)}</th>`).join('')}</tr></thead>
           <tbody>
             ${rows.map((row, rowIndex) => `
               <tr data-row-index="${rowIndex}">
-                ${columns.map(col => `<td>${renderValueCell(row[col], col, row)}</td>`).join('')}
+                ${columns.map(col => `<td>${valueCell(row[col], col, row)}</td>`).join('')}
               </tr>
             `).join('')}
           </tbody>
         </table>
       `;
-
-      tableWrapEl.innerHTML = tableHtml;
-      attachDetailButtons(rows, columns);
+      attachDetailButtons(rows);
     }
 
     function renderApp() {
@@ -959,18 +780,17 @@
       const cfg = PAGE_CONFIG[currentPage];
       pageTitleEl.textContent = cfg.title;
       pageSubtitleEl.textContent = cfg.subtitle;
-
-      if (cfg.type === 'dashboard') {
-        renderOverview();
-      } else if (cfg.type === 'manual') {
-        renderManualPage();
-      } else {
-        renderDataPage(currentPage);
-      }
+      if (cfg.type === 'dashboard') renderOverview();
+      else if (cfg.type === 'manual') renderManualPage();
+      else renderDataPage(currentPage);
     }
 
     async function loadAllJson() {
       loadError = null;
+      rawJsonData = null;
+      allData = {};
+      loadedPath = null;
+
       const candidatePaths = ['./alla.json', './alla (1).json'];
 
       try {
@@ -980,27 +800,34 @@
         for (const path of candidatePaths) {
           try {
             const response = await fetch(path, { cache: 'no-store' });
-            if (!response.ok) throw new Error(`HTTP ${response.status} for ${path}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             loaded = await response.json();
+            loadedPath = path;
             break;
           } catch (error) {
             lastError = error;
           }
         }
 
-        if (!loaded) {
-          throw lastError || new Error('Kunde inte hitta någon JSON-fil');
-        }
+        if (!loaded) throw lastError || new Error('Kunde inte hitta JSON-fil');
 
         rawJsonData = loaded;
-        allData = normalizeAllData(rawJsonData);
+        allData = normalizeAllData(loaded);
       } catch (error) {
         loadError = error;
-        rawJsonData = null;
         allData = {
-          signUps: [], lite: [], core: [], neo: [], overgangar: [], backups: [], licenslosa: [], inMoreThan1Teams: [], bannedPlayers: []
+          signUps: [],
+          lite: [],
+          core: [],
+          neo: [],
+          overgangar: [],
+          backups: [],
+          licenslosa: [],
+          inMoreThan1Teams: [],
+          bannedPlayers: []
         };
       }
+
       renderApp();
     }
 
@@ -1009,21 +836,18 @@
     document.getElementById('openJsonBtn').addEventListener('click', () => {
       const source = rawJsonData || allData || {};
       const keys = Object.keys(source);
-      openDrawer('alla.json', 'Tillgängliga toppnivå-nycklar', keys.map(key => ({
+      openDrawer('alla.json', 'Rå toppnivå från laddad fil', keys.map(key => ({
         key,
         type: Array.isArray(source[key]) ? 'array' : typeof source[key],
         length: Array.isArray(source[key]) ? source[key].length : '—'
       })));
     });
-      openDrawer('alla.json', 'Tillgängliga toppnivå-nycklar', keys.map(key => ({ key, type: Array.isArray(allData[key]) ? 'array' : typeof allData[key], length: Array.isArray(allData[key]) ? allData[key].length : '—' })));
-    });
     document.getElementById('showColumnsBtn').addEventListener('click', () => {
       const cfg = PAGE_CONFIG[currentPage];
-      const columns = cfg?.columns || [];
-      openDrawer('Kolumner', cfg?.jsonKey || 'Ingen key', columns.map((col, i) => ({ index: i + 1, column: col })));
+      openDrawer('Kolumner', cfg.jsonKey || 'manual', (cfg.columns || []).map((col, i) => ({ index: i + 1, column: col })));
     });
     document.getElementById('exportHintBtn').addEventListener('click', () => {
-      openDrawer('Export-idé', 'Inte kopplad ännu', [{ note: 'Nästa steg är CSV-export på filtrerade rader för vald sida.' }]);
+      openDrawer('Export', 'Ej inkopplad ännu', [{ note: 'Nästa steg är CSV-export på filtrerade rader.' }]);
     });
     searchInputEl.addEventListener('input', () => {
       if (PAGE_CONFIG[currentPage].type === 'data') renderDataPage(currentPage);
