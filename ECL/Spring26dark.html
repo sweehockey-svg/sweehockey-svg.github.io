@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -342,7 +342,7 @@
   <div id="loginScreen" class="login-screen">
     <div class="login-card">
       <h1 class="login-title">Admin Login</h1>
-      <p class="login-warning"><strong>Endast för admins.</strong><br> Dela inte sida eller lösenord vidare.</p>
+      <p class="login-warning"><strong>For admins only.</strong><br> Do not share this page or the password.</p>
       <label class="login-label" for="passwordInput">Password</label>
       <div class="login-row">
         <input id="passwordInput" class="login-input" type="password" placeholder="Enter password" autocomplete="off" />
@@ -472,7 +472,7 @@
   <aside class="drawer" id="drawer">
     <div class="drawer-head">
       <div>
-        <h3 id="drawerTitle" style="margin:0 0 6px;">Detaljer</h3>
+        <h3 id="drawerTitle" style="margin:0 0 6px;">Details</h3>
         <div class="muted" id="drawerSubtitle">Nested data</div>
       </div>
       <button class="drawer-close" id="drawerClose">✕</button>
@@ -509,17 +509,17 @@
     ];
 
     const PAGE_CONFIG = {
-      dashboard: { title: 'Overview', subtitle: 'Startvy med status och mapping för alla.json.', type: 'dashboard', label: 'Overview', badge: 'Start' },
+      dashboard: { title: 'Overview', subtitle: 'Start page with status and mapping for alla.json.', type: 'dashboard', label: 'Overview', badge: 'Start' },
       seeding: { title: 'Seeding 26 Spring', subtitle: 'Preset + registration check.', type: 'preset', label: 'Seeding 26 Spring', badge: 'Preset', csv: false },
-      registered: { title: 'Registered Teams 26 Spring', subtitle: 'Byggs från signUps.', type: 'data', jsonKey: 'signUps', label: 'Registered Teams', badge: 'signUps', csv: true, columns: ['teamName','teamCountry','registrationDate','divisionName','qualifierName','playerCount','fullLicenseCount','backupLicenseCount','unlicensedPlayerCount','signupIssue','userID','__sendMail'] },
-      lite: { title: 'Lite 26 Spring Teams', subtitle: 'Byggs från lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','totalPoints'] },
-      core: { title: 'Core 26 Spring Teams', subtitle: 'Byggs från core.', type: 'data', jsonKey: 'core', label: 'Core 26 Spring Teams', badge: 'core', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','totalPoints'] },
-      neo: { title: 'Neo 26 Spring Teams', subtitle: 'Byggs från neo.', type: 'data', jsonKey: 'neo', label: 'Neo 26 Spring Teams', badge: 'neo', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','NP','totalPoints'] },
-      transfers: { title: 'Transfers 26 Spring Teams', subtitle: 'Byggs från overgangar.', type: 'data', jsonKey: 'overgangar', label: 'Transfers 26 Spring Teams', badge: 'overgangar', csv: true, columns: ['Player','From','FromDiv','To','ToDiv','GroupGames26Winter','PlayoffGames26Winter','TotalGames26Winter','Date','Role'] },
-      backups: { title: 'Backups 26 Spring Teams', subtitle: 'Byggs från backups.', type: 'data', jsonKey: 'backups', label: 'Backups 26 Spring Teams', badge: 'backups', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
-      unlicensed: { title: 'Unlicensed 26 Spring Teams', subtitle: 'Byggs från licenslosa.', type: 'data', jsonKey: 'licenslosa', label: 'Unlicensed 26 Spring Teams', badge: 'licenslosa', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
-      multiple: { title: 'Players In Multiple Teams', subtitle: 'Byggs från inMoreThan1Teams.', type: 'data', jsonKey: 'inMoreThan1Teams', label: 'Players In Multiple Teams', badge: 'inMoreThan1Teams', csv: true, columns: ['playerName','teamCount','teams','__sendMail'] },
-      banned: { title: 'Banned Players', subtitle: 'Byggs från bannedPlayers.', type: 'data', jsonKey: 'bannedPlayers', label: 'Banned Players', badge: 'bannedPlayers', csv: true, columns: ['playerName','banType','untilText','active','status','foundAs','teamName','divisionName','notes'] }
+      registered: { title: 'Registered Teams 26 Spring', subtitle: 'Built from signUps.', type: 'data', jsonKey: 'signUps', label: 'Registered Teams', badge: 'signUps', csv: true, columns: ['teamName','teamCountry','registrationDate','divisionName','qualifierName','playerCount','fullLicenseCount','backupLicenseCount','unlicensedPlayerCount','signupIssue','userID','__sendMail'] },
+      lite: { title: 'Lite 26 Spring Teams', subtitle: 'Built from lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','totalPoints'] },
+      core: { title: 'Core 26 Spring Teams', subtitle: 'Built from core.', type: 'data', jsonKey: 'core', label: 'Core 26 Spring Teams', badge: 'core', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','totalPoints'] },
+      neo: { title: 'Neo 26 Spring Teams', subtitle: 'Built from neo.', type: 'data', jsonKey: 'neo', label: 'Neo 26 Spring Teams', badge: 'neo', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','NP','totalPoints'] },
+      transfers: { title: 'Transfers 26 Spring Teams', subtitle: 'Built from overgangar.', type: 'data', jsonKey: 'overgangar', label: 'Transfers 26 Spring Teams', badge: 'overgangar', csv: true, columns: ['Player','From','FromDiv','To','ToDiv','GroupGames26Winter','PlayoffGames26Winter','TotalGames26Winter','Date','Role'] },
+      backups: { title: 'Backups 26 Spring Teams', subtitle: 'Built from backups.', type: 'data', jsonKey: 'backups', label: 'Backups 26 Spring Teams', badge: 'backups', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
+      unlicensed: { title: 'Unlicensed 26 Spring Teams', subtitle: 'Built from licenslosa.', type: 'data', jsonKey: 'licenslosa', label: 'Unlicensed 26 Spring Teams', badge: 'licenslosa', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
+      multiple: { title: 'Players In Multiple Teams', subtitle: 'Built from inMoreThan1Teams.', type: 'data', jsonKey: 'inMoreThan1Teams', label: 'Players In Multiple Teams', badge: 'inMoreThan1Teams', csv: true, columns: ['playerName','teamCount','teams','__sendMail'] },
+      banned: { title: 'Banned Players', subtitle: 'Built from bannedPlayers.', type: 'data', jsonKey: 'bannedPlayers', label: 'Banned Players', badge: 'bannedPlayers', csv: true, columns: ['playerName','banType','untilText','active','status','foundAs','teamName','divisionName','notes'] }
     };
 
     const PAGE_ORDER = ['dashboard','seeding','registered','lite','core','neo','transfers','backups','unlicensed','multiple','banned'];
@@ -1086,12 +1086,15 @@
     }
 
     function renderHeader(columns) {
+      const headerLabels = {
+        teamName: 'Team', teamCountry: 'Country', registrationDate: 'Registration Date', divisionName: 'Division', qualifierName: 'Qualifier', playerCount: 'Players', fullLicenseCount: 'Full Licenses', backupLicenseCount: 'Backup Licenses', unlicensedPlayerCount: 'Unlicensed', signupIssue: 'Issue', userID: 'User ID', totalPlayers: 'Total Players', totalPoints: 'Total Points', Player: 'Player', tag: 'Tag', teamCount: 'Team Count', teams: 'Teams', banType: 'Ban Type', untilText: 'Until', active: 'Active', status: 'Status', foundAs: 'Found As', From: 'From', FromDiv: 'From Division', To: 'To', ToDiv: 'To Division', GroupGames26Winter: 'Winter Group Games', PlayoffGames26Winter: 'Winter Playoff Games', TotalGames26Winter: 'Winter Total Games', Date: 'Date', Role: 'Role', EP: 'Elite Players', PP: 'Pro Players', LP: 'Lite Players', CP: 'Core Players', NP: 'Neo Players', leagueID: 'League ID', notes: 'Notes'
+      };
       dom.headerRow.innerHTML = '';
       columns.forEach(col => {
         const th = document.createElement('th');
         if (col === '__sendMail') { th.textContent = 'MAIL'; dom.headerRow.appendChild(th); return; }
         th.classList.add('sortable');
-        th.textContent = col;
+        th.textContent = headerLabels[col] || col;
         if (sortState.column === col) th.classList.add(sortState.direction === 'asc' ? 'sort-asc' : 'sort-desc');
         th.addEventListener('click', () => {
           if (sortState.column === col) sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc'; else { sortState.column = col; sortState.direction = 'asc'; }
@@ -1150,13 +1153,13 @@
     }
 
     function getPageMetrics(pageKey, rows) {
-      if (pageKey === 'registered') return [{ label: 'Lag', value: rows.length, meta: 'Från signUps' }, { label: 'Spelare', value: rows.reduce((s,r) => s + Number(r.playerCount || 0), 0), meta: 'Summerat playerCount' }, { label: 'Licenslösa', value: rows.reduce((s,r) => s + Number(r.unlicensedPlayerCount || 0), 0), meta: 'Summerat unlicensedPlayerCount' }];
-      if (['lite','core','neo'].includes(pageKey)) return [{ label: 'Lag', value: rows.length, meta: `Från ${PAGE_CONFIG[pageKey].jsonKey}` }, { label: 'Flaggade lag', value: rows.filter(r => String(r.compatibility || '').toUpperCase() !== 'OK').length, meta: 'compatibility ≠ OK' }, { label: 'Spelare', value: rows.reduce((s,r) => s + Number(r.totalPlayers || 0), 0), meta: 'Summerat totalPlayers' }];
-      if (pageKey === 'transfers') return [{ label: 'Transfers', value: rows.length, meta: 'Från overgangar' }, { label: 'Med roll', value: rows.filter(r => r.Role).length, meta: 'Captain / Assistant' }, { label: 'Nyaste datum', value: rows[0]?.Date || '—', meta: 'Beror på sortering i källan' }];
-      if (pageKey === 'backups' || pageKey === 'unlicensed') { const total = rows.reduce((s,r) => s + Number(r.totalMatchesPlayed || 0), 0); return [{ label: 'Spelare', value: rows.length, meta: 'Antal rader' }, { label: 'Matcher', value: total, meta: 'Summerat totalMatchesPlayed' }, { label: 'Snitt', value: rows.length ? (total / rows.length).toFixed(1) : '0.0', meta: 'Matcher per spelare' }]; }
-      if (pageKey === 'multiple') return [{ label: 'Spelare', value: rows.length, meta: 'I flera lag' }, { label: 'Max teamCount', value: Math.max(0, ...rows.map(r => Number(r.teamCount || 0))), meta: 'Högsta värdet' }, { label: 'Detaljer', value: 'teams[]', meta: 'Öppnas i drawer' }];
-      if (pageKey === 'banned') return [{ label: 'Ban-rader', value: rows.length, meta: 'Från bannedPlayers' }, { label: 'Aktiva', value: rows.filter(r => String(r.active).toLowerCase() === 'yes').length, meta: 'active = Yes' }, { label: 'Violations', value: rows.filter(r => String(r.status).toLowerCase() === 'violation').length, meta: 'status = Violation' }];
-      return [{ label: 'Data source', value: 'Preset', meta: 'Seeding' }, { label: 'Status', value: 'Manual', meta: 'Kontrollvy' }, { label: 'Nästa steg', value: 'Seed-check', meta: 'Kopplad mot signUps' }];
+      if (pageKey === 'registered') return [{ label: 'Teams', value: rows.length, meta: 'From signUps' }, { label: 'Players', value: rows.reduce((s,r) => s + Number(r.playerCount || 0), 0), meta: 'Summed playerCount' }, { label: 'Unlicensed', value: rows.reduce((s,r) => s + Number(r.unlicensedPlayerCount || 0), 0), meta: 'Summed unlicensedPlayerCount' }];
+      if (['lite','core','neo'].includes(pageKey)) return [{ label: 'Teams', value: rows.length, meta: `From ${PAGE_CONFIG[pageKey].jsonKey}` }, { label: 'Flagged teams', value: rows.filter(r => String(r.compatibility || '').toUpperCase() !== 'OK').length, meta: 'compatibility ≠ OK' }, { label: 'Players', value: rows.reduce((s,r) => s + Number(r.totalPlayers || 0), 0), meta: 'Summed totalPlayers' }];
+      if (pageKey === 'transfers') return [{ label: 'Transfers', value: rows.length, meta: 'From overgangar' }, { label: 'With role', value: rows.filter(r => r.Role).length, meta: 'Captain / Assistant' }, { label: 'Latest date', value: rows[0]?.Date || '—', meta: 'Depends on current sort order' }];
+      if (pageKey === 'backups' || pageKey === 'unlicensed') { const total = rows.reduce((s,r) => s + Number(r.totalMatchesPlayed || 0), 0); return [{ label: 'Players', value: rows.length, meta: 'Row count' }, { label: 'Matches', value: total, meta: 'Summed totalMatchesPlayed' }, { label: 'Average', value: rows.length ? (total / rows.length).toFixed(1) : '0.0', meta: 'Matches per player' }]; }
+      if (pageKey === 'multiple') return [{ label: 'Players', value: rows.length, meta: 'In multiple teams' }, { label: 'Max teamCount', value: Math.max(0, ...rows.map(r => Number(r.teamCount || 0))), meta: 'Highest value' }, { label: 'Details', value: 'teams[]', meta: 'Opens in drawer' }];
+      if (pageKey === 'banned') return [{ label: 'Ban rows', value: rows.length, meta: 'From bannedPlayers' }, { label: 'Active', value: rows.filter(r => String(r.active).toLowerCase() === 'yes').length, meta: 'active = Yes' }, { label: 'Violations', value: rows.filter(r => String(r.status).toLowerCase() === 'violation').length, meta: 'status = Violation' }];
+      return [{ label: 'Data source', value: 'Preset', meta: 'Seeding' }, { label: 'Status', value: 'Manual', meta: 'Check view' }, { label: 'Next step', value: 'Seed check', meta: 'Connected to signUps' }];
     }
 
     const SeedingService = {
@@ -1248,13 +1251,13 @@
       const availableKeys = EXPECTED_KEYS.filter(key => Array.isArray(allData[key]));
       renderMetricCards([{ label: 'Data source', value: loadedPath || 'Ingen', meta: loadError ? 'Load error' : 'Active file' }, { label: 'Arrays found', value: availableKeys.length, meta: 'Top-level keys that can be rendered' }, { label: 'Status', value: loadError ? 'Fel' : 'OK', meta: loadError ? String(loadError.message || loadError) : 'Loader running' }], dom.overviewMetrics);
       dom.overviewStatusList.innerHTML = [{ t: 'Loaded file', s: loadedPath || 'No file found', p: loadError ? 'Fel' : 'OK', c: loadError ? 'danger' : 'ok' }, { t: 'Normalization', s: availableKeys.join(', ') || 'No known keys found', p: 'JSON', c: 'info' }, { t: 'Seeding', s: 'Preset + registration check', p: 'Preset', c: 'warn' }].map(item => `<div class="mini-item"><div><strong>${Utils.escapeHtml(item.t)}</strong><span>${Utils.escapeHtml(item.s)}</span></div><span class="pill ${item.c}">${Utils.escapeHtml(item.p)}</span></div>`).join('');
-      dom.mappingTableBody.innerHTML = [['Registered Teams','signUps','Lag, division, registrering, licensstatus','Live'],['Lite 26 Spring Teams','lite','Kompatibilitet och players[]','Live'],['Core 26 Spring Teams','core','Kompatibilitet och players[]','Live'],['Neo 26 Spring Teams','neo','Kompatibilitet och players[]','Live'],['Transfers 26 Spring Teams','overgangar','From/To, matcher, datum, roll','Live'],['Backups 26 Spring Teams','backups','Backuplicens','Live'],['Unlicensed 26 Spring Teams','licenslosa','Licenslösa spelare','Live'],['Players In Multiple Teams','inMoreThan1Teams','Flera lag + teams[]','Live'],['Banned Players','bannedPlayers','Banstatus och violations','Live'],['Seeding 26 Spring','preset','Preset seeding + signUps check','Preset']].map(row => `<tr><td>${Utils.escapeHtml(row[0])}</td><td><code>${Utils.escapeHtml(row[1])}</code></td><td>${Utils.escapeHtml(row[2])}</td><td>${pillHtml(row[3])}</td></tr>`).join('');
-      dom.sideMeta.innerHTML = `<div><strong>Data source:</strong> <code>${Utils.escapeHtml(loadedPath || 'ingen')}</code></div><div><strong>Keys:</strong> ${Utils.escapeHtml(String(availableKeys.length))} hittade</div><div><strong>Features:</strong> login, CSV, filters, messaging</div>`;
+      dom.mappingTableBody.innerHTML = [['Registered Teams','signUps','Teams, division, registration, license status','Live'],['Lite 26 Spring Teams','lite','Compatibility and players[]','Live'],['Core 26 Spring Teams','core','Compatibility and players[]','Live'],['Neo 26 Spring Teams','neo','Compatibility and players[]','Live'],['Transfers 26 Spring Teams','overgangar','From/To, matches, date, role','Live'],['Backups 26 Spring Teams','backups','Backup licenses','Live'],['Unlicensed 26 Spring Teams','licenslosa','Unlicensed players','Live'],['Players In Multiple Teams','inMoreThan1Teams','Multiple teams + teams[]','Live'],['Banned Players','bannedPlayers','Ban status and violations','Live'],['Seeding 26 Spring','preset','Preset seeding + signUps check','Preset']].map(row => `<tr><td>${Utils.escapeHtml(row[0])}</td><td><code>${Utils.escapeHtml(row[1])}</code></td><td>${Utils.escapeHtml(row[2])}</td><td>${pillHtml(row[3])}</td></tr>`).join('');
+      dom.sideMeta.innerHTML = `<div><strong>Data source:</strong> <code>${Utils.escapeHtml(loadedPath || 'none')}</code></div><div><strong>Keys:</strong> ${Utils.escapeHtml(String(availableKeys.length))} found</div><div><strong>Features:</strong> login, CSV, filters, messaging</div>`;
       dom.rowCounter.textContent = '';
     }
 
     function exportCsv() {
-      const cfg = PAGE_CONFIG[currentPage]; if (!cfg.csv) { Utils.setStatus('CSV inte tillgänglig här'); return; }
+      const cfg = PAGE_CONFIG[currentPage]; if (!cfg.csv) { Utils.setStatus('CSV is not available here'); return; }
       const columns = getVisibleColumns().filter(c => c !== '__sendMail'); const rows = normalizedRows;
       const lines = [columns.map(Utils.escapeCsv).join(',')];
       rows.forEach(row => {
@@ -1294,7 +1297,7 @@
       dom.reloadBtn.addEventListener('click', async () => { rawJsonData = null; allData = {}; teamLinkMapCache = null; playerLinkMapCache = null; captainUserIdMapCache = null; await loadAndRender(true); });
       dom.clearFiltersBtn.addEventListener('click', async () => { dom.searchInput.value = ''; dom.flaggedOnlyToggle.checked = false; dom.seedingFilterSelect.value = 'all'; dom.sortSelect.value = 'default'; sortState = { column: null, direction: 'asc' }; await renderApp(); });
       dom.csvExportBtn.addEventListener('click', exportCsv);
-      dom.openJsonBtn.addEventListener('click', () => { const source = rawJsonData || allData || {}; const keys = Object.keys(source); openDrawer('alla.json', 'Rå toppnivå från laddad fil', keys.map(key => ({ key, type: Array.isArray(source[key]) ? 'array' : typeof source[key], length: Array.isArray(source[key]) ? source[key].length : '—' }))); });
+      dom.openJsonBtn.addEventListener('click', () => { const source = rawJsonData || allData || {}; const keys = Object.keys(source); openDrawer('alla.json', 'Raw top-level keys from the loaded file', keys.map(key => ({ key, type: Array.isArray(source[key]) ? 'array' : typeof source[key], length: Array.isArray(source[key]) ? source[key].length : '—' }))); });
       dom.drawerClose.addEventListener('click', () => dom.drawer.classList.remove('open'));
       dom.searchInput.addEventListener('input', () => {
         if (currentPage === 'dashboard') return;
