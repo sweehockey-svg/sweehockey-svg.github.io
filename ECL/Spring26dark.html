@@ -537,6 +537,10 @@
     let normalizedRows = [];
     let sortState = { column: null, direction: 'asc' };
     let currentNumericColumns = new Set();
+    let teamLinkMapCache = null;
+    let playerLinkMapCache = null;
+    let captainUserIdMapCache = null;
+    let searchDebounce = null;
 
     const dom = {
       loginScreen: document.getElementById('loginScreen'),
@@ -737,10 +741,14 @@
         if (!loaded) throw (lastError || new Error('Kunde inte hitta JSON-fil'));
         rawJsonData = loaded;
         allData = this.normalizeAllData(loaded);
+        teamLinkMapCache = null;
+        playerLinkMapCache = null;
+        captainUserIdMapCache = null;
         return allData;
       },
       getRowsForSource(key) { const rows = allData?.[key]; if (!Array.isArray(rows)) throw new Error(`Key "${key}" saknas eller är inte en array`); return rows; },
       getPlayerLinkMap() {
+        if (playerLinkMapCache) return playerLinkMapCache;
         const map = new Map();
         Object.values(allData || {}).forEach(value => {
           if (!Array.isArray(value)) return;
@@ -750,9 +758,11 @@
             if (Array.isArray(row?.players)) row.players.forEach(player => { const pid = player?.playerID || player?.playerId || ''; const pname = player?.playerName || player?.Player || player?.tag || ''; const n = Utils.normalizePlayerName(pname); if (pid && n && !map.has(n)) map.set(n, String(pid)); });
           });
         });
+        playerLinkMapCache = map;
         return map;
       },
       getTeamLinkMap() {
+        if (teamLinkMapCache) return teamLinkMapCache;
         const map = new Map();
         Object.values(allData || {}).forEach(value => {
           if (!Array.isArray(value)) return;
@@ -769,9 +779,11 @@
             });
           });
         });
+        teamLinkMapCache = map;
         return map;
       },
       getCaptainUserIdMap() {
+        if (captainUserIdMapCache) return captainUserIdMapCache;
         const rows = Array.isArray(allData?.teamCaptains) ? allData.teamCaptains : [];
         const map = new Map();
         rows.forEach(originalRow => {
@@ -782,6 +794,7 @@
           if (!map.has(normalizedTeam)) map.set(normalizedTeam, []);
           const ids = map.get(normalizedTeam); if (!ids.includes(userId)) ids.push(userId);
         });
+        captainUserIdMapCache = map;
         return map;
       }
     };
@@ -789,7 +802,7 @@
     const MessagingService = {
       async getBackupMessageUrl(row) {
         if (!['backups','unlicensed'].includes(currentPage)) return '';
-        const captainMap = DataService.getCaptainUserIdMap();
+        const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
         const teamName = RowAccess.getTeamName(row);
         const normalizedTeam = Utils.normalizeTeamName(teamName);
         const captainIds = captainMap.get(normalizedTeam) || [];
@@ -800,7 +813,7 @@
       },
       async getMultipleTeamsMessageUrl(row) {
         if (currentPage !== 'multiple') return '';
-        const captainMap = DataService.getCaptainUserIdMap();
+        const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
         const recipients = [];
         const teams = Array.isArray(row?.teams) ? row.teams : [];
         const playerUserId = String(row?.userID ?? row?.userId ?? row?.UserID ?? row?.user_id ?? row?.userid ?? '').trim();
@@ -818,7 +831,7 @@
       },
       async getSignUpsMessageUrl(row) {
         if (currentPage !== 'registered') return '';
-        const captainMap = DataService.getCaptainUserIdMap();
+        const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
         const teamName = RowAccess.getTeamName(row);
         const normalizedTeam = Utils.normalizeTeamName(teamName);
         const captainIds = captainMap.get(normalizedTeam) || [];
@@ -998,7 +1011,7 @@
       let value = row[col] ?? '';
       if (col === 'fullLicenseCount') value = RowAccess.getFullLicenseCount(row);
       if (col === 'signupIssue') value = Rules.getSignupIssueText(row);
-      const playerLinkMap = DataService.getPlayerLinkMap(); const teamLinkMap = DataService.getTeamLinkMap();
+      const playerLinkMap = playerLinkMapCache || DataService.getPlayerLinkMap(); const teamLinkMap = teamLinkMapCache || DataService.getTeamLinkMap();
 
       if (col === 'teams' && Array.isArray(row?.teams)) {
         td.style.whiteSpace = 'normal';
@@ -1096,8 +1109,23 @@
           const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn'; btn.style.height = '34px'; btn.style.fontSize = '11px'; btn.textContent = 'Check Team'; checkTd.appendChild(btn);
           detailRow = document.createElement('tr'); detailRow.style.display = 'none';
           const detailCell = document.createElement('td'); detailCell.colSpan = columns.length + 1; detailCell.style.padding = '0'; detailCell.style.background = '#0b1630';
-          const panel = document.createElement('div'); panel.className = 'team-dropdown-panel'; panel.appendChild(await createTeamPlayerCheckPanel(row)); detailCell.appendChild(panel); detailRow.appendChild(detailCell);
-          btn.addEventListener('click', () => { const open = detailRow.style.display !== 'table-row'; detailRow.style.display = open ? 'table-row' : 'none'; btn.textContent = open ? 'Hide Team' : 'Check Team'; });
+          btn.addEventListener('click', async () => {
+            const open = detailRow.style.display === 'table-row';
+            if (open) {
+              detailRow.style.display = 'none';
+              btn.textContent = 'Check Team';
+              return;
+            }
+            if (!detailCell.hasChildNodes()) {
+              const panel = document.createElement('div');
+              panel.className = 'team-dropdown-panel';
+              panel.appendChild(await createTeamPlayerCheckPanel(row));
+              detailCell.appendChild(panel);
+              detailRow.appendChild(detailCell);
+            }
+            detailRow.style.display = 'table-row';
+            btn.textContent = 'Hide Team';
+          });
           tr.appendChild(checkTd);
         }
         dom.tableBody.appendChild(tr); if (detailRow) dom.tableBody.appendChild(detailRow);
@@ -1253,12 +1281,16 @@
     function bindEvents() {
       dom.loginBtn.addEventListener('click', tryLogin);
       dom.passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
-      dom.reloadBtn.addEventListener('click', async () => { rawJsonData = null; allData = {}; await loadAndRender(true); });
+      dom.reloadBtn.addEventListener('click', async () => { rawJsonData = null; allData = {}; teamLinkMapCache = null; playerLinkMapCache = null; captainUserIdMapCache = null; await loadAndRender(true); });
       dom.clearFiltersBtn.addEventListener('click', async () => { dom.searchInput.value = ''; dom.flaggedOnlyToggle.checked = false; dom.seedingFilterSelect.value = 'all'; dom.sortSelect.value = 'default'; sortState = { column: null, direction: 'asc' }; await renderApp(); });
       dom.csvExportBtn.addEventListener('click', exportCsv);
       dom.openJsonBtn.addEventListener('click', () => { const source = rawJsonData || allData || {}; const keys = Object.keys(source); openDrawer('alla.json', 'Rå toppnivå från laddad fil', keys.map(key => ({ key, type: Array.isArray(source[key]) ? 'array' : typeof source[key], length: Array.isArray(source[key]) ? source[key].length : '—' }))); });
       dom.drawerClose.addEventListener('click', () => dom.drawer.classList.remove('open'));
-      dom.searchInput.addEventListener('input', async () => { if (currentPage !== 'dashboard') await renderApp(); });
+      dom.searchInput.addEventListener('input', () => {
+        if (currentPage === 'dashboard') return;
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => { renderApp(); }, 180);
+      });
       dom.flaggedOnlyToggle.addEventListener('change', async () => { if (currentPage !== 'dashboard') await renderApp(); });
       dom.sortSelect.addEventListener('change', async () => { if (currentPage !== 'dashboard') { sortState = { column: null, direction: 'asc' }; await renderApp(); } });
       dom.seedingFilterSelect.addEventListener('change', async () => { if (currentPage === 'seeding') await renderApp(); });
