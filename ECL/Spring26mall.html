@@ -3,39 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>26 Spring Checks V2.1</title>
+  <title>26 Spring Checks V2.5 — Dark Mode</title>
   <style>
     :root {
-      --navy: #03045e;
-      --navy-2: #0b144f;
-      --accent: #ff5a8a;
-      --bg: #eef2f7;
-      --panel: #ffffff;
-      --panel-soft: #f8fbff;
-      --border: #d9e1ee;
-      --border-strong: #c6d2e3;
-      --text: #111827;
-      --muted: #64748b;
-      --ok: #198754;
-      --danger: #dc3545;
-      --warning: #c58a00;
-      --link: #0b57d0;
-      --shadow: 0 10px 28px rgba(7, 18, 79, 0.08);
-      --shadow-soft: 0 4px 14px rgba(7, 18, 79, 0.05);
+      --navy: #050b2b;
+      --navy-2: #0a1238;
+      --navy-3: #0e173f;
+      --bg: #071022;
+      --bg-2: #09152b;
+      --panel: #0d1730;
+      --panel-2: #111d38;
+      --panel-3: #162442;
+      --panel-soft: #0f1a33;
+      --border: rgba(102, 132, 189, 0.18);
+      --border-strong: rgba(132, 164, 224, 0.28);
+      --text: #eef4ff;
+      --muted: #93a4c3;
+      --muted-2: #7183a6;
+      --accent: #ff4f84;
+      --accent-2: #ff6a97;
+      --gold: #d8b44c;
+      --gold-2: #f0cf73;
+      --ok: #3ddc84;
+      --danger: #ff6b7f;
+      --warning: #f0c35b;
+      --link: #d7e6ff;
+      --thead: linear-gradient(90deg, #0a1035, #13204a);
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
+      --shadow-soft: 0 8px 22px rgba(0, 0, 0, 0.22);
 
-      --elite-bg: linear-gradient(90deg, #d9ba52, #edd983);
-      --elite-text: #0b144f;
+      --elite-bg: linear-gradient(90deg, #9d7a1f, #d5b14b 55%, #f2d67d);
+      --elite-text: #091126;
 
-      --pro-bg: linear-gradient(90deg, #d4d8e0, #eceff5);
-      --pro-text: #0b144f;
+      --pro-bg: linear-gradient(90deg, #7c848f, #b5bcc7 55%, #d9dee6);
+      --pro-text: #081022;
 
-      --lite-bg: linear-gradient(90deg, #955742, #cd775b);
+      --lite-bg: linear-gradient(90deg, #7d432f, #ad654a 55%, #d68462);
       --lite-text: #ffffff;
 
-      --core-bg: linear-gradient(90deg, #903300, #f85900);
+      --core-bg: linear-gradient(90deg, #8b3200, #ca5a0a 55%, #ee7b17);
       --core-text: #ffffff;
 
-      --neo-bg: linear-gradient(90deg, #2b7526, #4ed546);
+      --neo-bg: linear-gradient(90deg, #22672a, #2f9640 55%, #4ed163);
       --neo-text: #ffffff;
     }
 
@@ -45,8 +54,9 @@
     body {
       margin: 0;
       background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.55), transparent 30%),
-        linear-gradient(180deg, #edf2f8 0%, #edf1f6 100%);
+        radial-gradient(circle at top center, rgba(214, 180, 76, 0.08), transparent 20%),
+        radial-gradient(circle at left top, rgba(76, 111, 214, 0.08), transparent 28%),
+        linear-gradient(180deg, #050c1b 0%, #071022 35%, #09152a 100%);
       color: var(--text);
       font-family: Arial, Helvetica, sans-serif;
       font-size: 13px;
@@ -61,8 +71,8 @@
       justify-content: center;
       padding: 20px;
       background:
-        linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0)),
-        linear-gradient(135deg, #0b0f4f, #1b005c 55%, #5b001a);
+        radial-gradient(circle at top, rgba(240, 207, 115, 0.12), transparent 24%),
+        linear-gradient(135deg, #05081d, #08112f 45%, #12071d 100%);
     }
 
     .login-screen.hidden { display: none; }
@@ -70,12 +80,12 @@
     .login-card {
       width: 100%;
       max-width: 560px;
-      background: rgba(255,255,255,0.98);
-      border: 1px solid rgba(219, 226, 240, 0.9);
+      background: rgba(12, 22, 45, 0.97);
+      border: 1px solid var(--border-strong);
       border-radius: 22px;
-      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.5);
       padding: 30px 26px;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(8px);
     }
 
     .login-title {
@@ -85,18 +95,18 @@
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #07124f;
+      color: #fff3c9;
     }
 
     .login-warning {
       margin: 0 0 22px;
       font-size: 14px;
       line-height: 1.55;
-      color: #334155;
+      color: var(--muted);
       font-weight: 700;
     }
 
-    .login-warning strong { color: #7f1d1d; }
+    .login-warning strong { color: #ffd47c; }
 
     .login-label {
       display: block;
@@ -105,7 +115,7 @@
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      color: #07124f;
+      color: #dfe9ff;
     }
 
     .login-row {
@@ -118,19 +128,22 @@
       flex: 1 1 260px;
       min-width: 0;
       height: 48px;
-      border: 1px solid #cfd7e6;
+      border: 1px solid var(--border-strong);
       border-radius: 12px;
       padding: 0 14px;
       font-size: 15px;
       font-weight: 700;
       outline: none;
-      background: #fff;
+      background: #0a1530;
+      color: var(--text);
       transition: 0.15s ease;
     }
 
+    .login-input::placeholder { color: #7f91b3; }
+
     .login-input:focus {
-      border-color: #8ea3d6;
-      box-shadow: 0 0 0 3px rgba(11, 87, 208, 0.08);
+      border-color: rgba(240, 207, 115, 0.45);
+      box-shadow: 0 0 0 3px rgba(240, 207, 115, 0.1);
     }
 
     .login-btn {
@@ -138,19 +151,19 @@
       border: 0;
       border-radius: 12px;
       padding: 0 18px;
-      background: var(--accent);
+      background: linear-gradient(180deg, var(--accent-2), var(--accent));
       color: white;
       font-size: 12px;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       cursor: pointer;
-      box-shadow: 0 6px 16px rgba(255, 90, 138, 0.28);
+      box-shadow: 0 10px 22px rgba(255, 79, 132, 0.3);
       transition: transform 0.12s ease, filter 0.12s ease;
     }
 
     .login-btn:hover {
-      filter: brightness(0.98);
+      filter: brightness(1.03);
       transform: translateY(-1px);
     }
 
@@ -159,9 +172,9 @@
       margin-top: 14px;
       padding: 11px 12px;
       border-radius: 12px;
-      background: #fff1f2;
-      border: 1px solid #fecdd3;
-      color: #b91c1c;
+      background: rgba(120, 25, 37, 0.25);
+      border: 1px solid rgba(255, 107, 127, 0.35);
+      color: #ff9cac;
       font-size: 13px;
       font-weight: 800;
     }
@@ -172,10 +185,10 @@
       position: sticky;
       top: 0;
       z-index: 900;
-      background: rgba(3, 4, 94, 0.98);
+      background: rgba(4, 10, 33, 0.96);
       color: white;
-      border-bottom: 3px solid #00113a;
-      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(240, 207, 115, 0.15);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
       backdrop-filter: blur(8px);
     }
 
@@ -197,9 +210,10 @@
       letter-spacing: 0.3px;
       text-transform: uppercase;
       flex-shrink: 0;
+      color: #ffffff;
     }
 
-    .brand span { opacity: 0.85; }
+    .brand span { color: #d7def2; opacity: 0.9; }
 
     .site-header-titleblock {
       display: flex;
@@ -214,7 +228,7 @@
       text-transform: uppercase;
       letter-spacing: 0.8px;
       line-height: 1;
-      color: white;
+      color: #ffffff;
     }
 
     .site-header-subtitle {
@@ -222,15 +236,15 @@
       font-weight: 800;
       letter-spacing: 0.7px;
       text-transform: uppercase;
-      opacity: 0.9;
-      color: white;
+      opacity: 0.92;
+      color: #91a5cb;
     }
 
     .mobile-menu-btn {
       display: none;
       margin-left: auto;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
       color: white;
       border-radius: 12px;
       padding: 10px 13px;
@@ -248,7 +262,7 @@
     }
 
     .page-card {
-      background: rgba(255,255,255,0.94);
+      background: linear-gradient(180deg, rgba(10, 20, 43, 0.98), rgba(9, 18, 39, 0.98));
       border: 1px solid var(--border);
       border-radius: 20px;
       box-shadow: var(--shadow);
@@ -257,8 +271,10 @@
 
     .page-top {
       padding: 18px 18px 12px;
-      border-bottom: 1px solid #e7edf6;
-      background: linear-gradient(to bottom, rgba(255,255,255,0.98), rgba(248,250,255,0.98));
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top, rgba(240, 207, 115, 0.05), transparent 25%),
+        linear-gradient(to bottom, rgba(11, 23, 49, 0.98), rgba(10, 19, 40, 0.98));
     }
 
     h1 {
@@ -267,7 +283,7 @@
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      color: #07124f;
+      color: #f6f8ff;
       line-height: 1;
     }
 
@@ -280,9 +296,9 @@
 
     .tabs button {
       padding: 10px 13px;
-      border: 1px solid #cfd8e8;
-      background: linear-gradient(to bottom, #ffffff, #f7f9fd);
-      color: #0b144f;
+      border: 1px solid var(--border);
+      background: linear-gradient(to bottom, #101b36, #0d1730);
+      color: #cdd9f3;
       cursor: pointer;
       border-radius: 10px;
       font-size: 12px;
@@ -291,20 +307,20 @@
       letter-spacing: 0.3px;
       line-height: 1.1;
       transition: 0.15s ease;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }
 
     .tabs button:hover {
-      background: #f2f6ff;
-      border-color: #aebedf;
+      background: #132142;
+      border-color: rgba(240, 207, 115, 0.22);
       transform: translateY(-1px);
     }
 
     .tabs button.active {
-      background: linear-gradient(to bottom, #0f1c77, #03045e);
-      color: white;
-      border-color: var(--navy);
-      box-shadow: 0 8px 18px rgba(3, 4, 94, 0.22);
+      background: linear-gradient(to bottom, #1b2b5f, #101e49);
+      color: #fff5cf;
+      border-color: rgba(240, 207, 115, 0.35);
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
     }
 
     .mobile-tabs-panel {
@@ -312,7 +328,7 @@
       position: fixed;
       inset: 0;
       z-index: 1000;
-      background: rgba(3, 4, 94, 0.55);
+      background: rgba(3, 7, 22, 0.72);
       backdrop-filter: blur(2px);
     }
 
@@ -324,34 +340,35 @@
       top: 0;
       width: min(88vw, 360px);
       height: 100%;
-      background: white;
-      box-shadow: -10px 0 24px rgba(0, 0, 0, 0.18);
+      background: #0b1630;
+      border-left: 1px solid var(--border);
+      box-shadow: -10px 0 24px rgba(0, 0, 0, 0.32);
       display: flex;
       flex-direction: column;
     }
 
     .mobile-tabs-head {
       padding: 16px;
-      border-bottom: 1px solid #e8edf5;
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      background: #f8faff;
+      background: #0e1a37;
     }
 
     .mobile-tabs-title {
       font-size: 14px;
       font-weight: 900;
       text-transform: uppercase;
-      color: #07124f;
+      color: #f6f8ff;
       letter-spacing: 0.5px;
     }
 
     .mobile-close-btn {
-      border: 1px solid #d6def0;
-      background: white;
-      color: #07124f;
+      border: 1px solid var(--border);
+      background: #132142;
+      color: #f1f5ff;
       border-radius: 10px;
       padding: 8px 10px;
       font-size: 12px;
@@ -369,9 +386,9 @@
     .mobile-tab-btn {
       width: 100%;
       text-align: left;
-      border: 1px solid #dbe3f2;
-      background: white;
-      color: #0b144f;
+      border: 1px solid var(--border);
+      background: #101b36;
+      color: #d3def7;
       border-radius: 10px;
       padding: 12px;
       font-size: 13px;
@@ -382,9 +399,9 @@
     }
 
     .mobile-tab-btn.active {
-      background: var(--navy);
-      color: white;
-      border-color: var(--navy);
+      background: #182a5d;
+      color: #fff4c5;
+      border-color: rgba(240, 207, 115, 0.35);
     }
 
     .topbar {
@@ -402,7 +419,7 @@
       flex-wrap: wrap;
       margin-top: 12px;
       padding-top: 12px;
-      border-top: 1px solid #e8eef6;
+      border-top: 1px solid var(--border);
     }
 
     .action-btn {
@@ -416,19 +433,19 @@
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      box-shadow: 0 8px 16px rgba(255, 90, 138, 0.24);
+      box-shadow: 0 10px 20px rgba(255, 90, 138, 0.26);
       transition: transform 0.12s ease, filter 0.12s ease;
     }
 
     .action-btn:hover {
       transform: translateY(-1px);
-      filter: brightness(0.98);
+      filter: brightness(1.03);
     }
 
     .action-btn.secondary {
-      background: linear-gradient(to bottom, #ffffff, #f7f9fd);
-      color: #07124f;
-      border: 1px solid #d6def0;
+      background: linear-gradient(to bottom, #132142, #0e1831);
+      color: #e8efff;
+      border: 1px solid var(--border);
       box-shadow: none;
     }
 
@@ -436,19 +453,22 @@
     .filter-select {
       height: 40px;
       min-width: 220px;
-      border: 1px solid #cfd7e6;
+      border: 1px solid var(--border-strong);
       border-radius: 10px;
       padding: 0 12px;
       font-size: 13px;
       font-weight: 700;
       outline: none;
-      background: #fff;
+      background: #0b1630;
+      color: var(--text);
     }
+
+    .search-input::placeholder { color: #7f91b3; }
 
     .search-input:focus,
     .filter-select:focus {
-      border-color: #8ea3d6;
-      box-shadow: 0 0 0 3px rgba(11, 87, 208, 0.08);
+      border-color: rgba(240, 207, 115, 0.4);
+      box-shadow: 0 0 0 3px rgba(240, 207, 115, 0.08);
     }
 
     .toggle-box {
@@ -456,12 +476,12 @@
       align-items: center;
       gap: 8px;
       padding: 9px 11px;
-      background: #f8fbff;
-      border: 1px solid #e3eaf5;
+      background: #0e1933;
+      border: 1px solid var(--border);
       border-radius: 10px;
       font-size: 12px;
       font-weight: 800;
-      color: #334155;
+      color: #c0cdea;
       cursor: pointer;
       user-select: none;
     }
@@ -469,11 +489,11 @@
     .status {
       font-size: 12px;
       font-weight: 800;
-      color: #334155;
+      color: #dbe6fd;
       text-transform: uppercase;
       letter-spacing: 0.35px;
-      background: #f8fbff;
-      border: 1px solid #e3eaf5;
+      background: #0e1933;
+      border: 1px solid var(--border);
       padding: 8px 10px;
       border-radius: 10px;
     }
@@ -481,30 +501,30 @@
     .small {
       font-size: 11px;
       color: var(--muted);
-      background: #f8fbff;
-      border: 1px solid #e3eaf5;
+      background: #0e1933;
+      border: 1px solid var(--border);
       padding: 8px 10px;
       border-radius: 10px;
     }
 
     .content-area {
       padding: 16px;
-      background: linear-gradient(to bottom, #f7f9fd, #f2f6fb);
+      background: linear-gradient(to bottom, #081224, #091427);
     }
 
     .table-wrap,
     .proqual-wrap {
       overflow-x: auto;
-      background: white;
-      border: 1px solid #dfe6f1;
+      background: linear-gradient(180deg, #0c1730, #0a1429);
+      border: 1px solid var(--border);
       border-radius: 16px;
       box-shadow: var(--shadow-soft);
     }
 
     .section-wrap {
       overflow-x: auto;
-      background: white;
-      border: 1px solid #dfe6f1;
+      background: linear-gradient(180deg, #0c1730, #0a1429);
+      border: 1px solid var(--border);
       border-radius: 16px;
       box-shadow: var(--shadow-soft);
       padding: 10px;
@@ -518,24 +538,27 @@
     }
 
     thead {
-      background: linear-gradient(to right, #050967, #08105e);
+      background: var(--thead);
       color: white;
     }
 
     th, td {
       padding: 9px 10px;
-      border-bottom: 1px solid #ebeff6;
+      border-bottom: 1px solid rgba(124, 150, 202, 0.12);
       text-align: left;
       white-space: nowrap;
       line-height: 1.2;
       vertical-align: middle;
     }
 
+    td { color: #e8efff; }
+
     th {
       font-size: 11px;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.45px;
+      color: #f3f7ff;
     }
 
     #results thead th.sortable {
@@ -558,32 +581,32 @@
     #results thead th.sort-asc::after { content: "▲"; opacity: 1; }
     #results thead th.sort-desc::after { content: "▼"; opacity: 1; }
 
-    tbody tr:nth-child(even) { background: #fbfcff; }
-    tbody tr:hover { background: #eef4ff; }
+    tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
+    tbody tr:hover { background: rgba(101, 136, 219, 0.08); }
 
     .num {
       text-align: right;
       font-variant-numeric: tabular-nums;
     }
 
-    tbody tr.not-ok { background: #ffe7e7 !important; }
-    tbody tr.not-ok:nth-child(even) { background: #ffdfdf !important; }
-    tbody tr.not-ok:hover { background: #ffd2d2 !important; }
+    tbody tr.not-ok { background: rgba(162, 31, 51, 0.28) !important; }
+    tbody tr.not-ok:nth-child(even) { background: rgba(162, 31, 51, 0.32) !important; }
+    tbody tr.not-ok:hover { background: rgba(184, 40, 62, 0.4) !important; }
 
-    tbody tr.backup-warning { background: #fff4c7 !important; }
-    tbody tr.backup-warning:nth-child(even) { background: #ffefb0 !important; }
-    tbody tr.backup-warning:hover { background: #ffe58d !important; }
+    tbody tr.backup-warning { background: rgba(176, 132, 20, 0.22) !important; }
+    tbody tr.backup-warning:nth-child(even) { background: rgba(176, 132, 20, 0.26) !important; }
+    tbody tr.backup-warning:hover { background: rgba(201, 152, 24, 0.34) !important; }
 
     tbody tr.backup-danger,
     tbody tr.transfer-danger,
-    tbody tr.signup-rule-error { background: #ffe3e3 !important; }
+    tbody tr.signup-rule-error { background: rgba(153, 34, 48, 0.25) !important; }
 
     tbody tr.backup-danger:nth-child(even),
     tbody tr.transfer-danger:nth-child(even),
-    tbody tr.signup-rule-error:nth-child(even) { background: #ffd9d9 !important; }
+    tbody tr.signup-rule-error:nth-child(even) { background: rgba(153, 34, 48, 0.3) !important; }
 
-    tbody tr.ban-clear { background: #f3fff8 !important; }
-    tbody tr.ban-expired { background: #f8fafc !important; }
+    tbody tr.ban-clear { background: rgba(28, 102, 62, 0.16) !important; }
+    tbody tr.ban-expired { background: rgba(255,255,255,0.02) !important; }
 
     .section-table {
       width: 100%;
@@ -602,11 +625,12 @@
       text-transform: uppercase;
       letter-spacing: 0.7px;
       padding: 12px 10px;
-      border-radius: 10px 10px 0 0;
+      border-radius: 12px 12px 0 0;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
     }
 
     .seed-header-row th {
-      background: linear-gradient(to right, #050967, #08105e);
+      background: var(--thead);
       color: white;
       font-size: 11px;
       font-weight: 900;
@@ -614,22 +638,23 @@
       letter-spacing: 0.45px;
       padding: 9px 10px;
       text-align: left;
-      border-bottom: 1px solid #ebeff6;
+      border-bottom: 1px solid rgba(124, 150, 202, 0.12);
       white-space: nowrap;
     }
 
     .seed-row td {
-      border-bottom: 1px solid #e8ecf3;
+      border-bottom: 1px solid rgba(124, 150, 202, 0.1);
       padding: 10px 10px;
-      background: #fff;
+      background: #0e1933;
       line-height: 1.2;
       vertical-align: middle;
+      color: #e8efff;
     }
 
-    .seed-row.unlisted td { background: #fcfcff !important; }
-    .seed-row.missing td { background: #fff4f4 !important; }
-    .seed-row.disbanded td { background: #ffe3e3 !important; }
-    .seed-row.note td:nth-child(5) { color: #92400e; }
+    .seed-row.unlisted td { background: #101d39 !important; }
+    .seed-row.missing td { background: rgba(140, 30, 45, 0.25) !important; }
+    .seed-row.disbanded td { background: rgba(170, 44, 44, 0.34) !important; }
+    .seed-row.note td:nth-child(5) { color: #ffd98d; }
 
     .seed-status {
       display: inline-flex;
@@ -646,36 +671,36 @@
     }
 
     .seed-status.ok {
-      background: #e8fff1;
-      color: #157347;
-      border-color: #b7efcb;
+      background: rgba(61, 220, 132, 0.14);
+      color: #72ecaa;
+      border-color: rgba(61, 220, 132, 0.28);
     }
 
     .seed-status.missing {
-      background: #fff1f2;
-      color: #b42318;
-      border-color: #fecdd3;
+      background: rgba(255, 107, 127, 0.12);
+      color: #ff9cab;
+      border-color: rgba(255, 107, 127, 0.25);
     }
 
     .seed-status.disbanded {
-      background: #b42318;
+      background: #8e1f31;
       color: white;
-      border-color: #b42318;
+      border-color: #a5283d;
     }
 
     .seed-status.empty {
-      background: #f8fafc;
-      color: #64748b;
-      border-color: #e2e8f0;
+      background: rgba(255,255,255,0.03);
+      color: #8fa2c4;
+      border-color: rgba(255,255,255,0.08);
     }
 
     .seed-note-badge {
       display: inline-block;
       padding: 5px 9px;
       border-radius: 999px;
-      background: #fff4db;
-      color: #92400e;
-      border: 1px solid #f6d38d;
+      background: rgba(216, 180, 76, 0.14);
+      color: #ffd98a;
+      border: 1px solid rgba(216, 180, 76, 0.24);
       font-size: 11px;
       font-weight: 900;
       text-transform: uppercase;
@@ -685,32 +710,32 @@
     }
 
     .seed-note-badge.disbanded {
-      background: #b42318;
+      background: #8e1f31;
       color: white;
-      border-color: #b42318;
+      border-color: #a5283d;
     }
 
     .error {
-      color: #b00020;
+      color: #ffb3bf;
       font-weight: 800;
       margin-top: 12px;
       font-size: 12px;
-      background: #fff2f4;
-      border: 1px solid #ffd4da;
+      background: rgba(120, 25, 37, 0.2);
+      border: 1px solid rgba(255, 107, 127, 0.24);
       padding: 11px 12px;
       border-radius: 12px;
     }
 
     .empty {
       padding: 18px;
-      color: #666;
+      color: #91a5cb;
       font-size: 12px;
     }
 
     .cell-link,
     .seed-link,
     .proqual-link {
-      color: var(--link);
+      color: #eef4ff;
       text-decoration: none;
       font-weight: 800;
     }
@@ -719,6 +744,7 @@
     .seed-link:hover,
     .proqual-link:hover {
       text-decoration: underline;
+      color: #fff4c9;
     }
 
     .icon-actions {
@@ -741,55 +767,242 @@
       cursor: pointer;
       background: linear-gradient(to bottom, #ff6c96, #ff4f84);
       color: white;
-      box-shadow: 0 8px 16px rgba(255, 90, 138, 0.24);
+      box-shadow: 0 10px 18px rgba(255, 90, 138, 0.22);
       transition: transform 0.12s ease, filter 0.12s ease;
       font-size: 16px;
       line-height: 1;
     }
 
-    .team-detail-card {
-      background: #ffffff;
-      border: 1px solid #dfe6f1;
-      border-radius: 12px;
-      padding: 10px 12px;
-      min-width: 0;
-      white-space: normal;
-      overflow-wrap: anywhere;
-      word-break: break-word;
+    .team-dropdown-panel {
+      padding: 16px;
+      background: #0b1630;
+      border-top: 1px solid rgba(124, 150, 202, 0.14);
     }
 
-    .team-detail-title {
-      margin-bottom: 6px;
+    .team-rich-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .team-rich-summary {
+      background: linear-gradient(180deg, #101b36, #0d1730);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+
+    .team-rich-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .team-rich-stat {
+      background: #0f1a33;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .team-rich-stat-label {
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+      color: #8ea2c7;
+      margin-bottom: 5px;
+    }
+
+    .team-rich-stat-value {
+      font-size: 16px;
+      font-weight: 900;
+      color: #f3f7ff;
+      line-height: 1.2;
+    }
+
+    .team-rich-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .team-rich-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
       font-size: 11px;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.35px;
-      color: #64748b;
-      white-space: normal;
+      border: 1px solid var(--border);
+      background: #111d38;
+      color: #d6e2fb;
     }
 
-    .team-detail-value {
+    .team-rich-badge.flag {
+      background: rgba(216, 180, 76, 0.14);
+      color: #ffd98a;
+      border-color: rgba(216, 180, 76, 0.24);
+    }
+
+    .team-rich-badge.good {
+      background: rgba(61, 220, 132, 0.14);
+      color: #72ecaa;
+      border-color: rgba(61, 220, 132, 0.28);
+    }
+
+    .team-rich-badge.danger {
+      background: rgba(255, 107, 127, 0.12);
+      color: #ff9cab;
+      border-color: rgba(255, 107, 127, 0.25);
+    }
+
+    .team-rich-section {
+      background: linear-gradient(180deg, #101b36, #0d1730);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+
+    .team-rich-section-head {
+      padding: 12px 14px;
+      background: var(--thead);
+      color: white;
       font-size: 12px;
-      line-height: 1.45;
-      color: #111827;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+    }
+
+    .team-player-table-wrap {
+      overflow-x: auto;
+    }
+
+    .team-player-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1120px;
+      font-size: 12px;
+    }
+
+    .team-player-table thead {
+      background: #0e1933;
+      color: #f3f7ff;
+    }
+
+    .team-player-table thead th {
+      background: #0e1933;
+      color: #f3f7ff;
+      border-bottom: 1px solid rgba(124, 150, 202, 0.14);
+    }
+
+    .team-player-table td,
+    .team-player-table th {
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(124, 150, 202, 0.12);
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    .team-player-table tbody tr:nth-child(even) {
+      background: rgba(255,255,255,0.015);
+    }
+
+    .team-player-table tbody tr:hover {
+      background: rgba(101, 136, 219, 0.08);
+    }
+
+    .team-player-row-flagged {
+      background: rgba(216, 180, 76, 0.12) !important;
+    }
+
+    .team-player-row-flagged:nth-child(even) {
+      background: rgba(216, 180, 76, 0.16) !important;
+    }
+
+    .team-player-name {
+      min-width: 170px;
       white-space: normal;
-      overflow-wrap: anywhere;
-      word-break: break-word;
     }
 
-    .team-detail-value > div {
-      padding: 2px 0;
-      border-bottom: 1px dashed #e5ebf5;
+    .team-player-name-main {
+      font-weight: 900;
+      color: #f3f7ff;
+      line-height: 1.3;
     }
 
-    .team-detail-value > div:last-child {
-      border-bottom: 0;
+    .team-player-name-sub {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #8ea2c7;
+      line-height: 1.35;
+    }
+
+    .team-history-main {
+      font-weight: 900;
+      color: #f3f7ff;
+      line-height: 1.3;
+      white-space: normal;
+    }
+
+    .team-history-meta {
+      margin-top: 4px;
+      color: #c3d0ea;
+      font-weight: 700;
+      line-height: 1.35;
+      white-space: normal;
+    }
+
+    .team-history-games {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #8ea2c7;
+      line-height: 1.35;
+      white-space: normal;
+    }
+
+    .team-history-empty {
+      color: #94a3b8;
+      font-weight: 700;
+    }
+
+    .history-flag-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.35px;
+      margin-bottom: 6px;
+      border: 1px solid transparent;
+    }
+
+    .history-flag-badge.flagged {
+      background: rgba(255, 107, 127, 0.12);
+      color: #ff9cab;
+      border-color: rgba(255, 107, 127, 0.25);
+    }
+
+    .history-flag-badge.ok {
+      background: rgba(101, 136, 219, 0.12);
+      color: #cfe0ff;
+      border-color: rgba(101, 136, 219, 0.22);
     }
 
     .site-footer {
       margin-top: 28px;
-      background: linear-gradient(to right, #03045e, #07114f);
+      background: linear-gradient(to right, #040922, #0a1234);
       color: white;
+      border-top: 1px solid rgba(240, 207, 115, 0.1);
     }
 
     .site-footer-inner {
@@ -805,6 +1018,7 @@
       font-style: italic;
       text-transform: uppercase;
       margin-bottom: 12px;
+      color: #ffffff;
     }
 
     .footer-note {
@@ -812,6 +1026,7 @@
       opacity: 0.82;
       text-transform: uppercase;
       letter-spacing: 0.4px;
+      color: #95a8cb;
     }
 
     @media (max-width: 900px) {
@@ -837,6 +1052,16 @@
       .search-input,
       .filter-select {
         width: 100%;
+      }
+
+      .team-rich-summary-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .team-rich-summary-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -891,7 +1116,7 @@
     <main class="page">
       <div class="page-card">
         <div class="page-top">
-          <h1 id="pageTitle">26 Spring Checks V2.1</h1>
+          <h1 id="pageTitle">26 Spring Checks V2.5</h1>
           <div class="tabs" id="tabs"></div>
 
           <div class="topbar">
@@ -945,7 +1170,7 @@
     <footer class="site-footer">
       <div class="site-footer-inner">
         <div class="footer-brand">SportsGamer</div>
-        <div class="footer-note">ECL Tools • 26 Spring V2.1</div>
+        <div class="footer-note">ECL Tools • 26 Spring V2.5</div>
       </div>
     </footer>
   </div>
@@ -957,7 +1182,6 @@
       LEAGUE_ID: 501
     };
 
-    const TEAM_BASE_URL = `https://sportsgamer.gg/leagues/${CONFIG.LEAGUE_ID}/teams/`;
     const PLAYER_BASE_URL = `https://sportsgamer.gg/players/`;
 
     const DIVISION_STYLE_MAP = {
@@ -971,7 +1195,7 @@
     };
 
     const TEAM_NAME_KEYS = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName'];
-    const PLAYER_NAME_KEYS = ['Player', 'tag', 'playerName', 'player'];
+    const PLAYER_NAME_KEYS = ['Player', 'tag', 'playerName', 'player', 'playerName'];
     const PLAYER_LIST_NAME_KEYS = ['elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames'];
 
     const TEAM_NAME_CHANGES = [
@@ -997,11 +1221,11 @@
       { playerName: 'radekbonk111', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
       { playerName: 'snaasigi', aliases: [], banType: 'Captaincy ban', until: 'Undefined' },
       { playerName: 'Keuschemisch', aliases: [], banType: 'Captaincy ban', until: '2030.02.10' },
-      { playerName: 'eBjorken97_', aliases: [], banType: 'Suspension', until: '2026.08.13' },
-      { playerName: 'eBjorken97_', aliases: [], banType: 'Captaincy ban', until: '2027.04.09' },
-      { playerName: 'abbelandit__', aliases: [], banType: 'Captaincy ban', until: '2029.04.09' },
+      { playerName: 'nhlbot9878', aliases: ['eBjorken97_'], banType: 'Suspension', until: '2026.08.13' },
+      { playerName: 'nhlbot9878', aliases: ['eBjorken97_'], banType: 'Captaincy ban', until: '2027.04.09' },
+      { playerName: 'Ggwp87', aliases: ['abbelandit__'], banType: 'Captaincy ban', until: '2029.04.09' },
       { playerName: 'Bjorkudd_39', aliases: [], banType: 'Captaincy ban', until: '2027.04.09' },
-      { playerName: 'abbelandit__', aliases: [], banType: 'Suspension', until: 'until the End of ECL ’26: Spring' },
+      { playerName: 'Ggwp87', aliases: ['abbelandit__'], banType: 'Suspension', until: 'until the End of ECL ’26: Spring' },
       { playerName: 'I-MeIIe-l', aliases: [], banType: 'Captaincy ban', until: '2027.04.14' },
       { playerName: 'I-MeIIe-l', aliases: [], banType: 'Suspension', until: '2026.04.14' },
       { playerName: 'Blaze4214', aliases: [], banType: 'Captaincy ban', until: '2027.04.14' },
@@ -1010,7 +1234,8 @@
 
     const SEEDING_TEAM_STATUSES = {
       '': 'DISBANDED',
-      '': 'DISBANDED'
+      ' ': 'DISBANDED',
+      '  ': 'DISBANDED'
     };
 
     const SOURCES = [
@@ -1021,6 +1246,7 @@
       { key: 'overgangar', label: 'Transfers 26 Spring Teams', type: 'alla', csv: true },
       { key: 'backups', label: 'Backups 26 Spring Teams', type: 'alla', csv: true },
       { key: 'licenslosa', label: 'Unlicensed 26 Spring Teams', type: 'alla', csv: true },
+      { key: 'inMoreThan1Teams', label: 'Players In Multiple Teams', type: 'alla', csv: true },
       { key: 'signUps', label: 'Registered Teams 26 Spring', type: 'alla', csv: true },
       { key: 'proQualReqCheck', label: 'PRO QUAL REQ CHECK', type: 'proqualreqcheck', csv: false },
       { key: 'bannedPlayers', label: 'Banned Players', type: 'banned', csv: true }
@@ -1377,6 +1603,92 @@
           numeric: true,
           sensitivity: 'base'
         });
+      },
+
+      safeNumber(value) {
+        const num = Number(value);
+        return Number.isFinite(num) ? num : 0;
+      },
+
+      joinNonEmpty(parts, separator = ' • ') {
+        return parts.filter(Boolean).join(separator);
+      },
+
+      createEmptyValueNode() {
+        const span = document.createElement('span');
+        span.className = 'team-history-empty';
+        span.textContent = '-';
+        return span;
+      }
+    };
+
+    const TeamLinks = {
+      getLeagueId(row, column = null) {
+        if (!row || typeof row !== 'object') return '';
+
+        if (column === 'From') {
+          return String(
+            row.FromLeagueID ??
+            row.fromLeagueID ??
+            row.fromLeagueId ??
+            ''
+          ).trim();
+        }
+
+        if (column === 'To') {
+          return String(
+            row.ToLeagueID ??
+            row.toLeagueID ??
+            row.toLeagueId ??
+            ''
+          ).trim();
+        }
+
+        return String(
+          row.leagueID ??
+          row.leagueId ??
+          row.LeagueID ??
+          row.league_id ??
+          row.ToLeagueID ??
+          row.toLeagueID ??
+          row.toLeagueId ??
+          ''
+        ).trim();
+      },
+
+      getTeamId(row, column = null) {
+        if (!row || typeof row !== 'object') return '';
+
+        if (column === 'From') {
+          return String(
+            row.FromTeamID ??
+            row.fromTeamID ??
+            row.fromTeamId ??
+            ''
+          ).trim();
+        }
+
+        if (column === 'To') {
+          return String(
+            row.ToTeamID ??
+            row.toTeamID ??
+            row.toTeamId ??
+            ''
+          ).trim();
+        }
+
+        return String(
+          row.teamID ??
+          row.teamId ??
+          row.TeamID ??
+          row.team_id ??
+          ''
+        ).trim();
+      },
+
+      buildTeamUrl(teamId, leagueId) {
+        if (!teamId || !leagueId) return '';
+        return `https://sportsgamer.gg/leagues/${leagueId}/teams/${teamId}`;
       }
     };
 
@@ -1416,16 +1728,23 @@
         const cloned = { ...row };
 
         TEAM_NAME_KEYS.forEach(key => {
-          if (key in cloned && cloned[key]) {
-            cloned[key] = Rename.applyToValue(cloned[key]);
-          }
+          if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
         });
 
         ['history1Team', 'history2Team', 'history3Team', 'From', 'To'].forEach(key => {
-          if (key in cloned && cloned[key]) {
-            cloned[key] = Rename.applyToValue(cloned[key]);
-          }
+          if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
         });
+
+        if (Array.isArray(cloned.players)) {
+          cloned.players = cloned.players.map(player => {
+            if (!player || typeof player !== 'object') return player;
+            const playerClone = { ...player };
+            ['history1Team', 'history2Team', 'history3Team'].forEach(key => {
+              if (playerClone[key]) playerClone[key] = Rename.applyToValue(playerClone[key]);
+            });
+            return playerClone;
+          });
+        }
 
         return cloned;
       }
@@ -1503,38 +1822,36 @@
           value.forEach(originalRow => {
             const row = Rename.applyToRow(originalRow);
 
-            const possibleTeamIdKeys = [
-              'teamID', 'teamId', 'TeamID', 'team_id',
-              'fromTeamID', 'fromTeamId', 'toTeamID', 'toTeamId',
-              'FromTeamID', 'ToTeamID'
+            const entries = [
+              {
+                name: RowAccess.getTeamName(row),
+                teamId: TeamLinks.getTeamId(row),
+                leagueId: TeamLinks.getLeagueId(row)
+              },
+              {
+                name: row?.From,
+                teamId: TeamLinks.getTeamId(row, 'From'),
+                leagueId: TeamLinks.getLeagueId(row, 'From')
+              },
+              {
+                name: row?.To,
+                teamId: TeamLinks.getTeamId(row, 'To'),
+                leagueId: TeamLinks.getLeagueId(row, 'To')
+              }
             ];
 
-            const possibleTeamNameKeys = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName', 'From', 'To'];
+            entries.forEach(entry => {
+              const normalized = Utils.normalizeTeamName(entry.name);
+              if (!normalized || !entry.teamId || !entry.leagueId) return;
 
-            possibleTeamIdKeys.forEach(idKey => {
-              const idValue = row?.[idKey];
-              if (!idValue) return;
-
-              possibleTeamNameKeys.forEach(nameKey => {
-                const nameValue = row?.[nameKey];
-                const normalized = Utils.normalizeTeamName(nameValue);
-                if (normalized && !map.has(normalized)) map.set(normalized, String(idValue));
-              });
+              if (!map.has(normalized)) {
+                map.set(normalized, {
+                  teamId: String(entry.teamId),
+                  leagueId: String(entry.leagueId)
+                });
+              }
             });
-
-            const fallbackTeamId = row?.teamID || row?.teamId || row?.TeamID || row?.team_id;
-            const fallbackTeamName = RowAccess.getTeamName(row);
-            const fallbackNormalized = Utils.normalizeTeamName(fallbackTeamName);
-
-            if (fallbackTeamId && fallbackNormalized && !map.has(fallbackNormalized)) {
-              map.set(fallbackNormalized, String(fallbackTeamId));
-            }
           });
-        });
-
-        const signUpsMap = await this.getSignUpsMap(forceReload);
-        signUpsMap.forEach((row, normalized) => {
-          if (row?.teamID && !map.has(normalized)) map.set(normalized, String(row.teamID));
         });
 
         STATE.cache.teamLinkMap = map;
@@ -1554,11 +1871,22 @@
             const playerId = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
             if (!playerId) return;
 
-            ['Player', 'tag', 'playerName', 'player'].forEach(nameKey => {
+            ['Player', 'tag', 'playerName', 'player', 'playerName'].forEach(nameKey => {
               const playerName = row?.[nameKey];
               const normalized = Utils.normalizePlayerName(playerName);
               if (normalized && !map.has(normalized)) map.set(normalized, String(playerId));
             });
+
+            if (Array.isArray(row?.players)) {
+              row.players.forEach(player => {
+                const playerIdInner = player?.playerID || player?.playerId || '';
+                const playerNameInner = player?.playerName || player?.Player || player?.tag || '';
+                const normalizedInner = Utils.normalizePlayerName(playerNameInner);
+                if (playerIdInner && normalizedInner && !map.has(normalizedInner)) {
+                  map.set(normalizedInner, String(playerIdInner));
+                }
+              });
+            }
           });
         });
 
@@ -1606,9 +1934,24 @@
       },
 
       getSearchableText(row) {
-        return Object.values(row || {})
+        const baseText = Object.values(row || {})
+          .filter(value => !Array.isArray(value) && typeof value !== 'object')
           .map(value => String(value ?? '').toLowerCase())
           .join(' ');
+
+        const playerText = Array.isArray(row?.players)
+          ? row.players.map(player =>
+              Object.values(player || {}).map(value => String(value ?? '').toLowerCase()).join(' ')
+            ).join(' ')
+          : '';
+
+        const teamsText = Array.isArray(row?.teams)
+          ? row.teams.map(team =>
+              Object.values(team || {}).map(value => String(value ?? '').toLowerCase()).join(' ')
+            ).join(' ')
+          : '';
+
+        return `${baseText} ${playerText} ${teamsText}`.trim();
       }
     };
 
@@ -1717,6 +2060,8 @@
       },
 
       getRowClass(row) {
+        if (STATE.currentSource.key === 'inMoreThan1Teams') return 'not-ok';
+
         if (STATE.currentSource.key === 'bannedPlayers') {
           if (String(row?.status || '').toLowerCase() === 'violation') return 'not-ok';
           if (String(row?.status || '').toLowerCase() === 'clear') return 'ban-clear';
@@ -1734,6 +2079,11 @@
           }
         }
 
+        if (STATE.currentSource.key === 'licenslosa') {
+          const games = RowAccess.getBackupGames(row);
+          if (games !== null && games >= 1) return 'not-ok';
+        }
+
         if (this.isBigDropTransfer(row)) return 'transfer-danger';
         if (this.isNotOkRow(row)) return 'not-ok';
         return '';
@@ -1742,6 +2092,45 @@
       isFlaggedRow(row) {
         const cls = this.getRowClass(row);
         return ['not-ok', 'backup-warning', 'backup-danger', 'transfer-danger', 'signup-rule-error'].includes(cls);
+      },
+
+      getAllowedHistoryMaxLevel() {
+        if (STATE.currentSource.key === 'lite') return 2;
+        if (STATE.currentSource.key === 'core') return 1;
+        if (STATE.currentSource.key === 'neo') return 0;
+        return 99;
+      },
+
+      isFlaggedHistoryDivision(divisionName) {
+        const level = this.getDivisionLevel(divisionName);
+        if (level === null) return false;
+        return level > this.getAllowedHistoryMaxLevel();
+      },
+
+      getTeamCheckBadges(row) {
+        const badges = [];
+        const division = String(row?.divisionName || '').trim().toUpperCase();
+        if (division) badges.push({ text: division, className: 'team-rich-badge' });
+
+        const totalPlayers = Number(row?.totalPlayers ?? row?.playerCount ?? 0) || 0;
+        if (totalPlayers < 6) {
+          badges.push({ text: 'Low player count', className: 'team-rich-badge flag' });
+        } else {
+          badges.push({ text: 'Roster loaded', className: 'team-rich-badge good' });
+        }
+
+        const players = Array.isArray(row?.players) ? row.players : [];
+        const hasFlaggedHistory = players.some(player => {
+          return ['history1Division', 'history2Division', 'history3Division'].some(key => {
+            return Rules.isFlaggedHistoryDivision(player?.[key]);
+          });
+        });
+
+        if (hasFlaggedHistory) {
+          badges.push({ text: 'Flagged history found', className: 'team-rich-badge danger' });
+        }
+
+        return badges;
       }
     };
 
@@ -1802,6 +2191,15 @@
       getExportValue(row, col) {
         if (col === 'fullLicenseCount') return RowAccess.getFullLicenseCount(row);
         if (col === 'signupIssue') return Rules.getSignupIssueText(row);
+
+        if (col === 'teams' && Array.isArray(row?.teams)) {
+          return row.teams.map(team => {
+            const leagueName = String(team?.leagueName || '').trim();
+            const teamName = String(team?.teamName || '').trim();
+            return [leagueName, teamName].filter(Boolean).join(' — ');
+          }).join(' | ');
+        }
+
         return row?.[col] ?? '';
       },
 
@@ -1854,10 +2252,7 @@
         'history3Season',
         'history3GroupMatches',
         'history3PlayoffMatches',
-        'history3Matches',
-        'history1Summary',
-        'history2Summary',
-        'history3Summary'
+        'history3Matches'
       ],
 
       useTeamDropdownRows() {
@@ -1872,8 +2267,12 @@
       },
 
       getColumns(rows) {
+        if (STATE.currentSource.key === 'inMoreThan1Teams') {
+          return ['playerName', 'teamCount', 'teams'];
+        }
+
         if (STATE.currentSource.key === 'bannedPlayers') {
-          return ['playerName', 'banType', 'until', 'active', 'status', 'foundAs', 'teams', 'divisions', 'sources', 'notes'];
+          return ['playerName', 'banType', 'untilText', 'active', 'status', 'foundAs', 'teamName', 'divisionName', 'notes'];
         }
 
         const preferred = [
@@ -1883,15 +2282,16 @@
           'history1Division', 'history1Team', 'history1Year', 'history1Season', 'history1GroupMatches', 'history1PlayoffMatches', 'history1Matches',
           'history2Division', 'history2Team', 'history2Year', 'history2Season', 'history2GroupMatches', 'history2PlayoffMatches', 'history2Matches',
           'history3Division', 'history3Team', 'history3Year', 'history3Season', 'history3GroupMatches', 'history3PlayoffMatches', 'history3Matches',
-          'history1Summary', 'history2Summary', 'history3Summary',
           'teamDivision', 'EP', 'PP', 'LP', 'CP', 'NP',
           'elitePlayers', 'proPlayers', 'litePlayers', 'corePlayers',
           'neoOrLowerPlayers', 'coreOrLowerPlayers', 'liteOrLowerPlayers',
           'totalPlayers', 'playersWithPlayoffGames',
           'elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames',
-          'From', 'FromDiv', 'To', 'ToDiv',
+          'From', 'FromDiv', 'FromTeamID', 'FromLeagueID',
+          'To', 'ToDiv', 'ToTeamID', 'ToLeagueID',
           'GroupGames26Winter', 'PlayoffGames26Winter', 'TotalGames26Winter',
-          'totalMatchesPlayed', 'Date', 'Role', 'compatibility', 'totalPoints'
+          'totalMatchesPlayed', 'Date', 'Role', 'compatibility', 'totalPoints', 'leagueID',
+          'teamCount', 'teams'
         ];
 
         const allKeys = new Set();
@@ -1954,28 +2354,40 @@
 
       getVisibleColumns() {
         if (STATE.currentSource.key === 'bannedPlayers') return STATE.currentColumns;
+        if (STATE.currentSource.key === 'inMoreThan1Teams') return ['playerName', 'teamCount', 'teams', '__sendMail'];
 
         if (this.useTeamDropdownRows()) return this.getTeamTabVisibleColumns() || [];
 
         const cols = STATE.currentColumns.filter(col => !this.TEAM_DROPDOWN_DETAIL_COLUMNS.includes(col));
-        if (STATE.currentSource.key === 'backups' || STATE.currentSource.key === 'licenslosa') {
+        if (
+          STATE.currentSource.key === 'backups' ||
+          STATE.currentSource.key === 'licenslosa' ||
+          STATE.currentSource.key === 'signUps'
+        ) {
           return [...cols, '__sendMail'];
         }
         return cols;
       },
 
       getColumnHeaderLabel(col) {
+        if (STATE.currentSource.key === 'inMoreThan1Teams') {
+          return {
+            playerName: 'PLAYER',
+            teamCount: 'TEAM COUNT',
+            teams: 'TEAMS'
+          }[col] || col;
+        }
+
         if (STATE.currentSource.key === 'bannedPlayers') {
           return {
             playerName: 'PLAYER',
             banType: 'BAN TYPE',
-            until: 'UNTIL',
+            untilText: 'UNTIL',
             active: 'ACTIVE',
             status: 'STATUS',
             foundAs: 'FOUND AS',
-            teams: 'TEAM',
-            divisions: 'DIVISION',
-            sources: 'SOURCE',
+            teamName: 'TEAM',
+            divisionName: 'DIVISION',
             notes: 'NOTES'
           }[col] || col;
         }
@@ -2052,20 +2464,98 @@
         }[col] || col;
       },
 
-      getDropdownDetailItems(row) {
-        return [
-          { label: 'Elite-klubb', value: row?.elitePlayerNames ?? '' },
-          { label: 'Pro-klubb', value: row?.proPlayerNames ?? '' },
-          { label: 'Lite-klubb', value: row?.litePlayerNames ?? '' },
-          { label: 'Core-klubb', value: row?.corePlayerNames ?? '' },
-          { label: 'Players With Playoff Games', value: row?.playersWithPlayoffGames ?? '' },
-          { label: 'Senaste klubb', value: row?.history1Summary ?? '' },
-          { label: 'Tidigare klubb 1', value: row?.history2Summary ?? '' },
-          { label: 'Tidigare klubb 2', value: row?.history3Summary ?? '' }
-        ].filter(item => String(item.value ?? '').trim() !== '');
+      getTeamCheckSummaryStats(row) {
+        const totalPlayers = Utils.safeNumber(row?.totalPlayers ?? row?.playerCount);
+        const totalPoints = Utils.safeNumber(row?.totalPoints);
+        const ep = Utils.safeNumber(row?.EP);
+        const pp = Utils.safeNumber(row?.PP);
+        const lp = Utils.safeNumber(row?.LP);
+        const cp = Utils.safeNumber(row?.CP);
+        const np = Utils.safeNumber(row?.NP);
+
+        const stats = [
+          { label: 'Total players', value: String(totalPlayers) },
+          { label: 'Total points', value: String(totalPoints) },
+          { label: 'Elite', value: String(ep) },
+          { label: 'Pro', value: String(pp) },
+          { label: 'Lite', value: String(lp) }
+        ];
+
+        if (STATE.currentSource.key === 'core' || STATE.currentSource.key === 'neo') {
+          stats.push({ label: 'Core', value: String(cp) });
+        }
+
+        if (STATE.currentSource.key === 'neo') {
+          stats.push({ label: 'Neo', value: String(np) });
+        }
+
+        return stats;
+      },
+
+      getPlayerBucketOrder(bucket) {
+        if (bucket === 'ELITE') return 0;
+        if (bucket === 'PRO') return 1;
+        if (bucket === 'LITE') return 2;
+        if (bucket === 'CORE') return 3;
+        return 9;
+      },
+
+      buildTeamCheckPlayers(row) {
+        const rawPlayers = Array.isArray(row?.players) ? row.players : [];
+
+        return rawPlayers
+          .map(player => {
+            const renamedPlayer = Rename.applyToRow(player);
+
+            return {
+              playerID: renamedPlayer?.playerID || '',
+              userID: renamedPlayer?.userID || '',
+              playerName: String(
+                renamedPlayer?.playerName ||
+                renamedPlayer?.Player ||
+                renamedPlayer?.tag ||
+                ''
+              ).trim(),
+              bucket: String(renamedPlayer?.bucket || '').trim(),
+              matchCount: renamedPlayer?.playoffGames !== undefined && renamedPlayer?.playoffGames !== null
+                ? Number(renamedPlayer.playoffGames) || 0
+                : null,
+
+              history1Team: renamedPlayer?.history1Team || '',
+              history1Division: renamedPlayer?.history1Division || '',
+              history1Year: renamedPlayer?.history1Year || '',
+              history1Season: renamedPlayer?.history1Season || '',
+              history1GroupMatches: renamedPlayer?.history1GroupMatches || '',
+              history1PlayoffMatches: renamedPlayer?.history1PlayoffMatches || '',
+              history1Matches: renamedPlayer?.history1Matches || '',
+
+              history2Team: renamedPlayer?.history2Team || '',
+              history2Division: renamedPlayer?.history2Division || '',
+              history2Year: renamedPlayer?.history2Year || '',
+              history2Season: renamedPlayer?.history2Season || '',
+              history2GroupMatches: renamedPlayer?.history2GroupMatches || '',
+              history2PlayoffMatches: renamedPlayer?.history2PlayoffMatches || '',
+              history2Matches: renamedPlayer?.history2Matches || '',
+
+              history3Team: renamedPlayer?.history3Team || '',
+              history3Division: renamedPlayer?.history3Division || '',
+              history3Year: renamedPlayer?.history3Year || '',
+              history3Season: renamedPlayer?.history3Season || '',
+              history3GroupMatches: renamedPlayer?.history3GroupMatches || '',
+              history3PlayoffMatches: renamedPlayer?.history3PlayoffMatches || '',
+              history3Matches: renamedPlayer?.history3Matches || ''
+            };
+          })
+          .filter(player => player.playerName)
+          .sort((a, b) => {
+            const bucketDiff = this.getPlayerBucketOrder(a.bucket) - this.getPlayerBucketOrder(b.bucket);
+            if (bucketDiff !== 0) return bucketDiff;
+            return String(a.playerName).localeCompare(String(b.playerName), 'en', { sensitivity: 'base' });
+          });
       }
     };
-        const Sorting = {
+
+    const Sorting = {
       getSortedRows(rows) {
         if (!STATE.sortState.column) return [...rows];
         const isNumeric = STATE.currentNumericColumns.has(STATE.sortState.column) || STATE.sortState.column === 'fullLicenseCount';
@@ -2084,13 +2574,22 @@
             bValue = Rules.getSignupIssueText(b);
           }
 
+          if (STATE.sortState.column === 'teams') {
+            aValue = Array.isArray(a?.teams)
+              ? a.teams.map(team => `${team?.leagueName || ''} ${team?.teamName || ''}`).join(' | ')
+              : '';
+            bValue = Array.isArray(b?.teams)
+              ? b.teams.map(team => `${team?.leagueName || ''} ${team?.teamName || ''}`).join(' | ')
+              : '';
+          }
+
           const result = Utils.compareValues(aValue, bValue, isNumeric);
           return STATE.sortState.direction === 'asc' ? result : -result;
         });
       }
+      
     };
-
-    const SeedingService = {
+        const SeedingService = {
       getSeedingTeamStatus(teamName) {
         const normalizedTeam = Utils.normalizeTeamName(teamName);
         for (const [name, status] of Object.entries(SEEDING_TEAM_STATUSES)) {
@@ -2323,7 +2822,8 @@
               exists,
               note,
               extraClass: '',
-              teamID: teamInfo?.teamID || '',
+              teamID: teamInfo?.teamID || teamInfo?.teamId || '',
+              leagueID: teamInfo?.leagueID || teamInfo?.leagueId || '',
               statusText: isDisbanded ? 'Disbanded' : exists ? 'Registered' : canonicalTeam ? 'Missing' : '-',
               isMissing: !!canonicalTeam && !exists && !isDisbanded,
               isDisbanded,
@@ -2353,6 +2853,7 @@
                 note: this.getSeedRowNote(section, row.teamName || '', registeredInfoMap),
                 extraClass: 'unlisted',
                 teamID: row.teamID || '',
+                leagueID: row.leagueID || '',
                 statusText: 'Registered',
                 isMissing: false,
                 isDisbanded: false,
@@ -2374,6 +2875,7 @@
                 note: this.getSeedRowNote(section, row.teamName || '', registeredInfoMap),
                 extraClass: 'unlisted',
                 teamID: row.teamID || '',
+                leagueID: row.leagueID || '',
                 statusText: 'Registered',
                 isMissing: false,
                 isDisbanded: false,
@@ -2438,6 +2940,7 @@
             playerID: row.playerID || '',
             teamName: row.teamName || '',
             teamID: row.teamID || '',
+            leagueID: row.leagueID || '',
             divisionName: '',
             sourceKey: 'teamCaptains',
             matchRole: this.buildRoleDisplay(row.Role || 'Captain')
@@ -2457,7 +2960,8 @@
               playerName,
               playerID: row.playerID || '',
               teamName: row.teamName || row.To || '',
-              teamID: row.teamID || '',
+              teamID: row.teamID || row.ToTeamID || '',
+              leagueID: row.leagueID || row.ToLeagueID || '',
               divisionName: row.divisionName || row.ToDiv || '',
               sourceKey,
               matchRole: 'Player'
@@ -2497,8 +3001,8 @@
         return [...new Set(values.map(v => String(v || '').trim()).filter(Boolean))].join(' | ');
       },
 
-      findTeamIDForName(teamName, teamLinkMap) {
-        return teamLinkMap.get(Utils.normalizeTeamName(teamName)) || '';
+      findTeamInfoForName(teamName, teamLinkMap) {
+        return teamLinkMap.get(Utils.normalizeTeamName(teamName)) || null;
       },
 
       async buildRows(forceReload = false) {
@@ -2531,20 +3035,25 @@
           });
 
           const teamValues = uniqueMatches.map(match => {
-            const id = match.teamID || this.findTeamIDForName(match.teamName, teamLinkMap);
-            return id ? `${match.teamName}|||${id}` : match.teamName;
+            const info = this.findTeamInfoForName(match.teamName, teamLinkMap);
+            const teamId = match.teamID || info?.teamId || '';
+            const leagueId = match.leagueID || info?.leagueId || '';
+
+            return (teamId && leagueId)
+              ? `${match.teamName}|||${teamId}|||${leagueId}`
+              : match.teamName;
           });
 
           return {
             playerName: entry.playerName,
             playerAliases: this.getPlayerAliases(entry).slice(1).join(', '),
             banType: Rules.normalizeBanType(entry.banType),
-            until: entry.until,
+            untilText: entry.until,
             active: active ? 'Yes' : 'No',
             status: !active ? 'Expired' : uniqueMatches.length > 0 ? 'Violation' : 'Clear',
             foundAs: this.getUniqueJoined(uniqueMatches.map(match => match.matchRole)),
-            teams: this.getUniqueJoined(teamValues),
-            divisions: this.getUniqueJoined(uniqueMatches.map(match => match.divisionName || '-')),
+            teamName: this.getUniqueJoined(teamValues),
+            divisionName: this.getUniqueJoined(uniqueMatches.map(match => match.divisionName || '-')),
             sources: this.getUniqueJoined(uniqueMatches.map(match => match.sourceKey)),
             notes: this.getUniqueJoined([
               entry.notes || '',
@@ -2563,7 +3072,10 @@
 
     const MessagingService = {
       async getBackupMessageUrl(row, forceReload = false) {
-        if (STATE.currentSource.key !== 'backups' && STATE.currentSource.key !== 'licenslosa') return '';
+        if (
+          STATE.currentSource.key !== 'backups' &&
+          STATE.currentSource.key !== 'licenslosa'
+        ) return '';
 
         const captainMap = await BannedPlayersService.getCaptainUserIdMap(forceReload);
         const teamName = RowAccess.getTeamName(row);
@@ -2572,6 +3084,66 @@
         const playerUserId = String(RowAccess.getUserId(row) || '').trim();
 
         const recipients = [...captainIds, playerUserId]
+          .map(id => String(id).trim())
+          .filter(Boolean)
+          .filter((id, index, arr) => arr.indexOf(id) === index);
+
+        if (recipients.length === 0) return '';
+        return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
+      },
+
+      async getMultipleTeamsMessageUrl(row, forceReload = false) {
+        if (STATE.currentSource.key !== 'inMoreThan1Teams') return '';
+
+        const captainMap = await BannedPlayersService.getCaptainUserIdMap(forceReload);
+        const recipients = [];
+        const teams = Array.isArray(row?.teams) ? row.teams : [];
+
+        const playerUserId = String(
+          row?.userID ??
+          row?.userId ??
+          row?.UserID ??
+          row?.user_id ??
+          row?.userid ??
+          ''
+        ).trim();
+
+        if (playerUserId) recipients.push(playerUserId);
+
+        teams.forEach(team => {
+          const directCaptainId = String(
+            team?.captainUserID ??
+            team?.captainUserId ??
+            team?.CaptainUserID ??
+            ''
+          ).trim();
+
+          if (directCaptainId) {
+            recipients.push(directCaptainId);
+            return;
+          }
+
+          const normalizedTeam = Utils.normalizeTeamName(team?.teamName || '');
+          const mappedCaptainIds = captainMap.get(normalizedTeam) || [];
+          mappedCaptainIds.forEach(id => recipients.push(String(id).trim()));
+        });
+
+        const uniqueRecipients = recipients.filter((id, index, arr) => id && arr.indexOf(id) === index);
+
+        if (uniqueRecipients.length === 0) return '';
+        return `https://sportsgamer.gg/community/messenger/compose/?to=${uniqueRecipients.join(',')}`;
+      },
+
+      async getSignUpsMessageUrl(row, forceReload = false) {
+        if (STATE.currentSource.key !== 'signUps') return '';
+
+        const captainMap = await BannedPlayersService.getCaptainUserIdMap(forceReload);
+        const teamName = RowAccess.getTeamName(row);
+        const normalizedTeam = Utils.normalizeTeamName(teamName);
+        const captainIds = captainMap.get(normalizedTeam) || [];
+        const teamUserId = String(RowAccess.getUserId(row) || '').trim();
+
+        const recipients = [...captainIds, teamUserId]
           .map(id => String(id).trim())
           .filter(Boolean)
           .filter((id, index, arr) => arr.indexOf(id) === index);
@@ -2589,7 +3161,7 @@
         if (games < 10) {
           return `Upcoming License Upgrade Reminder for ${playerName}
 
-Hi ${teamName}
+Hi ${teamName},
 
 This is a friendly reminder that ${playerName} has now played ${games} matches using a Backup Player License and is approaching the 10-game limit.
 
@@ -2609,23 +3181,24 @@ Hi ${teamName},
 
 It has come to our attention that ${playerName} has participated in ${games} games using a Backup Player License. According to league regulations, a player may participate in a maximum of 10 games with a Backup License during the ECL ’26 season (including qualifiers).
 
-Since this limit has now been exceeded, ${playerName} is required to purchase a Full Player License, regardless of whether he plans to play additional matches or not. This step is necessary to update the license status and ensure compliance with league rules.
+Since this limit has now been exceeded, ${playerName} is required to purchase a Full Player License, regardless of whether the player plans to play additional matches or not. This step is necessary to update the license status and ensure compliance with league rules.
 
-For your convenience, here is the link to purchase the Full Player License: https://sportsgamer.gg/community/store
+For your convenience, here is the link to purchase the Full Player License:
+https://sportsgamer.gg/community/store
 
-Important
-Please note that exceeding the 10-game limit on a Backup License may already result in consequences if reported by an opponent. Continuing to participate without the correct license will lead to further—and potentially more serious—penalties.
+Important:
+Please note that exceeding the 10-game limit on a Backup License may already result in consequences if reported by an opponent. Continuing to participate without the correct license will lead to further — and potentially more serious — penalties.
 
 If ${playerName} has already purchased a Full Player License, please send us a copy of the payment receipt so we can investigate why the license is not showing correctly in our system.
 
-If you have any questions or need assistance, feel free to contact us. We are happy to help!
+If you have any questions or need assistance, feel free to contact us. We are happy to help.
 
 Best regards,`;
         }
 
         return `License Status Reminder – Action Required for ${playerName}
 
-Hi ${teamName}
+Hi ${teamName},
 
 This is a reminder that ${playerName} has now played 10 matches using a Backup Player License. According to league rules, a Backup License covers a maximum of 10 games across the entire ECL ’26 season — including Winter and Spring qualifiers, group stages, and playoffs.
 
@@ -2644,7 +3217,7 @@ Best regards,`;
 
         return `License Status Update – Action Required for ${playerName}
 
-Hi ${teamName}
+Hi ${teamName},
 
 It has come to our attention that ${playerName} has participated in ${games} games without holding either a Full Player License or a Backup Player License.
 
@@ -2662,12 +3235,76 @@ If you have any questions or need assistance, feel free to contact us — we are
 Best regards,`;
       },
 
+      buildMultipleTeamsMessage(row) {
+        const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
+        const teamCount = Number(row?.teamCount) || 0;
+        const teams = Array.isArray(row?.teams) ? row.teams : [];
+
+        const teamLines = teams.length
+          ? teams.map(team => {
+              const leagueName = String(team?.leagueName || '').trim();
+              const teamName = String(team?.teamName || '').trim();
+              return `- ${leagueName ? leagueName + ' — ' : ''}${teamName}`;
+            }).join('\n')
+          : '- Team information missing';
+
+        return `Multiple Team Registration – Action Required for ${playerName}
+
+Hi,
+
+It has come to our attention that ${playerName} is currently registered in ${teamCount} teams.
+
+This needs to be fixed immediately, as a player cannot be registered in multiple teams at the same time.
+
+Teams connected to this player:
+${teamLines}
+
+Please resolve this issue as soon as possible and confirm once it has been corrected.
+
+If you have any questions or need assistance, feel free to reach out.
+
+Best regards,`;
+      },
+
+      buildSignUpsMessage(row) {
+        const teamName = RowAccess.getTeamName(row) || 'team';
+        const divisionName = String(row?.divisionName || '').trim() || 'this division';
+        const issues = Rules.getSignupIssues(row);
+
+        const issueText = issues.length
+          ? issues.map(issue => `- ${issue}`).join('\n')
+          : '- Missing requirements detected';
+
+        return `Registration Requirements – Action Required for ${teamName}
+
+Hi ${teamName},
+
+We have reviewed your registration for ECL ’26: Spring and noticed that your team currently does not meet all requirements for ${divisionName}.
+
+The following issues need to be fixed:
+${issueText}
+
+Please correct these issues as soon as possible and confirm once everything has been updated.
+
+If you have any questions or need assistance, feel free to reach out.
+
+Best regards,`;
+      },
+
       async copyBackupMessage(row) {
         await navigator.clipboard.writeText(this.buildBackupMessage(row));
       },
 
       async copyUnlicensedMessage(row) {
         await navigator.clipboard.writeText(this.buildUnlicensedMessage(row));
+      },
+
+      async copyMultipleTeamsMessage(row) {
+        await navigator.clipboard.writeText(this.buildMultipleTeamsMessage(row));
+      },
+
+      async copySignUpsMessage(row) {
+        await navigator.clipboard.writeText(this.buildSignUpsMessage(row));
       }
     };
 
@@ -2774,51 +3411,292 @@ Best regards,`;
         }
       },
 
-      createTeamDetailSection(label, value) {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'team-detail-card';
+      buildHistoryData(player, prefix) {
+        const division = String(player?.[`${prefix}Division`] ?? '').trim();
+        const team = String(player?.[`${prefix}Team`] ?? '').trim();
+        const year = String(player?.[`${prefix}Year`] ?? '').trim();
+        const season = String(player?.[`${prefix}Season`] ?? '').trim();
+        const groupMatches = Number(player?.[`${prefix}GroupMatches`] ?? 0) || 0;
+        const playoffMatches = Number(player?.[`${prefix}PlayoffMatches`] ?? 0) || 0;
 
-  const title = document.createElement('div');
-  title.className = 'team-detail-title';
-  title.textContent = label.toUpperCase();
-  wrapper.appendChild(title);
+        const totalMatchesRaw = player?.[`${prefix}Matches`];
+        const totalMatches = totalMatchesRaw !== undefined && totalMatchesRaw !== null && totalMatchesRaw !== ''
+          ? Number(totalMatchesRaw) || 0
+          : groupMatches + playoffMatches;
 
-  const body = document.createElement('div');
-  body.className = 'team-detail-value';
+        const isFlagged = Rules.isFlaggedHistoryDivision(division);
 
-  const rawValue = String(value || '').trim();
+        return {
+          division,
+          team,
+          year,
+          season,
+          groupMatches,
+          playoffMatches,
+          totalMatches,
+          isFlagged
+        };
+      },
 
-  let parts = [];
-  if (rawValue.includes('||')) {
-    parts = rawValue.split('||').map(v => v.trim()).filter(Boolean);
-  } else if (rawValue.includes('|')) {
-    parts = rawValue.split('|').map(v => v.trim()).filter(Boolean);
-  } else if (rawValue.includes(',')) {
-    parts = rawValue.split(',').map(v => v.trim()).filter(Boolean);
-  } else if (rawValue) {
-    parts = [rawValue];
-  }
+      createPlayerHistoryCell(player, prefix) {
+        const history = this.buildHistoryData(player, prefix);
+        const td = document.createElement('td');
 
-  if (parts.length === 0) {
-    body.textContent = '-';
-  } else {
-    parts.forEach(part => {
-      const row = document.createElement('div');
-      row.textContent = part;
-      body.appendChild(row);
-    });
-  }
+        if (!history.team && !history.division && !history.year && !history.season && history.totalMatches === 0) {
+          td.appendChild(Utils.createEmptyValueNode());
+          return td;
+        }
 
-  wrapper.appendChild(body);
-  return wrapper;
-},
+        if (history.isFlagged) {
+          const badge = document.createElement('div');
+          badge.className = 'history-flag-badge flagged';
+          badge.textContent = `Flagged: ${history.division}`;
+          td.appendChild(badge);
+        } else {
+          const badge = document.createElement('div');
+          badge.className = 'history-flag-badge ok';
+          badge.textContent = history.division || 'History';
+          td.appendChild(badge);
+        }
 
-createEmptyTeamDetailSection() {
-  return this.createTeamDetailSection('Details', '-');
-},
+        const main = document.createElement('div');
+        main.className = 'team-history-main';
+        main.textContent = history.team || '-';
+        td.appendChild(main);
 
-      parsePlayerList(value) {
-        return String(value || '').split(',').map(part => part.trim()).filter(Boolean);
+        const meta = document.createElement('div');
+        meta.className = 'team-history-meta';
+        meta.textContent = Utils.joinNonEmpty([
+          history.division || '',
+          history.year || '',
+          history.season || ''
+        ]) || '-';
+        td.appendChild(meta);
+
+        const games = document.createElement('div');
+        games.className = 'team-history-games';
+        games.textContent = `Group stage: ${history.groupMatches} • Playoffs: ${history.playoffMatches} • Total: ${history.totalMatches}`;
+        td.appendChild(games);
+
+        return td;
+      },
+
+      playerHasFlaggedHistory(player) {
+        return ['history1', 'history2', 'history3'].some(prefix => this.buildHistoryData(player, prefix).isFlagged);
+      },
+
+      async createTeamPlayerCheckPanel(row, forceReload = false) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'team-rich-panel';
+
+        const teamLinkMap = await DataService.getTeamLinkMap(forceReload);
+        const playerLinkMap = await DataService.getPlayerLinkMap(forceReload);
+
+        const summary = document.createElement('div');
+        summary.className = 'team-rich-summary';
+
+        const summaryTitle = document.createElement('div');
+        summaryTitle.className = 'team-history-main';
+
+        const teamName = RowAccess.getTeamName(row);
+        const mappedTeamInfo = teamLinkMap.get(Utils.normalizeTeamName(teamName));
+        const directTeamID = TeamLinks.getTeamId(row);
+        const directLeagueID = TeamLinks.getLeagueId(row);
+
+        const teamId = directTeamID || mappedTeamInfo?.teamId || '';
+        const leagueId = directLeagueID || mappedTeamInfo?.leagueId || '';
+
+        if (teamId && leagueId) {
+          summaryTitle.appendChild(
+            Utils.createLink(TeamLinks.buildTeamUrl(teamId, leagueId), teamName || '-', 'proqual-link')
+          );
+        } else {
+          summaryTitle.textContent = teamName || '-';
+        }
+
+        summary.appendChild(summaryTitle);
+
+        const subtitle = document.createElement('div');
+        subtitle.className = 'team-history-meta';
+        subtitle.textContent = Utils.joinNonEmpty([
+          row?.divisionName || '',
+          row?.teamCountry || ''
+        ]) || '-';
+        summary.appendChild(subtitle);
+
+        const badgeWrap = document.createElement('div');
+        badgeWrap.className = 'team-rich-badges';
+
+        Rules.getTeamCheckBadges(row).forEach(item => {
+          const badge = document.createElement('span');
+          badge.className = item.className;
+          badge.textContent = item.text;
+          badgeWrap.appendChild(badge);
+        });
+
+        const flaggedRuleText = STATE.currentSource.key === 'lite'
+          ? 'Flags Elite/Pro history'
+          : STATE.currentSource.key === 'core'
+            ? 'Flags Elite/Pro/Lite history'
+            : STATE.currentSource.key === 'neo'
+              ? 'Flags Elite/Pro/Lite/Core history'
+              : '';
+
+        if (flaggedRuleText) {
+          const badge = document.createElement('span');
+          badge.className = 'team-rich-badge danger';
+          badge.textContent = flaggedRuleText;
+          badgeWrap.appendChild(badge);
+        }
+
+        summary.appendChild(badgeWrap);
+
+        const statGrid = document.createElement('div');
+        statGrid.className = 'team-rich-summary-grid';
+
+        TableConfig.getTeamCheckSummaryStats(row).forEach(stat => {
+          const statBox = document.createElement('div');
+          statBox.className = 'team-rich-stat';
+
+          const label = document.createElement('div');
+          label.className = 'team-rich-stat-label';
+          label.textContent = stat.label;
+
+          const value = document.createElement('div');
+          value.className = 'team-rich-stat-value';
+          value.textContent = stat.value;
+
+          statBox.appendChild(label);
+          statBox.appendChild(value);
+          statGrid.appendChild(statBox);
+        });
+
+        summary.appendChild(statGrid);
+        wrapper.appendChild(summary);
+
+        const section = document.createElement('div');
+        section.className = 'team-rich-section';
+
+        const head = document.createElement('div');
+        head.className = 'team-rich-section-head';
+        head.textContent = 'Player history check';
+        section.appendChild(head);
+
+        const tableWrap = document.createElement('div');
+        tableWrap.className = 'team-player-table-wrap';
+
+        const players = TableConfig.buildTeamCheckPlayers(row);
+
+        if (players.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = 'No player history found.';
+          tableWrap.appendChild(empty);
+        } else {
+          const table = document.createElement('table');
+          table.className = 'team-player-table';
+          table.innerHTML = `
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th>Latest team</th>
+                <th>Previous season 1</th>
+                <th>Previous season 2</th>
+              </tr>
+            </thead>
+          `;
+
+          const tbody = document.createElement('tbody');
+
+          players.forEach((player, index) => {
+            const tr = document.createElement('tr');
+
+            if (this.playerHasFlaggedHistory(player)) {
+              tr.classList.add('team-player-row-flagged');
+            }
+
+            const idx = document.createElement('td');
+            idx.className = 'num';
+            idx.textContent = index + 1;
+            tr.appendChild(idx);
+
+            const playerTd = document.createElement('td');
+            playerTd.className = 'team-player-name';
+
+            const playerNameMain = document.createElement('div');
+            playerNameMain.className = 'team-player-name-main';
+
+            const directPlayerID = player.playerID || '';
+            const mappedPlayerID = directPlayerID || playerLinkMap.get(Utils.normalizePlayerName(player.playerName));
+
+            if (mappedPlayerID) {
+              playerNameMain.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, player.playerName, 'proqual-link'));
+            } else {
+              playerNameMain.textContent = player.playerName;
+            }
+            playerTd.appendChild(playerNameMain);
+
+            const sub = document.createElement('div');
+            sub.className = 'team-player-name-sub';
+            sub.textContent = player.matchCount !== null && player.matchCount !== undefined
+              ? `${player.bucket || 'Unknown bucket'} • ${player.matchCount} playoff games`
+              : (player.bucket || 'Unknown bucket');
+            playerTd.appendChild(sub);
+
+            tr.appendChild(playerTd);
+
+            tr.appendChild(this.createPlayerHistoryCell(player, 'history1'));
+            tr.appendChild(this.createPlayerHistoryCell(player, 'history2'));
+            tr.appendChild(this.createPlayerHistoryCell(player, 'history3'));
+
+            tbody.appendChild(tr);
+          });
+
+          table.appendChild(tbody);
+          tableWrap.appendChild(table);
+        }
+
+        section.appendChild(tableWrap);
+        wrapper.appendChild(section);
+
+        return wrapper;
+      },
+
+      createTeamsListCell(teams) {
+        const td = document.createElement('td');
+        td.style.whiteSpace = 'normal';
+
+        if (!Array.isArray(teams) || teams.length === 0) {
+          td.textContent = '';
+          return td;
+        }
+
+        teams.forEach((team, index) => {
+          const row = document.createElement('div');
+          row.style.marginBottom = index === teams.length - 1 ? '0' : '6px';
+
+          const teamName = String(team?.teamName || '').trim();
+          const leagueName = String(team?.leagueName || '').trim();
+          const teamID = String(team?.teamID || '').trim();
+          const leagueID = String(team?.leagueID || '').trim();
+
+          if (teamName && teamID && leagueID) {
+            row.appendChild(
+              Utils.createLink(
+                TeamLinks.buildTeamUrl(teamID, leagueID),
+                `${leagueName ? leagueName + ' — ' : ''}${teamName}`,
+                'cell-link'
+              )
+            );
+          } else {
+            row.textContent = `${leagueName ? leagueName + ' — ' : ''}${teamName}`;
+          }
+
+          td.appendChild(row);
+        });
+
+        return td;
       },
 
       async renderTableCell(td, row, col, forceReload = false) {
@@ -2826,17 +3704,20 @@ createEmptyTeamDetailSection() {
         if (col === 'fullLicenseCount') value = RowAccess.getFullLicenseCount(row);
         if (col === 'signupIssue') value = Rules.getSignupIssueText(row);
 
+        if (STATE.currentSource.key === 'inMoreThan1Teams' && col === 'teams') {
+          const builtTd = this.createTeamsListCell(row?.teams);
+          td.replaceWith(builtTd);
+          return builtTd;
+        }
+
         const textValue = String(value ?? '');
         if (!textValue) {
           td.textContent = '';
-          return;
+          return td;
         }
 
         const teamLinkMap = await DataService.getTeamLinkMap(forceReload);
         const playerLinkMap = await DataService.getPlayerLinkMap(forceReload);
-
-        const directTeamID = row?.teamID || row?.teamId || row?.TeamID || row?.team_id;
-        const directPlayerID = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
 
         if (STATE.currentSource.key === 'bannedPlayers') {
           if (col === 'playerName') {
@@ -2851,32 +3732,35 @@ createEmptyTeamDetailSection() {
               const alias = document.createElement('div');
               alias.style.marginTop = '4px';
               alias.style.fontSize = '11px';
-              alias.style.color = '#64748b';
+              alias.style.color = '#8ea2c7';
               alias.style.whiteSpace = 'normal';
               alias.textContent = 'Alias: ' + row.playerAliases;
               td.appendChild(alias);
             }
-            return;
+            return td;
           }
 
-          if (col === 'teams') {
+          if (col === 'teamName') {
             const parts = textValue.split('|').map(part => part.trim()).filter(Boolean);
             parts.forEach((part, index) => {
-              const [teamName, teamID] = part.split('|||');
-              if (teamID) td.appendChild(Utils.createLink(TEAM_BASE_URL + teamID, teamName));
-              else td.appendChild(document.createTextNode(teamName));
+              const [teamName, teamID, leagueID] = part.split('|||');
+              if (teamID && leagueID) {
+                td.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamID, leagueID), teamName));
+              } else {
+                td.appendChild(document.createTextNode(teamName));
+              }
               if (index < parts.length - 1) td.appendChild(document.createTextNode(' | '));
             });
-            return;
+            return td;
           }
 
           if (col === 'notes') td.style.whiteSpace = 'normal';
           td.textContent = textValue;
-          return;
+          return td;
         }
 
         if (PLAYER_LIST_NAME_KEYS.includes(col)) {
-          const parts = this.parsePlayerList(textValue);
+          const parts = textValue.split(',').map(part => part.trim()).filter(Boolean);
           parts.forEach((part, index) => {
             const match = part.match(/^(.*?)(\s*\(\d+\))?$/);
             const nameOnly = (match?.[1] || part).trim();
@@ -2888,47 +3772,45 @@ createEmptyTeamDetailSection() {
 
             if (index < parts.length - 1) td.appendChild(document.createTextNode(', '));
           });
-          return;
+          return td;
         }
 
-        if (['From', 'To', 'history1Team', 'history2Team', 'history3Team'].includes(col)) {
+        if (['history1Team', 'history2Team', 'history3Team'].includes(col)) {
           td.textContent = textValue;
-          return;
+          return td;
         }
 
-        if (directTeamID && TEAM_NAME_KEYS.includes(col)) {
-          td.appendChild(Utils.createLink(TEAM_BASE_URL + directTeamID, textValue));
-          return;
-        }
+        if (TEAM_NAME_KEYS.includes(col) || col === 'From' || col === 'To') {
+          const mappedTeamInfo = teamLinkMap.get(Utils.normalizeTeamName(textValue));
+          const directTeamID = TeamLinks.getTeamId(row, col);
+          const directLeagueID = TeamLinks.getLeagueId(row, col);
 
-        if (directPlayerID && PLAYER_NAME_KEYS.includes(col)) {
-          td.appendChild(Utils.createLink(PLAYER_BASE_URL + directPlayerID, textValue));
-          return;
-        }
+          const teamId = directTeamID || mappedTeamInfo?.teamId || '';
+          const leagueId = directLeagueID || mappedTeamInfo?.leagueId || '';
 
-        if (TEAM_NAME_KEYS.includes(col)) {
-          const mappedTeamID = teamLinkMap.get(Utils.normalizeTeamName(textValue));
-          if (mappedTeamID) {
-            td.appendChild(Utils.createLink(TEAM_BASE_URL + mappedTeamID, textValue));
-            return;
+          if (teamId && leagueId) {
+            td.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamId, leagueId), textValue));
+            return td;
           }
         }
 
         if (PLAYER_NAME_KEYS.includes(col) || col === 'playerName') {
-          const mappedPlayerID = playerLinkMap.get(Utils.normalizePlayerName(textValue));
+          const directPlayerID = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
+          const mappedPlayerID = directPlayerID || playerLinkMap.get(Utils.normalizePlayerName(textValue));
           if (mappedPlayerID) {
             td.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, textValue));
-            return;
+            return td;
           }
         }
 
         const anyMappedPlayerID = playerLinkMap.get(Utils.normalizePlayerName(textValue));
         if (anyMappedPlayerID) {
           td.appendChild(Utils.createLink(PLAYER_BASE_URL + anyMappedPlayerID, textValue));
-          return;
+          return td;
         }
 
         td.textContent = textValue;
+        return td;
       },
 
       async renderTableBody(rows, forceReload = false) {
@@ -2955,38 +3837,40 @@ createEmptyTeamDetailSection() {
             const td = document.createElement('td');
 
             if (col === '__sendMail') {
-              const games = RowAccess.getBackupGames(row);
               const actions = document.createElement('div');
               actions.className = 'icon-actions';
 
-              if (STATE.currentSource.key === 'backups' && games !== null) {
-                const mailUrl = await MessagingService.getBackupMessageUrl(row, forceReload);
+              if (STATE.currentSource.key === 'backups') {
+                const games = RowAccess.getBackupGames(row);
+                if (games !== null) {
+                  const mailUrl = await MessagingService.getBackupMessageUrl(row, forceReload);
 
-                if (mailUrl) {
-                  const btn = document.createElement('a');
-                  btn.href = mailUrl;
-                  btn.target = '_blank';
-                  btn.rel = 'noopener noreferrer';
-                  btn.className = 'mail-icon-btn';
-                  btn.title = 'Open message';
-                  btn.textContent = '✉';
-                  actions.appendChild(btn);
-                }
-
-                const copyBtn = document.createElement('button');
-                copyBtn.type = 'button';
-                copyBtn.className = 'copy-icon-btn';
-                copyBtn.title = 'Copy preset message';
-                copyBtn.textContent = '⧉';
-                copyBtn.addEventListener('click', async () => {
-                  try {
-                    await MessagingService.copyBackupMessage(row);
-                    Utils.setStatus('Message copied');
-                  } catch {
-                    Utils.setStatus('Copy failed');
+                  if (mailUrl) {
+                    const btn = document.createElement('a');
+                    btn.href = mailUrl;
+                    btn.target = '_blank';
+                    btn.rel = 'noopener noreferrer';
+                    btn.className = 'mail-icon-btn';
+                    btn.title = 'Open message';
+                    btn.textContent = '✉';
+                    actions.appendChild(btn);
                   }
-                });
-                actions.appendChild(copyBtn);
+
+                  const copyBtn = document.createElement('button');
+                  copyBtn.type = 'button';
+                  copyBtn.className = 'copy-icon-btn';
+                  copyBtn.title = 'Copy preset message';
+                  copyBtn.textContent = '⧉';
+                  copyBtn.addEventListener('click', async () => {
+                    try {
+                      await MessagingService.copyBackupMessage(row);
+                      Utils.setStatus('Message copied');
+                    } catch {
+                      Utils.setStatus('Copy failed');
+                    }
+                  });
+                  actions.appendChild(copyBtn);
+                }
               }
 
               if (STATE.currentSource.key === 'licenslosa') {
@@ -3019,16 +3903,80 @@ createEmptyTeamDetailSection() {
                 actions.appendChild(copyBtn);
               }
 
+              if (STATE.currentSource.key === 'inMoreThan1Teams') {
+                const mailUrl = await MessagingService.getMultipleTeamsMessageUrl(row, forceReload);
+
+                if (mailUrl) {
+                  const btn = document.createElement('a');
+                  btn.href = mailUrl;
+                  btn.target = '_blank';
+                  btn.rel = 'noopener noreferrer';
+                  btn.className = 'mail-icon-btn';
+                  btn.title = 'Open message';
+                  btn.textContent = '✉';
+                  actions.appendChild(btn);
+                }
+
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'copy-icon-btn';
+                copyBtn.title = 'Copy preset message';
+                copyBtn.textContent = '⧉';
+                copyBtn.addEventListener('click', async () => {
+                  try {
+                    await MessagingService.copyMultipleTeamsMessage(row);
+                    Utils.setStatus('Message copied');
+                  } catch {
+                    Utils.setStatus('Copy failed');
+                  }
+                });
+                actions.appendChild(copyBtn);
+              }
+
+              if (STATE.currentSource.key === 'signUps') {
+                const issues = Rules.getSignupIssues(row);
+                const hasIssues = issues.length > 0;
+                const mailUrl = await MessagingService.getSignUpsMessageUrl(row, forceReload);
+
+                if (hasIssues && mailUrl) {
+                  const btn = document.createElement('a');
+                  btn.href = mailUrl;
+                  btn.target = '_blank';
+                  btn.rel = 'noopener noreferrer';
+                  btn.className = 'mail-icon-btn';
+                  btn.title = 'Open message';
+                  btn.textContent = '✉';
+                  actions.appendChild(btn);
+                }
+
+                if (hasIssues) {
+                  const copyBtn = document.createElement('button');
+                  copyBtn.type = 'button';
+                  copyBtn.className = 'copy-icon-btn';
+                  copyBtn.title = 'Copy preset message';
+                  copyBtn.textContent = '⧉';
+                  copyBtn.addEventListener('click', async () => {
+                    try {
+                      await MessagingService.copySignUpsMessage(row);
+                      Utils.setStatus('Message copied');
+                    } catch {
+                      Utils.setStatus('Copy failed');
+                    }
+                  });
+                  actions.appendChild(copyBtn);
+                }
+              }
+
               td.appendChild(actions);
               tr.appendChild(td);
               continue;
             }
 
             if (STATE.currentNumericColumns.has(col) || col === 'fullLicenseCount') td.className = 'num';
-            if (col === 'signupIssue' || col === 'notes') td.style.whiteSpace = 'normal';
+            if (col === 'signupIssue' || col === 'notes' || col === 'teams' || col === 'teamName') td.style.whiteSpace = 'normal';
 
-            await this.renderTableCell(td, row, col, forceReload);
-            tr.appendChild(td);
+            const maybeTd = await this.renderTableCell(td, row, col, forceReload);
+            tr.appendChild(maybeTd || td);
           }
 
           if (TableConfig.useTeamDropdownRows()) {
@@ -3042,32 +3990,19 @@ createEmptyTeamDetailSection() {
             btn.textContent = 'Check Team';
             checkTd.appendChild(btn);
 
-            const detailItems = TableConfig.getDropdownDetailItems(row);
             detailRow = document.createElement('tr');
             detailRow.style.display = 'none';
 
             const detailCell = document.createElement('td');
             detailCell.colSpan = visibleColumns.length + (hideIndex ? 1 : 2);
             detailCell.style.padding = '0';
-            detailCell.style.background = '#f8fbff';
+            detailCell.style.background = '#0b1630';
 
-            const detailBox = document.createElement('div');
-            detailBox.style.padding = '14px';
-            detailBox.style.borderTop = '1px solid #e4ebf5';
+            const panel = document.createElement('div');
+            panel.className = 'team-dropdown-panel';
+            panel.appendChild(await this.createTeamPlayerCheckPanel(row, forceReload));
 
-const detailGrid = document.createElement('div');
-detailGrid.style.display = 'flex';
-detailGrid.style.flexDirection = 'column';
-detailGrid.style.gap = '12px';
-
-if (detailItems.length > 0) {
-  detailItems.forEach(item => detailGrid.appendChild(this.createTeamDetailSection(item.label, item.value)));
-} else {
-  detailGrid.appendChild(this.createEmptyTeamDetailSection());
-}
-
-            detailBox.appendChild(detailGrid);
-            detailCell.appendChild(detailBox);
+            detailCell.appendChild(panel);
             detailRow.appendChild(detailCell);
 
             btn.addEventListener('click', () => {
@@ -3109,6 +4044,7 @@ if (detailItems.length > 0) {
           STATE.currentColumns.filter(col =>
             col !== 'fullLicenseCount' &&
             col !== 'signupIssue' &&
+            col !== 'teams' &&
             TableConfig.isNumericColumn(STATE.currentRows.map(r => {
               if (col === 'fullLicenseCount') return RowAccess.getFullLicenseCount(r);
               return r[col];
@@ -3140,6 +4076,13 @@ if (detailItems.length > 0) {
               const bDate = new Date(b?.registrationDate || 0).getTime();
               return bDate - aDate;
             });
+          } else if (STATE.currentSource.key === 'inMoreThan1Teams') {
+            baseRows = [...STATE.currentRows].sort((a, b) => {
+              const aCount = Number(a?.teamCount) || 0;
+              const bCount = Number(b?.teamCount) || 0;
+              if (bCount !== aCount) return bCount - aCount;
+              return String(a?.playerName || '').localeCompare(String(b?.playerName || ''), 'en', { sensitivity: 'base' });
+            });
           }
         }
 
@@ -3147,11 +4090,13 @@ if (detailItems.length > 0) {
         DOM.emptyMessage.style.display = filtered.length === 0 ? 'block' : 'none';
 
         if (STATE.currentSource.key === 'signUps') {
-          DOM.rowCounter.textContent = `Anmälda lag: ${filtered.length} / ${STATE.currentRows.length}`;
+          DOM.rowCounter.textContent = `Registered teams: ${filtered.length} / ${STATE.currentRows.length}`;
         } else if (STATE.currentSource.key === 'bannedPlayers') {
           const activeCount = filtered.filter(row => row.active === 'Yes').length;
           const violationCount = filtered.filter(row => row.status === 'Violation').length;
           DOM.rowCounter.textContent = `Bans: ${filtered.length} / ${STATE.currentRows.length} • Active: ${activeCount} • Violations: ${violationCount}`;
+        } else if (STATE.currentSource.key === 'inMoreThan1Teams') {
+          DOM.rowCounter.textContent = `${filtered.length} flagged player${filtered.length === 1 ? '' : 's'}`;
         } else {
           DOM.rowCounter.textContent = `${filtered.length} row${filtered.length === 1 ? '' : 's'}`;
         }
@@ -3205,8 +4150,14 @@ if (detailItems.length > 0) {
         tr.appendChild(seedTd);
 
         const teamTd = document.createElement('td');
-        if (item.displayTeam && item.teamID) {
-          teamTd.appendChild(Utils.createLink(TEAM_BASE_URL + item.teamID, item.displayTeam, 'seed-link'));
+        if (item.displayTeam && item.teamID && item.leagueID) {
+          teamTd.appendChild(
+            Utils.createLink(
+              TeamLinks.buildTeamUrl(item.teamID, item.leagueID),
+              item.displayTeam,
+              'seed-link'
+            )
+          );
         } else {
           teamTd.textContent = item.displayTeam || '';
         }
@@ -3245,7 +4196,7 @@ if (detailItems.length > 0) {
             noteTd.appendChild(badgeEl);
           });
         } else {
-          noteTd.innerHTML = '<span style="color:#94a3b8;font-weight:700;">-</span>';
+          noteTd.innerHTML = '<span style="color:#8ea2c7;font-weight:700;">-</span>';
         }
 
         tr.appendChild(noteTd);
@@ -3263,39 +4214,6 @@ if (detailItems.length > 0) {
         DOM.seedingBody.appendChild(tr);
       },
 
-      async renderSeeding(registeredRows, forceReload = false) {
-        this.showSeeding();
-        DOM.emptyMessage.style.display = 'none';
-        DOM.tbody.innerHTML = '';
-        DOM.headerRow.innerHTML = '';
-        DOM.proQualReqWrap.innerHTML = '';
-        DOM.seedingBody.innerHTML = '';
-        DOM.rowCounter.textContent = '';
-
-        const sections = await SeedingService.buildSeedingSections(registeredRows, forceReload);
-        let visibleRows = 0;
-        let renderedSections = 0;
-
-        sections.forEach(section => {
-          const filteredItems = Filters.getFilteredSeedingRows(section.title, section.items);
-          if (filteredItems.length === 0) return;
-
-          if (renderedSections > 0) this.renderSpacer();
-          renderedSections += 1;
-          visibleRows += filteredItems.length;
-
-          this.renderSectionTitle(section.title, section.count, section.styleKey);
-          this.renderSeedingHeaderRow();
-          filteredItems.forEach(item => this.renderSeedRow(item));
-        });
-
-        if (visibleRows === 0) {
-          DOM.seedingBody.innerHTML = '<tr><td colspan="5" class="empty">No seeding results found.</td></tr>';
-        }
-
-        DOM.rowCounter.textContent = `${visibleRows} seeding row${visibleRows === 1 ? '' : 's'}`;
-      },
-
       groupProQualReqRows(rows) {
         const map = new Map();
 
@@ -3308,6 +4226,7 @@ if (detailItems.length > 0) {
             map.set(key, {
               teamID,
               teamName,
+              leagueID: row.leagueID || row.leagueId || row.league_id || '',
               qualifierName: row.qualifierName || 'WILDCARD',
               players: []
             });
@@ -3322,36 +4241,32 @@ if (detailItems.length > 0) {
       },
 
       createHistoryCell(player, prefix) {
-        const summary = String(player?.[`${prefix}Summary`] || '').trim();
+        const division = player?.[`${prefix}Division`];
+        const team = player?.[`${prefix}Team`];
+        const year = player?.[`${prefix}Year`];
+        const season = player?.[`${prefix}Season`];
+        const groupMatches = Number(player?.[`${prefix}GroupMatches`] ?? 0) || 0;
+        const playoffMatches = Number(player?.[`${prefix}PlayoffMatches`] ?? 0) || 0;
+
+        const totalMatchesRaw = player?.[`${prefix}Matches`];
+        const totalMatches = totalMatchesRaw !== undefined && totalMatchesRaw !== null && totalMatchesRaw !== ''
+          ? Number(totalMatchesRaw) || 0
+          : groupMatches + playoffMatches;
+
         const td = document.createElement('td');
 
-        if (!summary) {
+        if (!division && !team && !year && !season && totalMatches === 0 && groupMatches === 0 && playoffMatches === 0) {
           td.textContent = '';
           return td;
         }
 
-        td.style.whiteSpace = 'normal';
-        td.style.minWidth = '260px';
-
-        const parts = summary.split(' || ').map(part => part.trim()).filter(Boolean);
-
-        parts.forEach((part, index) => {
-          const div = document.createElement('div');
-          div.textContent = part;
-          if (index === 0) {
-            div.style.fontWeight = '900';
-            div.style.color = '#0b144f';
-          } else if (index === 1) {
-            div.style.color = '#334155';
-            div.style.fontWeight = '700';
-          } else {
-            div.style.fontSize = '11px';
-            div.style.color = '#64748b';
-            div.style.marginTop = '2px';
-          }
-          td.appendChild(div);
-        });
-
+        td.innerHTML = `
+          ${team ? `<div style="font-weight:900;color:#f3f7ff;white-space:normal;">${team}</div>` : ''}
+          ${[division, year, season].filter(Boolean).length ? `<div style="color:#c3d0ea;font-weight:700;white-space:normal;">${[division, year, season].filter(Boolean).join(' • ')}</div>` : ''}
+          <div style="font-size:11px;color:#8ea2c7;margin-top:2px;">
+            Group stage: ${groupMatches} • Playoffs: ${playoffMatches} • Total: ${totalMatches}
+          </div>
+        `;
         return td;
       },
 
@@ -3374,14 +4289,14 @@ if (detailItems.length > 0) {
 
         teams.forEach((teamGroup, teamIndex) => {
           const teamBox = document.createElement('div');
-          teamBox.style.borderBottom = '1px solid #e7ebf2';
+          teamBox.style.borderBottom = '1px solid rgba(124, 150, 202, 0.12)';
           if (teamIndex === teams.length - 1) teamBox.style.borderBottom = '0';
 
           const headerBtn = document.createElement('button');
           headerBtn.type = 'button';
           headerBtn.style.width = '100%';
           headerBtn.style.border = '0';
-          headerBtn.style.background = 'linear-gradient(to bottom, #ffffff, #fbfcff)';
+          headerBtn.style.background = 'linear-gradient(to bottom, #101b36, #0d1730)';
           headerBtn.style.padding = '15px 16px';
           headerBtn.style.textAlign = 'left';
           headerBtn.style.cursor = 'pointer';
@@ -3389,22 +4304,29 @@ if (detailItems.length > 0) {
           headerBtn.style.justifyContent = 'space-between';
           headerBtn.style.alignItems = 'center';
           headerBtn.style.gap = '16px';
+          headerBtn.style.color = '#eef4ff';
 
           const left = document.createElement('div');
           const name = document.createElement('div');
           name.style.fontSize = '15px';
           name.style.fontWeight = '900';
-          name.style.color = '#07124f';
+          name.style.color = '#f4f7ff';
 
-          if (teamGroup.teamID) {
-            name.appendChild(Utils.createLink(TEAM_BASE_URL + teamGroup.teamID, teamGroup.teamName, 'proqual-link'));
+          if (teamGroup.teamID && teamGroup.leagueID) {
+            name.appendChild(
+              Utils.createLink(
+                TeamLinks.buildTeamUrl(teamGroup.teamID, teamGroup.leagueID),
+                teamGroup.teamName,
+                'proqual-link'
+              )
+            );
           } else {
             name.textContent = teamGroup.teamName;
           }
 
           const meta = document.createElement('div');
           meta.style.fontSize = '11px';
-          meta.style.color = '#64748b';
+          meta.style.color = '#8ea2c7';
           meta.style.textTransform = 'uppercase';
           meta.style.letterSpacing = '0.4px';
           meta.textContent = `${teamGroup.qualifierName || 'WILDCARD'}${teamGroup.teamID ? ' • TEAM ID ' + teamGroup.teamID : ''}`;
@@ -3421,15 +4343,16 @@ if (detailItems.length > 0) {
           count.textContent = `${teamGroup.players.length} players`;
           count.style.fontSize = '12px';
           count.style.fontWeight = '900';
-          count.style.color = '#334155';
-          count.style.background = '#eef3ff';
-          count.style.border = '1px solid #d8e2ff';
+          count.style.color = '#fff0c0';
+          count.style.background = 'rgba(216, 180, 76, 0.12)';
+          count.style.border = '1px solid rgba(216, 180, 76, 0.22)';
           count.style.borderRadius = '999px';
           count.style.padding = '6px 10px';
 
           const arrow = document.createElement('div');
           arrow.textContent = '▶';
           arrow.style.fontWeight = '900';
+          arrow.style.color = '#ffd98a';
 
           right.appendChild(count);
           right.appendChild(arrow);
@@ -3440,7 +4363,7 @@ if (detailItems.length > 0) {
           const body = document.createElement('div');
           body.style.display = 'none';
           body.style.padding = '0 16px 16px';
-          body.style.background = '#fcfdff';
+          body.style.background = '#0b1630';
 
           const table = document.createElement('table');
           table.style.minWidth = '1100px';
@@ -3449,9 +4372,9 @@ if (detailItems.length > 0) {
               <tr>
                 <th>#</th>
                 <th>Player</th>
-                <th>Senaste klubb</th>
-                <th>Tidigare år 1</th>
-                <th>Tidigare år 2</th>
+                <th>Latest team</th>
+                <th>Previous season 1</th>
+                <th>Previous season 2</th>
               </tr>
             </thead>
           `;
@@ -3504,49 +4427,46 @@ if (detailItems.length > 0) {
         });
 
         DOM.rowCounter.textContent = `${rows.length} player row${rows.length === 1 ? '' : 's'}`;
+      },
+
+      async renderSeeding(registeredRows, forceReload = false) {
+        this.showSeeding();
+        DOM.emptyMessage.style.display = 'none';
+        DOM.tbody.innerHTML = '';
+        DOM.headerRow.innerHTML = '';
+        DOM.proQualReqWrap.innerHTML = '';
+        DOM.seedingBody.innerHTML = '';
+        DOM.rowCounter.textContent = '';
+
+        const sections = await SeedingService.buildSeedingSections(registeredRows, forceReload);
+        let visibleRows = 0;
+        let renderedSections = 0;
+
+        sections.forEach(section => {
+          const filteredItems = Filters.getFilteredSeedingRows(section.title, section.items);
+          if (filteredItems.length === 0) return;
+
+          if (renderedSections > 0) this.renderSpacer();
+          renderedSections += 1;
+          visibleRows += filteredItems.length;
+
+          this.renderSectionTitle(section.title, section.count, section.styleKey);
+          this.renderSeedingHeaderRow();
+          filteredItems.forEach(item => this.renderSeedRow(item));
+        });
+
+        if (visibleRows === 0) {
+          DOM.seedingBody.innerHTML = '<tr><td colspan="5" class="empty">No seeding results found.</td></tr>';
+        }
+
+        DOM.rowCounter.textContent = `${visibleRows} seeding row${visibleRows === 1 ? '' : 's'}`;
       }
     };
 
     const Loader = {
-      buildHistorySummary(row, index) {
-        const team = String(row?.[`history${index}Team`] ?? '').trim();
-        const division = String(row?.[`history${index}Division`] ?? '').trim();
-        const year = String(row?.[`history${index}Year`] ?? '').trim();
-        const season = String(row?.[`history${index}Season`] ?? '').trim();
-
-        const groupMatches = Number(row?.[`history${index}GroupMatches`] ?? 0) || 0;
-        const playoffMatches = Number(row?.[`history${index}PlayoffMatches`] ?? 0) || 0;
-
-        const totalRaw = row?.[`history${index}Matches`];
-        const totalMatches =
-          totalRaw !== undefined && totalRaw !== null && totalRaw !== ''
-            ? Number(totalRaw) || 0
-            : groupMatches + playoffMatches;
-
-        if (!team && !division && !year && !season && totalMatches === 0 && groupMatches === 0 && playoffMatches === 0) {
-          return '';
-        }
-
-        const topLine = [team, division ? `(${division})` : '', year, season].filter(Boolean).join(' ');
-        const bottomLine = `Gruppspel: ${groupMatches} • Slutspel: ${playoffMatches} • Totalt: ${totalMatches}`;
-
-        return [topLine, bottomLine].filter(Boolean).join(' || ');
-      },
-
-      addHistorySummaries(row) {
-        return {
-          ...row,
-          history1Summary: this.buildHistorySummary(row, 1),
-          history2Summary: this.buildHistorySummary(row, 2),
-          history3Summary: this.buildHistorySummary(row, 3)
-        };
-      },
-
       getProQualReqCheckRows(allData) {
         if (Array.isArray(allData?.proQualReqCheck)) {
-          return allData.proQualReqCheck
-            .map(row => Rename.applyToRow(row))
-            .map(row => this.addHistorySummaries(row));
+          return allData.proQualReqCheck.map(row => Rename.applyToRow(row));
         }
 
         const signUps = DataService.getRowsForSource(allData, 'signUps');
@@ -3555,15 +4475,13 @@ if (detailItems.length > 0) {
           .map(row => Rename.applyToRow(row))
           .filter(row => String(row?.qualifierName || '').trim().toUpperCase().includes('WILDCARD'))
           .map(row => ({
+            leagueID: row.leagueID ?? '',
             teamID: row.teamID ?? '',
             teamName: row.teamName ?? '',
             qualifierName: row.qualifierName ?? '',
             divisionName: row.divisionName ?? '',
             teamCountry: row.teamCountry ?? '',
-            registrationDate: row.registrationDate ?? '',
-            history1Summary: '',
-            history2Summary: '',
-            history3Summary: ''
+            registrationDate: row.registrationDate ?? ''
           }));
       },
 
@@ -3589,8 +4507,7 @@ if (detailItems.length > 0) {
 
         return DataService
           .getRowsForSource(allData, STATE.currentSource.key)
-          .map(row => Rename.applyToRow(row))
-          .map(row => this.addHistorySummaries(row));
+          .map(row => Rename.applyToRow(row));
       }
     };
 
