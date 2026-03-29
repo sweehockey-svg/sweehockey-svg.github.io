@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>eHockey Admin Tool v4.1</title>
+  <title>eHockey Admin Tool v5</title>
   <style>
     :root {
       --bg: #07101b;
@@ -35,6 +35,69 @@
       border-radius: 8px;
       font-size: 12px;
     }
+
+    .login-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 5000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: radial-gradient(circle at top, rgba(79,140,255,.12), transparent 22%), linear-gradient(135deg, #05081d, #08112f 45%, #0f1730 100%);
+    }
+    .login-screen.hidden { display: none; }
+    .login-card {
+      width: 100%;
+      max-width: 520px;
+      background: rgba(12, 22, 45, 0.97);
+      border: 1px solid rgba(79, 140, 255, .28);
+      border-radius: 22px;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.5);
+      padding: 28px 24px;
+    }
+    .login-title { margin: 0 0 12px; font-size: 32px; font-weight: 900; text-transform: uppercase; }
+    .login-warning { margin: 0 0 20px; color: var(--muted); line-height: 1.6; font-weight: 700; }
+    .login-label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 900; text-transform: uppercase; color: #dfe9ff; }
+    .login-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .login-input {
+      flex: 1 1 260px;
+      min-width: 0;
+      height: 46px;
+      border: 1px solid rgba(79, 140, 255, .28);
+      border-radius: 12px;
+      padding: 0 14px;
+      font-size: 15px;
+      font-weight: 700;
+      outline: none;
+      background: #0a1530;
+      color: var(--text);
+    }
+    .login-btn {
+      height: 46px;
+      border: 0;
+      border-radius: 12px;
+      padding: 0 18px;
+      background: linear-gradient(180deg, #6ea0ff, #4f8cff);
+      color: white;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .login-error {
+      display: none;
+      margin-top: 14px;
+      padding: 11px 12px;
+      border-radius: 12px;
+      background: rgba(120, 25, 37, 0.25);
+      border: 1px solid rgba(255, 107, 127, 0.35);
+      color: #ff9cac;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .site-shell.locked { display: none; }
 
     .app {
       display: grid;
@@ -69,18 +132,8 @@
 
     .brand h1 { margin: 0; font-size: 18px; }
     .brand p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
-
-    .nav-title {
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin: 0 0 10px;
-      padding: 0 8px;
-    }
-
+    .nav-title { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 10px; padding: 0 8px; }
     .nav { display: grid; gap: 8px; }
-
     .nav-btn {
       width: 100%;
       display: flex;
@@ -96,19 +149,9 @@
       text-align: left;
       font-size: 14px;
     }
-
     .nav-btn:hover { background: rgba(255,255,255,.03); }
     .nav-btn.active { background: var(--accent-soft); border-color: rgba(79,140,255,.35); }
-
-    .badge {
-      background: rgba(255,255,255,.06);
-      color: var(--muted);
-      border-radius: 999px;
-      padding: 3px 8px;
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
+    .badge { background: rgba(255,255,255,.06); color: var(--muted); border-radius: 999px; padding: 3px 8px; font-size: 12px; white-space: nowrap; }
     .side-meta {
       margin-top: 18px;
       padding: 14px;
@@ -121,24 +164,11 @@
     }
 
     .main { padding: 26px; }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
     .title-wrap h2 { margin: 0; font-size: 28px; }
     .title-wrap p { margin: 6px 0 0; color: var(--muted); }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .filters-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
 
     .input, .btn, .select {
       height: 42px;
@@ -149,10 +179,33 @@
       padding: 0 14px;
       font-size: 14px;
     }
-
     .input { min-width: 260px; }
     .btn { cursor: pointer; font-weight: 600; background: var(--panel-2); }
     .btn.primary { background: var(--accent); color: white; border-color: transparent; }
+    .toggle-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 11px;
+      background: #0e1933;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #c0cdea;
+      user-select: none;
+    }
+    .status-chip {
+      font-size: 12px;
+      font-weight: 800;
+      color: #dbe6fd;
+      text-transform: uppercase;
+      letter-spacing: 0.35px;
+      background: #0e1933;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 10px;
+    }
 
     .card, .hero, .table-card {
       background: rgba(16,25,42,.92);
@@ -160,19 +213,11 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
-
     .hero { padding: 20px; margin-bottom: 18px; }
     .hero-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
     .hero h3 { margin: 0 0 8px; font-size: 22px; }
     .hero p { margin: 0; color: var(--muted); line-height: 1.6; }
-
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0,1fr));
-      gap: 14px;
-      margin-bottom: 18px;
-    }
-
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; margin-bottom: 18px; }
     .metric { padding: 18px; }
     .metric-label { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
     .metric-value { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
@@ -182,135 +227,100 @@
     .page.active { display: block; }
 
     .table-card { overflow: hidden; }
-    .table-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      padding: 18px;
-      border-bottom: 1px solid var(--border);
-      flex-wrap: wrap;
-    }
-
+    .table-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
     .table-head h3 { margin: 0; font-size: 18px; }
     .table-head p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
     .table-wrap { overflow: auto; }
+    .section-wrap { overflow-x: auto; background: linear-gradient(180deg, #0c1730, #0a1429); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 8px 22px rgba(0,0,0,.22); padding: 10px; }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 980px;
-    }
+    table { width: 100%; border-collapse: collapse; min-width: 980px; }
+    th, td { padding: 14px 18px; text-align: left; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 14px; vertical-align: top; }
+    th { color: var(--muted); background: rgba(255,255,255,.02); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+    th.sortable { cursor: pointer; position: relative; padding-right: 28px; }
+    th.sortable::after { content: '↕'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); opacity: .7; font-size: 11px; }
+    th.sort-asc::after { content: '▲'; opacity: 1; }
+    th.sort-desc::after { content: '▼'; opacity: 1; }
+    tbody tr:nth-child(even) { background: rgba(255,255,255,.015); }
+    tbody tr:hover { background: rgba(101, 136, 219, 0.08); }
+    tbody tr.not-ok { background: rgba(162,31,51,.28) !important; }
+    tbody tr.backup-warning { background: rgba(176,132,20,.22) !important; }
+    tbody tr.backup-danger, tbody tr.transfer-danger, tbody tr.signup-rule-error { background: rgba(153,34,48,.25) !important; }
+    tbody tr.ban-clear { background: rgba(28,102,62,.16) !important; }
+    tbody tr.ban-expired { background: rgba(255,255,255,.02) !important; }
 
-    th, td {
-      padding: 14px 18px;
-      text-align: left;
-      border-bottom: 1px solid rgba(255,255,255,.05);
-      font-size: 14px;
-      vertical-align: top;
-    }
-
-    th {
-      color: var(--muted);
-      background: rgba(255,255,255,.02);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 5px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
+    .pill { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
     .ok { background: rgba(110,231,183,.12); color: var(--ok); }
     .warn { background: rgba(245,196,81,.12); color: var(--warn); }
     .danger { background: rgba(255,122,122,.12); color: var(--danger); }
     .info { background: rgba(79,140,255,.12); color: #8ab1ff; }
-
     .muted { color: var(--muted); }
     .empty-state { padding: 28px; text-align: center; color: var(--muted); }
-
     .mini-list { display: grid; gap: 12px; }
-    .mini-item {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 14px;
-      border-radius: 14px;
-      background: rgba(255,255,255,.03);
-      border: 1px solid rgba(255,255,255,.05);
-    }
+    .mini-item { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.05); }
     .mini-item strong { display: block; margin-bottom: 4px; }
     .mini-item span { color: var(--muted); font-size: 12px; }
-
     .split { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
     .meta-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; margin-bottom: 18px; }
 
-    .detail-btn {
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.03);
-      color: var(--text);
-      border-radius: 10px;
-      padding: 7px 10px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .drawer {
-      position: fixed;
-      top: 0;
-      right: -560px;
-      width: 560px;
-      max-width: 100%;
-      height: 100vh;
-      background: #0c1524;
-      border-left: 1px solid var(--border);
-      transition: right .2s ease;
-      z-index: 30;
-      display: flex;
-      flex-direction: column;
-    }
-
+    .detail-btn { border: 1px solid var(--border); background: rgba(255,255,255,.03); color: var(--text); border-radius: 10px; padding: 7px 10px; cursor: pointer; font-size: 12px; font-weight: 700; }
+    .drawer { position: fixed; top: 0; right: -620px; width: 620px; max-width: 100%; height: 100vh; background: #0c1524; border-left: 1px solid var(--border); transition: right .2s ease; z-index: 30; display: flex; flex-direction: column; }
     .drawer.open { right: 0; }
-    .drawer-head {
-      padding: 18px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-    }
+    .drawer-head { padding: 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 12px; }
     .drawer-body { padding: 18px; overflow: auto; }
-    .drawer-close {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--panel-2);
-      color: var(--text);
-      cursor: pointer;
+    .drawer-close { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: var(--panel-2); color: var(--text); cursor: pointer; }
+    .json-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    .json-card h4 { margin: 0 0 10px; font-size: 14px; }
+    .json-row { display: grid; grid-template-columns: 150px 1fr; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+
+    .icon-actions { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; }
+    .mail-icon-btn, .copy-icon-btn {
+      display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px; text-decoration: none; border: 0; cursor: pointer; background: linear-gradient(180deg, #6ea0ff, #4f8cff); color: white; font-size: 16px;
     }
 
-    .json-card {
-      background: rgba(255,255,255,.03);
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-    .json-card h4 { margin: 0 0 10px; font-size: 14px; }
-    .json-row {
-      display: grid;
-      grid-template-columns: 150px 1fr;
-      gap: 10px;
-      margin-bottom: 8px;
-      font-size: 13px;
-    }
+    .team-dropdown-panel { padding: 16px; background: #0b1630; border-top: 1px solid rgba(124,150,202,.14); }
+    .team-rich-panel { display: flex; flex-direction: column; gap: 14px; }
+    .team-rich-summary, .team-rich-section { background: linear-gradient(180deg, #101b36, #0d1730); border: 1px solid var(--border); border-radius: 14px; }
+    .team-rich-summary { padding: 14px 16px; }
+    .team-rich-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 12px; }
+    .team-rich-stat { background: #0f1a33; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+    .team-rich-stat-label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.45px; color: #8ea2c7; margin-bottom: 5px; }
+    .team-rich-stat-value { font-size: 16px; font-weight: 900; color: #f3f7ff; line-height: 1.2; }
+    .team-rich-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .team-rich-badge { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 900; text-transform: uppercase; border: 1px solid var(--border); background: #111d38; color: #d6e2fb; }
+    .team-rich-badge.flag { background: rgba(216,180,76,.14); color: #ffd98a; border-color: rgba(216,180,76,.24); }
+    .team-rich-badge.good { background: rgba(61,220,132,.14); color: #72ecaa; border-color: rgba(61,220,132,.28); }
+    .team-rich-badge.danger { background: rgba(255,107,127,.12); color: #ff9cab; border-color: rgba(255,107,127,.25); }
+    .team-rich-section-head { padding: 12px 14px; background: rgba(255,255,255,.03); color: white; font-size: 12px; font-weight: 900; text-transform: uppercase; }
+    .team-player-table-wrap { overflow-x: auto; }
+    .team-player-table { width: 100%; border-collapse: collapse; min-width: 1120px; font-size: 12px; }
+    .team-player-table td, .team-player-table th { padding: 9px 10px; border-bottom: 1px solid rgba(124,150,202,.12); text-align: left; vertical-align: top; white-space: nowrap; }
+    .team-player-table tbody tr:nth-child(even) { background: rgba(255,255,255,.015); }
+    .team-player-row-flagged { background: rgba(216,180,76,.12) !important; }
+    .team-player-name { min-width: 170px; white-space: normal; }
+    .team-player-name-main { font-weight: 900; color: #f3f7ff; line-height: 1.3; }
+    .team-player-name-sub { margin-top: 4px; font-size: 11px; color: #8ea2c7; line-height: 1.35; }
+    .team-history-main { font-weight: 900; color: #f3f7ff; line-height: 1.3; white-space: normal; }
+    .team-history-meta { margin-top: 4px; color: #c3d0ea; font-weight: 700; line-height: 1.35; white-space: normal; }
+    .team-history-games { margin-top: 4px; font-size: 11px; color: #8ea2c7; line-height: 1.35; white-space: normal; }
+    .team-history-empty { color: #94a3b8; font-weight: 700; }
+    .history-flag-badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; font-size: 10px; font-weight: 900; text-transform: uppercase; margin-bottom: 6px; border: 1px solid transparent; }
+    .history-flag-badge.flagged { background: rgba(255,107,127,.12); color: #ff9cab; border-color: rgba(255,107,127,.25); }
+    .history-flag-badge.ok { background: rgba(101,136,219,.12); color: #cfe0ff; border-color: rgba(101,136,219,.22); }
+
+    .section-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 960px; font-size: 12px; }
+    .section-title-row td { color: #091126; font-weight: 900; text-align: center; border: 0; font-size: 15px; text-transform: uppercase; padding: 12px 10px; border-radius: 12px 12px 0 0; }
+    .seed-header-row th { background: rgba(255,255,255,.03); color: white; font-size: 11px; font-weight: 900; text-transform: uppercase; padding: 9px 10px; }
+    .seed-row td { border-bottom: 1px solid rgba(124,150,202,.1); padding: 10px 10px; background: #0e1933; color: #e8efff; }
+    .seed-row.unlisted td { background: #101d39 !important; }
+    .seed-row.missing td { background: rgba(140,30,45,.25) !important; }
+    .seed-row.disbanded td { background: rgba(170,44,44,.34) !important; }
+    .seed-status { display: inline-flex; align-items: center; justify-content: center; min-width: 92px; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 900; text-transform: uppercase; }
+    .seed-status.ok { background: rgba(61,220,132,.14); color: #72ecaa; }
+    .seed-status.missing { background: rgba(255,107,127,.12); color: #ff9cab; }
+    .seed-status.disbanded { background: #8e1f31; color: white; }
+    .seed-status.empty { background: rgba(255,255,255,.03); color: #8fa2c4; }
+    .seed-note-badge { display: inline-block; padding: 5px 9px; border-radius: 999px; background: rgba(216,180,76,.14); color: #ffd98a; font-size: 11px; font-weight: 900; margin-right: 6px; margin-bottom: 4px; }
+    .seed-note-badge.disbanded { background: #8e1f31; color: white; }
 
     @media (max-width: 1150px) {
       .app { grid-template-columns: 1fr; }
@@ -318,115 +328,145 @@
       .hero-grid, .split, .meta-grid { grid-template-columns: 1fr; }
       .metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
-
     @media (max-width: 720px) {
       .main { padding: 18px; }
       .metrics { grid-template-columns: 1fr; }
       .input { min-width: 100%; }
       .drawer { width: 100%; }
       .json-row { grid-template-columns: 1fr; }
+      .team-rich-summary-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="logo">EH</div>
-        <div>
-          <h1>eHockey Admin</h1>
-          <p>v4.1 • stabil JSON-loader</p>
-        </div>
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <h1 class="login-title">Admin Login</h1>
+      <p class="login-warning"><strong>Endast för admins.</strong><br> Dela inte sida eller lösenord vidare.</p>
+      <label class="login-label" for="passwordInput">Lösenord</label>
+      <div class="login-row">
+        <input id="passwordInput" class="login-input" type="password" placeholder="Ange lösenord" autocomplete="off" />
+        <button id="loginBtn" class="login-btn" type="button">Login</button>
       </div>
+      <div id="loginError" class="login-error">Fel lösenord.</div>
+    </div>
+  </div>
 
-      <p class="nav-title">Sidor</p>
-      <nav class="nav" id="nav"></nav>
-
-      <div class="side-meta" id="sideMeta">
-        <div><strong>Datakälla:</strong> <code>alla.json</code></div>
-        <div><strong>Seeding:</strong> separat/manuell tills egen key finns</div>
-        <div><strong>Detaljvyer:</strong> <code>players[]</code> och <code>teams[]</code></div>
-      </div>
-    </aside>
-
-    <main class="main">
-      <div class="topbar">
-        <div class="title-wrap">
-          <h2 id="pageTitle">Overview</h2>
-          <p id="pageSubtitle">Laddar data från alla.json och renderar varje adminvy dynamiskt.</p>
+  <div id="siteShell" class="site-shell locked">
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo">EH</div>
+          <div>
+            <h1>eHockey Admin</h1>
+            <p>v5 • design + funktioner</p>
+          </div>
         </div>
-        <div class="actions">
+
+        <p class="nav-title">Sidor</p>
+        <nav class="nav" id="nav"></nav>
+
+        <div class="side-meta" id="sideMeta"></div>
+      </aside>
+
+      <main class="main">
+        <div class="topbar">
+          <div class="title-wrap">
+            <h2 id="pageTitle">Overview</h2>
+            <p id="pageSubtitle">Laddar data från alla.json och renderar varje adminvy dynamiskt.</p>
+          </div>
+          <div class="actions">
+            <button class="btn" id="reloadBtn">Ladda om</button>
+            <button class="btn" id="clearFiltersBtn">Rensa filter</button>
+            <button class="btn" id="csvExportBtn">Export CSV</button>
+            <button class="btn primary" id="openJsonBtn">Visa rå JSON-info</button>
+          </div>
+        </div>
+
+        <div class="filters-row">
           <input class="input" id="searchInput" type="text" placeholder="Sök spelare, lag, userID eller division" />
+          <label class="toggle-box"><input id="flaggedOnlyToggle" type="checkbox" /> <span>Endast flaggade</span></label>
           <select class="select" id="sortSelect">
             <option value="default">Standard</option>
             <option value="name-asc">Namn A–Ö</option>
             <option value="name-desc">Namn Ö–A</option>
           </select>
-          <button class="btn" id="reloadBtn">Ladda om</button>
-          <button class="btn primary" id="openJsonBtn">Visa rå JSON-info</button>
-        </div>
-      </div>
-
-      <section class="page active" id="page-dashboard">
-        <div class="hero hero-grid">
-          <div>
-            <h3>Överblick för 26 Spring</h3>
-            <p>Den här versionen använder en enklare och stabilare loader. Den försöker läsa både platt JSON, <code>rows[0]</code> och <code>rows[0].json_result</code> som sträng.</p>
-          </div>
-          <div class="card" style="padding:18px;">
-            <div class="mini-list" id="overviewStatusList"></div>
-          </div>
+          <select class="select" id="seedingFilterSelect" style="display:none;">
+            <option value="all">Alla seed rows</option>
+            <option value="missing">Endast missing</option>
+            <option value="disbanded">Endast disbanded</option>
+            <option value="wrongDivision">Fel division</option>
+            <option value="proQualReq">PRO QUAL</option>
+            <option value="eliteQualReq">ELITE QUAL</option>
+          </select>
+          <div class="status-chip" id="statusChip">Ready</div>
+          <div class="status-chip" id="rowCounter"></div>
+          <div class="status-chip" id="lastUpdated"></div>
         </div>
 
-        <div class="metrics" id="overviewMetrics"></div>
+        <section class="page active" id="page-dashboard">
+          <div class="hero hero-grid">
+            <div>
+              <h3>Överblick för 26 Spring</h3>
+              <p>Den här versionen behåller designen, men har fått in viktiga funktioner från adminverktyget du skickade: login, refresh, clear filters, CSV-export, flagged-only, seedingfilter, row-highlighting, messaging-knappar och team-check-paneler.</p>
+            </div>
+            <div class="card" style="padding:18px;">
+              <div class="mini-list" id="overviewStatusList"></div>
+            </div>
+          </div>
 
-        <div class="split">
-          <section class="table-card">
+          <div class="metrics" id="overviewMetrics"></div>
+
+          <div class="split">
+            <section class="table-card">
+              <div class="table-head">
+                <div>
+                  <h3>Mapping mellan UI och alla.json</h3>
+                  <p>Frontend renderar dessa sidor från respektive JSON-nyckel.</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>UI-sida</th><th>JSON-nyckel</th><th>Primär användning</th><th>Status</th></tr>
+                  </thead>
+                  <tbody id="mappingTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <aside class="card" style="padding:18px;">
+              <h3 style="margin-top:0;">Teknisk idé</h3>
+              <p class="muted" style="line-height:1.7;">Den här hybriden använder den stabila JSON-loadern från nuvarande version och hämtar adminfunktioner från din andra fil, men utan att byta UI-språk eller layoutmodell.</p>
+            </aside>
+          </div>
+        </section>
+
+        <section class="page" id="page-data">
+          <div class="meta-grid" id="pageMetrics"></div>
+
+          <div class="table-card" id="normalTableWrap">
             <div class="table-head">
               <div>
-                <h3>Mapping mellan UI och alla.json</h3>
-                <p>Frontend renderar dessa sidor från respektive JSON-nyckel.</p>
+                <h3 id="dataSectionTitle">Data</h3>
+                <p id="dataSectionSubtitle">Dynamisk tabell.</p>
               </div>
             </div>
             <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>UI-sida</th>
-                    <th>JSON-nyckel</th>
-                    <th>Primär användning</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="mappingTableBody"></tbody>
+              <table id="resultsTable">
+                <thead><tr id="headerRow"></tr></thead>
+                <tbody id="tableBody"></tbody>
               </table>
-            </div>
-          </section>
-
-          <aside class="card" style="padding:18px;">
-            <h3 style="margin-top:0;">Teknisk idé</h3>
-            <p class="muted" style="line-height:1.7;">När detta fungerar stabilt är nästa steg CSV-export, filter per kolumn och fler sidor som <code>teamCaptains</code> och <code>proQualReqCheck</code>.</p>
-          </aside>
-        </div>
-      </section>
-
-      <section class="page" id="page-data">
-        <div class="meta-grid" id="pageMetrics"></div>
-        <section class="table-card">
-          <div class="table-head">
-            <div>
-              <h3 id="dataSectionTitle">Data</h3>
-              <p id="dataSectionSubtitle">Dynamisk tabell.</p>
-            </div>
-            <div class="actions">
-              <button class="btn" id="showColumnsBtn">Kolumner</button>
-              <button class="btn" id="exportHintBtn">Export</button>
+              <div id="emptyMessage" class="empty-state" style="display:none;">Inga resultat.</div>
             </div>
           </div>
-          <div class="table-wrap" id="tableWrap"></div>
+
+          <div class="section-wrap" id="seedingWrap" style="display:none; margin-top:18px;">
+            <table class="section-table"><tbody id="seedingBody"></tbody></table>
+          </div>
         </section>
-      </section>
-    </main>
+      </main>
+    </div>
   </div>
 
   <aside class="drawer" id="drawer">
@@ -441,422 +481,792 @@
   </aside>
 
   <script>
+    const CONFIG = {
+      ADMIN_PASSWORD: 'kungkenu',
+      DATA_FILES: ['./alla.json', './alla (1).json']
+    };
+
+    const PRESET_SECTIONS = [
+      { title: 'Elite', rows: [[1,'Elite 🏆','Tohtorit'],[2,'Elite 🥈','vNexs I'],[3,'Elite 3','HAVU Gaming'],[4,'Elite 4','GOONS'],[5,'Elite 5','Mythix'],[6,'Elite 6','Umpikuja'],[7,'Elite 7','KUUSAMO.gg'],[8,'Elite 8','ROBE Esports'],[9,'Elite 9','AFTERLIFE'],[10,'Elite 10','Polski Boys'],[11,'Elite 11','TIKI TALK'],[12,'Elite 12','Kastikekauppa Esports'],[13,'▶ Elite 14','SSK ESPORTS'],[14,'▶ Elite 15','Vizio'],[15,'▲ Pro 🥇','POGGERS'],[16,'▲ Pro 4','F0CUS']] },
+      { title: 'Elite Qualifiers (if needed)', rows: [[1,'▼ Elite 13','EXEN'],[2,'▼ Elite 16','VESUVIUS ESPORTS'],[3,'Pro 2','Unique'],[4,'Pro 3','Finnish Roosters'],[5,'Pro 5','Puck Over Glass'],[6,'Pro 6','GREATEST'],[7,'Pro 7','xBots'],[8,'Pro 8','Aspyre']] },
+      { title: 'Pro', rows: [[1,'▼ Elite 13','EXEN'],[2,'▼ Elite 16','VESUVIUS ESPORTS'],[3,'Pro 2','Unique'],[4,'Pro 3','Finnish Roosters'],[5,'Pro 5','Puck Over Glass'],[6,'Pro 6','GREATEST'],[7,'Pro 7','xBots'],[8,'Pro 8','Aspyre'],[9,'Pro 9','Carpe Diem'],[10,'Pro 10','NOSTREETSPORTS'],[11,'Pro 11','vNexs II'],[12,'Pro 12','MoDo Hockey'],[13,'Pro 13','Deadly Phantoms'],[14,'Pro 14','SSK Prospects'],[15,'Pro 15','Otukset'],[16,'Pro 16','Rusty X'],[17,'Pro 17','Vesuvius Academy'],[18,'Pro 18','Turun Gasellit'],[19,'Pro 19','Brynäs IF Esport'],[20,'Pro 20','The Oldtimers'],[21,'Pro 21','REIVILUOLA'],[22,'Pro 22','HC Lugano eSports'],[23,'▲ Lite 🥇','Renegade IHC'],[24,'▲ Lite 🥈','Wida'],[25,'▲ Lite 🥉','Conexion']] },
+      { title: 'Pro Qualifiers', rows: [[1,'Pro 23','Golden Sticks'],[2,'Pro 24','DEG eSports'],[3,'Pro 25','Lemmenvelhot'],[4,'Pro 26','NOVA'],[5,'Pro 27','Pasilan SKA'],[6,'Pro 28','Including Me'],[7,'Lite 4','Tinted Visors'],[8,'Lite 5','vNexs Vipers'],[9,'Lite 6','Fallen Rangers'],[10,'Lite 7','Kokemus Puuttuu'],[11,'Lite 8','Hockeyholics'],[12,'Lite 9','Veterankraft'],[13,'Lite 10','Supernatural'],[14,'Lite 11','Pata Hellalla'],[15,'Lite 12','HC KOROBKA'],[16,'Lite 13','HC VADELMA'],[17,'Lite 14','M3 Esports'],[18,'Lite 15','SSK Academy'],[19,'Lite 16','Bladerunners HC']] },
+      { title: 'Lite', rows: [[1,'▼ Pro 29','Saucer Hockey'],[2,'▼ Pro 30','Sunne IK Esport'],[3,'▼ Pro 31','Jagrs in Paradise'],[4,'▼ Pro 32','6 MAN AVALANCHE (DNF)'],[5,'Lite 17','VBO STARS'],[6,'Lite 18','Sopranos'],[7,'Lite 19','KELAGOLDCARD HC'],[8,'Lite 20','HC Nova Hut'],[9,'Lite 21','ARMEIJAN KURI'],[10,'Lite 22','TROJANS'],[11,'Lite 23','Jurricanes'],[12,'Lite 24','SSK Adepts'],[13,'Lite 25','Invasion Hockey'],[14,'Lite 26','Macho HC'],[15,'Lite 27','Nordic Nosebleed'],[16,'Lite 28','Hc Kasapallo'],[17,'Lite 29','German Ice Gladiators'],[18,'Lite 30','Eisbaeren Gaming'],[19,'Lite 31','MIELENSAPAHOITTAJAT'],[20,'Lite 32','MIESKISSAT'],[21,'Lite 33','Game Over Esports'],[22,'Lite 34','Silver Sword Griffins'],[23,'Lite 35','TeNo'],[24,'Lite 36','Dynamo IHC'],[25,'Lite 37','FatBurritos'],[26,'Lite 38','Iserlohn Roosters eSports'],[27,'▲ Core 🥇','HC Lisko'],[28,'▲ Core 🥈','HC Punishers'],[29,'▲ Core 🥉','German Elite Hockey'],[30,'▲ Core 4','Chlastpumpy'],[31,'▲ Core 5','Torspot'],[32,'▲ Core 6','Hungry Bears'],[33,'▲ Core 7','HCP eSports'],[34,'▲ Core 8','Pullasorsat HC']] },
+      { title: 'Core', rows: [[1,'Core 9','Rampa Bay'],[2,'Core 10','eskoetikka esports'],[3,'Core 11','Taskubilis'],[4,'Core 12','Thunder Rams Esports'],[5,'Core 13','KOST Wolves'],[6,'Core 14','PHOENIX HC'],[7,'Core 15','Koppibuutti'],[8,'Core 16','RAINERS HC'],[9,'Core 17','PeliKirja'],[10,'Core 18','Bad Habits'],[11,'Core 19','Pulp Odyssey'],[12,'Core 20','Kuukkarin Pojat'],[13,'Core 21','SCB eSports'],[14,'Core 22','Kasanovat'],[15,'Core 23','Hiljainen Pikkukaupunki'],[16,'Core 24','Carolus Icemen'],[17,'Core 25','Ghost'],[18,'Core 26','vNexs Wisemen'],[19,'Core 27','Style'],[20,'Core 28','Get Hagens HC'],[21,'Core 29','Zamboni Zorros'],[22,'Core 30','Surte Sisu HC'],[23,'Core 31','HC Tarinakellari'],[24,'Core 32','P0TKUKELKKA'],[25,'Core 33','Murohoki'],[26,'Core 34','HoneyWasp'],[27,'Core 35','Dump N Ch4se'],[28,'Core 36','Woodhands'],[29,'Core 37','EHC Olten eSports'],[30,'Core 38','EPIC BLADEZ'],[31,'Core 39','Sunburst Howlers'],[32,'Neo 1','AAkerho'],[33,'Neo 2','MORGANCHIPSEN HK'],[34,'Neo 3','Corsaires HC'],[35,'Neo 4','Tays Pitkaniemi'],[36,'Neo 5','Izhora Battalion'],[37,'Neo 6','Dynamite sharks'],[38,'Neo 7','Jormat'],[39,'Neo 8','Musta Korvatunturi']] },
+      { title: 'Neo', rows: [[1,'Neo 9','Black Wings'],[2,'Neo 10','Old but Gold'],[3,'Neo 11','La Primero'],[4,'Neo 12','Hannover Indians Esports'],[5,'Neo 13','Free From Rodents'],[6,'Neo 14','HC UKRAINE'],[7,'Neo 15','BIK Karlskoga Esport'],[8,'Neo 16','Northern Stars Hockey'],[9,'Neo 17','Slapshot Ninjas'],[10,'Neo 18','CZ JDOUCI NA SMRT SK'],[11,'Neo 19','The Flying Elbows'],[12,'Neo 20','Davemiehet'],[13,'Neo 21','Beer Bees'],[14,'Neo 22','LETTLAND'],[15,'Neo 23','Rappulan Rassaajat'],[16,'Neo 24','HC ZUBR NOI'],[17,'Neo 25','HC Nelson'],[18,'Neo 26','HawksGaming'],[19,'Neo 27','The Boyz are back'],[20,'Neo 28','SHADOW SKULLS'],[21,'Neo 29','Kitty Muscles'],[22,'Neo 30','HK Bricks'],[23,'Neo 31','Swiss x Wolves'],[24,'Neo 32','Eishockeynet Yetis'],[25,'Neo 33','Outlaw Rangers'],[26,'Neo 34','THE DEVIL WINGS'],[27,'Neo 35','Tigers Zlin'],[28,'Neo 36','Alpenkrieger HC'],[29,'Neo 37','Nordic Macabre'],[30,'Neo 38','Outlaws Hockey'],[31,'Neo 39','Hammer Eisbaeren eSports'],[32,'Neo 40','Brothers in Gaming D'],[33,'Neo 41','Wildcats esport II'],[34,'Neo 42','ALPINS MARMOTS'],[35,'Neo 43','EC Kassel Huskies eSports']] }
+    ];
+
+    const TEAM_NAME_CHANGES = [
+      { oldName: 'HAVU Gaming', newName: 'Parasite' },
+      { oldName: 'VESUVIUS ESPORTS', newName: 'Golden Buffalos' },
+      { oldName: 'GREATEST', newName: 'Unwanted' },
+      { oldName: 'Jagrs in Paradise', newName: 'Cityboys' },
+      { oldName: 'Mythix', newName: 'INCOACH' },
+      { oldName: 'MoDo Hockey', newName: 'Västerås IK' },
+      { oldName: 'ROBE Esports', newName: 'MSK Esports' },
+      { oldName: 'Polski Boys', newName: 'Tunnel Vision' },
+      { oldName: 'Vesuvius Academy', newName: 'Grim Reapers HC' }
+    ];
+
     const PAGE_CONFIG = {
-      dashboard: { title: 'Overview', subtitle: 'Laddar data från alla.json och renderar varje adminvy dynamiskt.', type: 'dashboard', label: 'Overview', badge: 'Start' },
-      seeding: { title: 'Seeding 26 Spring', subtitle: 'Manuell sida tills seeding finns som egen key.', type: 'manual', label: 'Seeding 26 Spring', badge: 'Manual' },
-      registered: { title: 'Registered Teams 26 Spring', subtitle: 'Byggs från signUps.', type: 'data', jsonKey: 'signUps', label: 'Registered Teams', badge: 'signUps', columns: ['teamName','divisionName','qualifierName','teamCountry','registrationDate','playerCount','backupLicenseCount','unlicensedPlayerCount','userID'] },
-      lite: { title: 'Lite 26 Spring Teams', subtitle: 'Byggs från lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', columns: ['teamName','EP','PP','LP','totalPlayers','playersWithPlayoffGames','totalPoints','compatibility','players'] },
-      core: { title: 'Core 26 Spring Teams', subtitle: 'Byggs från core.', type: 'data', jsonKey: 'core', label: 'Core 26 Spring Teams', badge: 'core', columns: ['teamName','EP','PP','LP','CP','totalPlayers','playersWithPlayoffGames','totalPoints','compatibility','players'] },
-      neo: { title: 'Neo 26 Spring Teams', subtitle: 'Byggs från neo.', type: 'data', jsonKey: 'neo', label: 'Neo 26 Spring Teams', badge: 'neo', columns: ['teamName','EP','PP','LP','CP','NP','totalPlayers','playersWithPlayoffGames','totalPoints','compatibility','players'] },
-      transfers: { title: 'Transfers 26 Spring Teams', subtitle: 'Byggs från overgangar.', type: 'data', jsonKey: 'overgangar', label: 'Transfers 26 Spring Teams', badge: 'overgangar', columns: ['Player','From','FromDiv','To','ToDiv','GroupGames26Winter','PlayoffGames26Winter','TotalGames26Winter','Date','Role'] },
-      backups: { title: 'Backups 26 Spring Teams', subtitle: 'Byggs från backups.', type: 'data', jsonKey: 'backups', label: 'Backups 26 Spring Teams', badge: 'backups', columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed'] },
-      unlicensed: { title: 'Unlicensed 26 Spring Teams', subtitle: 'Byggs från licenslosa.', type: 'data', jsonKey: 'licenslosa', label: 'Unlicensed 26 Spring Teams', badge: 'licenslosa', columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed'] },
-      multiple: { title: 'Players In Multiple Teams', subtitle: 'Byggs från inMoreThan1Teams.', type: 'data', jsonKey: 'inMoreThan1Teams', label: 'Players In Multiple Teams', badge: 'inMoreThan1Teams', columns: ['playerName','userID','teamCount','teams'] },
-      banned: { title: 'Banned Players', subtitle: 'Byggs från bannedPlayers.', type: 'data', jsonKey: 'bannedPlayers', label: 'Banned Players', badge: 'bannedPlayers', columns: ['playerName','banType','untilText','active','status','foundAs','teamName','divisionName','notes'] }
+      dashboard: { title: 'Overview', subtitle: 'Startvy med status och mapping för alla.json.', type: 'dashboard', label: 'Overview', badge: 'Start' },
+      seeding: { title: 'Seeding 26 Spring', subtitle: 'Preset + registreringskontroll.', type: 'preset', label: 'Seeding 26 Spring', badge: 'Preset', csv: false },
+      registered: { title: 'Registered Teams 26 Spring', subtitle: 'Byggs från signUps.', type: 'data', jsonKey: 'signUps', label: 'Registered Teams', badge: 'signUps', csv: true, columns: ['teamName','teamCountry','registrationDate','divisionName','qualifierName','playerCount','fullLicenseCount','backupLicenseCount','unlicensedPlayerCount','signupIssue','userID','__sendMail'] },
+      lite: { title: 'Lite 26 Spring Teams', subtitle: 'Byggs från lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','totalPoints'] },
+      core: { title: 'Core 26 Spring Teams', subtitle: 'Byggs från core.', type: 'data', jsonKey: 'core', label: 'Core 26 Spring Teams', badge: 'core', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','totalPoints'] },
+      neo: { title: 'Neo 26 Spring Teams', subtitle: 'Byggs från neo.', type: 'data', jsonKey: 'neo', label: 'Neo 26 Spring Teams', badge: 'neo', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','NP','totalPoints'] },
+      transfers: { title: 'Transfers 26 Spring Teams', subtitle: 'Byggs från overgangar.', type: 'data', jsonKey: 'overgangar', label: 'Transfers 26 Spring Teams', badge: 'overgangar', csv: true, columns: ['Player','From','FromDiv','To','ToDiv','GroupGames26Winter','PlayoffGames26Winter','TotalGames26Winter','Date','Role'] },
+      backups: { title: 'Backups 26 Spring Teams', subtitle: 'Byggs från backups.', type: 'data', jsonKey: 'backups', label: 'Backups 26 Spring Teams', badge: 'backups', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
+      unlicensed: { title: 'Unlicensed 26 Spring Teams', subtitle: 'Byggs från licenslosa.', type: 'data', jsonKey: 'licenslosa', label: 'Unlicensed 26 Spring Teams', badge: 'licenslosa', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
+      multiple: { title: 'Players In Multiple Teams', subtitle: 'Byggs från inMoreThan1Teams.', type: 'data', jsonKey: 'inMoreThan1Teams', label: 'Players In Multiple Teams', badge: 'inMoreThan1Teams', csv: true, columns: ['playerName','teamCount','teams','__sendMail'] },
+      banned: { title: 'Banned Players', subtitle: 'Byggs från bannedPlayers.', type: 'data', jsonKey: 'bannedPlayers', label: 'Banned Players', badge: 'bannedPlayers', csv: true, columns: ['playerName','banType','untilText','active','status','foundAs','teamName','divisionName','notes'] }
     };
 
     const PAGE_ORDER = ['dashboard','seeding','registered','lite','core','neo','transfers','backups','unlicensed','multiple','banned'];
     const EXPECTED_KEYS = ['signUps','lite','core','neo','overgangar','backups','licenslosa','inMoreThan1Teams','bannedPlayers','duplicatePlayers','teamCaptains','proQualReqCheck'];
+    const TEAM_NAME_KEYS = ['teamName', 'Team', 'team', 'name', 'lag', 'Lag', 'clubName'];
+    const PLAYER_NAME_KEYS = ['Player', 'tag', 'playerName', 'player'];
+    const PLAYER_LIST_NAME_KEYS = ['elitePlayerNames', 'proPlayerNames', 'litePlayerNames', 'corePlayerNames'];
+    const PLAYER_BASE_URL = 'https://sportsgamer.gg/players/';
 
     let currentPage = 'dashboard';
     let rawJsonData = null;
     let allData = {};
     let loadError = null;
     let loadedPath = null;
+    let normalizedRows = [];
+    let sortState = { column: null, direction: 'asc' };
+    let currentNumericColumns = new Set();
 
-    const navEl = document.getElementById('nav');
-    const pageTitleEl = document.getElementById('pageTitle');
-    const pageSubtitleEl = document.getElementById('pageSubtitle');
-    const searchInputEl = document.getElementById('searchInput');
-    const sortSelectEl = document.getElementById('sortSelect');
-    const overviewMetricsEl = document.getElementById('overviewMetrics');
-    const overviewStatusListEl = document.getElementById('overviewStatusList');
-    const mappingTableBodyEl = document.getElementById('mappingTableBody');
-    const pageMetricsEl = document.getElementById('pageMetrics');
-    const dataSectionTitleEl = document.getElementById('dataSectionTitle');
-    const dataSectionSubtitleEl = document.getElementById('dataSectionSubtitle');
-    const tableWrapEl = document.getElementById('tableWrap');
-    const drawerEl = document.getElementById('drawer');
-    const drawerTitleEl = document.getElementById('drawerTitle');
-    const drawerSubtitleEl = document.getElementById('drawerSubtitle');
-    const drawerBodyEl = document.getElementById('drawerBody');
-    const sideMetaEl = document.getElementById('sideMeta');
+    const dom = {
+      loginScreen: document.getElementById('loginScreen'),
+      siteShell: document.getElementById('siteShell'),
+      passwordInput: document.getElementById('passwordInput'),
+      loginBtn: document.getElementById('loginBtn'),
+      loginError: document.getElementById('loginError'),
+      nav: document.getElementById('nav'),
+      sideMeta: document.getElementById('sideMeta'),
+      pageTitle: document.getElementById('pageTitle'),
+      pageSubtitle: document.getElementById('pageSubtitle'),
+      searchInput: document.getElementById('searchInput'),
+      flaggedOnlyToggle: document.getElementById('flaggedOnlyToggle'),
+      sortSelect: document.getElementById('sortSelect'),
+      seedingFilterSelect: document.getElementById('seedingFilterSelect'),
+      statusChip: document.getElementById('statusChip'),
+      rowCounter: document.getElementById('rowCounter'),
+      lastUpdated: document.getElementById('lastUpdated'),
+      reloadBtn: document.getElementById('reloadBtn'),
+      clearFiltersBtn: document.getElementById('clearFiltersBtn'),
+      csvExportBtn: document.getElementById('csvExportBtn'),
+      openJsonBtn: document.getElementById('openJsonBtn'),
+      overviewMetrics: document.getElementById('overviewMetrics'),
+      overviewStatusList: document.getElementById('overviewStatusList'),
+      mappingTableBody: document.getElementById('mappingTableBody'),
+      pageMetrics: document.getElementById('pageMetrics'),
+      dataSectionTitle: document.getElementById('dataSectionTitle'),
+      dataSectionSubtitle: document.getElementById('dataSectionSubtitle'),
+      headerRow: document.getElementById('headerRow'),
+      tableBody: document.getElementById('tableBody'),
+      emptyMessage: document.getElementById('emptyMessage'),
+      normalTableWrap: document.getElementById('normalTableWrap'),
+      seedingWrap: document.getElementById('seedingWrap'),
+      seedingBody: document.getElementById('seedingBody'),
+      drawer: document.getElementById('drawer'),
+      drawerTitle: document.getElementById('drawerTitle'),
+      drawerSubtitle: document.getElementById('drawerSubtitle'),
+      drawerBody: document.getElementById('drawerBody'),
+      drawerClose: document.getElementById('drawerClose')
+    };
 
-    function escapeHtml(value) {
-      return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
+    const Utils = {
+      escapeHtml(value) {
+        return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#039;');
+      },
+      setStatus(text) { dom.statusChip.textContent = text; },
+      normalizeTeamName(value) {
+        return String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+      },
+      normalizePlayerName(value) {
+        return String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+      },
+      createLink(url, text, className = 'muted') {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.className = className;
+        a.style.color = '#eef4ff';
+        a.style.textDecoration = 'none';
+        a.style.fontWeight = '800';
+        a.textContent = text;
+        return a;
+      },
+      compareValues(a, b, isNumeric) {
+        const aVal = a === null || a === undefined ? '' : a;
+        const bVal = b === null || b === undefined ? '' : b;
+        if (isNumeric) {
+          const aNum = aVal === '' ? Number.NEGATIVE_INFINITY : Number(aVal);
+          const bNum = bVal === '' ? Number.NEGATIVE_INFINITY : Number(bVal);
+          return aNum - bNum;
+        }
+        return String(aVal).localeCompare(String(bVal), 'sv', { numeric: true, sensitivity: 'base' });
+      },
+      safeNumber(value) { const n = Number(value); return Number.isFinite(n) ? n : 0; },
+      toDisplayDate() { return new Date().toLocaleString('sv-SE'); },
+      escapeCsv(value) { const text = String(value ?? ''); return `"${text.replace(/"/g, '""')}"`; },
+      downloadFile(filename, content, mimeType = 'text/csv;charset=utf-8;') {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      }
+    };
+
+    const Rename = {
+      map: new Map(TEAM_NAME_CHANGES.flatMap(item => [[Utils.normalizeTeamName(item.oldName), item], [Utils.normalizeTeamName(item.newName), item]])),
+      getRenameInfo(teamName) { return Rename.map.get(Utils.normalizeTeamName(teamName)) || null; },
+      getCanonicalTeamName(teamName) { const info = Rename.getRenameInfo(teamName); return info ? info.newName : String(teamName || ''); },
+      getSeedRenameNote(teamName) { const info = Rename.getRenameInfo(teamName); return info ? `Old name ${info.oldName}` : ''; },
+      applyToValue(value) { const info = Rename.getRenameInfo(value); return info ? info.newName : String(value || ''); },
+      applyToRow(row) {
+        if (!row || typeof row !== 'object') return row;
+        const cloned = { ...row };
+        TEAM_NAME_KEYS.forEach(key => { if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]); });
+        ['history1Team','history2Team','history3Team','From','To'].forEach(key => { if (cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]); });
+        if (Array.isArray(cloned.players)) {
+          cloned.players = cloned.players.map(player => {
+            if (!player || typeof player !== 'object') return player;
+            const p = { ...player };
+            ['history1Team','history2Team','history3Team'].forEach(key => { if (p[key]) p[key] = Rename.applyToValue(p[key]); });
+            return p;
+          });
+        }
+        return cloned;
+      }
+    };
+
+    const RowAccess = {
+      getTeamName(row) { for (const key of TEAM_NAME_KEYS) if (row && row[key]) return String(row[key]); return ''; },
+      getPlayerId(row) { for (const key of ['playerID','playerId','PlayerID','player_id']) if (row && row[key]) return row[key]; return ''; },
+      getUserId(row) { for (const key of ['userID','userId','UserID','user_id','userid']) if (row && row[key] != null && String(row[key]).trim() !== '') return row[key]; return ''; },
+      getBackupGames(row) { for (const key of ['totalMatchesPlayed','TotalGames26Winter','totalGames26Winter','matchesPlayed','gamesPlayed']) { const num = Number(row?.[key]); if (isFinite(num)) return num; } return null; },
+      getFullLicenseCount(row) { const playerCount = Number(row?.playerCount) || 0; const backupLicenseCount = Number(row?.backupLicenseCount) || 0; const unlicensedPlayerCount = Number(row?.unlicensedPlayerCount) || 0; return playerCount - backupLicenseCount - unlicensedPlayerCount; },
+      getSearchableText(row) {
+        const baseText = Object.values(row || {}).filter(value => !Array.isArray(value) && typeof value !== 'object').map(value => String(value ?? '').toLowerCase()).join(' ');
+        const playerText = Array.isArray(row?.players) ? row.players.map(player => Object.values(player || {}).map(value => String(value ?? '').toLowerCase()).join(' ')).join(' ') : '';
+        const teamsText = Array.isArray(row?.teams) ? row.teams.map(team => Object.values(team || {}).map(value => String(value ?? '').toLowerCase()).join(' ')).join(' ') : '';
+        return `${baseText} ${playerText} ${teamsText}`.trim();
+      }
+    };
+
+    const Rules = {
+      getDivisionLevel(value) {
+        const d = String(value || '').trim().toUpperCase();
+        if (d === 'ELITE') return 4; if (d === 'PRO') return 3; if (d === 'LITE') return 2; if (d === 'CORE') return 1; if (d === 'NEO') return 0; return null;
+      },
+      isBigDropTransfer(row) { if (currentPage !== 'transfers') return false; const fromLevel = this.getDivisionLevel(row?.FromDiv); const toLevel = this.getDivisionLevel(row?.ToDiv); if (fromLevel === null || toLevel === null) return false; return (fromLevel - toLevel) > 1; },
+      isNotOkRow(row) { return Object.values(row || {}).some(v => String(v ?? '').trim().toLowerCase() === 'not ok'); },
+      getMinimumPlayersForDivision(divisionName) { const d = String(divisionName || '').trim().toUpperCase(); if (d === 'ELITE' || d === 'PRO') return 7; if (d === 'LITE' || d === 'CORE' || d === 'NEO') return 8; return 0; },
+      getSignupIssues(row) {
+        const issues = []; const division = String(row?.divisionName || '').trim().toUpperCase(); const playerCount = Number(row?.playerCount) || 0; const fullLicenseCount = RowAccess.getFullLicenseCount(row); const backupLicenseCount = Number(row?.backupLicenseCount) || 0; const minPlayers = this.getMinimumPlayersForDivision(division);
+        if (minPlayers > 0 && playerCount < minPlayers) issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
+        if (playerCount > 13) issues.push(`has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
+        if (fullLicenseCount < 6) issues.push(`needs ${6 - fullLicenseCount} more full license${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
+        if (backupLicenseCount > 3) issues.push(`has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
+        return issues;
+      },
+      getSignupIssueText(row) { return this.getSignupIssues(row).join(' • '); },
+      getAllowedHistoryMaxLevel() { if (currentPage === 'lite') return 2; if (currentPage === 'core') return 1; if (currentPage === 'neo') return 0; return 99; },
+      isFlaggedHistoryDivision(divisionName) { const level = this.getDivisionLevel(divisionName); if (level === null) return false; return level > this.getAllowedHistoryMaxLevel(); },
+      getRowClass(row) {
+        if (currentPage === 'multiple') return 'not-ok';
+        if (currentPage === 'banned') { if (String(row?.status || '').toLowerCase() === 'violation') return 'not-ok'; if (String(row?.status || '').toLowerCase() === 'clear') return 'ban-clear'; if (String(row?.status || '').toLowerCase() === 'expired') return 'ban-expired'; return ''; }
+        if (currentPage === 'registered' && this.getSignupIssues(row).length > 0) return 'signup-rule-error';
+        if (currentPage === 'backups') { const games = RowAccess.getBackupGames(row); if (games !== null) { if (games > 10) return 'backup-danger'; if (games === 10) return 'backup-warning'; } }
+        if (currentPage === 'unlicensed') { const games = RowAccess.getBackupGames(row); if (games !== null && games >= 1) return 'not-ok'; }
+        if (this.isBigDropTransfer(row)) return 'transfer-danger';
+        if (this.isNotOkRow(row)) return 'not-ok';
+        return '';
+      },
+      isFlaggedRow(row) { return ['not-ok','backup-warning','backup-danger','transfer-danger','signup-rule-error'].includes(this.getRowClass(row)); }
+    };
+
+    const TeamLinks = {
+      getLeagueId(row, column = null) {
+        if (!row || typeof row !== 'object') return '';
+        if (column === 'From') return String(row.FromLeagueID ?? row.fromLeagueID ?? row.fromLeagueId ?? '').trim();
+        if (column === 'To') return String(row.ToLeagueID ?? row.toLeagueID ?? row.toLeagueId ?? '').trim();
+        return String(row.leagueID ?? row.leagueId ?? row.LeagueID ?? row.league_id ?? row.ToLeagueID ?? row.toLeagueID ?? row.toLeagueId ?? '').trim();
+      },
+      getTeamId(row, column = null) {
+        if (!row || typeof row !== 'object') return '';
+        if (column === 'From') return String(row.FromTeamID ?? row.fromTeamID ?? row.fromTeamId ?? '').trim();
+        if (column === 'To') return String(row.ToTeamID ?? row.toTeamID ?? row.toTeamId ?? '').trim();
+        return String(row.teamID ?? row.teamId ?? row.TeamID ?? row.team_id ?? '').trim();
+      },
+      buildTeamUrl(teamId, leagueId) { if (!teamId || !leagueId) return ''; return `https://sportsgamer.gg/leagues/${leagueId}/teams/${teamId}`; }
+    };
+
+    const DataService = {
+      normalizeAllData(payload) {
+        if (!payload || typeof payload !== 'object') return {};
+        if (EXPECTED_KEYS.some(key => Array.isArray(payload[key]))) return payload;
+        if (typeof payload.json_result === 'string') { try { const parsed = JSON.parse(payload.json_result); if (EXPECTED_KEYS.some(key => Array.isArray(parsed[key]))) return parsed; } catch (e) {} }
+        if (payload.json_result && typeof payload.json_result === 'object') { if (EXPECTED_KEYS.some(key => Array.isArray(payload.json_result[key]))) return payload.json_result; }
+        if (Array.isArray(payload.rows) && payload.rows.length) {
+          const row0 = payload.rows[0];
+          if (row0 && typeof row0 === 'object') {
+            if (EXPECTED_KEYS.some(key => Array.isArray(row0[key]))) return row0;
+            if (typeof row0.json_result === 'string') { try { const parsed = JSON.parse(row0.json_result); if (EXPECTED_KEYS.some(key => Array.isArray(parsed[key]))) return parsed; } catch (e) {} }
+            if (row0.json_result && typeof row0.json_result === 'object') { if (EXPECTED_KEYS.some(key => Array.isArray(row0.json_result[key]))) return row0.json_result; }
+          }
+        }
+        return payload;
+      },
+      async fetchAll(forceReload = false) {
+        if (rawJsonData && allData && !forceReload) return allData;
+        loadError = null; rawJsonData = null; allData = {}; loadedPath = null;
+        let loaded = null; let lastError = null;
+        for (const path of CONFIG.DATA_FILES) {
+          try {
+            const response = await fetch(path + '?ts=' + Date.now(), { cache: 'no-store' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            loaded = await response.json(); loadedPath = path; break;
+          } catch (error) { lastError = error; }
+        }
+        if (!loaded) throw (lastError || new Error('Kunde inte hitta JSON-fil'));
+        rawJsonData = loaded;
+        allData = this.normalizeAllData(loaded);
+        return allData;
+      },
+      getRowsForSource(key) { const rows = allData?.[key]; if (!Array.isArray(rows)) throw new Error(`Key "${key}" saknas eller är inte en array`); return rows; },
+      getPlayerLinkMap() {
+        const map = new Map();
+        Object.values(allData || {}).forEach(value => {
+          if (!Array.isArray(value)) return;
+          value.forEach(row => {
+            const playerId = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
+            if (playerId) PLAYER_NAME_KEYS.forEach(nameKey => { const playerName = row?.[nameKey]; const normalized = Utils.normalizePlayerName(playerName); if (normalized && !map.has(normalized)) map.set(normalized, String(playerId)); });
+            if (Array.isArray(row?.players)) row.players.forEach(player => { const pid = player?.playerID || player?.playerId || ''; const pname = player?.playerName || player?.Player || player?.tag || ''; const n = Utils.normalizePlayerName(pname); if (pid && n && !map.has(n)) map.set(n, String(pid)); });
+          });
+        });
+        return map;
+      },
+      getTeamLinkMap() {
+        const map = new Map();
+        Object.values(allData || {}).forEach(value => {
+          if (!Array.isArray(value)) return;
+          value.forEach(originalRow => {
+            const row = Rename.applyToRow(originalRow);
+            [
+              { name: RowAccess.getTeamName(row), teamId: TeamLinks.getTeamId(row), leagueId: TeamLinks.getLeagueId(row) },
+              { name: row?.From, teamId: TeamLinks.getTeamId(row, 'From'), leagueId: TeamLinks.getLeagueId(row, 'From') },
+              { name: row?.To, teamId: TeamLinks.getTeamId(row, 'To'), leagueId: TeamLinks.getLeagueId(row, 'To') }
+            ].forEach(entry => {
+              const normalized = Utils.normalizeTeamName(entry.name);
+              if (!normalized || !entry.teamId || !entry.leagueId) return;
+              if (!map.has(normalized)) map.set(normalized, { teamId: String(entry.teamId), leagueId: String(entry.leagueId) });
+            });
+          });
+        });
+        return map;
+      },
+      getCaptainUserIdMap() {
+        const rows = Array.isArray(allData?.teamCaptains) ? allData.teamCaptains : [];
+        const map = new Map();
+        rows.forEach(originalRow => {
+          const row = Rename.applyToRow(originalRow);
+          const normalizedTeam = Utils.normalizeTeamName(row.teamName);
+          const userId = String(row.userID || '').trim();
+          if (!normalizedTeam || !userId) return;
+          if (!map.has(normalizedTeam)) map.set(normalizedTeam, []);
+          const ids = map.get(normalizedTeam); if (!ids.includes(userId)) ids.push(userId);
+        });
+        return map;
+      }
+    };
+
+    const MessagingService = {
+      async getBackupMessageUrl(row) {
+        if (!['backups','unlicensed'].includes(currentPage)) return '';
+        const captainMap = DataService.getCaptainUserIdMap();
+        const teamName = RowAccess.getTeamName(row);
+        const normalizedTeam = Utils.normalizeTeamName(teamName);
+        const captainIds = captainMap.get(normalizedTeam) || [];
+        const playerUserId = String(RowAccess.getUserId(row) || '').trim();
+        const recipients = [...captainIds, playerUserId].map(id => String(id).trim()).filter(Boolean).filter((id, index, arr) => arr.indexOf(id) === index);
+        if (recipients.length === 0) return '';
+        return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
+      },
+      async getMultipleTeamsMessageUrl(row) {
+        if (currentPage !== 'multiple') return '';
+        const captainMap = DataService.getCaptainUserIdMap();
+        const recipients = [];
+        const teams = Array.isArray(row?.teams) ? row.teams : [];
+        const playerUserId = String(row?.userID ?? row?.userId ?? row?.UserID ?? row?.user_id ?? row?.userid ?? '').trim();
+        if (playerUserId) recipients.push(playerUserId);
+        teams.forEach(team => {
+          const directCaptainId = String(team?.captainUserID ?? team?.captainUserId ?? team?.CaptainUserID ?? '').trim();
+          if (directCaptainId) { recipients.push(directCaptainId); return; }
+          const normalizedTeam = Utils.normalizeTeamName(team?.teamName || '');
+          const mappedCaptainIds = captainMap.get(normalizedTeam) || [];
+          mappedCaptainIds.forEach(id => recipients.push(String(id).trim()));
+        });
+        const unique = recipients.filter((id, index, arr) => id && arr.indexOf(id) === index);
+        if (!unique.length) return '';
+        return `https://sportsgamer.gg/community/messenger/compose/?to=${unique.join(',')}`;
+      },
+      async getSignUpsMessageUrl(row) {
+        if (currentPage !== 'registered') return '';
+        const captainMap = DataService.getCaptainUserIdMap();
+        const teamName = RowAccess.getTeamName(row);
+        const normalizedTeam = Utils.normalizeTeamName(teamName);
+        const captainIds = captainMap.get(normalizedTeam) || [];
+        const teamUserId = String(RowAccess.getUserId(row) || '').trim();
+        const recipients = [...captainIds, teamUserId].map(id => String(id).trim()).filter(Boolean).filter((id, index, arr) => arr.indexOf(id) === index);
+        if (!recipients.length) return '';
+        return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
+      },
+      buildBackupMessage(row) {
+        const teamName = RowAccess.getTeamName(row) || 'team';
+        const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
+        const games = Number(RowAccess.getBackupGames(row) || 0);
+        if (games < 10) return `Upcoming License Upgrade Reminder for ${playerName}\n\nHi ${teamName},\n\nThis is a friendly reminder that ${playerName} has now played ${games} matches using a Backup Player License and is approaching the 10-game limit.\n\nBest regards,`;
+        if (games > 10) return `License Status Update – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has participated in ${games} games using a Backup Player License and now needs a Full Player License.\n\nBest regards,`;
+        return `License Status Reminder – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has now played 10 matches using a Backup Player License.\n\nBest regards,`;
+      },
+      buildUnlicensedMessage(row) {
+        const teamName = RowAccess.getTeamName(row) || 'team';
+        const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
+        const games = Number(RowAccess.getBackupGames(row) || 0);
+        return `License Status Update – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has participated in ${games} games without a valid license.\n\nBest regards,`;
+      },
+      buildMultipleTeamsMessage(row) {
+        const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
+        const teamCount = Number(row?.teamCount) || 0;
+        const teams = Array.isArray(row?.teams) ? row.teams : [];
+        const teamLines = teams.length ? teams.map(team => `- ${team?.leagueName ? team.leagueName + ' — ' : ''}${team?.teamName || ''}`).join('\n') : '- Team information missing';
+        return `Multiple Team Registration – Action Required for ${playerName}\n\nHi,\n\n${playerName} is currently registered in ${teamCount} teams.\n\n${teamLines}\n\nBest regards,`;
+      },
+      buildSignUpsMessage(row) {
+        const teamName = RowAccess.getTeamName(row) || 'team';
+        const divisionName = String(row?.divisionName || '').trim() || 'this division';
+        const issues = Rules.getSignupIssues(row);
+        const issueText = issues.length ? issues.map(issue => `- ${issue}`).join('\n') : '- Missing requirements detected';
+        return `Registration Requirements – Action Required for ${teamName}\n\nHi ${teamName},\n\nYour registration for ${divisionName} currently does not meet all requirements.\n\n${issueText}\n\nBest regards,`;
+      },
+      async copyBackupMessage(row) { await navigator.clipboard.writeText(this.buildBackupMessage(row)); },
+      async copyUnlicensedMessage(row) { await navigator.clipboard.writeText(this.buildUnlicensedMessage(row)); },
+      async copyMultipleTeamsMessage(row) { await navigator.clipboard.writeText(this.buildMultipleTeamsMessage(row)); },
+      async copySignUpsMessage(row) { await navigator.clipboard.writeText(this.buildSignUpsMessage(row)); }
+    };
 
     function pillHtml(value) {
       if (value == null || value === '') return '<span class="muted">—</span>';
-      const t = String(value);
-      const lower = t.toLowerCase();
-      let cls = 'info';
+      const t = String(value); const lower = t.toLowerCase(); let cls = 'info';
       if (lower === 'ok' || lower === 'yes' || lower === 'clear') cls = 'ok';
       else if (lower.includes('not ok') || lower.includes('violation') || lower.includes('expired')) cls = 'danger';
       else if (lower.includes('manual') || lower.includes('warn') || lower.includes('review')) cls = 'warn';
-      return `<span class="pill ${cls}">${escapeHtml(t)}</span>`;
-    }
-
-    function normalizeAllData(payload) {
-      if (!payload || typeof payload !== 'object') return {};
-
-      if (EXPECTED_KEYS.some(key => Array.isArray(payload[key]))) {
-        return payload;
-      }
-
-      if (typeof payload.json_result === 'string') {
-        try {
-          const parsed = JSON.parse(payload.json_result);
-          if (EXPECTED_KEYS.some(key => Array.isArray(parsed[key]))) return parsed;
-        } catch (e) {}
-      }
-
-      if (payload.json_result && typeof payload.json_result === 'object') {
-        if (EXPECTED_KEYS.some(key => Array.isArray(payload.json_result[key]))) return payload.json_result;
-      }
-
-      if (Array.isArray(payload.rows) && payload.rows.length) {
-        const row0 = payload.rows[0];
-        if (row0 && typeof row0 === 'object') {
-          if (EXPECTED_KEYS.some(key => Array.isArray(row0[key]))) return row0;
-          if (typeof row0.json_result === 'string') {
-            try {
-              const parsed = JSON.parse(row0.json_result);
-              if (EXPECTED_KEYS.some(key => Array.isArray(parsed[key]))) return parsed;
-            } catch (e) {}
-          }
-          if (row0.json_result && typeof row0.json_result === 'object') {
-            if (EXPECTED_KEYS.some(key => Array.isArray(row0.json_result[key]))) return row0.json_result;
-          }
-        }
-      }
-
-      return payload;
-    }
-
-    function getRowsForPage(pageKey) {
-      const cfg = PAGE_CONFIG[pageKey];
-      if (!cfg || !cfg.jsonKey) return [];
-      const value = allData[cfg.jsonKey];
-      return Array.isArray(value) ? value : [];
+      return `<span class="pill ${cls}">${Utils.escapeHtml(t)}</span>`;
     }
 
     function renderNav() {
-      navEl.innerHTML = PAGE_ORDER.map(pageKey => {
+      dom.nav.innerHTML = PAGE_ORDER.map(pageKey => {
         const cfg = PAGE_CONFIG[pageKey];
-        return `<button class="nav-btn ${pageKey === currentPage ? 'active' : ''}" data-page="${pageKey}"><span>${escapeHtml(cfg.label)}</span><span class="badge">${escapeHtml(cfg.badge)}</span></button>`;
+        return `<button class="nav-btn ${pageKey === currentPage ? 'active' : ''}" data-page="${pageKey}"><span>${Utils.escapeHtml(cfg.label)}</span><span class="badge">${Utils.escapeHtml(cfg.badge)}</span></button>`;
       }).join('');
-
-      navEl.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          currentPage = btn.dataset.page;
-          renderApp();
-        });
-      });
-    }
-
-    function showPage(id) {
-      document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
+      dom.nav.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => { currentPage = btn.dataset.page; sortState = { column: null, direction: 'asc' }; renderApp(); }));
     }
 
     function renderMetricCards(items, target) {
-      target.innerHTML = items.map(item => `
-        <article class="card metric">
-          <div class="metric-label">${escapeHtml(item.label)}</div>
-          <div class="metric-value">${escapeHtml(item.value)}</div>
-          <div class="metric-meta">${escapeHtml(item.meta || '')}</div>
-        </article>
-      `).join('');
+      target.innerHTML = items.map(item => `<article class="card metric"><div class="metric-label">${Utils.escapeHtml(item.label)}</div><div class="metric-value">${Utils.escapeHtml(item.value)}</div><div class="metric-meta">${Utils.escapeHtml(item.meta || '')}</div></article>`).join('');
+    }
+
+    function showPage(id) { document.querySelectorAll('.page').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+    function getRowsForCurrentPage() {
+      const cfg = PAGE_CONFIG[currentPage];
+      if (!cfg || !cfg.jsonKey) return [];
+      return DataService.getRowsForSource(cfg.jsonKey).map(row => Rename.applyToRow(row));
+    }
+
+    function filterRows(rows) {
+      const query = String(dom.searchInput.value || '').trim().toLowerCase();
+      const flaggedOnly = dom.flaggedOnlyToggle.checked;
+      return rows.filter(row => {
+        if (flaggedOnly && !Rules.isFlaggedRow(row)) return false;
+        if (!query) return true;
+        return RowAccess.getSearchableText(row).includes(query);
+      });
+    }
+
+    function sortRows(rows) {
+      if (!sortState.column) {
+        const mode = dom.sortSelect.value;
+        if (mode === 'default') return [...rows];
+        const out = [...rows];
+        const key = ['teamName','playerName','Player','tag'].find(k => out.some(r => r && r[k] != null)) || Object.keys(out[0] || {})[0];
+        out.sort((a,b) => String(a?.[key] ?? '').localeCompare(String(b?.[key] ?? ''), 'sv'));
+        if (mode === 'name-desc') out.reverse();
+        return out;
+      }
+      const out = [...rows];
+      const isNumeric = currentNumericColumns.has(sortState.column) || sortState.column === 'fullLicenseCount';
+      out.sort((a,b) => {
+        let aValue = sortState.column === 'fullLicenseCount' ? RowAccess.getFullLicenseCount(a) : a?.[sortState.column];
+        let bValue = sortState.column === 'fullLicenseCount' ? RowAccess.getFullLicenseCount(b) : b?.[sortState.column];
+        if (sortState.column === 'signupIssue') { aValue = Rules.getSignupIssueText(a); bValue = Rules.getSignupIssueText(b); }
+        if (sortState.column === 'teams') {
+          aValue = Array.isArray(a?.teams) ? a.teams.map(t => `${t?.leagueName || ''} ${t?.teamName || ''}`).join(' | ') : '';
+          bValue = Array.isArray(b?.teams) ? b.teams.map(t => `${t?.leagueName || ''} ${t?.teamName || ''}`).join(' | ') : '';
+        }
+        const res = Utils.compareValues(aValue, bValue, isNumeric);
+        return sortState.direction === 'asc' ? res : -res;
+      });
+      return out;
+    }
+
+    function getVisibleColumns() {
+      const cfg = PAGE_CONFIG[currentPage];
+      return cfg.columns || [];
+    }
+
+    function buildNumericColumns(rows, columns) {
+      currentNumericColumns = new Set(columns.filter(col => col !== 'fullLicenseCount' && col !== 'signupIssue' && col !== 'teams' && col !== '__sendMail' && rows.every(r => r[col] == null || r[col] === '' || (!isNaN(Number(r[col])) && isFinite(Number(r[col]))))));
+      currentNumericColumns.add('fullLicenseCount');
+    }
+
+    function openDrawer(title, subtitle, items) {
+      dom.drawerTitle.textContent = title;
+      dom.drawerSubtitle.textContent = subtitle;
+      if (!Array.isArray(items) || !items.length) dom.drawerBody.innerHTML = '<div class="empty-state">Ingen data att visa.</div>';
+      else dom.drawerBody.innerHTML = items.map((item, index) => `<div class="json-card"><h4>Rad ${index + 1}</h4>${Object.entries(item).map(([k,v]) => `<div class="json-row"><div class="muted">${Utils.escapeHtml(k)}</div><div>${Utils.escapeHtml(Array.isArray(v) || typeof v === 'object' ? JSON.stringify(v) : v ?? '—')}</div></div>`).join('')}</div>`).join('');
+      dom.drawer.classList.add('open');
+    }
+
+    function createHistoryCell(player, prefix) {
+      const division = player?.[`${prefix}Division`]; const team = player?.[`${prefix}Team`]; const year = player?.[`${prefix}Year`]; const season = player?.[`${prefix}Season`]; const groupMatches = Number(player?.[`${prefix}GroupMatches`] ?? 0) || 0; const playoffMatches = Number(player?.[`${prefix}PlayoffMatches`] ?? 0) || 0; const totalMatchesRaw = player?.[`${prefix}Matches`]; const totalMatches = totalMatchesRaw !== undefined && totalMatchesRaw !== null && totalMatchesRaw !== '' ? Number(totalMatchesRaw) || 0 : groupMatches + playoffMatches;
+      const td = document.createElement('td');
+      if (!division && !team && !year && !season && totalMatches === 0 && groupMatches === 0 && playoffMatches === 0) { td.innerHTML = '<span class="team-history-empty">-</span>'; return td; }
+      const flagged = Rules.isFlaggedHistoryDivision(division);
+      td.innerHTML = `${flagged ? '<div class="history-flag-badge flagged">Flagged: ' + Utils.escapeHtml(division || 'history') + '</div>' : '<div class="history-flag-badge ok">' + Utils.escapeHtml(division || 'History') + '</div>'}<div class="team-history-main">${Utils.escapeHtml(team || '-')}</div><div class="team-history-meta">${Utils.escapeHtml([division, year, season].filter(Boolean).join(' • ') || '-')}</div><div class="team-history-games">Group stage: ${groupMatches} • Playoffs: ${playoffMatches} • Total: ${totalMatches}</div>`;
+      return td;
+    }
+
+    async function createTeamPlayerCheckPanel(row) {
+      const wrapper = document.createElement('div'); wrapper.className = 'team-rich-panel';
+      const teamLinkMap = DataService.getTeamLinkMap(); const playerLinkMap = DataService.getPlayerLinkMap();
+      const summary = document.createElement('div'); summary.className = 'team-rich-summary';
+      const teamName = RowAccess.getTeamName(row); const mappedTeamInfo = teamLinkMap.get(Utils.normalizeTeamName(teamName)); const directTeamID = TeamLinks.getTeamId(row); const directLeagueID = TeamLinks.getLeagueId(row); const teamId = directTeamID || mappedTeamInfo?.teamId || ''; const leagueId = directLeagueID || mappedTeamInfo?.leagueId || '';
+      const title = document.createElement('div'); title.className = 'team-history-main';
+      if (teamId && leagueId) title.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamId, leagueId), teamName || '-', 'proqual-link')); else title.textContent = teamName || '-';
+      summary.appendChild(title);
+      const subtitle = document.createElement('div'); subtitle.className = 'team-history-meta'; subtitle.textContent = [row?.divisionName || '', row?.teamCountry || ''].filter(Boolean).join(' • ') || '-'; summary.appendChild(subtitle);
+      const badges = document.createElement('div'); badges.className = 'team-rich-badges';
+      const totalPlayers = Utils.safeNumber(row?.totalPlayers ?? row?.playerCount); const totalPoints = Utils.safeNumber(row?.totalPoints); const ep = Utils.safeNumber(row?.EP); const pp = Utils.safeNumber(row?.PP); const lp = Utils.safeNumber(row?.LP); const cp = Utils.safeNumber(row?.CP); const np = Utils.safeNumber(row?.NP);
+      [{text: row?.divisionName || currentPage.toUpperCase(), className:'team-rich-badge'}, {text: totalPlayers < 6 ? 'Low player count' : 'Roster loaded', className: totalPlayers < 6 ? 'team-rich-badge flag' : 'team-rich-badge good'}].forEach(item => { const b = document.createElement('span'); b.className = item.className; b.textContent = item.text; badges.appendChild(b); });
+      summary.appendChild(badges);
+      const statGrid = document.createElement('div'); statGrid.className = 'team-rich-summary-grid';
+      [{label:'Total players',value:String(totalPlayers)},{label:'Total points',value:String(totalPoints)},{label:'Elite',value:String(ep)},{label:'Pro',value:String(pp)},{label:'Lite',value:String(lp)}].concat(currentPage === 'core' || currentPage === 'neo' ? [{label:'Core',value:String(cp)}] : []).concat(currentPage === 'neo' ? [{label:'Neo',value:String(np)}] : []).forEach(stat => { const box = document.createElement('div'); box.className = 'team-rich-stat'; box.innerHTML = `<div class="team-rich-stat-label">${Utils.escapeHtml(stat.label)}</div><div class="team-rich-stat-value">${Utils.escapeHtml(stat.value)}</div>`; statGrid.appendChild(box); });
+      summary.appendChild(statGrid); wrapper.appendChild(summary);
+      const section = document.createElement('div'); section.className = 'team-rich-section'; section.innerHTML = '<div class="team-rich-section-head">Player history check</div>';
+      const tableWrap = document.createElement('div'); tableWrap.className = 'team-player-table-wrap';
+      const rawPlayers = Array.isArray(row?.players) ? row.players.map(p => Rename.applyToRow(p)) : [];
+      const players = rawPlayers.map(player => ({ ...player, playerName: String(player?.playerName || player?.Player || player?.tag || '').trim(), bucket: String(player?.bucket || '').trim(), matchCount: player?.playoffGames !== undefined && player?.playoffGames !== null ? Number(player.playoffGames) || 0 : null })).filter(player => player.playerName).sort((a,b) => String(a.playerName).localeCompare(String(b.playerName), 'sv'));
+      if (!players.length) tableWrap.innerHTML = '<div class="empty-state">No player history found.</div>';
+      else {
+        const table = document.createElement('table'); table.className = 'team-player-table'; table.innerHTML = '<thead><tr><th>#</th><th>Player</th><th>Latest team</th><th>Previous season 1</th><th>Previous season 2</th></tr></thead>';
+        const tbody = document.createElement('tbody');
+        players.forEach((player, index) => {
+          const tr = document.createElement('tr'); if (['history1Division','history2Division','history3Division'].some(key => Rules.isFlaggedHistoryDivision(player?.[key]))) tr.classList.add('team-player-row-flagged');
+          const playerId = player.playerID || playerLinkMap.get(Utils.normalizePlayerName(player.playerName));
+          const playerCell = document.createElement('td'); playerCell.className = 'team-player-name'; playerCell.innerHTML = `<div class="team-player-name-main"></div><div class="team-player-name-sub">${Utils.escapeHtml(player.matchCount !== null && player.matchCount !== undefined ? `${player.bucket || 'Unknown bucket'} • ${player.matchCount} playoff games` : (player.bucket || 'Unknown bucket'))}</div>`;
+          if (playerId) playerCell.querySelector('.team-player-name-main').appendChild(Utils.createLink(PLAYER_BASE_URL + playerId, player.playerName, 'proqual-link')); else playerCell.querySelector('.team-player-name-main').textContent = player.playerName;
+          tr.innerHTML = `<td class="num">${index + 1}</td>`;
+          tr.appendChild(playerCell);
+          tr.appendChild(createHistoryCell(player, 'history1'));
+          tr.appendChild(createHistoryCell(player, 'history2'));
+          tr.appendChild(createHistoryCell(player, 'history3'));
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody); tableWrap.appendChild(table);
+      }
+      section.appendChild(tableWrap); wrapper.appendChild(section); return wrapper;
+    }
+
+    async function renderCell(td, row, col) {
+      let value = row[col] ?? '';
+      if (col === 'fullLicenseCount') value = RowAccess.getFullLicenseCount(row);
+      if (col === 'signupIssue') value = Rules.getSignupIssueText(row);
+      const playerLinkMap = DataService.getPlayerLinkMap(); const teamLinkMap = DataService.getTeamLinkMap();
+
+      if (col === 'teams' && Array.isArray(row?.teams)) {
+        td.style.whiteSpace = 'normal';
+        row.teams.forEach((team, index) => {
+          const line = document.createElement('div'); line.style.marginBottom = index === row.teams.length - 1 ? '0' : '6px';
+          const teamName = String(team?.teamName || '').trim(); const leagueName = String(team?.leagueName || '').trim(); const teamID = String(team?.teamID || '').trim(); const leagueID = String(team?.leagueID || '').trim();
+          if (teamName && teamID && leagueID) line.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamID, leagueID), `${leagueName ? leagueName + ' — ' : ''}${teamName}`)); else line.textContent = `${leagueName ? leagueName + ' — ' : ''}${teamName}`;
+          td.appendChild(line);
+        });
+        return td;
+      }
+
+      if (col === '__sendMail') {
+        const actions = document.createElement('div'); actions.className = 'icon-actions';
+        if (currentPage === 'backups') {
+          const mailUrl = await MessagingService.getBackupMessageUrl(row); if (mailUrl) { const btn = document.createElement('a'); btn.href = mailUrl; btn.target = '_blank'; btn.rel = 'noopener noreferrer'; btn.className = 'mail-icon-btn'; btn.title = 'Open message'; btn.textContent = '✉'; actions.appendChild(btn); }
+          const copyBtn = document.createElement('button'); copyBtn.type = 'button'; copyBtn.className = 'copy-icon-btn'; copyBtn.title = 'Copy preset message'; copyBtn.textContent = '⧉'; copyBtn.addEventListener('click', async () => { try { await MessagingService.copyBackupMessage(row); Utils.setStatus('Message copied'); } catch { Utils.setStatus('Copy failed'); } }); actions.appendChild(copyBtn);
+        }
+        if (currentPage === 'unlicensed') {
+          const mailUrl = await MessagingService.getBackupMessageUrl(row); if (mailUrl) { const btn = document.createElement('a'); btn.href = mailUrl; btn.target = '_blank'; btn.rel = 'noopener noreferrer'; btn.className = 'mail-icon-btn'; btn.title = 'Open message'; btn.textContent = '✉'; actions.appendChild(btn); }
+          const copyBtn = document.createElement('button'); copyBtn.type = 'button'; copyBtn.className = 'copy-icon-btn'; copyBtn.title = 'Copy preset message'; copyBtn.textContent = '⧉'; copyBtn.addEventListener('click', async () => { try { await MessagingService.copyUnlicensedMessage(row); Utils.setStatus('Message copied'); } catch { Utils.setStatus('Copy failed'); } }); actions.appendChild(copyBtn);
+        }
+        if (currentPage === 'multiple') {
+          const mailUrl = await MessagingService.getMultipleTeamsMessageUrl(row); if (mailUrl) { const btn = document.createElement('a'); btn.href = mailUrl; btn.target = '_blank'; btn.rel = 'noopener noreferrer'; btn.className = 'mail-icon-btn'; btn.title = 'Open message'; btn.textContent = '✉'; actions.appendChild(btn); }
+          const copyBtn = document.createElement('button'); copyBtn.type = 'button'; copyBtn.className = 'copy-icon-btn'; copyBtn.title = 'Copy preset message'; copyBtn.textContent = '⧉'; copyBtn.addEventListener('click', async () => { try { await MessagingService.copyMultipleTeamsMessage(row); Utils.setStatus('Message copied'); } catch { Utils.setStatus('Copy failed'); } }); actions.appendChild(copyBtn);
+        }
+        if (currentPage === 'registered') {
+          const issues = Rules.getSignupIssues(row); const mailUrl = await MessagingService.getSignUpsMessageUrl(row); if (issues.length && mailUrl) { const btn = document.createElement('a'); btn.href = mailUrl; btn.target = '_blank'; btn.rel = 'noopener noreferrer'; btn.className = 'mail-icon-btn'; btn.title = 'Open message'; btn.textContent = '✉'; actions.appendChild(btn); }
+          if (issues.length) { const copyBtn = document.createElement('button'); copyBtn.type = 'button'; copyBtn.className = 'copy-icon-btn'; copyBtn.title = 'Copy preset message'; copyBtn.textContent = '⧉'; copyBtn.addEventListener('click', async () => { try { await MessagingService.copySignUpsMessage(row); Utils.setStatus('Message copied'); } catch { Utils.setStatus('Copy failed'); } }); actions.appendChild(copyBtn); }
+        }
+        td.appendChild(actions); return td;
+      }
+
+      const textValue = String(value ?? '');
+      if (!textValue) { td.textContent = ''; return td; }
+      if (currentPage === 'banned' && col === 'playerName') {
+        const mappedPlayerID = playerLinkMap.get(Utils.normalizePlayerName(textValue));
+        if (mappedPlayerID) td.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, textValue)); else td.textContent = textValue;
+        return td;
+      }
+      if (currentPage === 'banned' && col === 'teamName') {
+        const parts = textValue.split('|').map(part => part.trim()).filter(Boolean);
+        parts.forEach((part, index) => { const [teamName, teamID, leagueID] = part.split('|||'); if (teamID && leagueID) td.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamID, leagueID), teamName)); else td.appendChild(document.createTextNode(teamName)); if (index < parts.length - 1) td.appendChild(document.createTextNode(' | ')); });
+        return td;
+      }
+      if (PLAYER_LIST_NAME_KEYS.includes(col)) {
+        const parts = textValue.split(',').map(part => part.trim()).filter(Boolean);
+        parts.forEach((part, index) => { const match = part.match(/^(.*?)(\s*\(\d+\))?$/); const nameOnly = (match?.[1] || part).trim(); const normalized = Utils.normalizePlayerName(nameOnly); const playerID = playerLinkMap.get(normalized); if (playerID) td.appendChild(Utils.createLink(PLAYER_BASE_URL + playerID, part)); else td.appendChild(document.createTextNode(part)); if (index < parts.length - 1) td.appendChild(document.createTextNode(', ')); });
+        return td;
+      }
+      if (['history1Team','history2Team','history3Team'].includes(col)) { td.textContent = textValue; return td; }
+      if (TEAM_NAME_KEYS.includes(col) || col === 'From' || col === 'To') {
+        const mappedTeamInfo = teamLinkMap.get(Utils.normalizeTeamName(textValue)); const directTeamID = TeamLinks.getTeamId(row, col); const directLeagueID = TeamLinks.getLeagueId(row, col); const teamId = directTeamID || mappedTeamInfo?.teamId || ''; const leagueId = directLeagueID || mappedTeamInfo?.leagueId || '';
+        if (teamId && leagueId) { td.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamId, leagueId), textValue)); return td; }
+      }
+      if (PLAYER_NAME_KEYS.includes(col) || col === 'playerName') {
+        const directPlayerID = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id; const mappedPlayerID = directPlayerID || playerLinkMap.get(Utils.normalizePlayerName(textValue));
+        if (mappedPlayerID) { td.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, textValue)); return td; }
+      }
+      if (['compatibility','status','active'].includes(col)) { td.innerHTML = pillHtml(textValue); return td; }
+      td.textContent = textValue; return td;
+    }
+
+    function renderHeader(columns) {
+      dom.headerRow.innerHTML = '';
+      columns.forEach(col => {
+        const th = document.createElement('th');
+        if (col === '__sendMail') { th.textContent = 'MAIL'; dom.headerRow.appendChild(th); return; }
+        th.classList.add('sortable');
+        th.textContent = col;
+        if (sortState.column === col) th.classList.add(sortState.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+        th.addEventListener('click', () => {
+          if (sortState.column === col) sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc'; else { sortState.column = col; sortState.direction = 'asc'; }
+          renderDataPage();
+        });
+        dom.headerRow.appendChild(th);
+      });
+      if (['lite','core','neo'].includes(currentPage)) { const th = document.createElement('th'); th.textContent = 'CHECK TEAM'; dom.headerRow.appendChild(th); }
+    }
+
+    async function renderDataRows(rows, columns) {
+      dom.tableBody.innerHTML = '';
+      for (const [index, row] of rows.entries()) {
+        const tr = document.createElement('tr'); const rowClass = Rules.getRowClass(row); if (rowClass) tr.classList.add(rowClass);
+        let detailRow = null;
+        for (const col of columns) {
+          const td = document.createElement('td');
+          if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.style.textAlign = 'right';
+          if (col === 'signupIssue' || col === 'notes' || col === 'teams' || col === 'teamName') td.style.whiteSpace = 'normal';
+          const rendered = await renderCell(td, row, col);
+          tr.appendChild(rendered || td);
+        }
+        if (['lite','core','neo'].includes(currentPage)) {
+          const checkTd = document.createElement('td');
+          const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn'; btn.style.height = '34px'; btn.style.fontSize = '11px'; btn.textContent = 'Check Team'; checkTd.appendChild(btn);
+          detailRow = document.createElement('tr'); detailRow.style.display = 'none';
+          const detailCell = document.createElement('td'); detailCell.colSpan = columns.length + 1; detailCell.style.padding = '0'; detailCell.style.background = '#0b1630';
+          const panel = document.createElement('div'); panel.className = 'team-dropdown-panel'; panel.appendChild(await createTeamPlayerCheckPanel(row)); detailCell.appendChild(panel); detailRow.appendChild(detailCell);
+          btn.addEventListener('click', () => { const open = detailRow.style.display !== 'table-row'; detailRow.style.display = open ? 'table-row' : 'none'; btn.textContent = open ? 'Hide Team' : 'Check Team'; });
+          tr.appendChild(checkTd);
+        }
+        dom.tableBody.appendChild(tr); if (detailRow) dom.tableBody.appendChild(detailRow);
+      }
+      dom.rowCounter.textContent = `${rows.length} row${rows.length === 1 ? '' : 's'}`;
+      if (currentPage === 'registered') dom.rowCounter.textContent = `Registered teams: ${rows.length}`;
+      if (currentPage === 'multiple') dom.rowCounter.textContent = `${rows.length} flagged player${rows.length === 1 ? '' : 's'}`;
+      if (currentPage === 'banned') {
+        const activeCount = rows.filter(row => row.active === 'Yes').length; const violationCount = rows.filter(row => row.status === 'Violation').length;
+        dom.rowCounter.textContent = `Bans: ${rows.length} • Active: ${activeCount} • Violations: ${violationCount}`;
+      }
+    }
+
+    function getPageMetrics(pageKey, rows) {
+      if (pageKey === 'registered') return [{ label: 'Lag', value: rows.length, meta: 'Från signUps' }, { label: 'Spelare', value: rows.reduce((s,r) => s + Number(r.playerCount || 0), 0), meta: 'Summerat playerCount' }, { label: 'Licenslösa', value: rows.reduce((s,r) => s + Number(r.unlicensedPlayerCount || 0), 0), meta: 'Summerat unlicensedPlayerCount' }];
+      if (['lite','core','neo'].includes(pageKey)) return [{ label: 'Lag', value: rows.length, meta: `Från ${PAGE_CONFIG[pageKey].jsonKey}` }, { label: 'Flaggade lag', value: rows.filter(r => String(r.compatibility || '').toUpperCase() !== 'OK').length, meta: 'compatibility ≠ OK' }, { label: 'Spelare', value: rows.reduce((s,r) => s + Number(r.totalPlayers || 0), 0), meta: 'Summerat totalPlayers' }];
+      if (pageKey === 'transfers') return [{ label: 'Transfers', value: rows.length, meta: 'Från overgangar' }, { label: 'Med roll', value: rows.filter(r => r.Role).length, meta: 'Captain / Assistant' }, { label: 'Nyaste datum', value: rows[0]?.Date || '—', meta: 'Beror på sortering i källan' }];
+      if (pageKey === 'backups' || pageKey === 'unlicensed') { const total = rows.reduce((s,r) => s + Number(r.totalMatchesPlayed || 0), 0); return [{ label: 'Spelare', value: rows.length, meta: 'Antal rader' }, { label: 'Matcher', value: total, meta: 'Summerat totalMatchesPlayed' }, { label: 'Snitt', value: rows.length ? (total / rows.length).toFixed(1) : '0.0', meta: 'Matcher per spelare' }]; }
+      if (pageKey === 'multiple') return [{ label: 'Spelare', value: rows.length, meta: 'I flera lag' }, { label: 'Max teamCount', value: Math.max(0, ...rows.map(r => Number(r.teamCount || 0))), meta: 'Högsta värdet' }, { label: 'Detaljer', value: 'teams[]', meta: 'Öppnas i drawer' }];
+      if (pageKey === 'banned') return [{ label: 'Ban-rader', value: rows.length, meta: 'Från bannedPlayers' }, { label: 'Aktiva', value: rows.filter(r => String(r.active).toLowerCase() === 'yes').length, meta: 'active = Yes' }, { label: 'Violations', value: rows.filter(r => String(r.status).toLowerCase() === 'violation').length, meta: 'status = Violation' }];
+      return [{ label: 'Datakälla', value: 'Preset', meta: 'Seeding' }, { label: 'Status', value: 'Manual', meta: 'Kontrollvy' }, { label: 'Nästa steg', value: 'Seed-check', meta: 'Kopplad mot signUps' }];
+    }
+
+    const SeedingService = {
+      detectSectionDivision(title) { const t = String(title || '').toLowerCase(); if (t === 'elite') return 'ELITE'; if (t === 'pro') return 'PRO'; if (t === 'lite') return 'LITE'; if (t === 'core') return 'CORE'; if (t === 'neo') return 'NEO'; if (t.startsWith('elite qualifiers')) return 'ELITE_QUAL'; if (t.startsWith('pro qualifiers')) return 'PRO_QUAL'; return ''; },
+      getSectionStyle(title) { const t = String(title || '').toLowerCase(); if (t.includes('elite')) return 'linear-gradient(90deg,#9d7a1f,#d5b14b 55%,#f2d67d)'; if (t === 'pro' || t.includes('pro qualifiers')) return 'linear-gradient(90deg,#7c848f,#b5bcc7 55%,#d9dee6)'; if (t === 'lite') return 'linear-gradient(90deg,#7d432f,#ad654a 55%,#d68462)'; if (t === 'core') return 'linear-gradient(90deg,#8b3200,#ca5a0a 55%,#ee7b17)'; return 'linear-gradient(90deg,#22672a,#2f9640 55%,#4ed163)'; },
+      collectPresetTeamNames() { const set = new Set(); PRESET_SECTIONS.forEach(section => section.rows.forEach(row => { const normalized = Utils.normalizeTeamName(Rename.getCanonicalTeamName(row[2])); if (normalized) set.add(normalized); })); return set; },
+      getQualifierNote(row) { const qualifier = String(row?.qualifierName || '').trim().toUpperCase(); if (qualifier.includes('PRO QUALIFIER')) return 'PRO QUAL SIGNUP'; if (qualifier.includes('ELITE QUALIFIER')) return 'ELITE QUAL REQ'; if (qualifier.includes('WILDCARD')) return 'PRO QUAL REQ'; return ''; },
+      buildRegisteredTeamInfoMap(rows) { const map = new Map(); rows.forEach(row => { const normalized = Utils.normalizeTeamName(RowAccess.getTeamName(row)); if (normalized) map.set(normalized, row); }); return map; },
+      getSeedRowNote(section, teamName, registeredInfoMap) {
+        const canonicalTeamName = Rename.getCanonicalTeamName(teamName); const normalized = Utils.normalizeTeamName(canonicalTeamName); if (!normalized) return '';
+        const row = registeredInfoMap.get(normalized); const notes = []; const renameNote = Rename.getSeedRenameNote(teamName); if (renameNote) notes.push(renameNote); if (!row) return notes.join(' • ');
+        const listedDivision = this.detectSectionDivision(section.title); const signedDivision = String(row.divisionName || '').trim().toUpperCase(); const qualifierNote = this.getQualifierNote(row); if (qualifierNote) notes.push(qualifierNote);
+        if (signedDivision && ['ELITE','PRO','LITE','CORE','NEO'].includes(listedDivision) && signedDivision !== listedDivision && !(listedDivision === 'CORE' && signedDivision === 'NEO')) notes.push('SIGNED UP TO ' + signedDivision);
+        return notes.join(' • ');
+      },
+      buildSections(registeredRows) {
+        const registeredSet = new Set(registeredRows.map(row => Utils.normalizeTeamName(RowAccess.getTeamName(row))).filter(Boolean));
+        const registeredInfoMap = this.buildRegisteredTeamInfoMap(registeredRows);
+        return PRESET_SECTIONS.map(section => {
+          const items = section.rows.map(row => {
+            const [pos, seed, team] = row; const displayTeam = Rename.getCanonicalTeamName(team); const normalized = Utils.normalizeTeamName(displayTeam); const exists = team ? registeredSet.has(normalized) : false; const note = team ? this.getSeedRowNote(section, team, registeredInfoMap) : '';
+            return { pos, seed, team, displayTeam, exists, note, isMissing: !!displayTeam && !exists, isDisbanded: false, isUnlisted: false };
+          });
+          return { title: section.title, count: items.length, items };
+        });
+      }
+    };
+
+    function getFilteredSeedingRows(sectionTitle, rows) {
+      const query = dom.searchInput.value.trim().toLowerCase(); const mode = dom.seedingFilterSelect.value;
+      return rows.filter(item => {
+        const haystack = [item.seed, item.team, item.note, item.displayTeam, sectionTitle].join(' ').toLowerCase();
+        if (query && !haystack.includes(query)) return false;
+        if (mode === 'all') return true;
+        if (mode === 'missing') return item.isMissing;
+        if (mode === 'disbanded') return item.isDisbanded;
+        if (mode === 'wrongDivision') return item.note.includes('SIGNED UP TO');
+        if (mode === 'proQualReq') return item.note.includes('PRO QUAL REQ') || item.note.includes('PRO QUAL SIGNUP');
+        if (mode === 'eliteQualReq') return item.note.includes('ELITE QUAL REQ');
+        return true;
+      });
+    }
+
+    async function renderSeedingPage() {
+      showPage('page-data'); dom.normalTableWrap.style.display = 'none'; dom.seedingWrap.style.display = 'block'; dom.seedingFilterSelect.style.display = 'inline-block'; dom.seedingBody.innerHTML = '';
+      const registeredRows = DataService.getRowsForSource('signUps').map(row => Rename.applyToRow(row));
+      renderMetricCards(getPageMetrics('seeding', registeredRows), dom.pageMetrics);
+      dom.dataSectionTitle.textContent = 'Seeding 26 Spring'; dom.dataSectionSubtitle.textContent = 'Preset-seeding jämförd mot signUps.';
+      const sections = SeedingService.buildSections(registeredRows);
+      let visibleRows = 0; let renderedSections = 0;
+      sections.forEach(section => {
+        const filteredItems = getFilteredSeedingRows(section.title, section.items); if (!filteredItems.length) return;
+        if (renderedSections > 0) { const spacer = document.createElement('tr'); spacer.innerHTML = '<td colspan="5" style="height:12px;border:0;padding:0;"></td>'; dom.seedingBody.appendChild(spacer); }
+        renderedSections += 1; visibleRows += filteredItems.length;
+        const titleRow = document.createElement('tr'); titleRow.className = 'section-title-row'; const titleCell = document.createElement('td'); titleCell.colSpan = 5; titleCell.textContent = `${section.title} (${section.count})`; titleCell.style.background = SeedingService.getSectionStyle(section.title); titleCell.style.color = '#091126'; titleRow.appendChild(titleCell); dom.seedingBody.appendChild(titleRow);
+        const header = document.createElement('tr'); header.className = 'seed-header-row'; ['#','Seed','Team','Status','Notes'].forEach(text => { const th = document.createElement('th'); th.textContent = text; header.appendChild(th); }); dom.seedingBody.appendChild(header);
+        filteredItems.forEach(item => {
+          const tr = document.createElement('tr'); tr.className = 'seed-row' + (item.isMissing ? ' missing' : '');
+          const teamLinkMap = DataService.getTeamLinkMap(); const mapped = teamLinkMap.get(Utils.normalizeTeamName(item.displayTeam));
+          tr.innerHTML = `<td>${item.pos ?? ''}</td><td>${Utils.escapeHtml(item.seed || '')}</td><td></td><td></td><td></td>`;
+          const teamTd = tr.children[2]; if (mapped?.teamId && mapped?.leagueId) teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId), item.displayTeam, 'seed-link')); else teamTd.textContent = item.displayTeam || '';
+          const statusTd = tr.children[3]; statusTd.innerHTML = !item.displayTeam ? '<span class="seed-status empty">-</span>' : item.exists ? '<span class="seed-status ok">Registered</span>' : '<span class="seed-status missing">Missing</span>';
+          const noteTd = tr.children[4]; if (item.note) item.note.split(' • ').filter(Boolean).forEach(part => { const badge = document.createElement('span'); badge.className = 'seed-note-badge'; badge.textContent = part; noteTd.appendChild(badge); }); else noteTd.innerHTML = '<span class="muted">-</span>';
+          dom.seedingBody.appendChild(tr);
+        });
+      });
+      if (!visibleRows) dom.seedingBody.innerHTML = '<tr><td colspan="5" class="empty-state">No seeding results found.</td></tr>';
+      dom.rowCounter.textContent = `${visibleRows} seeding row${visibleRows === 1 ? '' : 's'}`;
+    }
+
+    async function renderDataPage() {
+      showPage('page-data'); dom.normalTableWrap.style.display = 'block'; dom.seedingWrap.style.display = 'none'; dom.seedingFilterSelect.style.display = 'none';
+      const cfg = PAGE_CONFIG[currentPage];
+      let rows = getRowsForCurrentPage();
+      rows = filterRows(rows);
+      const columns = getVisibleColumns();
+      buildNumericColumns(rows, columns);
+      rows = sortRows(rows);
+      normalizedRows = rows;
+      renderMetricCards(getPageMetrics(currentPage, rows), dom.pageMetrics);
+      dom.dataSectionTitle.textContent = cfg.jsonKey; dom.dataSectionSubtitle.textContent = `${cfg.subtitle} Rader efter filter: ${rows.length}.`;
+      dom.emptyMessage.style.display = rows.length ? 'none' : 'block';
+      if (!rows.length) { dom.headerRow.innerHTML = ''; dom.tableBody.innerHTML = ''; dom.rowCounter.textContent = ''; return; }
+      renderHeader(columns); await renderDataRows(rows, columns);
     }
 
     function renderOverview() {
       showPage('page-dashboard');
       const availableKeys = EXPECTED_KEYS.filter(key => Array.isArray(allData[key]));
-
-      renderMetricCards([
-        { label: 'Datakälla', value: loadedPath || 'Ingen', meta: loadError ? 'Fel vid laddning' : 'Aktiv fil' },
-        { label: 'Hittade arrays', value: availableKeys.length, meta: 'Toppnivånycklar som kan renderas' },
-        { label: 'Status', value: loadError ? 'Fel' : 'OK', meta: loadError ? String(loadError.message || loadError) : 'Loader körs' }
-      ], overviewMetricsEl);
-
-      overviewStatusListEl.innerHTML = [
-        { t: 'Laddad fil', s: loadedPath || 'Ingen fil hittades', p: loadError ? 'Fel' : 'OK', c: loadError ? 'danger' : 'ok' },
-        { t: 'Normalisering', s: availableKeys.join(', ') || 'Inga kända keys hittades', p: 'JSON', c: 'info' },
-        { t: 'Seeding', s: 'Fortfarande separat/manuell', p: 'Manual', c: 'warn' }
-      ].map(item => `
-        <div class="mini-item">
-          <div><strong>${escapeHtml(item.t)}</strong><span>${escapeHtml(item.s)}</span></div>
-          <span class="pill ${item.c}">${escapeHtml(item.p)}</span>
-        </div>
-      `).join('');
-
-      mappingTableBodyEl.innerHTML = [
-        ['Registered Teams','signUps','Lag, division, registrering, licensstatus','Live'],
-        ['Lite 26 Spring Teams','lite','Kompatibilitet och players[]','Live'],
-        ['Core 26 Spring Teams','core','Kompatibilitet och players[]','Live'],
-        ['Neo 26 Spring Teams','neo','Kompatibilitet och players[]','Live'],
-        ['Transfers 26 Spring Teams','overgangar','From/To, matcher, datum, roll','Live'],
-        ['Backups 26 Spring Teams','backups','Backuplicens','Live'],
-        ['Unlicensed 26 Spring Teams','licenslosa','Licenslösa spelare','Live'],
-        ['Players In Multiple Teams','inMoreThan1Teams','Flera lag + teams[]','Live'],
-        ['Banned Players','bannedPlayers','Banstatus och violations','Live'],
-        ['Seeding 26 Spring','—','Extern eller framtida key','Manual']
-      ].map(row => `
-        <tr>
-          <td>${escapeHtml(row[0])}</td>
-          <td><code>${escapeHtml(row[1])}</code></td>
-          <td>${escapeHtml(row[2])}</td>
-          <td>${pillHtml(row[3])}</td>
-        </tr>
-      `).join('');
-
-      sideMetaEl.innerHTML = `
-        <div><strong>Datakälla:</strong> <code>${escapeHtml(loadedPath || 'ingen')}</code></div>
-        <div><strong>Keys:</strong> ${escapeHtml(String(availableKeys.length))} hittade</div>
-        <div><strong>Seeding:</strong> separat/manuell tills egen key finns</div>
-      `;
+      renderMetricCards([{ label: 'Datakälla', value: loadedPath || 'Ingen', meta: loadError ? 'Fel vid laddning' : 'Aktiv fil' }, { label: 'Hittade arrays', value: availableKeys.length, meta: 'Toppnivånycklar som kan renderas' }, { label: 'Status', value: loadError ? 'Fel' : 'OK', meta: loadError ? String(loadError.message || loadError) : 'Loader körs' }], dom.overviewMetrics);
+      dom.overviewStatusList.innerHTML = [{ t: 'Laddad fil', s: loadedPath || 'Ingen fil hittades', p: loadError ? 'Fel' : 'OK', c: loadError ? 'danger' : 'ok' }, { t: 'Normalisering', s: availableKeys.join(', ') || 'Inga kända keys hittades', p: 'JSON', c: 'info' }, { t: 'Seeding', s: 'Preset + registreringskontroll', p: 'Preset', c: 'warn' }].map(item => `<div class="mini-item"><div><strong>${Utils.escapeHtml(item.t)}</strong><span>${Utils.escapeHtml(item.s)}</span></div><span class="pill ${item.c}">${Utils.escapeHtml(item.p)}</span></div>`).join('');
+      dom.mappingTableBody.innerHTML = [['Registered Teams','signUps','Lag, division, registrering, licensstatus','Live'],['Lite 26 Spring Teams','lite','Kompatibilitet och players[]','Live'],['Core 26 Spring Teams','core','Kompatibilitet och players[]','Live'],['Neo 26 Spring Teams','neo','Kompatibilitet och players[]','Live'],['Transfers 26 Spring Teams','overgangar','From/To, matcher, datum, roll','Live'],['Backups 26 Spring Teams','backups','Backuplicens','Live'],['Unlicensed 26 Spring Teams','licenslosa','Licenslösa spelare','Live'],['Players In Multiple Teams','inMoreThan1Teams','Flera lag + teams[]','Live'],['Banned Players','bannedPlayers','Banstatus och violations','Live'],['Seeding 26 Spring','preset','Förifylld seeding + signUps-check','Preset']].map(row => `<tr><td>${Utils.escapeHtml(row[0])}</td><td><code>${Utils.escapeHtml(row[1])}</code></td><td>${Utils.escapeHtml(row[2])}</td><td>${pillHtml(row[3])}</td></tr>`).join('');
+      dom.sideMeta.innerHTML = `<div><strong>Datakälla:</strong> <code>${Utils.escapeHtml(loadedPath || 'ingen')}</code></div><div><strong>Keys:</strong> ${Utils.escapeHtml(String(availableKeys.length))} hittade</div><div><strong>Funktioner:</strong> login, CSV, filter, messaging</div>`;
+      dom.rowCounter.textContent = '';
     }
 
-    function openDrawer(title, subtitle, items) {
-      drawerTitleEl.textContent = title;
-      drawerSubtitleEl.textContent = subtitle;
-      if (!Array.isArray(items) || !items.length) {
-        drawerBodyEl.innerHTML = '<div class="empty-state">Ingen data att visa.</div>';
-      } else {
-        drawerBodyEl.innerHTML = items.map((item, index) => {
-          const rows = Object.entries(item).map(([k,v]) => `
-            <div class="json-row">
-              <div class="muted">${escapeHtml(k)}</div>
-              <div>${escapeHtml(Array.isArray(v) || typeof v === 'object' ? JSON.stringify(v) : v ?? '—')}</div>
-            </div>
-          `).join('');
-          return `<div class="json-card"><h4>Rad ${index + 1}</h4>${rows}</div>`;
-        }).join('');
-      }
-      drawerEl.classList.add('open');
-    }
-
-    function filterRows(rows, query) {
-      const q = String(query || '').trim().toLowerCase();
-      if (!q) return rows;
-      return rows.filter(row => JSON.stringify(row).toLowerCase().includes(q));
-    }
-
-    function sortRows(rows, mode) {
-      if (mode === 'default') return [...rows];
-      const out = [...rows];
-      const key = ['teamName','playerName','Player','tag'].find(k => out.some(r => r && r[k] != null)) || Object.keys(out[0] || {})[0];
-      out.sort((a,b) => String(a?.[key] ?? '').localeCompare(String(b?.[key] ?? ''), 'sv'));
-      if (mode === 'name-desc') out.reverse();
-      return out;
-    }
-
-    function valueCell(value, key, row) {
-      if (Array.isArray(value)) {
-        return `<button class="detail-btn" data-key="${escapeHtml(key)}" data-title="${escapeHtml(row.teamName || row.playerName || row.Player || 'Detaljer')}">Visa ${escapeHtml(key)} (${value.length})</button>`;
-      }
-      if (key === 'compatibility' || key === 'status' || key === 'active') return pillHtml(value);
-      if (value == null || value === '') return '<span class="muted">—</span>';
-      return escapeHtml(value);
-    }
-
-    function attachDetailButtons(rows) {
-      tableWrapEl.querySelectorAll('.detail-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const tr = btn.closest('tr');
-          const index = Number(tr.dataset.rowIndex || 0);
-          const key = btn.dataset.key;
-          const row = rows[index];
-          openDrawer(btn.dataset.title, `Nested array: ${key}`, row[key] || []);
-        });
+    function exportCsv() {
+      const cfg = PAGE_CONFIG[currentPage]; if (!cfg.csv) { Utils.setStatus('CSV inte tillgänglig här'); return; }
+      const columns = getVisibleColumns().filter(c => c !== '__sendMail'); const rows = normalizedRows;
+      const lines = [columns.map(Utils.escapeCsv).join(',')];
+      rows.forEach(row => {
+        lines.push(columns.map(col => {
+          if (col === 'fullLicenseCount') return Utils.escapeCsv(RowAccess.getFullLicenseCount(row));
+          if (col === 'signupIssue') return Utils.escapeCsv(Rules.getSignupIssueText(row));
+          if (col === 'teams' && Array.isArray(row?.teams)) return Utils.escapeCsv(row.teams.map(team => [team?.leagueName || '', team?.teamName || ''].filter(Boolean).join(' — ')).join(' | '));
+          return Utils.escapeCsv(row?.[col] ?? '');
+        }).join(','));
       });
+      const filename = `${currentPage}-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
+      Utils.downloadFile(filename, lines.join('\n'));
+      Utils.setStatus('CSV exported');
     }
 
-    function pageMetricsFor(pageKey, rows) {
-      if (pageKey === 'registered') {
-        return [
-          { label: 'Lag', value: rows.length, meta: 'Från signUps' },
-          { label: 'Spelare', value: rows.reduce((s,r) => s + Number(r.playerCount || 0), 0), meta: 'Summerat playerCount' },
-          { label: 'Licenslösa', value: rows.reduce((s,r) => s + Number(r.unlicensedPlayerCount || 0), 0), meta: 'Summerat unlicensedPlayerCount' }
-        ];
-      }
-      if (['lite','core','neo'].includes(pageKey)) {
-        return [
-          { label: 'Lag', value: rows.length, meta: `Från ${PAGE_CONFIG[pageKey].jsonKey}` },
-          { label: 'Flaggade lag', value: rows.filter(r => String(r.compatibility || '').toUpperCase() !== 'OK').length, meta: 'compatibility ≠ OK' },
-          { label: 'Spelare', value: rows.reduce((s,r) => s + Number(r.totalPlayers || 0), 0), meta: 'Summerat totalPlayers' }
-        ];
-      }
-      if (pageKey === 'transfers') {
-        return [
-          { label: 'Transfers', value: rows.length, meta: 'Från overgangar' },
-          { label: 'Med roll', value: rows.filter(r => r.Role).length, meta: 'Captain / Assistant / etc' },
-          { label: 'Nyaste datum', value: rows[0]?.Date || '—', meta: 'Beror på sortering i källan' }
-        ];
-      }
-      if (pageKey === 'backups' || pageKey === 'unlicensed') {
-        return [
-          { label: 'Spelare', value: rows.length, meta: 'Antal rader' },
-          { label: 'Matcher', value: rows.reduce((s,r) => s + Number(r.totalMatchesPlayed || 0), 0), meta: 'Summerat totalMatchesPlayed' },
-          { label: 'Snitt', value: rows.length ? (rows.reduce((s,r) => s + Number(r.totalMatchesPlayed || 0), 0) / rows.length).toFixed(1) : '0.0', meta: 'Matcher per spelare' }
-        ];
-      }
-      if (pageKey === 'multiple') {
-        return [
-          { label: 'Spelare', value: rows.length, meta: 'I flera lag' },
-          { label: 'Max teamCount', value: Math.max(0, ...rows.map(r => Number(r.teamCount || 0))), meta: 'Högsta värdet' },
-          { label: 'Detaljer', value: 'teams[]', meta: 'Öppnas i drawer' }
-        ];
-      }
-      if (pageKey === 'banned') {
-        return [
-          { label: 'Ban-rader', value: rows.length, meta: 'Från bannedPlayers' },
-          { label: 'Aktiva', value: rows.filter(r => String(r.active).toLowerCase() === 'yes').length, meta: 'active = Yes' },
-          { label: 'Violations', value: rows.filter(r => String(r.status).toLowerCase() === 'violation').length, meta: 'status = Violation' }
-        ];
-      }
-      return [
-        { label: 'Datakälla', value: 'Extern', meta: 'Seeding saknar egen key' },
-        { label: 'Status', value: 'Manual', meta: 'Placeholder' },
-        { label: 'Nästa steg', value: 'Skapa seeding[]', meta: 'I backend-exporten' }
-      ];
-    }
-
-    function renderManualPage() {
-      showPage('page-data');
-      renderMetricCards(pageMetricsFor('seeding', []), pageMetricsEl);
-      dataSectionTitleEl.textContent = 'Seeding 26 Spring';
-      dataSectionSubtitleEl.textContent = 'Manuell placeholder tills seeding finns som egen JSON-key.';
-      tableWrapEl.innerHTML = `
-        <table>
-          <thead>
-            <tr><th>#</th><th>Lag</th><th>Seed</th><th>Förra division</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>1</td><td>Exempel Team</td><td>1</td><td>LITE</td><td>${pillHtml('Manual')}</td></tr>
-            <tr><td>2</td><td>Exempel Team 2</td><td>2</td><td>CORE</td><td>${pillHtml('Manual')}</td></tr>
-          </tbody>
-        </table>
-      `;
-    }
-
-    function renderDataPage(pageKey) {
-      showPage('page-data');
-      const cfg = PAGE_CONFIG[pageKey];
-      const rows = sortRows(filterRows(getRowsForPage(pageKey), searchInputEl.value), sortSelectEl.value);
-      renderMetricCards(pageMetricsFor(pageKey, rows), pageMetricsEl);
-      dataSectionTitleEl.textContent = cfg.jsonKey;
-      dataSectionSubtitleEl.textContent = `${cfg.subtitle} Rader efter filter: ${rows.length}.`;
-
-      if (!rows.length) {
-        tableWrapEl.innerHTML = `<div class="empty-state">${loadError ? `Kunde inte ladda JSON: ${escapeHtml(loadError.message || loadError)}` : 'Inga rader matchar nuvarande filter eller så saknas data för den här nyckeln.'}</div>`;
-        return;
-      }
-
-      const columns = cfg.columns || Object.keys(rows[0]);
-      tableWrapEl.innerHTML = `
-        <table>
-          <thead><tr>${columns.map(col => `<th>${escapeHtml(col)}</th>`).join('')}</tr></thead>
-          <tbody>
-            ${rows.map((row, rowIndex) => `
-              <tr data-row-index="${rowIndex}">
-                ${columns.map(col => `<td>${valueCell(row[col], col, row)}</td>`).join('')}
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-      attachDetailButtons(rows);
-    }
-
-    function renderApp() {
+    async function renderApp() {
       renderNav();
-      const cfg = PAGE_CONFIG[currentPage];
-      pageTitleEl.textContent = cfg.title;
-      pageSubtitleEl.textContent = cfg.subtitle;
-      if (cfg.type === 'dashboard') renderOverview();
-      else if (cfg.type === 'manual') renderManualPage();
-      else renderDataPage(currentPage);
+      const cfg = PAGE_CONFIG[currentPage]; dom.pageTitle.textContent = cfg.title; dom.pageSubtitle.textContent = cfg.subtitle; dom.csvExportBtn.style.display = cfg.csv ? 'inline-block' : 'none';
+      if (currentPage === 'dashboard') renderOverview();
+      else if (currentPage === 'seeding') await renderSeedingPage();
+      else await renderDataPage();
+      dom.lastUpdated.textContent = 'Uppdaterad: ' + Utils.toDisplayDate();
+      Utils.setStatus(loadError ? 'Error' : 'Done');
     }
 
-    async function loadAllJson() {
-      loadError = null;
-      rawJsonData = null;
-      allData = {};
-      loadedPath = null;
-
-      const candidatePaths = ['./alla.json', './alla (1).json'];
-
-      try {
-        let loaded = null;
-        let lastError = null;
-
-        for (const path of candidatePaths) {
-          try {
-            const response = await fetch(path, { cache: 'no-store' });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            loaded = await response.json();
-            loadedPath = path;
-            break;
-          } catch (error) {
-            lastError = error;
-          }
-        }
-
-        if (!loaded) throw lastError || new Error('Kunde inte hitta JSON-fil');
-
-        rawJsonData = loaded;
-        allData = normalizeAllData(loaded);
-      } catch (error) {
-        loadError = error;
-        allData = {
-          signUps: [],
-          lite: [],
-          core: [],
-          neo: [],
-          overgangar: [],
-          backups: [],
-          licenslosa: [],
-          inMoreThan1Teams: [],
-          bannedPlayers: []
-        };
-      }
-
-      renderApp();
+    async function loadAndRender(forceReload = false) {
+      try { Utils.setStatus('Loading data...'); await DataService.fetchAll(forceReload); loadError = null; await renderApp(); }
+      catch (error) { console.error(error); loadError = error; allData = { signUps: [], lite: [], core: [], neo: [], overgangar: [], backups: [], licenslosa: [], inMoreThan1Teams: [], bannedPlayers: [] }; await renderApp(); Utils.setStatus('Error'); }
     }
 
-    document.getElementById('reloadBtn').addEventListener('click', loadAllJson);
-    document.getElementById('drawerClose').addEventListener('click', () => drawerEl.classList.remove('open'));
-    document.getElementById('openJsonBtn').addEventListener('click', () => {
-      const source = rawJsonData || allData || {};
-      const keys = Object.keys(source);
-      openDrawer('alla.json', 'Rå toppnivå från laddad fil', keys.map(key => ({
-        key,
-        type: Array.isArray(source[key]) ? 'array' : typeof source[key],
-        length: Array.isArray(source[key]) ? source[key].length : '—'
-      })));
-    });
-    document.getElementById('showColumnsBtn').addEventListener('click', () => {
-      const cfg = PAGE_CONFIG[currentPage];
-      openDrawer('Kolumner', cfg.jsonKey || 'manual', (cfg.columns || []).map((col, i) => ({ index: i + 1, column: col })));
-    });
-    document.getElementById('exportHintBtn').addEventListener('click', () => {
-      openDrawer('Export', 'Ej inkopplad ännu', [{ note: 'Nästa steg är CSV-export på filtrerade rader.' }]);
-    });
-    searchInputEl.addEventListener('input', () => {
-      if (PAGE_CONFIG[currentPage].type === 'data') renderDataPage(currentPage);
-    });
-    sortSelectEl.addEventListener('change', () => {
-      if (PAGE_CONFIG[currentPage].type === 'data') renderDataPage(currentPage);
-    });
+    function unlockPage() { dom.loginScreen.classList.add('hidden'); dom.siteShell.classList.remove('locked'); }
+    function tryLogin() { if (dom.passwordInput.value === CONFIG.ADMIN_PASSWORD) { dom.loginError.style.display = 'none'; sessionStorage.setItem('eh_admin_access', 'granted'); unlockPage(); } else dom.loginError.style.display = 'block'; }
 
-    loadAllJson();
+    function bindEvents() {
+      dom.loginBtn.addEventListener('click', tryLogin);
+      dom.passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+      dom.reloadBtn.addEventListener('click', async () => { rawJsonData = null; allData = {}; await loadAndRender(true); });
+      dom.clearFiltersBtn.addEventListener('click', async () => { dom.searchInput.value = ''; dom.flaggedOnlyToggle.checked = false; dom.seedingFilterSelect.value = 'all'; dom.sortSelect.value = 'default'; sortState = { column: null, direction: 'asc' }; await renderApp(); });
+      dom.csvExportBtn.addEventListener('click', exportCsv);
+      dom.openJsonBtn.addEventListener('click', () => { const source = rawJsonData || allData || {}; const keys = Object.keys(source); openDrawer('alla.json', 'Rå toppnivå från laddad fil', keys.map(key => ({ key, type: Array.isArray(source[key]) ? 'array' : typeof source[key], length: Array.isArray(source[key]) ? source[key].length : '—' }))); });
+      dom.drawerClose.addEventListener('click', () => dom.drawer.classList.remove('open'));
+      dom.searchInput.addEventListener('input', async () => { if (currentPage !== 'dashboard') await renderApp(); });
+      dom.flaggedOnlyToggle.addEventListener('change', async () => { if (currentPage !== 'dashboard') await renderApp(); });
+      dom.sortSelect.addEventListener('change', async () => { if (currentPage !== 'dashboard') { sortState = { column: null, direction: 'asc' }; await renderApp(); } });
+      dom.seedingFilterSelect.addEventListener('change', async () => { if (currentPage === 'seeding') await renderApp(); });
+    }
+
+    bindEvents();
+    if (sessionStorage.getItem('eh_admin_access') === 'granted') unlockPage();
+    loadAndRender();
   </script>
 </body>
 </html>
