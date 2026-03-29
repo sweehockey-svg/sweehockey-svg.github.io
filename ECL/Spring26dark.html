@@ -1309,7 +1309,8 @@
       dom.openJsonBtn.addEventListener('click', () => { const source = rawJsonData || allData || {}; const keys = Object.keys(source); openDrawer('alla.json', 'Raw top-level keys from the loaded file', keys.map(key => ({ key, type: Array.isArray(source[key]) ? 'array' : typeof source[key], length: Array.isArray(source[key]) ? source[key].length : '—' }))); });
       dom.drawerClose.addEventListener('click', () => dom.drawer.classList.remove('open'));
       document.getElementById('scrollTopBtn').addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smoo
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
       dom.searchInput.addEventListener('input', () => {
         if (currentPage === 'dashboard') return;
         clearTimeout(searchDebounce);
