@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>eHockey Admin Tool v5</title>
+  <title>SportsGamer ECL Checker</title>
   <style>
     :root {
       --bg: #07101b;
@@ -133,6 +133,8 @@
       font-weight: 800;
       background: linear-gradient(135deg, var(--accent), #7aa8ff);
       box-shadow: var(--shadow);
+      overflow: hidden;
+      flex-shrink: 0;
     }
 
     .brand h1 { margin: 0; font-size: 18px; }
@@ -360,9 +362,9 @@
     <div class="app">
       <aside class="sidebar">
         <div class="brand">
-          <div class="logo">EH</div>
+          <div class="logo" style="background:transparent; box-shadow:none; width:auto; height:auto; border-radius:0; padding:0;"><img src="https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2022_02/large.SportsGamer_TM.png.a196dcca2fa64f087c9436263855873f.png" alt="SportsGamer" style="width:42px; height:42px; object-fit:contain; display:block;" /></div>
           <div>
-            <h1>eHockey Admin</h1>
+            <h1>SportsGamer ECL Checker</h1>
             <p>v5 • design + features</p>
           </div>
         </div>
@@ -517,7 +519,7 @@
     ];
 
     const PAGE_CONFIG = {
-      dashboard: { title: 'Overview', subtitle: 'Start page with status and mapping for alla.json.', type: 'dashboard', label: 'Overview', badge: 'Start' },
+      dashboard: { title: 'Overview', subtitle: 'SportsGamer ECL tools overview and alla.json mapping.', type: 'dashboard', label: 'Overview', badge: 'Start' },
       seeding: { title: 'Seeding 26 Spring', subtitle: 'Preset + registration check.', type: 'preset', label: 'Seeding 26 Spring', badge: 'Preset', csv: false },
       registered: { title: 'Registered Teams 26 Spring', subtitle: 'Built from signUps.', type: 'data', jsonKey: 'signUps', label: 'Registered Teams', badge: 'signUps', csv: true, columns: ['teamName','teamCountry','registrationDate','divisionName','qualifierName','playerCount','fullLicenseCount','backupLicenseCount','unlicensedPlayerCount','signupIssue','userID','__sendMail'] },
       lite: { title: 'Lite 26 Spring Teams', subtitle: 'Built from lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','totalPoints'] },
