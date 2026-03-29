@@ -268,7 +268,6 @@
     .split { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
     .meta-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; margin-bottom: 18px; }
 
-    .detail-btn { border: 1px solid var(--border); background: rgba(255,255,255,.03); color: var(--text); border-radius: 10px; padding: 7px 10px; cursor: pointer; font-size: 12px; font-weight: 700; }
     .drawer { position: fixed; top: 0; right: -620px; width: 620px; max-width: 100%; height: 100vh; background: #0c1524; border-left: 1px solid var(--border); transition: right .2s ease; z-index: 30; display: flex; flex-direction: column; }
     .drawer.open { right: 0; }
     .drawer-head { padding: 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 12px; }
@@ -339,7 +338,6 @@
     .seed-status.empty { background: rgba(255,255,255,.03); color: #8fa2c4; }
     .seed-note-badge { display: inline-block; padding: 5px 9px; border-radius: 999px; background: rgba(216,180,76,.14); color: #ffd98a; font-size: 11px; font-weight: 900; margin-right: 6px; margin-bottom: 4px; }
     .seed-note-badge.disbanded { background: #8e1f31; color: white; }
-    .seed-note-badge.winter-match { background: rgba(79,140,255,.16); color: #b9d0ff; border: 1px solid rgba(79,140,255,.28); }
 
     @media (max-width: 1150px) {
       .app { grid-template-columns: 1fr; }
@@ -620,17 +618,6 @@
           .replace(/[^\p{L}\p{N}]+/gu, ' ')
           .trim();
       },
-      normalizeTeamNameLoose(value) {
-        return String(value ?? '')
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/\((?:\s*\d{2}\s*[ws]|\s*\d{2}\s*winter|\s*winter\s*\d{2}|\s*spring\s*\d{2}|\s*\d{2}\s*spring)\s*\)/gi, ' ')
-          .replace(/\b(26w|26s|winter\s*26|spring\s*26)\b/gi, ' ')
-          .replace(/\s+/g, ' ')
-          .replace(/[^\p{L}\p{N}]+/gu, ' ')
-          .trim();
-      },
       normalizePlayerName(value) {
         return String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
       },
@@ -842,59 +829,29 @@
       },
       getWinterTeamLinkMap() {
         if (winterTeamLinkMapCache) return winterTeamLinkMapCache;
-
-        const exactMap = new Map();
-        const looseMap = new Map();
+        const map = new Map();
         const rows = Array.isArray(allData?.overgangar) ? allData.overgangar : [];
-
         const addEntry = (teamName, teamId, leagueId) => {
-          const exact = Utils.normalizeTeamName(teamName);
-          const loose = Utils.normalizeTeamNameLoose(teamName);
+          const normalized = Utils.normalizeTeamName(teamName);
           const tId = String(teamId || '').trim();
           const lId = String(leagueId || '').trim();
-          if (!tId || !lId) return;
-
-          const payload = {
-            teamId: tId,
-            leagueId: lId,
-            sourceName: String(teamName || '').trim()
-          };
-
-          if (exact && !exactMap.has(exact)) exactMap.set(exact, payload);
-          if (loose && !looseMap.has(loose)) looseMap.set(loose, payload);
+          if (!normalized || !tId || !lId) return;
+          if (!map.has(normalized)) map.set(normalized, { teamId: tId, leagueId: lId, sourceName: String(teamName || '').trim() });
         };
-
         rows.forEach(originalRow => {
           const row = Rename.applyToRow(originalRow);
           addEntry(row?.From, row?.FromTeamID, row?.FromLeagueID);
           addEntry(row?.To, row?.ToTeamID, row?.ToLeagueID);
         });
-
-        winterTeamLinkMapCache = { exactMap, looseMap };
+        winterTeamLinkMapCache = map;
         return winterTeamLinkMapCache;
       }
     };
 
     function resolveWinterTeamLink(teamName) {
-      const winterMaps = DataService.getWinterTeamLinkMap();
-      const exactKey = Utils.normalizeTeamName(teamName);
-      const looseKey = Utils.normalizeTeamNameLoose(teamName);
-
-      if (winterMaps?.exactMap?.has(exactKey)) {
-        return {
-          ...winterMaps.exactMap.get(exactKey),
-          matchType: 'exact'
-        };
-      }
-
-      if (winterMaps?.looseMap?.has(looseKey)) {
-        return {
-          ...winterMaps.looseMap.get(looseKey),
-          matchType: 'loose'
-        };
-      }
-
-      return null;
+      const winterMap = DataService.getWinterTeamLinkMap();
+      const key = Utils.normalizeTeamName(teamName);
+      return winterMap.get(key) || null;
     }
         const MessagingService = {
       async getBackupMessageUrl(row) {
@@ -1425,14 +1382,40 @@ Best regards,`;
       dom.dataSectionTitle.textContent = 'Seeding 26 Spring'; dom.dataSectionSubtitle.textContent = 'Preset seeding compared against signUps.';
       const sections = SeedingService.buildSections(registeredRows);
       let visibleRows = 0; let renderedSections = 0;
-      sections.forEach(section => {
-        const filteredItems = getFilteredSeedingRows(section.title, section.items); if (!filteredItems.length) return;
-        if (renderedSections > 0) { const spacer = document.createElement('tr'); spacer.innerHTML = '<td colspan="6" style="height:12px;border:0;padding:0;"></td>'; dom.seedingBody.appendChild(spacer); }
-        renderedSections += 1; visibleRows += filteredItems.length;
-        const titleRow = document.createElement('tr'); titleRow.className = 'section-title-row'; const titleCell = document.createElement('td'); titleCell.colSpan = 6; titleCell.textContent = `${section.title} (${section.count})`; titleCell.style.background = SeedingService.getSectionStyle(section.title); titleCell.style.color = '#091126'; titleRow.appendChild(titleCell); dom.seedingBody.appendChild(titleRow);
-        const header = document.createElement('tr'); header.className = 'seed-header-row'; ['#','Seed','Team','Status','Notes','Mail'].forEach(text => { const th = document.createElement('th'); th.textContent = text; header.appendChild(th); }); dom.seedingBody.appendChild(header);
 
-        filteredItems.forEach(async item => {
+      for (const section of sections) {
+        const filteredItems = getFilteredSeedingRows(section.title, section.items);
+        if (!filteredItems.length) continue;
+
+        if (renderedSections > 0) {
+          const spacer = document.createElement('tr');
+          spacer.innerHTML = '<td colspan="6" style="height:12px;border:0;padding:0;"></td>';
+          dom.seedingBody.appendChild(spacer);
+        }
+
+        renderedSections += 1;
+        visibleRows += filteredItems.length;
+
+        const titleRow = document.createElement('tr');
+        titleRow.className = 'section-title-row';
+        const titleCell = document.createElement('td');
+        titleCell.colSpan = 6;
+        titleCell.textContent = `${section.title} (${section.count})`;
+        titleCell.style.background = SeedingService.getSectionStyle(section.title);
+        titleCell.style.color = '#091126';
+        titleRow.appendChild(titleCell);
+        dom.seedingBody.appendChild(titleRow);
+
+        const header = document.createElement('tr');
+        header.className = 'seed-header-row';
+        ['#','Seed','Team','Status','Notes','Mail'].forEach(text => {
+          const th = document.createElement('th');
+          th.textContent = text;
+          header.appendChild(th);
+        });
+        dom.seedingBody.appendChild(header);
+
+        for (const item of filteredItems) {
           const tr = document.createElement('tr');
           tr.className = 'seed-row' + (item.isMissing ? ' missing' : '') + (item.isUnlisted ? ' unlisted' : '');
 
@@ -1447,9 +1430,7 @@ Best regards,`;
             teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId), item.displayTeam, 'seed-link'));
           } else if (item.isMissing && winterMapped?.teamId && winterMapped?.leagueId) {
             teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(winterMapped.teamId, winterMapped.leagueId), item.displayTeam, 'seed-link'));
-            teamTd.title = winterMapped.matchType === 'loose'
-              ? `Winter fallback via name cleanup. Matched against "${winterMapped.sourceName}"`
-              : `Winter fallback. Matched against "${winterMapped.sourceName}"`;
+            teamTd.title = `Winter fallback. Matched against "${winterMapped.sourceName}"`;
           } else {
             teamTd.textContent = item.displayTeam || '';
           }
@@ -1462,14 +1443,16 @@ Best regards,`;
               : '<span class="seed-status missing">Missing</span>';
 
           const noteTd = tr.children[4];
-          if (item.note) item.note.split(' • ').filter(Boolean).forEach(part => { const badge = document.createElement('span'); badge.className = 'seed-note-badge'; badge.textContent = part; noteTd.appendChild(badge); });
-          if (item.isMissing && winterMapped?.teamId && winterMapped?.leagueId) {
-            const badge = document.createElement('span');
-            badge.className = 'seed-note-badge winter-match';
-            badge.textContent = winterMapped.matchType === 'loose' ? 'Winter loose match' : 'Winter exact match';
-            noteTd.appendChild(badge);
+          if (item.note) {
+            item.note.split(' • ').filter(Boolean).forEach(part => {
+              const badge = document.createElement('span');
+              badge.className = 'seed-note-badge';
+              badge.textContent = part;
+              noteTd.appendChild(badge);
+            });
+          } else {
+            noteTd.innerHTML = '<span class="muted">-</span>';
           }
-          if (!item.note && !(item.isMissing && winterMapped?.teamId && winterMapped?.leagueId)) noteTd.innerHTML = '<span class="muted">-</span>';
 
           const mailTd = tr.children[5];
           const actions = document.createElement('div');
@@ -1508,8 +1491,8 @@ Best regards,`;
           else mailTd.innerHTML = '<span class="muted">-</span>';
 
           dom.seedingBody.appendChild(tr);
-        });
-      });
+        }
+      }
 
       if (!visibleRows) dom.seedingBody.innerHTML = '<tr><td colspan="6" class="empty-state">No seeding results found.</td></tr>';
       dom.rowCounter.textContent = `${visibleRows} seeding row${visibleRows === 1 ? '' : 's'}`;
