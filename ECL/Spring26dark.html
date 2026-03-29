@@ -844,7 +844,7 @@
           addEntry(row?.To, row?.ToTeamID, row?.ToLeagueID);
         });
         winterTeamLinkMapCache = map;
-        return winterTeamLinkMapCache;
+        return map;
       }
     };
 
@@ -1420,15 +1420,16 @@ Best regards,`;
           tr.className = 'seed-row' + (item.isMissing ? ' missing' : '') + (item.isUnlisted ? ' unlisted' : '');
 
           const teamLinkMap = DataService.getTeamLinkMap();
-          const mapped = teamLinkMap.get(Utils.normalizeTeamName(item.displayTeam));
-          const winterMapped = resolveWinterTeamLink(item.displayTeam);
+          const normalizedName = Utils.normalizeTeamName(item.displayTeam);
+          const mapped = teamLinkMap.get(normalizedName);
+          const winterMapped = item.isMissing ? resolveWinterTeamLink(item.displayTeam) : null;
 
           tr.innerHTML = `<td>${item.pos ?? ''}</td><td>${Utils.escapeHtml(item.seed || '')}</td><td></td><td></td><td></td><td></td>`;
 
           const teamTd = tr.children[2];
           if (mapped?.teamId && mapped?.leagueId) {
             teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId), item.displayTeam, 'seed-link'));
-          } else if (item.isMissing && winterMapped?.teamId && winterMapped?.leagueId) {
+          } else if (winterMapped?.teamId && winterMapped?.leagueId) {
             teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(winterMapped.teamId, winterMapped.leagueId), item.displayTeam, 'seed-link'));
             teamTd.title = `Winter fallback. Matched against "${winterMapped.sourceName}"`;
           } else {
