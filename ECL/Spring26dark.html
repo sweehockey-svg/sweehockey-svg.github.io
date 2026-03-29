@@ -915,6 +915,16 @@
 
     function sortRows(rows) {
       if (!sortState.column) {
+        if (['lite','core','neo'].includes(currentPage)) {
+          return [...rows].sort((a, b) => (Number(b?.totalPoints) || 0) - (Number(a?.totalPoints) || 0));
+        }
+        if (currentPage === 'transfers') {
+          return [...rows].sort((a, b) => {
+            const aTime = new Date(a?.Date || 0).getTime();
+            const bTime = new Date(b?.Date || 0).getTime();
+            return bTime - aTime;
+          });
+        }
         const mode = dom.sortSelect.value;
         if (mode === 'default') return [...rows];
         const out = [...rows];
