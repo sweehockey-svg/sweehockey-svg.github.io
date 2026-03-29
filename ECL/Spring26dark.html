@@ -374,7 +374,7 @@
         <div class="side-meta" id="sideMeta"></div>
 
         <div style="margin-top:14px; display:grid; gap:8px; justify-items:start;">
-          <button class="btn" id="scrollTopBtn" type="button" aria-label="Scroll to top" title="Scroll to top" style="width:44px; height:44px; padding:0; display:grid; place-items:center; font-size:18px; border-radius:14px;">↑</button>
+          <button class="btn" id="scrollTopBtn" type="button" aria-label="Scroll to top" title="Scroll to top" style="width:38px; height:38px; padding:0; display:grid; place-items:center; font-size:18px; font-weight:800; border-radius:14px; background:rgba(255,255,255,.02); border:1.5px solid rgba(255,255,255,.9); box-shadow:none; color:white;">↑</button>
         </div>
       </aside>
 
@@ -524,10 +524,10 @@
       lite: { title: 'Lite 26 Spring Teams', subtitle: 'Built from lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','totalPoints'] },
       core: { title: 'Core 26 Spring Teams', subtitle: 'Built from core.', type: 'data', jsonKey: 'core', label: 'Core 26 Spring Teams', badge: 'core', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','totalPoints'] },
       neo: { title: 'Neo 26 Spring Teams', subtitle: 'Built from neo.', type: 'data', jsonKey: 'neo', label: 'Neo 26 Spring Teams', badge: 'neo', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','NP','totalPoints'] },
-      transfers: { title: 'Transfers 26 Spring Teams', subtitle: 'Built from overgangar.', type: 'data', jsonKey: 'overgangar', label: 'Transfers 26 Spring Teams', badge: 'overgangar', csv: true, columns: ['Player','From','FromDiv','To','ToDiv','GroupGames26Winter','PlayoffGames26Winter','TotalGames26Winter','Date','Role'] },
+      transfers: { title: 'Transfers 26 Spring Teams', subtitle: 'Built from overgangar.', type: 'data', jsonKey: 'overgangar', label: 'Transfers 26 Spring Teams', badge: 'transfers', csv: true, columns: ['Player','From','FromDiv','To','ToDiv','GroupGames26Winter','PlayoffGames26Winter','TotalGames26Winter','Date','Role'] },
       backups: { title: 'Backups 26 Spring Teams', subtitle: 'Built from backups.', type: 'data', jsonKey: 'backups', label: 'Backups 26 Spring Teams', badge: 'backups', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
       unlicensed: { title: 'Unlicensed 26 Spring Teams', subtitle: 'Built from licenslosa.', type: 'data', jsonKey: 'licenslosa', label: 'Unlicensed 26 Spring Teams', badge: 'licenslosa', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
-      multiple: { title: 'Players In Multiple Teams', subtitle: 'Built from inMoreThan1Teams.', type: 'data', jsonKey: 'inMoreThan1Teams', label: 'Players In Multiple Teams', badge: 'inMoreThan1Teams', csv: true, columns: ['playerName','teamCount','teams','__sendMail'] },
+      multiple: { title: 'Players In Multiple Teams', subtitle: 'Built from inMoreThan1Teams.', type: 'data', jsonKey: 'inMoreThan1Teams', label: 'Players In Multiple Teams', badge: 'multiTeams', csv: true, columns: ['playerName','teamCount','teams','__sendMail'] },
       banned: { title: 'Banned Players', subtitle: 'Built from bannedPlayers.', type: 'data', jsonKey: 'bannedPlayers', label: 'Banned Players', badge: 'bannedPlayers', csv: true, columns: ['playerName','banType','untilText','active','status','foundAs','teamName','divisionName','notes'] }
     };
 
