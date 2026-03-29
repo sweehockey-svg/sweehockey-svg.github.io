@@ -343,12 +343,12 @@
     <div class="login-card">
       <h1 class="login-title">Admin Login</h1>
       <p class="login-warning"><strong>Endast för admins.</strong><br> Dela inte sida eller lösenord vidare.</p>
-      <label class="login-label" for="passwordInput">Lösenord</label>
+      <label class="login-label" for="passwordInput">Password</label>
       <div class="login-row">
-        <input id="passwordInput" class="login-input" type="password" placeholder="Ange lösenord" autocomplete="off" />
+        <input id="passwordInput" class="login-input" type="password" placeholder="Enter password" autocomplete="off" />
         <button id="loginBtn" class="login-btn" type="button">Login</button>
       </div>
-      <div id="loginError" class="login-error">Fel lösenord.</div>
+      <div id="loginError" class="login-error">Wrong password.</div>
     </div>
   </div>
 
@@ -359,11 +359,11 @@
           <div class="logo">EH</div>
           <div>
             <h1>eHockey Admin</h1>
-            <p>v5 • design + funktioner</p>
+            <p>v5 • design + features</p>
           </div>
         </div>
 
-        <p class="nav-title">Sidor</p>
+        <p class="nav-title">Pages</p>
         <nav class="nav" id="nav"></nav>
 
         <div class="side-meta" id="sideMeta"></div>
@@ -373,29 +373,29 @@
         <div class="topbar">
           <div class="title-wrap">
             <h2 id="pageTitle">Overview</h2>
-            <p id="pageSubtitle">Laddar data från alla.json och renderar varje adminvy dynamiskt.</p>
+            <p id="pageSubtitle">Loads data from alla.json and renders each admin view dynamically.</p>
           </div>
           <div class="actions">
-            <button class="btn" id="reloadBtn">Ladda om</button>
-            <button class="btn" id="clearFiltersBtn">Rensa filter</button>
+            <button class="btn" id="reloadBtn">Refresh</button>
+            <button class="btn" id="clearFiltersBtn">Clear filters</button>
             <button class="btn" id="csvExportBtn">Export CSV</button>
-            <button class="btn primary" id="openJsonBtn">Visa rå JSON-info</button>
+            <button class="btn primary" id="openJsonBtn">Show raw JSON info</button>
           </div>
         </div>
 
         <div class="filters-row">
-          <input class="input" id="searchInput" type="text" placeholder="Sök spelare, lag, userID eller division" />
-          <label class="toggle-box"><input id="flaggedOnlyToggle" type="checkbox" /> <span>Endast flaggade</span></label>
+          <input class="input" id="searchInput" type="text" placeholder="Search player, team, userID or division" />
+          <label class="toggle-box"><input id="flaggedOnlyToggle" type="checkbox" /> <span>Flagged only</span></label>
           <select class="select" id="sortSelect">
-            <option value="default">Standard</option>
-            <option value="name-asc">Namn A–Ö</option>
-            <option value="name-desc">Namn Ö–A</option>
+            <option value="default">Default</option>
+            <option value="name-asc">Name A–Z</option>
+            <option value="name-desc">Name Z–A</option>
           </select>
           <select class="select" id="seedingFilterSelect" style="display:none;">
-            <option value="all">Alla seed rows</option>
-            <option value="missing">Endast missing</option>
-            <option value="disbanded">Endast disbanded</option>
-            <option value="wrongDivision">Fel division</option>
+            <option value="all">All seeding rows</option>
+            <option value="missing">Missing only</option>
+            <option value="disbanded">Disbanded only</option>
+            <option value="wrongDivision">Wrong division</option>
             <option value="proQualReq">PRO QUAL</option>
             <option value="eliteQualReq">ELITE QUAL</option>
           </select>
@@ -407,8 +407,8 @@
         <section class="page active" id="page-dashboard">
           <div class="hero hero-grid">
             <div>
-              <h3>Överblick för 26 Spring</h3>
-              <p>Den här versionen behåller designen, men har fått in viktiga funktioner från adminverktyget du skickade: login, refresh, clear filters, CSV-export, flagged-only, seedingfilter, row-highlighting, messaging-knappar och team-check-paneler.</p>
+              <h3>Overview for 26 Spring</h3>
+              <p>This version keeps the design, but now includes key functionality from the admin tool you shared: login, refresh, clear filters, CSV export, flagged-only, seeding filters, row highlighting, messaging buttons, and team check panels.</p>
             </div>
             <div class="card" style="padding:18px;">
               <div class="mini-list" id="overviewStatusList"></div>
@@ -421,8 +421,8 @@
             <section class="table-card">
               <div class="table-head">
                 <div>
-                  <h3>Mapping mellan UI och alla.json</h3>
-                  <p>Frontend renderar dessa sidor från respektive JSON-nyckel.</p>
+                  <h3>Mapping between UI and alla.json</h3>
+                  <p>The frontend renders these pages from their respective JSON keys.</p>
                 </div>
               </div>
               <div class="table-wrap">
@@ -436,8 +436,8 @@
             </section>
 
             <aside class="card" style="padding:18px;">
-              <h3 style="margin-top:0;">Teknisk idé</h3>
-              <p class="muted" style="line-height:1.7;">Den här hybriden använder den stabila JSON-loadern från nuvarande version och hämtar adminfunktioner från din andra fil, men utan att byta UI-språk eller layoutmodell.</p>
+              <h3 style="margin-top:0;">Technical idea</h3>
+              <p class="muted" style="line-height:1.7;">This hybrid version uses the stable JSON loader from the current version and brings in admin functionality from your other file without changing the UI structure or layout model.</p>
             </aside>
           </div>
         </section>
@@ -449,7 +449,7 @@
             <div class="table-head">
               <div>
                 <h3 id="dataSectionTitle">Data</h3>
-                <p id="dataSectionSubtitle">Dynamisk tabell.</p>
+                <p id="dataSectionSubtitle">Dynamic table.</p>
               </div>
             </div>
             <div class="table-wrap">
@@ -457,7 +457,7 @@
                 <thead><tr id="headerRow"></tr></thead>
                 <tbody id="tableBody"></tbody>
               </table>
-              <div id="emptyMessage" class="empty-state" style="display:none;">Inga resultat.</div>
+              <div id="emptyMessage" class="empty-state" style="display:none;">No results.</div>
             </div>
           </div>
 
@@ -510,7 +510,7 @@
 
     const PAGE_CONFIG = {
       dashboard: { title: 'Overview', subtitle: 'Startvy med status och mapping för alla.json.', type: 'dashboard', label: 'Overview', badge: 'Start' },
-      seeding: { title: 'Seeding 26 Spring', subtitle: 'Preset + registreringskontroll.', type: 'preset', label: 'Seeding 26 Spring', badge: 'Preset', csv: false },
+      seeding: { title: 'Seeding 26 Spring', subtitle: 'Preset + registration check.', type: 'preset', label: 'Seeding 26 Spring', badge: 'Preset', csv: false },
       registered: { title: 'Registered Teams 26 Spring', subtitle: 'Byggs från signUps.', type: 'data', jsonKey: 'signUps', label: 'Registered Teams', badge: 'signUps', csv: true, columns: ['teamName','teamCountry','registrationDate','divisionName','qualifierName','playerCount','fullLicenseCount','backupLicenseCount','unlicensedPlayerCount','signupIssue','userID','__sendMail'] },
       lite: { title: 'Lite 26 Spring Teams', subtitle: 'Byggs från lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','totalPoints'] },
       core: { title: 'Core 26 Spring Teams', subtitle: 'Byggs från core.', type: 'data', jsonKey: 'core', label: 'Core 26 Spring Teams', badge: 'core', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','totalPoints'] },
@@ -738,7 +738,7 @@
             loaded = await response.json(); loadedPath = path; break;
           } catch (error) { lastError = error; }
         }
-        if (!loaded) throw (lastError || new Error('Kunde inte hitta JSON-fil'));
+        if (!loaded) throw (lastError || new Error('Could not find JSON file'));
         rawJsonData = loaded;
         allData = this.normalizeAllData(loaded);
         teamLinkMapCache = null;
@@ -746,7 +746,7 @@
         captainUserIdMapCache = null;
         return allData;
       },
-      getRowsForSource(key) { const rows = allData?.[key]; if (!Array.isArray(rows)) throw new Error(`Key "${key}" saknas eller är inte en array`); return rows; },
+      getRowsForSource(key) { const rows = allData?.[key]; if (!Array.isArray(rows)) throw new Error(`Key "${key}" is missing or is not an array`); return rows; },
       getPlayerLinkMap() {
         if (playerLinkMapCache) return playerLinkMapCache;
         const map = new Map();
@@ -962,7 +962,7 @@
     function openDrawer(title, subtitle, items) {
       dom.drawerTitle.textContent = title;
       dom.drawerSubtitle.textContent = subtitle;
-      if (!Array.isArray(items) || !items.length) dom.drawerBody.innerHTML = '<div class="empty-state">Ingen data att visa.</div>';
+      if (!Array.isArray(items) || !items.length) dom.drawerBody.innerHTML = '<div class="empty-state">No data to show.</div>';
       else dom.drawerBody.innerHTML = items.map((item, index) => `<div class="json-card"><h4>Rad ${index + 1}</h4>${Object.entries(item).map(([k,v]) => `<div class="json-row"><div class="muted">${Utils.escapeHtml(k)}</div><div>${Utils.escapeHtml(Array.isArray(v) || typeof v === 'object' ? JSON.stringify(v) : v ?? '—')}</div></div>`).join('')}</div>`).join('');
       dom.drawer.classList.add('open');
     }
@@ -1156,7 +1156,7 @@
       if (pageKey === 'backups' || pageKey === 'unlicensed') { const total = rows.reduce((s,r) => s + Number(r.totalMatchesPlayed || 0), 0); return [{ label: 'Spelare', value: rows.length, meta: 'Antal rader' }, { label: 'Matcher', value: total, meta: 'Summerat totalMatchesPlayed' }, { label: 'Snitt', value: rows.length ? (total / rows.length).toFixed(1) : '0.0', meta: 'Matcher per spelare' }]; }
       if (pageKey === 'multiple') return [{ label: 'Spelare', value: rows.length, meta: 'I flera lag' }, { label: 'Max teamCount', value: Math.max(0, ...rows.map(r => Number(r.teamCount || 0))), meta: 'Högsta värdet' }, { label: 'Detaljer', value: 'teams[]', meta: 'Öppnas i drawer' }];
       if (pageKey === 'banned') return [{ label: 'Ban-rader', value: rows.length, meta: 'Från bannedPlayers' }, { label: 'Aktiva', value: rows.filter(r => String(r.active).toLowerCase() === 'yes').length, meta: 'active = Yes' }, { label: 'Violations', value: rows.filter(r => String(r.status).toLowerCase() === 'violation').length, meta: 'status = Violation' }];
-      return [{ label: 'Datakälla', value: 'Preset', meta: 'Seeding' }, { label: 'Status', value: 'Manual', meta: 'Kontrollvy' }, { label: 'Nästa steg', value: 'Seed-check', meta: 'Kopplad mot signUps' }];
+      return [{ label: 'Data source', value: 'Preset', meta: 'Seeding' }, { label: 'Status', value: 'Manual', meta: 'Kontrollvy' }, { label: 'Nästa steg', value: 'Seed-check', meta: 'Kopplad mot signUps' }];
     }
 
     const SeedingService = {
@@ -1204,7 +1204,7 @@
       showPage('page-data'); dom.normalTableWrap.style.display = 'none'; dom.seedingWrap.style.display = 'block'; dom.seedingFilterSelect.style.display = 'inline-block'; dom.seedingBody.innerHTML = '';
       const registeredRows = DataService.getRowsForSource('signUps').map(row => Rename.applyToRow(row));
       renderMetricCards(getPageMetrics('seeding', registeredRows), dom.pageMetrics);
-      dom.dataSectionTitle.textContent = 'Seeding 26 Spring'; dom.dataSectionSubtitle.textContent = 'Preset-seeding jämförd mot signUps.';
+      dom.dataSectionTitle.textContent = 'Seeding 26 Spring'; dom.dataSectionSubtitle.textContent = 'Preset seeding compared against signUps.';
       const sections = SeedingService.buildSections(registeredRows);
       let visibleRows = 0; let renderedSections = 0;
       sections.forEach(section => {
@@ -1237,7 +1237,7 @@
       rows = sortRows(rows);
       normalizedRows = rows;
       renderMetricCards(getPageMetrics(currentPage, rows), dom.pageMetrics);
-      dom.dataSectionTitle.textContent = cfg.jsonKey; dom.dataSectionSubtitle.textContent = `${cfg.subtitle} Rader efter filter: ${rows.length}.`;
+      dom.dataSectionTitle.textContent = cfg.jsonKey; dom.dataSectionSubtitle.textContent = `${cfg.subtitle} Rows after filters: ${rows.length}.`;
       dom.emptyMessage.style.display = rows.length ? 'none' : 'block';
       if (!rows.length) { dom.headerRow.innerHTML = ''; dom.tableBody.innerHTML = ''; dom.rowCounter.textContent = ''; return; }
       renderHeader(columns); await renderDataRows(rows, columns);
@@ -1246,10 +1246,10 @@
     function renderOverview() {
       showPage('page-dashboard');
       const availableKeys = EXPECTED_KEYS.filter(key => Array.isArray(allData[key]));
-      renderMetricCards([{ label: 'Datakälla', value: loadedPath || 'Ingen', meta: loadError ? 'Fel vid laddning' : 'Aktiv fil' }, { label: 'Hittade arrays', value: availableKeys.length, meta: 'Toppnivånycklar som kan renderas' }, { label: 'Status', value: loadError ? 'Fel' : 'OK', meta: loadError ? String(loadError.message || loadError) : 'Loader körs' }], dom.overviewMetrics);
-      dom.overviewStatusList.innerHTML = [{ t: 'Laddad fil', s: loadedPath || 'Ingen fil hittades', p: loadError ? 'Fel' : 'OK', c: loadError ? 'danger' : 'ok' }, { t: 'Normalisering', s: availableKeys.join(', ') || 'Inga kända keys hittades', p: 'JSON', c: 'info' }, { t: 'Seeding', s: 'Preset + registreringskontroll', p: 'Preset', c: 'warn' }].map(item => `<div class="mini-item"><div><strong>${Utils.escapeHtml(item.t)}</strong><span>${Utils.escapeHtml(item.s)}</span></div><span class="pill ${item.c}">${Utils.escapeHtml(item.p)}</span></div>`).join('');
-      dom.mappingTableBody.innerHTML = [['Registered Teams','signUps','Lag, division, registrering, licensstatus','Live'],['Lite 26 Spring Teams','lite','Kompatibilitet och players[]','Live'],['Core 26 Spring Teams','core','Kompatibilitet och players[]','Live'],['Neo 26 Spring Teams','neo','Kompatibilitet och players[]','Live'],['Transfers 26 Spring Teams','overgangar','From/To, matcher, datum, roll','Live'],['Backups 26 Spring Teams','backups','Backuplicens','Live'],['Unlicensed 26 Spring Teams','licenslosa','Licenslösa spelare','Live'],['Players In Multiple Teams','inMoreThan1Teams','Flera lag + teams[]','Live'],['Banned Players','bannedPlayers','Banstatus och violations','Live'],['Seeding 26 Spring','preset','Förifylld seeding + signUps-check','Preset']].map(row => `<tr><td>${Utils.escapeHtml(row[0])}</td><td><code>${Utils.escapeHtml(row[1])}</code></td><td>${Utils.escapeHtml(row[2])}</td><td>${pillHtml(row[3])}</td></tr>`).join('');
-      dom.sideMeta.innerHTML = `<div><strong>Datakälla:</strong> <code>${Utils.escapeHtml(loadedPath || 'ingen')}</code></div><div><strong>Keys:</strong> ${Utils.escapeHtml(String(availableKeys.length))} hittade</div><div><strong>Funktioner:</strong> login, CSV, filter, messaging</div>`;
+      renderMetricCards([{ label: 'Data source', value: loadedPath || 'Ingen', meta: loadError ? 'Load error' : 'Active file' }, { label: 'Arrays found', value: availableKeys.length, meta: 'Top-level keys that can be rendered' }, { label: 'Status', value: loadError ? 'Fel' : 'OK', meta: loadError ? String(loadError.message || loadError) : 'Loader running' }], dom.overviewMetrics);
+      dom.overviewStatusList.innerHTML = [{ t: 'Loaded file', s: loadedPath || 'No file found', p: loadError ? 'Fel' : 'OK', c: loadError ? 'danger' : 'ok' }, { t: 'Normalization', s: availableKeys.join(', ') || 'No known keys found', p: 'JSON', c: 'info' }, { t: 'Seeding', s: 'Preset + registration check', p: 'Preset', c: 'warn' }].map(item => `<div class="mini-item"><div><strong>${Utils.escapeHtml(item.t)}</strong><span>${Utils.escapeHtml(item.s)}</span></div><span class="pill ${item.c}">${Utils.escapeHtml(item.p)}</span></div>`).join('');
+      dom.mappingTableBody.innerHTML = [['Registered Teams','signUps','Lag, division, registrering, licensstatus','Live'],['Lite 26 Spring Teams','lite','Kompatibilitet och players[]','Live'],['Core 26 Spring Teams','core','Kompatibilitet och players[]','Live'],['Neo 26 Spring Teams','neo','Kompatibilitet och players[]','Live'],['Transfers 26 Spring Teams','overgangar','From/To, matcher, datum, roll','Live'],['Backups 26 Spring Teams','backups','Backuplicens','Live'],['Unlicensed 26 Spring Teams','licenslosa','Licenslösa spelare','Live'],['Players In Multiple Teams','inMoreThan1Teams','Flera lag + teams[]','Live'],['Banned Players','bannedPlayers','Banstatus och violations','Live'],['Seeding 26 Spring','preset','Preset seeding + signUps check','Preset']].map(row => `<tr><td>${Utils.escapeHtml(row[0])}</td><td><code>${Utils.escapeHtml(row[1])}</code></td><td>${Utils.escapeHtml(row[2])}</td><td>${pillHtml(row[3])}</td></tr>`).join('');
+      dom.sideMeta.innerHTML = `<div><strong>Data source:</strong> <code>${Utils.escapeHtml(loadedPath || 'ingen')}</code></div><div><strong>Keys:</strong> ${Utils.escapeHtml(String(availableKeys.length))} hittade</div><div><strong>Features:</strong> login, CSV, filters, messaging</div>`;
       dom.rowCounter.textContent = '';
     }
 
@@ -1276,7 +1276,7 @@
       if (currentPage === 'dashboard') renderOverview();
       else if (currentPage === 'seeding') await renderSeedingPage();
       else await renderDataPage();
-      dom.lastUpdated.textContent = 'Uppdaterad: ' + Utils.toDisplayDate();
+      dom.lastUpdated.textContent = 'Updated: ' + Utils.toDisplayDate();
       Utils.setStatus(loadError ? 'Error' : 'Done');
     }
 
