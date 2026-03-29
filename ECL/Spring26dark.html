@@ -895,24 +895,49 @@
         if (recipients.length === 0) return '';
         return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
       },
-      async getMultipleTeamsMessageUrl(row) {
-        if (currentPage !== 'multiple') return '';
-        const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
-        const recipients = [];
-        const teams = Array.isArray(row?.teams) ? row.teams : [];
-        const playerUserId = String(row?.userID ?? row?.userId ?? row?.UserID ?? row?.user_id ?? row?.userid ?? '').trim();
-        if (playerUserId) recipients.push(playerUserId);
-        teams.forEach(team => {
-          const directCaptainId = String(team?.captainUserID ?? team?.captainUserId ?? team?.CaptainUserID ?? '').trim();
-          if (directCaptainId) { recipients.push(directCaptainId); return; }
-          const normalizedTeam = Utils.normalizeTeamName(team?.teamName || '');
-          const mappedCaptainIds = captainMap.get(normalizedTeam) || [];
-          mappedCaptainIds.forEach(id => recipients.push(String(id).trim()));
-        });
-        const unique = recipients.filter((id, index, arr) => id && arr.indexOf(id) === index);
-        if (!unique.length) return '';
-        return `https://sportsgamer.gg/community/messenger/compose/?to=${unique.join(',')}`;
-      },
+async getMultipleTeamsMessageUrl(row) {
+  if (currentPage !== 'multiple') return '';
+
+  const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
+  const recipients = [];
+
+  const teams = Array.isArray(row?.teams) ? row.teams : [];
+
+  const playerUserId = String(
+    row?.userID ??
+    row?.userId ??
+    row?.UserID ??
+    row?.user_id ??
+    row?.userid ??
+    ''
+  ).trim();
+
+  if (playerUserId) recipients.push(playerUserId);
+
+  teams.forEach(team => {
+    const directCaptainIds = [
+      team?.captainUserID,
+      team?.captainUserId,
+      team?.CaptainUserID,
+      team?.captain1UserID,
+      team?.captain2UserID
+    ]
+      .map(v => String(v ?? '').trim())
+      .filter(Boolean);
+
+    directCaptainIds.forEach(id => recipients.push(id));
+
+    const normalizedTeam = Utils.normalizeTeamName(team?.teamName || '');
+    const mappedCaptainIds = captainMap.get(normalizedTeam) || [];
+    mappedCaptainIds.forEach(id => recipients.push(String(id).trim()));
+  });
+
+  const unique = recipients.filter((id, index, arr) => id && arr.indexOf(id) === index);
+
+  if (!unique.length) return '';
+
+  return `https://sportsgamer.gg/community/messenger/compose/?to=${unique.join(',')}`;
+},
       async getSignUpsMessageUrl(row) {
         if (currentPage !== 'registered') return '';
         const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
