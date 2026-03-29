@@ -1403,7 +1403,7 @@ Best regards,`;
           if (item.isMissing && winterMapped?.teamId && winterMapped?.leagueId) {
             const badge = document.createElement('span');
             badge.className = 'seed-note-badge winter-match';
-            badge.textContent = winterMapped.matchType === 'loose' ? 'Winter loose match' : 'Winter exact match';
+            badge.textContent = winterMapped.matchType === 'loose' ? '' : '';
             noteTd.appendChild(badge);
           }
           if (!item.note && !(item.isMissing && winterMapped?.teamId && winterMapped?.leagueId)) noteTd.innerHTML = '<span class="muted">-</span>';
