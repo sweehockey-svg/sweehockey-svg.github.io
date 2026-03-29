@@ -1236,6 +1236,7 @@
 
           return { title: section.title, count: items.length, items };
         });
+      }
     };
 
     function getFilteredSeedingRows(sectionTitle, rows) {
@@ -1267,7 +1268,7 @@
         const titleRow = document.createElement('tr'); titleRow.className = 'section-title-row'; const titleCell = document.createElement('td'); titleCell.colSpan = 5; titleCell.textContent = `${section.title} (${section.count})`; titleCell.style.background = SeedingService.getSectionStyle(section.title); titleCell.style.color = '#091126'; titleRow.appendChild(titleCell); dom.seedingBody.appendChild(titleRow);
         const header = document.createElement('tr'); header.className = 'seed-header-row'; ['#','Seed','Team','Status','Notes'].forEach(text => { const th = document.createElement('th'); th.textContent = text; header.appendChild(th); }); dom.seedingBody.appendChild(header);
         filteredItems.forEach(item => {
-          const tr = document.createElement('tr'); tr.className = 'seed-row' + (item.isMissing ? ' missing' : '');
+          const tr = document.createElement('tr'); tr.className = 'seed-row' + (item.isMissing ? ' missing' : '') + (item.isUnlisted ? ' unlisted' : '');
           const teamLinkMap = DataService.getTeamLinkMap(); const mapped = teamLinkMap.get(Utils.normalizeTeamName(item.displayTeam));
           tr.innerHTML = `<td>${item.pos ?? ''}</td><td>${Utils.escapeHtml(item.seed || '')}</td><td></td><td></td><td></td>`;
           const teamTd = tr.children[2]; if (mapped?.teamId && mapped?.leagueId) teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId), item.displayTeam, 'seed-link')); else teamTd.textContent = item.displayTeam || '';
