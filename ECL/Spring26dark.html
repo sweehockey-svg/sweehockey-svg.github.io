@@ -550,6 +550,7 @@
     let teamLinkMapCache = null;
     let playerLinkMapCache = null;
     let captainUserIdMapCache = null;
+    let winterTeamLinkMapCache = null;
     let searchDebounce = null;
 
     const dom = {
@@ -754,6 +755,7 @@
         teamLinkMapCache = null;
         playerLinkMapCache = null;
         captainUserIdMapCache = null;
+        winterTeamLinkMapCache = null;
         return allData;
       },
       getRowsForSource(key) { const rows = allData?.[key]; if (!Array.isArray(rows)) throw new Error(`Key "${key}" is missing or is not an array`); return rows; },
@@ -805,6 +807,24 @@
           const ids = map.get(normalizedTeam); if (!ids.includes(userId)) ids.push(userId);
         });
         captainUserIdMapCache = map;
+        return map;
+      },
+      getWinterTeamLinkMap() {
+        if (winterTeamLinkMapCache) return winterTeamLinkMapCache;
+        const map = new Map();
+        const rows = Array.isArray(allData?.overgangar) ? allData.overgangar : [];
+        rows.forEach(originalRow => {
+          const row = Rename.applyToRow(originalRow);
+          const teamName = String(row?.From || '').trim();
+          const normalized = Utils.normalizeTeamName(teamName);
+          const teamId = String(row?.FromTeamID || '').trim();
+          const leagueId = String(row?.FromLeagueID || '').trim();
+          if (!normalized || !teamId || !leagueId) return;
+          if (!map.has(normalized)) {
+            map.set(normalized, { teamId, leagueId });
+          }
+        });
+        winterTeamLinkMapCache = map;
         return map;
       }
     };
@@ -1269,9 +1289,19 @@
         const header = document.createElement('tr'); header.className = 'seed-header-row'; ['#','Seed','Team','Status','Notes'].forEach(text => { const th = document.createElement('th'); th.textContent = text; header.appendChild(th); }); dom.seedingBody.appendChild(header);
         filteredItems.forEach(item => {
           const tr = document.createElement('tr'); tr.className = 'seed-row' + (item.isMissing ? ' missing' : '') + (item.isUnlisted ? ' unlisted' : '');
-          const teamLinkMap = DataService.getTeamLinkMap(); const mapped = teamLinkMap.get(Utils.normalizeTeamName(item.displayTeam));
+          const teamLinkMap = DataService.getTeamLinkMap();
+          const winterTeamLinkMap = DataService.getWinterTeamLinkMap();
+          const mapped = teamLinkMap.get(Utils.normalizeTeamName(item.displayTeam));
+          const winterMapped = winterTeamLinkMap.get(Utils.normalizeTeamName(item.displayTeam));
           tr.innerHTML = `<td>${item.pos ?? ''}</td><td>${Utils.escapeHtml(item.seed || '')}</td><td></td><td></td><td></td>`;
-          const teamTd = tr.children[2]; if (mapped?.teamId && mapped?.leagueId) teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId), item.displayTeam, 'seed-link')); else teamTd.textContent = item.displayTeam || '';
+          const teamTd = tr.children[2];
+          if (mapped?.teamId && mapped?.leagueId) {
+            teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId), item.displayTeam, 'seed-link'));
+          } else if (item.isMissing && winterMapped?.teamId && winterMapped?.leagueId) {
+            teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(winterMapped.teamId, winterMapped.leagueId), item.displayTeam, 'seed-link'));
+          } else {
+            teamTd.textContent = item.displayTeam || '';
+          }
           const statusTd = tr.children[3]; statusTd.innerHTML = !item.displayTeam ? '<span class="seed-status empty">-</span>' : item.exists ? '<span class="seed-status ok">Registered</span>' : '<span class="seed-status missing">Missing</span>';
           const noteTd = tr.children[4]; if (item.note) item.note.split(' • ').filter(Boolean).forEach(part => { const badge = document.createElement('span'); badge.className = 'seed-note-badge'; badge.textContent = part; noteTd.appendChild(badge); }); else noteTd.innerHTML = '<span class="muted">-</span>';
           dom.seedingBody.appendChild(tr);
