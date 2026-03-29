@@ -831,27 +831,52 @@
         if (winterTeamLinkMapCache) return winterTeamLinkMapCache;
         const map = new Map();
         const rows = Array.isArray(allData?.overgangar) ? allData.overgangar : [];
+
         const addEntry = (teamName, teamId, leagueId) => {
           const normalized = Utils.normalizeTeamName(teamName);
           const tId = String(teamId || '').trim();
           const lId = String(leagueId || '').trim();
           if (!normalized || !tId || !lId) return;
-          if (!map.has(normalized)) map.set(normalized, { teamId: tId, leagueId: lId, sourceName: String(teamName || '').trim() });
+          if (!map.has(normalized)) {
+            map.set(normalized, {
+              teamId: tId,
+              leagueId: lId,
+              sourceName: String(teamName || '').trim()
+            });
+          }
         };
+
         rows.forEach(originalRow => {
           const row = Rename.applyToRow(originalRow);
           addEntry(row?.From, row?.FromTeamID, row?.FromLeagueID);
           addEntry(row?.To, row?.ToTeamID, row?.ToLeagueID);
         });
+
         winterTeamLinkMapCache = map;
         return map;
       }
     };
 
-    function resolveWinterTeamLink(teamName) {
+    function resolveWinterTeamLink(teamNameCandidates) {
       const winterMap = DataService.getWinterTeamLinkMap();
-      const key = Utils.normalizeTeamName(teamName);
-      return winterMap.get(key) || null;
+      const seen = new Set();
+      const candidates = (Array.isArray(teamNameCandidates) ? teamNameCandidates : [teamNameCandidates])
+        .map(v => String(v || '').trim())
+        .filter(Boolean)
+        .filter(name => {
+          const key = Utils.normalizeTeamName(name);
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+      for (const candidate of candidates) {
+        const key = Utils.normalizeTeamName(candidate);
+        const hit = winterMap.get(key);
+        if (hit) return hit;
+      }
+
+      return null;
     }
         const MessagingService = {
       async getBackupMessageUrl(row) {
@@ -1420,9 +1445,25 @@ Best regards,`;
           tr.className = 'seed-row' + (item.isMissing ? ' missing' : '') + (item.isUnlisted ? ' unlisted' : '');
 
           const teamLinkMap = DataService.getTeamLinkMap();
-          const normalizedName = Utils.normalizeTeamName(item.displayTeam);
-          const mapped = teamLinkMap.get(normalizedName);
-          const winterMapped = item.isMissing ? resolveWinterTeamLink(item.displayTeam) : null;
+
+          const teamCandidates = [
+            item.displayTeam,
+            item.team,
+            Rename.getCanonicalTeamName(item.team),
+            Rename.applyToValue(item.team),
+            Rename.applyToValue(item.displayTeam)
+          ].filter(Boolean);
+
+          let mapped = null;
+          for (const candidate of teamCandidates) {
+            const hit = teamLinkMap.get(Utils.normalizeTeamName(candidate));
+            if (hit?.teamId && hit?.leagueId) {
+              mapped = hit;
+              break;
+            }
+          }
+
+          const winterMapped = item.isMissing ? resolveWinterTeamLink(teamCandidates) : null;
 
           tr.innerHTML = `<td>${item.pos ?? ''}</td><td>${Utils.escapeHtml(item.seed || '')}</td><td></td><td></td><td></td><td></td>`;
 
