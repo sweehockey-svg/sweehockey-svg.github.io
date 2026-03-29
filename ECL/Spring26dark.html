@@ -327,6 +327,7 @@
     .seed-status.empty { background: rgba(255,255,255,.03); color: #8fa2c4; }
     .seed-note-badge { display: inline-block; padding: 5px 9px; border-radius: 999px; background: rgba(216,180,76,.14); color: #ffd98a; font-size: 11px; font-weight: 900; margin-right: 6px; margin-bottom: 4px; }
     .seed-note-badge.disbanded { background: #8e1f31; color: white; }
+    .seed-note-badge.winter-match { background: rgba(79,140,255,.16); color: #b9d0ff; border: 1px solid rgba(79,140,255,.28); }
 
     @media (max-width: 1150px) {
       .app { grid-template-columns: 1fr; }
@@ -599,7 +600,24 @@
       },
       setStatus(text) { dom.statusChip.textContent = text; },
       normalizeTeamName(value) {
-        return String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+        return String(value ?? '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s+/g, ' ')
+          .replace(/[^\p{L}\p{N}]+/gu, ' ')
+          .trim();
+      },
+      normalizeTeamNameLoose(value) {
+        return String(value ?? '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\((?:\s*\d{2}\s*[ws]|\s*\d{2}\s*winter|\s*winter\s*\d{2}|\s*spring\s*\d{2}|\s*\d{2}\s*spring)\s*\)/gi, ' ')
+          .replace(/\b(26w|26s|winter\s*26|spring\s*26)\b/gi, ' ')
+          .replace(/\s+/g, ' ')
+          .replace(/[^\p{L}\p{N}]+/gu, ' ')
+          .trim();
       },
       normalizePlayerName(value) {
         return String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
@@ -811,26 +829,61 @@
       },
       getWinterTeamLinkMap() {
         if (winterTeamLinkMapCache) return winterTeamLinkMapCache;
-        const map = new Map();
+
+        const exactMap = new Map();
+        const looseMap = new Map();
         const rows = Array.isArray(allData?.overgangar) ? allData.overgangar : [];
+
         const addEntry = (teamName, teamId, leagueId) => {
-          const normalized = Utils.normalizeTeamName(teamName);
+          const exact = Utils.normalizeTeamName(teamName);
+          const loose = Utils.normalizeTeamNameLoose(teamName);
           const tId = String(teamId || '').trim();
           const lId = String(leagueId || '').trim();
-          if (!normalized || !tId || !lId) return;
-          if (!map.has(normalized)) map.set(normalized, { teamId: tId, leagueId: lId });
+          if (!tId || !lId) return;
+
+          const payload = {
+            teamId: tId,
+            leagueId: lId,
+            sourceName: String(teamName || '').trim()
+          };
+
+          if (exact && !exactMap.has(exact)) exactMap.set(exact, payload);
+          if (loose && !looseMap.has(loose)) looseMap.set(loose, payload);
         };
+
         rows.forEach(originalRow => {
           const row = Rename.applyToRow(originalRow);
           addEntry(row?.From, row?.FromTeamID, row?.FromLeagueID);
           addEntry(row?.To, row?.ToTeamID, row?.ToLeagueID);
         });
-        winterTeamLinkMapCache = map;
-        return map;
+
+        winterTeamLinkMapCache = { exactMap, looseMap };
+        return winterTeamLinkMapCache;
       }
     };
 
-    const MessagingService = {
+    function resolveWinterTeamLink(teamName) {
+      const winterMaps = DataService.getWinterTeamLinkMap();
+      const exactKey = Utils.normalizeTeamName(teamName);
+      const looseKey = Utils.normalizeTeamNameLoose(teamName);
+
+      if (winterMaps?.exactMap?.has(exactKey)) {
+        return {
+          ...winterMaps.exactMap.get(exactKey),
+          matchType: 'exact'
+        };
+      }
+
+      if (winterMaps?.looseMap?.has(looseKey)) {
+        return {
+          ...winterMaps.looseMap.get(looseKey),
+          matchType: 'loose'
+        };
+      }
+
+      return null;
+    }
+        const MessagingService = {
       async getBackupMessageUrl(row) {
         if (!['backups','unlicensed'].includes(currentPage)) return '';
         const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
@@ -1291,21 +1344,30 @@
         filteredItems.forEach(item => {
           const tr = document.createElement('tr'); tr.className = 'seed-row' + (item.isMissing ? ' missing' : '') + (item.isUnlisted ? ' unlisted' : '');
           const teamLinkMap = DataService.getTeamLinkMap();
-          const winterTeamLinkMap = DataService.getWinterTeamLinkMap();
           const mapped = teamLinkMap.get(Utils.normalizeTeamName(item.displayTeam));
-          const winterMapped = winterTeamLinkMap.get(Utils.normalizeTeamName(item.displayTeam));
+          const winterMapped = resolveWinterTeamLink(item.displayTeam);
           tr.innerHTML = `<td>${item.pos ?? ''}</td><td>${Utils.escapeHtml(item.seed || '')}</td><td></td><td></td><td></td>`;
           const teamTd = tr.children[2];
           if (mapped?.teamId && mapped?.leagueId) {
             teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId), item.displayTeam, 'seed-link'));
           } else if (item.isMissing && winterMapped?.teamId && winterMapped?.leagueId) {
             teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(winterMapped.teamId, winterMapped.leagueId), item.displayTeam, 'seed-link'));
-            teamTd.title = `Winter fallback: league ${winterMapped.leagueId}, team ${winterMapped.teamId}`;
+            teamTd.title = winterMapped.matchType === 'loose'
+              ? `Winter fallback via name cleanup. Matched against "${winterMapped.sourceName}"`
+              : `Winter fallback. Matched against "${winterMapped.sourceName}"`;
           } else {
             teamTd.textContent = item.displayTeam || '';
           }
           const statusTd = tr.children[3]; statusTd.innerHTML = !item.displayTeam ? '<span class="seed-status empty">-</span>' : item.exists ? '<span class="seed-status ok">Registered</span>' : '<span class="seed-status missing">Missing</span>';
-          const noteTd = tr.children[4]; if (item.note) item.note.split(' • ').filter(Boolean).forEach(part => { const badge = document.createElement('span'); badge.className = 'seed-note-badge'; badge.textContent = part; noteTd.appendChild(badge); }); else noteTd.innerHTML = '<span class="muted">-</span>';
+          const noteTd = tr.children[4];
+          if (item.note) item.note.split(' • ').filter(Boolean).forEach(part => { const badge = document.createElement('span'); badge.className = 'seed-note-badge'; badge.textContent = part; noteTd.appendChild(badge); });
+          if (item.isMissing && winterMapped?.teamId && winterMapped?.leagueId) {
+            const badge = document.createElement('span');
+            badge.className = 'seed-note-badge winter-match';
+            badge.textContent = winterMapped.matchType === 'loose' ? 'Winter loose match' : 'Winter exact match';
+            noteTd.appendChild(badge);
+          }
+          if (!item.note && !(item.isMissing && winterMapped?.teamId && winterMapped?.leagueId)) noteTd.innerHTML = '<span class="muted">-</span>';
           dom.seedingBody.appendChild(tr);
         });
       });
@@ -1377,7 +1439,7 @@
     function bindEvents() {
       dom.loginBtn.addEventListener('click', tryLogin);
       dom.passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
-      dom.reloadBtn.addEventListener('click', async () => { rawJsonData = null; allData = {}; teamLinkMapCache = null; playerLinkMapCache = null; captainUserIdMapCache = null; await loadAndRender(true); });
+      dom.reloadBtn.addEventListener('click', async () => { rawJsonData = null; allData = {}; teamLinkMapCache = null; playerLinkMapCache = null; captainUserIdMapCache = null; winterTeamLinkMapCache = null; await loadAndRender(true); });
       dom.clearFiltersBtn.addEventListener('click', async () => { dom.searchInput.value = ''; dom.flaggedOnlyToggle.checked = false; dom.seedingFilterSelect.value = 'all'; dom.sortSelect.value = 'default'; sortState = { column: null, direction: 'asc' }; await renderApp(); });
       dom.csvExportBtn.addEventListener('click', exportCsv);
       dom.openJsonBtn.addEventListener('click', () => { const source = rawJsonData || allData || {}; const keys = Object.keys(source); openDrawer('alla.json', 'Raw top-level keys from the loaded file', keys.map(key => ({ key, type: Array.isArray(source[key]) ? 'array' : typeof source[key], length: Array.isArray(source[key]) ? source[key].length : '—' }))); });
