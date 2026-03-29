@@ -618,6 +618,24 @@
           .replace(/[^\p{L}\p{N}]+/gu, ' ')
           .trim();
       },
+      normalizeTeamNameLoose(value) {
+        return String(value ?? '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\(.*?\)/g, ' ')
+          .replace(/\b\d{2}[ws]\b/gi, ' ')
+          .replace(/\b(w|s)\b/gi, ' ')
+          .replace(/\besports\b/gi, ' ')
+          .replace(/\be-sports\b/gi, ' ')
+          .replace(/\bgg\b/gi, ' ')
+          .replace(/\bacademy\b/gi, ' ')
+          .replace(/\bteam\b/gi, ' ')
+          .replace(/\bhc\b/gi, ' ')
+          .replace(/[^\p{L}\p{N}]+/gu, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      },
       normalizePlayerName(value) {
         return String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
       },
@@ -829,21 +847,27 @@
       },
       getWinterTeamLinkMap() {
         if (winterTeamLinkMapCache) return winterTeamLinkMapCache;
-        const map = new Map();
+
+        const exactMap = new Map();
+        const looseMap = new Map();
         const rows = Array.isArray(allData?.overgangar) ? allData.overgangar : [];
 
         const addEntry = (teamName, teamId, leagueId) => {
-          const normalized = Utils.normalizeTeamName(teamName);
+          const exactKey = Utils.normalizeTeamName(teamName);
+          const looseKey = Utils.normalizeTeamNameLoose(teamName);
           const tId = String(teamId || '').trim();
           const lId = String(leagueId || '').trim();
-          if (!normalized || !tId || !lId) return;
-          if (!map.has(normalized)) {
-            map.set(normalized, {
-              teamId: tId,
-              leagueId: lId,
-              sourceName: String(teamName || '').trim()
-            });
-          }
+
+          if (!tId || !lId) return;
+
+          const payload = {
+            teamId: tId,
+            leagueId: lId,
+            sourceName: String(teamName || '').trim()
+          };
+
+          if (exactKey && !exactMap.has(exactKey)) exactMap.set(exactKey, payload);
+          if (looseKey && !looseMap.has(looseKey)) looseMap.set(looseKey, payload);
         };
 
         rows.forEach(originalRow => {
@@ -852,28 +876,23 @@
           addEntry(row?.To, row?.ToTeamID, row?.ToLeagueID);
         });
 
-        winterTeamLinkMapCache = map;
-        return map;
+        winterTeamLinkMapCache = { exactMap, looseMap };
+        return winterTeamLinkMapCache;
       }
     };
 
     function resolveWinterTeamLink(teamNameCandidates) {
-      const winterMap = DataService.getWinterTeamLinkMap();
-      const seen = new Set();
-      const candidates = (Array.isArray(teamNameCandidates) ? teamNameCandidates : [teamNameCandidates])
-        .map(v => String(v || '').trim())
-        .filter(Boolean)
-        .filter(name => {
-          const key = Utils.normalizeTeamName(name);
-          if (!key || seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
+      const { exactMap, looseMap } = DataService.getWinterTeamLinkMap();
+      const candidates = Array.isArray(teamNameCandidates) ? teamNameCandidates : [teamNameCandidates];
 
       for (const candidate of candidates) {
-        const key = Utils.normalizeTeamName(candidate);
-        const hit = winterMap.get(key);
-        if (hit) return hit;
+        const exactKey = Utils.normalizeTeamName(candidate);
+        if (exactKey && exactMap.has(exactKey)) return exactMap.get(exactKey);
+      }
+
+      for (const candidate of candidates) {
+        const looseKey = Utils.normalizeTeamNameLoose(candidate);
+        if (looseKey && looseMap.has(looseKey)) return looseMap.get(looseKey);
       }
 
       return null;
@@ -1469,9 +1488,21 @@ Best regards,`;
 
           const teamTd = tr.children[2];
           if (mapped?.teamId && mapped?.leagueId) {
-            teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId), item.displayTeam, 'seed-link'));
+            teamTd.appendChild(
+              Utils.createLink(
+                TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId),
+                item.displayTeam,
+                'seed-link'
+              )
+            );
           } else if (winterMapped?.teamId && winterMapped?.leagueId) {
-            teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(winterMapped.teamId, winterMapped.leagueId), item.displayTeam, 'seed-link'));
+            teamTd.appendChild(
+              Utils.createLink(
+                TeamLinks.buildTeamUrl(winterMapped.teamId, winterMapped.leagueId),
+                item.displayTeam,
+                'seed-link'
+              )
+            );
             teamTd.title = `Winter fallback. Matched against "${winterMapped.sourceName}"`;
           } else {
             teamTd.textContent = item.displayTeam || '';
