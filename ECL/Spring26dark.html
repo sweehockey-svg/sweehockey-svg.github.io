@@ -898,7 +898,7 @@
         const cfg = PAGE_CONFIG[pageKey];
         return `<button class="nav-btn ${pageKey === currentPage ? 'active' : ''}" data-page="${pageKey}">${Utils.escapeHtml(cfg.label)}</button>`;
       }).join('');
-      dom.nav.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => { currentPage = btn.dataset.page; sortState = { column: null, direction: 'asc' }; renderApp(); }));
+      dom.nav.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => { currentPage = btn.dataset.page; sortState = { column: null, direction: 'asc' }; window.scrollTo({ top: 0, behavior: 'auto' }); renderApp(); }));
     }
 
     function renderMetricCards(items, target) {
