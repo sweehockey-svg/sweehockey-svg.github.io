@@ -1188,14 +1188,54 @@
       buildSections(registeredRows) {
         const registeredSet = new Set(registeredRows.map(row => Utils.normalizeTeamName(RowAccess.getTeamName(row))).filter(Boolean));
         const registeredInfoMap = this.buildRegisteredTeamInfoMap(registeredRows);
+        const presetNames = this.collectPresetTeamNames();
+
+        const unlistedByDivision = { ELITE: [], PRO: [], LITE: [], CORE: [], NEO: [] };
+        registeredRows.forEach(row => {
+          const teamName = RowAccess.getTeamName(row);
+          const normalized = Utils.normalizeTeamName(teamName);
+          const division = String(row?.divisionName || '').trim().toUpperCase();
+          if (!normalized || presetNames.has(normalized)) return;
+          if (!unlistedByDivision[division]) return;
+          unlistedByDivision[division].push(row);
+        });
+
+        Object.keys(unlistedByDivision).forEach(key => {
+          unlistedByDivision[key].sort((a, b) => String(RowAccess.getTeamName(a) || '').localeCompare(String(RowAccess.getTeamName(b) || ''), 'sv', { sensitivity: 'base' }));
+        });
+
         return PRESET_SECTIONS.map(section => {
+          const sectionDivision = this.detectSectionDivision(section.title);
           const items = section.rows.map(row => {
-            const [pos, seed, team] = row; const displayTeam = Rename.getCanonicalTeamName(team); const normalized = Utils.normalizeTeamName(displayTeam); const exists = team ? registeredSet.has(normalized) : false; const note = team ? this.getSeedRowNote(section, team, registeredInfoMap) : '';
+            const [pos, seed, team] = row;
+            const displayTeam = Rename.getCanonicalTeamName(team);
+            const normalized = Utils.normalizeTeamName(displayTeam);
+            const exists = team ? registeredSet.has(normalized) : false;
+            const note = team ? this.getSeedRowNote(section, team, registeredInfoMap) : '';
             return { pos, seed, team, displayTeam, exists, note, isMissing: !!displayTeam && !exists, isDisbanded: false, isUnlisted: false };
           });
+
+          if (['ELITE','PRO','LITE','CORE','NEO'].includes(sectionDivision)) {
+            const extraRows = unlistedByDivision[sectionDivision] || [];
+            const startIndex = items.length + 1;
+            extraRows.forEach((row, idx) => {
+              const teamName = RowAccess.getTeamName(row) || '';
+              items.push({
+                pos: startIndex + idx,
+                seed: `${section.title} Unseeded`,
+                team: teamName,
+                displayTeam: Rename.getCanonicalTeamName(teamName),
+                exists: true,
+                note: this.getSeedRowNote(section, teamName, registeredInfoMap),
+                isMissing: false,
+                isDisbanded: false,
+                isUnlisted: true
+              });
+            });
+          }
+
           return { title: section.title, count: items.length, items };
         });
-      }
     };
 
     function getFilteredSeedingRows(sectionTitle, rows) {
