@@ -268,7 +268,6 @@
     .split { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
     .meta-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; margin-bottom: 18px; }
 
-    .detail-btn { border: 1px solid var(--border); background: rgba(255,255,255,.03); color: var(--text); border-radius: 10px; padding: 7px 10px; cursor: pointer; font-size: 12px; font-weight: 700; }
     .drawer { position: fixed; top: 0; right: -620px; width: 620px; max-width: 100%; height: 100vh; background: #0c1524; border-left: 1px solid var(--border); transition: right .2s ease; z-index: 30; display: flex; flex-direction: column; }
     .drawer.open { right: 0; }
     .drawer-head { padding: 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 12px; }
@@ -278,9 +277,21 @@
     .json-card h4 { margin: 0 0 10px; font-size: 14px; }
     .json-row { display: grid; grid-template-columns: 150px 1fr; gap: 10px; margin-bottom: 8px; font-size: 13px; }
 
-    .icon-actions { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; }
+    .icon-actions { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; flex-wrap: wrap; }
     .mail-icon-btn, .copy-icon-btn {
-      display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px; text-decoration: none; border: 0; cursor: pointer; background: linear-gradient(180deg, #6ea0ff, #4f8cff); color: white; font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      text-decoration: none;
+      border: 0;
+      cursor: pointer;
+      background: linear-gradient(180deg, #6ea0ff, #4f8cff);
+      color: white;
+      font-size: 16px;
+      font-weight: 900;
     }
 
     .team-dropdown-panel { padding: 16px; background: #0b1630; border-top: 1px solid rgba(124,150,202,.14); }
@@ -313,7 +324,7 @@
     .history-flag-badge.flagged { background: rgba(255,107,127,.12); color: #ff9cab; border-color: rgba(255,107,127,.25); }
     .history-flag-badge.ok { background: rgba(101,136,219,.12); color: #cfe0ff; border-color: rgba(101,136,219,.22); }
 
-    .section-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 960px; font-size: 12px; }
+    .section-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1080px; font-size: 12px; }
     .section-title-row td { color: #091126; font-weight: 900; text-align: center; border: 0; font-size: 15px; text-transform: uppercase; padding: 12px 10px; border-radius: 12px 12px 0 0; }
     .seed-header-row th { background: rgba(255,255,255,.03); color: white; font-size: 11px; font-weight: 900; text-transform: uppercase; padding: 9px 10px; }
     .seed-row td { border-bottom: 1px solid rgba(124,150,202,.1); padding: 10px 10px; background: #0e1933; color: #e8efff; }
@@ -511,7 +522,8 @@
       { oldName: 'VESUVIUS ESPORTS', newName: 'Golden Buffalos' },
       { oldName: 'GREATEST', newName: 'Unwanted' },
       { oldName: 'Jagrs in Paradise', newName: 'Cityboys' },
-      { oldName: 'Mythix', newName: 'INCOACH' },
+      { oldName: 'TROJANS', newName: 'Sjukstugan' },
+      { oldName: 'MoDo Hockey', newName: 'Västerås IK' },
       { oldName: 'MoDo Hockey', newName: 'Västerås IK' },
       { oldName: 'ROBE Esports', newName: 'MSK Esports' },
       { oldName: 'Polski Boys', newName: 'Tunnel Vision' },
@@ -550,6 +562,7 @@
     let teamLinkMapCache = null;
     let playerLinkMapCache = null;
     let captainUserIdMapCache = null;
+    let winterTeamLinkMapCache = null;
     let searchDebounce = null;
 
     const dom = {
@@ -598,7 +611,31 @@
       },
       setStatus(text) { dom.statusChip.textContent = text; },
       normalizeTeamName(value) {
-        return String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+        return String(value ?? '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s+/g, ' ')
+          .replace(/[^\p{L}\p{N}]+/gu, ' ')
+          .trim();
+      },
+      normalizeTeamNameLoose(value) {
+        return String(value ?? '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\(.*?\)/g, ' ')
+          .replace(/\b\d{2}[ws]\b/gi, ' ')
+          .replace(/\b(w|s)\b/gi, ' ')
+          .replace(/\besports\b/gi, ' ')
+          .replace(/\be-sports\b/gi, ' ')
+          .replace(/\bgg\b/gi, ' ')
+          .replace(/\bacademy\b/gi, ' ')
+          .replace(/\bteam\b/gi, ' ')
+          .replace(/\bhc\b/gi, ' ')
+          .replace(/[^\p{L}\p{N}]+/gu, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
       },
       normalizePlayerName(value) {
         return String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
@@ -754,6 +791,7 @@
         teamLinkMapCache = null;
         playerLinkMapCache = null;
         captainUserIdMapCache = null;
+        winterTeamLinkMapCache = null;
         return allData;
       },
       getRowsForSource(key) { const rows = allData?.[key]; if (!Array.isArray(rows)) throw new Error(`Key "${key}" is missing or is not an array`); return rows; },
@@ -802,14 +840,65 @@
           const userId = String(row.userID || '').trim();
           if (!normalizedTeam || !userId) return;
           if (!map.has(normalizedTeam)) map.set(normalizedTeam, []);
-          const ids = map.get(normalizedTeam); if (!ids.includes(userId)) ids.push(userId);
+          const ids = map.get(normalizedTeam);
+          if (!ids.includes(userId)) ids.push(userId);
         });
         captainUserIdMapCache = map;
         return map;
+      },
+      getWinterTeamLinkMap() {
+        if (winterTeamLinkMapCache) return winterTeamLinkMapCache;
+
+        const exactMap = new Map();
+        const looseMap = new Map();
+        const rows = Array.isArray(allData?.overgangar) ? allData.overgangar : [];
+
+        const addEntry = (teamName, teamId, leagueId) => {
+          const exactKey = Utils.normalizeTeamName(teamName);
+          const looseKey = Utils.normalizeTeamNameLoose(teamName);
+          const tId = String(teamId || '').trim();
+          const lId = String(leagueId || '').trim();
+
+          if (!tId || !lId) return;
+
+          const payload = {
+            teamId: tId,
+            leagueId: lId,
+            sourceName: String(teamName || '').trim()
+          };
+
+          if (exactKey && !exactMap.has(exactKey)) exactMap.set(exactKey, payload);
+          if (looseKey && !looseMap.has(looseKey)) looseMap.set(looseKey, payload);
+        };
+
+        rows.forEach(originalRow => {
+          const row = Rename.applyToRow(originalRow);
+          addEntry(row?.From, row?.FromTeamID, row?.FromLeagueID);
+          addEntry(row?.To, row?.ToTeamID, row?.ToLeagueID);
+        });
+
+        winterTeamLinkMapCache = { exactMap, looseMap };
+        return winterTeamLinkMapCache;
       }
     };
 
-    const MessagingService = {
+    function resolveWinterTeamLink(teamNameCandidates) {
+      const { exactMap, looseMap } = DataService.getWinterTeamLinkMap();
+      const candidates = Array.isArray(teamNameCandidates) ? teamNameCandidates : [teamNameCandidates];
+
+      for (const candidate of candidates) {
+        const exactKey = Utils.normalizeTeamName(candidate);
+        if (exactKey && exactMap.has(exactKey)) return exactMap.get(exactKey);
+      }
+
+      for (const candidate of candidates) {
+        const looseKey = Utils.normalizeTeamNameLoose(candidate);
+        if (looseKey && looseMap.has(looseKey)) return looseMap.get(looseKey);
+      }
+
+      return null;
+    }
+        const MessagingService = {
       async getBackupMessageUrl(row) {
         if (!['backups','unlicensed'].includes(currentPage)) return '';
         const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
@@ -821,24 +910,50 @@
         if (recipients.length === 0) return '';
         return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
       },
+
       async getMultipleTeamsMessageUrl(row) {
         if (currentPage !== 'multiple') return '';
+
         const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
         const recipients = [];
         const teams = Array.isArray(row?.teams) ? row.teams : [];
-        const playerUserId = String(row?.userID ?? row?.userId ?? row?.UserID ?? row?.user_id ?? row?.userid ?? '').trim();
+
+        const playerUserId = String(
+          row?.userID ??
+          row?.userId ??
+          row?.UserID ??
+          row?.user_id ??
+          row?.userid ??
+          ''
+        ).trim();
+
         if (playerUserId) recipients.push(playerUserId);
+
         teams.forEach(team => {
-          const directCaptainId = String(team?.captainUserID ?? team?.captainUserId ?? team?.CaptainUserID ?? '').trim();
-          if (directCaptainId) { recipients.push(directCaptainId); return; }
+          const directCaptainIds = [
+            team?.captainUserID,
+            team?.captainUserId,
+            team?.CaptainUserID,
+            team?.captain1UserID,
+            team?.captain2UserID
+          ]
+            .map(v => String(v ?? '').trim())
+            .filter(Boolean);
+
+          directCaptainIds.forEach(id => recipients.push(id));
+
           const normalizedTeam = Utils.normalizeTeamName(team?.teamName || '');
           const mappedCaptainIds = captainMap.get(normalizedTeam) || [];
           mappedCaptainIds.forEach(id => recipients.push(String(id).trim()));
         });
+
         const unique = recipients.filter((id, index, arr) => id && arr.indexOf(id) === index);
+
         if (!unique.length) return '';
+
         return `https://sportsgamer.gg/community/messenger/compose/?to=${unique.join(',')}`;
       },
+
       async getSignUpsMessageUrl(row) {
         if (currentPage !== 'registered') return '';
         const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
@@ -850,6 +965,19 @@
         if (!recipients.length) return '';
         return `https://sportsgamer.gg/community/messenger/compose/?to=${recipients.join(',')}`;
       },
+
+      async getSeedingMissingMessageUrl(teamName) {
+        const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
+        const normalizedTeam = Utils.normalizeTeamName(teamName);
+        const captainIds = (captainMap.get(normalizedTeam) || [])
+          .map(id => String(id).trim())
+          .filter(Boolean)
+          .filter((id, index, arr) => arr.indexOf(id) === index);
+
+        if (!captainIds.length) return '';
+        return `https://sportsgamer.gg/community/messenger/compose/?to=${captainIds.join(',')}`;
+      },
+
       buildBackupMessage(row) {
         const teamName = RowAccess.getTeamName(row) || 'team';
         const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
@@ -858,19 +986,36 @@
         if (games > 10) return `License Status Update – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has participated in ${games} games using a Backup Player License and now needs a Full Player License.\n\nBest regards,`;
         return `License Status Reminder – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has now played 10 matches using a Backup Player License.\n\nBest regards,`;
       },
+
       buildUnlicensedMessage(row) {
         const teamName = RowAccess.getTeamName(row) || 'team';
         const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
         const games = Number(RowAccess.getBackupGames(row) || 0);
         return `License Status Update – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has participated in ${games} games without a valid license.\n\nBest regards,`;
       },
+
       buildMultipleTeamsMessage(row) {
         const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
         const teamCount = Number(row?.teamCount) || 0;
         const teams = Array.isArray(row?.teams) ? row.teams : [];
-        const teamLines = teams.length ? teams.map(team => `- ${team?.leagueName ? team.leagueName + ' — ' : ''}${team?.teamName || ''}`).join('\n') : '- Team information missing';
-        return `Multiple Team Registration – Action Required for ${playerName}\n\nHi,\n\n${playerName} is currently registered in ${teamCount} teams.\n\n${teamLines}\n\nBest regards,`;
+
+        const teamLines = teams.length
+          ? teams.map(team => `- ${team?.leagueName ? team.leagueName + ' — ' : ''}${team?.teamName || ''}`).join('\n')
+          : '- Team information missing';
+
+        return `Multiple Team Registration – Action Required for ${playerName}
+
+Hi,
+
+${playerName} is currently registered in ${teamCount} teams.
+
+This message is being sent to the player and the captains of all listed teams.
+
+${teamLines}
+
+Best regards,`;
       },
+
       buildSignUpsMessage(row) {
         const teamName = RowAccess.getTeamName(row) || 'team';
         const divisionName = String(row?.divisionName || '').trim() || 'this division';
@@ -878,10 +1023,31 @@
         const issueText = issues.length ? issues.map(issue => `- ${issue}`).join('\n') : '- Missing requirements detected';
         return `Registration Requirements – Action Required for ${teamName}\n\nHi ${teamName},\n\nYour registration for ${divisionName} currently does not meet all requirements.\n\n${issueText}\n\nBest regards,`;
       },
+
+      buildMissingSeedingMessage(teamName) {
+        return `Last chance to secure your spot in ECL ’26: Spring
+
+Hi ${teamName}
+
+The registration window for ECL ’26: Spring is about to close for the Lite, Core, and Neo divisions — and we don’t want your team to miss the chance to secure its place.
+
+If you’re planning to compete this season, now is the time to lock in your division spot:
+https://sportsgamer.gg/leagues/501/registration
+
+Even if your team has decided not to participate, we’d still appreciate a quick reply. That helps us get a clearer picture of how many spots may open up through the qualifiers.
+
+Signups close at 23:59 CET on 2 April 2026.
+
+Don’t wait until the last minute — make sure your team is in.
+
+Best regards,`;
+      },
+
       async copyBackupMessage(row) { await navigator.clipboard.writeText(this.buildBackupMessage(row)); },
       async copyUnlicensedMessage(row) { await navigator.clipboard.writeText(this.buildUnlicensedMessage(row)); },
       async copyMultipleTeamsMessage(row) { await navigator.clipboard.writeText(this.buildMultipleTeamsMessage(row)); },
-      async copySignUpsMessage(row) { await navigator.clipboard.writeText(this.buildSignUpsMessage(row)); }
+      async copySignUpsMessage(row) { await navigator.clipboard.writeText(this.buildSignUpsMessage(row)); },
+      async copyMissingSeedingMessage(teamName) { await navigator.clipboard.writeText(this.buildMissingSeedingMessage(teamName)); }
     };
 
     function pillHtml(value) {
@@ -1261,23 +1427,148 @@
       dom.dataSectionTitle.textContent = 'Seeding 26 Spring'; dom.dataSectionSubtitle.textContent = 'Preset seeding compared against signUps.';
       const sections = SeedingService.buildSections(registeredRows);
       let visibleRows = 0; let renderedSections = 0;
-      sections.forEach(section => {
-        const filteredItems = getFilteredSeedingRows(section.title, section.items); if (!filteredItems.length) return;
-        if (renderedSections > 0) { const spacer = document.createElement('tr'); spacer.innerHTML = '<td colspan="5" style="height:12px;border:0;padding:0;"></td>'; dom.seedingBody.appendChild(spacer); }
-        renderedSections += 1; visibleRows += filteredItems.length;
-        const titleRow = document.createElement('tr'); titleRow.className = 'section-title-row'; const titleCell = document.createElement('td'); titleCell.colSpan = 5; titleCell.textContent = `${section.title} (${section.count})`; titleCell.style.background = SeedingService.getSectionStyle(section.title); titleCell.style.color = '#091126'; titleRow.appendChild(titleCell); dom.seedingBody.appendChild(titleRow);
-        const header = document.createElement('tr'); header.className = 'seed-header-row'; ['#','Seed','Team','Status','Notes'].forEach(text => { const th = document.createElement('th'); th.textContent = text; header.appendChild(th); }); dom.seedingBody.appendChild(header);
-        filteredItems.forEach(item => {
-          const tr = document.createElement('tr'); tr.className = 'seed-row' + (item.isMissing ? ' missing' : '') + (item.isUnlisted ? ' unlisted' : '');
-          const teamLinkMap = DataService.getTeamLinkMap(); const mapped = teamLinkMap.get(Utils.normalizeTeamName(item.displayTeam));
-          tr.innerHTML = `<td>${item.pos ?? ''}</td><td>${Utils.escapeHtml(item.seed || '')}</td><td></td><td></td><td></td>`;
-          const teamTd = tr.children[2]; if (mapped?.teamId && mapped?.leagueId) teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId), item.displayTeam, 'seed-link')); else teamTd.textContent = item.displayTeam || '';
-          const statusTd = tr.children[3]; statusTd.innerHTML = !item.displayTeam ? '<span class="seed-status empty">-</span>' : item.exists ? '<span class="seed-status ok">Registered</span>' : '<span class="seed-status missing">Missing</span>';
-          const noteTd = tr.children[4]; if (item.note) item.note.split(' • ').filter(Boolean).forEach(part => { const badge = document.createElement('span'); badge.className = 'seed-note-badge'; badge.textContent = part; noteTd.appendChild(badge); }); else noteTd.innerHTML = '<span class="muted">-</span>';
-          dom.seedingBody.appendChild(tr);
+
+      for (const section of sections) {
+        const filteredItems = getFilteredSeedingRows(section.title, section.items);
+        if (!filteredItems.length) continue;
+
+        if (renderedSections > 0) {
+          const spacer = document.createElement('tr');
+          spacer.innerHTML = '<td colspan="6" style="height:12px;border:0;padding:0;"></td>';
+          dom.seedingBody.appendChild(spacer);
+        }
+
+        renderedSections += 1;
+        visibleRows += filteredItems.length;
+
+        const titleRow = document.createElement('tr');
+        titleRow.className = 'section-title-row';
+        const titleCell = document.createElement('td');
+        titleCell.colSpan = 6;
+        titleCell.textContent = `${section.title} (${section.count})`;
+        titleCell.style.background = SeedingService.getSectionStyle(section.title);
+        titleCell.style.color = '#091126';
+        titleRow.appendChild(titleCell);
+        dom.seedingBody.appendChild(titleRow);
+
+        const header = document.createElement('tr');
+        header.className = 'seed-header-row';
+        ['#','Seed','Team','Status','Notes','Mail'].forEach(text => {
+          const th = document.createElement('th');
+          th.textContent = text;
+          header.appendChild(th);
         });
-      });
-      if (!visibleRows) dom.seedingBody.innerHTML = '<tr><td colspan="5" class="empty-state">No seeding results found.</td></tr>';
+        dom.seedingBody.appendChild(header);
+
+        for (const item of filteredItems) {
+          const tr = document.createElement('tr');
+          tr.className = 'seed-row' + (item.isMissing ? ' missing' : '') + (item.isUnlisted ? ' unlisted' : '');
+
+          const teamLinkMap = DataService.getTeamLinkMap();
+
+          const teamCandidates = [
+            item.displayTeam,
+            item.team,
+            Rename.getCanonicalTeamName(item.team),
+            Rename.applyToValue(item.team),
+            Rename.applyToValue(item.displayTeam)
+          ].filter(Boolean);
+
+          let mapped = null;
+          for (const candidate of teamCandidates) {
+            const hit = teamLinkMap.get(Utils.normalizeTeamName(candidate));
+            if (hit?.teamId && hit?.leagueId) {
+              mapped = hit;
+              break;
+            }
+          }
+
+          const winterMapped = item.isMissing ? resolveWinterTeamLink(teamCandidates) : null;
+
+          tr.innerHTML = `<td>${item.pos ?? ''}</td><td>${Utils.escapeHtml(item.seed || '')}</td><td></td><td></td><td></td><td></td>`;
+
+          const teamTd = tr.children[2];
+          if (mapped?.teamId && mapped?.leagueId) {
+            teamTd.appendChild(
+              Utils.createLink(
+                TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId),
+                item.displayTeam,
+                'seed-link'
+              )
+            );
+          } else if (winterMapped?.teamId && winterMapped?.leagueId) {
+            teamTd.appendChild(
+              Utils.createLink(
+                TeamLinks.buildTeamUrl(winterMapped.teamId, winterMapped.leagueId),
+                item.displayTeam,
+                'seed-link'
+              )
+            );
+            teamTd.title = `Winter fallback. Matched against "${winterMapped.sourceName}"`;
+          } else {
+            teamTd.textContent = item.displayTeam || '';
+          }
+
+          const statusTd = tr.children[3];
+          statusTd.innerHTML = !item.displayTeam
+            ? '<span class="seed-status empty">-</span>'
+            : item.exists
+              ? '<span class="seed-status ok">Registered</span>'
+              : '<span class="seed-status missing">Missing</span>';
+
+          const noteTd = tr.children[4];
+          if (item.note) {
+            item.note.split(' • ').filter(Boolean).forEach(part => {
+              const badge = document.createElement('span');
+              badge.className = 'seed-note-badge';
+              badge.textContent = part;
+              noteTd.appendChild(badge);
+            });
+          } else {
+            noteTd.innerHTML = '<span class="muted">-</span>';
+          }
+
+          const mailTd = tr.children[5];
+          const actions = document.createElement('div');
+          actions.className = 'icon-actions';
+
+          if (item.isMissing && item.displayTeam) {
+            const mailUrl = await MessagingService.getSeedingMissingMessageUrl(item.displayTeam);
+            if (mailUrl) {
+              const btn = document.createElement('a');
+              btn.href = mailUrl;
+              btn.target = '_blank';
+              btn.rel = 'noopener noreferrer';
+              btn.className = 'mail-icon-btn';
+              btn.title = 'Open message to captains';
+              btn.textContent = '✉';
+              actions.appendChild(btn);
+            }
+
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.className = 'copy-icon-btn';
+            copyBtn.title = 'Copy missing-team message';
+            copyBtn.textContent = '⧉';
+            copyBtn.addEventListener('click', async () => {
+              try {
+                await MessagingService.copyMissingSeedingMessage(item.displayTeam);
+                Utils.setStatus('Message copied');
+              } catch {
+                Utils.setStatus('Copy failed');
+              }
+            });
+            actions.appendChild(copyBtn);
+          }
+
+          if (actions.childNodes.length) mailTd.appendChild(actions);
+          else mailTd.innerHTML = '<span class="muted">-</span>';
+
+          dom.seedingBody.appendChild(tr);
+        }
+      }
+
+      if (!visibleRows) dom.seedingBody.innerHTML = '<tr><td colspan="6" class="empty-state">No seeding results found.</td></tr>';
       dom.rowCounter.textContent = `${visibleRows} seeding row${visibleRows === 1 ? '' : 's'}`;
     }
 
@@ -1345,7 +1636,7 @@
     function bindEvents() {
       dom.loginBtn.addEventListener('click', tryLogin);
       dom.passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
-      dom.reloadBtn.addEventListener('click', async () => { rawJsonData = null; allData = {}; teamLinkMapCache = null; playerLinkMapCache = null; captainUserIdMapCache = null; await loadAndRender(true); });
+      dom.reloadBtn.addEventListener('click', async () => { rawJsonData = null; allData = {}; teamLinkMapCache = null; playerLinkMapCache = null; captainUserIdMapCache = null; winterTeamLinkMapCache = null; await loadAndRender(true); });
       dom.clearFiltersBtn.addEventListener('click', async () => { dom.searchInput.value = ''; dom.flaggedOnlyToggle.checked = false; dom.seedingFilterSelect.value = 'all'; dom.sortSelect.value = 'default'; sortState = { column: null, direction: 'asc' }; await renderApp(); });
       dom.csvExportBtn.addEventListener('click', exportCsv);
       dom.openJsonBtn.addEventListener('click', () => { const source = rawJsonData || allData || {}; const keys = Object.keys(source); openDrawer('alla.json', 'Raw top-level keys from the loaded file', keys.map(key => ({ key, type: Array.isArray(source[key]) ? 'array' : typeof source[key], length: Array.isArray(source[key]) ? source[key].length : '—' }))); });
