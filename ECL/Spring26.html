@@ -394,7 +394,7 @@
         <div class="topbar">
           <div class="title-wrap">
             <h2 id="pageTitle">Overview</h2>
-            <p id="pageSubtitle">Loads data from alla.json and renders each admin view dynamically.</p>
+            <p id="pageSubtitle">Loads data from spring26.json and renders each admin view dynamically.</p>
           </div>
           <div class="actions">
             <button class="btn" id="reloadBtn">Refresh</button>
@@ -442,7 +442,7 @@
             <section class="table-card">
               <div class="table-head">
                 <div>
-                  <h3>Mapping between UI and alla.json</h3>
+                  <h3>Mapping between UI and spring26.json</h3>
                   <p>The frontend renders these pages from their respective JSON keys.</p>
                 </div>
               </div>
@@ -504,7 +504,7 @@
   <script>
     const CONFIG = {
       ADMIN_PASSWORD: 'kungkenu',
-      DATA_FILES: ['./alla.json', './alla (1).json']
+      DATA_FILES: ['./spring26.json', './alla (1).json']
     };
 
     const PRESET_SECTIONS = [
@@ -531,7 +531,7 @@
     ];
 
     const PAGE_CONFIG = {
-      dashboard: { title: 'Overview', subtitle: 'SportsGamer ECL tools overview and alla.json mapping.', type: 'dashboard', label: 'Overview', badge: 'Start' },
+      dashboard: { title: 'Overview', subtitle: 'SportsGamer ECL tools overview and spring26.json mapping.', type: 'dashboard', label: 'Overview', badge: 'Start' },
       seeding: { title: 'Seeding 26 Spring', subtitle: 'Preset + registration check.', type: 'preset', label: 'Seeding 26 Spring', badge: 'Preset', csv: false },
       registered: { title: 'Registered Teams 26 Spring', subtitle: 'Built from signUps.', type: 'data', jsonKey: 'signUps', label: 'Registered Teams', badge: 'signUps', csv: true, columns: ['teamName','teamCountry','registrationDate','divisionName','qualifierName','playerCount','fullLicenseCount','backupLicenseCount','unlicensedPlayerCount','signupIssue','userID','__sendMail'] },
       lite: { title: 'Lite 26 Spring Teams', subtitle: 'Built from lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','totalPoints'] },
@@ -1639,7 +1639,7 @@ Best regards,`;
       dom.reloadBtn.addEventListener('click', async () => { rawJsonData = null; allData = {}; teamLinkMapCache = null; playerLinkMapCache = null; captainUserIdMapCache = null; winterTeamLinkMapCache = null; await loadAndRender(true); });
       dom.clearFiltersBtn.addEventListener('click', async () => { dom.searchInput.value = ''; dom.flaggedOnlyToggle.checked = false; dom.seedingFilterSelect.value = 'all'; dom.sortSelect.value = 'default'; sortState = { column: null, direction: 'asc' }; await renderApp(); });
       dom.csvExportBtn.addEventListener('click', exportCsv);
-      dom.openJsonBtn.addEventListener('click', () => { const source = rawJsonData || allData || {}; const keys = Object.keys(source); openDrawer('alla.json', 'Raw top-level keys from the loaded file', keys.map(key => ({ key, type: Array.isArray(source[key]) ? 'array' : typeof source[key], length: Array.isArray(source[key]) ? source[key].length : '—' }))); });
+      dom.openJsonBtn.addEventListener('click', () => { const source = rawJsonData || allData || {}; const keys = Object.keys(source); openDrawer('spring26.json', 'Raw top-level keys from the loaded file', keys.map(key => ({ key, type: Array.isArray(source[key]) ? 'array' : typeof source[key], length: Array.isArray(source[key]) ? source[key].length : '—' }))); });
       dom.drawerClose.addEventListener('click', () => dom.drawer.classList.remove('open'));
       document.getElementById('scrollTopBtn').addEventListener('click', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
