@@ -524,10 +524,14 @@
       { oldName: 'Jagrs in Paradise', newName: 'Cityboys' },
       { oldName: 'TROJANS', newName: 'Sjukstugan' },
       { oldName: 'MoDo Hockey', newName: 'Västerås IK' },
-      { oldName: 'MoDo Hockey', newName: 'Västerås IK' },
       { oldName: 'ROBE Esports', newName: 'MSK Esports' },
       { oldName: 'Polski Boys', newName: 'Tunnel Vision' },
       { oldName: 'Vesuvius Academy', newName: 'Grim Reapers HC' }
+    ];
+
+    const DISBANDED_TEAMS = [
+      'Vizio',
+      'Deadly Phantoms'
     ];
 
     const PAGE_CONFIG = {
@@ -693,6 +697,13 @@
           });
         }
         return cloned;
+      }
+    };
+
+    const Disbanded = {
+      set: new Set(DISBANDED_TEAMS.map(name => Utils.normalizeTeamName(Rename.getCanonicalTeamName(name)))),
+      has(teamName) {
+        return this.set.has(Utils.normalizeTeamName(Rename.getCanonicalTeamName(teamName)));
       }
     };
 
@@ -898,7 +909,8 @@
 
       return null;
     }
-        const MessagingService = {
+
+    const MessagingService = {
       async getBackupMessageUrl(row) {
         if (!['backups','unlicensed'].includes(currentPage)) return '';
         const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
@@ -1049,8 +1061,7 @@ Best regards,`;
       async copySignUpsMessage(row) { await navigator.clipboard.writeText(this.buildSignUpsMessage(row)); },
       async copyMissingSeedingMessage(teamName) { await navigator.clipboard.writeText(this.buildMissingSeedingMessage(teamName)); }
     };
-
-    function pillHtml(value) {
+       function pillHtml(value) {
       if (value == null || value === '') return '<span class="muted">—</span>';
       const t = String(value); const lower = t.toLowerCase(); let cls = 'info';
       if (lower === 'ok' || lower === 'yes' || lower === 'clear') cls = 'ok';
@@ -1378,7 +1389,24 @@ Best regards,`;
             const normalized = Utils.normalizeTeamName(displayTeam);
             const exists = team ? registeredSet.has(normalized) : false;
             const note = team ? this.getSeedRowNote(section, team, registeredInfoMap) : '';
-            return { pos, seed, team, displayTeam, exists, note, isMissing: !!displayTeam && !exists, isDisbanded: false, isUnlisted: false };
+            const isDisbanded = Disbanded.has(team);
+            const isMissing = !!displayTeam && !exists && !isDisbanded;
+            const finalNoteParts = [];
+
+            if (note) finalNoteParts.push(note);
+            if (isDisbanded) finalNoteParts.push('DISBANDED');
+
+            return {
+              pos,
+              seed,
+              team,
+              displayTeam,
+              exists,
+              note: finalNoteParts.join(' • '),
+              isMissing,
+              isDisbanded,
+              isUnlisted: false
+            };
           });
 
           if (['ELITE','PRO','LITE','CORE','NEO'].includes(sectionDivision)) {
@@ -1462,7 +1490,11 @@ Best regards,`;
 
         for (const item of filteredItems) {
           const tr = document.createElement('tr');
-          tr.className = 'seed-row' + (item.isMissing ? ' missing' : '') + (item.isUnlisted ? ' unlisted' : '');
+          tr.className =
+            'seed-row' +
+            (item.isMissing ? ' missing' : '') +
+            (item.isDisbanded ? ' disbanded' : '') +
+            (item.isUnlisted ? ' unlisted' : '');
 
           const teamLinkMap = DataService.getTeamLinkMap();
 
@@ -1488,7 +1520,9 @@ Best regards,`;
           tr.innerHTML = `<td>${item.pos ?? ''}</td><td>${Utils.escapeHtml(item.seed || '')}</td><td></td><td></td><td></td><td></td>`;
 
           const teamTd = tr.children[2];
-          if (mapped?.teamId && mapped?.leagueId) {
+          if (item.isDisbanded) {
+            teamTd.textContent = item.displayTeam || '';
+          } else if (mapped?.teamId && mapped?.leagueId) {
             teamTd.appendChild(
               Utils.createLink(
                 TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId),
@@ -1512,15 +1546,19 @@ Best regards,`;
           const statusTd = tr.children[3];
           statusTd.innerHTML = !item.displayTeam
             ? '<span class="seed-status empty">-</span>'
-            : item.exists
-              ? '<span class="seed-status ok">Registered</span>'
-              : '<span class="seed-status missing">Missing</span>';
+            : item.isDisbanded
+              ? '<span class="seed-status disbanded">Disbanded</span>'
+              : item.exists
+                ? '<span class="seed-status ok">Registered</span>'
+                : '<span class="seed-status missing">Missing</span>';
 
           const noteTd = tr.children[4];
           if (item.note) {
             item.note.split(' • ').filter(Boolean).forEach(part => {
               const badge = document.createElement('span');
-              badge.className = 'seed-note-badge';
+              badge.className = part === 'DISBANDED'
+                ? 'seed-note-badge disbanded'
+                : 'seed-note-badge';
               badge.textContent = part;
               noteTd.appendChild(badge);
             });
@@ -1532,7 +1570,7 @@ Best regards,`;
           const actions = document.createElement('div');
           actions.className = 'icon-actions';
 
-          if (item.isMissing && item.displayTeam) {
+          if (item.isMissing && !item.isDisbanded && item.displayTeam) {
             const mailUrl = await MessagingService.getSeedingMissingMessageUrl(item.displayTeam);
             if (mailUrl) {
               const btn = document.createElement('a');
