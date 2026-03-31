@@ -744,88 +744,119 @@
     };
 
     const Rules = {
-      getDivisionLevel(value) {
-        const d = String(value || '').trim().toUpperCase();
-        if (d === 'ELITE') return 4;
-        if (d === 'PRO') return 3;
-        if (d === 'LITE') return 2;
-        if (d === 'CORE') return 1;
-        if (d === 'NEO') return 0;
-        return null;
-      },
-      isBigDropTransfer(row) {
-        if (currentPage !== 'transfers') return false;
-        const fromLevel = this.getDivisionLevel(row?.FromDiv);
-        const toLevel = this.getDivisionLevel(row?.ToDiv);
-        if (fromLevel === null || toLevel === null) return false;
-        return (fromLevel - toLevel) > 1;
-      },
-      isNotOkRow(row) {
-        return Object.values(row || {}).some(v => String(v ?? '').trim().toLowerCase() === 'not ok');
-      },
-      getMinimumPlayersForDivision(divisionName) {
-        const d = String(divisionName || '').trim().toUpperCase();
-        if (d === 'ELITE' || d === 'PRO') return 7;
-        if (d === 'LITE' || d === 'CORE' || d === 'NEO') return 8;
-        return 0;
-      },
-      getSignupIssues(row) {
-        const issues = [];
-        const division = String(row?.divisionName || '').trim().toUpperCase();
-        const playerCount = Number(row?.playerCount) || 0;
-        const fullLicenseCount = RowAccess.getFullLicenseCount(row);
-        const backupLicenseCount = Number(row?.backupLicenseCount) || 0;
-        const minPlayers = this.getMinimumPlayersForDivision(division);
+  getDivisionLevel(value) {
+    const d = String(value || '').trim().toUpperCase();
+    if (d === 'ELITE') return 4;
+    if (d === 'PRO') return 3;
+    if (d === 'LITE') return 2;
+    if (d === 'CORE') return 1;
+    if (d === 'NEO') return 0;
+    return null;
+  },
 
-        if (minPlayers > 0 && playerCount < minPlayers) issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers} )`);
-        if (playerCount > 13) issues.push(`has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
-       if (fullLicenseCount < 6) {
-  const licenseLabel = division === 'NEO' ? 'Neo license' : 'full license';
-  issues.push(`needs ${6 - fullLicenseCount} more ${licenseLabel}${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
-}
-        if (backupLicenseCount > 3) issues.push(`has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
-        return issues;
-      },
-      getSignupIssueText(row) { return this.getSignupIssues(row).join(' • '); },
-      getAllowedHistoryMaxLevel() {
-        if (currentPage === 'lite') return 2;
-        if (currentPage === 'core') return 1;
-        if (currentPage === 'neo') return 0;
-        return 99;
-      },
-      isFlaggedHistoryDivision(divisionName) {
-        const level = this.getDivisionLevel(divisionName);
-        if (level === null) return false;
-        return level > this.getAllowedHistoryMaxLevel();
-      },
-      getRowClass(row) {
-        if (currentPage === 'multiple') return 'not-ok';
-        if (currentPage === 'banned') {
-          if (String(row?.status || '').toLowerCase() === 'violation') return 'not-ok';
-          if (String(row?.status || '').toLowerCase() === 'clear') return 'ban-clear';
-          if (String(row?.status || '').toLowerCase() === 'expired') return 'ban-expired';
-          return '';
-        }
-        if (currentPage === 'registered' && this.getSignupIssues(row).length > 0) return 'signup-rule-error';
-        if (currentPage === 'backups') {
-          const games = RowAccess.getBackupGames(row);
-          if (games !== null) {
-            if (games > 10) return 'backup-danger';
-            if (games === 10) return 'backup-warning';
-          }
-        }
-        if (currentPage === 'unlicensed') {
-          const games = RowAccess.getBackupGames(row);
-          if (games !== null && games >= 1) return 'not-ok';
-        }
-        if (this.isBigDropTransfer(row)) return 'transfer-danger';
-        if (this.isNotOkRow(row)) return 'not-ok';
-        return '';
-      },
-      isFlaggedRow(row) {
-        return ['not-ok','backup-warning','backup-danger','transfer-danger','signup-rule-error'].includes(this.getRowClass(row));
+  isBigDropTransfer(row) {
+    if (currentPage !== 'transfers') return false;
+    const fromLevel = this.getDivisionLevel(row?.FromDiv);
+    const toLevel = this.getDivisionLevel(row?.ToDiv);
+    if (fromLevel === null || toLevel === null) return false;
+    return (fromLevel - toLevel) > 1;
+  },
+
+  isNotOkRow(row) {
+    return Object.values(row || {}).some(v => String(v ?? '').trim().toLowerCase() === 'not ok');
+  },
+
+  getMinimumPlayersForDivision(divisionName) {
+    const d = String(divisionName || '').trim().toUpperCase();
+    if (d === 'ELITE' || d === 'PRO') return 7;
+    if (d === 'LITE' || d === 'CORE' || d === 'NEO') return 8;
+    return 0;
+  },
+
+  getSignupIssues(row) {
+    const issues = [];
+    const division = String(row?.divisionName || '').trim().toUpperCase();
+    const playerCount = Number(row?.playerCount) || 0;
+    const fullLicenseCount = RowAccess.getFullLicenseCount(row);
+    const backupLicenseCount = Number(row?.backupLicenseCount) || 0;
+    const minPlayers = this.getMinimumPlayersForDivision(division);
+    const teamLicense = Number(row?.teamLicense) || 0;
+
+    if (teamLicense !== 1) {
+      issues.push('team license missing');
+    }
+
+    if (minPlayers > 0 && playerCount < minPlayers) {
+      issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
+    }
+
+    if (playerCount > 13) {
+      issues.push(`has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
+    }
+
+    if (fullLicenseCount < 6) {
+      const licenseLabel = division === 'NEO' ? 'Neo license' : 'full license';
+      issues.push(`needs ${6 - fullLicenseCount} more ${licenseLabel}${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
+    }
+
+    if (backupLicenseCount > 3) {
+      issues.push(`has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
+    }
+
+    return issues;
+  },
+
+  getSignupIssueText(row) {
+    return this.getSignupIssues(row).join(' • ');
+  },
+
+  getAllowedHistoryMaxLevel() {
+    if (currentPage === 'lite') return 2;
+    if (currentPage === 'core') return 1;
+    if (currentPage === 'neo') return 0;
+    return 99;
+  },
+
+  isFlaggedHistoryDivision(divisionName) {
+    const level = this.getDivisionLevel(divisionName);
+    if (level === null) return false;
+    return level > this.getAllowedHistoryMaxLevel();
+  },
+
+  getRowClass(row) {
+    if (currentPage === 'multiple') return 'not-ok';
+
+    if (currentPage === 'banned') {
+      if (String(row?.status || '').toLowerCase() === 'violation') return 'not-ok';
+      if (String(row?.status || '').toLowerCase() === 'clear') return 'ban-clear';
+      if (String(row?.status || '').toLowerCase() === 'expired') return 'ban-expired';
+      return '';
+    }
+
+    if (currentPage === 'registered' && this.getSignupIssues(row).length > 0) return 'signup-rule-error';
+
+    if (currentPage === 'backups') {
+      const games = RowAccess.getBackupGames(row);
+      if (games !== null) {
+        if (games > 10) return 'backup-danger';
+        if (games === 10) return 'backup-warning';
       }
-    };
+    }
+
+    if (currentPage === 'unlicensed') {
+      const games = RowAccess.getBackupGames(row);
+      if (games !== null && games >= 1) return 'not-ok';
+    }
+
+    if (this.isBigDropTransfer(row)) return 'transfer-danger';
+    if (this.isNotOkRow(row)) return 'not-ok';
+    return '';
+  },
+
+  isFlaggedRow(row) {
+    return ['not-ok','backup-warning','backup-danger','transfer-danger','signup-rule-error'].includes(this.getRowClass(row));
+  }
+};
 
     const TeamLinks = {
       getLeagueId(row, column = null) {
@@ -1177,26 +1208,7 @@ ${teamLines}
 Best regards,`;
       },
 
-     buildSignUpsMessage(row) {
-  const teamName = RowAccess.getTeamName(row) || 'team';
-  const divisionName = String(row?.divisionName || '').trim() || 'this division';
-  const issues = Rules.getSignupIssues(row);
-  const issueText = issues.length
-    ? issues.map(issue => `- ${issue}`).join('\n')
-    : '- Missing requirements detected';
-
-  return `Registration Requirements – Action Required for ${teamName}
-
-Hi ${teamName},
-
-Your registration for ${divisionName} currently does not meet all requirements.
-
-${issueText}
-
-Please make sure to add the missing players to your roster no later than April 2. If the team does not meet the minimum requirements by then, you risk being removed from the tournament. Please don’t hesitate to reach out for assistance - we’re happy to help! 
-
-Best regards,`;
-},
+     buildSignUpsMessage
 
       buildMissingSeedingMessage(teamName) {
         return `Last chance to secure your spot in ECL ’26: Spring
