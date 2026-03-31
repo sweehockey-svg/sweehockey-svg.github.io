@@ -782,9 +782,9 @@
   const minPlayers = this.getMinimumPlayersForDivision(division);
   const teamLicense = Number(row?.teamLicense) || 0;
 
-  if (teamLicense !== 1) {
-    issues.push('team license missing');
-  }
+if (division !== 'NEO' && teamLicense !== 1) {
+  issues.push('team license missing');
+}
 
   if (minPlayers > 0 && playerCount < minPlayers) {
     issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
