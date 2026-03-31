@@ -774,37 +774,37 @@
   },
 
   getSignupIssues(row) {
-    const issues = [];
-    const division = String(row?.divisionName || '').trim().toUpperCase();
-    const playerCount = Number(row?.playerCount) || 0;
-    const fullLicenseCount = RowAccess.getFullLicenseCount(row);
-    const backupLicenseCount = Number(row?.backupLicenseCount) || 0;
-    const minPlayers = this.getMinimumPlayersForDivision(division);
-    const teamLicense = Number(row?.teamLicense) || 0;
+  const issues = [];
+  const division = String(row?.divisionName || '').trim().toUpperCase();
+  const playerCount = Number(row?.playerCount) || 0;
+  const fullLicenseCount = RowAccess.getFullLicenseCount(row);
+  const backupLicenseCount = Number(row?.backupLicenseCount) || 0;
+  const minPlayers = this.getMinimumPlayersForDivision(division);
+  const teamLicense = Number(row?.teamLicense) || 0;
 
-    if (teamLicense !== 1) {
-      issues.push('team license missing');
-    }
+  if (teamLicense !== 1) {
+    issues.push('team license missing');
+  }
 
-    if (minPlayers > 0 && playerCount < minPlayers) {
-      issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
-    }
+  if (minPlayers > 0 && playerCount < minPlayers) {
+    issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
+  }
 
-    if (playerCount > 13) {
-      issues.push(`has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
-    }
+  if (playerCount > 13) {
+    issues.push(`has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
+  }
 
-    if (fullLicenseCount < 6) {
-      const licenseLabel = division === 'NEO' ? 'Neo license' : 'full license';
-      issues.push(`needs ${6 - fullLicenseCount} more ${licenseLabel}${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
-    }
+  if (fullLicenseCount < 6) {
+    const licenseLabel = division === 'NEO' ? 'Neo license' : 'full license';
+    issues.push(`needs ${6 - fullLicenseCount} more ${licenseLabel}${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
+  }
 
-    if (backupLicenseCount > 3) {
-      issues.push(`has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
-    }
+  if (backupLicenseCount > 3) {
+    issues.push(`has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
+  }
 
-    return issues;
-  },
+  return issues;
+},
 
   getSignupIssueText(row) {
     return this.getSignupIssues(row).join(' • ');
@@ -1186,16 +1186,16 @@
         return `License Status Update – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has participated in ${games} games without a valid license.\n\nBest regards,`;
       },
 
-      buildMultipleTeamsMessage(row) {
-        const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
-        const teamCount = Number(row?.teamCount) || 0;
-        const teams = Array.isArray(row?.teams) ? row.teams : [];
+     buildMultipleTeamsMessage(row) {
+  const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
+  const teamCount = Number(row?.teamCount) || 0;
+  const teams = Array.isArray(row?.teams) ? row.teams : [];
 
-        const teamLines = teams.length
-          ? teams.map(team => `- ${team?.leagueName ? team.leagueName + ' — ' : ''}${team?.teamName || ''}`).join('\n')
-          : '- Team information missing';
+  const teamLines = teams.length
+    ? teams.map(team => `- ${team?.leagueName ? team.leagueName + ' — ' : ''}${team?.teamName || ''}`).join('\n')
+    : '- Team information missing';
 
-        return `Multiple Team Registration – Action Required for ${playerName}
+  return `Multiple Team Registration – Action Required for ${playerName}
 
 Hi,
 
@@ -1206,12 +1206,32 @@ This message is being sent to the player and the captains of all listed teams.
 ${teamLines}
 
 Best regards,`;
-      },
+},
 
-     buildSignUpsMessage
+buildSignUpsMessage(row) {
+  const teamName = RowAccess.getTeamName(row) || 'team';
+  const divisionName = String(row?.divisionName || '').trim() || 'this division';
+  const issues = Rules.getSignupIssues(row);
 
-      buildMissingSeedingMessage(teamName) {
-        return `Last chance to secure your spot in ECL ’26: Spring
+  const issueText = issues.length
+    ? issues.map(issue => `- ${issue}`).join('\n')
+    : '- Missing requirements detected';
+
+  return `Registration Requirements – Action Required for ${teamName}
+
+Hi ${teamName},
+
+Your registration for ${divisionName} currently does not meet all requirements.
+
+${issueText}
+
+Please make sure to fix the issues above and add the missing players/licenses to your roster no later than April 2. If the team does not meet the minimum requirements by then, you risk being removed from the tournament. Please don’t hesitate to reach out for assistance - we’re happy to help!
+
+Best regards,`;
+},
+
+buildMissingSeedingMessage(teamName) {
+  return `Last chance to secure your spot in ECL ’26: Spring
 
 Hi ${teamName}
 
@@ -1227,7 +1247,7 @@ Signups close at 23:59 CET on 2 April 2026.
 Don’t wait until the last minute — make sure your team is in.
 
 Best regards,`;
-      },
+},
 
       buildFlaggedTeamMessage(row) {
         const teamName = RowAccess.getTeamName(row) || 'team';
