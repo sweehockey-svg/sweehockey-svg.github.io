@@ -530,20 +530,20 @@
 
     const DISBANDED_TEAMS = [
       'KUUSAMO.gg',
-'KUUSAMO.gg',
-'POGGERS',
+      'KUUSAMO.gg',
+      'POGGERS',
       'EXEN',
-'Finnish Roosters',
-'NOVA',
-'Tinted Visors',
+      'Finnish Roosters',
+      'NOVA',
+      'Tinted Visors',
       'Veterankraft',
-'M3 Esports',
-'6 MAN AVALANCHE (DNF)',
-       'Bad Habits',
-       'Get Hagens HC',
-     'SCB eSports',
-'HCP eSports',
-            'SHADOW SKULLS',
+      'M3 Esports',
+      '6 MAN AVALANCHE (DNF)',
+      'Bad Habits',
+      'Get Hagens HC',
+      'SCB eSports',
+      'HCP eSports',
+      'SHADOW SKULLS',
       'MORGANCHIPSEN HK'
     ];
 
@@ -551,9 +551,9 @@
       dashboard: { title: 'Overview', subtitle: 'SportsGamer ECL tools overview and spring26.json mapping.', type: 'dashboard', label: 'Overview', badge: 'Start' },
       seeding: { title: 'Seeding 26 Spring', subtitle: 'Preset + registration check.', type: 'preset', label: 'Seeding 26 Spring', badge: 'Preset', csv: false },
       registered: { title: 'Registered Teams 26 Spring', subtitle: 'Built from signUps.', type: 'data', jsonKey: 'signUps', label: 'Registered Teams', badge: 'signUps', csv: true, columns: ['teamName','teamCountry','registrationDate','divisionName','qualifierName','playerCount','fullLicenseCount','backupLicenseCount','unlicensedPlayerCount','signupIssue','userID','__sendMail'] },
-      lite: { title: 'Lite 26 Spring Teams', subtitle: 'Built from lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','totalPoints'] },
-      core: { title: 'Core 26 Spring Teams', subtitle: 'Built from core.', type: 'data', jsonKey: 'core', label: 'Core 26 Spring Teams', badge: 'core', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','totalPoints'] },
-      neo: { title: 'Neo 26 Spring Teams', subtitle: 'Built from neo.', type: 'data', jsonKey: 'neo', label: 'Neo 26 Spring Teams', badge: 'neo', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','NP','totalPoints'] },
+      lite: { title: 'Lite 26 Spring Teams', subtitle: 'Built from lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','totalPoints','compatibility','__sendMail'] },
+      core: { title: 'Core 26 Spring Teams', subtitle: 'Built from core.', type: 'data', jsonKey: 'core', label: 'Core 26 Spring Teams', badge: 'core', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','totalPoints','compatibility','__sendMail'] },
+      neo: { title: 'Neo 26 Spring Teams', subtitle: 'Built from neo.', type: 'data', jsonKey: 'neo', label: 'Neo 26 Spring Teams', badge: 'neo', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','NP','totalPoints','compatibility','__sendMail'] },
       transfers: { title: 'Transfers 26 Spring Teams', subtitle: 'Built from overgangar.', type: 'data', jsonKey: 'overgangar', label: 'Transfers 26 Spring Teams', badge: 'overgangar', csv: true, columns: ['Player','From','FromDiv','To','ToDiv','GroupGames26Winter','PlayoffGames26Winter','TotalGames26Winter','Date'] },
       backups: { title: 'Backups 26 Spring Teams', subtitle: 'Built from backups.', type: 'data', jsonKey: 'backups', label: 'Backups 26 Spring Teams', badge: 'backups', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
       unlicensed: { title: 'Unlicensed 26 Spring Teams', subtitle: 'Built from licenslosa.', type: 'data', jsonKey: 'licenslosa', label: 'Unlicensed 26 Spring Teams', badge: 'licenslosa', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
@@ -737,33 +737,85 @@
     const Rules = {
       getDivisionLevel(value) {
         const d = String(value || '').trim().toUpperCase();
-        if (d === 'ELITE') return 4; if (d === 'PRO') return 3; if (d === 'LITE') return 2; if (d === 'CORE') return 1; if (d === 'NEO') return 0; return null;
+        if (d === 'ELITE') return 4;
+        if (d === 'PRO') return 3;
+        if (d === 'LITE') return 2;
+        if (d === 'CORE') return 1;
+        if (d === 'NEO') return 0;
+        return null;
       },
-      isBigDropTransfer(row) { if (currentPage !== 'transfers') return false; const fromLevel = this.getDivisionLevel(row?.FromDiv); const toLevel = this.getDivisionLevel(row?.ToDiv); if (fromLevel === null || toLevel === null) return false; return (fromLevel - toLevel) > 1; },
-      isNotOkRow(row) { return Object.values(row || {}).some(v => String(v ?? '').trim().toLowerCase() === 'not ok'); },
-      getMinimumPlayersForDivision(divisionName) { const d = String(divisionName || '').trim().toUpperCase(); if (d === 'ELITE' || d === 'PRO') return 7; if (d === 'LITE' || d === 'CORE' || d === 'NEO') return 8; return 0; },
+      isBigDropTransfer(row) {
+        if (currentPage !== 'transfers') return false;
+        const fromLevel = this.getDivisionLevel(row?.FromDiv);
+        const toLevel = this.getDivisionLevel(row?.ToDiv);
+        if (fromLevel === null || toLevel === null) return false;
+        return (fromLevel - toLevel) > 1;
+      },
+      isNotOkRow(row) {
+        return Object.values(row || {}).some(v => String(v ?? '').trim().toLowerCase() === 'not ok');
+      },
+      getMinimumPlayersForDivision(divisionName) {
+        const d = String(divisionName || '').trim().toUpperCase();
+        if (d === 'ELITE' || d === 'PRO') return 7;
+        if (d === 'LITE' || d === 'CORE' || d === 'NEO') return 8;
+        return 0;
+      },
       getSignupIssues(row) {
-        const issues = []; const division = String(row?.divisionName || '').trim().toUpperCase(); const playerCount = Number(row?.playerCount) || 0; const fullLicenseCount = RowAccess.getFullLicenseCount(row); const backupLicenseCount = Number(row?.backupLicenseCount) || 0; const minPlayers = this.getMinimumPlayersForDivision(division);
-        if (minPlayers > 0 && playerCount < minPlayers) issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
+        const issues = [];
+        const division = String(row?.divisionName || '').trim().toUpperCase();
+        const playerCount = Number(row?.playerCount) || 0;
+        const fullLicenseCount = RowAccess.getFullLicenseCount(row);
+        const backupLicenseCount = Number(row?.backupLicenseCount) || 0;
+        const minPlayers = this.getMinimumPlayersForDivision(division);
+
+        if (minPlayers > 0 && playerCount < minPlayers) issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers} )`);
         if (playerCount > 13) issues.push(`has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
-        if (fullLicenseCount < 6) issues.push(`needs ${6 - fullLicenseCount} more full license${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
+       if (fullLicenseCount < 6) {
+  const licenseLabel = division === 'NEO' ? 'Neo license' : 'full license';
+  issues.push(`needs ${6 - fullLicenseCount} more ${licenseLabel}${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
+}
         if (backupLicenseCount > 3) issues.push(`has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
         return issues;
       },
       getSignupIssueText(row) { return this.getSignupIssues(row).join(' • '); },
-      getAllowedHistoryMaxLevel() { if (currentPage === 'lite') return 2; if (currentPage === 'core') return 1; if (currentPage === 'neo') return 0; return 99; },
-      isFlaggedHistoryDivision(divisionName) { const level = this.getDivisionLevel(divisionName); if (level === null) return false; return level > this.getAllowedHistoryMaxLevel(); },
+      getAllowedHistoryMaxLevel() {
+        if (currentPage === 'lite') return 2;
+        if (currentPage === 'core') return 1;
+        if (currentPage === 'neo') return 0;
+        return 99;
+      },
+      isFlaggedHistoryDivision(divisionName) {
+        const level = this.getDivisionLevel(divisionName);
+        if (level === null) return false;
+        return level > this.getAllowedHistoryMaxLevel();
+      },
       getRowClass(row) {
         if (currentPage === 'multiple') return 'not-ok';
-        if (currentPage === 'banned') { if (String(row?.status || '').toLowerCase() === 'violation') return 'not-ok'; if (String(row?.status || '').toLowerCase() === 'clear') return 'ban-clear'; if (String(row?.status || '').toLowerCase() === 'expired') return 'ban-expired'; return ''; }
+        if (currentPage === 'banned') {
+          if (String(row?.status || '').toLowerCase() === 'violation') return 'not-ok';
+          if (String(row?.status || '').toLowerCase() === 'clear') return 'ban-clear';
+          if (String(row?.status || '').toLowerCase() === 'expired') return 'ban-expired';
+          return '';
+        }
         if (currentPage === 'registered' && this.getSignupIssues(row).length > 0) return 'signup-rule-error';
-        if (currentPage === 'backups') { const games = RowAccess.getBackupGames(row); if (games !== null) { if (games > 10) return 'backup-danger'; if (games === 10) return 'backup-warning'; } }
-        if (currentPage === 'unlicensed') { const games = RowAccess.getBackupGames(row); if (games !== null && games >= 1) return 'not-ok'; }
+        if (currentPage === 'backups') {
+          const games = RowAccess.getBackupGames(row);
+          if (games !== null) {
+            if (games > 10) return 'backup-danger';
+            if (games === 10) return 'backup-warning';
+          }
+        }
+        if (currentPage === 'unlicensed') {
+          const games = RowAccess.getBackupGames(row);
+          if (games !== null && games >= 1) return 'not-ok';
+        }
         if (this.isBigDropTransfer(row)) return 'transfer-danger';
         if (this.isNotOkRow(row)) return 'not-ok';
         return '';
       },
-      isFlaggedRow(row) { return ['not-ok','backup-warning','backup-danger','transfer-danger','signup-rule-error'].includes(this.getRowClass(row)); }
+      isFlaggedRow(row) {
+        return ['not-ok','backup-warning','backup-danger','transfer-danger','signup-rule-error'].includes(this.getRowClass(row));
+      }
     };
 
     const TeamLinks = {
@@ -779,37 +831,67 @@
         if (column === 'To') return String(row.ToTeamID ?? row.toTeamID ?? row.toTeamId ?? '').trim();
         return String(row.teamID ?? row.teamId ?? row.TeamID ?? row.team_id ?? '').trim();
       },
-      buildTeamUrl(teamId, leagueId) { if (!teamId || !leagueId) return ''; return `https://sportsgamer.gg/leagues/${leagueId}/teams/${teamId}`; }
+      buildTeamUrl(teamId, leagueId) {
+        if (!teamId || !leagueId) return '';
+        return `https://sportsgamer.gg/leagues/${leagueId}/teams/${teamId}`;
+      }
     };
 
     const DataService = {
       normalizeAllData(payload) {
         if (!payload || typeof payload !== 'object') return {};
         if (EXPECTED_KEYS.some(key => Array.isArray(payload[key]))) return payload;
-        if (typeof payload.json_result === 'string') { try { const parsed = JSON.parse(payload.json_result); if (EXPECTED_KEYS.some(key => Array.isArray(parsed[key]))) return parsed; } catch (e) {} }
-        if (payload.json_result && typeof payload.json_result === 'object') { if (EXPECTED_KEYS.some(key => Array.isArray(payload.json_result[key]))) return payload.json_result; }
+        if (typeof payload.json_result === 'string') {
+          try {
+            const parsed = JSON.parse(payload.json_result);
+            if (EXPECTED_KEYS.some(key => Array.isArray(parsed[key]))) return parsed;
+          } catch (e) {}
+        }
+        if (payload.json_result && typeof payload.json_result === 'object') {
+          if (EXPECTED_KEYS.some(key => Array.isArray(payload.json_result[key]))) return payload.json_result;
+        }
         if (Array.isArray(payload.rows) && payload.rows.length) {
           const row0 = payload.rows[0];
           if (row0 && typeof row0 === 'object') {
             if (EXPECTED_KEYS.some(key => Array.isArray(row0[key]))) return row0;
-            if (typeof row0.json_result === 'string') { try { const parsed = JSON.parse(row0.json_result); if (EXPECTED_KEYS.some(key => Array.isArray(parsed[key]))) return parsed; } catch (e) {} }
-            if (row0.json_result && typeof row0.json_result === 'object') { if (EXPECTED_KEYS.some(key => Array.isArray(row0.json_result[key]))) return row0.json_result; }
+            if (typeof row0.json_result === 'string') {
+              try {
+                const parsed = JSON.parse(row0.json_result);
+                if (EXPECTED_KEYS.some(key => Array.isArray(parsed[key]))) return parsed;
+              } catch (e) {}
+            }
+            if (row0.json_result && typeof row0.json_result === 'object') {
+              if (EXPECTED_KEYS.some(key => Array.isArray(row0.json_result[key]))) return row0.json_result;
+            }
           }
         }
         return payload;
       },
+
       async fetchAll(forceReload = false) {
         if (rawJsonData && allData && !forceReload) return allData;
-        loadError = null; rawJsonData = null; allData = {}; loadedPath = null;
-        let loaded = null; let lastError = null;
+        loadError = null;
+        rawJsonData = null;
+        allData = {};
+        loadedPath = null;
+
+        let loaded = null;
+        let lastError = null;
+
         for (const path of CONFIG.DATA_FILES) {
           try {
             const response = await fetch(path + '?ts=' + Date.now(), { cache: 'no-store' });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            loaded = await response.json(); loadedPath = path; break;
-          } catch (error) { lastError = error; }
+            loaded = await response.json();
+            loadedPath = path;
+            break;
+          } catch (error) {
+            lastError = error;
+          }
         }
+
         if (!loaded) throw (lastError || new Error('Could not find JSON file'));
+
         rawJsonData = loaded;
         allData = this.normalizeAllData(loaded);
         teamLinkMapCache = null;
@@ -818,24 +900,48 @@
         winterTeamLinkMapCache = null;
         return allData;
       },
-      getRowsForSource(key) { const rows = allData?.[key]; if (!Array.isArray(rows)) throw new Error(`Key "${key}" is missing or is not an array`); return rows; },
+
+      getRowsForSource(key) {
+        const rows = allData?.[key];
+        if (!Array.isArray(rows)) throw new Error(`Key "${key}" is missing or is not an array`);
+        return rows;
+      },
+
       getPlayerLinkMap() {
         if (playerLinkMapCache) return playerLinkMapCache;
         const map = new Map();
+
         Object.values(allData || {}).forEach(value => {
           if (!Array.isArray(value)) return;
           value.forEach(row => {
             const playerId = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
-            if (playerId) PLAYER_NAME_KEYS.forEach(nameKey => { const playerName = row?.[nameKey]; const normalized = Utils.normalizePlayerName(playerName); if (normalized && !map.has(normalized)) map.set(normalized, String(playerId)); });
-            if (Array.isArray(row?.players)) row.players.forEach(player => { const pid = player?.playerID || player?.playerId || ''; const pname = player?.playerName || player?.Player || player?.tag || ''; const n = Utils.normalizePlayerName(pname); if (pid && n && !map.has(n)) map.set(n, String(pid)); });
+            if (playerId) {
+              PLAYER_NAME_KEYS.forEach(nameKey => {
+                const playerName = row?.[nameKey];
+                const normalized = Utils.normalizePlayerName(playerName);
+                if (normalized && !map.has(normalized)) map.set(normalized, String(playerId));
+              });
+            }
+
+            if (Array.isArray(row?.players)) {
+              row.players.forEach(player => {
+                const pid = player?.playerID || player?.playerId || '';
+                const pname = player?.playerName || player?.Player || player?.tag || '';
+                const n = Utils.normalizePlayerName(pname);
+                if (pid && n && !map.has(n)) map.set(n, String(pid));
+              });
+            }
           });
         });
+
         playerLinkMapCache = map;
         return map;
       },
+
       getTeamLinkMap() {
         if (teamLinkMapCache) return teamLinkMapCache;
         const map = new Map();
+
         Object.values(allData || {}).forEach(value => {
           if (!Array.isArray(value)) return;
           value.forEach(originalRow => {
@@ -851,13 +957,16 @@
             });
           });
         });
+
         teamLinkMapCache = map;
         return map;
       },
+
       getCaptainUserIdMap() {
         if (captainUserIdMapCache) return captainUserIdMapCache;
         const rows = Array.isArray(allData?.teamCaptains) ? allData.teamCaptains : [];
         const map = new Map();
+
         rows.forEach(originalRow => {
           const row = Rename.applyToRow(originalRow);
           const normalizedTeam = Utils.normalizeTeamName(row.teamName);
@@ -867,9 +976,11 @@
           const ids = map.get(normalizedTeam);
           if (!ids.includes(userId)) ids.push(userId);
         });
+
         captainUserIdMapCache = map;
         return map;
       },
+
       getWinterTeamLinkMap() {
         if (winterTeamLinkMapCache) return winterTeamLinkMapCache;
 
@@ -1003,6 +1114,22 @@
         return `https://sportsgamer.gg/community/messenger/compose/?to=${captainIds.join(',')}`;
       },
 
+      async getFlaggedTeamMessageUrl(row) {
+        if (!['lite', 'core', 'neo'].includes(currentPage)) return '';
+        if (!Rules.isFlaggedRow(row)) return '';
+
+        const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
+        const teamName = RowAccess.getTeamName(row);
+        const normalizedTeam = Utils.normalizeTeamName(teamName);
+        const captainIds = (captainMap.get(normalizedTeam) || [])
+          .map(id => String(id).trim())
+          .filter(Boolean)
+          .filter((id, index, arr) => arr.indexOf(id) === index);
+
+        if (!captainIds.length) return '';
+        return `https://sportsgamer.gg/community/messenger/compose/?to=${captainIds.join(',')}`;
+      },
+
       buildBackupMessage(row) {
         const teamName = RowAccess.getTeamName(row) || 'team';
         const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
@@ -1041,13 +1168,26 @@ ${teamLines}
 Best regards,`;
       },
 
-      buildSignUpsMessage(row) {
-        const teamName = RowAccess.getTeamName(row) || 'team';
-        const divisionName = String(row?.divisionName || '').trim() || 'this division';
-        const issues = Rules.getSignupIssues(row);
-        const issueText = issues.length ? issues.map(issue => `- ${issue}`).join('\n') : '- Missing requirements detected';
-        return `Registration Requirements – Action Required for ${teamName}\n\nHi ${teamName},\n\nYour registration for ${divisionName} currently does not meet all requirements.\n\n${issueText}\n\nBest regards,`;
-      },
+     buildSignUpsMessage(row) {
+  const teamName = RowAccess.getTeamName(row) || 'team';
+  const divisionName = String(row?.divisionName || '').trim() || 'this division';
+  const issues = Rules.getSignupIssues(row);
+  const issueText = issues.length
+    ? issues.map(issue => `- ${issue}`).join('\n')
+    : '- Missing requirements detected';
+
+  return `Registration Requirements – Action Required for ${teamName}
+
+Hi ${teamName},
+
+Your registration for ${divisionName} currently does not meet all requirements.
+
+${issueText}
+
+Please make sure to add the missing players to your roster no later than April 2. If the team does not meet the minimum requirements by then, you risk being removed from the tournament. Please don’t hesitate to reach out for assistance - we’re happy to help! 
+
+Best regards,`;
+},
 
       buildMissingSeedingMessage(teamName) {
         return `Last chance to secure your spot in ECL ’26: Spring
@@ -1068,15 +1208,37 @@ Don’t wait until the last minute — make sure your team is in.
 Best regards,`;
       },
 
+      buildFlaggedTeamMessage(row) {
+        const teamName = RowAccess.getTeamName(row) || 'team';
+        const currentDivision = String(row?.divisionName || currentPage || '').trim().toUpperCase();
+
+        let higherDivision = 'the division above';
+        if (currentDivision === 'LITE' || currentPage === 'lite') higherDivision = 'PRO';
+        else if (currentDivision === 'CORE' || currentPage === 'core') higherDivision = 'LITE';
+        else if (currentDivision === 'NEO' || currentPage === 'neo') higherDivision = 'CORE';
+
+        return `Hi ${teamName},
+
+We have reviewed your team and concluded that you are better suited for ${higherDivision}.
+
+We will therefore move your team to that division.
+
+Best regards,`;
+      },
+
       async copyBackupMessage(row) { await navigator.clipboard.writeText(this.buildBackupMessage(row)); },
       async copyUnlicensedMessage(row) { await navigator.clipboard.writeText(this.buildUnlicensedMessage(row)); },
       async copyMultipleTeamsMessage(row) { await navigator.clipboard.writeText(this.buildMultipleTeamsMessage(row)); },
       async copySignUpsMessage(row) { await navigator.clipboard.writeText(this.buildSignUpsMessage(row)); },
-      async copyMissingSeedingMessage(teamName) { await navigator.clipboard.writeText(this.buildMissingSeedingMessage(teamName)); }
+      async copyMissingSeedingMessage(teamName) { await navigator.clipboard.writeText(this.buildMissingSeedingMessage(teamName)); },
+      async copyFlaggedTeamMessage(row) { await navigator.clipboard.writeText(this.buildFlaggedTeamMessage(row)); }
     };
-       function pillHtml(value) {
+
+    function pillHtml(value) {
       if (value == null || value === '') return '<span class="muted">—</span>';
-      const t = String(value); const lower = t.toLowerCase(); let cls = 'info';
+      const t = String(value);
+      const lower = t.toLowerCase();
+      let cls = 'info';
       if (lower === 'ok' || lower === 'yes' || lower === 'clear') cls = 'ok';
       else if (lower.includes('not ok') || lower.includes('violation') || lower.includes('expired')) cls = 'danger';
       else if (lower.includes('manual') || lower.includes('warn') || lower.includes('review')) cls = 'warn';
@@ -1088,14 +1250,25 @@ Best regards,`;
         const cfg = PAGE_CONFIG[pageKey];
         return `<button class="nav-btn ${pageKey === currentPage ? 'active' : ''}" data-page="${pageKey}">${Utils.escapeHtml(cfg.label)}</button>`;
       }).join('');
-      dom.nav.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => { currentPage = btn.dataset.page; sortState = { column: null, direction: 'asc' }; window.scrollTo({ top: 0, behavior: 'auto' }); renderApp(); }));
+
+      dom.nav.querySelectorAll('.nav-btn').forEach(btn =>
+        btn.addEventListener('click', () => {
+          currentPage = btn.dataset.page;
+          sortState = { column: null, direction: 'asc' };
+          window.scrollTo({ top: 0, behavior: 'auto' });
+          renderApp();
+        })
+      );
     }
 
     function renderMetricCards(items, target) {
       target.innerHTML = items.map(item => `<article class="card metric"><div class="metric-label">${Utils.escapeHtml(item.label)}</div><div class="metric-value">${Utils.escapeHtml(item.value)}</div><div class="metric-meta">${Utils.escapeHtml(item.meta || '')}</div></article>`).join('');
     }
 
-    function showPage(id) { document.querySelectorAll('.page').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
 
     function getRowsForCurrentPage() {
       const cfg = PAGE_CONFIG[currentPage];
@@ -1118,6 +1291,7 @@ Best regards,`;
         if (['lite','core','neo'].includes(currentPage)) {
           return [...rows].sort((a, b) => (Number(b?.totalPoints) || 0) - (Number(a?.totalPoints) || 0));
         }
+
         if (currentPage === 'transfers') {
           return [...rows].sort((a, b) => {
             const aTime = new Date(a?.Date || 0).getTime();
@@ -1125,27 +1299,38 @@ Best regards,`;
             return bTime - aTime;
           });
         }
+
         const mode = dom.sortSelect.value;
         if (mode === 'default') return [...rows];
+
         const out = [...rows];
         const key = ['teamName','playerName','Player','tag'].find(k => out.some(r => r && r[k] != null)) || Object.keys(out[0] || {})[0];
         out.sort((a,b) => String(a?.[key] ?? '').localeCompare(String(b?.[key] ?? ''), 'sv'));
         if (mode === 'name-desc') out.reverse();
         return out;
       }
+
       const out = [...rows];
       const isNumeric = currentNumericColumns.has(sortState.column) || sortState.column === 'fullLicenseCount';
+
       out.sort((a,b) => {
         let aValue = sortState.column === 'fullLicenseCount' ? RowAccess.getFullLicenseCount(a) : a?.[sortState.column];
         let bValue = sortState.column === 'fullLicenseCount' ? RowAccess.getFullLicenseCount(b) : b?.[sortState.column];
-        if (sortState.column === 'signupIssue') { aValue = Rules.getSignupIssueText(a); bValue = Rules.getSignupIssueText(b); }
+
+        if (sortState.column === 'signupIssue') {
+          aValue = Rules.getSignupIssueText(a);
+          bValue = Rules.getSignupIssueText(b);
+        }
+
         if (sortState.column === 'teams') {
           aValue = Array.isArray(a?.teams) ? a.teams.map(t => `${t?.leagueName || ''} ${t?.teamName || ''}`).join(' | ') : '';
           bValue = Array.isArray(b?.teams) ? b.teams.map(t => `${t?.leagueName || ''} ${t?.teamName || ''}`).join(' | ') : '';
         }
+
         const res = Utils.compareValues(aValue, bValue, isNumeric);
         return sortState.direction === 'asc' ? res : -res;
       });
+
       return out;
     }
 
@@ -1155,56 +1340,170 @@ Best regards,`;
     }
 
     function buildNumericColumns(rows, columns) {
-      currentNumericColumns = new Set(columns.filter(col => col !== 'fullLicenseCount' && col !== 'signupIssue' && col !== 'teams' && col !== '__sendMail' && rows.every(r => r[col] == null || r[col] === '' || (!isNaN(Number(r[col])) && isFinite(Number(r[col]))))));
+      currentNumericColumns = new Set(
+        columns.filter(col =>
+          col !== 'fullLicenseCount' &&
+          col !== 'signupIssue' &&
+          col !== 'teams' &&
+          col !== '__sendMail' &&
+          rows.every(r => r[col] == null || r[col] === '' || (!isNaN(Number(r[col])) && isFinite(Number(r[col]))))
+        )
+      );
       currentNumericColumns.add('fullLicenseCount');
     }
 
     function openDrawer(title, subtitle, items) {
       dom.drawerTitle.textContent = title;
       dom.drawerSubtitle.textContent = subtitle;
-      if (!Array.isArray(items) || !items.length) dom.drawerBody.innerHTML = '<div class="empty-state">No data to show.</div>';
-      else dom.drawerBody.innerHTML = items.map((item, index) => `<div class="json-card"><h4>Rad ${index + 1}</h4>${Object.entries(item).map(([k,v]) => `<div class="json-row"><div class="muted">${Utils.escapeHtml(k)}</div><div>${Utils.escapeHtml(Array.isArray(v) || typeof v === 'object' ? JSON.stringify(v) : v ?? '—')}</div></div>`).join('')}</div>`).join('');
+
+      if (!Array.isArray(items) || !items.length) {
+        dom.drawerBody.innerHTML = '<div class="empty-state">No data to show.</div>';
+      } else {
+        dom.drawerBody.innerHTML = items.map((item, index) =>
+          `<div class="json-card"><h4>Rad ${index + 1}</h4>${Object.entries(item).map(([k,v]) =>
+            `<div class="json-row"><div class="muted">${Utils.escapeHtml(k)}</div><div>${Utils.escapeHtml(Array.isArray(v) || typeof v === 'object' ? JSON.stringify(v) : v ?? '—')}</div></div>`
+          ).join('')}</div>`
+        ).join('');
+      }
+
       dom.drawer.classList.add('open');
     }
 
     function createHistoryCell(player, prefix) {
-      const division = player?.[`${prefix}Division`]; const team = player?.[`${prefix}Team`]; const year = player?.[`${prefix}Year`]; const season = player?.[`${prefix}Season`]; const groupMatches = Number(player?.[`${prefix}GroupMatches`] ?? 0) || 0; const playoffMatches = Number(player?.[`${prefix}PlayoffMatches`] ?? 0) || 0; const totalMatchesRaw = player?.[`${prefix}Matches`]; const totalMatches = totalMatchesRaw !== undefined && totalMatchesRaw !== null && totalMatchesRaw !== '' ? Number(totalMatchesRaw) || 0 : groupMatches + playoffMatches;
+      const division = player?.[`${prefix}Division`];
+      const team = player?.[`${prefix}Team`];
+      const year = player?.[`${prefix}Year`];
+      const season = player?.[`${prefix}Season`];
+      const groupMatches = Number(player?.[`${prefix}GroupMatches`] ?? 0) || 0;
+      const playoffMatches = Number(player?.[`${prefix}PlayoffMatches`] ?? 0) || 0;
+      const totalMatchesRaw = player?.[`${prefix}Matches`];
+      const totalMatches = totalMatchesRaw !== undefined && totalMatchesRaw !== null && totalMatchesRaw !== '' ? Number(totalMatchesRaw) || 0 : groupMatches + playoffMatches;
+
       const td = document.createElement('td');
-      if (!division && !team && !year && !season && totalMatches === 0 && groupMatches === 0 && playoffMatches === 0) { td.innerHTML = '<span class="team-history-empty">-</span>'; return td; }
+
+      if (!division && !team && !year && !season && totalMatches === 0 && groupMatches === 0 && playoffMatches === 0) {
+        td.innerHTML = '<span class="team-history-empty">-</span>';
+        return td;
+      }
+
       const flagged = Rules.isFlaggedHistoryDivision(division);
       td.innerHTML = `${flagged ? '<div class="history-flag-badge flagged">Flagged: ' + Utils.escapeHtml(division || 'history') + '</div>' : '<div class="history-flag-badge ok">' + Utils.escapeHtml(division || 'History') + '</div>'}<div class="team-history-main">${Utils.escapeHtml(team || '-')}</div><div class="team-history-meta">${Utils.escapeHtml([division, year, season].filter(Boolean).join(' • ') || '-')}</div><div class="team-history-games">Group stage: ${groupMatches} • Playoffs: ${playoffMatches} • Total: ${totalMatches}</div>`;
       return td;
     }
 
     async function createTeamPlayerCheckPanel(row) {
-      const wrapper = document.createElement('div'); wrapper.className = 'team-rich-panel';
-      const teamLinkMap = DataService.getTeamLinkMap(); const playerLinkMap = DataService.getPlayerLinkMap();
-      const summary = document.createElement('div'); summary.className = 'team-rich-summary';
-      const teamName = RowAccess.getTeamName(row); const mappedTeamInfo = teamLinkMap.get(Utils.normalizeTeamName(teamName)); const directTeamID = TeamLinks.getTeamId(row); const directLeagueID = TeamLinks.getLeagueId(row); const teamId = directTeamID || mappedTeamInfo?.teamId || ''; const leagueId = directLeagueID || mappedTeamInfo?.leagueId || '';
-      const title = document.createElement('div'); title.className = 'team-history-main';
-      if (teamId && leagueId) title.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamId, leagueId), teamName || '-', 'proqual-link')); else title.textContent = teamName || '-';
+      const wrapper = document.createElement('div');
+      wrapper.className = 'team-rich-panel';
+
+      const teamLinkMap = DataService.getTeamLinkMap();
+      const playerLinkMap = DataService.getPlayerLinkMap();
+
+      const summary = document.createElement('div');
+      summary.className = 'team-rich-summary';
+
+      const teamName = RowAccess.getTeamName(row);
+      const mappedTeamInfo = teamLinkMap.get(Utils.normalizeTeamName(teamName));
+      const directTeamID = TeamLinks.getTeamId(row);
+      const directLeagueID = TeamLinks.getLeagueId(row);
+      const teamId = directTeamID || mappedTeamInfo?.teamId || '';
+      const leagueId = directLeagueID || mappedTeamInfo?.leagueId || '';
+
+      const title = document.createElement('div');
+      title.className = 'team-history-main';
+      if (teamId && leagueId) title.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamId, leagueId), teamName || '-', 'proqual-link'));
+      else title.textContent = teamName || '-';
       summary.appendChild(title);
-      const subtitle = document.createElement('div'); subtitle.className = 'team-history-meta'; subtitle.textContent = [row?.divisionName || '', row?.teamCountry || ''].filter(Boolean).join(' • ') || '-'; summary.appendChild(subtitle);
-      const badges = document.createElement('div'); badges.className = 'team-rich-badges';
-      const totalPlayers = Utils.safeNumber(row?.totalPlayers ?? row?.playerCount); const totalPoints = Utils.safeNumber(row?.totalPoints); const ep = Utils.safeNumber(row?.EP); const pp = Utils.safeNumber(row?.PP); const lp = Utils.safeNumber(row?.LP); const cp = Utils.safeNumber(row?.CP); const np = Utils.safeNumber(row?.NP);
-      [{text: row?.divisionName || currentPage.toUpperCase(), className:'team-rich-badge'}, {text: totalPlayers < 6 ? 'Low player count' : 'Roster loaded', className: totalPlayers < 6 ? 'team-rich-badge flag' : 'team-rich-badge good'}].forEach(item => { const b = document.createElement('span'); b.className = item.className; b.textContent = item.text; badges.appendChild(b); });
+
+      const subtitle = document.createElement('div');
+      subtitle.className = 'team-history-meta';
+      subtitle.textContent = [row?.divisionName || '', row?.teamCountry || ''].filter(Boolean).join(' • ') || '-';
+      summary.appendChild(subtitle);
+
+      const badges = document.createElement('div');
+      badges.className = 'team-rich-badges';
+
+      const totalPlayers = Utils.safeNumber(row?.totalPlayers ?? row?.playerCount);
+      const totalPoints = Utils.safeNumber(row?.totalPoints);
+      const ep = Utils.safeNumber(row?.EP);
+      const pp = Utils.safeNumber(row?.PP);
+      const lp = Utils.safeNumber(row?.LP);
+      const cp = Utils.safeNumber(row?.CP);
+      const np = Utils.safeNumber(row?.NP);
+
+      [
+        { text: row?.divisionName || currentPage.toUpperCase(), className:'team-rich-badge' },
+        { text: totalPlayers < 6 ? 'Low player count' : 'Roster loaded', className: totalPlayers < 6 ? 'team-rich-badge flag' : 'team-rich-badge good' }
+      ].forEach(item => {
+        const b = document.createElement('span');
+        b.className = item.className;
+        b.textContent = item.text;
+        badges.appendChild(b);
+      });
+
       summary.appendChild(badges);
-      const statGrid = document.createElement('div'); statGrid.className = 'team-rich-summary-grid';
-      [{label:'Total players',value:String(totalPlayers)},{label:'Total points',value:String(totalPoints)},{label:'Elite',value:String(ep)},{label:'Pro',value:String(pp)},{label:'Lite',value:String(lp)}].concat(currentPage === 'core' || currentPage === 'neo' ? [{label:'Core',value:String(cp)}] : []).concat(currentPage === 'neo' ? [{label:'Neo',value:String(np)}] : []).forEach(stat => { const box = document.createElement('div'); box.className = 'team-rich-stat'; box.innerHTML = `<div class="team-rich-stat-label">${Utils.escapeHtml(stat.label)}</div><div class="team-rich-stat-value">${Utils.escapeHtml(stat.value)}</div>`; statGrid.appendChild(box); });
-      summary.appendChild(statGrid); wrapper.appendChild(summary);
-      const section = document.createElement('div'); section.className = 'team-rich-section'; section.innerHTML = '<div class="team-rich-section-head">Player history check</div>';
-      const tableWrap = document.createElement('div'); tableWrap.className = 'team-player-table-wrap';
+
+      const statGrid = document.createElement('div');
+      statGrid.className = 'team-rich-summary-grid';
+
+      [
+        {label:'Total players',value:String(totalPlayers)},
+        {label:'Total points',value:String(totalPoints)},
+        {label:'Elite',value:String(ep)},
+        {label:'Pro',value:String(pp)},
+        {label:'Lite',value:String(lp)}
+      ]
+      .concat(currentPage === 'core' || currentPage === 'neo' ? [{label:'Core',value:String(cp)}] : [])
+      .concat(currentPage === 'neo' ? [{label:'Neo',value:String(np)}] : [])
+      .forEach(stat => {
+        const box = document.createElement('div');
+        box.className = 'team-rich-stat';
+        box.innerHTML = `<div class="team-rich-stat-label">${Utils.escapeHtml(stat.label)}</div><div class="team-rich-stat-value">${Utils.escapeHtml(stat.value)}</div>`;
+        statGrid.appendChild(box);
+      });
+
+      summary.appendChild(statGrid);
+      wrapper.appendChild(summary);
+
+      const section = document.createElement('div');
+      section.className = 'team-rich-section';
+      section.innerHTML = '<div class="team-rich-section-head">Player history check</div>';
+
+      const tableWrap = document.createElement('div');
+      tableWrap.className = 'team-player-table-wrap';
+
       const rawPlayers = Array.isArray(row?.players) ? row.players.map(p => Rename.applyToRow(p)) : [];
-      const players = rawPlayers.map(player => ({ ...player, playerName: String(player?.playerName || player?.Player || player?.tag || '').trim(), bucket: String(player?.bucket || '').trim(), matchCount: player?.playoffGames !== undefined && player?.playoffGames !== null ? Number(player.playoffGames) || 0 : null })).filter(player => player.playerName).sort((a,b) => String(a.playerName).localeCompare(String(b.playerName), 'sv'));
-      if (!players.length) tableWrap.innerHTML = '<div class="empty-state">No player history found.</div>';
-      else {
-        const table = document.createElement('table'); table.className = 'team-player-table'; table.innerHTML = '<thead><tr><th>#</th><th>Player</th><th>Latest team</th><th>Previous season 1</th><th>Previous season 2</th></tr></thead>';
+      const players = rawPlayers
+        .map(player => ({
+          ...player,
+          playerName: String(player?.playerName || player?.Player || player?.tag || '').trim(),
+          bucket: String(player?.bucket || '').trim(),
+          matchCount: player?.playoffGames !== undefined && player?.playoffGames !== null ? Number(player.playoffGames) || 0 : null
+        }))
+        .filter(player => player.playerName)
+        .sort((a,b) => String(a.playerName).localeCompare(String(b.playerName), 'sv'));
+
+      if (!players.length) {
+        tableWrap.innerHTML = '<div class="empty-state">No player history found.</div>';
+      } else {
+        const table = document.createElement('table');
+        table.className = 'team-player-table';
+        table.innerHTML = '<thead><tr><th>#</th><th>Player</th><th>Latest team</th><th>Previous season 1</th><th>Previous season 2</th></tr></thead>';
+
         const tbody = document.createElement('tbody');
+
         players.forEach((player, index) => {
-          const tr = document.createElement('tr'); if (['history1Division','history2Division','history3Division'].some(key => Rules.isFlaggedHistoryDivision(player?.[key]))) tr.classList.add('team-player-row-flagged');
+          const tr = document.createElement('tr');
+          if (['history1Division','history2Division','history3Division'].some(key => Rules.isFlaggedHistoryDivision(player?.[key]))) tr.classList.add('team-player-row-flagged');
+
           const playerId = player.playerID || playerLinkMap.get(Utils.normalizePlayerName(player.playerName));
-          const playerCell = document.createElement('td'); playerCell.className = 'team-player-name'; playerCell.innerHTML = `<div class="team-player-name-main"></div><div class="team-player-name-sub">${Utils.escapeHtml(player.matchCount !== null && player.matchCount !== undefined ? `${player.bucket || 'Unknown bucket'} • ${player.matchCount} playoff games` : (player.bucket || 'Unknown bucket'))}</div>`;
-          if (playerId) playerCell.querySelector('.team-player-name-main').appendChild(Utils.createLink(PLAYER_BASE_URL + playerId, player.playerName, 'proqual-link')); else playerCell.querySelector('.team-player-name-main').textContent = player.playerName;
+
+          const playerCell = document.createElement('td');
+          playerCell.className = 'team-player-name';
+          playerCell.innerHTML = `<div class="team-player-name-main"></div><div class="team-player-name-sub">${Utils.escapeHtml(player.matchCount !== null && player.matchCount !== undefined ? `${player.bucket || 'Unknown bucket'} • ${player.matchCount} playoff games` : (player.bucket || 'Unknown bucket'))}</div>`;
+
+          if (playerId) playerCell.querySelector('.team-player-name-main').appendChild(Utils.createLink(PLAYER_BASE_URL + playerId, player.playerName, 'proqual-link'));
+          else playerCell.querySelector('.team-player-name-main').textContent = player.playerName;
+
           tr.innerHTML = `<td class="num">${index + 1}</td>`;
           tr.appendChild(playerCell);
           tr.appendChild(createHistoryCell(player, 'history1'));
@@ -1212,104 +1511,362 @@ Best regards,`;
           tr.appendChild(createHistoryCell(player, 'history3'));
           tbody.appendChild(tr);
         });
-        table.appendChild(tbody); tableWrap.appendChild(table);
-      }
-      section.appendChild(tableWrap); wrapper.appendChild(section); return wrapper;
-    }
 
-    async function renderCell(td, row, col) {
+        table.appendChild(tbody);
+        tableWrap.appendChild(table);
+      }
+
+      section.appendChild(tableWrap);
+      wrapper.appendChild(section);
+      return wrapper;
+    }
+        async function renderCell(td, row, col) {
       let value = row[col] ?? '';
       if (col === 'fullLicenseCount') value = RowAccess.getFullLicenseCount(row);
       if (col === 'signupIssue') value = Rules.getSignupIssueText(row);
-      const playerLinkMap = playerLinkMapCache || DataService.getPlayerLinkMap(); const teamLinkMap = teamLinkMapCache || DataService.getTeamLinkMap();
+
+      const playerLinkMap = playerLinkMapCache || DataService.getPlayerLinkMap();
+      const teamLinkMap = teamLinkMapCache || DataService.getTeamLinkMap();
 
       if (col === 'teams' && Array.isArray(row?.teams)) {
         td.style.whiteSpace = 'normal';
         row.teams.forEach((team, index) => {
-          const line = document.createElement('div'); line.style.marginBottom = index === row.teams.length - 1 ? '0' : '6px';
-          const teamName = String(team?.teamName || '').trim(); const leagueName = String(team?.leagueName || '').trim(); const teamID = String(team?.teamID || '').trim(); const leagueID = String(team?.leagueID || '').trim();
-          if (teamName && teamID && leagueID) line.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamID, leagueID), `${leagueName ? leagueName + ' — ' : ''}${teamName}`)); else line.textContent = `${leagueName ? leagueName + ' — ' : ''}${teamName}`;
+          const line = document.createElement('div');
+          line.style.marginBottom = index === row.teams.length - 1 ? '0' : '6px';
+          const teamName = String(team?.teamName || '').trim();
+          const leagueName = String(team?.leagueName || '').trim();
+          const teamID = String(team?.teamID || '').trim();
+          const leagueID = String(team?.leagueID || '').trim();
+
+          if (teamName && teamID && leagueID) {
+            line.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamID, leagueID), `${leagueName ? leagueName + ' — ' : ''}${teamName}`));
+          } else {
+            line.textContent = `${leagueName ? leagueName + ' — ' : ''}${teamName}`;
+          }
+
           td.appendChild(line);
         });
         return td;
       }
 
       if (col === '__sendMail') {
-        const actions = document.createElement('div'); actions.className = 'icon-actions';
+        const actions = document.createElement('div');
+        actions.className = 'icon-actions';
+
         if (currentPage === 'backups') {
-          const mailUrl = await MessagingService.getBackupMessageUrl(row); if (mailUrl) { const btn = document.createElement('a'); btn.href = mailUrl; btn.target = '_blank'; btn.rel = 'noopener noreferrer'; btn.className = 'mail-icon-btn'; btn.title = 'Open message'; btn.textContent = '✉'; actions.appendChild(btn); }
-          const copyBtn = document.createElement('button'); copyBtn.type = 'button'; copyBtn.className = 'copy-icon-btn'; copyBtn.title = 'Copy preset message'; copyBtn.textContent = '⧉'; copyBtn.addEventListener('click', async () => { try { await MessagingService.copyBackupMessage(row); Utils.setStatus('Message copied'); } catch { Utils.setStatus('Copy failed'); } }); actions.appendChild(copyBtn);
+          const mailUrl = await MessagingService.getBackupMessageUrl(row);
+          if (mailUrl) {
+            const btn = document.createElement('a');
+            btn.href = mailUrl;
+            btn.target = '_blank';
+            btn.rel = 'noopener noreferrer';
+            btn.className = 'mail-icon-btn';
+            btn.title = 'Open message';
+            btn.textContent = '✉';
+            actions.appendChild(btn);
+          }
+
+          const copyBtn = document.createElement('button');
+          copyBtn.type = 'button';
+          copyBtn.className = 'copy-icon-btn';
+          copyBtn.title = 'Copy preset message';
+          copyBtn.textContent = '⧉';
+          copyBtn.addEventListener('click', async () => {
+            try {
+              await MessagingService.copyBackupMessage(row);
+              Utils.setStatus('Message copied');
+            } catch {
+              Utils.setStatus('Copy failed');
+            }
+          });
+          actions.appendChild(copyBtn);
         }
+
         if (currentPage === 'unlicensed') {
-          const mailUrl = await MessagingService.getBackupMessageUrl(row); if (mailUrl) { const btn = document.createElement('a'); btn.href = mailUrl; btn.target = '_blank'; btn.rel = 'noopener noreferrer'; btn.className = 'mail-icon-btn'; btn.title = 'Open message'; btn.textContent = '✉'; actions.appendChild(btn); }
-          const copyBtn = document.createElement('button'); copyBtn.type = 'button'; copyBtn.className = 'copy-icon-btn'; copyBtn.title = 'Copy preset message'; copyBtn.textContent = '⧉'; copyBtn.addEventListener('click', async () => { try { await MessagingService.copyUnlicensedMessage(row); Utils.setStatus('Message copied'); } catch { Utils.setStatus('Copy failed'); } }); actions.appendChild(copyBtn);
+          const mailUrl = await MessagingService.getBackupMessageUrl(row);
+          if (mailUrl) {
+            const btn = document.createElement('a');
+            btn.href = mailUrl;
+            btn.target = '_blank';
+            btn.rel = 'noopener noreferrer';
+            btn.className = 'mail-icon-btn';
+            btn.title = 'Open message';
+            btn.textContent = '✉';
+            actions.appendChild(btn);
+          }
+
+          const copyBtn = document.createElement('button');
+          copyBtn.type = 'button';
+          copyBtn.className = 'copy-icon-btn';
+          copyBtn.title = 'Copy preset message';
+          copyBtn.textContent = '⧉';
+          copyBtn.addEventListener('click', async () => {
+            try {
+              await MessagingService.copyUnlicensedMessage(row);
+              Utils.setStatus('Message copied');
+            } catch {
+              Utils.setStatus('Copy failed');
+            }
+          });
+          actions.appendChild(copyBtn);
         }
+
         if (currentPage === 'multiple') {
-          const mailUrl = await MessagingService.getMultipleTeamsMessageUrl(row); if (mailUrl) { const btn = document.createElement('a'); btn.href = mailUrl; btn.target = '_blank'; btn.rel = 'noopener noreferrer'; btn.className = 'mail-icon-btn'; btn.title = 'Open message'; btn.textContent = '✉'; actions.appendChild(btn); }
-          const copyBtn = document.createElement('button'); copyBtn.type = 'button'; copyBtn.className = 'copy-icon-btn'; copyBtn.title = 'Copy preset message'; copyBtn.textContent = '⧉'; copyBtn.addEventListener('click', async () => { try { await MessagingService.copyMultipleTeamsMessage(row); Utils.setStatus('Message copied'); } catch { Utils.setStatus('Copy failed'); } }); actions.appendChild(copyBtn);
+          const mailUrl = await MessagingService.getMultipleTeamsMessageUrl(row);
+          if (mailUrl) {
+            const btn = document.createElement('a');
+            btn.href = mailUrl;
+            btn.target = '_blank';
+            btn.rel = 'noopener noreferrer';
+            btn.className = 'mail-icon-btn';
+            btn.title = 'Open message';
+            btn.textContent = '✉';
+            actions.appendChild(btn);
+          }
+
+          const copyBtn = document.createElement('button');
+          copyBtn.type = 'button';
+          copyBtn.className = 'copy-icon-btn';
+          copyBtn.title = 'Copy preset message';
+          copyBtn.textContent = '⧉';
+          copyBtn.addEventListener('click', async () => {
+            try {
+              await MessagingService.copyMultipleTeamsMessage(row);
+              Utils.setStatus('Message copied');
+            } catch {
+              Utils.setStatus('Copy failed');
+            }
+          });
+          actions.appendChild(copyBtn);
         }
+
         if (currentPage === 'registered') {
-          const issues = Rules.getSignupIssues(row); const mailUrl = await MessagingService.getSignUpsMessageUrl(row); if (issues.length && mailUrl) { const btn = document.createElement('a'); btn.href = mailUrl; btn.target = '_blank'; btn.rel = 'noopener noreferrer'; btn.className = 'mail-icon-btn'; btn.title = 'Open message'; btn.textContent = '✉'; actions.appendChild(btn); }
-          if (issues.length) { const copyBtn = document.createElement('button'); copyBtn.type = 'button'; copyBtn.className = 'copy-icon-btn'; copyBtn.title = 'Copy preset message'; copyBtn.textContent = '⧉'; copyBtn.addEventListener('click', async () => { try { await MessagingService.copySignUpsMessage(row); Utils.setStatus('Message copied'); } catch { Utils.setStatus('Copy failed'); } }); actions.appendChild(copyBtn); }
+          const issues = Rules.getSignupIssues(row);
+          const mailUrl = await MessagingService.getSignUpsMessageUrl(row);
+
+          if (issues.length && mailUrl) {
+            const btn = document.createElement('a');
+            btn.href = mailUrl;
+            btn.target = '_blank';
+            btn.rel = 'noopener noreferrer';
+            btn.className = 'mail-icon-btn';
+            btn.title = 'Open message';
+            btn.textContent = '✉';
+            actions.appendChild(btn);
+          }
+
+          if (issues.length) {
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.className = 'copy-icon-btn';
+            copyBtn.title = 'Copy preset message';
+            copyBtn.textContent = '⧉';
+            copyBtn.addEventListener('click', async () => {
+              try {
+                await MessagingService.copySignUpsMessage(row);
+                Utils.setStatus('Message copied');
+              } catch {
+                Utils.setStatus('Copy failed');
+              }
+            });
+            actions.appendChild(copyBtn);
+          }
         }
-        td.appendChild(actions); return td;
+
+        if (['lite', 'core', 'neo'].includes(currentPage) && Rules.isFlaggedRow(row)) {
+          const mailUrl = await MessagingService.getFlaggedTeamMessageUrl(row);
+
+          if (mailUrl) {
+            const btn = document.createElement('a');
+            btn.href = mailUrl;
+            btn.target = '_blank';
+            btn.rel = 'noopener noreferrer';
+            btn.className = 'mail-icon-btn';
+            btn.title = 'Open message';
+            btn.textContent = '✉';
+            actions.appendChild(btn);
+          }
+
+          const copyBtn = document.createElement('button');
+          copyBtn.type = 'button';
+          copyBtn.className = 'copy-icon-btn';
+          copyBtn.title = 'Copy preset message';
+          copyBtn.textContent = '⧉';
+          copyBtn.addEventListener('click', async () => {
+            try {
+              await MessagingService.copyFlaggedTeamMessage(row);
+              Utils.setStatus('Message copied');
+            } catch {
+              Utils.setStatus('Copy failed');
+            }
+          });
+          actions.appendChild(copyBtn);
+        }
+
+        td.appendChild(actions);
+        return td;
       }
 
       const textValue = String(value ?? '');
-      if (!textValue) { td.textContent = ''; return td; }
+      if (!textValue) {
+        td.textContent = '';
+        return td;
+      }
+
       if (currentPage === 'banned' && col === 'playerName') {
         const mappedPlayerID = playerLinkMap.get(Utils.normalizePlayerName(textValue));
-        if (mappedPlayerID) td.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, textValue)); else td.textContent = textValue;
+        if (mappedPlayerID) td.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, textValue));
+        else td.textContent = textValue;
         return td;
       }
+
       if (currentPage === 'banned' && col === 'teamName') {
         const parts = textValue.split('|').map(part => part.trim()).filter(Boolean);
-        parts.forEach((part, index) => { const [teamName, teamID, leagueID] = part.split('|||'); if (teamID && leagueID) td.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamID, leagueID), teamName)); else td.appendChild(document.createTextNode(teamName)); if (index < parts.length - 1) td.appendChild(document.createTextNode(' | ')); });
+        parts.forEach((part, index) => {
+          const [teamName, teamID, leagueID] = part.split('|||');
+          if (teamID && leagueID) td.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamID, leagueID), teamName));
+          else td.appendChild(document.createTextNode(teamName));
+          if (index < parts.length - 1) td.appendChild(document.createTextNode(' | '));
+        });
         return td;
       }
+
       if (PLAYER_LIST_NAME_KEYS.includes(col)) {
         const parts = textValue.split(',').map(part => part.trim()).filter(Boolean);
-        parts.forEach((part, index) => { const match = part.match(/^(.*?)(\s*\(\d+\))?$/); const nameOnly = (match?.[1] || part).trim(); const normalized = Utils.normalizePlayerName(nameOnly); const playerID = playerLinkMap.get(normalized); if (playerID) td.appendChild(Utils.createLink(PLAYER_BASE_URL + playerID, part)); else td.appendChild(document.createTextNode(part)); if (index < parts.length - 1) td.appendChild(document.createTextNode(', ')); });
+        parts.forEach((part, index) => {
+          const match = part.match(/^(.*?)(\s*\(\d+\))?$/);
+          const nameOnly = (match?.[1] || part).trim();
+          const normalized = Utils.normalizePlayerName(nameOnly);
+          const playerID = playerLinkMap.get(normalized);
+          if (playerID) td.appendChild(Utils.createLink(PLAYER_BASE_URL + playerID, part));
+          else td.appendChild(document.createTextNode(part));
+          if (index < parts.length - 1) td.appendChild(document.createTextNode(', '));
+        });
         return td;
       }
-      if (['history1Team','history2Team','history3Team'].includes(col)) { td.textContent = textValue; return td; }
+
+      if (['history1Team','history2Team','history3Team'].includes(col)) {
+        td.textContent = textValue;
+        return td;
+      }
+
       if (TEAM_NAME_KEYS.includes(col) || col === 'From' || col === 'To') {
-        const mappedTeamInfo = teamLinkMap.get(Utils.normalizeTeamName(textValue)); const directTeamID = TeamLinks.getTeamId(row, col); const directLeagueID = TeamLinks.getLeagueId(row, col); const teamId = directTeamID || mappedTeamInfo?.teamId || ''; const leagueId = directLeagueID || mappedTeamInfo?.leagueId || '';
-        if (teamId && leagueId) { td.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamId, leagueId), textValue)); return td; }
+        const mappedTeamInfo = teamLinkMap.get(Utils.normalizeTeamName(textValue));
+        const directTeamID = TeamLinks.getTeamId(row, col);
+        const directLeagueID = TeamLinks.getLeagueId(row, col);
+        const teamId = directTeamID || mappedTeamInfo?.teamId || '';
+        const leagueId = directLeagueID || mappedTeamInfo?.leagueId || '';
+        if (teamId && leagueId) {
+          td.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(teamId, leagueId), textValue));
+          return td;
+        }
       }
+
       if (PLAYER_NAME_KEYS.includes(col) || col === 'playerName') {
-        const directPlayerID = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id; const mappedPlayerID = directPlayerID || playerLinkMap.get(Utils.normalizePlayerName(textValue));
-        if (mappedPlayerID) { td.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, textValue)); return td; }
+        const directPlayerID = row?.playerID || row?.playerId || row?.PlayerID || row?.player_id;
+        const mappedPlayerID = directPlayerID || playerLinkMap.get(Utils.normalizePlayerName(textValue));
+        if (mappedPlayerID) {
+          td.appendChild(Utils.createLink(PLAYER_BASE_URL + mappedPlayerID, textValue));
+          return td;
+        }
       }
-      if (['compatibility','status','active'].includes(col)) { td.innerHTML = pillHtml(textValue); return td; }
-      td.textContent = textValue; return td;
+
+      if (['compatibility','status','active'].includes(col)) {
+        td.innerHTML = pillHtml(textValue);
+        return td;
+      }
+
+      td.textContent = textValue;
+      return td;
     }
 
     function renderHeader(columns) {
       const headerLabels = {
-        teamName: 'Team', teamCountry: 'Country', registrationDate: 'Registration Date', divisionName: 'Division', qualifierName: 'Qualifier', playerCount: 'Players', fullLicenseCount: 'Full Licenses', backupLicenseCount: 'Backup Licenses', unlicensedPlayerCount: 'Unlicensed', signupIssue: 'Issue', userID: 'User ID', totalPlayers: 'Total Players', totalPoints: 'Total Points', Player: 'Player', tag: 'Tag', teamCount: 'Team Count', teams: 'Teams', banType: 'Ban Type', untilText: 'Until', active: 'Active', status: 'Status', foundAs: 'Found As', From: 'From', FromDiv: 'From Division', To: 'To', ToDiv: 'To Division', GroupGames26Winter: 'Winter Group Games', PlayoffGames26Winter: 'Winter Playoff Games', TotalGames26Winter: 'Winter Total Games', Date: 'Date', Role: 'Role', EP: 'Elite Players', PP: 'Pro Players', LP: 'Lite Players', CP: 'Core Players', NP: 'Neo Players', leagueID: 'League ID', notes: 'Notes'
+        teamName: 'Team',
+        teamCountry: 'Country',
+        registrationDate: 'Registration Date',
+        divisionName: 'Division',
+        qualifierName: 'Qualifier',
+        playerCount: 'Players',
+        fullLicenseCount: 'Full Licenses',
+        backupLicenseCount: 'Backup Licenses',
+        unlicensedPlayerCount: 'Unlicensed',
+        signupIssue: 'Issue',
+        userID: 'User ID',
+        totalPlayers: 'Total Players',
+        totalPoints: 'Total Points',
+        Player: 'Player',
+        tag: 'Tag',
+        teamCount: 'Team Count',
+        teams: 'Teams',
+        banType: 'Ban Type',
+        untilText: 'Until',
+        active: 'Active',
+        status: 'Status',
+        foundAs: 'Found As',
+        From: 'From',
+        FromDiv: 'From Division',
+        To: 'To',
+        ToDiv: 'To Division',
+        GroupGames26Winter: 'Winter Group Games',
+        PlayoffGames26Winter: 'Winter Playoff Games',
+        TotalGames26Winter: 'Winter Total Games',
+        Date: 'Date',
+        Role: 'Role',
+        EP: 'Elite Players',
+        PP: 'Pro Players',
+        LP: 'Lite Players',
+        CP: 'Core Players',
+        NP: 'Neo Players',
+        leagueID: 'League ID',
+        notes: 'Notes',
+        compatibility: 'Compatibility'
       };
+
       dom.headerRow.innerHTML = '';
+
       columns.forEach(col => {
         const th = document.createElement('th');
-        if (col === '__sendMail') { th.textContent = 'MAIL'; dom.headerRow.appendChild(th); return; }
+        if (col === '__sendMail') {
+          th.textContent = 'MAIL';
+          dom.headerRow.appendChild(th);
+          return;
+        }
+
         th.classList.add('sortable');
         th.textContent = headerLabels[col] || col;
+
         if (sortState.column === col) th.classList.add(sortState.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+
         th.addEventListener('click', () => {
-          if (sortState.column === col) sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc'; else { sortState.column = col; sortState.direction = 'asc'; }
+          if (sortState.column === col) sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+          else {
+            sortState.column = col;
+            sortState.direction = 'asc';
+          }
           renderDataPage();
         });
+
         dom.headerRow.appendChild(th);
       });
-      if (['lite','core','neo'].includes(currentPage)) { const th = document.createElement('th'); th.textContent = 'CHECK TEAM'; dom.headerRow.appendChild(th); }
+
+      if (['lite','core','neo'].includes(currentPage)) {
+        const th = document.createElement('th');
+        th.textContent = 'CHECK TEAM';
+        dom.headerRow.appendChild(th);
+      }
     }
 
     async function renderDataRows(rows, columns) {
       dom.tableBody.innerHTML = '';
+
       for (const [index, row] of rows.entries()) {
-        const tr = document.createElement('tr'); const rowClass = Rules.getRowClass(row); if (rowClass) tr.classList.add(rowClass);
+        const tr = document.createElement('tr');
+        const rowClass = Rules.getRowClass(row);
+        if (rowClass) tr.classList.add(rowClass);
+
         let detailRow = null;
+
         for (const col of columns) {
           const td = document.createElement('td');
           if (currentNumericColumns.has(col) || col === 'fullLicenseCount') td.style.textAlign = 'right';
@@ -1317,18 +1874,34 @@ Best regards,`;
           const rendered = await renderCell(td, row, col);
           tr.appendChild(rendered || td);
         }
+
         if (['lite','core','neo'].includes(currentPage)) {
           const checkTd = document.createElement('td');
-          const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn'; btn.style.height = '34px'; btn.style.fontSize = '11px'; btn.textContent = 'Check Team'; checkTd.appendChild(btn);
-          detailRow = document.createElement('tr'); detailRow.style.display = 'none';
-          const detailCell = document.createElement('td'); detailCell.colSpan = columns.length + 1; detailCell.style.padding = '0'; detailCell.style.background = '#0b1630';
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn';
+          btn.style.height = '34px';
+          btn.style.fontSize = '11px';
+          btn.textContent = 'Check Team';
+          checkTd.appendChild(btn);
+
+          detailRow = document.createElement('tr');
+          detailRow.style.display = 'none';
+
+          const detailCell = document.createElement('td');
+          detailCell.colSpan = columns.length + 1;
+          detailCell.style.padding = '0';
+          detailCell.style.background = '#0b1630';
+
           btn.addEventListener('click', async () => {
             const open = detailRow.style.display === 'table-row';
+
             if (open) {
               detailRow.style.display = 'none';
               btn.textContent = 'Check Team';
               return;
             }
+
             if (!detailCell.hasChildNodes()) {
               const panel = document.createElement('div');
               panel.className = 'team-dropdown-panel';
@@ -1336,255 +1909,300 @@ Best regards,`;
               detailCell.appendChild(panel);
               detailRow.appendChild(detailCell);
             }
+
             detailRow.style.display = 'table-row';
             btn.textContent = 'Hide Team';
           });
+
           tr.appendChild(checkTd);
         }
-        dom.tableBody.appendChild(tr); if (detailRow) dom.tableBody.appendChild(detailRow);
+
+        dom.tableBody.appendChild(tr);
+        if (detailRow) dom.tableBody.appendChild(detailRow);
       }
+
       dom.rowCounter.textContent = `${rows.length} row${rows.length === 1 ? '' : 's'}`;
       if (currentPage === 'registered') dom.rowCounter.textContent = `Registered teams: ${rows.length}`;
       if (currentPage === 'multiple') dom.rowCounter.textContent = `${rows.length} flagged player${rows.length === 1 ? '' : 's'}`;
       if (currentPage === 'banned') {
-        const activeCount = rows.filter(row => row.active === 'Yes').length; const violationCount = rows.filter(row => row.status === 'Violation').length;
+        const activeCount = rows.filter(row => row.active === 'Yes').length;
+        const violationCount = rows.filter(row => row.status === 'Violation').length;
         dom.rowCounter.textContent = `Bans: ${rows.length} • Active: ${activeCount} • Violations: ${violationCount}`;
       }
     }
 
     function getPageMetrics(pageKey, rows) {
-      if (pageKey === 'registered') return [{ label: 'Teams', value: rows.length, meta: 'From signUps' }, { label: 'Players', value: rows.reduce((s,r) => s + Number(r.playerCount || 0), 0), meta: 'Summed playerCount' }, { label: 'Unlicensed', value: rows.reduce((s,r) => s + Number(r.unlicensedPlayerCount || 0), 0), meta: 'Summed unlicensedPlayerCount' }];
-      if (['lite','core','neo'].includes(pageKey)) return [{ label: 'Teams', value: rows.length, meta: `From ${PAGE_CONFIG[pageKey].jsonKey}` }, { label: 'Flagged teams', value: rows.filter(r => String(r.compatibility || '').toUpperCase() !== 'OK').length, meta: 'compatibility ≠ OK' }, { label: 'Players', value: rows.reduce((s,r) => s + Number(r.totalPlayers || 0), 0), meta: 'Summed totalPlayers' }];
-      if (pageKey === 'transfers') return [{ label: 'Transfers', value: rows.length, meta: 'From overgangar' }, { label: 'With role', value: rows.filter(r => r.Role).length, meta: 'Captain / Assistant' }, { label: 'Latest date', value: rows[0]?.Date || '—', meta: 'Depends on current sort order' }];
-      if (pageKey === 'backups' || pageKey === 'unlicensed') { const total = rows.reduce((s,r) => s + Number(r.totalMatchesPlayed || 0), 0); return [{ label: 'Players', value: rows.length, meta: 'Row count' }, { label: 'Matches', value: total, meta: 'Summed totalMatchesPlayed' }, { label: 'Average', value: rows.length ? (total / rows.length).toFixed(1) : '0.0', meta: 'Matches per player' }]; }
-      if (pageKey === 'multiple') return [{ label: 'Players', value: rows.length, meta: 'In multiple teams' }, { label: 'Max teamCount', value: Math.max(0, ...rows.map(r => Number(r.teamCount || 0))), meta: 'Highest value' }, { label: 'Details', value: 'teams[]', meta: 'Opens in drawer' }];
-      if (pageKey === 'banned') return [{ label: 'Ban rows', value: rows.length, meta: 'From bannedPlayers' }, { label: 'Active', value: rows.filter(r => String(r.active).toLowerCase() === 'yes').length, meta: 'active = Yes' }, { label: 'Violations', value: rows.filter(r => String(r.status).toLowerCase() === 'violation').length, meta: 'status = Violation' }];
-      return [{ label: 'Data source', value: 'Preset', meta: 'Seeding' }, { label: 'Status', value: 'Manual', meta: 'Check view' }, { label: 'Next step', value: 'Seed check', meta: 'Connected to signUps' }];
-    }
+      if (pageKey === 'registered') return [
+        { label: 'Teams', value: rows.length, meta: 'From signUps' },
+        { label: 'Players', value: rows.reduce((s,r) => s + Number(r.playerCount || 0), 0), meta: 'Summed playerCount' },
+        { label: 'Unlicensed', value: rows.reduce((s,r) => s + Number(r.unlicensedPlayerCount || 0), 0), meta: 'Summed unlicensedPlayerCount' }
+      ];
 
-const SeedingService = {
-  detectSectionDivision(title) {
-    const t = String(title || '').toLowerCase();
-    if (t === 'elite') return 'ELITE';
-    if (t === 'pro') return 'PRO';
-    if (t === 'lite') return 'LITE';
-    if (t === 'core') return 'CORE';
-    if (t === 'neo') return 'NEO';
-    if (t.startsWith('elite qualifiers')) return 'ELITE_QUAL';
-    if (t.startsWith('pro qualifiers')) return 'PRO_QUAL';
-    return '';
-  },
+      if (['lite','core','neo'].includes(pageKey)) return [
+        { label: 'Teams', value: rows.length, meta: `From ${PAGE_CONFIG[pageKey].jsonKey}` },
+        { label: 'Flagged teams', value: rows.filter(r => String(r.compatibility || '').toUpperCase() !== 'OK').length, meta: 'compatibility ≠ OK' },
+        { label: 'Players', value: rows.reduce((s,r) => s + Number(r.totalPlayers || 0), 0), meta: 'Summed totalPlayers' }
+      ];
 
-  getSectionStyle(title) {
-    const t = String(title || '').toLowerCase();
-    if (t.includes('elite')) return 'linear-gradient(90deg,#9d7a1f,#d5b14b 55%,#f2d67d)';
-    if (t === 'pro' || t.includes('pro qualifiers')) return 'linear-gradient(90deg,#7c848f,#b5bcc7 55%,#d9dee6)';
-    if (t === 'lite') return 'linear-gradient(90deg,#7d432f,#ad654a 55%,#d68462)';
-    if (t === 'core') return 'linear-gradient(90deg,#8b3200,#ca5a0a 55%,#ee7b17)';
-    return 'linear-gradient(90deg,#22672a,#2f9640 55%,#4ed163)';
-  },
+      if (pageKey === 'transfers') return [
+        { label: 'Transfers', value: rows.length, meta: 'From overgangar' },
+        { label: 'With role', value: rows.filter(r => r.Role).length, meta: 'Captain / Assistant' },
+        { label: 'Latest date', value: rows[0]?.Date || '—', meta: 'Depends on current sort order' }
+      ];
 
-  collectPresetTeamNames() {
-    const set = new Set();
-    PRESET_SECTIONS.forEach(section => {
-      section.rows.forEach(row => {
-        const normalized = Utils.normalizeTeamName(Rename.getCanonicalTeamName(row[2]));
-        if (normalized) set.add(normalized);
-      });
-    });
-    return set;
-  },
-
-  getQualifierNote(row) {
-    const qualifier = String(row?.qualifierName || '').trim().toUpperCase();
-    if (qualifier.includes('PRO QUALIFIER')) return 'PRO QUAL SIGNUP';
-    if (qualifier.includes('ELITE QUALIFIER')) return 'ELITE QUAL REQ';
-    if (qualifier.includes('WILDCARD')) return 'PRO QUAL REQ';
-    return '';
-  },
-
-  buildRegisteredTeamInfoMap(rows) {
-    const map = new Map();
-    rows.forEach(row => {
-      const normalized = Utils.normalizeTeamName(RowAccess.getTeamName(row));
-      if (normalized && !map.has(normalized)) {
-        map.set(normalized, row);
+      if (pageKey === 'backups' || pageKey === 'unlicensed') {
+        const total = rows.reduce((s,r) => s + Number(r.totalMatchesPlayed || 0), 0);
+        return [
+          { label: 'Players', value: rows.length, meta: 'Row count' },
+          { label: 'Matches', value: total, meta: 'Summed totalMatchesPlayed' },
+          { label: 'Average', value: rows.length ? (total / rows.length).toFixed(1) : '0.0', meta: 'Matches per player' }
+        ];
       }
-    });
-    return map;
-  },
 
-  getSeedRowNote(section, teamName, registeredInfoMap) {
-    const canonicalTeamName = Rename.getCanonicalTeamName(teamName);
-    const normalized = Utils.normalizeTeamName(canonicalTeamName);
-    if (!normalized) return '';
+      if (pageKey === 'multiple') return [
+        { label: 'Players', value: rows.length, meta: 'In multiple teams' },
+        { label: 'Max teamCount', value: Math.max(0, ...rows.map(r => Number(r.teamCount || 0))), meta: 'Highest value' },
+        { label: 'Details', value: 'teams[]', meta: 'Opens in drawer' }
+      ];
 
-    const row = registeredInfoMap.get(normalized);
-    const notes = [];
+      if (pageKey === 'banned') return [
+        { label: 'Ban rows', value: rows.length, meta: 'From bannedPlayers' },
+        { label: 'Active', value: rows.filter(r => String(r.active).toLowerCase() === 'yes').length, meta: 'active = Yes' },
+        { label: 'Violations', value: rows.filter(r => String(r.status).toLowerCase() === 'violation').length, meta: 'status = Violation' }
+      ];
 
-    const renameNote = Rename.getSeedRenameNote(teamName);
-    if (renameNote) notes.push(renameNote);
-
-    if (!row) return notes.join(' • ');
-
-    const listedDivision = this.detectSectionDivision(section.title);
-    const signedDivision = String(row.divisionName || '').trim().toUpperCase();
-    const qualifierNote = this.getQualifierNote(row);
-
-    if (qualifierNote) notes.push(qualifierNote);
-
-    if (
-      signedDivision &&
-      ['ELITE', 'PRO', 'LITE', 'CORE', 'NEO'].includes(listedDivision) &&
-      signedDivision !== listedDivision &&
-      !(listedDivision === 'CORE' && signedDivision === 'NEO')
-    ) {
-      notes.push('SIGNED UP TO ' + signedDivision);
+      return [
+        { label: 'Data source', value: 'Preset', meta: 'Seeding' },
+        { label: 'Status', value: 'Manual', meta: 'Check view' },
+        { label: 'Next step', value: 'Seed check', meta: 'Connected to signUps' }
+      ];
     }
 
-    return notes.join(' • ');
-  },
+    const SeedingService = {
+      detectSectionDivision(title) {
+        const t = String(title || '').toLowerCase();
+        if (t === 'elite') return 'ELITE';
+        if (t === 'pro') return 'PRO';
+        if (t === 'lite') return 'LITE';
+        if (t === 'core') return 'CORE';
+        if (t === 'neo') return 'NEO';
+        if (t.startsWith('elite qualifiers')) return 'ELITE_QUAL';
+        if (t.startsWith('pro qualifiers')) return 'PRO_QUAL';
+        return '';
+      },
 
-  dedupeSectionItems(items) {
-    const seen = new Set();
-    const out = [];
+      getSectionStyle(title) {
+        const t = String(title || '').toLowerCase();
+        if (t.includes('elite')) return 'linear-gradient(90deg,#9d7a1f,#d5b14b 55%,#f2d67d)';
+        if (t === 'pro' || t.includes('pro qualifiers')) return 'linear-gradient(90deg,#7c848f,#b5bcc7 55%,#d9dee6)';
+        if (t === 'lite') return 'linear-gradient(90deg,#7d432f,#ad654a 55%,#d68462)';
+        if (t === 'core') return 'linear-gradient(90deg,#8b3200,#ca5a0a 55%,#ee7b17)';
+        return 'linear-gradient(90deg,#22672a,#2f9640 55%,#4ed163)';
+      },
 
-    for (const item of items) {
-      const normalized = Utils.normalizeTeamName(item.displayTeam || item.team || '');
-      if (!normalized) {
-        out.push(item);
-        continue;
-      }
-      if (seen.has(normalized)) continue;
-      seen.add(normalized);
-      out.push(item);
-    }
-
-    return out.map((item, index) => ({
-      ...item,
-      pos: index + 1
-    }));
-  },
-
-  dedupeRegisteredRows(rows) {
-    const seen = new Set();
-    const out = [];
-
-    for (const row of rows) {
-      const normalized = Utils.normalizeTeamName(RowAccess.getTeamName(row));
-      if (!normalized) continue;
-      if (seen.has(normalized)) continue;
-      seen.add(normalized);
-      out.push(row);
-    }
-
-    return out;
-  },
-
-  buildSections(registeredRows) {
-    const dedupedRegisteredRows = this.dedupeRegisteredRows(registeredRows);
-
-    const registeredSet = new Set(
-      dedupedRegisteredRows
-        .map(row => Utils.normalizeTeamName(RowAccess.getTeamName(row)))
-        .filter(Boolean)
-    );
-
-    const registeredInfoMap = this.buildRegisteredTeamInfoMap(dedupedRegisteredRows);
-    const presetNames = this.collectPresetTeamNames();
-
-    const unlistedByDivision = {
-      ELITE: [],
-      PRO: [],
-      LITE: [],
-      CORE: [],
-      NEO: []
-    };
-
-    dedupedRegisteredRows.forEach(row => {
-      const teamName = RowAccess.getTeamName(row);
-      const normalized = Utils.normalizeTeamName(teamName);
-      const division = String(row?.divisionName || '').trim().toUpperCase();
-
-      if (!normalized || presetNames.has(normalized)) return;
-      if (!unlistedByDivision[division]) return;
-
-      unlistedByDivision[division].push(row);
-    });
-
-    Object.keys(unlistedByDivision).forEach(key => {
-      unlistedByDivision[key] = this.dedupeRegisteredRows(unlistedByDivision[key]).sort((a, b) =>
-        String(RowAccess.getTeamName(a) || '').localeCompare(
-          String(RowAccess.getTeamName(b) || ''),
-          'sv',
-          { sensitivity: 'base' }
-        )
-      );
-    });
-
-    return PRESET_SECTIONS.map(section => {
-      const sectionDivision = this.detectSectionDivision(section.title);
-
-      let items = section.rows.map(row => {
-        const [pos, seed, team] = row;
-        const displayTeam = Rename.getCanonicalTeamName(team);
-        const normalized = Utils.normalizeTeamName(displayTeam);
-        const exists = team ? registeredSet.has(normalized) : false;
-        const note = team ? this.getSeedRowNote(section, team, registeredInfoMap) : '';
-        const isDisbanded = Disbanded.has(team);
-        const isMissing = !!displayTeam && !exists && !isDisbanded;
-
-        const finalNoteParts = [];
-        if (note) finalNoteParts.push(note);
-        if (isDisbanded) finalNoteParts.push('DISBANDED');
-
-        return {
-          pos,
-          seed,
-          team,
-          displayTeam,
-          exists,
-          note: finalNoteParts.join(' • '),
-          isMissing,
-          isDisbanded,
-          isUnlisted: false
-        };
-      });
-
-      items = this.dedupeSectionItems(items);
-
-      if (['ELITE', 'PRO', 'LITE', 'CORE', 'NEO'].includes(sectionDivision)) {
-        const extraRows = unlistedByDivision[sectionDivision] || [];
-
-        extraRows.forEach(row => {
-          const teamName = RowAccess.getTeamName(row) || '';
-          items.push({
-            pos: items.length + 1,
-            seed: `${section.title} Unseeded`,
-            team: teamName,
-            displayTeam: Rename.getCanonicalTeamName(teamName),
-            exists: true,
-            note: this.getSeedRowNote(section, teamName, registeredInfoMap),
-            isMissing: false,
-            isDisbanded: false,
-            isUnlisted: true
+      collectPresetTeamNames() {
+        const set = new Set();
+        PRESET_SECTIONS.forEach(section => {
+          section.rows.forEach(row => {
+            const normalized = Utils.normalizeTeamName(Rename.getCanonicalTeamName(row[2]));
+            if (normalized) set.add(normalized);
           });
         });
+        return set;
+      },
+
+      getQualifierNote(row) {
+        const qualifier = String(row?.qualifierName || '').trim().toUpperCase();
+        if (qualifier.includes('PRO QUALIFIER')) return 'PRO QUAL SIGNUP';
+        if (qualifier.includes('ELITE QUALIFIER')) return 'ELITE QUAL REQ';
+        if (qualifier.includes('WILDCARD')) return 'PRO QUAL REQ';
+        return '';
+      },
+
+      buildRegisteredTeamInfoMap(rows) {
+        const map = new Map();
+        rows.forEach(row => {
+          const normalized = Utils.normalizeTeamName(RowAccess.getTeamName(row));
+          if (normalized && !map.has(normalized)) {
+            map.set(normalized, row);
+          }
+        });
+        return map;
+      },
+
+      getSeedRowNote(section, teamName, registeredInfoMap) {
+        const canonicalTeamName = Rename.getCanonicalTeamName(teamName);
+        const normalized = Utils.normalizeTeamName(canonicalTeamName);
+        if (!normalized) return '';
+
+        const row = registeredInfoMap.get(normalized);
+        const notes = [];
+
+        const renameNote = Rename.getSeedRenameNote(teamName);
+        if (renameNote) notes.push(renameNote);
+
+        if (!row) return notes.join(' • ');
+
+        const listedDivision = this.detectSectionDivision(section.title);
+        const signedDivision = String(row.divisionName || '').trim().toUpperCase();
+        const qualifierNote = this.getQualifierNote(row);
+
+        if (qualifierNote) notes.push(qualifierNote);
+
+        if (
+          signedDivision &&
+          ['ELITE', 'PRO', 'LITE', 'CORE', 'NEO'].includes(listedDivision) &&
+          signedDivision !== listedDivision &&
+          !(listedDivision === 'CORE' && signedDivision === 'NEO')
+        ) {
+          notes.push('SIGNED UP TO ' + signedDivision);
+        }
+
+        return notes.join(' • ');
+      },
+
+      dedupeSectionItems(items) {
+        const seen = new Set();
+        const out = [];
+
+        for (const item of items) {
+          const normalized = Utils.normalizeTeamName(item.displayTeam || item.team || '');
+          if (!normalized) {
+            out.push(item);
+            continue;
+          }
+          if (seen.has(normalized)) continue;
+          seen.add(normalized);
+          out.push(item);
+        }
+
+        return out.map((item, index) => ({
+          ...item,
+          pos: index + 1
+        }));
+      },
+
+      dedupeRegisteredRows(rows) {
+        const seen = new Set();
+        const out = [];
+
+        for (const row of rows) {
+          const normalized = Utils.normalizeTeamName(RowAccess.getTeamName(row));
+          if (!normalized) continue;
+          if (seen.has(normalized)) continue;
+          seen.add(normalized);
+          out.push(row);
+        }
+
+        return out;
+      },
+
+      buildSections(registeredRows) {
+        const dedupedRegisteredRows = this.dedupeRegisteredRows(registeredRows);
+
+        const registeredSet = new Set(
+          dedupedRegisteredRows
+            .map(row => Utils.normalizeTeamName(RowAccess.getTeamName(row)))
+            .filter(Boolean)
+        );
+
+        const registeredInfoMap = this.buildRegisteredTeamInfoMap(dedupedRegisteredRows);
+        const presetNames = this.collectPresetTeamNames();
+
+        const unlistedByDivision = {
+          ELITE: [],
+          PRO: [],
+          LITE: [],
+          CORE: [],
+          NEO: []
+        };
+
+        dedupedRegisteredRows.forEach(row => {
+          const teamName = RowAccess.getTeamName(row);
+          const normalized = Utils.normalizeTeamName(teamName);
+          const division = String(row?.divisionName || '').trim().toUpperCase();
+
+          if (!normalized || presetNames.has(normalized)) return;
+          if (!unlistedByDivision[division]) return;
+
+          unlistedByDivision[division].push(row);
+        });
+
+        Object.keys(unlistedByDivision).forEach(key => {
+          unlistedByDivision[key] = this.dedupeRegisteredRows(unlistedByDivision[key]).sort((a, b) =>
+            String(RowAccess.getTeamName(a) || '').localeCompare(
+              String(RowAccess.getTeamName(b) || ''),
+              'sv',
+              { sensitivity: 'base' }
+            )
+          );
+        });
+
+        return PRESET_SECTIONS.map(section => {
+          const sectionDivision = this.detectSectionDivision(section.title);
+
+          let items = section.rows.map(row => {
+            const [pos, seed, team] = row;
+            const displayTeam = Rename.getCanonicalTeamName(team);
+            const normalized = Utils.normalizeTeamName(displayTeam);
+            const exists = team ? registeredSet.has(normalized) : false;
+            const note = team ? this.getSeedRowNote(section, team, registeredInfoMap) : '';
+            const isDisbanded = Disbanded.has(team);
+            const isMissing = !!displayTeam && !exists && !isDisbanded;
+
+            const finalNoteParts = [];
+            if (note) finalNoteParts.push(note);
+            if (isDisbanded) finalNoteParts.push('DISBANDED');
+
+            return {
+              pos,
+              seed,
+              team,
+              displayTeam,
+              exists,
+              note: finalNoteParts.join(' • '),
+              isMissing,
+              isDisbanded,
+              isUnlisted: false
+            };
+          });
+
+          items = this.dedupeSectionItems(items);
+
+          if (['ELITE', 'PRO', 'LITE', 'CORE', 'NEO'].includes(sectionDivision)) {
+            const extraRows = unlistedByDivision[sectionDivision] || [];
+
+            extraRows.forEach(row => {
+              const teamName = RowAccess.getTeamName(row) || '';
+              items.push({
+                pos: items.length + 1,
+                seed: `${section.title} Unseeded`,
+                team: teamName,
+                displayTeam: Rename.getCanonicalTeamName(teamName),
+                exists: true,
+                note: this.getSeedRowNote(section, teamName, registeredInfoMap),
+                isMissing: false,
+                isDisbanded: false,
+                isUnlisted: true
+              });
+            });
+          }
+
+          items = this.dedupeSectionItems(items);
+
+          return {
+            title: section.title,
+            count: items.length,
+            items
+          };
+        });
       }
-
-      items = this.dedupeSectionItems(items);
-
-      return {
-        title: section.title,
-        count: items.length,
-        items
-      };
-    });
-  }
     };
 
     function getFilteredSeedingRows(sectionTitle, rows) {
-      const query = dom.searchInput.value.trim().toLowerCase(); const mode = dom.seedingFilterSelect.value;
+      const query = dom.searchInput.value.trim().toLowerCase();
+      const mode = dom.seedingFilterSelect.value;
+
       return rows.filter(item => {
         const haystack = [item.seed, item.team, item.note, item.displayTeam, sectionTitle].join(' ').toLowerCase();
         if (query && !haystack.includes(query)) return false;
@@ -1599,12 +2217,20 @@ const SeedingService = {
     }
 
     async function renderSeedingPage() {
-      showPage('page-data'); dom.normalTableWrap.style.display = 'none'; dom.seedingWrap.style.display = 'block'; dom.seedingFilterSelect.style.display = 'inline-block'; dom.seedingBody.innerHTML = '';
+      showPage('page-data');
+      dom.normalTableWrap.style.display = 'none';
+      dom.seedingWrap.style.display = 'block';
+      dom.seedingFilterSelect.style.display = 'inline-block';
+      dom.seedingBody.innerHTML = '';
+
       const registeredRows = DataService.getRowsForSource('signUps').map(row => Rename.applyToRow(row));
       renderMetricCards(getPageMetrics('seeding', registeredRows), dom.pageMetrics);
-      dom.dataSectionTitle.textContent = 'Seeding 26 Spring'; dom.dataSectionSubtitle.textContent = 'Preset seeding compared against signUps.';
+      dom.dataSectionTitle.textContent = 'Seeding 26 Spring';
+      dom.dataSectionSubtitle.textContent = 'Preset seeding compared against signUps.';
+
       const sections = SeedingService.buildSections(registeredRows);
-      let visibleRows = 0; let renderedSections = 0;
+      let visibleRows = 0;
+      let renderedSections = 0;
 
       for (const section of sections) {
         const filteredItems = getFilteredSeedingRows(section.title, section.items);
@@ -1673,21 +2299,9 @@ const SeedingService = {
           if (item.isDisbanded) {
             teamTd.textContent = item.displayTeam || '';
           } else if (mapped?.teamId && mapped?.leagueId) {
-            teamTd.appendChild(
-              Utils.createLink(
-                TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId),
-                item.displayTeam,
-                'seed-link'
-              )
-            );
+            teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId), item.displayTeam, 'seed-link'));
           } else if (winterMapped?.teamId && winterMapped?.leagueId) {
-            teamTd.appendChild(
-              Utils.createLink(
-                TeamLinks.buildTeamUrl(winterMapped.teamId, winterMapped.leagueId),
-                item.displayTeam,
-                'seed-link'
-              )
-            );
+            teamTd.appendChild(Utils.createLink(TeamLinks.buildTeamUrl(winterMapped.teamId, winterMapped.leagueId), item.displayTeam, 'seed-link'));
             teamTd.title = `Winter fallback. Matched against "${winterMapped.sourceName}"`;
           } else {
             teamTd.textContent = item.displayTeam || '';
@@ -1706,9 +2320,7 @@ const SeedingService = {
           if (item.note) {
             item.note.split(' • ').filter(Boolean).forEach(part => {
               const badge = document.createElement('span');
-              badge.className = part === 'DISBANDED'
-                ? 'seed-note-badge disbanded'
-                : 'seed-note-badge';
+              badge.className = part === 'DISBANDED' ? 'seed-note-badge disbanded' : 'seed-note-badge';
               badge.textContent = part;
               noteTd.appendChild(badge);
             });
@@ -1722,6 +2334,7 @@ const SeedingService = {
 
           if (item.isMissing && !item.isDisbanded && item.displayTeam) {
             const mailUrl = await MessagingService.getSeedingMissingMessageUrl(item.displayTeam);
+
             if (mailUrl) {
               const btn = document.createElement('a');
               btn.href = mailUrl;
@@ -1761,7 +2374,11 @@ const SeedingService = {
     }
 
     async function renderDataPage() {
-      showPage('page-data'); dom.normalTableWrap.style.display = 'block'; dom.seedingWrap.style.display = 'none'; dom.seedingFilterSelect.style.display = 'none';
+      showPage('page-data');
+      dom.normalTableWrap.style.display = 'block';
+      dom.seedingWrap.style.display = 'none';
+      dom.seedingFilterSelect.style.display = 'none';
+
       const cfg = PAGE_CONFIG[currentPage];
       let rows = getRowsForCurrentPage();
       rows = filterRows(rows);
@@ -1769,27 +2386,67 @@ const SeedingService = {
       buildNumericColumns(rows, columns);
       rows = sortRows(rows);
       normalizedRows = rows;
+
       renderMetricCards(getPageMetrics(currentPage, rows), dom.pageMetrics);
-      dom.dataSectionTitle.textContent = cfg.jsonKey; dom.dataSectionSubtitle.textContent = `${cfg.subtitle} Rows after filters: ${rows.length}.`;
+      dom.dataSectionTitle.textContent = cfg.jsonKey;
+      dom.dataSectionSubtitle.textContent = `${cfg.subtitle} Rows after filters: ${rows.length}.`;
       dom.emptyMessage.style.display = rows.length ? 'none' : 'block';
-      if (!rows.length) { dom.headerRow.innerHTML = ''; dom.tableBody.innerHTML = ''; dom.rowCounter.textContent = ''; return; }
-      renderHeader(columns); await renderDataRows(rows, columns);
+
+      if (!rows.length) {
+        dom.headerRow.innerHTML = '';
+        dom.tableBody.innerHTML = '';
+        dom.rowCounter.textContent = '';
+        return;
+      }
+
+      renderHeader(columns);
+      await renderDataRows(rows, columns);
     }
 
     function renderOverview() {
       showPage('page-dashboard');
       const availableKeys = EXPECTED_KEYS.filter(key => Array.isArray(allData[key]));
-      renderMetricCards([{ label: 'Data source', value: loadedPath || 'Ingen', meta: loadError ? 'Load error' : 'Active file' }, { label: 'Arrays found', value: availableKeys.length, meta: 'Top-level keys that can be rendered' }, { label: 'Status', value: loadError ? 'Fel' : 'OK', meta: loadError ? String(loadError.message || loadError) : 'Loader running' }], dom.overviewMetrics);
-      dom.overviewStatusList.innerHTML = [{ t: 'Loaded file', s: loadedPath || 'No file found', p: loadError ? 'Fel' : 'OK', c: loadError ? 'danger' : 'ok' }, { t: 'Normalization', s: availableKeys.join(', ') || 'No known keys found', p: 'JSON', c: 'info' }, { t: 'Seeding', s: 'Preset + registration check', p: 'Preset', c: 'warn' }].map(item => `<div class="mini-item"><div><strong>${Utils.escapeHtml(item.t)}</strong><span>${Utils.escapeHtml(item.s)}</span></div><span class="pill ${item.c}">${Utils.escapeHtml(item.p)}</span></div>`).join('');
-      dom.mappingTableBody.innerHTML = [['Registered Teams','signUps','Teams, division, registration, license status','Live'],['Lite 26 Spring Teams','lite','Compatibility and players[]','Live'],['Core 26 Spring Teams','core','Compatibility and players[]','Live'],['Neo 26 Spring Teams','neo','Compatibility and players[]','Live'],['Transfers 26 Spring Teams','overgangar','From/To, matches, date, role','Live'],['Backups 26 Spring Teams','backups','Backup licenses','Live'],['Unlicensed 26 Spring Teams','licenslosa','Unlicensed players','Live'],['Players In Multiple Teams','inMoreThan1Teams','Multiple teams + teams[]','Live'],['Banned Players','bannedPlayers','Ban status and violations','Live'],['Seeding 26 Spring','preset','Preset seeding + signUps check','Preset']].map(row => `<tr><td>${Utils.escapeHtml(row[0])}</td><td><code>${Utils.escapeHtml(row[1])}</code></td><td>${Utils.escapeHtml(row[2])}</td><td>${pillHtml(row[3])}</td></tr>`).join('');
+
+      renderMetricCards([
+        { label: 'Data source', value: loadedPath || 'Ingen', meta: loadError ? 'Load error' : 'Active file' },
+        { label: 'Arrays found', value: availableKeys.length, meta: 'Top-level keys that can be rendered' },
+        { label: 'Status', value: loadError ? 'Fel' : 'OK', meta: loadError ? String(loadError.message || loadError) : 'Loader running' }
+      ], dom.overviewMetrics);
+
+      dom.overviewStatusList.innerHTML = [
+        { t: 'Loaded file', s: loadedPath || 'No file found', p: loadError ? 'Fel' : 'OK', c: loadError ? 'danger' : 'ok' },
+        { t: 'Normalization', s: availableKeys.join(', ') || 'No known keys found', p: 'JSON', c: 'info' },
+        { t: 'Seeding', s: 'Preset + registration check', p: 'Preset', c: 'warn' }
+      ].map(item => `<div class="mini-item"><div><strong>${Utils.escapeHtml(item.t)}</strong><span>${Utils.escapeHtml(item.s)}</span></div><span class="pill ${item.c}">${Utils.escapeHtml(item.p)}</span></div>`).join('');
+
+      dom.mappingTableBody.innerHTML = [
+        ['Registered Teams','signUps','Teams, division, registration, license status','Live'],
+        ['Lite 26 Spring Teams','lite','Compatibility and players[]','Live'],
+        ['Core 26 Spring Teams','core','Compatibility and players[]','Live'],
+        ['Neo 26 Spring Teams','neo','Compatibility and players[]','Live'],
+        ['Transfers 26 Spring Teams','overgangar','From/To, matches, date, role','Live'],
+        ['Backups 26 Spring Teams','backups','Backup licenses','Live'],
+        ['Unlicensed 26 Spring Teams','licenslosa','Unlicensed players','Live'],
+        ['Players In Multiple Teams','inMoreThan1Teams','Multiple teams + teams[]','Live'],
+        ['Banned Players','bannedPlayers','Ban status and violations','Live'],
+        ['Seeding 26 Spring','preset','Preset seeding + signUps check','Preset']
+      ].map(row => `<tr><td>${Utils.escapeHtml(row[0])}</td><td><code>${Utils.escapeHtml(row[1])}</code></td><td>${Utils.escapeHtml(row[2])}</td><td>${pillHtml(row[3])}</td></tr>`).join('');
+
       dom.sideMeta.innerHTML = `<div><strong>Data source:</strong> <code>${Utils.escapeHtml(loadedPath || 'none')}</code></div><div><strong>Keys:</strong> ${Utils.escapeHtml(String(availableKeys.length))} found</div><div><strong>Features:</strong> login, CSV, filters, messaging</div>`;
       dom.rowCounter.textContent = '';
     }
 
     function exportCsv() {
-      const cfg = PAGE_CONFIG[currentPage]; if (!cfg.csv) { Utils.setStatus('CSV is not available here'); return; }
-      const columns = getVisibleColumns().filter(c => c !== '__sendMail'); const rows = normalizedRows;
+      const cfg = PAGE_CONFIG[currentPage];
+      if (!cfg.csv) {
+        Utils.setStatus('CSV is not available here');
+        return;
+      }
+
+      const columns = getVisibleColumns().filter(c => c !== '__sendMail');
+      const rows = normalizedRows;
       const lines = [columns.map(Utils.escapeCsv).join(',')];
+
       rows.forEach(row => {
         lines.push(columns.map(col => {
           if (col === 'fullLicenseCount') return Utils.escapeCsv(RowAccess.getFullLicenseCount(row));
@@ -1798,6 +2455,7 @@ const SeedingService = {
           return Utils.escapeCsv(row?.[col] ?? '');
         }).join(','));
       });
+
       const filename = `${currentPage}-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
       Utils.downloadFile(filename, lines.join('\n'));
       Utils.setStatus('CSV exported');
@@ -1805,41 +2463,120 @@ const SeedingService = {
 
     async function renderApp() {
       renderNav();
-      const cfg = PAGE_CONFIG[currentPage]; dom.pageTitle.textContent = cfg.title; dom.pageSubtitle.textContent = cfg.subtitle; dom.csvExportBtn.style.display = cfg.csv ? 'inline-block' : 'none';
+      const cfg = PAGE_CONFIG[currentPage];
+      dom.pageTitle.textContent = cfg.title;
+      dom.pageSubtitle.textContent = cfg.subtitle;
+      dom.csvExportBtn.style.display = cfg.csv ? 'inline-block' : 'none';
+
       if (currentPage === 'dashboard') renderOverview();
       else if (currentPage === 'seeding') await renderSeedingPage();
       else await renderDataPage();
+
       dom.lastUpdated.textContent = 'Updated: ' + Utils.toDisplayDate();
       Utils.setStatus(loadError ? 'Error' : 'Done');
     }
 
     async function loadAndRender(forceReload = false) {
-      try { Utils.setStatus('Loading data...'); await DataService.fetchAll(forceReload); loadError = null; await renderApp(); }
-      catch (error) { console.error(error); loadError = error; allData = { signUps: [], lite: [], core: [], neo: [], overgangar: [], backups: [], licenslosa: [], inMoreThan1Teams: [], bannedPlayers: [] }; await renderApp(); Utils.setStatus('Error'); }
+      try {
+        Utils.setStatus('Loading data...');
+        await DataService.fetchAll(forceReload);
+        loadError = null;
+        await renderApp();
+      } catch (error) {
+        console.error(error);
+        loadError = error;
+        allData = {
+          signUps: [],
+          lite: [],
+          core: [],
+          neo: [],
+          overgangar: [],
+          backups: [],
+          licenslosa: [],
+          inMoreThan1Teams: [],
+          bannedPlayers: []
+        };
+        await renderApp();
+        Utils.setStatus('Error');
+      }
     }
 
-    function unlockPage() { dom.loginScreen.classList.add('hidden'); dom.siteShell.classList.remove('locked'); }
-    function tryLogin() { if (dom.passwordInput.value === CONFIG.ADMIN_PASSWORD) { dom.loginError.style.display = 'none'; sessionStorage.setItem('eh_admin_access', 'granted'); unlockPage(); } else dom.loginError.style.display = 'block'; }
+    function unlockPage() {
+      dom.loginScreen.classList.add('hidden');
+      dom.siteShell.classList.remove('locked');
+    }
+
+    function tryLogin() {
+      if (dom.passwordInput.value === CONFIG.ADMIN_PASSWORD) {
+        dom.loginError.style.display = 'none';
+        sessionStorage.setItem('eh_admin_access', 'granted');
+        unlockPage();
+      } else {
+        dom.loginError.style.display = 'block';
+      }
+    }
 
     function bindEvents() {
       dom.loginBtn.addEventListener('click', tryLogin);
       dom.passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
-      dom.reloadBtn.addEventListener('click', async () => { rawJsonData = null; allData = {}; teamLinkMapCache = null; playerLinkMapCache = null; captainUserIdMapCache = null; winterTeamLinkMapCache = null; await loadAndRender(true); });
-      dom.clearFiltersBtn.addEventListener('click', async () => { dom.searchInput.value = ''; dom.flaggedOnlyToggle.checked = false; dom.seedingFilterSelect.value = 'all'; dom.sortSelect.value = 'default'; sortState = { column: null, direction: 'asc' }; await renderApp(); });
+
+      dom.reloadBtn.addEventListener('click', async () => {
+        rawJsonData = null;
+        allData = {};
+        teamLinkMapCache = null;
+        playerLinkMapCache = null;
+        captainUserIdMapCache = null;
+        winterTeamLinkMapCache = null;
+        await loadAndRender(true);
+      });
+
+      dom.clearFiltersBtn.addEventListener('click', async () => {
+        dom.searchInput.value = '';
+        dom.flaggedOnlyToggle.checked = false;
+        dom.seedingFilterSelect.value = 'all';
+        dom.sortSelect.value = 'default';
+        sortState = { column: null, direction: 'asc' };
+        await renderApp();
+      });
+
       dom.csvExportBtn.addEventListener('click', exportCsv);
-      dom.openJsonBtn.addEventListener('click', () => { const source = rawJsonData || allData || {}; const keys = Object.keys(source); openDrawer('spring26.json', 'Raw top-level keys from the loaded file', keys.map(key => ({ key, type: Array.isArray(source[key]) ? 'array' : typeof source[key], length: Array.isArray(source[key]) ? source[key].length : '—' }))); });
+
+      dom.openJsonBtn.addEventListener('click', () => {
+        const source = rawJsonData || allData || {};
+        const keys = Object.keys(source);
+        openDrawer('spring26.json', 'Raw top-level keys from the loaded file', keys.map(key => ({
+          key,
+          type: Array.isArray(source[key]) ? 'array' : typeof source[key],
+          length: Array.isArray(source[key]) ? source[key].length : '—'
+        })));
+      });
+
       dom.drawerClose.addEventListener('click', () => dom.drawer.classList.remove('open'));
+
       document.getElementById('scrollTopBtn').addEventListener('click', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
+
       dom.searchInput.addEventListener('input', () => {
         if (currentPage === 'dashboard') return;
         clearTimeout(searchDebounce);
         searchDebounce = setTimeout(() => { renderApp(); }, 180);
       });
-      dom.flaggedOnlyToggle.addEventListener('change', async () => { if (currentPage !== 'dashboard') await renderApp(); });
-      dom.sortSelect.addEventListener('change', async () => { if (currentPage !== 'dashboard') { sortState = { column: null, direction: 'asc' }; await renderApp(); } });
-      dom.seedingFilterSelect.addEventListener('change', async () => { if (currentPage === 'seeding') await renderApp(); });
+
+      dom.flaggedOnlyToggle.addEventListener('change', async () => {
+        if (currentPage !== 'dashboard') await renderApp();
+      });
+
+      dom.sortSelect.addEventListener('change', async () => {
+        if (currentPage !== 'dashboard') {
+          sortState = { column: null, direction: 'asc' };
+          await renderApp();
+        }
+      });
+
+      dom.seedingFilterSelect.addEventListener('change', async () => {
+        if (currentPage === 'seeding') await renderApp();
+      });
     }
 
     bindEvents();
