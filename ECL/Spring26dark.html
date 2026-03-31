@@ -768,7 +768,7 @@
         const backupLicenseCount = Number(row?.backupLicenseCount) || 0;
         const minPlayers = this.getMinimumPlayersForDivision(division);
 
-        if (minPlayers > 0 && playerCount < minPlayers) issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
+        if (minPlayers > 0 && playerCount < minPlayers) issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers} )`);
         if (playerCount > 13) issues.push(`has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
        if (fullLicenseCount < 6) {
   const licenseLabel = division === 'NEO' ? 'Neo license' : 'full license';
