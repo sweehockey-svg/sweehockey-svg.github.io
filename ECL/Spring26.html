@@ -524,10 +524,28 @@
       { oldName: 'Jagrs in Paradise', newName: 'Cityboys' },
       { oldName: 'TROJANS', newName: 'Sjukstugan' },
       { oldName: 'MoDo Hockey', newName: 'Västerås IK' },
-      { oldName: 'MoDo Hockey', newName: 'Västerås IK' },
       { oldName: 'ROBE Esports', newName: 'MSK Esports' },
       { oldName: 'Polski Boys', newName: 'Tunnel Vision' },
       { oldName: 'Vesuvius Academy', newName: 'Grim Reapers HC' }
+    ];
+
+    const DISBANDED_TEAMS = [
+      'KUUSAMO.gg',
+'KUUSAMO.gg',
+'POGGERS',
+      'EXEN',
+'Finnish Roosters',
+'NOVA',
+'Tinted Visors',
+      'Veterankraft',
+'M3 Esports',
+'6 MAN AVALANCHE (DNF)',
+       'Bad Habits',
+       'Get Hagens HC',
+     'SCB eSports',
+'HCP eSports',
+            'SHADOW SKULLS',
+      'MORGANCHIPSEN HK'
     ];
 
     const PAGE_CONFIG = {
@@ -693,6 +711,13 @@
           });
         }
         return cloned;
+      }
+    };
+
+    const Disbanded = {
+      set: new Set(DISBANDED_TEAMS.map(name => Utils.normalizeTeamName(Rename.getCanonicalTeamName(name)))),
+      has(teamName) {
+        return this.set.has(Utils.normalizeTeamName(Rename.getCanonicalTeamName(teamName)));
       }
     };
 
@@ -898,7 +923,8 @@
 
       return null;
     }
-        const MessagingService = {
+
+    const MessagingService = {
       async getBackupMessageUrl(row) {
         if (!['backups','unlicensed'].includes(currentPage)) return '';
         const captainMap = captainUserIdMapCache || DataService.getCaptainUserIdMap();
@@ -1049,8 +1075,7 @@ Best regards,`;
       async copySignUpsMessage(row) { await navigator.clipboard.writeText(this.buildSignUpsMessage(row)); },
       async copyMissingSeedingMessage(teamName) { await navigator.clipboard.writeText(this.buildMissingSeedingMessage(teamName)); }
     };
-
-    function pillHtml(value) {
+       function pillHtml(value) {
       if (value == null || value === '') return '<span class="muted">—</span>';
       const t = String(value); const lower = t.toLowerCase(); let cls = 'info';
       if (lower === 'ok' || lower === 'yes' || lower === 'clear') cls = 'ok';
@@ -1338,71 +1363,225 @@ Best regards,`;
       return [{ label: 'Data source', value: 'Preset', meta: 'Seeding' }, { label: 'Status', value: 'Manual', meta: 'Check view' }, { label: 'Next step', value: 'Seed check', meta: 'Connected to signUps' }];
     }
 
-    const SeedingService = {
-      detectSectionDivision(title) { const t = String(title || '').toLowerCase(); if (t === 'elite') return 'ELITE'; if (t === 'pro') return 'PRO'; if (t === 'lite') return 'LITE'; if (t === 'core') return 'CORE'; if (t === 'neo') return 'NEO'; if (t.startsWith('elite qualifiers')) return 'ELITE_QUAL'; if (t.startsWith('pro qualifiers')) return 'PRO_QUAL'; return ''; },
-      getSectionStyle(title) { const t = String(title || '').toLowerCase(); if (t.includes('elite')) return 'linear-gradient(90deg,#9d7a1f,#d5b14b 55%,#f2d67d)'; if (t === 'pro' || t.includes('pro qualifiers')) return 'linear-gradient(90deg,#7c848f,#b5bcc7 55%,#d9dee6)'; if (t === 'lite') return 'linear-gradient(90deg,#7d432f,#ad654a 55%,#d68462)'; if (t === 'core') return 'linear-gradient(90deg,#8b3200,#ca5a0a 55%,#ee7b17)'; return 'linear-gradient(90deg,#22672a,#2f9640 55%,#4ed163)'; },
-      collectPresetTeamNames() { const set = new Set(); PRESET_SECTIONS.forEach(section => section.rows.forEach(row => { const normalized = Utils.normalizeTeamName(Rename.getCanonicalTeamName(row[2])); if (normalized) set.add(normalized); })); return set; },
-      getQualifierNote(row) { const qualifier = String(row?.qualifierName || '').trim().toUpperCase(); if (qualifier.includes('PRO QUALIFIER')) return 'PRO QUAL SIGNUP'; if (qualifier.includes('ELITE QUALIFIER')) return 'ELITE QUAL REQ'; if (qualifier.includes('WILDCARD')) return 'PRO QUAL REQ'; return ''; },
-      buildRegisteredTeamInfoMap(rows) { const map = new Map(); rows.forEach(row => { const normalized = Utils.normalizeTeamName(RowAccess.getTeamName(row)); if (normalized) map.set(normalized, row); }); return map; },
-      getSeedRowNote(section, teamName, registeredInfoMap) {
-        const canonicalTeamName = Rename.getCanonicalTeamName(teamName); const normalized = Utils.normalizeTeamName(canonicalTeamName); if (!normalized) return '';
-        const row = registeredInfoMap.get(normalized); const notes = []; const renameNote = Rename.getSeedRenameNote(teamName); if (renameNote) notes.push(renameNote); if (!row) return notes.join(' • ');
-        const listedDivision = this.detectSectionDivision(section.title); const signedDivision = String(row.divisionName || '').trim().toUpperCase(); const qualifierNote = this.getQualifierNote(row); if (qualifierNote) notes.push(qualifierNote);
-        if (signedDivision && ['ELITE','PRO','LITE','CORE','NEO'].includes(listedDivision) && signedDivision !== listedDivision && !(listedDivision === 'CORE' && signedDivision === 'NEO')) notes.push('SIGNED UP TO ' + signedDivision);
-        return notes.join(' • ');
-      },
-      buildSections(registeredRows) {
-        const registeredSet = new Set(registeredRows.map(row => Utils.normalizeTeamName(RowAccess.getTeamName(row))).filter(Boolean));
-        const registeredInfoMap = this.buildRegisteredTeamInfoMap(registeredRows);
-        const presetNames = this.collectPresetTeamNames();
+const SeedingService = {
+  detectSectionDivision(title) {
+    const t = String(title || '').toLowerCase();
+    if (t === 'elite') return 'ELITE';
+    if (t === 'pro') return 'PRO';
+    if (t === 'lite') return 'LITE';
+    if (t === 'core') return 'CORE';
+    if (t === 'neo') return 'NEO';
+    if (t.startsWith('elite qualifiers')) return 'ELITE_QUAL';
+    if (t.startsWith('pro qualifiers')) return 'PRO_QUAL';
+    return '';
+  },
 
-        const unlistedByDivision = { ELITE: [], PRO: [], LITE: [], CORE: [], NEO: [] };
-        registeredRows.forEach(row => {
-          const teamName = RowAccess.getTeamName(row);
-          const normalized = Utils.normalizeTeamName(teamName);
-          const division = String(row?.divisionName || '').trim().toUpperCase();
-          if (!normalized || presetNames.has(normalized)) return;
-          if (!unlistedByDivision[division]) return;
-          unlistedByDivision[division].push(row);
-        });
+  getSectionStyle(title) {
+    const t = String(title || '').toLowerCase();
+    if (t.includes('elite')) return 'linear-gradient(90deg,#9d7a1f,#d5b14b 55%,#f2d67d)';
+    if (t === 'pro' || t.includes('pro qualifiers')) return 'linear-gradient(90deg,#7c848f,#b5bcc7 55%,#d9dee6)';
+    if (t === 'lite') return 'linear-gradient(90deg,#7d432f,#ad654a 55%,#d68462)';
+    if (t === 'core') return 'linear-gradient(90deg,#8b3200,#ca5a0a 55%,#ee7b17)';
+    return 'linear-gradient(90deg,#22672a,#2f9640 55%,#4ed163)';
+  },
 
-        Object.keys(unlistedByDivision).forEach(key => {
-          unlistedByDivision[key].sort((a, b) => String(RowAccess.getTeamName(a) || '').localeCompare(String(RowAccess.getTeamName(b) || ''), 'sv', { sensitivity: 'base' }));
-        });
+  collectPresetTeamNames() {
+    const set = new Set();
+    PRESET_SECTIONS.forEach(section => {
+      section.rows.forEach(row => {
+        const normalized = Utils.normalizeTeamName(Rename.getCanonicalTeamName(row[2]));
+        if (normalized) set.add(normalized);
+      });
+    });
+    return set;
+  },
 
-        return PRESET_SECTIONS.map(section => {
-          const sectionDivision = this.detectSectionDivision(section.title);
-          const items = section.rows.map(row => {
-            const [pos, seed, team] = row;
-            const displayTeam = Rename.getCanonicalTeamName(team);
-            const normalized = Utils.normalizeTeamName(displayTeam);
-            const exists = team ? registeredSet.has(normalized) : false;
-            const note = team ? this.getSeedRowNote(section, team, registeredInfoMap) : '';
-            return { pos, seed, team, displayTeam, exists, note, isMissing: !!displayTeam && !exists, isDisbanded: false, isUnlisted: false };
+  getQualifierNote(row) {
+    const qualifier = String(row?.qualifierName || '').trim().toUpperCase();
+    if (qualifier.includes('PRO QUALIFIER')) return 'PRO QUAL SIGNUP';
+    if (qualifier.includes('ELITE QUALIFIER')) return 'ELITE QUAL REQ';
+    if (qualifier.includes('WILDCARD')) return 'PRO QUAL REQ';
+    return '';
+  },
+
+  buildRegisteredTeamInfoMap(rows) {
+    const map = new Map();
+    rows.forEach(row => {
+      const normalized = Utils.normalizeTeamName(RowAccess.getTeamName(row));
+      if (normalized && !map.has(normalized)) {
+        map.set(normalized, row);
+      }
+    });
+    return map;
+  },
+
+  getSeedRowNote(section, teamName, registeredInfoMap) {
+    const canonicalTeamName = Rename.getCanonicalTeamName(teamName);
+    const normalized = Utils.normalizeTeamName(canonicalTeamName);
+    if (!normalized) return '';
+
+    const row = registeredInfoMap.get(normalized);
+    const notes = [];
+
+    const renameNote = Rename.getSeedRenameNote(teamName);
+    if (renameNote) notes.push(renameNote);
+
+    if (!row) return notes.join(' • ');
+
+    const listedDivision = this.detectSectionDivision(section.title);
+    const signedDivision = String(row.divisionName || '').trim().toUpperCase();
+    const qualifierNote = this.getQualifierNote(row);
+
+    if (qualifierNote) notes.push(qualifierNote);
+
+    if (
+      signedDivision &&
+      ['ELITE', 'PRO', 'LITE', 'CORE', 'NEO'].includes(listedDivision) &&
+      signedDivision !== listedDivision &&
+      !(listedDivision === 'CORE' && signedDivision === 'NEO')
+    ) {
+      notes.push('SIGNED UP TO ' + signedDivision);
+    }
+
+    return notes.join(' • ');
+  },
+
+  dedupeSectionItems(items) {
+    const seen = new Set();
+    const out = [];
+
+    for (const item of items) {
+      const normalized = Utils.normalizeTeamName(item.displayTeam || item.team || '');
+      if (!normalized) {
+        out.push(item);
+        continue;
+      }
+      if (seen.has(normalized)) continue;
+      seen.add(normalized);
+      out.push(item);
+    }
+
+    return out.map((item, index) => ({
+      ...item,
+      pos: index + 1
+    }));
+  },
+
+  dedupeRegisteredRows(rows) {
+    const seen = new Set();
+    const out = [];
+
+    for (const row of rows) {
+      const normalized = Utils.normalizeTeamName(RowAccess.getTeamName(row));
+      if (!normalized) continue;
+      if (seen.has(normalized)) continue;
+      seen.add(normalized);
+      out.push(row);
+    }
+
+    return out;
+  },
+
+  buildSections(registeredRows) {
+    const dedupedRegisteredRows = this.dedupeRegisteredRows(registeredRows);
+
+    const registeredSet = new Set(
+      dedupedRegisteredRows
+        .map(row => Utils.normalizeTeamName(RowAccess.getTeamName(row)))
+        .filter(Boolean)
+    );
+
+    const registeredInfoMap = this.buildRegisteredTeamInfoMap(dedupedRegisteredRows);
+    const presetNames = this.collectPresetTeamNames();
+
+    const unlistedByDivision = {
+      ELITE: [],
+      PRO: [],
+      LITE: [],
+      CORE: [],
+      NEO: []
+    };
+
+    dedupedRegisteredRows.forEach(row => {
+      const teamName = RowAccess.getTeamName(row);
+      const normalized = Utils.normalizeTeamName(teamName);
+      const division = String(row?.divisionName || '').trim().toUpperCase();
+
+      if (!normalized || presetNames.has(normalized)) return;
+      if (!unlistedByDivision[division]) return;
+
+      unlistedByDivision[division].push(row);
+    });
+
+    Object.keys(unlistedByDivision).forEach(key => {
+      unlistedByDivision[key] = this.dedupeRegisteredRows(unlistedByDivision[key]).sort((a, b) =>
+        String(RowAccess.getTeamName(a) || '').localeCompare(
+          String(RowAccess.getTeamName(b) || ''),
+          'sv',
+          { sensitivity: 'base' }
+        )
+      );
+    });
+
+    return PRESET_SECTIONS.map(section => {
+      const sectionDivision = this.detectSectionDivision(section.title);
+
+      let items = section.rows.map(row => {
+        const [pos, seed, team] = row;
+        const displayTeam = Rename.getCanonicalTeamName(team);
+        const normalized = Utils.normalizeTeamName(displayTeam);
+        const exists = team ? registeredSet.has(normalized) : false;
+        const note = team ? this.getSeedRowNote(section, team, registeredInfoMap) : '';
+        const isDisbanded = Disbanded.has(team);
+        const isMissing = !!displayTeam && !exists && !isDisbanded;
+
+        const finalNoteParts = [];
+        if (note) finalNoteParts.push(note);
+        if (isDisbanded) finalNoteParts.push('DISBANDED');
+
+        return {
+          pos,
+          seed,
+          team,
+          displayTeam,
+          exists,
+          note: finalNoteParts.join(' • '),
+          isMissing,
+          isDisbanded,
+          isUnlisted: false
+        };
+      });
+
+      items = this.dedupeSectionItems(items);
+
+      if (['ELITE', 'PRO', 'LITE', 'CORE', 'NEO'].includes(sectionDivision)) {
+        const extraRows = unlistedByDivision[sectionDivision] || [];
+
+        extraRows.forEach(row => {
+          const teamName = RowAccess.getTeamName(row) || '';
+          items.push({
+            pos: items.length + 1,
+            seed: `${section.title} Unseeded`,
+            team: teamName,
+            displayTeam: Rename.getCanonicalTeamName(teamName),
+            exists: true,
+            note: this.getSeedRowNote(section, teamName, registeredInfoMap),
+            isMissing: false,
+            isDisbanded: false,
+            isUnlisted: true
           });
-
-          if (['ELITE','PRO','LITE','CORE','NEO'].includes(sectionDivision)) {
-            const extraRows = unlistedByDivision[sectionDivision] || [];
-            const startIndex = items.length + 1;
-            extraRows.forEach((row, idx) => {
-              const teamName = RowAccess.getTeamName(row) || '';
-              items.push({
-                pos: startIndex + idx,
-                seed: `${section.title} Unseeded`,
-                team: teamName,
-                displayTeam: Rename.getCanonicalTeamName(teamName),
-                exists: true,
-                note: this.getSeedRowNote(section, teamName, registeredInfoMap),
-                isMissing: false,
-                isDisbanded: false,
-                isUnlisted: true
-              });
-            });
-          }
-
-          return { title: section.title, count: items.length, items };
         });
       }
+
+      items = this.dedupeSectionItems(items);
+
+      return {
+        title: section.title,
+        count: items.length,
+        items
+      };
+    });
+  }
     };
 
     function getFilteredSeedingRows(sectionTitle, rows) {
@@ -1462,7 +1641,11 @@ Best regards,`;
 
         for (const item of filteredItems) {
           const tr = document.createElement('tr');
-          tr.className = 'seed-row' + (item.isMissing ? ' missing' : '') + (item.isUnlisted ? ' unlisted' : '');
+          tr.className =
+            'seed-row' +
+            (item.isMissing ? ' missing' : '') +
+            (item.isDisbanded ? ' disbanded' : '') +
+            (item.isUnlisted ? ' unlisted' : '');
 
           const teamLinkMap = DataService.getTeamLinkMap();
 
@@ -1488,7 +1671,9 @@ Best regards,`;
           tr.innerHTML = `<td>${item.pos ?? ''}</td><td>${Utils.escapeHtml(item.seed || '')}</td><td></td><td></td><td></td><td></td>`;
 
           const teamTd = tr.children[2];
-          if (mapped?.teamId && mapped?.leagueId) {
+          if (item.isDisbanded) {
+            teamTd.textContent = item.displayTeam || '';
+          } else if (mapped?.teamId && mapped?.leagueId) {
             teamTd.appendChild(
               Utils.createLink(
                 TeamLinks.buildTeamUrl(mapped.teamId, mapped.leagueId),
@@ -1512,15 +1697,19 @@ Best regards,`;
           const statusTd = tr.children[3];
           statusTd.innerHTML = !item.displayTeam
             ? '<span class="seed-status empty">-</span>'
-            : item.exists
-              ? '<span class="seed-status ok">Registered</span>'
-              : '<span class="seed-status missing">Missing</span>';
+            : item.isDisbanded
+              ? '<span class="seed-status disbanded">Disbanded</span>'
+              : item.exists
+                ? '<span class="seed-status ok">Registered</span>'
+                : '<span class="seed-status missing">Missing</span>';
 
           const noteTd = tr.children[4];
           if (item.note) {
             item.note.split(' • ').filter(Boolean).forEach(part => {
               const badge = document.createElement('span');
-              badge.className = 'seed-note-badge';
+              badge.className = part === 'DISBANDED'
+                ? 'seed-note-badge disbanded'
+                : 'seed-note-badge';
               badge.textContent = part;
               noteTd.appendChild(badge);
             });
@@ -1532,7 +1721,7 @@ Best regards,`;
           const actions = document.createElement('div');
           actions.className = 'icon-actions';
 
-          if (item.isMissing && item.displayTeam) {
+          if (item.isMissing && !item.isDisbanded && item.displayTeam) {
             const mailUrl = await MessagingService.getSeedingMissingMessageUrl(item.displayTeam);
             if (mailUrl) {
               const btn = document.createElement('a');
