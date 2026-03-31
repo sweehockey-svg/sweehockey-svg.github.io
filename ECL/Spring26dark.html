@@ -770,7 +770,10 @@
 
         if (minPlayers > 0 && playerCount < minPlayers) issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
         if (playerCount > 13) issues.push(`has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
-        if (fullLicenseCount < 6) issues.push(`needs ${6 - fullLicenseCount} more full license (or neo license)${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
+       if (fullLicenseCount < 6) {
+  const licenseLabel = division === 'NEO' ? 'Neo license' : 'full license';
+  issues.push(`needs ${6 - fullLicenseCount} more ${licenseLabel}${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
+}
         if (backupLicenseCount > 3) issues.push(`has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
         return issues;
       },
