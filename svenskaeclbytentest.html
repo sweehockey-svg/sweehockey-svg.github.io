@@ -3,22 +3,26 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Svensk eHockey test</title>
+  <title>Svensk eHockey – Svenska byten</title>
   <link rel="icon" type="image/png" href="favicon.png?v=1">
   <link rel="apple-touch-icon" href="favicon.png?v=1">
-  <meta name="description" content="Svensk eHockey – ECL, nyheter och Svenska eHockey Cupen (SEC)." />
+  <meta name="description" content="Svenska spelare som bytt ECL-lag." />
 
   <style>
     :root{
       --bg: #0b0f17;
       --panel: rgba(255,255,255,0.06);
+      --panel-2: rgba(255,255,255,0.04);
       --text: rgba(255,255,255,0.92);
-      --muted: rgba(255,255,255,0.70);
+      --muted: rgba(255,255,255,0.68);
       --border: rgba(255,255,255,0.12);
+      --gold: rgba(245,195,75,0.95);
       --shadow: 0 20px 60px rgba(0,0,0,.45);
     }
+
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
+
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -28,76 +32,85 @@
         var(--bg);
       color: var(--text);
     }
+
     a{ color:inherit; text-decoration:none; }
-    .container{ width:min(1100px, calc(100% - 32px)); margin:0 auto; }
+    .container{ width:min(1180px, calc(100% - 32px)); margin:0 auto; }
 
     .topbar{
-      position:sticky; top:0; z-index:50;
+      position:sticky;
+      top:0;
+      z-index:50;
       backdrop-filter: blur(10px);
       background: rgba(10,14,22,0.78);
       border-bottom: 1px solid var(--border);
     }
+
     .topbar__inner{
-      display:flex; align-items:center; gap:16px;
-      padding: 14px 0;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:14px 0;
     }
-    .brand{
-      display:flex; align-items:center; gap:12px;
-      min-width: 220px;
-    }
-    .brand__logo{
-      height: 38px;
-      width: auto;
-      display:block;
-    }
+
+    .brand{ display:flex; align-items:center; min-width:220px; }
+    .brand__logo{ height:38px; width:auto; display:block; }
 
     .nav{
-      display:flex; align-items:center; justify-content:flex-end;
-      gap:14px; flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:14px;
+      flex:1;
     }
-    .nav__link{
+
+    .nav__link,
+    .nav__button{
       font-size:14px;
       color: var(--muted);
-      padding: 10px 10px;
-      border-radius: 10px;
-      white-space: nowrap;
+      padding:10px 10px;
+      border-radius:10px;
+      white-space:nowrap;
+      background:transparent;
+      border:0;
+      cursor:pointer;
     }
-    .nav__link:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
+
+    .nav__link:hover,
+    .nav__button:hover{
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
 
     .dropdown{ position:relative; }
-    .nav__button{
-      border:0; background:transparent; cursor:pointer;
-      font: inherit; color: var(--muted);
-      padding: 10px 10px;
-      border-radius: 10px;
-      display:flex; align-items:center; gap:6px;
-      white-space: nowrap;
-    }
-    .nav__button:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
 
     .menu{
       position:absolute;
       top: calc(100% + 10px);
-      right: 0;
-      width: 270px;
-      padding: 8px;
-      border-radius: 14px;
+      right:0;
+      width:270px;
+      padding:8px;
+      border-radius:14px;
       background: rgba(20,26,38,0.96);
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
       display:none;
     }
+
     .dropdown.open .menu{ display:block; }
 
     .menu__item{
       display:block;
-      padding: 10px 10px;
-      border-radius: 10px;
+      padding:10px;
+      border-radius:10px;
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.35;
+      font-size:14px;
+      line-height:1.35;
     }
-    .menu__item:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
+
+    .menu__item:hover{
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
 
     .iconbtn{
       border: 1px solid var(--border);
@@ -118,15 +131,23 @@
       cursor:pointer;
       margin-left:auto;
     }
+
     .mobile{
       display:none;
       border-top: 1px solid var(--border);
       background: rgba(10,14,22,0.85);
     }
+
     .mobile.open{ display:block; }
-    .mobile__inner{ padding: 12px 0 16px; display:grid; gap:8px; }
+
+    .mobile__inner{
+      padding: 12px 0 16px;
+      display:grid;
+      gap:8px;
+    }
+
     .mobile__link{
-      padding: 12px 12px;
+      padding: 12px;
       border-radius: 12px;
       background: rgba(255,255,255,0.04);
       color: var(--muted);
@@ -136,23 +157,24 @@
       border-bottom: 1px solid var(--border);
       background: rgba(10,14,22,0.55);
     }
+
     .banner-strip__inner{
-      padding: 18px 0;
+      padding:18px 0;
       display:flex;
       justify-content:center;
     }
+
     .banner{
-      width: 100%;
-      max-width: 980px;
-      height: 160px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.14);
+      width:100%;
+      max-width:980px;
+      height:160px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,0.14);
       box-shadow: var(--shadow);
       background-image: url("svenakehocket.jpg");
       background-size: cover;
       background-position: center;
-      position: relative;
-      overflow: hidden;
+      overflow:hidden;
     }
 
     main{ padding: 28px 0 46px; }
@@ -164,154 +186,294 @@
       padding: 22px 20px;
       box-shadow: var(--shadow);
     }
+
     h1{
-      margin: 0 0 10px;
+      margin:0 0 10px;
       font-size: clamp(22px, 3vw, 30px);
     }
+
     p{
-      margin: 10px 0;
+      margin:10px 0;
       color: var(--muted);
-      line-height: 1.65;
+      line-height:1.65;
     }
+
     .cta{
-      margin-top: 16px;
-      display:flex; gap:12px; flex-wrap:wrap;
+      margin-top:16px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
     }
+
     .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding: 11px 14px;
-      border-radius: 12px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:11px 14px;
+      border-radius:12px;
       background: rgba(255,255,255,0.06);
       border: 1px solid var(--border);
       color: var(--text);
-      font-weight: 650;
+      font-weight:650;
     }
+
     .btn--primary{
       background: rgba(245,195,75,0.14);
       border-color: rgba(245,195,75,0.35);
     }
 
+    .transfers{ margin-top: 26px; }
+
+    .header-box{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+      gap:14px;
+      margin: 0 0 18px;
+    }
+
+    .header-box h2{
+      margin:0;
+      font-size:28px;
+      font-weight:900;
+      letter-spacing:-0.2px;
+    }
+
+    #searchTransfers{
+      width:min(100%, 320px);
+      padding:12px 16px;
+      font-size:15px;
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.035);
+      color: var(--text);
+      border-radius:14px;
+      outline:none;
+    }
+
+    #searchTransfers::placeholder{ color: rgba(255,255,255,0.45); }
+
+    #searchTransfers:focus{
+      border-color: rgba(245,195,75,0.42);
+      box-shadow: 0 0 0 4px rgba(245,195,75,.10);
+      background: rgba(255,255,255,0.055);
+    }
+
+    .transfers-grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:16px;
+    }
+
+    .transfer-card{
+      position:relative;
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03));
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow: 0 18px 40px rgba(0,0,0,.28);
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+
+    .transfer-card:hover{
+      transform: translateY(-3px);
+      border-color: rgba(245,195,75,0.22);
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.04));
+    }
+
+    .transfer-top{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      padding:16px;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+
+    .player-avatar{
+      width:72px;
+      height:72px;
+      border-radius:16px;
+      overflow:hidden;
+      flex:0 0 72px;
+      background: rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.10);
+    }
+
+    .player-avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .player-meta{
+      min-width:0;
+      flex:1;
+    }
+
+    .player-name{
+      font-size:20px;
+      font-weight:900;
+      line-height:1.15;
+      margin:0 0 6px;
+      color:#fff;
+    }
+
+    .player-date{
+      font-size:13px;
+      color: var(--gold);
+      font-weight:800;
+      letter-spacing:.2px;
+      text-transform:uppercase;
+    }
+
+    .transfer-body{
+      padding:16px;
+      display:grid;
+      gap:12px;
+    }
+
+    .team-row{
+      display:grid;
+      grid-template-columns: 50px 1fr;
+      gap:12px;
+      align-items:center;
+      background: rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:14px;
+      padding:10px 12px;
+    }
+
+    .team-logo{
+      width:50px;
+      height:50px;
+      border-radius:12px;
+      overflow:hidden;
+      background: rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .team-logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      padding:4px;
+    }
+
+    .team-label{
+      font-size:12px;
+      font-weight:800;
+      color: var(--gold);
+      text-transform:uppercase;
+      letter-spacing:.35px;
+      margin-bottom:2px;
+    }
+
+    .team-name{
+      font-size:16px;
+      font-weight:800;
+      color:#fff;
+      line-height:1.25;
+      margin-bottom:3px;
+    }
+
+    .team-division{
+      font-size:13px;
+      color: var(--muted);
+      font-weight:700;
+    }
+
+    .arrow-line{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: var(--gold);
+      font-size:20px;
+      font-weight:900;
+      opacity:.95;
+      margin: -2px 0;
+    }
+
+    .empty-state{
+      padding:18px;
+      border-radius:16px;
+      background: rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
+    }
+
+    .lastUpdated{
+      font-size:13px;
+      color: rgba(255,255,255,0.58);
+      margin-top:12px;
+      text-align:right;
+    }
+
     footer{
-      border-top: 1px solid var(--border);
+      border-top:1px solid var(--border);
       background: rgba(10,14,22,0.78);
     }
+
     .footer__inner{
-      padding: 16px 0;
-      display:flex; gap:10px;
-      align-items:center; justify-content:center;
+      padding:16px 0;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
       color: var(--muted);
-      font-size: 13px;
+      font-size:13px;
     }
 
-    .transfers{ margin-top: 18px; }
-
-    .header-box {
-      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
-      margin: 10px 0 18px; gap: 12px;
-    }
-    .header-box h2 {
-      font-size: 22px; font-weight: 800;
-      color: var(--text);
-      margin: 0;
-    }
-    #searchTransfers {
-      padding: 10px 14px; font-size: 15px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(255,255,255,0.04);
-      color: var(--text);
-      border-radius: 10px; min-width: 240px; outline: none;
-    }
-
-    .wrap {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 14px;
-      overflow-x: auto;
-      box-shadow: var(--shadow);
-    }
-
-    #transfer-stats table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      font: 15px/1.4 system-ui, Arial, sans-serif;
-      color: var(--text);
-    }
-    #transfer-stats thead th {
-      position: sticky;
-      top: 0;
-      background: rgba(16,27,64,0.92);
-      color: rgba(245,195,75,0.95);
-      padding: 12px 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.10);
-      text-align: left;
-      cursor: pointer;
-      user-select: none;
-      font-weight: 800;
-    }
-    #transfer-stats tbody td {
-      padding: 12px 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      text-align: left;
-      color: rgba(255,255,255,0.88);
-    }
-
-    .lastUpdated {
-      font-size: 13px;
-      color: rgba(255,255,255,0.60);
-      margin-top: 8px;
+    @media (max-width: 980px){
+      .transfers-grid{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     @media (max-width: 860px){
       .nav{ display:none; }
       .hamburger{ display:inline-flex; }
-      .brand__logo{ height: 32px; }
-      .brand{ min-width: 160px; }
-      .banner{ height: 120px; border-radius: 16px; }
-      .banner-strip__inner{ padding: 14px 0; }
+      .brand__logo{ height:32px; }
+      .brand{ min-width:160px; }
+      .banner{ height:120px; border-radius:16px; }
+      .banner-strip__inner{ padding:14px 0; }
+      .header-box h2{ font-size:24px; }
     }
 
-    @media (max-width: 700px) {
-      .header-box { flex-direction: column; align-items: flex-start; gap: 10px; }
-      #searchTransfers { width: 100%; }
-
-      #transfer-stats thead { display: none; }
-      #transfer-stats table,
-      #transfer-stats tbody,
-      #transfer-stats tr,
-      #transfer-stats td {
-        display: block;
-        width: 100%;
+    @media (max-width: 700px){
+      .header-box{
+        flex-direction:column;
+        align-items:stretch;
       }
 
-      #transfer-stats tbody tr {
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 14px;
-        margin-bottom: 14px;
-        padding: 10px 12px;
+      #searchTransfers{
+        width:100%;
       }
 
-      #transfer-stats tbody td {
-        display: block;
-        padding: 6px 4px;
-        border: none;
+      .transfers-grid{
+        grid-template-columns: 1fr;
       }
 
-      #transfer-stats tbody td:first-child {
-        font-size: 17px;
-        font-weight: 800;
-        color: var(--text);
-        margin-bottom: 6px;
+      .transfer-top{
+        padding:14px;
       }
 
-      #transfer-stats tbody td::before {
-        content: attr(data-label);
-        font-weight: 700;
-        color: rgba(255,255,255,0.70);
-        display: block;
-        font-size: 13px;
-        margin-bottom: 2px;
+      .player-avatar{
+        width:64px;
+        height:64px;
+        flex-basis:64px;
+      }
+
+      .player-name{
+        font-size:18px;
+      }
+
+      .lastUpdated{
+        text-align:left;
       }
     }
   </style>
@@ -452,15 +614,6 @@
       const search = document.getElementById("searchTransfers");
       const updated = document.getElementById("lastUpdated");
 
-      const columns = [
-        { key: "Player", label: "Spelare" },
-        { key: "From", label: "Från" },
-        { key: "FromDiv", label: "Från division" },
-        { key: "To", label: "Till" },
-        { key: "ToDiv", label: "Till division" },
-        { key: "Date", label: "Datum" }
-      ];
-
       const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE"]);
 
       function extractJsonResultObject(rawData) {
@@ -483,9 +636,7 @@
         if (Array.isArray(rawData.rows) && rawData.rows.length > 0) {
           const firstRow = rawData.rows[0];
 
-          if (firstRow && Array.isArray(firstRow.overgangar)) {
-            return firstRow;
-          }
+          if (firstRow && Array.isArray(firstRow.overgangar)) return firstRow;
 
           if (firstRow && firstRow.json_result && typeof firstRow.json_result === "object") {
             return firstRow.json_result;
@@ -512,34 +663,124 @@
         if (!value) return "";
         const d = new Date(value);
         if (isNaN(d)) return value;
+
         const months = ["JAN", "FEB", "MAR", "APR", "MAJ", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEC"];
         return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
       }
 
-      function renderTable(rows, tbody) {
-        tbody.innerHTML = "";
-
-        rows.forEach((row) => {
-          const tr = document.createElement("tr");
-
-          columns.forEach((col) => {
-            const td = document.createElement("td");
-            let value = row[col.key] ?? "";
-
-            if (col.key === "Date") {
-              value = formatDate(value);
-            }
-
-            td.textContent = value;
-            td.setAttribute("data-label", col.label);
-            tr.appendChild(td);
-          });
-
-          tbody.appendChild(tr);
-        });
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
       }
 
-      target.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,.75)">Laddar …</div>';
+      function playerImage(player) {
+        return `/players/${player.playerID}.png`;
+      }
+
+      function fromLogo(player) {
+        return `/teamlogos/${player.FromTeamID}.png`;
+      }
+
+      function toLogo(player) {
+        return `/teamlogos/${player.ToTeamID}.png`;
+      }
+
+      function fallbackPlayerImage(event) {
+        event.target.src = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+            <rect width="100%" height="100%" fill="#1a2233"/>
+            <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="#c9d1e3" font-family="Arial" font-size="72">🏒</text>
+          </svg>
+        `);
+      }
+
+      function fallbackLogo(event) {
+        event.target.src = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+            <rect width="100%" height="100%" rx="18" ry="18" fill="#121a2b"/>
+            <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="#f5c34b" font-family="Arial" font-size="62">🏒</text>
+          </svg>
+        `);
+      }
+
+      function cardMarkup(player) {
+        return `
+          <article class="transfer-card" data-search="${escapeHtml([
+            player.Player,
+            player.From,
+            player.FromDiv,
+            player.To,
+            player.ToDiv,
+            player.Date
+          ].join(" ").toLowerCase())}">
+            <div class="transfer-top">
+              <div class="player-avatar">
+                <img
+                  src="${escapeHtml(playerImage(player))}"
+                  alt="${escapeHtml(player.Player)}"
+                  loading="lazy"
+                  onerror="(${fallbackPlayerImage.toString()})(event)"
+                >
+              </div>
+              <div class="player-meta">
+                <div class="player-name">${escapeHtml(player.Player)}</div>
+                <div class="player-date">${escapeHtml(formatDate(player.Date))}</div>
+              </div>
+            </div>
+
+            <div class="transfer-body">
+              <div class="team-row">
+                <div class="team-logo">
+                  <img
+                    src="${escapeHtml(fromLogo(player))}"
+                    alt="${escapeHtml(player.From)}"
+                    loading="lazy"
+                    onerror="(${fallbackLogo.toString()})(event)"
+                  >
+                </div>
+                <div>
+                  <div class="team-label">Från</div>
+                  <div class="team-name">${escapeHtml(player.From)}</div>
+                  <div class="team-division">${escapeHtml(player.FromDiv || "")}</div>
+                </div>
+              </div>
+
+              <div class="arrow-line">↓</div>
+
+              <div class="team-row">
+                <div class="team-logo">
+                  <img
+                    src="${escapeHtml(toLogo(player))}"
+                    alt="${escapeHtml(player.To)}"
+                    loading="lazy"
+                    onerror="(${fallbackLogo.toString()})(event)"
+                  >
+                </div>
+                <div>
+                  <div class="team-label">Till</div>
+                  <div class="team-name">${escapeHtml(player.To)}</div>
+                  <div class="team-division">${escapeHtml(player.ToDiv || "")}</div>
+                </div>
+              </div>
+            </div>
+          </article>
+        `;
+      }
+
+      function renderCards(rows) {
+        if (!rows.length) {
+          target.innerHTML = `<div class="empty-state">Inga svenska byten hittades.</div>`;
+          return;
+        }
+
+        target.innerHTML = `<div class="transfers-grid">${rows.map(cardMarkup).join("")}</div>`;
+      }
+
+      target.innerHTML = '<div class="empty-state">Laddar …</div>';
 
       fetch(JSON_URL, { cache: "no-store" })
         .then((response) => {
@@ -556,37 +797,7 @@
             .filter(isSwedish)
             .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
 
-          if (!swedishRows.length) {
-            target.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,.75)">Inga svenska byten hittades.</div>';
-            updated.textContent = "";
-            return;
-          }
-
-          const table = document.createElement("table");
-          const thead = document.createElement("thead");
-          const trh = document.createElement("tr");
-
-          columns.forEach((col, idx) => {
-            const th = document.createElement("th");
-            th.textContent = col.label;
-            th.addEventListener("click", () => sortTable(idx));
-            trh.appendChild(th);
-          });
-
-          thead.appendChild(trh);
-          table.appendChild(thead);
-
-          const tbody = document.createElement("tbody");
-          table.appendChild(tbody);
-
-          const wrap = document.createElement("div");
-          wrap.className = "wrap";
-          wrap.appendChild(table);
-
-          target.innerHTML = "";
-          target.appendChild(wrap);
-
-          renderTable(swedishRows, tbody);
+          renderCards(swedishRows);
 
           updated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
             day: "numeric",
@@ -597,37 +808,17 @@
           });
 
           search.addEventListener("input", function () {
-            const q = this.value.toLowerCase();
-            [...tbody.rows].forEach((tr) => {
-              const match = [...tr.cells].some((td) => td.textContent.toLowerCase().includes(q));
-              tr.style.display = match ? "" : "none";
+            const q = this.value.toLowerCase().trim();
+            const cards = target.querySelectorAll(".transfer-card");
+
+            cards.forEach((card) => {
+              const haystack = card.getAttribute("data-search") || "";
+              card.style.display = haystack.includes(q) ? "" : "none";
             });
           });
-
-          let sortAsc = true;
-
-          function sortTable(idx) {
-            const key = columns[idx].key;
-
-            swedishRows.sort((a, b) => {
-              const valA = String(a[key] ?? "").toLowerCase();
-              const valB = String(b[key] ?? "").toLowerCase();
-
-              if (key === "Date") {
-                const da = new Date(a[key] || 0);
-                const db = new Date(b[key] || 0);
-                return sortAsc ? da - db : db - da;
-              }
-
-              return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-            });
-
-            sortAsc = !sortAsc;
-            renderTable(swedishRows, tbody);
-          }
         })
         .catch((err) => {
-          target.innerHTML = `<div style="padding:12px;color:rgba(255,255,255,.75)">Fel vid laddning: ${err.message}</div>`;
+          target.innerHTML = `<div class="empty-state">Fel vid laddning: ${escapeHtml(err.message)}</div>`;
           updated.textContent = "";
         });
     })();
