@@ -12,7 +12,6 @@
     :root{
       --bg: #0b0f17;
       --panel: rgba(255,255,255,0.06);
-      --panel2: rgba(255,255,255,0.08);
       --text: rgba(255,255,255,0.92);
       --muted: rgba(255,255,255,0.70);
       --border: rgba(255,255,255,0.12);
@@ -22,7 +21,7 @@
     html,body{ height:100%; }
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background:
         radial-gradient(1200px 600px at 50% -10%, rgba(245,195,75,0.12), transparent 60%),
         radial-gradient(900px 500px at 10% 10%, rgba(120,155,255,0.12), transparent 55%),
@@ -50,8 +49,6 @@
       height: 38px;
       width: auto;
       display:block;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
-      user-select:none;
     }
 
     .nav{
@@ -66,7 +63,6 @@
       white-space: nowrap;
     }
     .nav__link:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
-    .nav__link.is-active{ color: var(--text); }
 
     .dropdown{ position:relative; }
     .nav__button{
@@ -78,7 +74,6 @@
       white-space: nowrap;
     }
     .nav__button:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
-    .chev{ opacity:.75; }
 
     .menu{
       position:absolute;
@@ -136,14 +131,10 @@
       background: rgba(255,255,255,0.04);
       color: var(--muted);
     }
-    .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
-    .mobile__link.is-active{ color: var(--text); }
 
     .banner-strip{
       border-bottom: 1px solid var(--border);
-      background:
-        radial-gradient(900px 220px at 50% 0%, rgba(255,255,255,0.05), transparent 70%),
-        rgba(10,14,22,0.55);
+      background: rgba(10,14,22,0.55);
     }
     .banner-strip__inner{
       padding: 18px 0;
@@ -163,12 +154,6 @@
       position: relative;
       overflow: hidden;
     }
-    .banner::after{
-      content:"";
-      position:absolute; inset:0;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.35));
-      pointer-events:none;
-    }
 
     main{ padding: 28px 0 46px; }
 
@@ -182,7 +167,6 @@
     h1{
       margin: 0 0 10px;
       font-size: clamp(22px, 3vw, 30px);
-      letter-spacing: .2px;
     }
     p{
       margin: 10px 0;
@@ -202,7 +186,6 @@
       color: var(--text);
       font-weight: 650;
     }
-    .btn:hover{ filter: brightness(1.08); }
     .btn--primary{
       background: rgba(245,195,75,0.14);
       border-color: rgba(245,195,75,0.35);
@@ -219,16 +202,6 @@
       color: var(--muted);
       font-size: 13px;
     }
-    .sep{ opacity:.5; }
-
-    @media (max-width: 860px){
-      .nav{ display:none; }
-      .hamburger{ display:inline-flex; }
-      .brand__logo{ height: 32px; }
-      .brand{ min-width: 160px; }
-      .banner{ height: 120px; border-radius: 16px; }
-      .banner-strip__inner{ padding: 14px 0; }
-    }
 
     .transfers{ margin-top: 18px; }
 
@@ -237,11 +210,9 @@
       margin: 10px 0 18px; gap: 12px;
     }
     .header-box h2 {
-      font-family: Inter, system-ui, Arial, sans-serif;
       font-size: 22px; font-weight: 800;
       color: var(--text);
       margin: 0;
-      text-shadow: 0 2px 10px rgba(0,0,0,.25);
     }
     #searchTransfers {
       padding: 10px 14px; font-size: 15px;
@@ -249,13 +220,6 @@
       background: rgba(255,255,255,0.04);
       color: var(--text);
       border-radius: 10px; min-width: 240px; outline: none;
-      transition: border-color .2s, box-shadow .2s, background .2s;
-    }
-    #searchTransfers::placeholder{ color: rgba(255,255,255,0.55); }
-    #searchTransfers:focus {
-      border-color: rgba(245,195,75,0.45);
-      box-shadow: 0 0 0 3px rgba(245,195,75,.12);
-      background: rgba(255,255,255,0.06);
     }
 
     .wrap {
@@ -270,12 +234,11 @@
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
-      font: 15px/1.4 Inter, system-ui, Arial, sans-serif;
+      font: 15px/1.4 system-ui, Arial, sans-serif;
       color: var(--text);
     }
     #transfer-stats thead th {
-      position: sticky;
-      top: 0;
+      position: sticky; top: 0;
       background: rgba(16,27,64,0.92);
       color: rgba(245,195,75,0.95);
       padding: 12px 10px;
@@ -284,25 +247,37 @@
       cursor: pointer;
       user-select: none;
       font-weight: 800;
-      letter-spacing: .3px;
     }
-    #transfer-stats thead th:hover { background: rgba(21,37,95,0.92); }
     #transfer-stats tbody td {
       padding: 12px 10px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       text-align: left;
       color: rgba(255,255,255,0.88);
     }
-    #transfer-stats tbody tr:hover {
-      background: rgba(255,255,255,0.05);
-      cursor: pointer;
-      transition: background .2s;
-    }
-    .lastUpdated {
+
+    .lastUpdated, .debugBox {
       font-size: 13px;
       color: rgba(255,255,255,0.60);
       margin-top: 8px;
-      text-align: right;
+    }
+
+    .debugBox{
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    @media (max-width: 860px){
+      .nav{ display:none; }
+      .hamburger{ display:inline-flex; }
+      .brand__logo{ height: 32px; }
+      .brand{ min-width: 160px; }
+      .banner{ height: 120px; border-radius: 16px; }
+      .banner-strip__inner{ padding: 14px 0; }
     }
 
     @media (max-width: 700px) {
@@ -324,12 +299,6 @@
         border-radius: 14px;
         margin-bottom: 14px;
         padding: 10px 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,.28);
-        transition: transform .15s ease, background .2s;
-      }
-      #transfer-stats tbody tr:hover {
-        transform: translateY(-3px);
-        background: rgba(255,255,255,0.05);
       }
 
       #transfer-stats tbody td {
@@ -369,9 +338,9 @@
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            Svensk ECL Statistik <span class="chev">▾</span>
+            Svensk ECL Statistik <span>▾</span>
           </button>
-          <div class="menu" role="menu" aria-label="Svensk EC Statistik" data-dropdown-menu>
+          <div class="menu" role="menu" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
           </div>
@@ -381,16 +350,14 @@
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            Cuper <span class="chev">▾</span>
+            Cuper <span>▾</span>
           </button>
-          <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
+          <div class="menu" role="menu" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
           </div>
         </div>
 
-        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">
-          🔍
-        </button>
+        <button class="iconbtn" type="button" aria-label="Sök">🔍</button>
       </nav>
 
       <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
@@ -415,7 +382,7 @@
 
   <main class="container">
     <section class="card">
-      <h1>Välkommen till Svensk eHockey! test 1 🏒</h1>
+      <h1>Välkommen till Svensk eHockey! test 2 🏒</h1>
 
       <p>
         Svensk eHockey är mötesplatsen för alla som följer den svenska eHockeyscenen – från intensiva matcher i
@@ -440,13 +407,14 @@
 
       <div id="transfer-stats"></div>
       <p id="lastUpdated" class="lastUpdated"></p>
+      <div id="debugBox" class="debugBox">Debug laddas…</div>
     </section>
   </main>
 
   <footer>
     <div class="container footer__inner">
       <span>© <span id="year"></span> Svensk eHockey</span>
-      <span class="sep">•</span>
+      <span>•</span>
       <a href="#">Kontakt</a>
     </div>
   </footer>
@@ -454,15 +422,12 @@
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
 
-    const dropdowns = document.querySelectorAll("[data-dropdown]");
-    dropdowns.forEach((dd) => {
+    document.querySelectorAll("[data-dropdown]").forEach((dd) => {
       const btn = dd.querySelector("[data-dropdown-btn]");
-
       const close = () => {
         dd.classList.remove("open");
         btn.setAttribute("aria-expanded", "false");
       };
-
       const open = () => {
         dd.classList.add("open");
         btn.setAttribute("aria-expanded", "true");
@@ -472,7 +437,7 @@
         e.stopPropagation();
         dd.classList.contains("open") ? close() : open();
 
-        dropdowns.forEach((other) => {
+        document.querySelectorAll("[data-dropdown]").forEach((other) => {
           if (other !== dd) {
             other.classList.remove("open");
             other.querySelector("[data-dropdown-btn]")?.setAttribute("aria-expanded", "false");
@@ -481,9 +446,6 @@
       });
 
       document.addEventListener("click", close);
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") close();
-      });
     });
 
     const mobileBtn = document.querySelector("[data-mobile-toggle]");
@@ -495,14 +457,11 @@
     }
 
     (function () {
-      const JSON_URL = "/ECL/spring26.json";
+      const JSON_URL = "/ECL/spring26.json?v=2";
       const target = document.getElementById("transfer-stats");
       const search = document.getElementById("searchTransfers");
       const updated = document.getElementById("lastUpdated");
-
-      if (!target || !search || !updated) return;
-
-      target.innerHTML = '<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">Laddar …</div>';
+      const debugBox = document.getElementById("debugBox");
 
       const columns = [
         { key: "Player", label: "Spelare" },
@@ -517,6 +476,10 @@
 
       const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE"]);
 
+      function setDebug(text) {
+        debugBox.textContent = text;
+      }
+
       function normalizeRoot(data) {
         if (!data) return {};
 
@@ -524,8 +487,7 @@
           try {
             return JSON.parse(data.json_result);
           } catch (e) {
-            console.error("Kunde inte parsa json_result:", e);
-            return data;
+            return { __parseError: e.message, raw: data };
           }
         }
 
@@ -545,7 +507,6 @@
         if (!value) return "";
         const d = new Date(value);
         if (isNaN(d)) return value;
-
         const months = ["JAN", "FEB", "MAR", "APR", "MAJ", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEC"];
         return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
       }
@@ -573,6 +534,8 @@
         });
       }
 
+      target.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,.75)">Laddar …</div>';
+
       fetch(JSON_URL, { cache: "no-store" })
         .then((response) => {
           if (!response.ok) {
@@ -582,14 +545,29 @@
         })
         .then((rawData) => {
           const data = normalizeRoot(rawData);
-          const allTransfers = Array.isArray(data?.overgangar) ? data.overgangar : [];
 
-          const rows = allTransfers
+          const allTransfers = Array.isArray(data?.overgangar)
+            ? data.overgangar
+            : Array.isArray(rawData?.overgangar)
+            ? rawData.overgangar
+            : [];
+
+          const swedishRows = allTransfers
             .filter(isSwedish)
             .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
 
-          if (!rows.length) {
-            target.innerHTML = '<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">Inga svenska byten hittades.</div>';
+          setDebug(
+            "JSON URL: " + JSON_URL + "\n" +
+            "Typ rawData: " + typeof rawData + "\n" +
+            "Nycklar rawData: " + Object.keys(rawData || {}).join(", ") + "\n" +
+            "Nycklar normaliserad data: " + Object.keys(data || {}).join(", ") + "\n" +
+            "Antal overgangar totalt: " + allTransfers.length + "\n" +
+            "Antal svenska overgangar: " + swedishRows.length + "\n" +
+            "Första posten: " + JSON.stringify(allTransfers[0] || null, null, 2)
+          );
+
+          if (!swedishRows.length) {
+            target.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,.75)">Inga svenska byten hittades.</div>';
             updated.textContent = "";
             return;
           }
@@ -618,7 +596,7 @@
           target.innerHTML = "";
           target.appendChild(wrap);
 
-          renderTable(rows, tbody);
+          renderTable(swedishRows, tbody);
 
           updated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
             day: "numeric",
@@ -641,7 +619,7 @@
           function sortTable(idx) {
             const key = columns[idx].key;
 
-            rows.sort((a, b) => {
+            swedishRows.sort((a, b) => {
               const valA = String(a[key] ?? "").toLowerCase();
               const valB = String(b[key] ?? "").toLowerCase();
 
@@ -655,12 +633,12 @@
             });
 
             sortAsc = !sortAsc;
-            renderTable(rows, tbody);
+            renderTable(swedishRows, tbody);
           }
         })
         .catch((err) => {
-          console.error(err);
-          target.innerHTML = `<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">Fel vid laddning: ${err.message}</div>`;
+          target.innerHTML = `<div style="padding:12px;color:rgba(255,255,255,.75)">Fel vid laddning: ${err.message}</div>`;
+          setDebug("Fel: " + err.message);
           updated.textContent = "";
         });
     })();
