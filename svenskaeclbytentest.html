@@ -771,12 +771,127 @@
           .replaceAll("'", "&#039;");
       }
 
-      function playerImage(player) {
-        return `/players/${player.playerID}.PNG`;
+      function normalizeFileBase(value) {
+        return String(value || "")
+          .trim()
+          .replace(/\s+/g, " ")
+          .replace(/[\/\\:*?"<>|]/g, "")
+          .replace(/\u00A0/g, " ");
       }
 
-      function teamLogo(teamId) {
-        return `/teamlogos/${teamId}.png`;
+      function removeDiacritics(value) {
+        return String(value || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+      }
+
+      function slugifyLoose(value) {
+        return removeDiacritics(value)
+          .toLowerCase()
+          .replace(/&/g, " and ")
+          .replace(/[^a-z0-9]+/g, "")
+          .trim();
+      }
+
+      function unique(values) {
+        return [...new Set(values.filter(Boolean))];
+      }
+
+      function playerImageCandidates(playerName) {
+        const base = normalizeFileBase(playerName);
+        const noDiacritics = normalizeFileBase(removeDiacritics(playerName));
+        const slug = slugifyLoose(playerName);
+
+        const names = unique([
+          base,
+          noDiacritics,
+          base.toLowerCase(),
+          noDiacritics.toLowerCase(),
+          slug
+        ]);
+
+        const exts = ["jpg", "jpeg", "png", "webp", "JPG", "JPEG", "PNG", "WEBP"];
+        const paths = [];
+
+        names.forEach((name) => {
+          exts.forEach((ext) => {
+            paths.push(`/players/${name}.${ext}`);
+          });
+        });
+
+        return paths;
+      }
+
+      function teamNameCandidates(teamName) {
+        const base = normalizeFileBase(teamName);
+        const noDiacritics = normalizeFileBase(removeDiacritics(teamName));
+        const slug = slugifyLoose(teamName);
+
+        const shortened = unique([
+          base.replace(/\s+IF\s+Esport$/i, ""),
+          base.replace(/\s+Esport$/i, ""),
+          base.replace(/\s+Hockey$/i, ""),
+          base.replace(/\s+\(\d+[A-Z]?\)$/i, ""),
+          base.replace(/\s+IF\s+Esport$/i, "").replace(/\s+\(\d+[A-Z]?\)$/i, ""),
+          base.replace(/\s+Esport$/i, "").replace(/\s+\(\d+[A-Z]?\)$/i, ""),
+          base.replace(/\s+Hockey$/i, "").replace(/\s+\(\d+[A-Z]?\)$/i, "")
+        ]);
+
+        const expanded = unique([
+          base,
+          noDiacritics,
+          ...shortened,
+          ...shortened.map(removeDiacritics),
+          base.toLowerCase(),
+          noDiacritics.toLowerCase(),
+          ...shortened.map(v => v.toLowerCase()),
+          ...shortened.map(v => removeDiacritics(v).toLowerCase()),
+          slug
+        ]);
+
+        const exts = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "webp", "WEBP"];
+        const paths = [];
+
+        expanded.forEach((name) => {
+          exts.forEach((ext) => {
+            paths.push(`/teamlogos/${name}.${ext}`);
+          });
+        });
+
+        return unique(paths);
+      }
+
+      function setImageCandidate(img, candidates, fallback) {
+        img.dataset.candidates = JSON.stringify(candidates);
+        img.dataset.candidateIndex = "0";
+        img.dataset.fallbackType = fallback;
+        img.src = candidates[0] || "";
+      }
+
+      function tryNextImageCandidate(img) {
+        const raw = img.dataset.candidates || "[]";
+        let candidates = [];
+
+        try {
+          candidates = JSON.parse(raw);
+        } catch (e) {
+          candidates = [];
+        }
+
+        const currentIndex = Number(img.dataset.candidateIndex || 0);
+        const nextIndex = currentIndex + 1;
+
+        if (nextIndex < candidates.length) {
+          img.dataset.candidateIndex = String(nextIndex);
+          img.src = candidates[nextIndex];
+          return;
+        }
+
+        if (img.dataset.fallbackType === "player") {
+          fallbackPlayerImage({ target: img });
+        } else {
+          fallbackLogo({ target: img });
+        }
       }
 
       function initialsFromName(name) {
@@ -787,14 +902,22 @@
       }
 
       function teamShortName(name) {
-        return String(name || "").trim().slice(0, 3).toUpperCase() || "ECL";
+        const cleaned = String(name || "")
+          .replace(/\s+\(\d+[A-Z]?\)$/i, "")
+          .replace(/\s+IF\s+Esport$/i, "")
+          .replace(/\s+Esport$/i, "")
+          .trim();
+
+        return cleaned.slice(0, 3).toUpperCase() || "ECL";
       }
 
       function fallbackPlayerImage(event) {
-        const name = event.target.getAttribute("data-name") || "";
+        const img = event.target;
+        const name = img.getAttribute("data-name") || "";
         const initials = initialsFromName(name);
 
-        event.target.src =
+        img.onerror = null;
+        img.src =
           "data:image/svg+xml;charset=UTF-8," +
           encodeURIComponent(`
             <svg xmlns="http://www.w3.org/2000/svg" width="240" height="320" viewBox="0 0 240 320">
@@ -813,10 +936,12 @@
       }
 
       function fallbackLogo(event) {
-        const team = event.target.getAttribute("data-team") || "";
+        const img = event.target;
+        const team = img.getAttribute("data-team") || "";
         const shortName = teamShortName(team);
 
-        event.target.src =
+        img.onerror = null;
+        img.src =
           "data:image/svg+xml;charset=UTF-8," +
           encodeURIComponent(`
             <svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220">
@@ -833,10 +958,17 @@
           `);
       }
 
-      window.fallbackPlayerImage = fallbackPlayerImage;
-      window.fallbackLogo = fallbackLogo;
+      function handleImageError(event) {
+        tryNextImageCandidate(event.target);
+      }
 
-      function cardMarkup(player) {
+      window.handleImageError = handleImageError;
+
+      function cardMarkup(player, index) {
+        const playerCandidates = playerImageCandidates(player.Player);
+        const fromCandidates = teamNameCandidates(player.From);
+        const toCandidates = teamNameCandidates(player.To);
+
         return `
           <article class="transfer-card" data-search="${escapeHtml([
             player.Player,
@@ -850,11 +982,11 @@
               <div class="transfer-player">
                 <div class="player-avatar">
                   <img
-                    src="${escapeHtml(playerImage(player))}"
+                    id="player-img-${index}"
                     alt="${escapeHtml(player.Player)}"
                     data-name="${escapeHtml(player.Player)}"
                     loading="lazy"
-                    onerror="fallbackPlayerImage(event)"
+                    onerror="handleImageError(event)"
                   >
                 </div>
                 <div class="player-meta">
@@ -867,11 +999,11 @@
                 <div class="team-box">
                   <div class="team-logo">
                     <img
-                      src="${escapeHtml(teamLogo(player.FromTeamID))}"
+                      id="from-logo-${index}"
                       alt="${escapeHtml(player.From)}"
                       data-team="${escapeHtml(player.From)}"
                       loading="lazy"
-                      onerror="fallbackLogo(event)"
+                      onerror="handleImageError(event)"
                     >
                   </div>
                   <div>
@@ -885,11 +1017,11 @@
                 <div class="team-box">
                   <div class="team-logo">
                     <img
-                      src="${escapeHtml(teamLogo(player.ToTeamID))}"
+                      id="to-logo-${index}"
                       alt="${escapeHtml(player.To)}"
                       data-team="${escapeHtml(player.To)}"
                       loading="lazy"
-                      onerror="fallbackLogo(event)"
+                      onerror="handleImageError(event)"
                     >
                   </div>
                   <div>
@@ -899,8 +1031,49 @@
                 </div>
               </div>
             </div>
+
+            <script type="application/json" class="image-candidates">
+              ${escapeHtml(JSON.stringify({
+                playerId: `player-img-${index}`,
+                playerCandidates,
+                fromId: `from-logo-${index}`,
+                fromCandidates,
+                toId: `to-logo-${index}`,
+                toCandidates
+              }))}
+            </script>
           </article>
         `;
+      }
+
+      function applyImageCandidates() {
+        document.querySelectorAll(".image-candidates").forEach((node) => {
+          let config = null;
+
+          try {
+            config = JSON.parse(node.textContent);
+          } catch (e) {
+            config = null;
+          }
+
+          if (!config) return;
+
+          const playerImg = document.getElementById(config.playerId);
+          const fromImg = document.getElementById(config.fromId);
+          const toImg = document.getElementById(config.toId);
+
+          if (playerImg) {
+            setImageCandidate(playerImg, config.playerCandidates || [], "player");
+          }
+
+          if (fromImg) {
+            setImageCandidate(fromImg, config.fromCandidates || [], "team");
+          }
+
+          if (toImg) {
+            setImageCandidate(toImg, config.toCandidates || [], "team");
+          }
+        });
       }
 
       function renderCards(rows) {
@@ -909,7 +1082,8 @@
           return;
         }
 
-        target.innerHTML = `<div class="transfers-list">${rows.map(cardMarkup).join("")}</div>`;
+        target.innerHTML = `<div class="transfers-list">${rows.map((row, index) => cardMarkup(row, index)).join("")}</div>`;
+        applyImageCandidates();
       }
 
       target.innerHTML = '<div class="empty-state">Laddar …</div>';
