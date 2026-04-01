@@ -238,7 +238,8 @@
       color: var(--text);
     }
     #transfer-stats thead th {
-      position: sticky; top: 0;
+      position: sticky;
+      top: 0;
       background: rgba(16,27,64,0.92);
       color: rgba(245,195,75,0.95);
       padding: 12px 10px;
@@ -480,22 +481,46 @@
         debugBox.textContent = text;
       }
 
-      function normalizeRoot(data) {
-        if (!data) return {};
+      function extractJsonResultObject(rawData) {
+        if (!rawData || typeof rawData !== "object") return {};
 
-        if (data.json_result && typeof data.json_result === "string") {
+        if (Array.isArray(rawData.overgangar)) {
+          return rawData;
+        }
+
+        if (rawData.json_result && typeof rawData.json_result === "object") {
+          return rawData.json_result;
+        }
+
+        if (rawData.json_result && typeof rawData.json_result === "string") {
           try {
-            return JSON.parse(data.json_result);
+            return JSON.parse(rawData.json_result);
           } catch (e) {
-            return { __parseError: e.message, raw: data };
+            return {};
           }
         }
 
-        if (data.json_result && typeof data.json_result === "object") {
-          return data.json_result;
+        if (Array.isArray(rawData.rows) && rawData.rows.length > 0) {
+          const firstRow = rawData.rows[0];
+
+          if (firstRow && Array.isArray(firstRow.overgangar)) {
+            return firstRow;
+          }
+
+          if (firstRow && firstRow.json_result && typeof firstRow.json_result === "object") {
+            return firstRow.json_result;
+          }
+
+          if (firstRow && typeof firstRow.json_result === "string") {
+            try {
+              return JSON.parse(firstRow.json_result);
+            } catch (e) {
+              return {};
+            }
+          }
         }
 
-        return data;
+        return {};
       }
 
       function isSwedish(row) {
@@ -544,13 +569,8 @@
           return response.json();
         })
         .then((rawData) => {
-          const data = normalizeRoot(rawData);
-
-          const allTransfers = Array.isArray(data?.overgangar)
-            ? data.overgangar
-            : Array.isArray(rawData?.overgangar)
-            ? rawData.overgangar
-            : [];
+          const parsed = extractJsonResultObject(rawData);
+          const allTransfers = Array.isArray(parsed.overgangar) ? parsed.overgangar : [];
 
           const swedishRows = allTransfers
             .filter(isSwedish)
@@ -558,9 +578,9 @@
 
           setDebug(
             "JSON URL: " + JSON_URL + "\n" +
-            "Typ rawData: " + typeof rawData + "\n" +
             "Nycklar rawData: " + Object.keys(rawData || {}).join(", ") + "\n" +
-            "Nycklar normaliserad data: " + Object.keys(data || {}).join(", ") + "\n" +
+            "Rows finns: " + (Array.isArray(rawData.rows) ? "ja (" + rawData.rows.length + ")" : "nej") + "\n" +
+            "Nycklar parsed: " + Object.keys(parsed || {}).join(", ") + "\n" +
             "Antal overgangar totalt: " + allTransfers.length + "\n" +
             "Antal svenska overgangar: " + swedishRows.length + "\n" +
             "Första posten: " + JSON.stringify(allTransfers[0] || null, null, 2)
