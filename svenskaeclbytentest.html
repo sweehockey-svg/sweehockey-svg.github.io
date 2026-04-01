@@ -296,25 +296,25 @@
 
     .transfer-row{
       display:grid;
-      grid-template-columns: 280px 1fr;
+      grid-template-columns: 360px 1fr;
       min-height: 178px;
     }
 
     .transfer-player{
-      padding:20px;
+      padding:20px 24px;
       border-right:1px solid rgba(255,255,255,0.08);
       display:flex;
       align-items:center;
-      gap:16px;
+      gap:18px;
       background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
     }
 
     .player-avatar{
-      width:88px;
-      height:88px;
+      width:96px;
+      height:96px;
       border-radius:20px;
       overflow:hidden;
-      flex:0 0 88px;
+      flex:0 0 96px;
       background: rgba(255,255,255,0.06);
       border:1px solid rgba(255,255,255,0.12);
       position: relative;
@@ -334,13 +334,16 @@
     }
 
     .player-name{
-      font-size:30px;
+      font-size:34px;
       font-weight:900;
       line-height:1.04;
       margin:0 0 8px;
       color:#fff;
       letter-spacing:-0.5px;
-      word-break: break-word;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      word-break:normal;
     }
 
     .player-date{
@@ -368,7 +371,7 @@
       border:1px solid rgba(255,255,255,0.08);
       border-radius:18px;
       padding:14px;
-      min-height: 110px;
+      min-height:110px;
     }
 
     .team-logo{
@@ -393,12 +396,7 @@
     }
 
     .team-label{
-      font-size:12px;
-      font-weight:900;
-      color: var(--gold);
-      text-transform:uppercase;
-      letter-spacing:.4px;
-      margin-bottom:4px;
+      display:none;
     }
 
     .team-name{
@@ -407,7 +405,7 @@
       color:#fff;
       line-height:1.15;
       margin-bottom:5px;
-      word-break: break-word;
+      word-break:break-word;
     }
 
     .team-division{
@@ -474,7 +472,7 @@
       }
 
       .player-name{
-        font-size:26px;
+        font-size:28px;
       }
 
       .team-name{
@@ -532,7 +530,7 @@
 
       .team-box{
         grid-template-columns: 58px 1fr;
-        min-height: unset;
+        min-height:unset;
       }
 
       .team-logo{
@@ -753,12 +751,8 @@
         return `/players/${player.playerID}.PNG`;
       }
 
-      function fromLogo(player) {
-        return `/teamlogos/FromTeam${player.FromTeamID}.png`;
-      }
-
-      function toLogo(player) {
-        return `/teamlogos/FromTeam${player.ToTeamID}.png`;
+      function teamLogo(teamId) {
+        return `/teamlogos/${teamId}.png`;
       }
 
       function initialsFromName(name) {
@@ -849,7 +843,7 @@
                 <div class="team-box">
                   <div class="team-logo">
                     <img
-                      src="${escapeHtml(fromLogo(player))}"
+                      src="${escapeHtml(teamLogo(player.FromTeamID))}"
                       alt="${escapeHtml(player.From)}"
                       data-team="${escapeHtml(player.From)}"
                       loading="lazy"
@@ -857,7 +851,6 @@
                     >
                   </div>
                   <div>
-                    <div class="team-label">Från</div>
                     <div class="team-name">${escapeHtml(player.From)}</div>
                     <div class="team-division">${escapeHtml(player.FromDiv || "")}</div>
                   </div>
@@ -868,7 +861,7 @@
                 <div class="team-box">
                   <div class="team-logo">
                     <img
-                      src="${escapeHtml(toLogo(player))}"
+                      src="${escapeHtml(teamLogo(player.ToTeamID))}"
                       alt="${escapeHtml(player.To)}"
                       data-team="${escapeHtml(player.To)}"
                       loading="lazy"
@@ -876,7 +869,6 @@
                     >
                   </div>
                   <div>
-                    <div class="team-label">Till</div>
                     <div class="team-name">${escapeHtml(player.To)}</div>
                     <div class="team-division">${escapeHtml(player.ToDiv || "")}</div>
                   </div>
