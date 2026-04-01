@@ -256,20 +256,10 @@
       color: rgba(255,255,255,0.88);
     }
 
-    .lastUpdated, .debugBox {
+    .lastUpdated {
       font-size: 13px;
       color: rgba(255,255,255,0.60);
       margin-top: 8px;
-    }
-
-    .debugBox{
-      margin-top: 14px;
-      padding: 12px;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 12px;
-      background: rgba(255,255,255,0.03);
-      white-space: pre-wrap;
-      word-break: break-word;
     }
 
     @media (max-width: 860px){
@@ -408,7 +398,6 @@
 
       <div id="transfer-stats"></div>
       <p id="lastUpdated" class="lastUpdated"></p>
-      <div id="debugBox" class="debugBox">Debug laddas…</div>
     </section>
   </main>
 
@@ -462,31 +451,22 @@
       const target = document.getElementById("transfer-stats");
       const search = document.getElementById("searchTransfers");
       const updated = document.getElementById("lastUpdated");
-      const debugBox = document.getElementById("debugBox");
 
       const columns = [
         { key: "Player", label: "Spelare" },
-        { key: "nationality", label: "Nationalitet" },
         { key: "From", label: "Från" },
         { key: "FromDiv", label: "Från division" },
         { key: "To", label: "Till" },
         { key: "ToDiv", label: "Till division" },
-        { key: "Date", label: "Datum" },
-        { key: "Role", label: "Roll" }
+        { key: "Date", label: "Datum" }
       ];
 
       const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE"]);
 
-      function setDebug(text) {
-        debugBox.textContent = text;
-      }
-
       function extractJsonResultObject(rawData) {
         if (!rawData || typeof rawData !== "object") return {};
 
-        if (Array.isArray(rawData.overgangar)) {
-          return rawData;
-        }
+        if (Array.isArray(rawData.overgangar)) return rawData;
 
         if (rawData.json_result && typeof rawData.json_result === "object") {
           return rawData.json_result;
@@ -576,16 +556,6 @@
             .filter(isSwedish)
             .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
 
-          setDebug(
-            "JSON URL: " + JSON_URL + "\n" +
-            "Nycklar rawData: " + Object.keys(rawData || {}).join(", ") + "\n" +
-            "Rows finns: " + (Array.isArray(rawData.rows) ? "ja (" + rawData.rows.length + ")" : "nej") + "\n" +
-            "Nycklar parsed: " + Object.keys(parsed || {}).join(", ") + "\n" +
-            "Antal overgangar totalt: " + allTransfers.length + "\n" +
-            "Antal svenska overgangar: " + swedishRows.length + "\n" +
-            "Första posten: " + JSON.stringify(allTransfers[0] || null, null, 2)
-          );
-
           if (!swedishRows.length) {
             target.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,.75)">Inga svenska byten hittades.</div>';
             updated.textContent = "";
@@ -658,7 +628,6 @@
         })
         .catch((err) => {
           target.innerHTML = `<div style="padding:12px;color:rgba(255,255,255,.75)">Fel vid laddning: ${err.message}</div>`;
-          setDebug("Fel: " + err.message);
           updated.textContent = "";
         });
     })();
