@@ -382,7 +382,7 @@
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link" href="/">Startsida</a>
-        <a class="mobile__link is-active" href="/svenskaeclbyten.html">ECL 26 Winter – Byten</a>
+        <a class="mobile__link is-active" href="/svenskaeclbyten.html">ECL Spring 26 – Byten</a>
         <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
         <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
@@ -497,8 +497,23 @@
 
       const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE"]);
 
-      function isSwedish(nationality) {
-        const value = String(nationality ?? "").trim().toUpperCase();
+      function normalizeRoot(data) {
+        if (!data) return {};
+        if (data.json_result && typeof data.json_result === "string") {
+          try {
+            return JSON.parse(data.json_result);
+          } catch (_) {
+            return data;
+          }
+        }
+        if (data.json_result && typeof data.json_result === "object") {
+          return data.json_result;
+        }
+        return data;
+      }
+
+      function isSwedish(row) {
+        const value = String(row?.nationality ?? "").trim().toUpperCase();
         return swedishValues.has(value);
       }
 
@@ -510,7 +525,7 @@
         return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
       }
 
-      function renderTable(rows, table, tbody) {
+      function renderTable(rows, tbody) {
         tbody.innerHTML = "";
 
         rows.forEach(row => {
@@ -533,18 +548,19 @@
         });
       }
 
-      fetch(JSON_URL)
+      fetch(JSON_URL, { cache: "no-store" })
         .then(async (response) => {
           if (!response.ok) {
             throw new Error(`Kunde inte läsa ${JSON_URL} (${response.status})`);
           }
           return response.json();
         })
-        .then(data => {
+        .then(rawData => {
+          const data = normalizeRoot(rawData);
           const allTransfers = Array.isArray(data?.overgangar) ? data.overgangar : [];
 
           const rows = allTransfers
-            .filter(row => isSwedish(row.nationality))
+            .filter(isSwedish)
             .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
 
           if (!rows.length) {
@@ -577,7 +593,7 @@
           target.innerHTML = "";
           target.appendChild(wrap);
 
-          renderTable(rows, table, tbody);
+          renderTable(rows, tbody);
 
           updated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
             day: "numeric",
@@ -614,11 +630,12 @@
             });
 
             sortAsc = !sortAsc;
-            renderTable(rows, table, tbody);
+            renderTable(rows, tbody);
           }
         })
         .catch(err => {
-          target.textContent = "Fel vid laddning: " + err.message;
+          target.innerHTML = `<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">Fel vid laddning: ${err.message}</div>`;
+          updated.textContent = "";
         });
     })();
   </script>
