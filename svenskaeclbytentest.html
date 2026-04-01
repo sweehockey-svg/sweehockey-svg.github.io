@@ -1,12 +1,11 @@
-
 <!doctype html>
 <html lang="sv">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Svensk eHockey test</title>
-    <link rel="icon" type="image/png" href="favicon.png?v=1">
-<link rel="apple-touch-icon" href="favicon.png?v=1">
+  <link rel="icon" type="image/png" href="favicon.png?v=1">
+  <link rel="apple-touch-icon" href="favicon.png?v=1">
   <meta name="description" content="Svensk eHockey – ECL, nyheter och Svenska eHockey Cupen (SEC)." />
 
   <style>
@@ -33,7 +32,6 @@
     a{ color:inherit; text-decoration:none; }
     .container{ width:min(1100px, calc(100% - 32px)); margin:0 auto; }
 
-    /* Topbar */
     .topbar{
       position:sticky; top:0; z-index:50;
       backdrop-filter: blur(10px);
@@ -141,7 +139,6 @@
     .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
     .mobile__link.is-active{ color: var(--text); }
 
-    /* Banner-ruta under navbar (”mellanrummet”) */
     .banner-strip{
       border-bottom: 1px solid var(--border);
       background:
@@ -160,7 +157,7 @@
       border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.14);
       box-shadow: var(--shadow);
-      background-image: url("svenakehocket.jpg"); /* ligger i root */
+      background-image: url("svenakehocket.jpg");
       background-size: cover;
       background-position: center;
       position: relative;
@@ -173,7 +170,6 @@
       pointer-events:none;
     }
 
-    /* Content */
     main{ padding: 28px 0 46px; }
 
     .card{
@@ -212,7 +208,6 @@
       border-color: rgba(245,195,75,0.35);
     }
 
-    /* Footer */
     footer{
       border-top: 1px solid var(--border);
       background: rgba(10,14,22,0.78);
@@ -235,9 +230,6 @@
       .banner-strip__inner{ padding: 14px 0; }
     }
 
-    /* =========================================================
-       ✅ SVENSKA BYTEN (din kod) — inbäddad men färganpassad
-       ========================================================= */
     .transfers{ margin-top: 18px; }
 
     .header-box {
@@ -349,7 +341,6 @@
 </head>
 
 <body>
-  <!-- ✅ MENY UPPDATERAD TILL SAMMA SOM INDEX -->
   <header class="topbar">
     <div class="container topbar__inner">
       <a class="brand" href="/" aria-label="Svensk eHockey">
@@ -388,7 +379,6 @@
       <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
     </div>
 
-    <!-- Mobilmeny (matchar index, men med relevanta länkar) -->
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link" href="/">Startsida</a>
@@ -400,7 +390,6 @@
     </div>
   </header>
 
-  <!-- Mellanrummet med banner -->
   <section class="banner-strip" aria-label="Banner">
     <div class="container banner-strip__inner">
       <div class="banner" role="img" aria-label="Svensk eHockey banner"></div>
@@ -417,7 +406,7 @@
       </p>
 
       <p>
-        Just nu: <strong>Svenska spelare som bytt ECL-lag</strong> (uppdateras automatiskt från Google Sheet).
+        Just nu: <strong>Svenska spelare som bytt ECL-lag</strong> (hämtas från Spring 26 JSON).
       </p>
 
       <div class="cta">
@@ -426,7 +415,6 @@
       </div>
     </section>
 
-    <!-- ✅ Svenska byten-sektionen -->
     <section id="byten" class="transfers" aria-label="Svenska byten">
       <div class="header-box">
         <h2>📋 Svenska spelare som bytt ECL-lag</h2>
@@ -447,10 +435,8 @@
   </footer>
 
   <script>
-    // År i footern
     document.getElementById("year").textContent = new Date().getFullYear();
 
-    // Dropdowns
     const dropdowns = document.querySelectorAll("[data-dropdown]");
     dropdowns.forEach((dd) => {
       const btn = dd.querySelector("[data-dropdown-btn]");
@@ -482,18 +468,14 @@
       });
     });
 
-    // Mobilmeny
     const mobileBtn = document.querySelector("[data-mobile-toggle]");
     const mobileMenu = document.querySelector("[data-mobile-menu]");
     mobileBtn.addEventListener("click", () => {
       mobileMenu.classList.toggle("open");
     });
 
-    // =========================================================
-    // ✅ SVENSKA BYTEN (din script) — oförändrad logik
-    // =========================================================
     (function(){
-      const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZCNO-QbbfniaDOODJpcE_B8ab6RHunhkSRGuEjYeVlM2TVq6okNMG8JPHHZyWf50RsJFflI6bbAnB/pub?gid=0&single=true&output=csv";
+      const JSON_URL = "ECL/spring26.json";
       const target = document.getElementById("transfer-stats");
       const search = document.getElementById("searchTransfers");
       const updated = document.getElementById("lastUpdated");
@@ -502,59 +484,109 @@
 
       target.innerHTML = '<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">Laddar …</div>';
 
-      fetch(SHEET_URL)
-        .then(r => r.text())
-        .then(csv => {
-          const rows = csv.trim().split("\n").map(r => r.split(","));
-          const headers = rows.shift();
-          rows.sort((a,b) => new Date(b[3]) - new Date(a[3]));
+      const columns = [
+        { key: "Player", label: "Spelare" },
+        { key: "nationality", label: "Nationalitet" },
+        { key: "From", label: "Från" },
+        { key: "FromDiv", label: "Från division" },
+        { key: "To", label: "Till" },
+        { key: "ToDiv", label: "Till division" },
+        { key: "Date", label: "Datum" },
+        { key: "Role", label: "Roll" }
+      ];
+
+      const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE"]);
+
+      function isSwedish(nationality) {
+        const value = String(nationality ?? "").trim().toUpperCase();
+        return swedishValues.has(value);
+      }
+
+      function formatDate(value) {
+        if (!value) return "";
+        const d = new Date(value);
+        if (isNaN(d)) return value;
+        const months = ['JAN','FEB','MAR','APR','MAJ','JUN','JUL','AUG','SEP','OKT','NOV','DEC'];
+        return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+      }
+
+      function renderTable(rows, table, tbody) {
+        tbody.innerHTML = "";
+
+        rows.forEach(row => {
+          const tr = document.createElement("tr");
+
+          columns.forEach(col => {
+            const td = document.createElement("td");
+            let value = row[col.key] ?? "";
+
+            if (col.key === "Date") {
+              value = formatDate(value);
+            }
+
+            td.textContent = value;
+            td.setAttribute("data-label", col.label);
+            tr.appendChild(td);
+          });
+
+          tbody.appendChild(tr);
+        });
+      }
+
+      fetch(JSON_URL)
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`Kunde inte läsa ${JSON_URL} (${response.status})`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          const allTransfers = Array.isArray(data?.overgangar) ? data.overgangar : [];
+
+          const rows = allTransfers
+            .filter(row => isSwedish(row.nationality))
+            .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
+
+          if (!rows.length) {
+            target.innerHTML = '<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">Inga svenska byten hittades.</div>';
+            updated.textContent = "";
+            return;
+          }
 
           const table = document.createElement("table");
           const thead = document.createElement("thead");
           const trh = document.createElement("tr");
 
-          headers.forEach((h, idx) => {
+          columns.forEach((col, idx) => {
             const th = document.createElement("th");
-            th.textContent = h;
+            th.textContent = col.label;
             th.addEventListener("click", () => sortTable(idx));
             trh.appendChild(th);
           });
+
           thead.appendChild(trh);
           table.appendChild(thead);
 
           const tbody = document.createElement("tbody");
-
-          rows.forEach(row => {
-            const tr = document.createElement("tr");
-            row.forEach((v,i) => {
-              const td = document.createElement("td");
-              if (i === 3) {
-                const d = new Date(v);
-                if (!isNaN(d)) {
-                  const months = ['JAN','FEB','MAR','APR','MAJ','JUN','JUL','AUG','SEP','OKT','NOV','DEC'];
-                  v = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
-                }
-              }
-              td.textContent = v;
-              td.setAttribute("data-label", headers[i]);
-              tr.appendChild(td);
-            });
-            tbody.appendChild(tr);
-          });
-
           table.appendChild(tbody);
 
           const wrap = document.createElement("div");
           wrap.className = "wrap";
           wrap.appendChild(table);
+
           target.innerHTML = "";
           target.appendChild(wrap);
 
+          renderTable(rows, table, tbody);
+
           updated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
-            day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
           });
 
-          // 🔍 Sök
           search.addEventListener("input", function(){
             const q = this.value.toLowerCase();
             [...tbody.rows].forEach(tr => {
@@ -563,41 +595,26 @@
             });
           });
 
-          // ↕️ Sortering
           let sortAsc = true;
-          function sortTable(idx){
-            rows.sort((a,b)=>{
-              const valA = (a[idx] ?? "").toString().toLowerCase();
-              const valB = (b[idx] ?? "").toString().toLowerCase();
 
-              if (idx === 3) {
-                const da = new Date(a[idx]);
-                const db = new Date(b[idx]);
+          function sortTable(idx) {
+            const key = columns[idx].key;
+
+            rows.sort((a, b) => {
+              const valA = String(a[key] ?? "").toLowerCase();
+              const valB = String(b[key] ?? "").toLowerCase();
+
+              if (key === "Date") {
+                const da = new Date(a[key] || 0);
+                const db = new Date(b[key] || 0);
                 return sortAsc ? (da - db) : (db - da);
               }
 
               return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
             });
-            sortAsc = !sortAsc;
 
-            tbody.innerHTML = "";
-            rows.forEach(r=>{
-              const tr = document.createElement("tr");
-              r.forEach((v,i)=>{
-                const td = document.createElement("td");
-                if (i === 3) {
-                  const d = new Date(v);
-                  if (!isNaN(d)) {
-                    const months = ['JAN','FEB','MAR','APR','MAJ','JUN','JUL','AUG','SEP','OKT','NOV','DEC'];
-                    v = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
-                  }
-                }
-                td.textContent = v;
-                td.setAttribute("data-label", headers[i]);
-                tr.appendChild(td);
-              });
-              tbody.appendChild(tr);
-            });
+            sortAsc = !sortAsc;
+            renderTable(rows, table, tbody);
           }
         })
         .catch(err => {
