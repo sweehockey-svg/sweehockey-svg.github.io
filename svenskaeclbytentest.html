@@ -475,169 +475,58 @@
     });
 
     (function(){
-      const JSON_URL = "/ECL/spring26.json";
-      const target = document.getElementById("transfer-stats");
-      const search = document.getElementById("searchTransfers");
-      const updated = document.getElementById("lastUpdated");
+  <script>
+(function(){
+  const JSON_URL = "/ECL/spring26.json";
+  const target = document.getElementById("transfer-stats");
+  const search = document.getElementById("searchTransfers");
+  const updated = document.getElementById("lastUpdated");
 
-      if (!target || !search || !updated) return;
+  if (!target || !search || !updated) return;
 
-      target.innerHTML = '<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">Laddar …</div>';
+  target.innerHTML = '<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">Laddar …</div>';
 
-      const columns = [
-        { key: "Player", label: "Spelare" },
-        { key: "nationality", label: "Nationalitet" },
-        { key: "From", label: "Från" },
-        { key: "FromDiv", label: "Från division" },
-        { key: "To", label: "Till" },
-        { key: "ToDiv", label: "Till division" },
-        { key: "Date", label: "Datum" },
-        { key: "Role", label: "Roll" }
-      ];
+  function normalizeRoot(data) {
+    if (!data) return {};
 
-      const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE"]);
-
-      function normalizeRoot(data) {
-        if (!data) return {};
-        if (data.json_result && typeof data.json_result === "string") {
-          try {
-            return JSON.parse(data.json_result);
-          } catch (_) {
-            return data;
-          }
-        }
-        if (data.json_result && typeof data.json_result === "object") {
-          return data.json_result;
-        }
+    if (data.json_result && typeof data.json_result === "string") {
+      try {
+        return JSON.parse(data.json_result);
+      } catch (e) {
+        console.log("Kunde inte parsa json_result-sträng:", e);
         return data;
       }
+    }
 
-      function isSwedish(row) {
-        const value = String(row?.nationality ?? "").trim().toUpperCase();
-        return swedishValues.has(value);
+    if (data.json_result && typeof data.json_result === "object") {
+      return data.json_result;
+    }
+
+    return data;
+  }
+
+  fetch(JSON_URL, { cache: "no-store" })
+    .then(async (response) => {
+      console.log("JSON status:", response.status, response.url);
+      if (!response.ok) {
+        throw new Error(`Kunde inte läsa ${JSON_URL} (${response.status})`);
       }
+      return response.json();
+    })
+    .then(rawData => {
+      console.log("RAW DATA:", rawData);
 
-      function formatDate(value) {
-        if (!value) return "";
-        const d = new Date(value);
-        if (isNaN(d)) return value;
-        const months = ['JAN','FEB','MAR','APR','MAJ','JUN','JUL','AUG','SEP','OKT','NOV','DEC'];
-        return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
-      }
+      const data = normalizeRoot(rawData);
+      console.log("NORMALISERAD DATA:", data);
+      console.log("OVERGANGAR:", data?.overgangar);
 
-      function renderTable(rows, tbody) {
-        tbody.innerHTML = "";
-
-        rows.forEach(row => {
-          const tr = document.createElement("tr");
-
-          columns.forEach(col => {
-            const td = document.createElement("td");
-            let value = row[col.key] ?? "";
-
-            if (col.key === "Date") {
-              value = formatDate(value);
-            }
-
-            td.textContent = value;
-            td.setAttribute("data-label", col.label);
-            tr.appendChild(td);
-          });
-
-          tbody.appendChild(tr);
-        });
-      }
-
-      fetch(JSON_URL, { cache: "no-store" })
-        .then(async (response) => {
-          if (!response.ok) {
-            throw new Error(`Kunde inte läsa ${JSON_URL} (${response.status})`);
-          }
-          return response.json();
-        })
-        .then(rawData => {
-          const data = normalizeRoot(rawData);
-          const allTransfers = Array.isArray(data?.overgangar) ? data.overgangar : [];
-
-          const rows = allTransfers
-            .filter(isSwedish)
-            .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
-
-          if (!rows.length) {
-            target.innerHTML = '<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">Inga svenska byten hittades.</div>';
-            updated.textContent = "";
-            return;
-          }
-
-          const table = document.createElement("table");
-          const thead = document.createElement("thead");
-          const trh = document.createElement("tr");
-
-          columns.forEach((col, idx) => {
-            const th = document.createElement("th");
-            th.textContent = col.label;
-            th.addEventListener("click", () => sortTable(idx));
-            trh.appendChild(th);
-          });
-
-          thead.appendChild(trh);
-          table.appendChild(thead);
-
-          const tbody = document.createElement("tbody");
-          table.appendChild(tbody);
-
-          const wrap = document.createElement("div");
-          wrap.className = "wrap";
-          wrap.appendChild(table);
-
-          target.innerHTML = "";
-          target.appendChild(wrap);
-
-          renderTable(rows, tbody);
-
-          updated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
-          });
-
-          search.addEventListener("input", function(){
-            const q = this.value.toLowerCase();
-            [...tbody.rows].forEach(tr => {
-              const match = [...tr.cells].some(td => td.textContent.toLowerCase().includes(q));
-              tr.style.display = match ? "" : "none";
-            });
-          });
-
-          let sortAsc = true;
-
-          function sortTable(idx) {
-            const key = columns[idx].key;
-
-            rows.sort((a, b) => {
-              const valA = String(a[key] ?? "").toLowerCase();
-              const valB = String(b[key] ?? "").toLowerCase();
-
-              if (key === "Date") {
-                const da = new Date(a[key] || 0);
-                const db = new Date(b[key] || 0);
-                return sortAsc ? (da - db) : (db - da);
-              }
-
-              return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-            });
-
-            sortAsc = !sortAsc;
-            renderTable(rows, tbody);
-          }
-        })
-        .catch(err => {
-          target.innerHTML = `<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">Fel vid laddning: ${err.message}</div>`;
-          updated.textContent = "";
-        });
-    })();
-  </script>
+      target.innerHTML = '<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">JSON laddad. Kolla console.</div>';
+    })
+    .catch(err => {
+      console.error(err);
+      target.innerHTML = `<div style="padding:12px;font-family:system-ui,Arial;color:rgba(255,255,255,.75)">Fel vid laddning: ${err.message}</div>`;
+    });
+})();
+</script>
 </body>
 </html>
