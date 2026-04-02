@@ -915,8 +915,55 @@
         return `https://sportsgamer.gg/players/${encodeURIComponent(player.playerID ?? "")}`;
       }
 
-      function teamUrl(teamId) {
-        return `https://sportsgamer.gg/leagues/501/teams/${encodeURIComponent(teamId ?? "")}`;
+      function resolveLeagueId(player, side) {
+        const fromLeagueKeys = [
+          "FromLeagueID",
+          "fromLeagueID",
+          "fromLeagueId",
+          "LeagueIDFrom",
+          "leagueIDFrom",
+          "leagueIdFrom",
+          "FromLeague",
+          "fromLeague"
+        ];
+
+        const toLeagueKeys = [
+          "ToLeagueID",
+          "toLeagueID",
+          "toLeagueId",
+          "LeagueIDTo",
+          "leagueIDTo",
+          "leagueIdTo",
+          "ToLeague",
+          "toLeague"
+        ];
+
+        const fallbackKeys = [
+          "LeagueID",
+          "leagueID",
+          "leagueId"
+        ];
+
+        const keys = side === "from" ? fromLeagueKeys : toLeagueKeys;
+
+        for (const key of keys) {
+          if (player && player[key] != null && player[key] !== "") {
+            return player[key];
+          }
+        }
+
+        for (const key of fallbackKeys) {
+          if (player && player[key] != null && player[key] !== "") {
+            return player[key];
+          }
+        }
+
+        return "";
+      }
+
+      function teamUrl(teamId, leagueId) {
+        if (!teamId || !leagueId) return "#";
+        return `https://sportsgamer.gg/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(teamId)}`;
       }
 
       function initialsFromName(name) {
@@ -1018,8 +1065,20 @@
         const fromCandidates = teamNameCandidates(player.From);
         const toCandidates = teamNameCandidates(player.To);
         const profileUrl = playerUrl(player);
-        const fromTeamUrl = teamUrl(player.FromTeamID);
-        const toTeamUrl = teamUrl(player.ToTeamID);
+
+        const fromLeagueId = resolveLeagueId(player, "from");
+        const toLeagueId = resolveLeagueId(player, "to");
+
+        const fromTeamUrl = teamUrl(player.FromTeamID, fromLeagueId);
+        const toTeamUrl = teamUrl(player.ToTeamID, toLeagueId);
+
+        const fromLinkAttrs = fromTeamUrl === "#"
+          ? 'class="team-link" aria-disabled="true"'
+          : `class="team-link" href="${escapeHtml(fromTeamUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna lagprofil för ${escapeHtml(player.From)}"`;
+
+        const toLinkAttrs = toTeamUrl === "#"
+          ? 'class="team-link" aria-disabled="true"'
+          : `class="team-link" href="${escapeHtml(toTeamUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna lagprofil för ${escapeHtml(player.To)}"`;
 
         return `
           <article class="transfer-card" data-search="${escapeHtml([
@@ -1057,13 +1116,7 @@
               </div>
 
               <div class="transfer-move">
-                <a
-                  class="team-link"
-                  href="${escapeHtml(fromTeamUrl)}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Öppna lagprofil för ${escapeHtml(player.From)}"
-                >
+                <a ${fromLinkAttrs}>
                   <div class="team-box">
                     <div class="team-logo">
                       <img
@@ -1084,13 +1137,7 @@
 
                 <div class="transfer-arrow">→</div>
 
-                <a
-                  class="team-link"
-                  href="${escapeHtml(toTeamUrl)}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Öppna lagprofil för ${escapeHtml(player.To)}"
-                >
+                <a ${toLinkAttrs}>
                   <div class="team-box">
                     <div class="team-logo">
                       <img
