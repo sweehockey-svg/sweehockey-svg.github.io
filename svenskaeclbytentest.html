@@ -381,6 +381,11 @@
       text-decoration:none;
     }
 
+    .team-link[aria-disabled="true"]{
+      pointer-events:none;
+      cursor:default;
+    }
+
     .team-link:hover .team-box{
       border-color: rgba(245,195,75,0.24);
       background: rgba(255,255,255,0.05);
@@ -739,6 +744,9 @@
       const search = document.getElementById("searchTransfers");
       const updated = document.getElementById("lastUpdated");
 
+      const FROM_LEAGUE_ID_FIELD = "FromLeagueID";
+      const TO_LEAGUE_ID_FIELD = "ToLeagueID";
+
       const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE"]);
 
       function extractJsonResultObject(rawData) {
@@ -915,52 +923,6 @@
         return `https://sportsgamer.gg/players/${encodeURIComponent(player.playerID ?? "")}`;
       }
 
-      function resolveLeagueId(player, side) {
-        const fromLeagueKeys = [
-          "FromLeagueID",
-          "fromLeagueID",
-          "fromLeagueId",
-          "LeagueIDFrom",
-          "leagueIDFrom",
-          "leagueIdFrom",
-          "FromLeague",
-          "fromLeague"
-        ];
-
-        const toLeagueKeys = [
-          "ToLeagueID",
-          "toLeagueID",
-          "toLeagueId",
-          "LeagueIDTo",
-          "leagueIDTo",
-          "leagueIdTo",
-          "ToLeague",
-          "toLeague"
-        ];
-
-        const fallbackKeys = [
-          "LeagueID",
-          "leagueID",
-          "leagueId"
-        ];
-
-        const keys = side === "from" ? fromLeagueKeys : toLeagueKeys;
-
-        for (const key of keys) {
-          if (player && player[key] != null && player[key] !== "") {
-            return player[key];
-          }
-        }
-
-        for (const key of fallbackKeys) {
-          if (player && player[key] != null && player[key] !== "") {
-            return player[key];
-          }
-        }
-
-        return "";
-      }
-
       function teamUrl(teamId, leagueId) {
         if (!teamId || !leagueId) return "#";
         return `https://sportsgamer.gg/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(teamId)}`;
@@ -1064,10 +1026,10 @@
         const playerCandidates = playerImageCandidates(player.Player);
         const fromCandidates = teamNameCandidates(player.From);
         const toCandidates = teamNameCandidates(player.To);
-        const profileUrl = playerUrl(player);
 
-        const fromLeagueId = resolveLeagueId(player, "from");
-        const toLeagueId = resolveLeagueId(player, "to");
+        const profileUrl = playerUrl(player);
+        const fromLeagueId = player?.[FROM_LEAGUE_ID_FIELD];
+        const toLeagueId = player?.[TO_LEAGUE_ID_FIELD];
 
         const fromTeamUrl = teamUrl(player.FromTeamID, fromLeagueId);
         const toTeamUrl = teamUrl(player.ToTeamID, toLeagueId);
