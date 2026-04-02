@@ -376,6 +376,20 @@
       align-items:center;
     }
 
+    .team-link{
+      display:block;
+      text-decoration:none;
+    }
+
+    .team-link:hover .team-box{
+      border-color: rgba(245,195,75,0.24);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .team-link:hover .team-name{
+      color: var(--gold);
+    }
+
     .team-box{
       display:grid;
       grid-template-columns: 68px 1fr;
@@ -386,6 +400,7 @@
       border-radius:18px;
       padding:14px;
       min-height:110px;
+      transition: border-color .15s ease, background .15s ease;
     }
 
     .team-logo{
@@ -420,6 +435,7 @@
       line-height:1.15;
       margin-bottom:5px;
       word-break:break-word;
+      transition: color .15s ease;
     }
 
     .team-division{
@@ -899,6 +915,10 @@
         return `https://sportsgamer.gg/players/${encodeURIComponent(player.playerID ?? "")}`;
       }
 
+      function teamUrl(teamId) {
+        return `https://sportsgamer.gg/leagues/501/teams/${encodeURIComponent(teamId ?? "")}`;
+      }
+
       function initialsFromName(name) {
         const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
         if (!parts.length) return "EH";
@@ -998,6 +1018,8 @@
         const fromCandidates = teamNameCandidates(player.From);
         const toCandidates = teamNameCandidates(player.To);
         const profileUrl = playerUrl(player);
+        const fromTeamUrl = teamUrl(player.FromTeamID);
+        const toTeamUrl = teamUrl(player.ToTeamID);
 
         return `
           <article class="transfer-card" data-search="${escapeHtml([
@@ -1035,41 +1057,57 @@
               </div>
 
               <div class="transfer-move">
-                <div class="team-box">
-                  <div class="team-logo">
-                    <img
-                      alt="${escapeHtml(player.From)}"
-                      data-type="team"
-                      data-team="${escapeHtml(player.From)}"
-                      data-candidates="${escapeHtml(encodeAttr(fromCandidates))}"
-                      loading="lazy"
-                      onerror="handleImageError(event)"
-                    >
+                <a
+                  class="team-link"
+                  href="${escapeHtml(fromTeamUrl)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Öppna lagprofil för ${escapeHtml(player.From)}"
+                >
+                  <div class="team-box">
+                    <div class="team-logo">
+                      <img
+                        alt="${escapeHtml(player.From)}"
+                        data-type="team"
+                        data-team="${escapeHtml(player.From)}"
+                        data-candidates="${escapeHtml(encodeAttr(fromCandidates))}"
+                        loading="lazy"
+                        onerror="handleImageError(event)"
+                      >
+                    </div>
+                    <div>
+                      <div class="team-name">${escapeHtml(player.From)}</div>
+                      <div class="team-division">${escapeHtml(player.FromDiv || "")}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div class="team-name">${escapeHtml(player.From)}</div>
-                    <div class="team-division">${escapeHtml(player.FromDiv || "")}</div>
-                  </div>
-                </div>
+                </a>
 
                 <div class="transfer-arrow">→</div>
 
-                <div class="team-box">
-                  <div class="team-logo">
-                    <img
-                      alt="${escapeHtml(player.To)}"
-                      data-type="team"
-                      data-team="${escapeHtml(player.To)}"
-                      data-candidates="${escapeHtml(encodeAttr(toCandidates))}"
-                      loading="lazy"
-                      onerror="handleImageError(event)"
-                    >
+                <a
+                  class="team-link"
+                  href="${escapeHtml(toTeamUrl)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Öppna lagprofil för ${escapeHtml(player.To)}"
+                >
+                  <div class="team-box">
+                    <div class="team-logo">
+                      <img
+                        alt="${escapeHtml(player.To)}"
+                        data-type="team"
+                        data-team="${escapeHtml(player.To)}"
+                        data-candidates="${escapeHtml(encodeAttr(toCandidates))}"
+                        loading="lazy"
+                        onerror="handleImageError(event)"
+                      >
+                    </div>
+                    <div>
+                      <div class="team-name">${escapeHtml(player.To)}</div>
+                      <div class="team-division">${escapeHtml(player.ToDiv || "")}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div class="team-name">${escapeHtml(player.To)}</div>
-                    <div class="team-division">${escapeHtml(player.ToDiv || "")}</div>
-                  </div>
-                </div>
+                </a>
               </div>
             </div>
           </article>
