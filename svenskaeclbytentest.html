@@ -309,6 +309,19 @@
       background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
     }
 
+    .player-link{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      width:100%;
+      min-width:0;
+      text-decoration:none;
+    }
+
+    .player-link:hover .player-name{
+      color: var(--gold);
+    }
+
     .player-avatar{
       width:78px;
       height:116px;
@@ -344,6 +357,7 @@
       overflow:visible;
       text-overflow:clip;
       word-break:normal;
+      transition: color .15s ease;
     }
 
     .player-date{
@@ -516,6 +530,9 @@
 
       .transfer-player{
         padding:16px;
+      }
+
+      .player-link{
         gap:14px;
       }
 
@@ -878,6 +895,10 @@
         return buildPaths("teamlogos", names, ["png", "jpg", "jpeg", "webp", "PNG", "JPG", "JPEG", "WEBP"]);
       }
 
+      function playerUrl(player) {
+        return `https://sportsgamer.gg/players/${encodeURIComponent(player.playerID ?? "")}`;
+      }
+
       function initialsFromName(name) {
         const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
         if (!parts.length) return "EH";
@@ -976,6 +997,7 @@
         const playerCandidates = playerImageCandidates(player.Player);
         const fromCandidates = teamNameCandidates(player.From);
         const toCandidates = teamNameCandidates(player.To);
+        const profileUrl = playerUrl(player);
 
         return `
           <article class="transfer-card" data-search="${escapeHtml([
@@ -988,20 +1010,28 @@
           ].join(" ").toLowerCase())}">
             <div class="transfer-row">
               <div class="transfer-player">
-                <div class="player-avatar">
-                  <img
-                    alt="${escapeHtml(player.Player)}"
-                    data-type="player"
-                    data-name="${escapeHtml(player.Player)}"
-                    data-candidates="${escapeHtml(encodeAttr(playerCandidates))}"
-                    loading="lazy"
-                    onerror="handleImageError(event)"
-                  >
-                </div>
-                <div class="player-meta">
-                  <div class="player-name">${escapeHtml(player.Player)}</div>
-                  <div class="player-date">${escapeHtml(formatDate(player.Date))}</div>
-                </div>
+                <a
+                  class="player-link"
+                  href="${escapeHtml(profileUrl)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Öppna spelarprofil för ${escapeHtml(player.Player)}"
+                >
+                  <div class="player-avatar">
+                    <img
+                      alt="${escapeHtml(player.Player)}"
+                      data-type="player"
+                      data-name="${escapeHtml(player.Player)}"
+                      data-candidates="${escapeHtml(encodeAttr(playerCandidates))}"
+                      loading="lazy"
+                      onerror="handleImageError(event)"
+                    >
+                  </div>
+                  <div class="player-meta">
+                    <div class="player-name">${escapeHtml(player.Player)}</div>
+                    <div class="player-date">${escapeHtml(formatDate(player.Date))}</div>
+                  </div>
+                </a>
               </div>
 
               <div class="transfer-move">
