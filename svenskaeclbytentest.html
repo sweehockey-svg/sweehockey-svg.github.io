@@ -744,9 +744,6 @@
       const search = document.getElementById("searchTransfers");
       const updated = document.getElementById("lastUpdated");
 
-      const FROM_LEAGUE_ID_FIELD = "FromLeagueID";
-      const TO_LEAGUE_ID_FIELD = "ToLeagueID";
-
       const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE"]);
 
       function extractJsonResultObject(rawData) {
@@ -1028,11 +1025,9 @@
         const toCandidates = teamNameCandidates(player.To);
 
         const profileUrl = playerUrl(player);
-        const fromLeagueId = player?.[FROM_LEAGUE_ID_FIELD];
-        const toLeagueId = player?.[TO_LEAGUE_ID_FIELD];
 
-        const fromTeamUrl = teamUrl(player.FromTeamID, fromLeagueId);
-        const toTeamUrl = teamUrl(player.ToTeamID, toLeagueId);
+        const fromTeamUrl = teamUrl(player.FromTeamID, player.FromLeagueID);
+        const toTeamUrl = teamUrl(player.ToTeamID, player.ToLeagueID);
 
         const fromLinkAttrs = fromTeamUrl === "#"
           ? 'class="team-link" aria-disabled="true"'
