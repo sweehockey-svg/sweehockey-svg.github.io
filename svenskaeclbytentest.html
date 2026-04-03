@@ -10,14 +10,21 @@
 
   <style>
     :root{
-      --bg: #0b0f17;
-      --panel: rgba(255,255,255,0.06);
-      --panel-2: rgba(255,255,255,0.04);
-      --text: rgba(255,255,255,0.92);
+      --bg: #07101d;
+      --bg-2: #0b1628;
+      --panel: rgba(255,255,255,0.055);
+      --panel-2: rgba(255,255,255,0.035);
+      --panel-3: rgba(255,255,255,0.025);
+      --text: rgba(255,255,255,0.95);
       --muted: rgba(255,255,255,0.68);
-      --border: rgba(255,255,255,0.12);
-      --gold: rgba(245,195,75,0.95);
-      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --soft: rgba(255,255,255,0.10);
+      --border: rgba(255,255,255,0.11);
+      --gold: #f5c34b;
+      --gold-soft: rgba(245,195,75,0.18);
+      --gold-line: rgba(245,195,75,0.34);
+      --blue-soft: rgba(88,140,255,0.12);
+      --shadow: 0 24px 64px rgba(0,0,0,.42);
+      --shadow-2: 0 16px 36px rgba(0,0,0,.28);
     }
 
     *{ box-sizing:border-box; }
@@ -27,21 +34,21 @@
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background:
-        radial-gradient(1200px 600px at 50% -10%, rgba(245,195,75,0.12), transparent 60%),
-        radial-gradient(900px 500px at 10% 10%, rgba(120,155,255,0.12), transparent 55%),
-        var(--bg);
+        radial-gradient(1100px 520px at 50% -8%, rgba(245,195,75,0.11), transparent 60%),
+        radial-gradient(820px 480px at 10% 10%, rgba(82,125,255,0.11), transparent 55%),
+        linear-gradient(180deg, #09111f 0%, #06101d 100%);
       color: var(--text);
     }
 
     a{ color:inherit; text-decoration:none; }
-    .container{ width:min(1220px, calc(100% - 32px)); margin:0 auto; }
+    .container{ width:min(1240px, calc(100% - 32px)); margin:0 auto; }
 
     .topbar{
       position:sticky;
       top:0;
       z-index:50;
-      backdrop-filter: blur(10px);
-      background: rgba(10,14,22,0.78);
+      backdrop-filter: blur(12px);
+      background: rgba(7,12,20,0.78);
       border-bottom: 1px solid var(--border);
     }
 
@@ -82,6 +89,7 @@
       background:transparent;
       border:0;
       cursor:pointer;
+      transition: background .16s ease, color .16s ease;
     }
 
     .nav__link:hover,
@@ -99,7 +107,7 @@
       width:270px;
       padding:8px;
       border-radius:14px;
-      background: rgba(20,26,38,0.96);
+      background: rgba(16,22,34,0.97);
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
       display:none;
@@ -114,6 +122,7 @@
       color: var(--muted);
       font-size:14px;
       line-height:1.35;
+      transition: background .16s ease, color .16s ease;
     }
 
     .menu__item:hover{
@@ -128,6 +137,12 @@
       border-radius: 12px;
       padding: 8px 10px;
       cursor:pointer;
+      transition: background .16s ease, border-color .16s ease;
+    }
+
+    .iconbtn:hover{
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.18);
     }
 
     .hamburger{
@@ -144,7 +159,7 @@
     .mobile{
       display:none;
       border-top: 1px solid var(--border);
-      background: rgba(10,14,22,0.85);
+      background: rgba(10,14,22,0.88);
     }
 
     .mobile.open{ display:block; }
@@ -164,7 +179,7 @@
 
     .banner-strip{
       border-bottom: 1px solid var(--border);
-      background: rgba(10,14,22,0.55);
+      background: rgba(10,14,22,0.48);
     }
 
     .banner-strip__inner{
@@ -177,8 +192,8 @@
       width:100%;
       max-width:980px;
       height:160px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,0.14);
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,0.13);
       box-shadow: var(--shadow);
       background-image: url("svenakehocket.jpg");
       background-size: cover;
@@ -186,19 +201,21 @@
       overflow:hidden;
     }
 
-    main{ padding: 28px 0 46px; }
+    main{ padding: 28px 0 54px; }
 
     .card{
-      background: var(--panel);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03));
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 22px 20px;
+      border-radius: 22px;
+      padding: 24px 22px;
       box-shadow: var(--shadow);
     }
 
     h1{
       margin:0 0 10px;
       font-size: clamp(22px, 3vw, 30px);
+      letter-spacing:-0.4px;
     }
 
     p{
@@ -218,46 +235,102 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding:11px 14px;
-      border-radius:12px;
+      padding:12px 16px;
+      border-radius:14px;
       background: rgba(255,255,255,0.06);
-      border: 1px solid var(--border);
+      border: 1px solid rgba(255,255,255,0.14);
       color: var(--text);
-      font-weight:650;
+      font-weight:750;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+
+    .btn:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.18);
     }
 
     .btn--primary{
-      background: rgba(245,195,75,0.14);
+      background: linear-gradient(180deg, rgba(245,195,75,0.18), rgba(245,195,75,0.10));
       border-color: rgba(245,195,75,0.35);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        0 10px 28px rgba(245,195,75,0.08);
     }
 
-    .transfers{ margin-top: 26px; }
+    .transfers{
+      margin-top: 26px;
+    }
 
     .header-box{
       display:flex;
       flex-wrap:wrap;
       justify-content:space-between;
       align-items:center;
-      gap:14px;
+      gap:18px;
       margin: 0 0 18px;
+      padding: 2px 4px;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+    }
+
+    .section-title__icon{
+      width:34px;
+      height:34px;
+      display:grid;
+      place-items:center;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(245,195,75,0.14), rgba(245,195,75,0.06));
+      border:1px solid rgba(245,195,75,0.18);
+      color: var(--gold);
+      font-size:18px;
+      flex:0 0 34px;
     }
 
     .header-box h2{
       margin:0;
-      font-size:28px;
-      font-weight:900;
-      letter-spacing:-0.2px;
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight:950;
+      letter-spacing:-0.7px;
+      line-height:1.05;
+    }
+
+    .search-wrap{
+      width:min(100%, 410px);
+      position:relative;
+    }
+
+    .search-wrap::before{
+      content:"🔍";
+      position:absolute;
+      left:16px;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:15px;
+      opacity:.7;
+      pointer-events:none;
     }
 
     #searchTransfers{
-      width:min(100%, 400px);
-      padding:12px 16px;
+      width:100%;
+      padding:14px 16px 14px 42px;
       font-size:15px;
-      border:1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.035);
+      border:1px solid rgba(245,195,75,0.22);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
       color: var(--text);
-      border-radius:14px;
+      border-radius:18px;
       outline:none;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 8px 24px rgba(0,0,0,.16);
+      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
     }
 
     #searchTransfers::placeholder{
@@ -266,7 +339,10 @@
 
     #searchTransfers:focus{
       border-color: rgba(245,195,75,0.42);
-      box-shadow: 0 0 0 4px rgba(245,195,75,.10);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 0 0 4px rgba(245,195,75,.10),
+        0 12px 30px rgba(0,0,0,.2);
       background: rgba(255,255,255,0.055);
     }
 
@@ -279,19 +355,20 @@
     .transfer-card{
       width:100%;
       background:
-        radial-gradient(120% 140% at 0% 0%, rgba(245,195,75,0.07), transparent 40%),
-        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03));
-      border:1px solid rgba(255,255,255,0.12);
-      border-radius:22px;
+        radial-gradient(110% 150% at 0% 0%, rgba(245,195,75,0.10), transparent 38%),
+        radial-gradient(80% 100% at 100% 100%, rgba(88,140,255,0.06), transparent 42%),
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      border:1px solid rgba(255,255,255,0.11);
+      border-radius:26px;
       overflow:hidden;
-      box-shadow: 0 18px 40px rgba(0,0,0,.28);
-      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+      box-shadow: 0 18px 42px rgba(0,0,0,.25);
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
 
     .transfer-card:hover{
       transform: translateY(-3px);
       border-color: rgba(245,195,75,0.24);
-      box-shadow: 0 24px 50px rgba(0,0,0,.34);
+      box-shadow: 0 26px 58px rgba(0,0,0,.34);
     }
 
     .transfer-row{
@@ -301,12 +378,14 @@
     }
 
     .transfer-player{
-      padding:18px 24px;
+      padding:20px 24px;
       border-right:1px solid rgba(255,255,255,0.08);
       display:flex;
       align-items:center;
       gap:16px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.028), transparent),
+        linear-gradient(90deg, rgba(255,255,255,0.02), transparent 65%);
     }
 
     .player-link{
@@ -325,13 +404,16 @@
     .player-avatar{
       width:78px;
       height:116px;
-      border-radius:18px;
+      border-radius:20px;
       overflow:hidden;
       flex:0 0 78px;
-      background: rgba(255,255,255,0.06);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
       border:1px solid rgba(255,255,255,0.12);
       position: relative;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 10px 22px rgba(0,0,0,.22);
     }
 
     .player-avatar img{
@@ -348,30 +430,31 @@
 
     .player-name{
       font-size:34px;
-      font-weight:900;
+      font-weight:950;
       line-height:1.02;
       margin:0 0 10px;
       color:#fff;
-      letter-spacing:-0.7px;
+      letter-spacing:-0.8px;
       white-space:nowrap;
       overflow:visible;
       text-overflow:clip;
       word-break:normal;
       transition: color .15s ease;
+      text-shadow: 0 2px 10px rgba(0,0,0,.16);
     }
 
     .player-date{
       font-size:13px;
       color: var(--gold);
       font-weight:900;
-      letter-spacing:.35px;
+      letter-spacing:.4px;
       text-transform:uppercase;
     }
 
     .transfer-move{
       padding:18px 20px;
       display:grid;
-      grid-template-columns: 1fr 62px 1fr;
+      grid-template-columns: 1fr 70px 1fr;
       gap:16px;
       align-items:center;
     }
@@ -388,7 +471,8 @@
 
     .team-link:hover .team-box{
       border-color: rgba(245,195,75,0.24);
-      background: rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.055);
+      transform: translateY(-1px);
     }
 
     .team-link:hover .team-name{
@@ -397,28 +481,32 @@
 
     .team-box{
       display:grid;
-      grid-template-columns: 68px 1fr;
+      grid-template-columns: 70px 1fr;
       gap:14px;
       align-items:center;
-      background: rgba(255,255,255,0.035);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.022));
       border:1px solid rgba(255,255,255,0.08);
-      border-radius:18px;
-      padding:14px;
-      min-height:110px;
-      transition: border-color .15s ease, background .15s ease;
+      border-radius:20px;
+      padding:14px 16px;
+      min-height:112px;
+      transition: border-color .15s ease, background .15s ease, transform .15s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
     }
 
     .team-logo{
-      width:68px;
-      height:68px;
-      border-radius:16px;
+      width:70px;
+      height:70px;
+      border-radius:18px;
       overflow:hidden;
-      background: rgba(255,255,255,0.05);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
       border:1px solid rgba(255,255,255,0.08);
       display:flex;
       align-items:center;
       justify-content:center;
       position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }
 
     .team-logo img{
@@ -426,7 +514,7 @@
       height:100%;
       object-fit:contain;
       display:block;
-      padding:5px;
+      padding:6px;
     }
 
     .team-label{
@@ -434,41 +522,46 @@
     }
 
     .team-name{
-      font-size:22px;
-      font-weight:900;
+      font-size:20px;
+      font-weight:950;
       color:#fff;
-      line-height:1.15;
-      margin-bottom:5px;
+      line-height:1.12;
+      margin-bottom:6px;
       word-break:break-word;
       transition: color .15s ease;
+      letter-spacing:-0.3px;
     }
 
     .team-division{
       font-size:13px;
-      color: rgba(255,255,255,0.72);
-      font-weight:800;
+      color: rgba(255,255,255,0.74);
+      font-weight:900;
       text-transform:uppercase;
-      letter-spacing:.35px;
+      letter-spacing:.38px;
     }
 
     .transfer-arrow{
       display:flex;
       align-items:center;
       justify-content:center;
-      width:62px;
-      height:62px;
+      width:64px;
+      height:64px;
       border-radius:999px;
-      background: rgba(245,195,75,0.08);
-      border:1px solid rgba(245,195,75,0.18);
+      background:
+        radial-gradient(circle at 50% 35%, rgba(245,195,75,0.11), rgba(245,195,75,0.05));
+      border:1px solid rgba(245,195,75,0.22);
       color: var(--gold);
-      font-size:28px;
+      font-size:30px;
       font-weight:900;
       margin: 0 auto;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 10px 22px rgba(0,0,0,.16);
     }
 
     .empty-state{
       padding:18px;
-      border-radius:16px;
+      border-radius:18px;
       background: rgba(255,255,255,0.03);
       border:1px solid rgba(255,255,255,0.08);
       color: var(--muted);
@@ -483,7 +576,7 @@
 
     footer{
       border-top:1px solid var(--border);
-      background: rgba(10,14,22,0.78);
+      background: rgba(8,12,20,0.8);
     }
 
     .footer__inner{
@@ -506,7 +599,7 @@
       }
 
       .team-name{
-        font-size:20px;
+        font-size:19px;
       }
     }
 
@@ -525,7 +618,7 @@
       }
 
       .team-name{
-        font-size:20px;
+        font-size:19px;
       }
     }
 
@@ -545,7 +638,7 @@
         align-items:stretch;
       }
 
-      #searchTransfers{
+      .search-wrap{
         width:100%;
       }
 
@@ -577,8 +670,8 @@
       .transfer-arrow{
         width:100%;
         height:auto;
-        padding:6px 0;
-        border-radius:14px;
+        padding:8px 0;
+        border-radius:16px;
         font-size:24px;
       }
 
@@ -684,8 +777,14 @@
 
     <section id="byten" class="transfers" aria-label="Svenska byten">
       <div class="header-box">
-        <h2>📋 Svenska spelare som bytt ECL-lag</h2>
-        <input type="text" id="searchTransfers" placeholder="🔍 Sök spelare eller lag...">
+        <div class="section-title">
+          <div class="section-title__icon">📋</div>
+          <h2>Svenska spelare som bytt ECL-lag</h2>
+        </div>
+
+        <div class="search-wrap">
+          <input type="text" id="searchTransfers" placeholder="Sök spelare eller lag...">
+        </div>
       </div>
 
       <div id="transfer-stats"></div>
@@ -984,13 +1083,6 @@
         return `https://sportsgamer.gg/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(teamId)}`;
       }
 
-      function initialsFromName(name) {
-        const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
-        if (!parts.length) return "EH";
-        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-      }
-
       function teamShortName(name) {
         const cleaned = stripParens(cleanDisplayTeamName(name))
           .replace(/\s+IF\s+Esport$/i, "")
@@ -1003,24 +1095,34 @@
       }
 
       function fallbackPlayerImage(img) {
-        const name = img.getAttribute("data-name") || "";
-        const initials = initialsFromName(name);
-
         img.onerror = null;
         img.src =
           "data:image/svg+xml;charset=UTF-8," +
           encodeURIComponent(`
             <svg xmlns="http://www.w3.org/2000/svg" width="240" height="320" viewBox="0 0 240 320">
               <defs>
-                <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-                  <stop offset="0%" stop-color="#22304a"/>
-                  <stop offset="100%" stop-color="#111827"/>
+                <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#14233d"/>
+                  <stop offset="100%" stop-color="#0b1322"/>
+                </linearGradient>
+                <radialGradient id="glow" cx="50%" cy="24%" r="55%">
+                  <stop offset="0%" stop-color="rgba(245,195,75,0.22)"/>
+                  <stop offset="100%" stop-color="rgba(245,195,75,0)"/>
+                </radialGradient>
+                <linearGradient id="shoulders" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#4b4c44"/>
+                  <stop offset="100%" stop-color="#31342f"/>
                 </linearGradient>
               </defs>
-              <rect width="240" height="320" rx="28" fill="url(#g)"/>
-              <circle cx="120" cy="106" r="34" fill="#f5c34b" fill-opacity="0.18"/>
-              <path d="M62 224c8-33 35-50 58-50s50 17 58 50" fill="#f5c34b" fill-opacity="0.18"/>
-              <text x="120" y="274" text-anchor="middle" fill="#f5c34b" font-family="Arial, sans-serif" font-weight="700" font-size="34">${initials}</text>
+
+              <rect width="240" height="320" rx="28" fill="url(#bg)"/>
+              <rect x="1" y="1" width="238" height="318" rx="27" fill="none" stroke="rgba(255,255,255,0.08)"/>
+              <circle cx="120" cy="90" r="68" fill="url(#glow)"/>
+
+              <circle cx="120" cy="104" r="32" fill="#4d4b43"/>
+              <path d="M58 238c9-35 33-59 62-59s53 24 62 59v18H58z" fill="url(#shoulders)"/>
+
+              <rect x="0" y="0" width="240" height="320" rx="28" fill="none" stroke="rgba(245,195,75,0.16)"/>
             </svg>
           `);
       }
