@@ -1199,20 +1199,24 @@
         const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
         const teamCount = Number(row?.teamCount) || 0;
         const teams = Array.isArray(row?.teams) ? row.teams : [];
+        const removeCount = Math.max(teamCount - 1, 1);
 
         const teamLines = teams.length
           ? teams.map(team => `- ${team?.leagueName ? team.leagueName + ' — ' : ''}${team?.teamName || ''}`).join('\n')
           : '- Team information missing';
 
-        return `Multiple Team Registration – Action Required for ${playerName}
-
-Hi,
-
-${playerName} is currently registered in ${teamCount} teams.
+        return `${playerName} is currently registered in ${teamCount} teams.
 
 This message is being sent to the player and the captains of all listed teams.
 
+Hi,
+
+It is not allowed to be registered in more than one team at the same time.
+
+The player is currently listed in the following teams:
 ${teamLines}
+
+Please make sure that ${playerName} is removed from ${removeCount} team${removeCount === 1 ? '' : 's'} so that the player remains registered in only one team.
 
 Best regards,`;
       },
