@@ -834,7 +834,10 @@
       }
 
       function stripParens(value) {
-        return String(value || "").replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim();
+        return String(value || "")
+          .replace(/\s*\([^)]*\)\s*/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
       }
 
       function slugifyLoose(value) {
@@ -846,12 +849,13 @@
       }
 
       function normalizeTeamKey(value) {
-        return String(value || "")
-          .replace(/\u00A0/g, " ")
-          .replace(/\s*\(DSQ\)\s*/gi, " ")
-          .replace(/\s+/g, " ")
-          .trim()
-          .toUpperCase();
+        return stripParens(
+          String(value || "")
+            .replace(/\u00A0/g, " ")
+            .replace(/\s*\(DSQ\)\s*/gi, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+        ).toUpperCase();
       }
 
       function unique(values) {
@@ -884,7 +888,7 @@
           "ROBE ESPORTS": "MSK Esports"
         };
 
-        return replacements[key] || raw;
+        return replacements[key] || stripParens(raw);
       }
 
       function playerImageCandidates(playerName) {
