@@ -859,6 +859,20 @@
         return unique(paths);
       }
 
+      function cleanDisplayTeamName(name) {
+        let result = String(name || "").trim();
+
+        result = result.replace(/\s*\(DSQ\)\s*/gi, "").trim();
+
+        const replacements = {
+          "GREATEST": "Unwanted",
+          "VESUVIUS ESPORTS": "Golden Buffalos",
+          "ROBE Esports": "MSK Esports"
+        };
+
+        return replacements[result] || result;
+      }
+
       function playerImageCandidates(playerName) {
         const clean = normalizeFileBase(playerName);
         const noDiacritics = normalizeFileBase(removeDiacritics(clean));
@@ -878,7 +892,8 @@
       }
 
       function teamNameCandidates(teamName) {
-        const raw = normalizeFileBase(teamName);
+        const displayName = cleanDisplayTeamName(teamName);
+        const raw = normalizeFileBase(displayName);
         const noParens = stripParens(raw);
         const noDiacritics = normalizeFileBase(removeDiacritics(noParens));
 
@@ -933,7 +948,7 @@
       }
 
       function teamShortName(name) {
-        const cleaned = stripParens(name)
+        const cleaned = stripParens(cleanDisplayTeamName(name))
           .replace(/\s+IF\s+Esport$/i, "")
           .replace(/\s+Esport$/i, "")
           .replace(/\s+Esports$/i, "")
@@ -1020,6 +1035,9 @@
       };
 
       function cardMarkup(player) {
+        const fromDisplay = cleanDisplayTeamName(player.From);
+        const toDisplay = cleanDisplayTeamName(player.To);
+
         const playerCandidates = playerImageCandidates(player.Player);
         const fromCandidates = teamNameCandidates(player.From);
         const toCandidates = teamNameCandidates(player.To);
@@ -1031,18 +1049,18 @@
 
         const fromLinkAttrs = fromTeamUrl === "#"
           ? 'class="team-link" aria-disabled="true"'
-          : `class="team-link" href="${escapeHtml(fromTeamUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna lagprofil för ${escapeHtml(player.From)}"`;
+          : `class="team-link" href="${escapeHtml(fromTeamUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna lagprofil för ${escapeHtml(fromDisplay)}"`;
 
         const toLinkAttrs = toTeamUrl === "#"
           ? 'class="team-link" aria-disabled="true"'
-          : `class="team-link" href="${escapeHtml(toTeamUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna lagprofil för ${escapeHtml(player.To)}"`;
+          : `class="team-link" href="${escapeHtml(toTeamUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna lagprofil för ${escapeHtml(toDisplay)}"`;
 
         return `
           <article class="transfer-card" data-search="${escapeHtml([
             player.Player,
-            player.From,
+            fromDisplay,
             player.FromDiv,
-            player.To,
+            toDisplay,
             player.ToDiv,
             player.Date
           ].join(" ").toLowerCase())}">
@@ -1077,16 +1095,16 @@
                   <div class="team-box">
                     <div class="team-logo">
                       <img
-                        alt="${escapeHtml(player.From)}"
+                        alt="${escapeHtml(fromDisplay)}"
                         data-type="team"
-                        data-team="${escapeHtml(player.From)}"
+                        data-team="${escapeHtml(fromDisplay)}"
                         data-candidates="${escapeHtml(encodeAttr(fromCandidates))}"
                         loading="lazy"
                         onerror="handleImageError(event)"
                       >
                     </div>
                     <div>
-                      <div class="team-name">${escapeHtml(player.From)}</div>
+                      <div class="team-name">${escapeHtml(fromDisplay)}</div>
                       <div class="team-division">${escapeHtml(player.FromDiv || "")}</div>
                     </div>
                   </div>
@@ -1098,16 +1116,16 @@
                   <div class="team-box">
                     <div class="team-logo">
                       <img
-                        alt="${escapeHtml(player.To)}"
+                        alt="${escapeHtml(toDisplay)}"
                         data-type="team"
-                        data-team="${escapeHtml(player.To)}"
+                        data-team="${escapeHtml(toDisplay)}"
                         data-candidates="${escapeHtml(encodeAttr(toCandidates))}"
                         loading="lazy"
                         onerror="handleImageError(event)"
                       >
                     </div>
                     <div>
-                      <div class="team-name">${escapeHtml(player.To)}</div>
+                      <div class="team-name">${escapeHtml(toDisplay)}</div>
                       <div class="team-division">${escapeHtml(player.ToDiv || "")}</div>
                     </div>
                   </div>
