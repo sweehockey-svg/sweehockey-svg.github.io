@@ -845,6 +845,15 @@
           .trim();
       }
 
+      function normalizeTeamKey(value) {
+        return String(value || "")
+          .replace(/\u00A0/g, " ")
+          .replace(/\s*\(DSQ\)\s*/gi, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toUpperCase();
+      }
+
       function unique(values) {
         return [...new Set(values.map(v => String(v || "").trim()).filter(Boolean))];
       }
@@ -860,18 +869,22 @@
       }
 
       function cleanDisplayTeamName(name) {
-        let result = String(name || "").trim();
+        const raw = String(name || "")
+          .replace(/\u00A0/g, " ")
+          .replace(/\s*\(DSQ\)\s*/gi, " ")
+          .replace(/\s+/g, " ")
+          .trim();
 
-        result = result.replace(/\s*\(DSQ\)\s*/gi, "").trim();
+        const key = normalizeTeamKey(raw);
 
         const replacements = {
           "GREATEST": "Unwanted",
           "VESUVIUS ESPORTS": "Golden Buffalos",
-          "Vesuvius Academy": "Grim Reapers HC",
-          "ROBE Esports": "MSK Esports"
+          "VESUVIUS ACADEMY": "Grim Reapers HC",
+          "ROBE ESPORTS": "MSK Esports"
         };
 
-        return replacements[result] || result;
+        return replacements[key] || raw;
       }
 
       function playerImageCandidates(playerName) {
