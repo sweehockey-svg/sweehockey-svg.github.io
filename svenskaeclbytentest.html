@@ -891,6 +891,32 @@
         return replacements[key] || stripParens(raw);
       }
 
+      function normalizeTransferKeyPart(value) {
+        return stripParens(
+          String(value || "")
+            .replace(/\u00A0/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+        ).toUpperCase();
+      }
+
+      function dedupeTransfers(rows) {
+        const seen = new Set();
+
+        return rows.filter((row) => {
+          const key = [
+            String(row.playerID || row.Player || "").trim().toUpperCase(),
+            String(row.Date || "").trim(),
+            normalizeTransferKeyPart(row.From),
+            normalizeTransferKeyPart(row.To)
+          ].join("||");
+
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+
       function playerImageCandidates(playerName) {
         const clean = normalizeFileBase(playerName);
         const noDiacritics = normalizeFileBase(removeDiacritics(clean));
@@ -1183,9 +1209,11 @@
           const parsed = extractJsonResultObject(rawData);
           const allTransfers = Array.isArray(parsed.overgangar) ? parsed.overgangar : [];
 
-          const swedishRows = allTransfers
-            .filter(isSwedish)
-            .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
+          const swedishRows = dedupeTransfers(
+            allTransfers
+              .filter(isSwedish)
+              .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0))
+          );
 
           renderCards(swedishRows);
 
