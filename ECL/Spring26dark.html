@@ -715,19 +715,23 @@
       getCanonicalTeamName(teamName) { const info = Rename.getRenameInfo(teamName); return info ? info.newName : String(teamName || ''); },
       getSeedRenameNote(teamName) { const info = Rename.getRenameInfo(teamName); return info ? `Old name ${info.oldName}` : ''; },
       applyToValue(value) { const info = Rename.getRenameInfo(value); return info ? info.newName : String(value || ''); },
+
+      /* VIKTIGT:
+         Vi byter INTE namn på history1Team/history2Team/history3Team
+         och vi rör INTE nested players[] här.
+         Då visas original-lagnamnen i Check Team History. */
       applyToRow(row) {
         if (!row || typeof row !== 'object') return row;
         const cloned = { ...row };
-        TEAM_NAME_KEYS.forEach(key => { if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]); });
-        ['history1Team','history2Team','history3Team','From','To'].forEach(key => { if (cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]); });
-        if (Array.isArray(cloned.players)) {
-          cloned.players = cloned.players.map(player => {
-            if (!player || typeof player !== 'object') return player;
-            const p = { ...player };
-            ['history1Team','history2Team','history3Team'].forEach(key => { if (p[key]) p[key] = Rename.applyToValue(p[key]); });
-            return p;
-          });
-        }
+
+        TEAM_NAME_KEYS.forEach(key => {
+          if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
+        });
+
+        ['From', 'To'].forEach(key => {
+          if (cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
+        });
+
         return cloned;
       }
     };
@@ -867,7 +871,8 @@
         return ['not-ok','backup-warning','backup-danger','transfer-danger','signup-rule-error'].includes(this.getRowClass(row));
       }
     };
-        const TeamLinks = {
+
+    const TeamLinks = {
       getLeagueId(row, column = null) {
         if (!row || typeof row !== 'object') return '';
         if (column === 'From') return String(row.FromLeagueID ?? row.fromLeagueID ?? row.fromLeagueId ?? '').trim();
@@ -1533,7 +1538,8 @@ Best regards,`;
       const tableWrap = document.createElement('div');
       tableWrap.className = 'team-player-table-wrap';
 
-      const rawPlayers = Array.isArray(row?.players) ? row.players.map(p => Rename.applyToRow(p)) : [];
+      /* Här använder vi ORIGINAL players-data utan rename på historyTeam-fälten */
+      const rawPlayers = Array.isArray(row?.players) ? row.players.map(p => ({ ...p })) : [];
       const players = rawPlayers
         .map(player => ({
           ...player,
