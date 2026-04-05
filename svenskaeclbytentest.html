@@ -1019,6 +1019,75 @@
         });
       }
 
+      function normalizeDivisionLabel(value) {
+        const raw = String(value || "").trim();
+        const upper = raw.toUpperCase();
+
+        if (!upper) return "";
+        if (upper.includes("ELITE")) return "Elite";
+        if (upper.includes("PRO")) return "Pro";
+        if (upper.includes("LITE")) return "Lite";
+        if (upper.includes("CORE")) return "Core";
+        if (upper.includes("NEO")) return "Neo";
+
+        return raw;
+      }
+
+      function buildPlayerTeamKey(playerName, playerId, teamName, teamId) {
+        const p = String(playerId || playerName || "").trim().toUpperCase();
+        const t = String(teamId || normalizeTeamKey(teamName) || "").trim().toUpperCase();
+        return `${p}||${t}`;
+      }
+
+      function normalizeRelegationDivisions(rows) {
+        const divisionMap = new Map();
+
+        rows.forEach((row) => {
+          const playerName = row.Player || "";
+          const playerId = row.playerID || "";
+
+          const fromKey = buildPlayerTeamKey(playerName, playerId, row.From, row.FromTeamID);
+          const toKey = buildPlayerTeamKey(playerName, playerId, row.To, row.ToTeamID);
+
+          const fromDiv = normalizeDivisionLabel(row.FromDiv);
+          const toDiv = normalizeDivisionLabel(row.ToDiv);
+
+          if (fromKey) {
+            if (!divisionMap.has(fromKey)) divisionMap.set(fromKey, new Set());
+            if (fromDiv) divisionMap.get(fromKey).add(fromDiv.toUpperCase());
+          }
+
+          if (toKey) {
+            if (!divisionMap.has(toKey)) divisionMap.set(toKey, new Set());
+            if (toDiv) divisionMap.get(toKey).add(toDiv.toUpperCase());
+          }
+        });
+
+        return rows.map((row) => {
+          const cloned = { ...row };
+
+          const fromKey = buildPlayerTeamKey(cloned.Player, cloned.playerID, cloned.From, cloned.FromTeamID);
+          const toKey = buildPlayerTeamKey(cloned.Player, cloned.playerID, cloned.To, cloned.ToTeamID);
+
+          const fromDivisions = divisionMap.get(fromKey) || new Set();
+          const toDivisions = divisionMap.get(toKey) || new Set();
+
+          if (fromDivisions.has("PRO") && fromDivisions.has("ELITE")) {
+            cloned.FromDiv = "Pro";
+          } else {
+            cloned.FromDiv = normalizeDivisionLabel(cloned.FromDiv);
+          }
+
+          if (toDivisions.has("PRO") && toDivisions.has("ELITE")) {
+            cloned.ToDiv = "Pro";
+          } else {
+            cloned.ToDiv = normalizeDivisionLabel(cloned.ToDiv);
+          }
+
+          return cloned;
+        });
+      }
+
       function playerImageCandidates(playerName) {
         const clean = normalizeFileBase(playerName);
         const noDiacritics = normalizeFileBase(removeDiacritics(clean));
@@ -1036,7 +1105,8 @@
 
         return buildPaths("players", names, ["jpg", "jpeg", "png", "webp", "JPG", "JPEG", "PNG", "WEBP"]);
       }
-            function teamNameCandidates(teamName) {
+
+      function teamNameCandidates(teamName) {
         const displayName = cleanDisplayTeamName(teamName);
         const raw = normalizeFileBase(displayName);
         const noParens = stripParens(raw);
@@ -1285,9 +1355,11 @@
           const parsed = extractJsonResultObject(rawData);
           const allTransfers = Array.isArray(parsed.overgangar) ? parsed.overgangar : [];
 
+          const swedishRowsRaw = allTransfers.filter(isSwedish);
+          const swedishRowsNormalized = normalizeRelegationDivisions(swedishRowsRaw);
+
           const swedishRows = dedupeTransfers(
-            allTransfers
-              .filter(isSwedish)
+            swedishRowsNormalized
               .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0))
           );
 
