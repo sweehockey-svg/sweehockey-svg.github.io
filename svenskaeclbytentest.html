@@ -1044,21 +1044,24 @@
         return raw;
       }
 
-      function defaultSeasonFromJsonUrl(url) {
-        const lower = String(url || "").toLowerCase();
-        if (lower.includes("spring26")) return "Spring 26";
-        if (lower.includes("winter26")) return "Winter 26";
-        if (lower.includes("spring25")) return "Spring 25";
-        if (lower.includes("winter25")) return "Winter 25";
-        return "";
-      }
-
       function extractSeasonValue(value) {
         const raw = String(value || "").trim();
         if (!raw) return "";
 
+        const match = raw.match(/(?:'?\d{2}|\d{2}|\d{4})\s*[:\-]?\s*(Spring|Winter)/i);
+        if (match) {
+          const yearRaw = String(match[0]).match(/'?\d{2}|\d{4}/)?.[0] || "";
+          const seasonRaw = match[1] || "";
+
+          let yearShort = yearRaw.replace("'", "");
+          if (yearShort.length === 4) yearShort = yearShort.slice(-2);
+
+          const seasonCap = seasonRaw.charAt(0).toUpperCase() + seasonRaw.slice(1).toLowerCase();
+          return `${seasonCap} ${yearShort}`;
+        }
+
         const clean = raw
-          .replace(/^ECL\s*\d*[:\-]?\s*/i, "")
+          .replace(/^ECL\s*/i, "")
           .replace(/\s+EU$/i, "")
           .replace(/\s+NA$/i, "")
           .replace(/\s+Old[- ]Gen$/i, "")
@@ -1066,7 +1069,13 @@
           .replace(/\s+/g, " ")
           .trim();
 
-        return clean;
+        const looseMatch = clean.match(/(Spring|Winter)\s+(\d{2})/i);
+        if (looseMatch) {
+          const seasonCap = looseMatch[1].charAt(0).toUpperCase() + looseMatch[1].slice(1).toLowerCase();
+          return `${seasonCap} ${looseMatch[2]}`;
+        }
+
+        return "";
       }
 
       function getSideSeason(row, side) {
@@ -1101,7 +1110,7 @@
           if (season) return season;
         }
 
-        return defaultSeasonFromJsonUrl(JSON_URL);
+        return "";
       }
 
       function buildDivisionWithSeason(division, season) {
