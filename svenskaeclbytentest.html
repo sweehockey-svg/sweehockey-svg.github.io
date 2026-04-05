@@ -960,6 +960,17 @@
         ).toUpperCase();
       }
 
+      function normalizePlayerKey(value) {
+        return stripParens(
+          removeDiacritics(
+            String(value || "")
+              .replace(/\u00A0/g, " ")
+              .replace(/\s+/g, " ")
+              .trim()
+          )
+        ).toUpperCase();
+      }
+
       function unique(values) {
         return [...new Set(values.map(v => String(v || "").trim()).filter(Boolean))];
       }
@@ -1007,7 +1018,7 @@
 
         return rows.filter((row) => {
           const key = [
-            String(row.playerID || row.Player || "").trim().toUpperCase(),
+            normalizePlayerKey(row.Player || row.playerID || ""),
             String(row.Date || "").trim(),
             normalizeTransferKeyPart(row.From),
             normalizeTransferKeyPart(row.To)
@@ -1033,31 +1044,29 @@
         return raw;
       }
 
-      function buildPlayerTeamKey(playerName, playerId, teamName, teamId) {
-        const p = String(playerId || playerName || "").trim().toUpperCase();
-        const t = String(teamId || normalizeTeamKey(teamName) || "").trim().toUpperCase();
-        return `${p}||${t}`;
+      function buildPlayerTeamKey(playerName, teamName) {
+        return [
+          normalizePlayerKey(playerName),
+          normalizeTeamKey(teamName)
+        ].join("||");
       }
 
       function normalizeRelegationDivisions(rows) {
         const divisionMap = new Map();
 
         rows.forEach((row) => {
-          const playerName = row.Player || "";
-          const playerId = row.playerID || "";
-
-          const fromKey = buildPlayerTeamKey(playerName, playerId, row.From, row.FromTeamID);
-          const toKey = buildPlayerTeamKey(playerName, playerId, row.To, row.ToTeamID);
+          const fromKey = buildPlayerTeamKey(row.Player, row.From);
+          const toKey = buildPlayerTeamKey(row.Player, row.To);
 
           const fromDiv = normalizeDivisionLabel(row.FromDiv);
           const toDiv = normalizeDivisionLabel(row.ToDiv);
 
-          if (fromKey) {
+          if (fromKey && fromKey !== "||") {
             if (!divisionMap.has(fromKey)) divisionMap.set(fromKey, new Set());
             if (fromDiv) divisionMap.get(fromKey).add(fromDiv.toUpperCase());
           }
 
-          if (toKey) {
+          if (toKey && toKey !== "||") {
             if (!divisionMap.has(toKey)) divisionMap.set(toKey, new Set());
             if (toDiv) divisionMap.get(toKey).add(toDiv.toUpperCase());
           }
@@ -1066,8 +1075,8 @@
         return rows.map((row) => {
           const cloned = { ...row };
 
-          const fromKey = buildPlayerTeamKey(cloned.Player, cloned.playerID, cloned.From, cloned.FromTeamID);
-          const toKey = buildPlayerTeamKey(cloned.Player, cloned.playerID, cloned.To, cloned.ToTeamID);
+          const fromKey = buildPlayerTeamKey(cloned.Player, cloned.From);
+          const toKey = buildPlayerTeamKey(cloned.Player, cloned.To);
 
           const fromDivisions = divisionMap.get(fromKey) || new Set();
           const toDivisions = divisionMap.get(toKey) || new Set();
