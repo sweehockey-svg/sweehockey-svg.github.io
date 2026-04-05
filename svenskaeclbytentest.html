@@ -1048,10 +1048,24 @@
         const raw = String(value || "").trim();
         if (!raw) return "";
 
-        const match = raw.match(/(?:'?\d{2}|\d{2}|\d{4})\s*[:\-]?\s*(Spring|Winter)/i);
-        if (match) {
-          const yearRaw = String(match[0]).match(/'?\d{2}|\d{4}/)?.[0] || "";
-          const seasonRaw = match[1] || "";
+        const compactMatch = raw.match(/\b(\d{2})\s*([sw])\b/i);
+        if (compactMatch) {
+          const year = compactMatch[1];
+          const seasonCode = compactMatch[2].toLowerCase();
+          return seasonCode === "s" ? `Spring ${year}` : `Winter ${year}`;
+        }
+
+        const compactReverseMatch = raw.match(/\b([sw])\s*(\d{2})\b/i);
+        if (compactReverseMatch) {
+          const seasonCode = compactReverseMatch[1].toLowerCase();
+          const year = compactReverseMatch[2];
+          return seasonCode === "s" ? `Spring ${year}` : `Winter ${year}`;
+        }
+
+        const longMatch = raw.match(/(?:'?\d{2}|\d{4})\s*[:\-]?\s*(Spring|Winter)/i);
+        if (longMatch) {
+          const yearRaw = String(longMatch[0]).match(/'?\d{2}|\d{4}/)?.[0] || "";
+          const seasonRaw = longMatch[1] || "";
 
           let yearShort = yearRaw.replace("'", "");
           if (yearShort.length === 4) yearShort = yearShort.slice(-2);
@@ -1060,16 +1074,7 @@
           return `${seasonCap} ${yearShort}`;
         }
 
-        const clean = raw
-          .replace(/^ECL\s*/i, "")
-          .replace(/\s+EU$/i, "")
-          .replace(/\s+NA$/i, "")
-          .replace(/\s+Old[- ]Gen$/i, "")
-          .replace(/\s+Next[- ]Gen$/i, "")
-          .replace(/\s+/g, " ")
-          .trim();
-
-        const looseMatch = clean.match(/(Spring|Winter)\s+(\d{2})/i);
+        const looseMatch = raw.match(/(Spring|Winter)\s+(\d{2})/i);
         if (looseMatch) {
           const seasonCap = looseMatch[1].charAt(0).toUpperCase() + looseMatch[1].slice(1).toLowerCase();
           return `${seasonCap} ${looseMatch[2]}`;
