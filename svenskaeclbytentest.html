@@ -1062,53 +1062,100 @@
           return seasonCode === "s" ? `Spring ${year}` : `Winter ${year}`;
         }
 
-        const longMatch = raw.match(/(?:'?\d{2}|\d{4})\s*[:\-]?\s*(Spring|Winter)/i);
-        if (longMatch) {
-          const yearRaw = String(longMatch[0]).match(/'?\d{2}|\d{4}/)?.[0] || "";
-          const seasonRaw = longMatch[1] || "";
-
-          let yearShort = yearRaw.replace("'", "");
-          if (yearShort.length === 4) yearShort = yearShort.slice(-2);
-
-          const seasonCap = seasonRaw.charAt(0).toUpperCase() + seasonRaw.slice(1).toLowerCase();
-          return `${seasonCap} ${yearShort}`;
+        const spring25Match = raw.match(/\b(spring|winter)\s*'?(\d{2}|\d{4})\b/i);
+        if (spring25Match) {
+          const seasonCap = spring25Match[1].charAt(0).toUpperCase() + spring25Match[1].slice(1).toLowerCase();
+          let year = spring25Match[2];
+          if (year.length === 4) year = year.slice(-2);
+          return `${seasonCap} ${year}`;
         }
 
-        const looseMatch = raw.match(/(Spring|Winter)\s+(\d{2})/i);
-        if (looseMatch) {
-          const seasonCap = looseMatch[1].charAt(0).toUpperCase() + looseMatch[1].slice(1).toLowerCase();
-          return `${seasonCap} ${looseMatch[2]}`;
+        const yearSeasonMatch = raw.match(/\b'?(\d{2}|\d{4})\s*[:\-]?\s*(spring|winter)\b/i);
+        if (yearSeasonMatch) {
+          let year = yearSeasonMatch[1];
+          if (year.length === 4) year = year.slice(-2);
+          const seasonCap = yearSeasonMatch[2].charAt(0).toUpperCase() + yearSeasonMatch[2].slice(1).toLowerCase();
+          return `${seasonCap} ${year}`;
         }
 
         return "";
       }
 
+      function parseDivisionFromText(value) {
+        const raw = String(value || "").trim();
+        if (!raw) return "";
+        const upper = raw.toUpperCase();
+
+        if (upper.includes("ELITE")) return "Elite";
+        if (upper.includes("PRO")) return "Pro";
+        if (upper.includes("LITE")) return "Lite";
+        if (upper.includes("CORE")) return "Core";
+        if (upper.includes("NEO")) return "Neo";
+
+        return "";
+      }
+
+      function getRowValue(row, key) {
+        return row && Object.prototype.hasOwnProperty.call(row, key) ? row[key] : undefined;
+      }
+
+      function getSideCandidates(row, side) {
+        const prefixes = side === "from"
+          ? ["From", "from", "FROM"]
+          : ["To", "to", "TO"];
+
+        const exactKeys = [];
+
+        prefixes.forEach((prefix) => {
+          exactKeys.push(
+            `${prefix}Season`,
+            `${prefix}LeagueSeason`,
+            `${prefix}League`,
+            `${prefix}LeagueName`,
+            `${prefix}Competition`,
+            `${prefix}LeagueID`,
+            `${prefix}Div`,
+            `${prefix}Division`,
+            `${prefix}LeagueDivision`,
+            `${prefix}LeagueShort`,
+            `${prefix}LeagueSlug`,
+            `${prefix}LeagueCode`
+          );
+        });
+
+        const values = [];
+
+        exactKeys.forEach((key) => {
+          const value = getRowValue(row, key);
+          if (value != null && value !== "") values.push(value);
+        });
+
+        Object.keys(row || {}).forEach((key) => {
+          const lower = key.toLowerCase();
+          if (!lower.includes(side)) return;
+
+          const value = row[key];
+          if (value == null || value === "") return;
+
+          if (
+            lower.includes("season") ||
+            lower.includes("league") ||
+            lower.includes("competition") ||
+            lower.includes("div") ||
+            lower.includes("division") ||
+            lower.includes("slug") ||
+            lower.includes("code") ||
+            lower.includes("id")
+          ) {
+            values.push(value);
+          }
+        });
+
+        return unique(values);
+      }
+
       function getSideSeason(row, side) {
-        const candidates = side === "from"
-          ? [
-              row.FromSeason,
-              row.fromSeason,
-              row.FromLeagueSeason,
-              row.fromLeagueSeason,
-              row.FromLeagueName,
-              row.fromLeagueName,
-              row.FromCompetition,
-              row.fromCompetition,
-              row.FromLeague,
-              row.fromLeague
-            ]
-          : [
-              row.ToSeason,
-              row.toSeason,
-              row.ToLeagueSeason,
-              row.toLeagueSeason,
-              row.ToLeagueName,
-              row.toLeagueName,
-              row.ToCompetition,
-              row.toCompetition,
-              row.ToLeague,
-              row.toLeague
-            ];
+        const candidates = getSideCandidates(row, side);
 
         for (const candidate of candidates) {
           const season = extractSeasonValue(candidate);
@@ -1116,6 +1163,18 @@
         }
 
         return "";
+      }
+
+      function getSideDivisionRaw(row, side) {
+        const candidates = getSideCandidates(row, side);
+
+        for (const candidate of candidates) {
+          const division = parseDivisionFromText(candidate);
+          if (division) return division;
+        }
+
+        const fallback = side === "from" ? row.FromDiv || row.fromDiv : row.ToDiv || row.toDiv;
+        return normalizeDivisionLabel(fallback);
       }
 
       function buildDivisionWithSeason(division, season) {
@@ -1141,8 +1200,8 @@
           const fromKey = buildPlayerTeamKey(row.Player, row.From);
           const toKey = buildPlayerTeamKey(row.Player, row.To);
 
-          const fromDiv = normalizeDivisionLabel(row.FromDiv);
-          const toDiv = normalizeDivisionLabel(row.ToDiv);
+          const fromDiv = getSideDivisionRaw(row, "from");
+          const toDiv = getSideDivisionRaw(row, "to");
 
           if (fromKey && fromKey !== "||") {
             if (!divisionMap.has(fromKey)) divisionMap.set(fromKey, new Set());
@@ -1169,11 +1228,11 @@
 
           const fromDivisionBase = fromDivisions.has("PRO") && fromDivisions.has("ELITE")
             ? "Pro"
-            : normalizeDivisionLabel(cloned.FromDiv);
+            : getSideDivisionRaw(cloned, "from");
 
           const toDivisionBase = toDivisions.has("PRO") && toDivisions.has("ELITE")
             ? "Pro"
-            : normalizeDivisionLabel(cloned.ToDiv);
+            : getSideDivisionRaw(cloned, "to");
 
           cloned.FromDiv = buildDivisionWithSeason(fromDivisionBase, fromSeason);
           cloned.ToDiv = buildDivisionWithSeason(toDivisionBase, toSeason);
