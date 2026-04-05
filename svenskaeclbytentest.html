@@ -1044,6 +1044,75 @@
         return raw;
       }
 
+      function defaultSeasonFromJsonUrl(url) {
+        const lower = String(url || "").toLowerCase();
+        if (lower.includes("spring26")) return "Spring 26";
+        if (lower.includes("winter26")) return "Winter 26";
+        if (lower.includes("spring25")) return "Spring 25";
+        if (lower.includes("winter25")) return "Winter 25";
+        return "";
+      }
+
+      function extractSeasonValue(value) {
+        const raw = String(value || "").trim();
+        if (!raw) return "";
+
+        const clean = raw
+          .replace(/^ECL\s*\d*[:\-]?\s*/i, "")
+          .replace(/\s+EU$/i, "")
+          .replace(/\s+NA$/i, "")
+          .replace(/\s+Old[- ]Gen$/i, "")
+          .replace(/\s+Next[- ]Gen$/i, "")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        return clean;
+      }
+
+      function getSideSeason(row, side) {
+        const candidates = side === "from"
+          ? [
+              row.FromSeason,
+              row.fromSeason,
+              row.FromLeagueSeason,
+              row.fromLeagueSeason,
+              row.FromLeagueName,
+              row.fromLeagueName,
+              row.FromCompetition,
+              row.fromCompetition,
+              row.FromLeague,
+              row.fromLeague
+            ]
+          : [
+              row.ToSeason,
+              row.toSeason,
+              row.ToLeagueSeason,
+              row.toLeagueSeason,
+              row.ToLeagueName,
+              row.toLeagueName,
+              row.ToCompetition,
+              row.toCompetition,
+              row.ToLeague,
+              row.toLeague
+            ];
+
+        for (const candidate of candidates) {
+          const season = extractSeasonValue(candidate);
+          if (season) return season;
+        }
+
+        return defaultSeasonFromJsonUrl(JSON_URL);
+      }
+
+      function buildDivisionWithSeason(division, season) {
+        const div = String(division || "").trim();
+        const sea = String(season || "").trim();
+
+        if (!div) return "";
+        if (!sea) return div;
+        return `${div} (${sea})`;
+      }
+
       function buildPlayerTeamKey(playerName, teamName) {
         return [
           normalizePlayerKey(playerName),
@@ -1081,17 +1150,19 @@
           const fromDivisions = divisionMap.get(fromKey) || new Set();
           const toDivisions = divisionMap.get(toKey) || new Set();
 
-          if (fromDivisions.has("PRO") && fromDivisions.has("ELITE")) {
-            cloned.FromDiv = "Pro";
-          } else {
-            cloned.FromDiv = normalizeDivisionLabel(cloned.FromDiv);
-          }
+          const fromSeason = getSideSeason(cloned, "from");
+          const toSeason = getSideSeason(cloned, "to");
 
-          if (toDivisions.has("PRO") && toDivisions.has("ELITE")) {
-            cloned.ToDiv = "Pro";
-          } else {
-            cloned.ToDiv = normalizeDivisionLabel(cloned.ToDiv);
-          }
+          const fromDivisionBase = fromDivisions.has("PRO") && fromDivisions.has("ELITE")
+            ? "Pro"
+            : normalizeDivisionLabel(cloned.FromDiv);
+
+          const toDivisionBase = toDivisions.has("PRO") && toDivisions.has("ELITE")
+            ? "Pro"
+            : normalizeDivisionLabel(cloned.ToDiv);
+
+          cloned.FromDiv = buildDivisionWithSeason(fromDivisionBase, fromSeason);
+          cloned.ToDiv = buildDivisionWithSeason(toDivisionBase, toSeason);
 
           return cloned;
         });
