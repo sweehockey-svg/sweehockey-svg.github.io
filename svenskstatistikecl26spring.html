@@ -693,15 +693,10 @@
       return n;
     }
 
-    function formatSVP(raw){
-      const n = parseSVP(raw) * 100;
-      return n.toFixed(1) + "%";
-    }
-
-    function formatGAA(raw){
-      const n = toNum(raw);
-      if(String(raw || "").trim() === "") return "-";
-      return n.toFixed(2);
+    function rawText(value, fallback = "-"){
+      if(value === undefined || value === null) return fallback;
+      const s = String(value).trim();
+      return s === "" ? fallback : s;
     }
 
     function resolveSortKey(colName){
@@ -873,52 +868,52 @@
       if(!key){
         if(activeLeague === "goalies"){
           return {
-            main: `${formatSVP(p.svp)} räddningsprocent`,
-            sub:  `M ${p.games} · GAA ${formatGAA(p.gaa)} · Nollor ${p.shutouts}`
+            main: `${rawText(p.svpRaw)} räddningsprocent`,
+            sub:  `M ${rawText(p.gamesRaw)} · GAA ${rawText(p.gaaRaw)} · Nollor ${rawText(p.shutoutsRaw)}`
           };
         }
         return {
-          main: `${p.points} poäng`,
-          sub:  `GP ${p.games} · G ${p.goals} · A ${p.assists}`
+          main: `${rawText(p.pointsRaw)} poäng`,
+          sub:  `GP ${rawText(p.gamesRaw)} · G ${rawText(p.goalsRaw)} · A ${rawText(p.assistsRaw)}`
         };
       }
 
-      const raw = p.__sortRaw ?? "";
+      const raw = rawText(p.__sortRaw, "0");
       const num = p.__sortNum ?? 0;
 
       if(activeLeague === "goalies"){
         if(key === "svp" || key === "sv%"){
           return {
-            main: `${formatSVP(raw)} räddningsprocent`,
-            sub:  `M ${p.games} · GAA ${formatGAA(p.gaa)} · Nollor ${p.shutouts}`
+            main: `${raw} räddningsprocent`,
+            sub:  `M ${rawText(p.gamesRaw)} · GAA ${rawText(p.gaaRaw)} · Nollor ${rawText(p.shutoutsRaw)}`
           };
         }
         if(key === "gaa"){
           return {
-            main: `GAA ${formatGAA(raw)}`,
-            sub:  `M ${p.games} · SV% ${formatSVP(p.svp)} · Nollor ${p.shutouts}`
+            main: `GAA ${raw}`,
+            sub:  `M ${rawText(p.gamesRaw)} · SV% ${rawText(p.svpRaw)} · Nollor ${rawText(p.shutoutsRaw)}`
           };
         }
         if(key === "so" || key === "nollor"){
           return {
-            main: `Nollor ${toNum(raw)}`,
-            sub:  `M ${p.games} · SV% ${formatSVP(p.svp)} · GAA ${formatGAA(p.gaa)}`
+            main: `Nollor ${raw}`,
+            sub:  `M ${rawText(p.gamesRaw)} · SV% ${rawText(p.svpRaw)} · GAA ${rawText(p.gaaRaw)}`
           };
         }
         return {
-          main: `${num}`,
-          sub:  `M ${p.games} · SV% ${formatSVP(p.svp)} · GAA ${formatGAA(p.gaa)}`
+          main: `${raw || num}`,
+          sub:  `M ${rawText(p.gamesRaw)} · SV% ${rawText(p.svpRaw)} · GAA ${rawText(p.gaaRaw)}`
         };
       }
 
-      if(key === "p") return { main: `${p.points} poäng`, sub: `GP ${p.games} · G ${p.goals} · A ${p.assists}` };
-      if(key === "m") return { main: `${p.goals} mål`, sub: `GP ${p.games} · P ${p.points} · A ${p.assists}` };
-      if(key === "a") return { main: `${p.assists} assists`, sub: `GP ${p.games} · P ${p.points} · G ${p.goals}` };
-      if(key === "u") return { main: `${toNum(raw)} utv`, sub: `GP ${p.games} · P ${p.points} · G ${p.goals} · A ${p.assists}` };
-      if(key === "ma") return { main: `${toNum(raw)} matcher`, sub: `P ${p.points} · G ${p.goals} · A ${p.assists}` };
-      if(key === "dim") return { main: `DIM ${raw}`, sub: `GP ${p.games} · P ${p.points} · G ${p.goals} · A ${p.assists}` };
+      if(key === "p") return { main: `${rawText(p.pointsRaw)} poäng`, sub: `GP ${rawText(p.gamesRaw)} · G ${rawText(p.goalsRaw)} · A ${rawText(p.assistsRaw)}` };
+      if(key === "m") return { main: `${rawText(p.goalsRaw)} mål`, sub: `GP ${rawText(p.gamesRaw)} · P ${rawText(p.pointsRaw)} · A ${rawText(p.assistsRaw)}` };
+      if(key === "a") return { main: `${rawText(p.assistsRaw)} assists`, sub: `GP ${rawText(p.gamesRaw)} · P ${rawText(p.pointsRaw)} · G ${rawText(p.goalsRaw)}` };
+      if(key === "u") return { main: `${raw} utv`, sub: `GP ${rawText(p.gamesRaw)} · P ${rawText(p.pointsRaw)} · G ${rawText(p.goalsRaw)} · A ${rawText(p.assistsRaw)}` };
+      if(key === "ma") return { main: `${raw} matcher`, sub: `P ${rawText(p.pointsRaw)} · G ${rawText(p.goalsRaw)} · A ${rawText(p.assistsRaw)}` };
+      if(key === "dim") return { main: `DIM ${raw}`, sub: `GP ${rawText(p.gamesRaw)} · P ${rawText(p.pointsRaw)} · G ${rawText(p.goalsRaw)} · A ${rawText(p.assistsRaw)}` };
 
-      return { main: `${raw}`, sub: `GP ${p.games} · P ${p.points} · G ${p.goals} · A ${p.assists}` };
+      return { main: `${raw}`, sub: `GP ${rawText(p.gamesRaw)} · P ${rawText(p.pointsRaw)} · G ${rawText(p.goalsRaw)} · A ${rawText(p.assistsRaw)}` };
     }
 
     function medalForRank(i){
@@ -935,19 +930,19 @@
         const maxU = Math.max(...players.map(x => toNum(x.__sortRaw)), 1);
         const maxM = Math.max(...players.map(x => x.games), 1);
         return [
-          { label: "Utvisningsmin", value: toNum(p.__sortRaw), percent: (toNum(p.__sortRaw) / maxU) * 100 },
-          { label: "Matcher", value: p.games, percent: (p.games / maxM) * 100 }
+          { label: "Utvisningsmin", value: rawText(p.__sortRaw), percent: (toNum(p.__sortRaw) / maxU) * 100 },
+          { label: "Matcher", value: rawText(p.gamesRaw), percent: (p.games / maxM) * 100 }
         ];
       }
 
       if(key === "ma"){
         const maxM = Math.max(...players.map(x => x.games), 1);
-        return [{ label: "Matcher", value: p.games, percent: (p.games / maxM) * 100 }];
+        return [{ label: "Matcher", value: rawText(p.gamesRaw), percent: (p.games / maxM) * 100 }];
       }
 
       if(key === "dim"){
         const maxDIM = Math.max(...players.map(x => toNum(x.__sortRaw)), 1);
-        return [{ label: "DIM", value: p.__sortRaw, percent: (toNum(p.__sortRaw) / maxDIM) * 100 }];
+        return [{ label: "DIM", value: rawText(p.__sortRaw), percent: (toNum(p.__sortRaw) / maxDIM) * 100 }];
       }
 
       const maxG = Math.max(...players.map(x => x.goals), 1);
@@ -955,9 +950,9 @@
       const maxP = Math.max(...players.map(x => x.points), 1);
 
       return [
-        { label: "Mål", value: p.goals, percent: (p.goals / maxG) * 100 },
-        { label: "Assists", value: p.assists, percent: (p.assists / maxA) * 100 },
-        { label: "Poäng", value: p.points, percent: (p.points / maxP) * 100 }
+        { label: "Mål", value: rawText(p.goalsRaw), percent: (p.goals / maxG) * 100 },
+        { label: "Assists", value: rawText(p.assistsRaw), percent: (p.assists / maxA) * 100 },
+        { label: "Poäng", value: rawText(p.pointsRaw), percent: (p.points / maxP) * 100 }
       ];
     }
 
@@ -1055,21 +1050,21 @@
 
             <div class="stat-bars">
               <div class="bar-row">
-                <div class="bar-label"><span>Matcher</span><span>${p.games}</span></div>
+                <div class="bar-label"><span>Matcher</span><span>${rawText(p.gamesRaw)}</span></div>
                 <div class="bar-track">
                   <div class="bar-fill" style="width:${(p.games/maxM)*100}%"></div>
                 </div>
               </div>
 
               <div class="bar-row">
-                <div class="bar-label"><span>Räddnings%</span><span>${formatSVP(p.svp)}</span></div>
+                <div class="bar-label"><span>Räddnings%</span><span>${rawText(p.svpRaw)}</span></div>
                 <div class="bar-track">
                   <div class="bar-fill" style="width:${(p.svpVal/maxSV)*100}%"></div>
                 </div>
               </div>
 
               <div class="bar-row">
-                <div class="bar-label"><span>Nollor</span><span>${p.shutouts}</span></div>
+                <div class="bar-label"><span>Nollor</span><span>${rawText(p.shutoutsRaw)}</span></div>
                 <div class="bar-track">
                   <div class="bar-fill" style="width:${(p.shutouts/maxSO)*100}%"></div>
                 </div>
@@ -1376,15 +1371,31 @@
         const playerSlug = slugify(pick(item, ["playerSlug","slug","imageSlug"], name));
         const teamSlug = slugify(pick(item, ["teamSlug","logoSlug"], team));
 
+        const gamesRaw = pick(item, ["gp","games","matcher","ma"], "");
+        const goalsRaw = pick(item, ["g","goals","mål","mal","m"], "");
+        const assistsRaw = pick(item, ["a","assists","assist"], "");
+        const pointsRaw = pick(item, ["p","points","poäng","poang"], "");
+        const pimRaw = pick(item, ["u","utvisningsmin","utv","pim"], "");
+        const dimRaw = pick(item, ["dim"], "");
+
         return {
           name,
           team,
-          games: toNum(pick(item, ["gp","games","matcher","ma"])),
-          goals: toNum(pick(item, ["g","goals","mål","mal","m"])),
-          assists: toNum(pick(item, ["a","assists","assist"])),
-          points: toNum(pick(item, ["p","points","poäng","poang"])),
-          pim: toNum(pick(item, ["u","utvisningsmin","utv","pim"])),
-          dim: pick(item, ["dim"], ""),
+
+          gamesRaw,
+          goalsRaw,
+          assistsRaw,
+          pointsRaw,
+          pimRaw,
+          dimRaw,
+
+          games: toNum(gamesRaw),
+          goals: toNum(goalsRaw),
+          assists: toNum(assistsRaw),
+          points: toNum(pointsRaw),
+          pim: toNum(pimRaw),
+          dim: dimRaw,
+
           imgCandidates: fileCandidates("/players", playerImage, name, playerSlug),
           teamLogoCandidates: fileCandidates("/teamlogos", teamLogo, team, teamSlug)
         };
@@ -1399,16 +1410,27 @@
         const teamLogo = pick(item, ["teamLogo","logo","laglogo"]);
         const playerSlug = slugify(pick(item, ["playerSlug","slug","imageSlug"], name));
         const teamSlug = slugify(pick(item, ["teamSlug","logoSlug"], team));
-        const svpRaw = pick(item, ["svp","sv%","sv","save%","savePercentage","räddningsprocent","raddningsprocent"]);
+
+        const gamesRaw = pick(item, ["m","ma","matcher","games","gp"], "");
+        const gaaRaw = pick(item, ["gaa"], "");
+        const svpRaw = pick(item, ["svp","sv%","sv","save%","savePercentage","räddningsprocent","raddningsprocent"], "");
+        const shutoutsRaw = pick(item, ["so","nollor","shutouts"], "");
 
         return {
           name,
           team,
-          games: toNum(pick(item, ["m","ma","matcher","games","gp"])),
-          gaa: pick(item, ["gaa"], ""),
+
+          gamesRaw,
+          gaaRaw,
+          svpRaw,
+          shutoutsRaw,
+
+          games: toNum(gamesRaw),
+          gaa: gaaRaw,
           svp: svpRaw,
           svpVal: parseSVP(svpRaw),
-          shutouts: toNum(pick(item, ["so","nollor","shutouts"])),
+          shutouts: toNum(shutoutsRaw),
+
           imgCandidates: fileCandidates("/players", playerImage, name, playerSlug),
           teamLogoCandidates: fileCandidates("/teamlogos", teamLogo, team, teamSlug)
         };
@@ -1421,16 +1443,16 @@
         const rows = items.map(item => [
           item.name,
           item.team,
-          item.games,
-          formatGAA(item.gaa),
-          formatSVP(item.svp),
-          item.shutouts
+          rawText(item.gamesRaw),
+          rawText(item.gaaRaw),
+          rawText(item.svpRaw),
+          rawText(item.shutoutsRaw)
         ]);
         return { header, rows };
       }
 
-      const sampleHasDIM = items.some(item => String(item.dim || "").trim() !== "");
-      const sampleHasPIM = items.some(item => Number(item.pim || 0) > 0);
+      const sampleHasDIM = items.some(item => String(item.dimRaw || "").trim() !== "");
+      const sampleHasPIM = items.some(item => String(item.pimRaw || "").trim() !== "");
 
       const header = ["Namn", "Lag", "GP", "M", "A", "P"];
       if(sampleHasPIM) header.push("U");
@@ -1440,13 +1462,13 @@
         const row = [
           item.name,
           item.team,
-          item.games,
-          item.goals,
-          item.assists,
-          item.points
+          rawText(item.gamesRaw),
+          rawText(item.goalsRaw),
+          rawText(item.assistsRaw),
+          rawText(item.pointsRaw)
         ];
-        if(sampleHasPIM) row.push(item.pim);
-        if(activeLeague === "defenders" && sampleHasDIM) row.push(item.dim);
+        if(sampleHasPIM) row.push(rawText(item.pimRaw));
+        if(activeLeague === "defenders" && sampleHasDIM) row.push(rawText(item.dimRaw));
         return row;
       });
 
