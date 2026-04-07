@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Svensk statistik – ECL 26 Spring</title>
+  <title>22 Svensk statistik – ECL 26 Spring</title>
   <link rel="icon" type="image/png" href="favicon.png?v=1">
   <link rel="apple-touch-icon" href="favicon.png?v=1">
   <meta name="description" content="Svensk statistik för ECL 26 Spring – grundserie och slutspel. All statistik hämtas rått från JSON." />
@@ -683,10 +683,6 @@
       return Number.isNaN(n) ? null : n;
     }
 
-    function isNumericLike(v){
-      return toNum(v) !== null;
-    }
-
     function prettyLabel(key){
       const map = {
         regular: "Grundserie",
@@ -700,20 +696,19 @@
         core: "Core",
         neo: "Neo",
         gp: "GP",
-        g: "M",
+        g: "G",
         a: "A",
         p: "P",
-        u: "U",
-        m: "M",
-        so: "Nollor",
+        ppg: "PPG",
+        pen: "PEN",
+        dim: "DIM",
+        w: "W",
+        sv: "SV",
         gaa: "GAA",
         svp: "SV%",
-        ppg: "PPG",
-        dim: "DIM",
+        so: "SO",
         name: "Namn",
         team: "Lag",
-        userID: "UserID",
-        playerID: "PlayerID",
         teamLogo: "Laglogo",
         playerImage: "Spelarbild"
       };
@@ -842,26 +837,29 @@
       });
     }
 
-    function collectColumns(rows){
-      const hidden = new Set(["teamLogo", "playerImage"]);
-      const preferred = ["name", "team"];
+    function getOrderedColumns(rows, league){
+      const hidden = new Set(["teamLogo", "playerImage", "userID", "playerID"]);
+      const ordered = ["name", "team"];
 
-      const seen = new Set();
-      const ordered = [];
+      const statOrderByLeague = {
+        skaters:   ["gp", "g", "a", "p", "ppg", "pen", "dim"],
+        defenders: ["gp", "g", "a", "p", "ppg", "pen", "dim"],
+        goalies:   ["gp", "w", "sv", "gaa", "svp", "so"]
+      };
 
-      preferred.forEach(k => {
-        const hasKey = rows.some(row => Object.prototype.hasOwnProperty.call(row, k));
-        if(hasKey && !hidden.has(k)){
-          seen.add(k);
-          ordered.push(k);
+      const statOrder = statOrderByLeague[league] || [];
+
+      statOrder.forEach(key => {
+        const hasKey = rows.some(row => Object.prototype.hasOwnProperty.call(row, key));
+        if(hasKey && !ordered.includes(key) && !hidden.has(key)){
+          ordered.push(key);
         }
       });
 
       rows.forEach(row => {
         Object.keys(row).forEach(key => {
           if(hidden.has(key)) return;
-          if(seen.has(key)) return;
-          seen.add(key);
+          if(ordered.includes(key)) return;
           ordered.push(key);
         });
       });
@@ -869,11 +867,18 @@
       return ordered;
     }
 
-    function buildCardMetrics(row, columns){
-      const ignore = new Set(["name", "team", "userID", "playerID", "teamLogo", "playerImage"]);
-      const metrics = columns.filter(k => !ignore.has(k)).slice(0, 3);
+    function buildCardMetrics(row){
+      const metricOrderByLeague = {
+        skaters:   ["gp", "g", "a", "p", "ppg", "pen", "dim"],
+        defenders: ["gp", "g", "a", "p", "ppg", "pen", "dim"],
+        goalies:   ["gp", "w", "sv", "gaa", "svp", "so"]
+      };
 
-      return metrics.map(key => ({
+      const metricKeys = (metricOrderByLeague[activeLeague] || []).filter(key =>
+        Object.prototype.hasOwnProperty.call(row, key)
+      );
+
+      return metricKeys.slice(0, 3).map(key => ({
         key,
         label: prettyLabel(key),
         raw: safeText(row[key]),
@@ -890,7 +895,7 @@
       return Math.max(...values, 1);
     }
 
-    function renderTop3(rows, columns){
+    function renderTop3(rows){
       if(!rows.length){
         top3.innerHTML = "";
         return;
@@ -899,14 +904,9 @@
       const topRows = rows.slice(0, 3);
 
       top3.innerHTML = topRows.map((row, i) => {
-        const name = safeText(row.name || row.player || row.spelare || "Okänd");
-        const team = safeText(row.team || row.lag || "");
-        const playerImage = row.playerImage || row.image || row.img || row.photo || row.foto || row.portrait;
-        const teamLogo = row.teamLogo || row.logo || row.laglogo;
-        const playerSlug = slugify(name);
-        const teamSlug = slugify(team);
-
-        const metrics = buildCardMetrics(row, columns);
+        const name = safeText(row.name || "Okänd");
+        const team = safeText(row.team || "");
+        const metrics = buildCardMetrics(row);
 
         return `
           <div class="player-card">
@@ -959,8 +959,8 @@
         const card = top3.children[i];
         if(!card) return;
 
-        const name = safeText(row.name || row.player || row.spelare || "");
-        const team = safeText(row.team || row.lag || "");
+        const name = safeText(row.name || "");
+        const team = safeText(row.team || "");
         const playerImage = row.playerImage || row.image || row.img || row.photo || row.foto || row.portrait;
         const teamLogo = row.teamLogo || row.logo || row.laglogo;
         const playerSlug = slugify(name);
@@ -995,8 +995,16 @@
     }
 
     function getDefaultSortKey(columns){
-      const preferred = ["p", "svp", "gaa", "g", "a", "gp", "m", "so", "dim", "ppg"];
-      for(const key of preferred){
+      const preferredByLeague = {
+        skaters: "p",
+        defenders: "p",
+        goalies: "svp"
+      };
+      const preferredKey = preferredByLeague[activeLeague];
+      if(preferredKey && columns.includes(preferredKey)) return preferredKey;
+
+      const fallback = ["p", "svp", "gaa", "g", "a", "gp", "w", "sv", "so", "dim", "ppg"];
+      for(const key of fallback){
         if(columns.includes(key)) return key;
       }
       return columns.find(k => k !== "name" && k !== "team") || columns[0] || null;
@@ -1091,7 +1099,7 @@
       const filtered = filterRows(currentRows, searchBox.value);
       const sorted = sortRows(filtered, currentSort.key, currentSort.asc);
 
-      renderTop3(sorted, currentColumns);
+      renderTop3(sorted);
       renderTable(currentColumns, sorted);
 
       const upd = getUpdatedText(rawData);
@@ -1138,7 +1146,7 @@
       const rows = getRows(rawData, activeStage, activeLeague, activeDivision);
 
       currentRows = rows.slice();
-      currentColumns = collectColumns(currentRows);
+      currentColumns = getOrderedColumns(currentRows, activeLeague);
 
       const defaultSortKey = getDefaultSortKey(currentColumns);
       if(!currentSort.key || !currentColumns.includes(currentSort.key)){
