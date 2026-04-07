@@ -1193,12 +1193,11 @@
         return `License Status Reminder – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has now played 10 matches using a Backup Player License.\n\nBest regards,`;
       },
 
-      buildUnlicensedMessage(row) {
-        const teamName = RowAccess.getTeamName(row) || 'team';
-        const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
-        const games = Number(RowAccess.getBackupGames(row) || 0);
-        return `License Status Update – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has participated in ${games} games without a valid license.\n\nBest regards,`;
-      },
+buildUnlicensedMessage(row) {
+  const teamName = RowAccess.getTeamName(row) || 'team';
+  const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
+  return `License Status Update – Action Required for ${playerName}\n\nHi ${teamName},\n\nIt has come to our attention that ${playerName} has participated in matches without a valid license.\n\nTo comply with league regulations, ${playerName} must immediately purchase either a Full Player License or a Backup Player License. It is important that this is completed as soon as possible to ensure that the player is properly licensed for participation in ECL ’26.\n\nYou can purchase the required license here:\nhttps://sportsgamer.gg/community/store/\n\nImportant\nPlease note that playing without a valid license may result in consequences if reported by an opponent. Continued participation without the correct license may lead to further penalties.\n\nIf ${playerName} has already purchased a license, please send us a copy of the payment receipt so we can review the matter and check why the license is not showing correctly in our system.\n\nIf you have any questions or need assistance, feel free to contact us. We are happy to help.\n\nBest regards,`;
+}
 
       buildMultipleTeamsMessage(row) {
         const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
