@@ -29,6 +29,8 @@
 
       --menu-dark: #0a0f19;
       --menu-dark-2: #111826;
+      --menu-shell: rgba(8, 15, 28, 0.88);
+      --menu-shell-border: rgba(255,255,255,0.06);
       --menu-active-1: #f4aa44;
       --menu-active-2: #f2cf59;
     }
@@ -194,45 +196,71 @@
       padding: 0;
     }
 
-    .ecl-tabs-row-wrap{
+    .stats-menu-wrap{
       overflow-x: auto;
       overflow-y: hidden;
       -webkit-overflow-scrolling: touch;
-      margin: 8px 0 18px;
-      scrollbar-width: none;
+      margin: 8px 0 22px;
+      padding-bottom: 2px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,.18) transparent;
     }
-    .ecl-tabs-row-wrap::-webkit-scrollbar{
-      display:none;
+    .stats-menu-wrap::-webkit-scrollbar{
+      height: 8px;
+    }
+    .stats-menu-wrap::-webkit-scrollbar-thumb{
+      background: rgba(255,255,255,.14);
+      border-radius: 999px;
+    }
+    .stats-menu-wrap::-webkit-scrollbar-track{
+      background: transparent;
     }
 
-    .ecl-tabs-row{
+    .stats-menu{
       display:flex;
-      align-items:center;
-      flex-wrap:nowrap;
-      gap:14px;
+      align-items:flex-start;
+      gap:16px;
       min-width:max-content;
-      padding: 2px 0;
     }
 
-    .ecl-tabs-group{
+    .menu-group{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:max-content;
+    }
+
+    .menu-group__label{
+      padding-left: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      color: rgba(255,255,255,0.58);
+      white-space: nowrap;
+    }
+
+    .menu-group__tabs{
       display:flex;
       align-items:center;
       gap:10px;
-      flex-wrap:nowrap;
-    }
-
-    .ecl-tabs-sep{
-      width: 12px;
-      flex: 0 0 12px;
+      padding: 8px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(12,18,30,0.96), rgba(6,11,20,0.96));
+      border: 1px solid var(--menu-shell-border);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.03),
+        0 10px 28px rgba(0,0,0,0.30);
+      min-width:max-content;
     }
 
     .ecl-tab{
       border:none;
       padding: 8px 18px;
       border-radius: 999px;
-      min-height: 32px;
+      min-height: 34px;
       background: linear-gradient(180deg, var(--menu-dark-2), var(--menu-dark));
-      color: rgba(255,255,255,0.82);
+      color: rgba(255,255,255,0.84);
       font-size: 12px;
       font-weight: 900;
       text-transform: uppercase;
@@ -243,6 +271,7 @@
         inset 0 1px 0 rgba(255,255,255,0.04),
         0 6px 18px rgba(0,0,0,0.35);
       transition: transform .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease;
+      flex: 0 0 auto;
     }
     .ecl-tab:hover{
       transform: translateY(-1px);
@@ -514,15 +543,16 @@
       .team-logo-card{ width: 32px; height: 32px; }
       .header-box input{ width: 100%; min-width: 0; }
 
-      .ecl-tabs-row{
-        gap: 10px;
+      .stats-menu{
+        gap: 12px;
       }
-      .ecl-tabs-group{
+      .menu-group{
+        gap: 6px;
+      }
+      .menu-group__tabs{
         gap: 8px;
-      }
-      .ecl-tabs-sep{
-        width: 6px;
-        flex-basis: 6px;
+        padding: 7px;
+        border-radius: 16px;
       }
       .ecl-tab{
         padding: 8px 15px;
@@ -593,13 +623,22 @@
 
   <main class="container">
     <div class="stats-wrap">
-      <div class="ecl-tabs-row-wrap">
-        <div class="ecl-tabs-row" aria-label="Statistikmeny">
-          <div class="ecl-tabs-group" id="stageTabs" aria-label="Spelform"></div>
-          <div class="ecl-tabs-sep" aria-hidden="true"></div>
-          <div class="ecl-tabs-group" id="leagueTabs" aria-label="Roll"></div>
-          <div class="ecl-tabs-sep" aria-hidden="true"></div>
-          <div class="ecl-tabs-group" id="divisionTabs" aria-label="Division"></div>
+      <div class="stats-menu-wrap" aria-label="Statistikmeny">
+        <div class="stats-menu">
+          <div class="menu-group">
+            <div class="menu-group__label">Spelform</div>
+            <div class="menu-group__tabs" id="stageTabs" aria-label="Spelform"></div>
+          </div>
+
+          <div class="menu-group">
+            <div class="menu-group__label">Spelartyp</div>
+            <div class="menu-group__tabs" id="leagueTabs" aria-label="Spelartyp"></div>
+          </div>
+
+          <div class="menu-group">
+            <div class="menu-group__label">Division</div>
+            <div class="menu-group__tabs" id="divisionTabs" aria-label="Division"></div>
+          </div>
         </div>
       </div>
 
