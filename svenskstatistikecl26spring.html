@@ -189,34 +189,54 @@
       padding: 0;
     }
 
-    .ecl-tabs{
-      display: inline-flex;
-      gap: 8px;
-      margin: 8px 0 14px;
-      padding: 6px 8px;
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.35);
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+    .ecl-menu{
+      display: flex;
+      align-items: center;
       flex-wrap: wrap;
+      gap: 10px 16px;
+      margin: 8px 0 18px;
+      padding: 0;
     }
+
+    .ecl-tab-group{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(4,10,22,0.96), rgba(2,7,24,0.96));
+      box-shadow:
+        0 12px 30px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
     .ecl-tab{
       border: none;
-      padding: 7px 16px;
+      padding: 8px 16px;
       border-radius: 999px;
       font-size: 13px;
       cursor: pointer;
-      background: rgba(255, 255, 255, 0.06);
-      color: rgba(255,255,255,0.70);
-      font-weight: 700;
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.78);
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: .08em;
-      transition: 0.18s;
+      transition: background .18s, color .18s, transform .18s, box-shadow .18s;
       white-space: nowrap;
+      min-height: 34px;
+      line-height: 1;
+    }
+    .ecl-tab:hover{
+      background: rgba(255,255,255,0.08);
+      color: #fff;
     }
     .ecl-tab.active{
       background: linear-gradient(135deg, var(--accent-orange), var(--accent-yellow));
       color: #141320;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 10px 26px rgba(0,0,0,0.55);
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.45),
+        0 8px 22px rgba(0,0,0,0.45);
       transform: translateY(-1px);
     }
 
@@ -476,6 +496,16 @@
       #sectionDesc{ font-size: 10px; line-height: 1.4; }
       .team-logo-card{ width: 32px; height: 32px; }
       .header-box input{ width: 100%; min-width: 0; }
+
+      .ecl-menu{
+        gap: 10px;
+      }
+      .ecl-tab-group{
+        width: 100%;
+        justify-content: flex-start;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
     }
   </style>
 </head>
@@ -540,9 +570,11 @@
 
   <main class="container">
     <div class="stats-wrap">
-      <div class="ecl-tabs" id="stageTabs" aria-label="Spelform"></div>
-      <div class="ecl-tabs" id="leagueTabs" aria-label="Roll"></div>
-      <div class="ecl-tabs" id="divisionTabs" aria-label="Division"></div>
+      <div class="ecl-menu" aria-label="Statistikmeny">
+        <div class="ecl-tab-group" id="stageTabs" aria-label="Spelform"></div>
+        <div class="ecl-tab-group" id="leagueTabs" aria-label="Roll"></div>
+        <div class="ecl-tab-group" id="divisionTabs" aria-label="Division"></div>
+      </div>
 
       <div class="page-title">
         <div class="page-title-icon" id="titleIcon">🏆</div>
