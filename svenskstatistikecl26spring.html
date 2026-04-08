@@ -26,6 +26,11 @@
       --text-main: #f5f6ff;
       --text-muted: #c5c8de;
       --card-bg: #07132f;
+
+      --menu-dark: #0a0f19;
+      --menu-dark-2: #111826;
+      --menu-active-1: #f4aa44;
+      --menu-active-2: #f2cf59;
     }
 
     *{ box-sizing:border-box; }
@@ -189,55 +194,56 @@
       padding: 0;
     }
 
-    .ecl-menu{
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px 16px;
+    .ecl-tabs-row{
+      display:flex;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:12px;
       margin: 8px 0 18px;
       padding: 0;
     }
 
-    .ecl-tab-group{
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px;
-      border-radius: 999px;
-      background: linear-gradient(180deg, rgba(4,10,22,0.96), rgba(2,7,24,0.96));
-      box-shadow:
-        0 12px 30px rgba(0,0,0,0.55),
-        inset 0 1px 0 rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.05);
+    .ecl-tabs-group{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .ecl-tabs-sep{
+      width: 14px;
+      flex: 0 0 14px;
     }
 
     .ecl-tab{
-      border: none;
-      padding: 8px 16px;
+      border:none;
+      padding: 8px 18px;
       border-radius: 999px;
-      font-size: 13px;
-      cursor: pointer;
-      background: rgba(255,255,255,0.04);
-      color: rgba(255,255,255,0.78);
-      font-weight: 800;
+      min-height: 30px;
+      background: linear-gradient(180deg, var(--menu-dark-2), var(--menu-dark));
+      color: rgba(255,255,255,0.82);
+      font-size: 12px;
+      font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: .08em;
-      transition: background .18s, color .18s, transform .18s, box-shadow .18s;
+      letter-spacing: .12em;
       white-space: nowrap;
-      min-height: 34px;
-      line-height: 1;
+      cursor:pointer;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 6px 18px rgba(0,0,0,0.35);
+      transition: transform .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease;
     }
     .ecl-tab:hover{
-      background: rgba(255,255,255,0.08);
-      color: #fff;
+      transform: translateY(-1px);
+      color:#fff;
+      background: linear-gradient(180deg, #171f2e, #0d121d);
     }
     .ecl-tab.active{
-      background: linear-gradient(135deg, var(--accent-orange), var(--accent-yellow));
-      color: #141320;
+      background: linear-gradient(135deg, var(--menu-active-1), var(--menu-active-2));
+      color: #10131c;
       box-shadow:
-        0 0 0 1px rgba(0,0,0,0.45),
+        inset 0 1px 0 rgba(255,255,255,0.28),
         0 8px 22px rgba(0,0,0,0.45);
-      transform: translateY(-1px);
     }
 
     .page-title{
@@ -497,14 +503,15 @@
       .team-logo-card{ width: 32px; height: 32px; }
       .header-box input{ width: 100%; min-width: 0; }
 
-      .ecl-menu{
+      .ecl-tabs-row{
         gap: 10px;
       }
-      .ecl-tab-group{
-        width: 100%;
-        justify-content: flex-start;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+      .ecl-tabs-sep{
+        display:none;
+      }
+      .ecl-tabs-group{
+        width:100%;
+        gap:8px;
       }
     }
   </style>
@@ -570,10 +577,12 @@
 
   <main class="container">
     <div class="stats-wrap">
-      <div class="ecl-menu" aria-label="Statistikmeny">
-        <div class="ecl-tab-group" id="stageTabs" aria-label="Spelform"></div>
-        <div class="ecl-tab-group" id="leagueTabs" aria-label="Roll"></div>
-        <div class="ecl-tab-group" id="divisionTabs" aria-label="Division"></div>
+      <div class="ecl-tabs-row" aria-label="Statistikmeny">
+        <div class="ecl-tabs-group" id="stageTabs" aria-label="Spelform"></div>
+        <div class="ecl-tabs-sep" aria-hidden="true"></div>
+        <div class="ecl-tabs-group" id="leagueTabs" aria-label="Roll"></div>
+        <div class="ecl-tabs-sep" aria-hidden="true"></div>
+        <div class="ecl-tabs-group" id="divisionTabs" aria-label="Division"></div>
       </div>
 
       <div class="page-title">
