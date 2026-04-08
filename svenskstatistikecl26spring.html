@@ -194,32 +194,43 @@
       padding: 0;
     }
 
+    .ecl-tabs-row-wrap{
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      margin: 8px 0 18px;
+      scrollbar-width: none;
+    }
+    .ecl-tabs-row-wrap::-webkit-scrollbar{
+      display:none;
+    }
+
     .ecl-tabs-row{
       display:flex;
       align-items:center;
-      flex-wrap:wrap;
-      gap:12px;
-      margin: 8px 0 18px;
-      padding: 0;
+      flex-wrap:nowrap;
+      gap:14px;
+      min-width:max-content;
+      padding: 2px 0;
     }
 
     .ecl-tabs-group{
       display:flex;
       align-items:center;
       gap:10px;
-      flex-wrap:wrap;
+      flex-wrap:nowrap;
     }
 
     .ecl-tabs-sep{
-      width: 14px;
-      flex: 0 0 14px;
+      width: 12px;
+      flex: 0 0 12px;
     }
 
     .ecl-tab{
       border:none;
       padding: 8px 18px;
       border-radius: 999px;
-      min-height: 30px;
+      min-height: 32px;
       background: linear-gradient(180deg, var(--menu-dark-2), var(--menu-dark));
       color: rgba(255,255,255,0.82);
       font-size: 12px;
@@ -506,12 +517,17 @@
       .ecl-tabs-row{
         gap: 10px;
       }
-      .ecl-tabs-sep{
-        display:none;
-      }
       .ecl-tabs-group{
-        width:100%;
-        gap:8px;
+        gap: 8px;
+      }
+      .ecl-tabs-sep{
+        width: 6px;
+        flex-basis: 6px;
+      }
+      .ecl-tab{
+        padding: 8px 15px;
+        font-size: 11px;
+        letter-spacing: .10em;
       }
     }
   </style>
@@ -577,12 +593,14 @@
 
   <main class="container">
     <div class="stats-wrap">
-      <div class="ecl-tabs-row" aria-label="Statistikmeny">
-        <div class="ecl-tabs-group" id="stageTabs" aria-label="Spelform"></div>
-        <div class="ecl-tabs-sep" aria-hidden="true"></div>
-        <div class="ecl-tabs-group" id="leagueTabs" aria-label="Roll"></div>
-        <div class="ecl-tabs-sep" aria-hidden="true"></div>
-        <div class="ecl-tabs-group" id="divisionTabs" aria-label="Division"></div>
+      <div class="ecl-tabs-row-wrap">
+        <div class="ecl-tabs-row" aria-label="Statistikmeny">
+          <div class="ecl-tabs-group" id="stageTabs" aria-label="Spelform"></div>
+          <div class="ecl-tabs-sep" aria-hidden="true"></div>
+          <div class="ecl-tabs-group" id="leagueTabs" aria-label="Roll"></div>
+          <div class="ecl-tabs-sep" aria-hidden="true"></div>
+          <div class="ecl-tabs-group" id="divisionTabs" aria-label="Division"></div>
+        </div>
       </div>
 
       <div class="page-title">
@@ -666,6 +684,10 @@
     const JSON_URL = "svenskstatistikecl26spring.json";
     const DEFAULT_IMG = "/players/1DEFAULTBILDID.jpg";
     const DEFAULT_LOGO = "";
+
+    const STAGE_ORDER = ["regular", "playoffs"];
+    const LEAGUE_ORDER = ["skaters", "defenders", "goalies"];
+    const DIVISION_ORDER = ["elite", "pro", "lite", "core", "neo"];
 
     const stageTabs = document.getElementById("stageTabs");
     const leagueTabs = document.getElementById("leagueTabs");
@@ -759,6 +781,12 @@
       return "🏆";
     }
 
+    function orderKeys(keys, preferredOrder){
+      const presentPreferred = preferredOrder.filter(key => keys.includes(key));
+      const rest = keys.filter(key => !preferredOrder.includes(key));
+      return [...presentPreferred, ...rest];
+    }
+
     function unwrapApiJson(data){
       if (data && data.regular && data.playoffs) return data;
 
@@ -796,15 +824,18 @@
     }
 
     function getAvailableStages(data){
-      return Object.keys(data).filter(k => typeof data[k] === "object" && data[k] && !Array.isArray(data[k]) && k !== "updated");
+      const keys = Object.keys(data).filter(k => typeof data[k] === "object" && data[k] && !Array.isArray(data[k]) && k !== "updated");
+      return orderKeys(keys, STAGE_ORDER);
     }
 
     function getAvailableLeagues(data, stage){
-      return Object.keys(data?.[stage] || {});
+      const keys = Object.keys(data?.[stage] || {});
+      return orderKeys(keys, LEAGUE_ORDER);
     }
 
     function getAvailableDivisions(data, stage, league){
-      return Object.keys(data?.[stage]?.[league] || {});
+      const keys = Object.keys(data?.[stage]?.[league] || {});
+      return orderKeys(keys, DIVISION_ORDER);
     }
 
     function getRows(data, stage, league, division){
