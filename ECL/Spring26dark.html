@@ -1184,9 +1184,28 @@
         const teamName = RowAccess.getTeamName(row) || 'team';
         const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
         const games = Number(RowAccess.getBackupGames(row) || 0);
-        if (games < 10) return `Upcoming License Upgrade Reminder for ${playerName}\n\nHi ${teamName},\n\nThis is a friendly reminder that ${playerName} has now played ${games} matches using a Backup Player License and is approaching the 10-game limit.\n\nBest regards,`;
-        if (games > 10) return `License Status Update – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has participated in ${games} games using a Backup Player License and now needs a Full Player License.\n\nBest regards,`;
-        return `License Status Reminder – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has now played 10 matches using a Backup Player License.\n\nBest regards,`;
+
+        if (games < 10) {
+          return `Upcoming License Upgrade Reminder for ${playerName}
+
+Hi ${teamName},
+
+This is a friendly reminder that ${playerName} has now played ${games} matches using a Backup Player License and is approaching the 10-game limit.
+
+Best regards,`;
+        }
+
+        return `License Status Reminder – Action Required for ${playerName}
+
+Hi ${teamName},
+
+This is a reminder that ${playerName} has now played ${games} matches using a Backup Player License. According to league rules, a Backup Player License covers a maximum of 10 games across the entire ECL '26 season - including Winter and Spring qualifiers, group stages, and playoffs.
+
+If ${playerName} is to continue playing, a Full Player License is required.
+
+If you have any questions or need assistance with the process, feel free to reach out.
+
+Best regards,`;
       },
 
       buildUnlicensedMessage(row) {
