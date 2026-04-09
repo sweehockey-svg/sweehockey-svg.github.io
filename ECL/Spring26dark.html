@@ -1239,10 +1239,15 @@ Best regards,`;
         const teamName = RowAccess.getTeamName(row) || 'team';
         const divisionName = String(row?.divisionName || '').trim() || 'this division';
         const issues = Rules.getSignupIssues(row);
+        const matchesPlayed = Number(row?.matchesPlayed || 0);
 
         const issueText = issues.length
           ? issues.map(issue => `- ${issue}`).join('\n')
           : '- Missing requirements detected';
+
+        const playedWarning = matchesPlayed > 0
+          ? `\nImportant warning\nYour team has already played ${matchesPlayed} match${matchesPlayed === 1 ? '' : 'es'} even though the team does not currently fulfill the registration requirements.\n`
+          : '';
 
         return `Registration Requirements – Action Required for ${teamName}
 
@@ -1250,9 +1255,8 @@ Hi ${teamName},
 
 Your registration for ${divisionName} currently does not meet all requirements.
 
-${issueText}
-
-Please make sure to address these issues. If you have already taken care of this, please let us know and we will look into why it is not showing on our end. Please don’t hesitate to reach out if you need any assistance — we’re happy to help!
+${issueText}${playedWarning}
+Please make sure to address these issues immediately. If you have already taken care of this, please let us know and we will look into why it is not showing on our end.
 
 Best regards,`;
       },
