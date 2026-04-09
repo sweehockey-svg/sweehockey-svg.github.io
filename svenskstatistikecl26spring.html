@@ -1165,6 +1165,10 @@
       return key === "gaa";
     }
 
+    function getBestSortDirection(key){
+      return key === "gaa";
+    }
+
     function sortRows(rows, key, asc){
       if(!key) return rows.slice();
 
@@ -1282,10 +1286,13 @@
       updateTitles();
 
       const filtered = filterRows(currentRows, searchBox.value);
-      const sorted = sortRows(filtered, currentSort.key, currentSort.asc);
+      const tableSorted = sortRows(filtered, currentSort.key, currentSort.asc);
 
-      renderTop3(sorted);
-      renderTable(currentColumns, sorted);
+      const bestAsc = getBestSortDirection(currentSort.key);
+      const bestTop3 = sortRows(filtered, currentSort.key, bestAsc);
+
+      renderTop3(bestTop3);
+      renderTable(currentColumns, tableSorted);
 
       const upd = getUpdatedText(rawData);
       updated.textContent = upd ? `Senast uppdaterad: ${upd}` : "";
