@@ -1019,16 +1019,38 @@
       return ordered;
     }
 
-    function buildCardMetrics(row){
-      const metricOrderByLeague = {
-        skaters:   ["gp", "g", "a", "p", "ppg", "pen", "dim"],
-        defenders: ["gp", "g", "a", "p", "ppg", "pen", "dim"],
-        goalies:   ["gp", "w", "sv", "gaa", "svp", "so"]
+    function getCardMetricKeys(row){
+      const key = currentSort.key;
+
+      if(activeLeague === "goalies"){
+        if(key === "gaa") return ["gaa", "svp", "so"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+        if(key === "svp") return ["svp", "gaa", "so"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+        if(key === "so") return ["so", "svp", "gaa"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+        if(key === "w") return ["w", "svp", "gaa"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+        if(key === "sv") return ["sv", "svp", "gaa"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+        return ["svp", "gaa", "so"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      }
+
+      if(key === "g") return ["g", "a", "p"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      if(key === "a") return ["a", "g", "p"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      if(key === "p") return ["p", "g", "a"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      if(key === "pen") return ["pen", "gp", "p"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      if(key === "dim") return ["dim", "gp", "p"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      if(key === "ppg") return ["ppg", "p", "gp"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      if(key === "gp") return ["gp", "p", "g"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+
+      const fallback = {
+        skaters:   ["p", "g", "a"],
+        defenders: ["p", "g", "a"],
+        goalies:   ["svp", "gaa", "so"]
       };
 
-      const metricKeys = (metricOrderByLeague[activeLeague] || []).filter(key =>
-        Object.prototype.hasOwnProperty.call(row, key)
-      );
+      return (fallback[activeLeague] || ["p", "g", "a"])
+        .filter(k => Object.prototype.hasOwnProperty.call(row, k));
+    }
+
+    function buildCardMetrics(row){
+      const metricKeys = getCardMetricKeys(row);
 
       return metricKeys.slice(0, 3).map(key => ({
         key,
@@ -1038,13 +1060,25 @@
       }));
     }
 
-    function getNumericMax(rows, key){
+    function getMetricPercent(rows, metric){
+      const value = metric.num;
+      if(value === null) return 0;
+
       const values = rows
-        .map(r => toNum(r[key]))
+        .map(r => toNum(r[metric.key]))
         .filter(v => v !== null);
 
-      if(!values.length) return null;
-      return Math.max(...values, 1);
+      if(!values.length) return 0;
+
+      if(metric.key === "gaa"){
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        if(max === min) return 100;
+        return ((max - value) / (max - min)) * 100;
+      }
+
+      const max = Math.max(...values, 1);
+      return (value / max) * 100;
     }
 
     function renderTop3(rows){
@@ -1086,21 +1120,17 @@
             </div>
 
             <div class="stat-bars">
-              ${metrics.map(metric => {
-                const max = getNumericMax(rows, metric.key);
-                const percent = (metric.num !== null && max && max > 0) ? (metric.num / max) * 100 : 0;
-                return `
-                  <div class="bar-row">
-                    <div class="bar-label">
-                      <span>${metric.label}</span>
-                      <span>${metric.raw}</span>
-                    </div>
-                    <div class="bar-track">
-                      <div class="bar-fill" style="width:${percent}%"></div>
-                    </div>
+              ${metrics.map(metric => `
+                <div class="bar-row">
+                  <div class="bar-label">
+                    <span>${metric.label}</span>
+                    <span>${metric.raw}</span>
                   </div>
-                `;
-              }).join("")}
+                  <div class="bar-track">
+                    <div class="bar-fill" style="width:${getMetricPercent(rows, metric)}%"></div>
+                  </div>
+                </div>
+              `).join("")}
             </div>
           </div>
         `;
