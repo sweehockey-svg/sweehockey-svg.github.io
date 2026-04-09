@@ -405,7 +405,7 @@
         </div>
 
         <div class="filters-row">
-          <input class="input" id="searchInput" type="text" placeholder="Search player, team, userID or division" />
+          <input class="input" id="searchInput" type="text" placeholder="Search player, team, matches or division" />
           <label class="toggle-box"><input id="flaggedOnlyToggle" type="checkbox" /> <span>Flagged only</span></label>
           <select class="select" id="sortSelect">
             <option value="default">Default</option>
@@ -567,7 +567,7 @@
         label: 'Registered Teams',
         badge: 'signUps',
         csv: true,
-        columns: ['teamName','teamCountry','registrationDate','divisionName','qualifierName','teamLicense','playerCount','fullLicenseCount','backupLicenseCount','unlicensedPlayerCount','signupIssue','userID','__sendMail']
+        columns: ['teamName','teamCountry','registrationDate','divisionName','qualifierName','teamLicense','playerCount','fullLicenseCount','backupLicenseCount','unlicensedPlayerCount','matchesPlayed','signupIssue','__sendMail']
       },
       lite: { title: 'Lite 26 Spring Teams', subtitle: 'Built from lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','totalPoints','compatibility','__sendMail'] },
       core: { title: 'Core 26 Spring Teams', subtitle: 'Built from core.', type: 'data', jsonKey: 'core', label: 'Core 26 Spring Teams', badge: 'core', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','totalPoints','compatibility','__sendMail'] },
@@ -716,10 +716,6 @@
       getSeedRenameNote(teamName) { const info = Rename.getRenameInfo(teamName); return info ? `Old name ${info.oldName}` : ''; },
       applyToValue(value) { const info = Rename.getRenameInfo(value); return info ? info.newName : String(value || ''); },
 
-      /* VIKTIGT:
-         Vi byter INTE namn på history1Team/history2Team/history3Team
-         och vi rör INTE nested players[] här.
-         Då visas original-lagnamnen i Check Team History. */
       applyToRow(row) {
         if (!row || typeof row !== 'object') return row;
         const cloned = { ...row };
@@ -1193,25 +1189,25 @@
         return `License Status Reminder – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has now played 10 matches using a Backup Player License.\n\nBest regards,`;
       },
 
-buildUnlicensedMessage(row) {
-  const teamName = RowAccess.getTeamName(row) || 'team';
-  const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
-  const games = Number(RowAccess.getBackupGames(row) || 0);
+      buildUnlicensedMessage(row) {
+        const teamName = RowAccess.getTeamName(row) || 'team';
+        const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
+        const games = Number(RowAccess.getBackupGames(row) || 0);
 
-  return (
-    'License Status Update - Action Required for ' + playerName + '\n\n' +
-    'Hi ' + teamName + ',\n\n' +
-    'It has come to our attention that ' + playerName + ' has participated in ' + games + ' games without a valid license.\n\n' +
-    'To comply with league regulations, ' + playerName + ' must immediately purchase either a Full Player License or a Backup Player License. This must be completed as soon as possible to ensure that the player is properly licensed for participation in ECL 26.\n\n' +
-    'You can purchase the required license here:\n' +
-    'https://sportsgamer.gg/community/store/\n\n' +
-    'Important\n' +
-    'Please note that playing without a valid license may result in consequences if reported by an opponent. Continued participation without the correct license may lead to further penalties.\n\n' +
-    'If ' + playerName + ' has already purchased a license, please send us a copy of the payment receipt so we can review the matter and check why the license is not showing correctly in our system.\n\n' +
-    'If you have any questions or need assistance, feel free to contact us. We are happy to help.\n\n' +
-    'Best regards,'
-  );
-},
+        return (
+          'License Status Update - Action Required for ' + playerName + '\n\n' +
+          'Hi ' + teamName + ',\n\n' +
+          'It has come to our attention that ' + playerName + ' has participated in ' + games + ' games without a valid license.\n\n' +
+          'To comply with league regulations, ' + playerName + ' must immediately purchase either a Full Player License or a Backup Player License. This must be completed as soon as possible to ensure that the player is properly licensed for participation in ECL 26.\n\n' +
+          'You can purchase the required license here:\n' +
+          'https://sportsgamer.gg/community/store/\n\n' +
+          'Important\n' +
+          'Please note that playing without a valid license may result in consequences if reported by an opponent. Continued participation without the correct license may lead to further penalties.\n\n' +
+          'If ' + playerName + ' has already purchased a license, please send us a copy of the payment receipt so we can review the matter and check why the license is not showing correctly in our system.\n\n' +
+          'If you have any questions or need assistance, feel free to contact us. We are happy to help.\n\n' +
+          'Best regards,'
+        );
+      },
 
       buildMultipleTeamsMessage(row) {
         const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
@@ -1551,7 +1547,6 @@ Best regards,`;
       const tableWrap = document.createElement('div');
       tableWrap.className = 'team-player-table-wrap';
 
-      /* Här använder vi ORIGINAL players-data utan rename på historyTeam-fälten */
       const rawPlayers = Array.isArray(row?.players) ? row.players.map(p => ({ ...p })) : [];
       const players = rawPlayers
         .map(player => ({
@@ -1882,6 +1877,7 @@ Best regards,`;
         fullLicenseCount: 'Full Licenses',
         backupLicenseCount: 'Backup Licenses',
         unlicensedPlayerCount: 'Unlicensed',
+        matchesPlayed: 'Matches',
         signupIssue: 'Issue',
         userID: 'User ID',
         totalPlayers: 'Total Players',
