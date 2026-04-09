@@ -757,6 +757,21 @@
     const LEAGUE_ORDER = ["skaters", "defenders", "goalies"];
     const DIVISION_ORDER = ["elite", "pro", "lite", "core", "neo"];
 
+    const SORT_TITLES = {
+      p: "Poängliga",
+      g: "Målligan",
+      a: "Assistligan",
+      pen: "Busligan",
+      gp: "Matchligan",
+      dim: "Defensiva toppligan",
+      ppg: "Poäng per match-ligan",
+      w: "Vinstligan",
+      sv: "Räddningsligan",
+      svp: "Bästa räddningsprocent",
+      gaa: "GAA-ligan",
+      so: "Nolligan"
+    };
+
     const stageTabs = document.getElementById("stageTabs");
     const leagueTabs = document.getElementById("leagueTabs");
     const divisionTabs = document.getElementById("divisionTabs");
@@ -1139,7 +1154,7 @@
       const preferredKey = preferredByLeague[activeLeague];
       if(preferredKey && columns.includes(preferredKey)) return preferredKey;
 
-      const fallback = ["p", "svp", "gaa", "g", "a", "gp", "w", "sv", "so", "dim", "ppg"];
+      const fallback = ["p", "svp", "gaa", "g", "a", "gp", "w", "sv", "so", "pen", "dim", "ppg"];
       for(const key of fallback){
         if(columns.includes(key)) return key;
       }
@@ -1172,6 +1187,49 @@
       return rows.filter(row => {
         return Object.values(row).some(v => normalize(v).includes(q));
       });
+    }
+
+    function getStageSuffix(){
+      return activeStage === "playoffs" ? " – Slutspel" : "";
+    }
+
+    function setBaseTitles(){
+      titleIcon.textContent = detectTitleIcon(activeLeague);
+      titleText.textContent = `ECL 26 Spring – ${prettyLabel(activeLeague)} – ${prettyLabel(activeDivision)}`;
+      titleSub.textContent = prettyLabel(activeStage).toUpperCase();
+      sectionTitle.textContent = `${prettyLabel(activeDivision)} ${prettyLabel(activeLeague)}`;
+      sectionDesc.textContent = `All visad statistik hämtas rått från JSON.`;
+      tableStrip.textContent = `${prettyLabel(activeDivision)} – ${prettyLabel(activeLeague)}`;
+    }
+
+    function setSortedTitleByKey(key){
+      const leagueLabel = SORT_TITLES[key];
+      if(!leagueLabel){
+        setBaseTitles();
+        return;
+      }
+
+      titleSub.textContent = prettyLabel(activeStage).toUpperCase();
+      titleIcon.textContent = detectTitleIcon(activeLeague);
+      titleText.textContent = `ECL 26 Spring – Svenska ${leagueLabel.toLowerCase()}${getStageSuffix()}`;
+      sectionTitle.textContent = `${prettyLabel(activeDivision)} ${leagueLabel}${getStageSuffix()}`;
+      tableStrip.textContent = `${prettyLabel(activeDivision)} – ${leagueLabel}${getStageSuffix()}`;
+
+      if(activeLeague === "defenders" && key === "dim"){
+        sectionDesc.innerHTML =
+          `Defensiv Impact per match (DIM) är ett sammansatt nyckeltal som mäter hur mycket en spelare bidrar <br>` +
+          `defensivt per match, oberoende av offensiv produktion. Fokus ligger på att stoppa anfall, bryta pucktempo och förhindra farliga avslut.`;
+      } else {
+        sectionDesc.textContent = `All visad statistik hämtas rått från JSON.`;
+      }
+    }
+
+    function updateTitles(){
+      if(currentSort.key && SORT_TITLES[currentSort.key]){
+        setSortedTitleByKey(currentSort.key);
+      } else {
+        setBaseTitles();
+      }
     }
 
     function renderTable(columns, rows){
@@ -1220,15 +1278,6 @@
       });
     }
 
-    function updateTitles(){
-      titleIcon.textContent = detectTitleIcon(activeLeague);
-      titleText.textContent = `ECL 26 Spring – ${prettyLabel(activeLeague)} – ${prettyLabel(activeDivision)}`;
-      titleSub.textContent = prettyLabel(activeStage).toUpperCase();
-      sectionTitle.textContent = `${prettyLabel(activeDivision)} ${prettyLabel(activeLeague)}`;
-      sectionDesc.textContent = `All visad statistik hämtas rått från JSON.`;
-      tableStrip.textContent = `${prettyLabel(activeDivision)} – ${prettyLabel(activeLeague)}`;
-    }
-
     function renderCurrentView(){
       updateTitles();
 
@@ -1258,6 +1307,7 @@
           activeLeague = leagues[0] || null;
         }
         syncDivisionIfNeeded();
+        currentSort = { key: null, asc: false };
         rebuildTabs();
         refreshDataset();
       });
@@ -1266,6 +1316,7 @@
       buildTabs(leagueTabs, leagues, activeLeague, "league", (value) => {
         activeLeague = value;
         syncDivisionIfNeeded();
+        currentSort = { key: null, asc: false };
         rebuildTabs();
         refreshDataset();
       });
@@ -1273,6 +1324,7 @@
       const divisions = getAvailableDivisions(rawData, activeStage, activeLeague);
       buildTabs(divisionTabs, divisions, activeDivision, "division", (value) => {
         activeDivision = value;
+        currentSort = { key: null, asc: false };
         rebuildTabs();
         refreshDataset();
       });
