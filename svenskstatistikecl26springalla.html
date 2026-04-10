@@ -361,7 +361,7 @@
 
     .top3-container{
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 14px;
       margin-bottom: 18px;
     }
@@ -398,11 +398,10 @@
       position: static;
       background: transparent;
       padding: 0;
-      font-size: 15px;
+      font-size: 18px;
       line-height: 1;
-      font-weight: 900;
+      font-weight: 800;
       overflow: visible;
-      color: #fff;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
     }
 
@@ -589,16 +588,6 @@
         font-size: 11px;
         letter-spacing: .10em;
       }
-
-      .top3-container{
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 560px){
-      .top3-container{
-        grid-template-columns: 1fr;
-      }
     }
   </style>
 </head>
@@ -767,6 +756,21 @@
     const STAGE_ORDER = ["regular", "playoffs"];
     const LEAGUE_ORDER = ["skaters", "defenders", "goalies"];
     const DIVISION_ORDER = ["elite", "pro", "lite", "core", "neo"];
+
+    const SORT_TITLES = {
+      p: "Poängliga",
+      g: "Målligan",
+      a: "Assistligan",
+      pen: "Busligan",
+      gp: "Matchligan",
+      dim: "Defensiva toppligan",
+      ppg: "Poäng per match-ligan",
+      w: "Vinstligan",
+      sv: "Räddningsligan",
+      svp: "Bästa räddningsprocent",
+      gaa: "GAA-ligan",
+      so: "Nolligan"
+    };
 
     const stageTabs = document.getElementById("stageTabs");
     const leagueTabs = document.getElementById("leagueTabs");
@@ -1015,16 +1019,38 @@
       return ordered;
     }
 
-    function buildCardMetrics(row){
-      const metricOrderByLeague = {
-        skaters:   ["gp", "g", "a", "p", "ppg", "pen", "dim"],
-        defenders: ["gp", "g", "a", "p", "ppg", "pen", "dim"],
-        goalies:   ["gp", "w", "sv", "gaa", "svp", "so"]
+    function getCardMetricKeys(row){
+      const key = currentSort.key;
+
+      if(activeLeague === "goalies"){
+        if(key === "gaa") return ["gaa", "svp", "so"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+        if(key === "svp") return ["svp", "gaa", "so"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+        if(key === "so") return ["so", "svp", "gaa"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+        if(key === "w") return ["w", "svp", "gaa"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+        if(key === "sv") return ["sv", "svp", "gaa"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+        return ["svp", "gaa", "so"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      }
+
+      if(key === "g") return ["g", "a", "p"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      if(key === "a") return ["a", "g", "p"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      if(key === "p") return ["p", "g", "a"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      if(key === "pen") return ["pen", "gp", "p"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      if(key === "dim") return ["dim", "gp", "p"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      if(key === "ppg") return ["ppg", "p", "gp"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+      if(key === "gp") return ["gp", "p", "g"].filter(k => Object.prototype.hasOwnProperty.call(row, k));
+
+      const fallback = {
+        skaters:   ["p", "g", "a"],
+        defenders: ["p", "g", "a"],
+        goalies:   ["svp", "gaa", "so"]
       };
 
-      const metricKeys = (metricOrderByLeague[activeLeague] || []).filter(key =>
-        Object.prototype.hasOwnProperty.call(row, key)
-      );
+      return (fallback[activeLeague] || ["p", "g", "a"])
+        .filter(k => Object.prototype.hasOwnProperty.call(row, k));
+    }
+
+    function buildCardMetrics(row){
+      const metricKeys = getCardMetricKeys(row);
 
       return metricKeys.slice(0, 3).map(key => ({
         key,
@@ -1034,13 +1060,25 @@
       }));
     }
 
-    function getNumericMax(rows, key){
+    function getMetricPercent(rows, metric){
+      const value = metric.num;
+      if(value === null) return 0;
+
       const values = rows
-        .map(r => toNum(r[key]))
+        .map(r => toNum(r[metric.key]))
         .filter(v => v !== null);
 
-      if(!values.length) return null;
-      return Math.max(...values, 1);
+      if(!values.length) return 0;
+
+      if(metric.key === "gaa"){
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        if(max === min) return 100;
+        return ((max - value) / (max - min)) * 100;
+      }
+
+      const max = Math.max(...values, 1);
+      return (value / max) * 100;
     }
 
     function renderTop3(rows){
@@ -1053,19 +1091,20 @@
         const name = safeText(row.name || "Okänd");
         const team = safeText(row.team || "");
         const metrics = buildCardMetrics(row);
+        const medal = ["🥇", "🥈", "🥉"][i] || "";
 
         return `
           <div class="player-card">
             ${team ? `
               <div class="team-logo-wrap">
                 <img class="team-logo-card" alt="${team}">
-                <div class="player-ribbon">#${i + 1}</div>
+                ${medal ? `<div class="player-ribbon">${medal}</div>` : ""}
               </div>
-            ` : `
+            ` : medal ? `
               <div class="team-logo-wrap">
-                <div class="player-ribbon">#${i + 1}</div>
+                <div class="player-ribbon">${medal}</div>
               </div>
-            `}
+            ` : ""}
 
             <div class="player-top-row">
               <div class="player-img-wrap">
@@ -1084,21 +1123,17 @@
             </div>
 
             <div class="stat-bars">
-              ${metrics.map(metric => {
-                const max = getNumericMax(rows, metric.key);
-                const percent = (metric.num !== null && max && max > 0) ? (metric.num / max) * 100 : 0;
-                return `
-                  <div class="bar-row">
-                    <div class="bar-label">
-                      <span>${metric.label}</span>
-                      <span>${metric.raw}</span>
-                    </div>
-                    <div class="bar-track">
-                      <div class="bar-fill" style="width:${percent}%"></div>
-                    </div>
+              ${metrics.map(metric => `
+                <div class="bar-row">
+                  <div class="bar-label">
+                    <span>${metric.label}</span>
+                    <span>${metric.raw}</span>
                   </div>
-                `;
-              }).join("")}
+                  <div class="bar-track">
+                    <div class="bar-fill" style="width:${getMetricPercent(rows, metric)}%"></div>
+                  </div>
+                </div>
+              `).join("")}
             </div>
           </div>
         `;
@@ -1152,7 +1187,7 @@
       const preferredKey = preferredByLeague[activeLeague];
       if(preferredKey && columns.includes(preferredKey)) return preferredKey;
 
-      const fallback = ["p", "svp", "gaa", "g", "a", "gp", "w", "sv", "so", "dim", "ppg"];
+      const fallback = ["p", "svp", "gaa", "g", "a", "gp", "w", "sv", "so", "pen", "dim", "ppg"];
       for(const key of fallback){
         if(columns.includes(key)) return key;
       }
@@ -1160,6 +1195,10 @@
     }
 
     function getDefaultSortDirection(key){
+      return key === "gaa";
+    }
+
+    function getBestSortDirection(key){
       return key === "gaa";
     }
 
@@ -1185,6 +1224,49 @@
       return rows.filter(row => {
         return Object.values(row).some(v => normalize(v).includes(q));
       });
+    }
+
+    function getStageSuffix(){
+      return activeStage === "playoffs" ? " – Slutspel" : "";
+    }
+
+    function setBaseTitles(){
+      titleIcon.textContent = detectTitleIcon(activeLeague);
+      titleText.textContent = `ECL 26 Spring – ${prettyLabel(activeLeague)} – ${prettyLabel(activeDivision)}`;
+      titleSub.textContent = prettyLabel(activeStage).toUpperCase();
+      sectionTitle.textContent = `${prettyLabel(activeDivision)} ${prettyLabel(activeLeague)}`;
+      sectionDesc.textContent = `All visad statistik hämtas rått från JSON.`;
+      tableStrip.textContent = `${prettyLabel(activeDivision)} – ${prettyLabel(activeLeague)}`;
+    }
+
+    function setSortedTitleByKey(key){
+      const leagueLabel = SORT_TITLES[key];
+      if(!leagueLabel){
+        setBaseTitles();
+        return;
+      }
+
+      titleSub.textContent = prettyLabel(activeStage).toUpperCase();
+      titleIcon.textContent = detectTitleIcon(activeLeague);
+      titleText.textContent = `ECL 26 Spring – Svenska ${leagueLabel.toLowerCase()}${getStageSuffix()}`;
+      sectionTitle.textContent = `${prettyLabel(activeDivision)} ${leagueLabel}${getStageSuffix()}`;
+      tableStrip.textContent = `${prettyLabel(activeDivision)} – ${leagueLabel}${getStageSuffix()}`;
+
+      if(activeLeague === "defenders" && key === "dim"){
+        sectionDesc.innerHTML =
+          `Defensiv Impact per match (DIM) är ett sammansatt nyckeltal som mäter hur mycket en spelare bidrar <br>` +
+          `defensivt per match, oberoende av offensiv produktion. Fokus ligger på att stoppa anfall, bryta pucktempo och förhindra farliga avslut.`;
+      } else {
+        sectionDesc.textContent = `All visad statistik hämtas rått från JSON.`;
+      }
+    }
+
+    function updateTitles(){
+      if(currentSort.key && SORT_TITLES[currentSort.key]){
+        setSortedTitleByKey(currentSort.key);
+      } else {
+        setBaseTitles();
+      }
     }
 
     function renderTable(columns, rows){
@@ -1233,23 +1315,17 @@
       });
     }
 
-    function updateTitles(){
-      titleIcon.textContent = detectTitleIcon(activeLeague);
-      titleText.textContent = `ECL 26 Spring – ${prettyLabel(activeLeague)} – ${prettyLabel(activeDivision)}`;
-      titleSub.textContent = prettyLabel(activeStage).toUpperCase();
-      sectionTitle.textContent = `${prettyLabel(activeDivision)} ${prettyLabel(activeLeague)}`;
-      sectionDesc.textContent = `All visad statistik hämtas rått från JSON. Alla rader i listan visas också som spelarkort ovanför tabellen.`;
-      tableStrip.textContent = `${prettyLabel(activeDivision)} – ${prettyLabel(activeLeague)}`;
-    }
-
     function renderCurrentView(){
       updateTitles();
 
       const filtered = filterRows(currentRows, searchBox.value);
-      const sorted = sortRows(filtered, currentSort.key, currentSort.asc);
+      const tableSorted = sortRows(filtered, currentSort.key, currentSort.asc);
 
-      renderTop3(sorted);
-      renderTable(currentColumns, sorted);
+      const bestAsc = getBestSortDirection(currentSort.key);
+      const bestCards = sortRows(filtered, currentSort.key, bestAsc);
+
+      renderTop3(bestCards);
+      renderTable(currentColumns, tableSorted);
 
       const upd = getUpdatedText(rawData);
       updated.textContent = upd ? `Senast uppdaterad: ${upd}` : "";
@@ -1271,6 +1347,7 @@
           activeLeague = leagues[0] || null;
         }
         syncDivisionIfNeeded();
+        currentSort = { key: null, asc: false };
         rebuildTabs();
         refreshDataset();
       });
@@ -1279,6 +1356,7 @@
       buildTabs(leagueTabs, leagues, activeLeague, "league", (value) => {
         activeLeague = value;
         syncDivisionIfNeeded();
+        currentSort = { key: null, asc: false };
         rebuildTabs();
         refreshDataset();
       });
@@ -1286,6 +1364,7 @@
       const divisions = getAvailableDivisions(rawData, activeStage, activeLeague);
       buildTabs(divisionTabs, divisions, activeDivision, "division", (value) => {
         activeDivision = value;
+        currentSort = { key: null, asc: false };
         rebuildTabs();
         refreshDataset();
       });
