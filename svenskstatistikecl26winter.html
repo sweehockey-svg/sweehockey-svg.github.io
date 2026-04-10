@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Svensk statistik – ECL 26 Winter</title>
-    <link rel="icon" type="image/png" href="favicon.png?v=1">
-<link rel="apple-touch-icon" href="favicon.png?v=1">
+  <link rel="icon" type="image/png" href="favicon.png?v=1">
+  <link rel="apple-touch-icon" href="favicon.png?v=1">
   <meta name="description" content="Svensk statistik för ECL 26 Winter – grundserie och slutspel. Spelare, backar och målvakter per division." />
 
   <style>
@@ -492,7 +492,7 @@
 </head>
 
 <body>
-  <!-- ======= MENY (EXAKT) ======= -->
+  <!-- ======= MENY ======= -->
   <header class="topbar">
     <div class="container topbar__inner">
       <a class="brand" href="/" aria-label="Svensk eHockey">
@@ -506,9 +506,10 @@
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
             Svensk ECL Statistik <span class="chev">▾</span>
           </button>
-          <div class="menu" role="menu" aria-label="Svensk EC Statistik" data-dropdown-menu>
+          <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
+            <a class="menu__item" role="menuitem" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
           </div>
         </div>
 
@@ -534,22 +535,23 @@
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link" href="/">Startsida</a>
-        <a class="mobile__link" href="/svenskaeclbyten.html">ECL 26 Winter – Byten</a>
+        <a class="mobile__link" href="/svenskaeclbyten.html">ECL – Byten</a>
         <a class="mobile__link is-active" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
+        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring – Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
         <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
       </div>
     </div>
   </header>
 
-  <!-- ======= BANNER (EXAKT) ======= -->
+  <!-- ======= BANNER ======= -->
   <section class="banner-strip" aria-label="Banner">
     <div class="container banner-strip__inner">
       <div class="banner" role="img" aria-label="Svensk eHockey banner"></div>
     </div>
   </section>
 
-  <!-- ======= CONTENT (EXAKT UPPLÄGG UNDER) ======= -->
+  <!-- ======= CONTENT ======= -->
   <main class="container">
     <div class="stats-wrap">
 
@@ -602,7 +604,7 @@
     </div>
   </main>
 
-  <!-- ======= FOOTER (EXAKT) ======= -->
+  <!-- ======= FOOTER ======= -->
   <footer>
     <div class="container footer__inner">
       <span>© <span id="year"></span> Svensk eHockey</span>
@@ -612,10 +614,10 @@
   </footer>
 
   <script>
-    // År i footern (EXAKT)
+    // År i footern
     document.getElementById("year").textContent = new Date().getFullYear();
 
-    // Dropdowns (EXAKT)
+    // Dropdowns
     const dropdowns = document.querySelectorAll("[data-dropdown]");
     dropdowns.forEach((dd) => {
       const btn = dd.querySelector("[data-dropdown-btn]");
@@ -647,7 +649,7 @@
       });
     });
 
-    // Mobilmeny (EXAKT)
+    // Mobilmeny
     const mobileBtn = document.querySelector("[data-mobile-toggle]");
     const mobileMenu = document.querySelector("[data-mobile-menu]");
     mobileBtn.addEventListener("click", () => {
@@ -683,9 +685,9 @@
 
     const LOGO_SHEET = sheetUrl("Loggor");
 
-    let activeStage  = "regular"; // regular | playoffs
-    let activeLeague = "skaters"; // skaters | defenders | goalies
-    let activeDiv    = "elite";   // elite | pro | lite | core | neo
+    let activeStage  = "regular";
+    let activeLeague = "skaters";
+    let activeDiv    = "elite";
 
     let currentSort = { idx: null, key: null, label: null };
 
@@ -1090,14 +1092,13 @@
       const ths = host.querySelectorAll("thead th");
       let sortState = { idx: null, asc: false };
 
-      // Default sort: Målvakter -> bästa SV% (högst), annars Poäng -> Mål -> Matcher (om finns)
       if(activeLeague === "goalies"){
         const hn = header.map(h => normalize(h));
-        const svIdx = hn.findIndex(x=>["sv","sv%","svp","svprocent","räddningsprocent","save%","savepercentage"].includes(x));
+        const svIdx = hn.findIndex(x=>["sv","sv%","svp","svprocent","räddningsprocent"].includes(x));
 
         if(svIdx >= 0){
-          sortState.idx = svIdx + 1; // +1 pga "#" i fullHeader
-          sortState.asc = false;     // desc
+          sortState.idx = svIdx + 1;
+          sortState.asc = false;
 
           currentSort = { idx: sortState.idx, key: "svp", label: sortTitles["svp"] || null };
 
@@ -1105,7 +1106,7 @@
             const va = (a.row[svIdx] ?? "").toString();
             const vb = (b.row[svIdx] ?? "").toString();
             const na = parseSVP(va), nb = parseSVP(vb);
-            if(na !== nb) return nb - na; // högst först
+            if(na !== nb) return nb - na;
             const pa = rowObjects[a.rowIndex] || {};
             const pb = rowObjects[b.rowIndex] || {};
             if ((pa.games ?? 0) !== (pb.games ?? 0)) return (pa.games ?? 0) - (pb.games ?? 0);
@@ -1174,7 +1175,6 @@
             const av = a.__sortNum ?? 0;
             const bv = b.__sortNum ?? 0;
 
-            // GAA: lägst är bäst
             if(activeLeague === "goalies" && currentSort.key === "gaa"){
               if(av !== bv) return av - bv;
               if((a.games ?? 0) !== (b.games ?? 0)) return (a.games ?? 0) - (b.games ?? 0);
@@ -1426,7 +1426,6 @@
       });
     }
 
-    // Tabs: stage
     document.querySelectorAll(".ecl-tab[data-stage]").forEach(btn=>{
       btn.addEventListener("click", ()=>{
         document.querySelectorAll(".ecl-tab[data-stage]").forEach(b=>b.classList.remove("active"));
@@ -1436,7 +1435,6 @@
       });
     });
 
-    // Tabs: league
     document.querySelectorAll(".ecl-tab[data-league]").forEach(btn=>{
       btn.addEventListener("click", ()=>{
         document.querySelectorAll(".ecl-tab[data-league]").forEach(b=>b.classList.remove("active"));
@@ -1446,7 +1444,6 @@
       });
     });
 
-    // Tabs: division
     document.querySelectorAll(".ecl-tab[data-division]").forEach(btn=>{
       btn.addEventListener("click", ()=>{
         document.querySelectorAll(".ecl-tab[data-division]").forEach(b=>b.classList.remove("active"));
