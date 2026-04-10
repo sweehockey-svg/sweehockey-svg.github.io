@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Svensk eHockey</title>
-    <link rel="icon" type="image/png" href="favicon.png?v=1">
-<link rel="apple-touch-icon" href="favicon.png?v=1">
+  <link rel="icon" type="image/png" href="favicon.png?v=1">
+  <link rel="apple-touch-icon" href="favicon.png?v=1">
   <meta name="description" content="Svensk eHockey – ECL, nyheter och Svenska eHockey Cupen (SEC)." />
   <style>
     :root{
@@ -141,7 +141,7 @@
     .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
     .mobile__link.is-active{ color: var(--text); }
 
-    /* Banner-ruta under navbar (”mellanrummet”) */
+    /* Banner-ruta under navbar */
     .banner-strip{
       border-bottom: 1px solid var(--border);
       background:
@@ -160,7 +160,7 @@
       border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.14);
       box-shadow: var(--shadow);
-      background-image: url("svenakehocket.jpg"); /* ligger i root */
+      background-image: url("svenakehocket.jpg");
       background-size: cover;
       background-position: center;
       position: relative;
@@ -275,9 +275,10 @@
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
             Svensk ECL Statistik <span class="chev">▾</span>
           </button>
-          <div class="menu" role="menu" aria-label="Svensk EC Statistik" data-dropdown-menu>
+          <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
+            <a class="menu__item" role="menuitem" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
           </div>
         </div>
 
@@ -303,15 +304,15 @@
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link is-active" href="/">Startsida</a>
-        <a class="mobile__link" href="/svenskaeclbyten.html">ECL 26 Winter – Byten</a>
+        <a class="mobile__link" href="/svenskaeclbyten.html">ECL – Byten</a>
         <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
+        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring – Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
         <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
       </div>
     </div>
   </header>
 
-  <!-- Mellanrummet med banner -->
   <section class="banner-strip" aria-label="Banner">
     <div class="container banner-strip__inner">
       <div class="banner" role="img" aria-label="Svensk eHockey banner"></div>
@@ -368,10 +369,8 @@
   </footer>
 
   <script>
-    // År i footern
     document.getElementById("year").textContent = new Date().getFullYear();
 
-    // Dropdowns
     const dropdowns = document.querySelectorAll("[data-dropdown]");
     dropdowns.forEach((dd) => {
       const btn = dd.querySelector("[data-dropdown-btn]");
@@ -389,7 +388,6 @@
         e.stopPropagation();
         dd.classList.contains("open") ? close() : open();
 
-        // stäng övriga dropdowns
         dropdowns.forEach((other) => {
           if (other !== dd) {
             other.classList.remove("open");
@@ -404,7 +402,6 @@
       });
     });
 
-    // Mobilmeny
     const mobileBtn = document.querySelector("[data-mobile-toggle]");
     const mobileMenu = document.querySelector("[data-mobile-menu]");
     mobileBtn.addEventListener("click", () => {
