@@ -3,23 +3,28 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Svensk eHockey test</title>
+  <title>Svensk eHockey – Svenska byten</title>
   <link rel="icon" type="image/png" href="favicon.png?v=1">
   <link rel="apple-touch-icon" href="favicon.png?v=1">
-  <meta name="description" content="Svensk eHockey – ECL, nyheter och Svenska eHockey Cupen (SEC)." />
+  <meta name="description" content="Svenska spelare som bytt ECL-lag." />
 
   <style>
     :root{
-      --bg: #0b0f17;
-      --panel: rgba(255,255,255,0.06);
-      --text: rgba(255,255,255,0.92);
-      --muted: rgba(255,255,255,0.70);
-      --border: rgba(255,255,255,0.12);
-      --shadow: 0 20px 60px rgba(0,0,0,.45);
-      --gold: rgba(245,195,75,0.95);
+      --bg: #07101d;
+      --bg-2: #0b1628;
+      --panel: rgba(255,255,255,0.055);
+      --panel-2: rgba(255,255,255,0.035);
+      --panel-3: rgba(255,255,255,0.025);
+      --text: rgba(255,255,255,0.95);
+      --muted: rgba(255,255,255,0.68);
+      --soft: rgba(255,255,255,0.10);
+      --border: rgba(255,255,255,0.11);
+      --gold: #f5c34b;
       --gold-soft: rgba(245,195,75,0.18);
-      --navy: rgba(16,27,64,0.92);
-      --navy-2: rgba(22,36,86,0.96);
+      --gold-line: rgba(245,195,75,0.34);
+      --blue-soft: rgba(88,140,255,0.12);
+      --shadow: 0 24px 64px rgba(0,0,0,.42);
+      --shadow-2: 0 16px 36px rgba(0,0,0,.28);
     }
 
     *{ box-sizing:border-box; }
@@ -28,22 +33,25 @@
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:
-        radial-gradient(1200px 600px at 50% -10%, rgba(245,195,75,0.12), transparent 60%),
-        radial-gradient(900px 500px at 10% 10%, rgba(120,155,255,0.12), transparent 55%),
-        var(--bg);
+      background-color:#05101b;
+      background-image:
+        radial-gradient(1700px 980px at 50% -24%, rgba(245,195,75,0.07), transparent 72%),
+        radial-gradient(1450px 1100px at 8% 8%, rgba(46,96,235,0.10), transparent 76%),
+        radial-gradient(1100px 900px at 88% 22%, rgba(25,60,150,0.06), transparent 78%),
+        linear-gradient(180deg, #081322 0%, #06111d 58%, #05101b 100%);
+      background-repeat:no-repeat;
       color: var(--text);
     }
 
     a{ color:inherit; text-decoration:none; }
-    .container{ width:min(1100px, calc(100% - 32px)); margin:0 auto; }
+    .container{ width:min(1240px, calc(100% - 32px)); margin:0 auto; }
 
     .topbar{
       position:sticky;
       top:0;
       z-index:50;
-      backdrop-filter: blur(10px);
-      background: rgba(10,14,22,0.78);
+      backdrop-filter: blur(12px);
+      background: rgba(7,12,20,0.78);
       border-bottom: 1px solid var(--border);
     }
 
@@ -51,19 +59,18 @@
       display:flex;
       align-items:center;
       gap:16px;
-      padding: 14px 0;
+      padding:14px 0;
     }
 
     .brand{
       display:flex;
       align-items:center;
-      gap:12px;
-      min-width: 220px;
+      min-width:220px;
     }
 
     .brand__logo{
-      height: 38px;
-      width: auto;
+      height:38px;
+      width:auto;
       display:block;
     }
 
@@ -75,48 +82,37 @@
       flex:1;
     }
 
-    .nav__link{
+    .nav__link,
+    .nav__button{
       font-size:14px;
       color: var(--muted);
-      padding: 10px 10px;
-      border-radius: 10px;
-      white-space: nowrap;
-    }
-
-    .nav__link:hover{
-      background: rgba(255,255,255,0.06);
-      color: var(--text);
-    }
-
-    .dropdown{ position:relative; }
-
-    .nav__button{
-      border:0;
+      padding:10px 10px;
+      border-radius:10px;
+      white-space:nowrap;
       background:transparent;
+      border:0;
       cursor:pointer;
-      font: inherit;
-      color: var(--muted);
-      padding: 10px 10px;
-      border-radius: 10px;
-      display:flex;
-      align-items:center;
-      gap:6px;
-      white-space: nowrap;
+      transition: background .16s ease, color .16s ease;
     }
 
+    .nav__link:hover,
     .nav__button:hover{
       background: rgba(255,255,255,0.06);
       color: var(--text);
     }
 
+    .nav__link.is-active{ color: var(--text); }
+
+    .dropdown{ position:relative; }
+
     .menu{
       position:absolute;
       top: calc(100% + 10px);
-      right: 0;
-      width: 270px;
-      padding: 8px;
-      border-radius: 14px;
-      background: rgba(20,26,38,0.96);
+      right:0;
+      width:290px;
+      padding:8px;
+      border-radius:14px;
+      background: rgba(16,22,34,0.97);
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
       display:none;
@@ -126,11 +122,12 @@
 
     .menu__item{
       display:block;
-      padding: 10px 10px;
-      border-radius: 10px;
+      padding:10px;
+      border-radius:10px;
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.35;
+      font-size:14px;
+      line-height:1.35;
+      transition: background .16s ease, color .16s ease;
     }
 
     .menu__item:hover{
@@ -145,6 +142,12 @@
       border-radius: 12px;
       padding: 8px 10px;
       cursor:pointer;
+      transition: background .16s ease, border-color .16s ease;
+    }
+
+    .iconbtn:hover{
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.18);
     }
 
     .hamburger{
@@ -161,7 +164,7 @@
     .mobile{
       display:none;
       border-top: 1px solid var(--border);
-      background: rgba(10,14,22,0.85);
+      background: rgba(10,14,22,0.88);
     }
 
     .mobile.open{ display:block; }
@@ -173,60 +176,64 @@
     }
 
     .mobile__link{
-      padding: 12px 12px;
+      padding: 12px;
       border-radius: 12px;
       background: rgba(255,255,255,0.04);
       color: var(--muted);
     }
 
+    .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
+    .mobile__link.is-active{ color: var(--text); }
+
     .banner-strip{
       border-bottom: 1px solid var(--border);
-      background: rgba(10,14,22,0.55);
+      background: rgba(10,14,22,0.48);
     }
 
     .banner-strip__inner{
-      padding: 18px 0;
+      padding:18px 0;
       display:flex;
       justify-content:center;
     }
 
     .banner{
-      width: 100%;
-      max-width: 980px;
-      height: 160px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.14);
+      width:100%;
+      max-width:980px;
+      height:160px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,0.13);
       box-shadow: var(--shadow);
       background-image: url("svenakehocket.jpg");
       background-size: cover;
       background-position: center;
-      position: relative;
-      overflow: hidden;
+      overflow:hidden;
     }
 
-    main{ padding: 28px 0 46px; }
+    main{ padding: 28px 0 54px; }
 
     .card{
-      background: var(--panel);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03));
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 22px 20px;
+      border-radius: 22px;
+      padding: 24px 22px;
       box-shadow: var(--shadow);
     }
 
     h1{
-      margin: 0 0 10px;
+      margin:0 0 10px;
       font-size: clamp(22px, 3vw, 30px);
+      letter-spacing:-0.4px;
     }
 
     p{
-      margin: 10px 0;
+      margin:10px 0;
       color: var(--muted);
-      line-height: 1.65;
+      line-height:1.65;
     }
 
     .cta{
-      margin-top: 16px;
+      margin-top:16px;
       display:flex;
       gap:12px;
       flex-wrap:wrap;
@@ -236,22 +243,28 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding: 11px 14px;
-      border-radius: 12px;
+      padding:12px 16px;
+      border-radius:14px;
       background: rgba(255,255,255,0.06);
-      border: 1px solid var(--border);
+      border: 1px solid rgba(255,255,255,0.14);
       color: var(--text);
-      font-weight: 650;
-      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+      font-weight:750;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
     }
 
     .btn:hover{
       transform: translateY(-1px);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.18);
     }
 
     .btn--primary{
-      background: rgba(245,195,75,0.14);
+      background: linear-gradient(180deg, rgba(245,195,75,0.18), rgba(245,195,75,0.10));
       border-color: rgba(245,195,75,0.35);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        0 10px 28px rgba(245,195,75,0.08);
     }
 
     .transfers{
@@ -263,31 +276,69 @@
       flex-wrap:wrap;
       justify-content:space-between;
       align-items:center;
+      gap:18px;
       margin: 0 0 18px;
+      padding: 2px 4px;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:center;
       gap:14px;
+      min-width:0;
+    }
+
+    .section-title__icon{
+      width:34px;
+      height:34px;
+      display:grid;
+      place-items:center;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(245,195,75,0.14), rgba(245,195,75,0.06));
+      border:1px solid rgba(245,195,75,0.18);
+      color: var(--gold);
+      font-size:18px;
+      flex:0 0 34px;
     }
 
     .header-box h2{
-      font-size: 28px;
-      font-weight: 900;
-      color: var(--text);
-      margin: 0;
-      letter-spacing: -0.2px;
-      display:flex;
-      align-items:center;
-      gap:10px;
+      margin:0;
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight:950;
+      letter-spacing:-0.7px;
+      line-height:1.05;
+    }
+
+    .search-wrap{
+      width:min(100%, 410px);
+      position:relative;
+    }
+
+    .search-wrap::before{
+      content:"🔍";
+      position:absolute;
+      left:16px;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:15px;
+      opacity:.7;
+      pointer-events:none;
     }
 
     #searchTransfers{
-      width: min(100%, 310px);
-      padding: 12px 16px;
-      font-size: 15px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.035);
+      width:100%;
+      padding:14px 16px 14px 42px;
+      font-size:15px;
+      border:1px solid rgba(245,195,75,0.22);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
       color: var(--text);
-      border-radius: 14px;
-      outline: none;
-      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+      border-radius:18px;
+      outline:none;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 8px 24px rgba(0,0,0,.16);
+      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
     }
 
     #searchTransfers::placeholder{
@@ -296,196 +347,364 @@
 
     #searchTransfers:focus{
       border-color: rgba(245,195,75,0.42);
-      box-shadow: 0 0 0 4px rgba(245,195,75,.10);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 0 0 4px rgba(245,195,75,.10),
+        0 12px 30px rgba(0,0,0,.2);
       background: rgba(255,255,255,0.055);
     }
 
-    .wrap{
-      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 18px 40px rgba(0,0,0,.28);
+    .transfers-list{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
     }
 
-    #transfer-stats table{
+    .transfer-card{
       width:100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      table-layout: fixed;
-      font: 15px/1.45 system-ui, Arial, sans-serif;
-      color: var(--text);
+      background:
+        radial-gradient(110% 150% at 0% 0%, rgba(245,195,75,0.10), transparent 38%),
+        radial-gradient(80% 100% at 100% 100%, rgba(88,140,255,0.06), transparent 42%),
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      border:1px solid rgba(255,255,255,0.11);
+      border-radius:26px;
+      overflow:hidden;
+      box-shadow: 0 18px 42px rgba(0,0,0,.25);
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
 
-    #transfer-stats colgroup col.col-player { width: 18%; }
-    #transfer-stats colgroup col.col-from { width: 24%; }
-    #transfer-stats colgroup col.col-fromdiv { width: 16%; }
-    #transfer-stats colgroup col.col-to { width: 22%; }
-    #transfer-stats colgroup col.col-todiv { width: 12%; }
-    #transfer-stats colgroup col.col-date { width: 8%; }
+    .transfer-card:hover{
+      transform: translateY(-3px);
+      border-color: rgba(245,195,75,0.24);
+      box-shadow: 0 26px 58px rgba(0,0,0,.34);
+    }
 
-    #transfer-stats thead th{
-      position: sticky;
-      top: 0;
-      background: linear-gradient(180deg, var(--navy-2), var(--navy));
+    .transfer-row{
+      display:grid;
+      grid-template-columns: 430px 1fr;
+      min-height: 178px;
+    }
+
+    .transfer-player{
+      padding:20px 24px;
+      border-right:1px solid rgba(255,255,255,0.08);
+      display:flex;
+      align-items:center;
+      gap:16px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.028), transparent),
+        linear-gradient(90deg, rgba(255,255,255,0.02), transparent 65%);
+    }
+
+    .player-link{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      width:100%;
+      min-width:0;
+      text-decoration:none;
+    }
+
+    .player-link:hover .player-name{
       color: var(--gold);
-      padding: 15px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      text-align: left;
-      cursor: pointer;
-      user-select: none;
-      font-weight: 900;
-      font-size: 14px;
-      letter-spacing: .2px;
-      white-space: nowrap;
     }
 
-    #transfer-stats thead th:hover{
-      background: linear-gradient(180deg, rgba(27,43,103,0.98), rgba(20,33,79,0.98));
+    .player-avatar{
+      width:78px;
+      height:116px;
+      border-radius:20px;
+      overflow:hidden;
+      flex:0 0 78px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border:1px solid rgba(255,255,255,0.12);
+      position: relative;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 10px 22px rgba(0,0,0,.22);
     }
 
-    #transfer-stats tbody tr{
-      transition: background .16s ease;
+    .player-avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
     }
 
-    #transfer-stats tbody tr:nth-child(odd){
-      background: rgba(255,255,255,0.015);
+    .player-meta{
+      min-width:0;
+      flex:1;
     }
 
-    #transfer-stats tbody tr:nth-child(even){
+    .player-name{
+      font-size:34px;
+      font-weight:950;
+      line-height:1.02;
+      margin:0 0 10px;
+      color:#fff;
+      letter-spacing:-0.8px;
+      white-space:nowrap;
+      overflow:visible;
+      text-overflow:clip;
+      word-break:normal;
+      transition: color .15s ease;
+      text-shadow: 0 2px 10px rgba(0,0,0,.16);
+    }
+
+    .player-date{
+      font-size:13px;
+      color: var(--gold);
+      font-weight:900;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+
+    .transfer-move{
+      padding:18px 20px;
+      display:grid;
+      grid-template-columns: 1fr 70px 1fr;
+      gap:16px;
+      align-items:center;
+    }
+
+    .team-link{
+      display:block;
+      text-decoration:none;
+    }
+
+    .team-link[aria-disabled="true"]{
+      pointer-events:none;
+      cursor:default;
+    }
+
+    .team-link:hover .team-box{
+      border-color: rgba(245,195,75,0.24);
+      background: rgba(255,255,255,0.055);
+      transform: translateY(-1px);
+    }
+
+    .team-link:hover .team-name{
+      color: var(--gold);
+    }
+
+    .team-box{
+      display:grid;
+      grid-template-columns: 70px 1fr;
+      gap:14px;
+      align-items:center;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.022));
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:20px;
+      padding:14px 16px;
+      min-height:112px;
+      transition: border-color .15s ease, background .15s ease, transform .15s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+    }
+
+    .team-logo{
+      width:70px;
+      height:70px;
+      border-radius:18px;
+      overflow:hidden;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      border:1px solid rgba(255,255,255,0.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .team-logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      padding:6px;
+    }
+
+    .team-label{
+      display:none;
+    }
+
+    .team-name{
+      font-size:20px;
+      font-weight:950;
+      color:#fff;
+      line-height:1.12;
+      margin-bottom:6px;
+      word-break:break-word;
+      transition: color .15s ease;
+      letter-spacing:-0.3px;
+    }
+
+    .team-division{
+      font-size:13px;
+      color: rgba(255,255,255,0.74);
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.38px;
+    }
+
+    .transfer-arrow{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:64px;
+      height:64px;
+      border-radius:999px;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(245,195,75,0.11), rgba(245,195,75,0.05));
+      border:1px solid rgba(245,195,75,0.22);
+      color: var(--gold);
+      font-size:30px;
+      font-weight:900;
+      margin: 0 auto;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 10px 22px rgba(0,0,0,.16);
+    }
+
+    .empty-state{
+      padding:18px;
+      border-radius:18px;
       background: rgba(255,255,255,0.03);
-    }
-
-    #transfer-stats tbody tr:hover{
-      background: rgba(255,255,255,0.06);
-    }
-
-    #transfer-stats tbody td{
-      padding: 14px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-      text-align: left;
-      color: rgba(255,255,255,0.90);
-      vertical-align: middle;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    #transfer-stats tbody tr:last-child td{
-      border-bottom: none;
-    }
-
-    #transfer-stats tbody td:first-child{
-      font-weight: 800;
-      color: #ffffff;
-    }
-
-    #transfer-stats tbody td:nth-child(3),
-    #transfer-stats tbody td:nth-child(5){
-      color: rgba(245,195,75,0.92);
-      font-weight: 700;
+      border:1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
     }
 
     .lastUpdated{
-      font-size: 13px;
+      font-size:13px;
       color: rgba(255,255,255,0.58);
-      margin-top: 10px;
-      text-align: right;
+      margin-top:12px;
+      text-align:right;
     }
 
     footer{
-      border-top: 1px solid var(--border);
-      background: rgba(10,14,22,0.78);
+      border-top:1px solid var(--border);
+      background: rgba(8,12,20,0.8);
     }
 
     .footer__inner{
-      padding: 16px 0;
+      padding:16px 0;
       display:flex;
       gap:10px;
       align-items:center;
       justify-content:center;
       color: var(--muted);
-      font-size: 13px;
+      font-size:13px;
+    }
+
+    @media (max-width: 1120px){
+      .transfer-row{
+        grid-template-columns: 390px 1fr;
+      }
+
+      .player-name{
+        font-size:30px;
+      }
+
+      .team-name{
+        font-size:19px;
+      }
+    }
+
+    @media (max-width: 980px){
+      .transfer-row{
+        grid-template-columns: 1fr;
+      }
+
+      .transfer-player{
+        border-right:0;
+        border-bottom:1px solid rgba(255,255,255,0.08);
+      }
+
+      .player-name{
+        font-size:28px;
+      }
+
+      .team-name{
+        font-size:19px;
+      }
     }
 
     @media (max-width: 860px){
       .nav{ display:none; }
       .hamburger{ display:inline-flex; }
-      .brand__logo{ height: 32px; }
-      .brand{ min-width: 160px; }
-      .banner{ height: 120px; border-radius: 16px; }
-      .banner-strip__inner{ padding: 14px 0; }
-      .header-box h2{ font-size: 24px; }
+      .brand__logo{ height:32px; }
+      .brand{ min-width:160px; }
+      .banner{ height:120px; border-radius:16px; }
+      .banner-strip__inner{ padding:14px 0; }
+      .header-box h2{ font-size:24px; }
     }
 
     @media (max-width: 700px){
       .header-box{
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
+        flex-direction:column;
+        align-items:stretch;
       }
 
-      #searchTransfers{
-        width: 100%;
-      }
-
-      #transfer-stats thead{
-        display:none;
-      }
-
-      #transfer-stats table,
-      #transfer-stats tbody,
-      #transfer-stats tr,
-      #transfer-stats td{
-        display:block;
+      .search-wrap{
         width:100%;
       }
 
-      #transfer-stats tbody{
-        padding: 10px;
+      .transfer-player{
+        padding:16px;
       }
 
-      #transfer-stats tbody tr{
-        background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03));
-        border: 1px solid rgba(255,255,255,0.10);
-        border-radius: 16px;
-        margin-bottom: 12px;
-        padding: 10px 12px;
-        box-shadow: 0 10px 24px rgba(0,0,0,.22);
+      .player-link{
+        gap:14px;
       }
 
-      #transfer-stats tbody tr:hover{
-        transform: translateY(-2px);
-        background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04));
+      .player-avatar{
+        width:68px;
+        height:96px;
+        flex-basis:68px;
       }
 
-      #transfer-stats tbody td{
-        display:block;
-        padding: 7px 4px;
-        border:none;
-        white-space: normal;
+      .player-name{
+        font-size:24px;
+        white-space:normal;
       }
 
-      #transfer-stats tbody td:first-child{
+      .transfer-move{
+        grid-template-columns: 1fr;
+        gap:12px;
+        padding:16px;
+      }
+
+      .transfer-arrow{
+        width:100%;
+        height:auto;
+        padding:8px 0;
+        border-radius:16px;
+        font-size:24px;
+      }
+
+      .team-box{
+        grid-template-columns: 58px 1fr;
+        min-height:unset;
+      }
+
+      .team-logo{
+        width:58px;
+        height:58px;
+      }
+
+      .team-name{
         font-size:18px;
-        font-weight:900;
-        color:#fff;
-        margin-bottom:4px;
-      }
-
-      #transfer-stats tbody td::before{
-        content: attr(data-label);
-        display:block;
-        font-size:12px;
-        font-weight:800;
-        color: rgba(245,195,75,0.86);
-        margin-bottom:2px;
-        text-transform: uppercase;
-        letter-spacing: .35px;
       }
 
       .lastUpdated{
         text-align:left;
-        margin-top:12px;
+      }
+    }
+
+    @media (max-width: 460px){
+      .player-name{
+        font-size:21px;
       }
     }
   </style>
@@ -502,12 +721,13 @@
         <a class="nav__link" href="/">Startsida</a>
 
         <div class="dropdown" data-dropdown>
-          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+          <button class="nav__button is-active" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
             Svensk ECL Statistik <span>▾</span>
           </button>
-          <div class="menu" role="menu" data-dropdown-menu>
+          <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
+            <a class="menu__item" role="menuitem" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
           </div>
         </div>
 
@@ -517,12 +737,12 @@
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
             Cuper <span>▾</span>
           </button>
-          <div class="menu" role="menu" data-dropdown-menu>
+          <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
           </div>
         </div>
 
-        <button class="iconbtn" type="button" aria-label="Sök">🔍</button>
+        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">🔍</button>
       </nav>
 
       <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
@@ -531,8 +751,9 @@
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link" href="/">Startsida</a>
-        <a class="mobile__link is-active" href="/svenskaeclbytentest.html">ECL Spring 26 – Byten</a>
+        <a class="mobile__link is-active" href="/svenskaeclbyten.html">ECL – Byten</a>
         <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
+        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring – Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
         <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
       </div>
@@ -566,8 +787,14 @@
 
     <section id="byten" class="transfers" aria-label="Svenska byten">
       <div class="header-box">
-        <h2>📋 Svenska spelare som bytt ECL-lag</h2>
-        <input type="text" id="searchTransfers" placeholder="🔍 Sök spelare eller lag...">
+        <div class="section-title">
+          <div class="section-title__icon">📋</div>
+          <h2>Svenska spelare som bytt ECL-lag</h2>
+        </div>
+
+        <div class="search-wrap">
+          <input type="text" id="searchTransfers" placeholder="Sök spelare eller lag...">
+        </div>
       </div>
 
       <div id="transfer-stats"></div>
@@ -586,8 +813,10 @@
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
 
-    document.querySelectorAll("[data-dropdown]").forEach((dd) => {
+    const dropdowns = document.querySelectorAll("[data-dropdown]");
+    dropdowns.forEach((dd) => {
       const btn = dd.querySelector("[data-dropdown-btn]");
+
       const close = () => {
         dd.classList.remove("open");
         btn.setAttribute("aria-expanded", "false");
@@ -601,7 +830,7 @@
         e.stopPropagation();
         dd.classList.contains("open") ? close() : open();
 
-        document.querySelectorAll("[data-dropdown]").forEach((other) => {
+        dropdowns.forEach((other) => {
           if (other !== dd) {
             other.classList.remove("open");
             other.querySelector("[data-dropdown-btn]")?.setAttribute("aria-expanded", "false");
@@ -610,6 +839,9 @@
       });
 
       document.addEventListener("click", close);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+      });
     });
 
     const mobileBtn = document.querySelector("[data-mobile-toggle]");
@@ -625,15 +857,6 @@
       const target = document.getElementById("transfer-stats");
       const search = document.getElementById("searchTransfers");
       const updated = document.getElementById("lastUpdated");
-
-      const columns = [
-        { key: "Player", label: "Spelare" },
-        { key: "From", label: "Från" },
-        { key: "FromDiv", label: "Från division" },
-        { key: "To", label: "Till" },
-        { key: "ToDiv", label: "Till division" },
-        { key: "Date", label: "Datum" }
-      ];
 
       const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE"]);
 
@@ -657,9 +880,7 @@
         if (Array.isArray(rawData.rows) && rawData.rows.length > 0) {
           const firstRow = rawData.rows[0];
 
-          if (firstRow && Array.isArray(firstRow.overgangar)) {
-            return firstRow;
-          }
+          if (firstRow && Array.isArray(firstRow.overgangar)) return firstRow;
 
           if (firstRow && firstRow.json_result && typeof firstRow.json_result === "object") {
             return firstRow.json_result;
@@ -686,34 +907,337 @@
         if (!value) return "";
         const d = new Date(value);
         if (isNaN(d)) return value;
+
         const months = ["JAN", "FEB", "MAR", "APR", "MAJ", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEC"];
         return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
       }
 
-      function renderTable(rows, tbody) {
-        tbody.innerHTML = "";
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
 
-        rows.forEach((row) => {
-          const tr = document.createElement("tr");
+      function encodeAttr(value) {
+        return encodeURIComponent(JSON.stringify(value));
+      }
 
-          columns.forEach((col) => {
-            const td = document.createElement("td");
-            let value = row[col.key] ?? "";
+      function decodeAttr(value) {
+        try {
+          return JSON.parse(decodeURIComponent(value || ""));
+        } catch (e) {
+          return [];
+        }
+      }
 
-            if (col.key === "Date") {
-              value = formatDate(value);
-            }
+      function normalizeFileBase(value) {
+        return String(value || "")
+          .trim()
+          .replace(/\u00A0/g, " ")
+          .replace(/\s+/g, " ")
+          .replace(/[\/\\:*?"<>|]/g, "");
+      }
 
-            td.textContent = value;
-            td.setAttribute("data-label", col.label);
-            tr.appendChild(td);
+      function removeDiacritics(value) {
+        return String(value || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+      }
+
+      function stripParens(value) {
+        return String(value || "")
+          .replace(/\s*\([^)]*\)\s*/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function slugifyLoose(value) {
+        return removeDiacritics(value)
+          .toLowerCase()
+          .replace(/&/g, " and ")
+          .replace(/[^a-z0-9]+/g, "")
+          .trim();
+      }
+
+      function unique(values) {
+        return [...new Set(values.map(v => String(v || "").trim()).filter(Boolean))];
+      }
+
+      function buildPaths(folder, names, exts) {
+        const paths = [];
+        names.forEach((name) => {
+          exts.forEach((ext) => {
+            paths.push(`/${folder}/${name}.${ext}`);
           });
+        });
+        return unique(paths);
+      }
 
-          tbody.appendChild(tr);
+      function cleanDisplayTeamName(name) {
+        return String(name || "")
+          .replace(/\u00A0/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function playerImageCandidates(playerName) {
+        const clean = normalizeFileBase(playerName);
+        const noDiacritics = normalizeFileBase(removeDiacritics(clean));
+        const lower = clean.toLowerCase();
+        const noDiacriticsLower = noDiacritics.toLowerCase();
+        const slug = slugifyLoose(clean);
+
+        const names = unique([
+          clean,
+          noDiacritics,
+          lower,
+          noDiacriticsLower,
+          slug
+        ]);
+
+        return buildPaths("players", names, ["jpg", "jpeg", "png", "webp", "JPG", "JPEG", "PNG", "WEBP"]);
+      }
+
+      function teamNameCandidates(teamName) {
+        const displayName = cleanDisplayTeamName(teamName);
+        const raw = normalizeFileBase(displayName);
+        const noParens = stripParens(raw);
+        const noDiacritics = normalizeFileBase(removeDiacritics(noParens));
+
+        const short1 = noParens.replace(/\s+IF\s+Esport$/i, "").trim();
+        const short2 = noParens.replace(/\s+Esport$/i, "").trim();
+        const short3 = noParens.replace(/\s+Hockey$/i, "").trim();
+        const short4 = noParens.replace(/\s+Esports$/i, "").trim();
+
+        const names = unique([
+          noParens,
+          removeDiacritics(noParens),
+          short1,
+          removeDiacritics(short1),
+          short2,
+          removeDiacritics(short2),
+          short3,
+          removeDiacritics(short3),
+          short4,
+          removeDiacritics(short4),
+          noDiacritics,
+          noParens.toLowerCase(),
+          removeDiacritics(noParens).toLowerCase(),
+          short1.toLowerCase(),
+          removeDiacritics(short1).toLowerCase(),
+          short2.toLowerCase(),
+          removeDiacritics(short2).toLowerCase(),
+          short3.toLowerCase(),
+          removeDiacritics(short3).toLowerCase(),
+          slugifyLoose(noParens),
+          slugifyLoose(short1),
+          slugifyLoose(short2),
+          slugifyLoose(short3)
+        ]);
+
+        return buildPaths("teamlogos", names, ["png", "jpg", "jpeg", "webp", "PNG", "JPG", "JPEG", "WEBP"]);
+      }
+
+      function playerUrl(player) {
+        return `https://sportsgamer.gg/players/${encodeURIComponent(player.playerID ?? "")}`;
+      }
+
+      function teamUrl(teamId, leagueId) {
+        if (!teamId || !leagueId) return "#";
+        return `https://sportsgamer.gg/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(teamId)}`;
+      }
+
+      function teamShortName(name) {
+        const cleaned = stripParens(cleanDisplayTeamName(name))
+          .replace(/\s+IF\s+Esport$/i, "")
+          .replace(/\s+Esport$/i, "")
+          .replace(/\s+Esports$/i, "")
+          .replace(/\s+Hockey$/i, "")
+          .trim();
+
+        return cleaned.slice(0, 3).toUpperCase() || "ECL";
+      }
+
+      function fallbackPlayerImage(img) {
+        img.onerror = null;
+        img.src = "/players/1DEFAULTBILDID.jpg";
+      }
+
+      function fallbackLogo(img) {
+        const team = img.getAttribute("data-team") || "";
+        const shortName = teamShortName(team);
+
+        img.onerror = null;
+        img.src =
+          "data:image/svg+xml;charset=UTF-8," +
+          encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220">
+              <defs>
+                <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#18233d"/>
+                  <stop offset="100%" stop-color="#0f172a"/>
+                </linearGradient>
+              </defs>
+              <rect width="220" height="220" rx="32" fill="url(#g)"/>
+              <path d="M110 38l52 20v37c0 39-22 67-52 88-30-21-52-49-52-88V58z" fill="#f5c34b" fill-opacity="0.18"/>
+              <text x="110" y="126" text-anchor="middle" fill="#f5c34b" font-family="Arial, sans-serif" font-weight="800" font-size="34">${shortName}</text>
+            </svg>
+          `);
+      }
+
+      function setFirstCandidate(img) {
+        const candidates = decodeAttr(img.dataset.candidates);
+        img.dataset.candidateIndex = "0";
+
+        if (candidates.length) {
+          img.src = candidates[0];
+        } else {
+          if (img.dataset.type === "player") fallbackPlayerImage(img);
+          else fallbackLogo(img);
+        }
+      }
+
+      function tryNextCandidate(img) {
+        const candidates = decodeAttr(img.dataset.candidates);
+        const currentIndex = Number(img.dataset.candidateIndex || "0");
+        const nextIndex = currentIndex + 1;
+
+        if (nextIndex < candidates.length) {
+          img.dataset.candidateIndex = String(nextIndex);
+          img.src = candidates[nextIndex];
+          return;
+        }
+
+        if (img.dataset.type === "player") fallbackPlayerImage(img);
+        else fallbackLogo(img);
+      }
+
+      window.handleImageError = function(event) {
+        tryNextCandidate(event.target);
+      };
+
+      function cardMarkup(player) {
+        const fromDisplay = cleanDisplayTeamName(player.From);
+        const toDisplay = cleanDisplayTeamName(player.To);
+
+        const playerCandidates = playerImageCandidates(player.Player);
+        const fromCandidates = teamNameCandidates(player.From);
+        const toCandidates = teamNameCandidates(player.To);
+
+        const profileUrl = playerUrl(player);
+
+        const fromTeamUrl = teamUrl(player.FromTeamID, player.FromLeagueID);
+        const toTeamUrl = teamUrl(player.ToTeamID, player.ToLeagueID);
+
+        const fromLinkAttrs = fromTeamUrl === "#"
+          ? 'class="team-link" aria-disabled="true"'
+          : `class="team-link" href="${escapeHtml(fromTeamUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna lagprofil för ${escapeHtml(fromDisplay)}"`;
+
+        const toLinkAttrs = toTeamUrl === "#"
+          ? 'class="team-link" aria-disabled="true"'
+          : `class="team-link" href="${escapeHtml(toTeamUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna lagprofil för ${escapeHtml(toDisplay)}"`;
+
+        return `
+          <article class="transfer-card" data-search="${escapeHtml([
+            player.Player,
+            fromDisplay,
+            player.FromDiv,
+            toDisplay,
+            player.ToDiv,
+            player.Date
+          ].join(" ").toLowerCase())}">
+            <div class="transfer-row">
+              <div class="transfer-player">
+                <a
+                  class="player-link"
+                  href="${escapeHtml(profileUrl)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Öppna spelarprofil för ${escapeHtml(player.Player)}"
+                >
+                  <div class="player-avatar">
+                    <img
+                      alt="${escapeHtml(player.Player)}"
+                      data-type="player"
+                      data-name="${escapeHtml(player.Player)}"
+                      data-candidates="${escapeHtml(encodeAttr(playerCandidates))}"
+                      loading="lazy"
+                      onerror="handleImageError(event)"
+                    >
+                  </div>
+                  <div class="player-meta">
+                    <div class="player-name">${escapeHtml(player.Player)}</div>
+                    <div class="player-date">${escapeHtml(formatDate(player.Date))}</div>
+                  </div>
+                </a>
+              </div>
+
+              <div class="transfer-move">
+                <a ${fromLinkAttrs}>
+                  <div class="team-box">
+                    <div class="team-logo">
+                      <img
+                        alt="${escapeHtml(fromDisplay)}"
+                        data-type="team"
+                        data-team="${escapeHtml(fromDisplay)}"
+                        data-candidates="${escapeHtml(encodeAttr(fromCandidates))}"
+                        loading="lazy"
+                        onerror="handleImageError(event)"
+                      >
+                    </div>
+                    <div>
+                      <div class="team-name">${escapeHtml(fromDisplay)}</div>
+                      <div class="team-division">${escapeHtml(player.FromDiv || "")}</div>
+                    </div>
+                  </div>
+                </a>
+
+                <div class="transfer-arrow">→</div>
+
+                <a ${toLinkAttrs}>
+                  <div class="team-box">
+                    <div class="team-logo">
+                      <img
+                        alt="${escapeHtml(toDisplay)}"
+                        data-type="team"
+                        data-team="${escapeHtml(toDisplay)}"
+                        data-candidates="${escapeHtml(encodeAttr(toCandidates))}"
+                        loading="lazy"
+                        onerror="handleImageError(event)"
+                      >
+                    </div>
+                    <div>
+                      <div class="team-name">${escapeHtml(toDisplay)}</div>
+                      <div class="team-division">${escapeHtml(player.ToDiv || "")}</div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </article>
+        `;
+      }
+
+      function activateImages() {
+        target.querySelectorAll("img[data-candidates]").forEach((img) => {
+          setFirstCandidate(img);
         });
       }
 
-      target.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,.75)">Laddar …</div>';
+      function renderCards(rows) {
+        if (!rows.length) {
+          target.innerHTML = `<div class="empty-state">Inga svenska byten hittades.</div>`;
+          return;
+        }
+
+        target.innerHTML = `<div class="transfers-list">${rows.map(cardMarkup).join("")}</div>`;
+        activateImages();
+      }
+
+      target.innerHTML = '<div class="empty-state">Laddar …</div>';
 
       fetch(JSON_URL, { cache: "no-store" })
         .then((response) => {
@@ -730,46 +1254,7 @@
             .filter(isSwedish)
             .sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
 
-          if (!swedishRows.length) {
-            target.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,.75)">Inga svenska byten hittades.</div>';
-            updated.textContent = "";
-            return;
-          }
-
-          const table = document.createElement("table");
-
-          const colgroup = document.createElement("colgroup");
-          ["col-player", "col-from", "col-fromdiv", "col-to", "col-todiv", "col-date"].forEach((className) => {
-            const col = document.createElement("col");
-            col.className = className;
-            colgroup.appendChild(col);
-          });
-          table.appendChild(colgroup);
-
-          const thead = document.createElement("thead");
-          const trh = document.createElement("tr");
-
-          columns.forEach((col, idx) => {
-            const th = document.createElement("th");
-            th.textContent = col.label;
-            th.addEventListener("click", () => sortTable(idx));
-            trh.appendChild(th);
-          });
-
-          thead.appendChild(trh);
-          table.appendChild(thead);
-
-          const tbody = document.createElement("tbody");
-          table.appendChild(tbody);
-
-          const wrap = document.createElement("div");
-          wrap.className = "wrap";
-          wrap.appendChild(table);
-
-          target.innerHTML = "";
-          target.appendChild(wrap);
-
-          renderTable(swedishRows, tbody);
+          renderCards(swedishRows);
 
           updated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
             day: "numeric",
@@ -780,37 +1265,17 @@
           });
 
           search.addEventListener("input", function () {
-            const q = this.value.toLowerCase();
-            [...tbody.rows].forEach((tr) => {
-              const match = [...tr.cells].some((td) => td.textContent.toLowerCase().includes(q));
-              tr.style.display = match ? "" : "none";
+            const q = this.value.toLowerCase().trim();
+            const cards = target.querySelectorAll(".transfer-card");
+
+            cards.forEach((card) => {
+              const haystack = card.getAttribute("data-search") || "";
+              card.style.display = haystack.includes(q) ? "" : "none";
             });
           });
-
-          let sortAsc = true;
-
-          function sortTable(idx) {
-            const key = columns[idx].key;
-
-            swedishRows.sort((a, b) => {
-              const valA = String(a[key] ?? "").toLowerCase();
-              const valB = String(b[key] ?? "").toLowerCase();
-
-              if (key === "Date") {
-                const da = new Date(a[key] || 0);
-                const db = new Date(b[key] || 0);
-                return sortAsc ? da - db : db - da;
-              }
-
-              return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-            });
-
-            sortAsc = !sortAsc;
-            renderTable(swedishRows, tbody);
-          }
         })
         .catch((err) => {
-          target.innerHTML = `<div style="padding:12px;color:rgba(255,255,255,.75)">Fel vid laddning: ${err.message}</div>`;
+          target.innerHTML = `<div class="empty-state">Fel vid laddning: ${escapeHtml(err.message)}</div>`;
           updated.textContent = "";
         });
     })();
