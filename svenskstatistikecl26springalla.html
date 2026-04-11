@@ -1076,10 +1076,17 @@
       }));
     }
 
-    function getGoalieExtraInfo(row){
-      if(activeLeague !== "goalies") return "";
-      if(!Object.prototype.hasOwnProperty.call(row, "gp")) return "";
-      return `Spelade matcher: ${safeText(row.gp)}`;
+    function getExtraInfo(row){
+      if(activeLeague === "goalies"){
+        if(!Object.prototype.hasOwnProperty.call(row, "gp")) return "";
+        return `Spelade matcher: ${safeText(row.gp)}`;
+      }
+
+      if(["p", "g", "a"].includes(currentSort.key) && Object.prototype.hasOwnProperty.call(row, "gp")){
+        return `Spelade matcher: ${safeText(row.gp)}`;
+      }
+
+      return "";
     }
 
     function getMetricPercent(rows, metric){
@@ -1114,7 +1121,7 @@
         const team = safeText(row.team || "");
         const metrics = buildCardMetrics(row);
         const medal = ["🥇", "🥈", "🥉"][i] || "";
-        const goalieExtraInfo = getGoalieExtraInfo(row);
+        const extraInfo = getExtraInfo(row);
 
         return `
           <div class="player-card">
@@ -1142,7 +1149,7 @@
                     ${[metrics[1], metrics[2]].filter(Boolean).map(m => `${m.label}: ${m.raw}`).join(" · ")}
                   </div>
                 ` : ""}
-                ${goalieExtraInfo ? `<div class="player-extra-info">${goalieExtraInfo}</div>` : ""}
+                ${extraInfo ? `<div class="player-extra-info">${extraInfo}</div>` : ""}
               </div>
             </div>
 
