@@ -456,6 +456,11 @@
     }
     .player-points{ margin-top: 4px; font-size: 13px; }
     .player-ga{ font-size: 12px; color: rgba(255,255,255,0.78); }
+    .player-extra-info{
+      margin-top: 4px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.82);
+    }
 
     .stat-bars{ margin-top: 8px; }
     .bar-row{ margin-bottom: 3px; font-size: 11px; }
@@ -1071,6 +1076,12 @@
       }));
     }
 
+    function getGoalieExtraInfo(row){
+      if(activeLeague !== "goalies") return "";
+      if(!Object.prototype.hasOwnProperty.call(row, "gp")) return "";
+      return `Spelade matcher: ${safeText(row.gp)}`;
+    }
+
     function getMetricPercent(rows, metric){
       const value = metric.num;
       if(value === null) return 0;
@@ -1103,6 +1114,7 @@
         const team = safeText(row.team || "");
         const metrics = buildCardMetrics(row);
         const medal = ["🥇", "🥈", "🥉"][i] || "";
+        const goalieExtraInfo = getGoalieExtraInfo(row);
 
         return `
           <div class="player-card">
@@ -1130,6 +1142,7 @@
                     ${[metrics[1], metrics[2]].filter(Boolean).map(m => `${m.label}: ${m.raw}`).join(" · ")}
                   </div>
                 ` : ""}
+                ${goalieExtraInfo ? `<div class="player-extra-info">${goalieExtraInfo}</div>` : ""}
               </div>
             </div>
 
