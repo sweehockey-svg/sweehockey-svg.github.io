@@ -101,13 +101,15 @@
       color: var(--text);
     }
 
+    .nav__link.is-active{ color: var(--text); }
+
     .dropdown{ position:relative; }
 
     .menu{
       position:absolute;
       top: calc(100% + 10px);
       right:0;
-      width:270px;
+      width:290px;
       padding:8px;
       border-radius:14px;
       background: rgba(16,22,34,0.97);
@@ -179,6 +181,9 @@
       background: rgba(255,255,255,0.04);
       color: var(--muted);
     }
+
+    .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
+    .mobile__link.is-active{ color: var(--text); }
 
     .banner-strip{
       border-bottom: 1px solid var(--border);
@@ -716,12 +721,13 @@
         <a class="nav__link" href="/">Startsida</a>
 
         <div class="dropdown" data-dropdown>
-          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+          <button class="nav__button is-active" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
             Svensk ECL Statistik <span>▾</span>
           </button>
-          <div class="menu" role="menu" data-dropdown-menu>
+          <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
+            <a class="menu__item" role="menuitem" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
           </div>
         </div>
 
@@ -731,12 +737,12 @@
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
             Cuper <span>▾</span>
           </button>
-          <div class="menu" role="menu" data-dropdown-menu>
+          <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
           </div>
         </div>
 
-        <button class="iconbtn" type="button" aria-label="Sök">🔍</button>
+        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">🔍</button>
       </nav>
 
       <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
@@ -745,8 +751,9 @@
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link" href="/">Startsida</a>
-        <a class="mobile__link is-active" href="/svenskaeclbytentest.html">ECL Spring 26 – Byten</a>
+        <a class="mobile__link is-active" href="/svenskaeclbyten.html">ECL – Byten</a>
         <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
+        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring – Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
         <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
       </div>
@@ -769,7 +776,7 @@
       </p>
 
       <p>
-        Just nu: <strong>Svenska spelare som bytt ECL-lag</strong> (hämtas från Spring 26 JSON).
+        Just nu: <strong>Svenska spelare som bytt ECL-lag</strong> (hämtas från <strong>svenskstatistikecl26spring.json</strong>).
       </p>
 
       <div class="cta">
@@ -806,8 +813,10 @@
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
 
-    document.querySelectorAll("[data-dropdown]").forEach((dd) => {
+    const dropdowns = document.querySelectorAll("[data-dropdown]");
+    dropdowns.forEach((dd) => {
       const btn = dd.querySelector("[data-dropdown-btn]");
+
       const close = () => {
         dd.classList.remove("open");
         btn.setAttribute("aria-expanded", "false");
@@ -821,7 +830,7 @@
         e.stopPropagation();
         dd.classList.contains("open") ? close() : open();
 
-        document.querySelectorAll("[data-dropdown]").forEach((other) => {
+        dropdowns.forEach((other) => {
           if (other !== dd) {
             other.classList.remove("open");
             other.querySelector("[data-dropdown-btn]")?.setAttribute("aria-expanded", "false");
@@ -830,6 +839,9 @@
       });
 
       document.addEventListener("click", close);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+      });
     });
 
     const mobileBtn = document.querySelector("[data-mobile-toggle]");
@@ -841,7 +853,7 @@
     }
 
     (function () {
-      const JSON_URL = "/ECL/spring26.json?v=2";
+      const JSON_URL = "./svenskstatistikecl26spring.json";
       const target = document.getElementById("transfer-stats");
       const search = document.getElementById("searchTransfers");
       const updated = document.getElementById("lastUpdated");
@@ -898,6 +910,20 @@
 
         const months = ["JAN", "FEB", "MAR", "APR", "MAJ", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEC"];
         return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+      }
+
+      function formatUpdated(value) {
+        if (!value) return "";
+        const d = new Date(value);
+        if (isNaN(d)) return value;
+
+        return d.toLocaleString("sv-SE", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
       }
 
       function escapeHtml(value) {
@@ -1244,13 +1270,18 @@
 
           renderCards(swedishRows);
 
-          updated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
-          });
+          const updatedValue = parsed.updated || rawData.updated || "";
+          if (updatedValue) {
+            updated.textContent = "Senast uppdaterad: " + formatUpdated(updatedValue);
+          } else {
+            updated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit"
+            });
+          }
 
           search.addEventListener("input", function () {
             const q = this.value.toLowerCase().trim();
