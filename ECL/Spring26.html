@@ -405,12 +405,20 @@
         </div>
 
         <div class="filters-row">
-          <input class="input" id="searchInput" type="text" placeholder="Search player, team, userID or division" />
+          <input class="input" id="searchInput" type="text" placeholder="Search player, team, matches or division" />
           <label class="toggle-box"><input id="flaggedOnlyToggle" type="checkbox" /> <span>Flagged only</span></label>
           <select class="select" id="sortSelect">
             <option value="default">Default</option>
             <option value="name-asc">Name A–Z</option>
             <option value="name-desc">Name Z–A</option>
+          </select>
+          <select class="select" id="divisionFilterSelect" style="display:none;">
+            <option value="all">All divisions</option>
+            <option value="ELITE">Elite</option>
+            <option value="PRO">Pro</option>
+            <option value="LITE">Lite</option>
+            <option value="CORE">Core</option>
+            <option value="NEO">Neo</option>
           </select>
           <select class="select" id="seedingFilterSelect" style="display:none;">
             <option value="all">All seeding rows</option>
@@ -543,31 +551,33 @@
       'HCP eSports',
       'SHADOW SKULLS',
       'Dump N Ch4se',
+      'eskoetikka esports',
+      'The Oldtimers',
       'MORGANCHIPSEN HK'
     ];
 
-   const PAGE_CONFIG = {
-  dashboard: { title: 'Overview', subtitle: 'SportsGamer ECL tools overview and spring26.json mapping.', type: 'dashboard', label: 'Overview', badge: 'Start' },
-  seeding: { title: 'Seeding 26 Spring', subtitle: 'Preset + registration check.', type: 'preset', label: 'Seeding 26 Spring', badge: 'Preset', csv: false },
-  registered: {
-    title: 'Registered Teams 26 Spring',
-    subtitle: 'Built from signUps.',
-    type: 'data',
-    jsonKey: 'signUps',
-    label: 'Registered Teams',
-    badge: 'signUps',
-    csv: true,
-    columns: ['teamName','teamCountry','registrationDate','divisionName','qualifierName','teamLicense','playerCount','fullLicenseCount','backupLicenseCount','unlicensedPlayerCount','signupIssue','userID','__sendMail']
-  },
-  lite: { title: 'Lite 26 Spring Teams', subtitle: 'Built from lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','totalPoints','compatibility','__sendMail'] },
-  core: { title: 'Core 26 Spring Teams', subtitle: 'Built from core.', type: 'data', jsonKey: 'core', label: 'Core 26 Spring Teams', badge: 'core', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','totalPoints','compatibility','__sendMail'] },
-  neo: { title: 'Neo 26 Spring Teams', subtitle: 'Built from neo.', type: 'data', jsonKey: 'neo', label: 'Neo 26 Spring Teams', badge: 'neo', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','NP','totalPoints','compatibility','__sendMail'] },
-  transfers: { title: 'Transfers 26 Spring Teams', subtitle: 'Built from overgangar.', type: 'data', jsonKey: 'overgangar', label: 'Transfers 26 Spring Teams', badge: 'overgangar', csv: true, columns: ['Player','From','FromDiv','To','ToDiv','GroupGames26Winter','PlayoffGames26Winter','TotalGames26Winter','Date'] },
-  backups: { title: 'Backups 26 Spring Teams', subtitle: 'Built from backups.', type: 'data', jsonKey: 'backups', label: 'Backups 26 Spring Teams', badge: 'backups', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
-  unlicensed: { title: 'Unlicensed 26 Spring Teams', subtitle: 'Built from licenslosa.', type: 'data', jsonKey: 'licenslosa', label: 'Unlicensed 26 Spring Teams', badge: 'licenslosa', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
-  multiple: { title: 'Players In Multiple Teams', subtitle: 'Built from inMoreThan1Teams.', type: 'data', jsonKey: 'inMoreThan1Teams', label: 'Players In Multiple Teams', badge: 'inMoreThan1Teams', csv: true, columns: ['playerName','teamCount','teams','__sendMail'] },
-  banned: { title: 'Banned Players', subtitle: 'Built from bannedPlayers.', type: 'data', jsonKey: 'bannedPlayers', label: 'Banned Players', badge: 'bannedPlayers', csv: true, columns: ['playerName','banType','untilText','active','status','foundAs','teamName','divisionName','notes'] }
-};
+    const PAGE_CONFIG = {
+      dashboard: { title: 'Overview', subtitle: 'SportsGamer ECL tools overview and spring26.json mapping.', type: 'dashboard', label: 'Overview', badge: 'Start' },
+      seeding: { title: 'Seeding 26 Spring', subtitle: 'Preset + registration check.', type: 'preset', label: 'Seeding 26 Spring', badge: 'Preset', csv: false },
+      registered: {
+        title: 'Registered Teams 26 Spring',
+        subtitle: 'Built from signUps.',
+        type: 'data',
+        jsonKey: 'signUps',
+        label: 'Registered Teams',
+        badge: 'signUps',
+        csv: true,
+        columns: ['teamName','teamCountry','registrationDate','divisionName','qualifierName','teamLicense','playerCount','fullLicenseCount','backupLicenseCount','unlicensedPlayerCount','matchesPlayed','signupIssue','__sendMail']
+      },
+      lite: { title: 'Lite 26 Spring Teams', subtitle: 'Built from lite.', type: 'data', jsonKey: 'lite', label: 'Lite 26 Spring Teams', badge: 'lite', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','totalPoints','compatibility','__sendMail'] },
+      core: { title: 'Core 26 Spring Teams', subtitle: 'Built from core.', type: 'data', jsonKey: 'core', label: 'Core 26 Spring Teams', badge: 'core', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','totalPoints','compatibility','__sendMail'] },
+      neo: { title: 'Neo 26 Spring Teams', subtitle: 'Built from neo.', type: 'data', jsonKey: 'neo', label: 'Neo 26 Spring Teams', badge: 'neo', csv: true, columns: ['teamName','totalPlayers','EP','PP','LP','CP','NP','totalPoints','compatibility','__sendMail'] },
+      transfers: { title: 'Transfers 26 Spring Teams', subtitle: 'Built from overgangar.', type: 'data', jsonKey: 'overgangar', label: 'Transfers 26 Spring Teams', badge: 'overgangar', csv: true, columns: ['Player','From','FromDiv','To','ToDiv','GroupGames26Winter','PlayoffGames26Winter','TotalGames26Winter','Date'] },
+      backups: { title: 'Backups 26 Spring Teams', subtitle: 'Built from backups.', type: 'data', jsonKey: 'backups', label: 'Backups 26 Spring Teams', badge: 'backups', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
+      unlicensed: { title: 'Unlicensed 26 Spring Teams', subtitle: 'Built from licenslosa.', type: 'data', jsonKey: 'licenslosa', label: 'Unlicensed 26 Spring Teams', badge: 'licenslosa', csv: true, columns: ['tag','teamName','leagueID','userID','totalMatchesPlayed','__sendMail'] },
+      multiple: { title: 'Players In Multiple Teams', subtitle: 'Built from inMoreThan1Teams.', type: 'data', jsonKey: 'inMoreThan1Teams', label: 'Players In Multiple Teams', badge: 'inMoreThan1Teams', csv: true, columns: ['playerName','teamCount','teams','__sendMail'] },
+      banned: { title: 'Banned Players', subtitle: 'Built from bannedPlayers.', type: 'data', jsonKey: 'bannedPlayers', label: 'Banned Players', badge: 'bannedPlayers', csv: true, columns: ['playerName','banType','untilText','active','status','foundAs','teamName','divisionName','notes'] }
+    };
 
     const PAGE_ORDER = ['dashboard','seeding','registered','lite','core','neo','transfers','backups','unlicensed','multiple','banned'];
     const EXPECTED_KEYS = ['signUps','lite','core','neo','overgangar','backups','licenslosa','inMoreThan1Teams','bannedPlayers','duplicatePlayers','teamCaptains','proQualReqCheck'];
@@ -603,6 +613,7 @@
       searchInput: document.getElementById('searchInput'),
       flaggedOnlyToggle: document.getElementById('flaggedOnlyToggle'),
       sortSelect: document.getElementById('sortSelect'),
+      divisionFilterSelect: document.getElementById('divisionFilterSelect'),
       seedingFilterSelect: document.getElementById('seedingFilterSelect'),
       statusChip: document.getElementById('statusChip'),
       rowCounter: document.getElementById('rowCounter'),
@@ -704,19 +715,19 @@
       getCanonicalTeamName(teamName) { const info = Rename.getRenameInfo(teamName); return info ? info.newName : String(teamName || ''); },
       getSeedRenameNote(teamName) { const info = Rename.getRenameInfo(teamName); return info ? `Old name ${info.oldName}` : ''; },
       applyToValue(value) { const info = Rename.getRenameInfo(value); return info ? info.newName : String(value || ''); },
+
       applyToRow(row) {
         if (!row || typeof row !== 'object') return row;
         const cloned = { ...row };
-        TEAM_NAME_KEYS.forEach(key => { if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]); });
-        ['history1Team','history2Team','history3Team','From','To'].forEach(key => { if (cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]); });
-        if (Array.isArray(cloned.players)) {
-          cloned.players = cloned.players.map(player => {
-            if (!player || typeof player !== 'object') return player;
-            const p = { ...player };
-            ['history1Team','history2Team','history3Team'].forEach(key => { if (p[key]) p[key] = Rename.applyToValue(p[key]); });
-            return p;
-          });
-        }
+
+        TEAM_NAME_KEYS.forEach(key => {
+          if (key in cloned && cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
+        });
+
+        ['From', 'To'].forEach(key => {
+          if (cloned[key]) cloned[key] = Rename.applyToValue(cloned[key]);
+        });
+
         return cloned;
       }
     };
@@ -743,119 +754,119 @@
     };
 
     const Rules = {
-  getDivisionLevel(value) {
-    const d = String(value || '').trim().toUpperCase();
-    if (d === 'ELITE') return 4;
-    if (d === 'PRO') return 3;
-    if (d === 'LITE') return 2;
-    if (d === 'CORE') return 1;
-    if (d === 'NEO') return 0;
-    return null;
-  },
+      getDivisionLevel(value) {
+        const d = String(value || '').trim().toUpperCase();
+        if (d === 'ELITE') return 4;
+        if (d === 'PRO') return 3;
+        if (d === 'LITE') return 2;
+        if (d === 'CORE') return 1;
+        if (d === 'NEO') return 0;
+        return null;
+      },
 
-  isBigDropTransfer(row) {
-    if (currentPage !== 'transfers') return false;
-    const fromLevel = this.getDivisionLevel(row?.FromDiv);
-    const toLevel = this.getDivisionLevel(row?.ToDiv);
-    if (fromLevel === null || toLevel === null) return false;
-    return (fromLevel - toLevel) > 1;
-  },
+      isBigDropTransfer(row) {
+        if (currentPage !== 'transfers') return false;
+        const fromLevel = this.getDivisionLevel(row?.FromDiv);
+        const toLevel = this.getDivisionLevel(row?.ToDiv);
+        if (fromLevel === null || toLevel === null) return false;
+        return (fromLevel - toLevel) > 1;
+      },
 
-  isNotOkRow(row) {
-    return Object.values(row || {}).some(v => String(v ?? '').trim().toLowerCase() === 'not ok');
-  },
+      isNotOkRow(row) {
+        return Object.values(row || {}).some(v => String(v ?? '').trim().toLowerCase() === 'not ok');
+      },
 
-  getMinimumPlayersForDivision(divisionName) {
-    const d = String(divisionName || '').trim().toUpperCase();
-    if (d === 'ELITE' || d === 'PRO') return 7;
-    if (d === 'LITE' || d === 'CORE' || d === 'NEO') return 8;
-    return 0;
-  },
+      getMinimumPlayersForDivision(divisionName) {
+        const d = String(divisionName || '').trim().toUpperCase();
+        if (d === 'ELITE' || d === 'PRO') return 7;
+        if (d === 'LITE' || d === 'CORE' || d === 'NEO') return 8;
+        return 0;
+      },
 
-  getSignupIssues(row) {
-  const issues = [];
-  const division = String(row?.divisionName || '').trim().toUpperCase();
-  const playerCount = Number(row?.playerCount) || 0;
-  const fullLicenseCount = RowAccess.getFullLicenseCount(row);
-  const backupLicenseCount = Number(row?.backupLicenseCount) || 0;
-  const minPlayers = this.getMinimumPlayersForDivision(division);
-  const teamLicense = Number(row?.teamLicense) || 0;
+      getSignupIssues(row) {
+        const issues = [];
+        const division = String(row?.divisionName || '').trim().toUpperCase();
+        const playerCount = Number(row?.playerCount) || 0;
+        const fullLicenseCount = RowAccess.getFullLicenseCount(row);
+        const backupLicenseCount = Number(row?.backupLicenseCount) || 0;
+        const minPlayers = this.getMinimumPlayersForDivision(division);
+        const teamLicense = Number(row?.teamLicense) || 0;
 
-if (division !== 'NEO' && teamLicense !== 1) {
-  issues.push('team license missing');
-}
+        if (division !== 'NEO' && teamLicense !== 1) {
+          issues.push('team license missing');
+        }
 
-  if (minPlayers > 0 && playerCount < minPlayers) {
-    issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
-  }
+        if (minPlayers > 0 && playerCount < minPlayers) {
+          issues.push(`needs ${minPlayers - playerCount} more player${minPlayers - playerCount === 1 ? '' : 's'} (min ${minPlayers})`);
+        }
 
-  if (playerCount > 13) {
-    issues.push(`has ${playerCount - 13} player${playerCount - 13 === 1 ? '' : 's'} too many (max 13)`);
-  }
+        if (playerCount > 14) {
+          issues.push(`has ${playerCount - 14} player${playerCount - 14 === 1 ? '' : 's'} too many (max 14)`);
+        }
 
-  if (fullLicenseCount < 6) {
-    const licenseLabel = division === 'NEO' ? 'Neo license' : 'full license';
-    issues.push(`needs ${6 - fullLicenseCount} more ${licenseLabel}${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
-  }
+        if (fullLicenseCount < 6) {
+          const licenseLabel = division === 'NEO' ? 'Neo license' : 'full license';
+          issues.push(`needs ${6 - fullLicenseCount} more ${licenseLabel}${6 - fullLicenseCount === 1 ? '' : 's'} (min 6)`);
+        }
 
-  if (backupLicenseCount > 3) {
-    issues.push(`has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
-  }
+        if (backupLicenseCount > 3) {
+          issues.push(`has ${backupLicenseCount - 3} backup license${backupLicenseCount - 3 === 1 ? '' : 's'} too many (max 3)`);
+        }
 
-  return issues;
-},
+        return issues;
+      },
 
-  getSignupIssueText(row) {
-    return this.getSignupIssues(row).join(' • ');
-  },
+      getSignupIssueText(row) {
+        return this.getSignupIssues(row).join(' • ');
+      },
 
-  getAllowedHistoryMaxLevel() {
-    if (currentPage === 'lite') return 2;
-    if (currentPage === 'core') return 1;
-    if (currentPage === 'neo') return 0;
-    return 99;
-  },
+      getAllowedHistoryMaxLevel() {
+        if (currentPage === 'lite') return 2;
+        if (currentPage === 'core') return 1;
+        if (currentPage === 'neo') return 0;
+        return 99;
+      },
 
-  isFlaggedHistoryDivision(divisionName) {
-    const level = this.getDivisionLevel(divisionName);
-    if (level === null) return false;
-    return level > this.getAllowedHistoryMaxLevel();
-  },
+      isFlaggedHistoryDivision(divisionName) {
+        const level = this.getDivisionLevel(divisionName);
+        if (level === null) return false;
+        return level > this.getAllowedHistoryMaxLevel();
+      },
 
-  getRowClass(row) {
-    if (currentPage === 'multiple') return 'not-ok';
+      getRowClass(row) {
+        if (currentPage === 'multiple') return 'not-ok';
 
-    if (currentPage === 'banned') {
-      if (String(row?.status || '').toLowerCase() === 'violation') return 'not-ok';
-      if (String(row?.status || '').toLowerCase() === 'clear') return 'ban-clear';
-      if (String(row?.status || '').toLowerCase() === 'expired') return 'ban-expired';
-      return '';
-    }
+        if (currentPage === 'banned') {
+          if (String(row?.status || '').toLowerCase() === 'violation') return 'not-ok';
+          if (String(row?.status || '').toLowerCase() === 'clear') return 'ban-clear';
+          if (String(row?.status || '').toLowerCase() === 'expired') return 'ban-expired';
+          return '';
+        }
 
-    if (currentPage === 'registered' && this.getSignupIssues(row).length > 0) return 'signup-rule-error';
+        if (currentPage === 'registered' && this.getSignupIssues(row).length > 0) return 'signup-rule-error';
 
-    if (currentPage === 'backups') {
-      const games = RowAccess.getBackupGames(row);
-      if (games !== null) {
-        if (games > 10) return 'backup-danger';
-        if (games === 10) return 'backup-warning';
+        if (currentPage === 'backups') {
+          const games = RowAccess.getBackupGames(row);
+          if (games !== null) {
+            if (games > 10) return 'backup-danger';
+            if (games === 10) return 'backup-warning';
+          }
+        }
+
+        if (currentPage === 'unlicensed') {
+          const games = RowAccess.getBackupGames(row);
+          if (games !== null && games >= 1) return 'not-ok';
+        }
+
+        if (this.isBigDropTransfer(row)) return 'transfer-danger';
+        if (this.isNotOkRow(row)) return 'not-ok';
+        return '';
+      },
+
+      isFlaggedRow(row) {
+        return ['not-ok','backup-warning','backup-danger','transfer-danger','signup-rule-error'].includes(this.getRowClass(row));
       }
-    }
-
-    if (currentPage === 'unlicensed') {
-      const games = RowAccess.getBackupGames(row);
-      if (games !== null && games >= 1) return 'not-ok';
-    }
-
-    if (this.isBigDropTransfer(row)) return 'transfer-danger';
-    if (this.isNotOkRow(row)) return 'not-ok';
-    return '';
-  },
-
-  isFlaggedRow(row) {
-    return ['not-ok','backup-warning','backup-danger','transfer-danger','signup-rule-error'].includes(this.getRowClass(row));
-  }
-};
+    };
 
     const TeamLinks = {
       getLeagueId(row, column = null) {
@@ -1173,64 +1184,104 @@ if (division !== 'NEO' && teamLicense !== 1) {
         const teamName = RowAccess.getTeamName(row) || 'team';
         const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
         const games = Number(RowAccess.getBackupGames(row) || 0);
-        if (games < 10) return `Upcoming License Upgrade Reminder for ${playerName}\n\nHi ${teamName},\n\nThis is a friendly reminder that ${playerName} has now played ${games} matches using a Backup Player License and is approaching the 10-game limit.\n\nBest regards,`;
-        if (games > 10) return `License Status Update – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has participated in ${games} games using a Backup Player License and now needs a Full Player License.\n\nBest regards,`;
-        return `License Status Reminder – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has now played 10 matches using a Backup Player License.\n\nBest regards,`;
+
+        if (games < 10) {
+          return `Upcoming License Upgrade Reminder for ${playerName}
+
+Hi ${teamName},
+
+This is a friendly reminder that ${playerName} has now played ${games} matches using a Backup Player License and is approaching the 10-game limit.
+
+Best regards,`;
+        }
+
+        return `License Status Reminder – Action Required for ${playerName}
+
+Hi ${teamName},
+
+This is a reminder that ${playerName} has now played ${games} matches using a Backup Player License. According to league rules, a Backup Player License covers a maximum of 10 games across the entire ECL '26 season - including Winter and Spring qualifiers, group stages, and playoffs.
+
+If ${playerName} is to continue playing, a Full Player License is required.
+
+If you have any questions or need assistance with the process, feel free to reach out.
+
+Best regards,`;
       },
 
       buildUnlicensedMessage(row) {
         const teamName = RowAccess.getTeamName(row) || 'team';
         const playerName = String(row?.tag || row?.Player || '').trim() || 'player';
         const games = Number(RowAccess.getBackupGames(row) || 0);
-        return `License Status Update – Action Required for ${playerName}\n\nHi ${teamName},\n\n${playerName} has participated in ${games} games without a valid license.\n\nBest regards,`;
+
+        return (
+          'License Status Update - Action Required for ' + playerName + '\n\n' +
+          'Hi ' + teamName + ',\n\n' +
+          'It has come to our attention that ' + playerName + ' has participated in ' + games + ' games without a valid license.\n\n' +
+          'To comply with league regulations, ' + playerName + ' must immediately purchase either a Full Player License or a Backup Player License. This must be completed as soon as possible to ensure that the player is properly licensed for participation in ECL 26.\n\n' +
+          'You can purchase the required license here:\n' +
+          'https://sportsgamer.gg/community/store/\n\n' +
+          'Important\n' +
+          'Please note that playing without a valid license may result in consequences if reported by an opponent. Continued participation without the correct license may lead to further penalties.\n\n' +
+          'If ' + playerName + ' has already purchased a license, please send us a copy of the payment receipt so we can review the matter and check why the license is not showing correctly in our system.\n\n' +
+          'If you have any questions or need assistance, feel free to contact us. We are happy to help.\n\n' +
+          'Best regards,'
+        );
       },
 
-     buildMultipleTeamsMessage(row) {
-  const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
-  const teamCount = Number(row?.teamCount) || 0;
-  const teams = Array.isArray(row?.teams) ? row.teams : [];
+      buildMultipleTeamsMessage(row) {
+        const playerName = String(row?.playerName || row?.Player || row?.tag || '').trim() || 'player';
+        const teamCount = Number(row?.teamCount) || 0;
+        const teams = Array.isArray(row?.teams) ? row.teams : [];
+        const removeCount = Math.max(teamCount - 1, 1);
 
-  const teamLines = teams.length
-    ? teams.map(team => `- ${team?.leagueName ? team.leagueName + ' — ' : ''}${team?.teamName || ''}`).join('\n')
-    : '- Team information missing';
+        const teamLines = teams.length
+          ? teams.map(team => `- ${team?.leagueName ? team.leagueName + ' — ' : ''}${team?.teamName || ''}`).join('\n')
+          : '- Team information missing';
 
-  return `Multiple Team Registration – Action Required for ${playerName}
-
-Hi,
-
-${playerName} is currently registered in ${teamCount} teams.
+        return `${playerName} is currently registered in ${teamCount} teams.
 
 This message is being sent to the player and the captains of all listed teams.
 
+Hi,
+
+It is not allowed to be registered in more than one team at the same time.
+
+The player is currently listed in the following teams:
 ${teamLines}
 
+Please make sure that ${playerName} is removed from ${removeCount} team${removeCount === 1 ? '' : 's'} so that the player remains registered in only one team.
+
 Best regards,`;
-},
+      },
 
-buildSignUpsMessage(row) {
-  const teamName = RowAccess.getTeamName(row) || 'team';
-  const divisionName = String(row?.divisionName || '').trim() || 'this division';
-  const issues = Rules.getSignupIssues(row);
+      buildSignUpsMessage(row) {
+        const teamName = RowAccess.getTeamName(row) || 'team';
+        const divisionName = String(row?.divisionName || '').trim() || 'this division';
+        const issues = Rules.getSignupIssues(row);
+        const matchesPlayed = Number(row?.matchesPlayed || 0);
 
-  const issueText = issues.length
-    ? issues.map(issue => `- ${issue}`).join('\n')
-    : '- Missing requirements detected';
+        const issueText = issues.length
+          ? issues.map(issue => `- ${issue}`).join('\n')
+          : '- Missing requirements detected';
 
-  return `Registration Requirements – Action Required for ${teamName}
+        const playedWarning = matchesPlayed > 0
+          ? `\nImportant warning\nYour team has already played ${matchesPlayed} match${matchesPlayed === 1 ? '' : 'es'} even though the team does not currently fulfill the requirements.\n`
+          : '';
+
+        return `Action Required for ${teamName}
 
 Hi ${teamName},
 
 Your registration for ${divisionName} currently does not meet all requirements.
 
-${issueText}
-
-Please make sure to fix the issues above and add the missing players/licenses to your roster no later than April 2. If the team does not meet the minimum requirements by then, you risk being removed from the tournament. Please don’t hesitate to reach out for assistance - we’re happy to help!
+${issueText}${playedWarning}
+Please make sure to address these issues immediately. If you have already taken care of this, please let us know and we will look into why it is not showing on our end.
 
 Best regards,`;
-},
+      },
 
-buildMissingSeedingMessage(teamName) {
-  return `Last chance to secure your spot in ECL ’26: Spring
+      buildMissingSeedingMessage(teamName) {
+        return `Last chance to secure your spot in ECL ’26: Spring
 
 Hi ${teamName}
 
@@ -1246,7 +1297,7 @@ Signups close at 23:59 CET on 2 April 2026.
 Don’t wait until the last minute — make sure your team is in.
 
 Best regards,`;
-},
+      },
 
       buildFlaggedTeamMessage(row) {
         const teamName = RowAccess.getTeamName(row) || 'team';
@@ -1319,8 +1370,16 @@ Best regards,`;
     function filterRows(rows) {
       const query = String(dom.searchInput.value || '').trim().toLowerCase();
       const flaggedOnly = dom.flaggedOnlyToggle.checked;
+      const divisionFilter = String(dom.divisionFilterSelect?.value || 'all').toUpperCase();
+
       return rows.filter(row => {
         if (flaggedOnly && !Rules.isFlaggedRow(row)) return false;
+
+        if (currentPage === 'registered' && divisionFilter !== 'ALL') {
+          const rowDivision = String(row?.divisionName || '').trim().toUpperCase();
+          if (rowDivision !== divisionFilter) return false;
+        }
+
         if (!query) return true;
         return RowAccess.getSearchableText(row).includes(query);
       });
@@ -1511,7 +1570,7 @@ Best regards,`;
       const tableWrap = document.createElement('div');
       tableWrap.className = 'team-player-table-wrap';
 
-      const rawPlayers = Array.isArray(row?.players) ? row.players.map(p => Rename.applyToRow(p)) : [];
+      const rawPlayers = Array.isArray(row?.players) ? row.players.map(p => ({ ...p })) : [];
       const players = rawPlayers
         .map(player => ({
           ...player,
@@ -1560,14 +1619,17 @@ Best regards,`;
       wrapper.appendChild(section);
       return wrapper;
     }
-        async function renderCell(td, row, col) {
+
+    async function renderCell(td, row, col) {
       let value = row[col] ?? '';
-          if (col === 'teamLicense') {
-  td.innerHTML = Number(value) === 1
-    ? '<span class="pill ok">Yes</span>'
-    : '<span class="pill danger">No</span>';
-  return td;
-}
+
+      if (col === 'teamLicense') {
+        td.innerHTML = Number(value) === 1
+          ? '<span class="pill ok">Yes</span>'
+          : '<span class="pill danger">No</span>';
+        return td;
+      }
+
       if (col === 'fullLicenseCount') value = RowAccess.getFullLicenseCount(row);
       if (col === 'signupIssue') value = Rules.getSignupIssueText(row);
 
@@ -1827,17 +1889,18 @@ Best regards,`;
     }
 
     function renderHeader(columns) {
-     const headerLabels = {
-  teamName: 'Team',
-  teamCountry: 'Country',
-  registrationDate: 'Registration Date',
-  divisionName: 'Division',
-  qualifierName: 'Qualifier',
-  teamLicense: 'Team License',
+      const headerLabels = {
+        teamName: 'Team',
+        teamCountry: 'Country',
+        registrationDate: 'Registration Date',
+        divisionName: 'Division',
+        qualifierName: 'Qualifier',
+        teamLicense: 'Team License',
         playerCount: 'Players',
         fullLicenseCount: 'Full Licenses',
         backupLicenseCount: 'Backup Licenses',
         unlicensedPlayerCount: 'Unlicensed',
+        matchesPlayed: 'Matches',
         signupIssue: 'Issue',
         userID: 'User ID',
         totalPlayers: 'Total Players',
@@ -1907,7 +1970,7 @@ Best regards,`;
     async function renderDataRows(rows, columns) {
       dom.tableBody.innerHTML = '';
 
-      for (const [index, row] of rows.entries()) {
+      for (const row of rows) {
         const tr = document.createElement('tr');
         const rowClass = Rules.getRowClass(row);
         if (rowClass) tr.classList.add(rowClass);
@@ -2268,6 +2331,7 @@ Best regards,`;
       dom.normalTableWrap.style.display = 'none';
       dom.seedingWrap.style.display = 'block';
       dom.seedingFilterSelect.style.display = 'inline-block';
+      dom.divisionFilterSelect.style.display = 'none';
       dom.seedingBody.innerHTML = '';
 
       const registeredRows = DataService.getRowsForSource('signUps').map(row => Rename.applyToRow(row));
@@ -2425,6 +2489,7 @@ Best regards,`;
       dom.normalTableWrap.style.display = 'block';
       dom.seedingWrap.style.display = 'none';
       dom.seedingFilterSelect.style.display = 'none';
+      dom.divisionFilterSelect.style.display = currentPage === 'registered' ? 'inline-block' : 'none';
 
       const cfg = PAGE_CONFIG[currentPage];
       let rows = getRowsForCurrentPage();
@@ -2452,6 +2517,8 @@ Best regards,`;
 
     function renderOverview() {
       showPage('page-dashboard');
+      dom.divisionFilterSelect.style.display = 'none';
+
       const availableKeys = EXPECTED_KEYS.filter(key => Array.isArray(allData[key]));
 
       renderMetricCards([
@@ -2580,8 +2647,9 @@ Best regards,`;
       dom.clearFiltersBtn.addEventListener('click', async () => {
         dom.searchInput.value = '';
         dom.flaggedOnlyToggle.checked = false;
-        dom.seedingFilterSelect.value = 'all';
         dom.sortSelect.value = 'default';
+        dom.divisionFilterSelect.value = 'all';
+        dom.seedingFilterSelect.value = 'all';
         sortState = { column: null, direction: 'asc' };
         await renderApp();
       });
@@ -2616,6 +2684,13 @@ Best regards,`;
 
       dom.sortSelect.addEventListener('change', async () => {
         if (currentPage !== 'dashboard') {
+          sortState = { column: null, direction: 'asc' };
+          await renderApp();
+        }
+      });
+
+      dom.divisionFilterSelect.addEventListener('change', async () => {
+        if (currentPage === 'registered') {
           sortState = { column: null, direction: 'asc' };
           await renderApp();
         }
