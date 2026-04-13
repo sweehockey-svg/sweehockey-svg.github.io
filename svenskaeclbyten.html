@@ -768,7 +768,7 @@
 
   <main class="container">
     <section class="card">
-      <h1>Välkommen till Svensk eHockey! test 2 🏒</h1>
+      <h1>Välkommen till Svensk eHockey! 🏒</h1>
 
       <p>
         Svensk eHockey är mötesplatsen för alla som följer den svenska eHockeyscenen – från intensiva matcher i
@@ -776,7 +776,7 @@
       </p>
 
       <p>
-        Just nu: <strong>Svenska spelare som bytt ECL-lag</strong> (hämtas från Spring 26 JSON).
+        Just nu: <strong>Svenska spelare som bytt ECL-lag</strong> (hämtas från <strong>svenskstatistikecl26spring.json</strong>).
       </p>
 
       <div class="cta">
@@ -853,7 +853,7 @@
     }
 
     (function () {
-      const JSON_URL = "/ECL/spring26.json?v=2";
+      const JSON_URL = "./svenskstatistikecl26spring.json";
       const target = document.getElementById("transfer-stats");
       const search = document.getElementById("searchTransfers");
       const updated = document.getElementById("lastUpdated");
@@ -910,6 +910,20 @@
 
         const months = ["JAN", "FEB", "MAR", "APR", "MAJ", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEC"];
         return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+      }
+
+      function formatUpdated(value) {
+        if (!value) return "";
+        const d = new Date(value);
+        if (isNaN(d)) return value;
+
+        return d.toLocaleString("sv-SE", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
       }
 
       function escapeHtml(value) {
@@ -1256,13 +1270,18 @@
 
           renderCards(swedishRows);
 
-          updated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
-          });
+          const updatedValue = parsed.updated || rawData.updated || "";
+          if (updatedValue) {
+            updated.textContent = "Senast uppdaterad: " + formatUpdated(updatedValue);
+          } else {
+            updated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit"
+            });
+          }
 
           search.addEventListener("input", function () {
             const q = this.value.toLowerCase().trim();
