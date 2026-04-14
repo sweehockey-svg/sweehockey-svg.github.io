@@ -216,7 +216,7 @@
     .grid{
       margin-top: 18px;
       display:grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 14px;
     }
     .tile{
@@ -249,6 +249,10 @@
     }
     .sep{ opacity:.5; }
 
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: repeat(2, 1fr); }
+    }
+
     @media (max-width: 860px){
       .nav{ display:none; }
       .hamburger{ display:inline-flex; }
@@ -277,6 +281,7 @@
           </button>
           <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
+            <a class="menu__item" role="menuitem" href="/svenskaeclmatcher.html">Svenska matcher</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
           </div>
@@ -305,6 +310,7 @@
       <div class="container mobile__inner">
         <a class="mobile__link is-active" href="/">Startsida</a>
         <a class="mobile__link" href="/svenskaeclbyten.html">ECL – Byten</a>
+        <a class="mobile__link" href="/svenskaeclmatcher.html">ECL – Svenska matcher</a>
         <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
         <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring – Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
@@ -329,12 +335,13 @@
       </p>
 
       <p>
-        Just nu: svenska spelare som bytt ECL-lag (ECL 26 Spring) och svensk statistik.
+        Just nu: svenska spelare som bytt ECL-lag, svenska matcher i ECL 26 Spring och svensk statistik.
       </p>
 
       <div class="cta">
         <a class="btn btn--primary" href="https://www.svenskehockey.se/SEC/">Gå till SEC</a>
         <a class="btn" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
+        <a class="btn" href="/svenskaeclmatcher.html">Svenska matcher</a>
         <a class="btn" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
       </div>
     </section>
@@ -350,6 +357,12 @@
         <h2>Svenska ECL Byten</h2>
         <p>Lista över svenska spelare som bytt ECL-lag.</p>
         <a class="tile__link" href="/svenskaeclbyten.html">Öppna →</a>
+      </article>
+
+      <article class="tile">
+        <h2>Svenska matcher</h2>
+        <p>Alla matcher med svenska lag i ECL 26 Spring, med matchinfo i popup.</p>
+        <a class="tile__link" href="/svenskaeclmatcher.html">Öppna →</a>
       </article>
 
       <article class="tile">
