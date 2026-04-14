@@ -1,0 +1,1810 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Svensk eHockey – Svenska matcher</title>
+  <link rel="icon" type="image/png" href="favicon.png?v=1">
+  <link rel="apple-touch-icon" href="favicon.png?v=1">
+  <meta name="description" content="Svenska matcher i ECL 26 Spring." />
+
+  <style>
+    :root{
+      --bg: #07101d;
+      --bg-2: #0b1628;
+      --panel: rgba(255,255,255,0.055);
+      --panel-2: rgba(255,255,255,0.035);
+      --panel-3: rgba(255,255,255,0.025);
+      --text: rgba(255,255,255,0.95);
+      --muted: rgba(255,255,255,0.68);
+      --soft: rgba(255,255,255,0.10);
+      --border: rgba(255,255,255,0.11);
+      --gold: #f5c34b;
+      --gold-soft: rgba(245,195,75,0.18);
+      --gold-line: rgba(245,195,75,0.34);
+      --blue-soft: rgba(88,140,255,0.12);
+      --shadow: 0 24px 64px rgba(0,0,0,.42);
+      --shadow-2: 0 16px 36px rgba(0,0,0,.28);
+      --danger: #ff6767;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background-color:#05101b;
+      background-image:
+        radial-gradient(1700px 980px at 50% -24%, rgba(245,195,75,0.07), transparent 72%),
+        radial-gradient(1450px 1100px at 8% 8%, rgba(46,96,235,0.10), transparent 76%),
+        radial-gradient(1100px 900px at 88% 22%, rgba(25,60,150,0.06), transparent 78%),
+        linear-gradient(180deg, #081322 0%, #06111d 58%, #05101b 100%);
+      background-repeat:no-repeat;
+      color: var(--text);
+    }
+
+    body.modal-open{
+      overflow:hidden;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+    .container{ width:min(1240px, calc(100% - 32px)); margin:0 auto; }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter: blur(12px);
+      background: rgba(7,12,20,0.78);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar__inner{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:14px 0;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      min-width:220px;
+    }
+
+    .brand__logo{
+      height:38px;
+      width:auto;
+      display:block;
+    }
+
+    .nav{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:14px;
+      flex:1;
+    }
+
+    .nav__link,
+    .nav__button{
+      font-size:14px;
+      color: var(--muted);
+      padding:10px 10px;
+      border-radius:10px;
+      white-space:nowrap;
+      background:transparent;
+      border:0;
+      cursor:pointer;
+      transition: background .16s ease, color .16s ease;
+    }
+
+    .nav__link:hover,
+    .nav__button:hover{
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
+
+    .nav__link.is-active{ color: var(--text); }
+
+    .dropdown{ position:relative; }
+
+    .menu{
+      position:absolute;
+      top: calc(100% + 10px);
+      right:0;
+      width:290px;
+      padding:8px;
+      border-radius:14px;
+      background: rgba(16,22,34,0.97);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display:none;
+    }
+
+    .dropdown.open .menu{ display:block; }
+
+    .menu__item{
+      display:block;
+      padding:10px;
+      border-radius:10px;
+      color: var(--muted);
+      font-size:14px;
+      line-height:1.35;
+      transition: background .16s ease, color .16s ease;
+    }
+
+    .menu__item:hover{
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
+
+    .iconbtn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
+      transition: background .16s ease, border-color .16s ease;
+    }
+
+    .iconbtn:hover{
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.18);
+    }
+
+    .hamburger{
+      display:none;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor:pointer;
+      margin-left:auto;
+    }
+
+    .mobile{
+      display:none;
+      border-top: 1px solid var(--border);
+      background: rgba(10,14,22,0.88);
+    }
+
+    .mobile.open{ display:block; }
+
+    .mobile__inner{
+      padding: 12px 0 16px;
+      display:grid;
+      gap:8px;
+    }
+
+    .mobile__link{
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+    }
+
+    .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
+    .mobile__link.is-active{ color: var(--text); }
+
+    .banner-strip{
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,14,22,0.48);
+    }
+
+    .banner-strip__inner{
+      padding:18px 0;
+      display:flex;
+      justify-content:center;
+    }
+
+    .banner{
+      width:100%;
+      max-width:980px;
+      height:160px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,0.13);
+      box-shadow: var(--shadow);
+      background-image: url("svenakehocket.jpg");
+      background-size: cover;
+      background-position: center;
+      overflow:hidden;
+    }
+
+    main{ padding: 28px 0 54px; }
+
+    .card{
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 24px 22px;
+      box-shadow: var(--shadow);
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size: clamp(22px, 3vw, 30px);
+      letter-spacing:-0.4px;
+    }
+
+    p{
+      margin:10px 0;
+      color: var(--muted);
+      line-height:1.65;
+    }
+
+    .cta{
+      margin-top:16px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:12px 16px;
+      border-radius:14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: var(--text);
+      font-weight:750;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+      cursor:pointer;
+    }
+
+    .btn:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.18);
+    }
+
+    .btn--primary{
+      background: linear-gradient(180deg, rgba(245,195,75,0.18), rgba(245,195,75,0.10));
+      border-color: rgba(245,195,75,0.35);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        0 10px 28px rgba(245,195,75,0.08);
+    }
+
+    .matches{
+      margin-top: 26px;
+    }
+
+    .header-box{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+      gap:18px;
+      margin: 0 0 18px;
+      padding: 2px 4px;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+    }
+
+    .section-title__icon{
+      width:34px;
+      height:34px;
+      display:grid;
+      place-items:center;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(245,195,75,0.14), rgba(245,195,75,0.06));
+      border:1px solid rgba(245,195,75,0.18);
+      color: var(--gold);
+      font-size:18px;
+      flex:0 0 34px;
+    }
+
+    .header-box h2{
+      margin:0;
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight:950;
+      letter-spacing:-0.7px;
+      line-height:1.05;
+    }
+
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      align-items:center;
+      width:100%;
+    }
+
+    .tabs{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .tab{
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.045);
+      color: var(--muted);
+      border-radius:14px;
+      padding:10px 14px;
+      font-size:14px;
+      font-weight:900;
+      letter-spacing:.2px;
+      cursor:pointer;
+      transition: background .16s ease, color .16s ease, border-color .16s ease, transform .16s ease;
+    }
+
+    .tab:hover{
+      color: var(--text);
+      background: rgba(255,255,255,0.07);
+      transform: translateY(-1px);
+    }
+
+    .tab.is-active{
+      color: var(--text);
+      border-color: rgba(245,195,75,0.34);
+      background: linear-gradient(180deg, rgba(245,195,75,0.18), rgba(245,195,75,0.08));
+      box-shadow: 0 10px 24px rgba(245,195,75,0.08);
+    }
+
+    .search-wrap{
+      width:min(100%, 410px);
+      position:relative;
+      margin-left:auto;
+    }
+
+    .search-wrap::before{
+      content:"🔍";
+      position:absolute;
+      left:16px;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:15px;
+      opacity:.7;
+      pointer-events:none;
+    }
+
+    #searchMatches{
+      width:100%;
+      padding:14px 16px 14px 42px;
+      font-size:15px;
+      border:1px solid rgba(245,195,75,0.22);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
+      color: var(--text);
+      border-radius:18px;
+      outline:none;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 8px 24px rgba(0,0,0,.16);
+      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+
+    #searchMatches::placeholder{
+      color: rgba(255,255,255,0.45);
+    }
+
+    #searchMatches:focus{
+      border-color: rgba(245,195,75,0.42);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 0 0 4px rgba(245,195,75,.10),
+        0 12px 30px rgba(0,0,0,.2);
+      background: rgba(255,255,255,0.055);
+    }
+
+    .stats-bar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin: 14px 0 18px;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:14px;
+      background: rgba(255,255,255,0.045);
+      border:1px solid rgba(255,255,255,0.09);
+      color: var(--muted);
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .chip strong{
+      color: var(--text);
+      font-size:14px;
+    }
+
+    .matches-list{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+
+    .match-card{
+      width:100%;
+      background:
+        radial-gradient(110% 150% at 0% 0%, rgba(245,195,75,0.10), transparent 38%),
+        radial-gradient(80% 100% at 100% 100%, rgba(88,140,255,0.06), transparent 42%),
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      border:1px solid rgba(255,255,255,0.11);
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow: 0 18px 42px rgba(0,0,0,.25);
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .match-card:hover{
+      transform: translateY(-3px);
+      border-color: rgba(245,195,75,0.24);
+      box-shadow: 0 26px 58px rgba(0,0,0,.34);
+    }
+
+    .match-button{
+      width:100%;
+      border:0;
+      background:transparent;
+      color:inherit;
+      cursor:pointer;
+      padding:0;
+      text-align:left;
+      font:inherit;
+    }
+
+    .match-row{
+      display:grid;
+      grid-template-columns: 210px 1fr 210px 150px;
+      align-items:center;
+      gap:16px;
+      padding:20px 22px;
+    }
+
+    .match-side{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+
+    .match-side--home{
+      justify-content:flex-end;
+      text-align:right;
+    }
+
+    .team-badge{
+      width:56px;
+      height:56px;
+      border-radius:16px;
+      overflow:hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      border:1px solid rgba(255,255,255,0.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      flex:0 0 56px;
+    }
+
+    .team-badge img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      padding:5px;
+    }
+
+    .team-info{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .team-title{
+      font-size:20px;
+      font-weight:950;
+      color:#fff;
+      line-height:1.1;
+      letter-spacing:-0.3px;
+      word-break:break-word;
+    }
+
+    .team-flag{
+      font-size:12px;
+      font-weight:900;
+      color: var(--gold);
+      text-transform:uppercase;
+      letter-spacing:.38px;
+    }
+
+    .match-center{
+      text-align:center;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      min-width:0;
+    }
+
+    .scoreline{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+      font-weight:950;
+      letter-spacing:-0.8px;
+    }
+
+    .score{
+      font-size:42px;
+      line-height:1;
+    }
+
+    .score-sep{
+      font-size:22px;
+      color: rgba(255,255,255,0.45);
+      font-weight:700;
+    }
+
+    .ot-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:48px;
+      padding:4px 10px;
+      border-radius:999px;
+      background: rgba(245,195,75,0.14);
+      border:1px solid rgba(245,195,75,0.26);
+      color: var(--gold);
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.5px;
+      text-transform:uppercase;
+    }
+
+    .ot-pill.is-hidden{
+      visibility:hidden;
+    }
+
+    .match-meta{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:8px;
+    }
+
+    .meta-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
+      font-size:12px;
+      font-weight:850;
+      letter-spacing:.28px;
+    }
+
+    .match-sideinfo{
+      display:flex;
+      justify-content:flex-end;
+    }
+
+    .open-match{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-width:128px;
+      padding:12px 14px;
+      border-radius:16px;
+      background: linear-gradient(180deg, rgba(245,195,75,0.16), rgba(245,195,75,0.08));
+      border:1px solid rgba(245,195,75,0.28);
+      color: var(--text);
+      font-weight:900;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    .open-match span{
+      color: var(--gold);
+      font-size:18px;
+      line-height:1;
+    }
+
+    .empty-state{
+      padding:18px;
+      border-radius:18px;
+      background: rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
+    }
+
+    .lastUpdated{
+      font-size:13px;
+      color: rgba(255,255,255,0.58);
+      margin-top:12px;
+      text-align:right;
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index:120;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .modal.open{
+      display:flex;
+    }
+
+    .modal__backdrop{
+      position:absolute;
+      inset:0;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal__dialog{
+      position:relative;
+      z-index:1;
+      width:min(980px, 100%);
+      max-height:min(88vh, 920px);
+      overflow:auto;
+      border-radius:28px;
+      background:
+        linear-gradient(180deg, rgba(17,23,36,0.98), rgba(10,15,24,0.98));
+      border:1px solid rgba(255,255,255,0.11);
+      box-shadow: 0 30px 90px rgba(0,0,0,.48);
+    }
+
+    .modal__header{
+      position:sticky;
+      top:0;
+      z-index:2;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      padding:22px 22px 18px;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      background: rgba(12,18,28,0.94);
+      backdrop-filter: blur(10px);
+    }
+
+    .modal__title{
+      margin:0;
+      font-size: clamp(24px, 3vw, 34px);
+      font-weight:950;
+      letter-spacing:-0.8px;
+      line-height:1.02;
+    }
+
+    .modal__subtitle{
+      margin-top:10px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .modal__close{
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      border-radius:14px;
+      width:44px;
+      height:44px;
+      font-size:20px;
+      cursor:pointer;
+      flex:0 0 44px;
+    }
+
+    .modal__close:hover{
+      background: rgba(255,255,255,0.08);
+    }
+
+    .modal__content{
+      padding:22px;
+      display:grid;
+      gap:20px;
+    }
+
+    .detail-card{
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:22px;
+      padding:18px;
+    }
+
+    .detail-score{
+      display:grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap:16px;
+      align-items:center;
+    }
+
+    .detail-team{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+
+    .detail-team--home{
+      justify-content:flex-end;
+      text-align:right;
+    }
+
+    .detail-team--home .detail-team-text{
+      order:-1;
+    }
+
+    .detail-team-logo{
+      width:74px;
+      height:74px;
+      border-radius:18px;
+      overflow:hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      border:1px solid rgba(255,255,255,0.09);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 74px;
+    }
+
+    .detail-team-logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      padding:6px;
+    }
+
+    .detail-team-name{
+      font-size:24px;
+      font-weight:950;
+      line-height:1.08;
+      color:#fff;
+      word-break:break-word;
+    }
+
+    .detail-team-note{
+      margin-top:6px;
+      font-size:12px;
+      font-weight:900;
+      color: var(--gold);
+      letter-spacing:.38px;
+      text-transform:uppercase;
+    }
+
+    .detail-center{
+      text-align:center;
+      min-width:160px;
+    }
+
+    .detail-scoreline{
+      font-size:58px;
+      font-weight:950;
+      line-height:1;
+      letter-spacing:-1.2px;
+    }
+
+    .detail-scoreline span{
+      color: rgba(255,255,255,0.42);
+      font-weight:700;
+      margin:0 12px;
+    }
+
+    .detail-ot{
+      margin-top:10px;
+    }
+
+    .detail-grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:14px;
+    }
+
+    .detail-box{
+      padding:14px;
+      border-radius:18px;
+      background: rgba(255,255,255,0.035);
+      border:1px solid rgba(255,255,255,0.07);
+    }
+
+    .detail-box__label{
+      font-size:12px;
+      font-weight:900;
+      color: var(--muted);
+      letter-spacing:.38px;
+      text-transform:uppercase;
+      margin-bottom:8px;
+    }
+
+    .detail-box__value{
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.25;
+      word-break:break-word;
+    }
+
+    .events-title{
+      margin:0 0 14px;
+      font-size:20px;
+      font-weight:950;
+      letter-spacing:-0.3px;
+    }
+
+    .events-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .event-row{
+      padding:12px 14px;
+      border-radius:16px;
+      background: rgba(255,255,255,0.035);
+      border:1px solid rgba(255,255,255,0.07);
+      color: var(--text);
+      line-height:1.5;
+      font-size:14px;
+    }
+
+    .event-row.is-penalty{
+      border-color: rgba(255,103,103,0.22);
+      background: rgba(255,103,103,0.06);
+    }
+
+    footer{
+      border-top:1px solid var(--border);
+      background: rgba(8,12,20,0.8);
+    }
+
+    .footer__inner{
+      padding:16px 0;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      color: var(--muted);
+      font-size:13px;
+    }
+
+    @media (max-width: 1120px){
+      .match-row{
+        grid-template-columns: 1fr 1fr;
+        gap:18px 14px;
+      }
+
+      .match-center{
+        grid-column:1 / -1;
+        order:-1;
+      }
+
+      .match-sideinfo{
+        grid-column:1 / -1;
+        justify-content:center;
+      }
+    }
+
+    @media (max-width: 980px){
+      .detail-score{
+        grid-template-columns:1fr;
+      }
+
+      .detail-team,
+      .detail-team--home{
+        justify-content:flex-start;
+        text-align:left;
+      }
+
+      .detail-team--home .detail-team-text{
+        order:initial;
+      }
+
+      .detail-grid{
+        grid-template-columns:1fr 1fr;
+      }
+    }
+
+    @media (max-width: 860px){
+      .nav{ display:none; }
+      .hamburger{ display:inline-flex; }
+      .brand__logo{ height:32px; }
+      .brand{ min-width:160px; }
+      .banner{ height:120px; border-radius:16px; }
+      .banner-strip__inner{ padding:14px 0; }
+      .header-box h2{ font-size:24px; }
+    }
+
+    @media (max-width: 700px){
+      .header-box{
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .controls{
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .tabs{
+        width:100%;
+      }
+
+      .tab{
+        flex:1 1 calc(50% - 10px);
+        text-align:center;
+      }
+
+      .search-wrap{
+        width:100%;
+        margin-left:0;
+      }
+
+      .match-row{
+        grid-template-columns:1fr;
+      }
+
+      .match-side,
+      .match-side--home{
+        justify-content:flex-start;
+        text-align:left;
+      }
+
+      .score{
+        font-size:36px;
+      }
+
+      .team-title{
+        font-size:18px;
+      }
+
+      .detail-grid{
+        grid-template-columns:1fr;
+      }
+
+      .detail-team-name{
+        font-size:22px;
+      }
+
+      .detail-scoreline{
+        font-size:48px;
+      }
+
+      .lastUpdated{
+        text-align:left;
+      }
+    }
+
+    @media (max-width: 460px){
+      .team-title{
+        font-size:17px;
+      }
+
+      .score{
+        font-size:32px;
+      }
+
+      .modal{
+        padding:10px;
+      }
+
+      .modal__header,
+      .modal__content{
+        padding:16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <a class="brand" href="/" aria-label="Svensk eHockey">
+        <img class="brand__logo" src="svenakehocket.png" alt="Svensk eHockey" />
+      </a>
+
+      <nav class="nav" aria-label="Huvudmeny">
+        <a class="nav__link" href="/">Startsida</a>
+
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button is-active" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            Svensk ECL Statistik <span>▾</span>
+          </button>
+          <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
+            <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
+            <a class="menu__item" role="menuitem" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
+            <a class="menu__item" role="menuitem" href="/svenskaeclmatcher.html">Svenska matcher</a>
+          </div>
+        </div>
+
+        <a class="nav__link" href="#">Nyheter</a>
+
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            Cuper <span>▾</span>
+          </button>
+          <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
+          </div>
+        </div>
+
+        <button class="iconbtn" type="button" aria-label="Sök matcher" title="Sök matcher" onclick="document.getElementById('searchMatches')?.focus()">🔍</button>
+      </nav>
+
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
+    </div>
+
+    <div class="mobile" data-mobile-menu>
+      <div class="container mobile__inner">
+        <a class="mobile__link" href="/">Startsida</a>
+        <a class="mobile__link" href="/svenskaeclbyten.html">ECL – Byten</a>
+        <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
+        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring – Statistik</a>
+        <a class="mobile__link is-active" href="/svenskaeclmatcher.html">ECL – Svenska matcher</a>
+        <a class="mobile__link" href="#">Nyheter</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="banner-strip" aria-label="Banner">
+    <div class="container banner-strip__inner">
+      <div class="banner" role="img" aria-label="Svensk eHockey banner"></div>
+    </div>
+  </section>
+
+  <main class="container">
+    <section class="card">
+      <h1>Välkommen till Svensk eHockey! 🏒</h1>
+
+      <p>
+        Svensk eHockey är mötesplatsen för alla som följer den svenska eHockeyscenen – från intensiva matcher i
+        <strong>ECL</strong> till turneringar som <strong>Svenska eHockey Cupen (SEC)</strong>.
+      </p>
+
+      <p>
+        Just nu: <strong>Svenska matcher i ECL 26 Spring</strong> med popup för full matchinfo.
+      </p>
+
+      <div class="cta">
+        <a class="btn btn--primary" href="https://www.svenskehockey.se/SEC/">Gå till SEC</a>
+        <a class="btn" href="#matcher">Visa Svenska matcher</a>
+      </div>
+    </section>
+
+    <section id="matcher" class="matches" aria-label="Svenska matcher">
+      <div class="header-box">
+        <div class="section-title">
+          <div class="section-title__icon">🏒</div>
+          <h2>Svenska matcher</h2>
+        </div>
+
+        <div class="controls">
+          <div class="tabs" id="divisionTabs" aria-label="Divisioner"></div>
+
+          <div class="search-wrap">
+            <input type="text" id="searchMatches" placeholder="Sök lag, grupp, datum eller match...">
+          </div>
+        </div>
+      </div>
+
+      <div id="matchStats" class="stats-bar"></div>
+      <div id="matchList"></div>
+      <p id="lastUpdated" class="lastUpdated"></p>
+    </section>
+  </main>
+
+  <div class="modal" id="matchModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal__header">
+        <div>
+          <h3 class="modal__title" id="modalTitle">Matchinfo</h3>
+          <div class="modal__subtitle" id="modalSubtitle"></div>
+        </div>
+        <button class="modal__close" type="button" aria-label="Stäng popup" id="closeModal">✕</button>
+      </div>
+      <div class="modal__content" id="modalContent"></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container footer__inner">
+      <span>© <span id="year"></span> Svensk eHockey</span>
+      <span>•</span>
+      <a href="#">Kontakt</a>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const dropdowns = document.querySelectorAll("[data-dropdown]");
+    dropdowns.forEach((dd) => {
+      const btn = dd.querySelector("[data-dropdown-btn]");
+
+      const close = () => {
+        dd.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+      };
+      const open = () => {
+        dd.classList.add("open");
+        btn.setAttribute("aria-expanded", "true");
+      };
+
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dd.classList.contains("open") ? close() : open();
+
+        dropdowns.forEach((other) => {
+          if (other !== dd) {
+            other.classList.remove("open");
+            other.querySelector("[data-dropdown-btn]")?.setAttribute("aria-expanded", "false");
+          }
+        });
+      });
+
+      document.addEventListener("click", close);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+      });
+    });
+
+    const mobileBtn = document.querySelector("[data-mobile-toggle]");
+    const mobileMenu = document.querySelector("[data-mobile-menu]");
+    if (mobileBtn && mobileMenu) {
+      mobileBtn.addEventListener("click", () => {
+        mobileMenu.classList.toggle("open");
+      });
+    }
+
+    (function () {
+      const JSON_URL = "./svenskstatistikecl26spring.json";
+
+      const divisionOrder = ["elite", "pro", "lite", "core", "neo"];
+      const divisionLabels = {
+        elite: "Elite",
+        pro: "Pro",
+        lite: "Lite",
+        core: "Core",
+        neo: "Neo"
+      };
+
+      const matchList = document.getElementById("matchList");
+      const matchStats = document.getElementById("matchStats");
+      const searchInput = document.getElementById("searchMatches");
+      const lastUpdated = document.getElementById("lastUpdated");
+      const divisionTabs = document.getElementById("divisionTabs");
+
+      const modal = document.getElementById("matchModal");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalSubtitle = document.getElementById("modalSubtitle");
+      const modalContent = document.getElementById("modalContent");
+      const closeModalBtn = document.getElementById("closeModal");
+
+      let allData = {};
+      let activeDivision = "elite";
+      let currentMatches = [];
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function extractJsonResultObject(rawData) {
+        if (!rawData || typeof rawData !== "object") return {};
+
+        if (rawData.matcher && typeof rawData.matcher === "object") return rawData;
+
+        if (rawData.json_result && typeof rawData.json_result === "object") {
+          return rawData.json_result;
+        }
+
+        if (rawData.json_result && typeof rawData.json_result === "string") {
+          try {
+            return JSON.parse(rawData.json_result);
+          } catch (e) {
+            return {};
+          }
+        }
+
+        if (Array.isArray(rawData.rows) && rawData.rows.length > 0) {
+          const firstRow = rawData.rows[0];
+
+          if (firstRow && firstRow.matcher && typeof firstRow.matcher === "object") return firstRow;
+
+          if (firstRow && firstRow.json_result && typeof firstRow.json_result === "object") {
+            return firstRow.json_result;
+          }
+
+          if (firstRow && typeof firstRow.json_result === "string") {
+            try {
+              return JSON.parse(firstRow.json_result);
+            } catch (e) {
+              return {};
+            }
+          }
+        }
+
+        return {};
+      }
+
+      function normalizeFileBase(value) {
+        return String(value || "")
+          .trim()
+          .replace(/\u00A0/g, " ")
+          .replace(/\s+/g, " ")
+          .replace(/[\/\\:*?"<>|]/g, "");
+      }
+
+      function removeDiacritics(value) {
+        return String(value || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+      }
+
+      function stripParens(value) {
+        return String(value || "")
+          .replace(/\s*\([^)]*\)\s*/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function slugifyLoose(value) {
+        return removeDiacritics(value)
+          .toLowerCase()
+          .replace(/&/g, " and ")
+          .replace(/[^a-z0-9]+/g, "")
+          .trim();
+      }
+
+      function unique(values) {
+        return [...new Set(values.map(v => String(v || "").trim()).filter(Boolean))];
+      }
+
+      function buildPaths(folder, names, exts) {
+        const paths = [];
+        names.forEach((name) => {
+          exts.forEach((ext) => {
+            paths.push(`/${folder}/${name}.${ext}`);
+          });
+        });
+        return unique(paths);
+      }
+
+      function cleanDisplayTeamName(name) {
+        return String(name || "")
+          .replace(/\u00A0/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function teamNameCandidates(teamName) {
+        const displayName = cleanDisplayTeamName(teamName);
+        const raw = normalizeFileBase(displayName);
+        const noParens = stripParens(raw);
+        const noDiacritics = normalizeFileBase(removeDiacritics(noParens));
+
+        const short1 = noParens.replace(/\s+IF\s+Esport$/i, "").trim();
+        const short2 = noParens.replace(/\s+Esport$/i, "").trim();
+        const short3 = noParens.replace(/\s+Hockey$/i, "").trim();
+        const short4 = noParens.replace(/\s+Esports$/i, "").trim();
+
+        const names = unique([
+          noParens,
+          removeDiacritics(noParens),
+          short1,
+          removeDiacritics(short1),
+          short2,
+          removeDiacritics(short2),
+          short3,
+          removeDiacritics(short3),
+          short4,
+          removeDiacritics(short4),
+          noDiacritics,
+          noParens.toLowerCase(),
+          removeDiacritics(noParens).toLowerCase(),
+          short1.toLowerCase(),
+          removeDiacritics(short1).toLowerCase(),
+          short2.toLowerCase(),
+          removeDiacritics(short2).toLowerCase(),
+          short3.toLowerCase(),
+          removeDiacritics(short3).toLowerCase(),
+          slugifyLoose(noParens),
+          slugifyLoose(short1),
+          slugifyLoose(short2),
+          slugifyLoose(short3)
+        ]);
+
+        return buildPaths("teamlogos", names, ["png", "jpg", "jpeg", "webp", "PNG", "JPG", "JPEG", "WEBP"]);
+      }
+
+      function encodeAttr(value) {
+        return encodeURIComponent(JSON.stringify(value));
+      }
+
+      function decodeAttr(value) {
+        try {
+          return JSON.parse(decodeURIComponent(value || ""));
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function teamShortName(name) {
+        const cleaned = stripParens(cleanDisplayTeamName(name))
+          .replace(/\s+IF\s+Esport$/i, "")
+          .replace(/\s+Esport$/i, "")
+          .replace(/\s+Esports$/i, "")
+          .replace(/\s+Hockey$/i, "")
+          .trim();
+
+        return cleaned.slice(0, 3).toUpperCase() || "ECL";
+      }
+
+      function fallbackLogo(img) {
+        const team = img.getAttribute("data-team") || "";
+        const shortName = teamShortName(team);
+
+        img.onerror = null;
+        img.src =
+          "data:image/svg+xml;charset=UTF-8," +
+          encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220">
+              <defs>
+                <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#18233d"/>
+                  <stop offset="100%" stop-color="#0f172a"/>
+                </linearGradient>
+              </defs>
+              <rect width="220" height="220" rx="32" fill="url(#g)"/>
+              <path d="M110 38l52 20v37c0 39-22 67-52 88-30-21-52-49-52-88V58z" fill="#f5c34b" fill-opacity="0.18"/>
+              <text x="110" y="126" text-anchor="middle" fill="#f5c34b" font-family="Arial, sans-serif" font-weight="800" font-size="34">${shortName}</text>
+            </svg>
+          `);
+      }
+
+      function setFirstCandidate(img) {
+        const candidates = decodeAttr(img.dataset.candidates);
+        img.dataset.candidateIndex = "0";
+
+        if (candidates.length) {
+          img.src = candidates[0];
+        } else {
+          fallbackLogo(img);
+        }
+      }
+
+      function tryNextCandidate(img) {
+        const candidates = decodeAttr(img.dataset.candidates);
+        const currentIndex = Number(img.dataset.candidateIndex || "0");
+        const nextIndex = currentIndex + 1;
+
+        if (nextIndex < candidates.length) {
+          img.dataset.candidateIndex = String(nextIndex);
+          img.src = candidates[nextIndex];
+          return;
+        }
+
+        fallbackLogo(img);
+      }
+
+      window.handleMatchImageError = function(event) {
+        tryNextCandidate(event.target);
+      };
+
+      function activateImages(scope = document) {
+        scope.querySelectorAll("img[data-candidates]").forEach((img) => {
+          setFirstCandidate(img);
+        });
+      }
+
+      function formatDate(value) {
+        if (!value) return "";
+        const d = new Date(value + "T00:00:00");
+        if (isNaN(d)) return value;
+
+        return d.toLocaleDateString("sv-SE", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric"
+        });
+      }
+
+      function formatDateShort(value) {
+        if (!value) return "";
+        const d = new Date(value + "T00:00:00");
+        if (isNaN(d)) return value;
+
+        return d.toLocaleDateString("sv-SE", {
+          day: "numeric",
+          month: "short"
+        });
+      }
+
+      function formatUpdated(value) {
+        if (!value) return "";
+        const d = new Date(value);
+        if (isNaN(d)) return value;
+
+        return d.toLocaleString("sv-SE", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function parseEvents(goalsSummary) {
+        if (!goalsSummary) return [];
+        return String(goalsSummary)
+          .split(" | ")
+          .map(item => item.trim())
+          .filter(Boolean);
+      }
+
+      function getDivisionMatches(division) {
+        const source = allData?.matcher?.[division];
+        return Array.isArray(source) ? source.slice() : [];
+      }
+
+      function buildTabs() {
+        divisionTabs.innerHTML = divisionOrder.map((division) => {
+          const count = getDivisionMatches(division).length;
+          return `
+            <button
+              class="tab ${division === activeDivision ? "is-active" : ""}"
+              type="button"
+              data-division="${escapeHtml(division)}"
+            >
+              ${escapeHtml(divisionLabels[division])} (${count})
+            </button>
+          `;
+        }).join("");
+
+        divisionTabs.querySelectorAll("[data-division]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            activeDivision = btn.dataset.division;
+            buildTabs();
+            render();
+          });
+        });
+      }
+
+      function matchCardMarkup(match, index) {
+        const awayCandidates = teamNameCandidates(match.awayTeam);
+        const homeCandidates = teamNameCandidates(match.homeTeam);
+        const searchData = [
+          match.awayTeam,
+          match.homeTeam,
+          match.group,
+          match.stage,
+          match.svensktLag,
+          match.date,
+          match.time,
+          divisionLabels[activeDivision]
+        ].join(" ").toLowerCase();
+
+        return `
+          <article class="match-card" data-search="${escapeHtml(searchData)}">
+            <button class="match-button" type="button" data-match-index="${index}">
+              <div class="match-row">
+                <div class="match-side">
+                  <div class="team-badge">
+                    <img
+                      alt="${escapeHtml(match.awayTeam)}"
+                      data-type="team"
+                      data-team="${escapeHtml(match.awayTeam)}"
+                      data-candidates="${escapeHtml(encodeAttr(awayCandidates))}"
+                      loading="lazy"
+                      onerror="handleMatchImageError(event)"
+                    >
+                  </div>
+                  <div class="team-info">
+                    <div class="team-title">${escapeHtml(match.awayTeam)}</div>
+                    <div class="team-flag">${match.svensktLag === match.awayTeam || match.svensktLag === "SWE vs SWE" ? "Svenskt lag" : "Motståndare"}</div>
+                  </div>
+                </div>
+
+                <div class="match-center">
+                  <div class="scoreline">
+                    <div class="score">${escapeHtml(match.awayScore)}</div>
+                    <div class="score-sep">–</div>
+                    <div class="score">${escapeHtml(match.homeScore)}</div>
+                  </div>
+
+                  <div class="ot-pill ${match.ot ? "" : "is-hidden"}">${escapeHtml(match.ot || "OT")}</div>
+
+                  <div class="match-meta">
+                    <div class="meta-pill">${escapeHtml(formatDateShort(match.date))}</div>
+                    <div class="meta-pill">${escapeHtml(match.time || "")}</div>
+                    <div class="meta-pill">${escapeHtml(match.group || "")}</div>
+                    <div class="meta-pill">${escapeHtml(divisionLabels[activeDivision])}</div>
+                  </div>
+                </div>
+
+                <div class="match-side match-side--home">
+                  <div class="team-info">
+                    <div class="team-title">${escapeHtml(match.homeTeam)}</div>
+                    <div class="team-flag">${match.svensktLag === match.homeTeam || match.svensktLag === "SWE vs SWE" ? "Svenskt lag" : "Motståndare"}</div>
+                  </div>
+                  <div class="team-badge">
+                    <img
+                      alt="${escapeHtml(match.homeTeam)}"
+                      data-type="team"
+                      data-team="${escapeHtml(match.homeTeam)}"
+                      data-candidates="${escapeHtml(encodeAttr(homeCandidates))}"
+                      loading="lazy"
+                      onerror="handleMatchImageError(event)"
+                    >
+                  </div>
+                </div>
+
+                <div class="match-sideinfo">
+                  <div class="open-match">Öppna match <span>›</span></div>
+                </div>
+              </div>
+            </button>
+          </article>
+        `;
+      }
+
+      function renderStats(matches) {
+        const swedishTeamCount = matches.reduce((acc, match) => {
+          if (match.svensktLag === "SWE vs SWE") return acc + 2;
+          if (match.svensktLag) return acc + 1;
+          return acc;
+        }, 0);
+
+        const otCount = matches.filter(match => String(match.ot || "").trim() !== "").length;
+
+        matchStats.innerHTML = `
+          <div class="chip">Division <strong>${escapeHtml(divisionLabels[activeDivision])}</strong></div>
+          <div class="chip">Matcher <strong>${matches.length}</strong></div>
+          <div class="chip">Svenska laginslag <strong>${swedishTeamCount}</strong></div>
+          <div class="chip">Övertid <strong>${otCount}</strong></div>
+        `;
+      }
+
+      function render() {
+        const query = searchInput.value.toLowerCase().trim();
+        const matches = getDivisionMatches(activeDivision)
+          .sort((a, b) => {
+            const aDate = new Date(`${a.date || ""}T${a.time || "00:00"}`);
+            const bDate = new Date(`${b.date || ""}T${b.time || "00:00"}`);
+            return bDate - aDate;
+          });
+
+        currentMatches = matches;
+
+        renderStats(matches);
+
+        const filtered = matches.filter((match) => {
+          const haystack = [
+            match.awayTeam,
+            match.homeTeam,
+            match.group,
+            match.stage,
+            match.svensktLag,
+            match.date,
+            match.time
+          ].join(" ").toLowerCase();
+
+          return haystack.includes(query);
+        });
+
+        if (!filtered.length) {
+          matchList.innerHTML = `<div class="empty-state">Inga matcher hittades i ${escapeHtml(divisionLabels[activeDivision])}.</div>`;
+          return;
+        }
+
+        matchList.innerHTML = `<div class="matches-list">${filtered.map((match, index) => {
+          const realIndex = matches.indexOf(match);
+          return matchCardMarkup(match, realIndex);
+        }).join("")}</div>`;
+
+        activateImages(matchList);
+
+        matchList.querySelectorAll("[data-match-index]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const idx = Number(btn.dataset.matchIndex);
+            openModal(currentMatches[idx]);
+          });
+        });
+      }
+
+      function eventMarkup(text) {
+        const isPenalty = /\bUTV\b/i.test(text);
+        return `<div class="event-row ${isPenalty ? "is-penalty" : ""}">${escapeHtml(text)}</div>`;
+      }
+
+      function openModal(match) {
+        if (!match) return;
+
+        const awayCandidates = teamNameCandidates(match.awayTeam);
+        const homeCandidates = teamNameCandidates(match.homeTeam);
+        const events = parseEvents(match.goalsSummary);
+
+        modalTitle.textContent = `${match.awayTeam} ${match.awayScore}–${match.homeScore} ${match.homeTeam}`;
+        modalSubtitle.innerHTML = `
+          <div class="meta-pill">${escapeHtml(divisionLabels[activeDivision])}</div>
+          <div class="meta-pill">${escapeHtml(match.stage || "Gruppspel")}</div>
+          <div class="meta-pill">${escapeHtml(match.group || "")}</div>
+          <div class="meta-pill">${escapeHtml(formatDate(match.date))}</div>
+          <div class="meta-pill">${escapeHtml(match.time || "")}</div>
+        `;
+
+        modalContent.innerHTML = `
+          <section class="detail-card">
+            <div class="detail-score">
+              <div class="detail-team">
+                <div class="detail-team-logo">
+                  <img
+                    alt="${escapeHtml(match.awayTeam)}"
+                    data-type="team"
+                    data-team="${escapeHtml(match.awayTeam)}"
+                    data-candidates="${escapeHtml(encodeAttr(awayCandidates))}"
+                    onerror="handleMatchImageError(event)"
+                  >
+                </div>
+                <div class="detail-team-text">
+                  <div class="detail-team-name">${escapeHtml(match.awayTeam)}</div>
+                  <div class="detail-team-note">${match.svensktLag === match.awayTeam || match.svensktLag === "SWE vs SWE" ? "Svenskt lag" : "Motståndarlag"}</div>
+                </div>
+              </div>
+
+              <div class="detail-center">
+                <div class="detail-scoreline">
+                  ${escapeHtml(match.awayScore)} <span>–</span> ${escapeHtml(match.homeScore)}
+                </div>
+                <div class="detail-ot">
+                  <span class="ot-pill ${match.ot ? "" : "is-hidden"}">${escapeHtml(match.ot || "OT")}</span>
+                </div>
+              </div>
+
+              <div class="detail-team detail-team--home">
+                <div class="detail-team-logo">
+                  <img
+                    alt="${escapeHtml(match.homeTeam)}"
+                    data-type="team"
+                    data-team="${escapeHtml(match.homeTeam)}"
+                    data-candidates="${escapeHtml(encodeAttr(homeCandidates))}"
+                    onerror="handleMatchImageError(event)"
+                  >
+                </div>
+                <div class="detail-team-text">
+                  <div class="detail-team-name">${escapeHtml(match.homeTeam)}</div>
+                  <div class="detail-team-note">${match.svensktLag === match.homeTeam || match.svensktLag === "SWE vs SWE" ? "Svenskt lag" : "Motståndarlag"}</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="detail-grid">
+            <div class="detail-box">
+              <div class="detail-box__label">Division</div>
+              <div class="detail-box__value">${escapeHtml(divisionLabels[activeDivision])}</div>
+            </div>
+            <div class="detail-box">
+              <div class="detail-box__label">Fas</div>
+              <div class="detail-box__value">${escapeHtml(match.stage || "Gruppspel")}</div>
+            </div>
+            <div class="detail-box">
+              <div class="detail-box__label">Grupp</div>
+              <div class="detail-box__value">${escapeHtml(match.group || "-")}</div>
+            </div>
+            <div class="detail-box">
+              <div class="detail-box__label">Datum</div>
+              <div class="detail-box__value">${escapeHtml(formatDate(match.date))}</div>
+            </div>
+            <div class="detail-box">
+              <div class="detail-box__label">Tid</div>
+              <div class="detail-box__value">${escapeHtml(match.time || "-")}</div>
+            </div>
+            <div class="detail-box">
+              <div class="detail-box__label">Svenskt lag</div>
+              <div class="detail-box__value">${escapeHtml(match.svensktLag || "-")}</div>
+            </div>
+          </section>
+
+          <section class="detail-card">
+            <h4 class="events-title">Matchhändelser</h4>
+            ${
+              events.length
+                ? `<div class="events-list">${events.map(eventMarkup).join("")}</div>`
+                : `<div class="empty-state">Ingen matchinfo hittades för den här matchen.</div>`
+            }
+          </section>
+        `;
+
+        activateImages(modalContent);
+
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("modal-open");
+      }
+
+      function closeModal() {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+      }
+
+      closeModalBtn.addEventListener("click", closeModal);
+      modal.querySelectorAll("[data-close-modal]").forEach((el) => {
+        el.addEventListener("click", closeModal);
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeModal();
+        }
+      });
+
+      searchInput.addEventListener("input", render);
+
+      matchList.innerHTML = '<div class="empty-state">Laddar …</div>';
+
+      fetch(JSON_URL, { cache: "no-store" })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Kunde inte läsa ${JSON_URL} (${response.status})`);
+          }
+          return response.json();
+        })
+        .then((rawData) => {
+          const parsed = extractJsonResultObject(rawData);
+          allData = parsed || {};
+
+          buildTabs();
+          render();
+
+          const updatedValue = parsed.updated || rawData.updated || "";
+          if (updatedValue) {
+            lastUpdated.textContent = "Senast uppdaterad: " + formatUpdated(updatedValue);
+          } else {
+            lastUpdated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit"
+            });
+          }
+        })
+        .catch((err) => {
+          matchList.innerHTML = `<div class="empty-state">Fel vid laddning: ${escapeHtml(err.message)}</div>`;
+          matchStats.innerHTML = "";
+          lastUpdated.textContent = "";
+        });
+    })();
+  </script>
+</body>
+</html>
