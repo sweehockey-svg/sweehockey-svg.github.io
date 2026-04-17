@@ -1110,26 +1110,35 @@
       return (value / max) * 100;
     }
 
-    function getTeamGamesForRow(row, allRows){
+    function getTeamGamesForRow(row){
       const teamName = safeText(row.team || "").trim();
       if(!teamName) return 0;
 
-      const sameTeamRows = allRows.filter(r =>
-        safeText(r.team || "").trim() === teamName
-      );
+      const leaguesToCheck = ["skaters", "defenders", "goalies"];
+      const gpValues = [];
 
-      const gpValues = sameTeamRows
-        .map(r => toNum(r.gp))
-        .filter(v => v !== null);
+      leaguesToCheck.forEach(leagueKey => {
+        const rows = getRows(rawData, activeStage, leagueKey, activeDivision);
+
+        rows.forEach(r => {
+          if(safeText(r.team || "").trim() !== teamName) return;
+
+          const gp = toNum(r.gp);
+          if(gp !== null) gpValues.push(gp);
+        });
+      });
 
       if(!gpValues.length) return 0;
-
       return Math.max(...gpValues);
     }
 
     function renderTop3(rows){
       if(!rows.length){
-        top3.innerHTML = "";
+        if(activeLeague === "goalies"){
+          top3.innerHTML = `<div class="empty-box">Inga målvakter uppfyller kravet på minst 50% av lagets matcher.</div>`;
+        } else {
+          top3.innerHTML = "";
+        }
         return;
       }
 
@@ -1283,7 +1292,7 @@
       titleText.textContent = `ECL 26 Spring – ${prettyLabel(activeLeague)} – ${prettyLabel(activeDivision)}`;
       titleSub.textContent = prettyLabel(activeStage).toUpperCase();
       sectionTitle.textContent = `${prettyLabel(activeDivision)} ${prettyLabel(activeLeague)}`;
-      sectionDesc.textContent = `.`;
+      sectionDesc.textContent = `All visad statistik hämtas rått från JSON.`;
       tableStrip.textContent = `${prettyLabel(activeDivision)} – ${prettyLabel(activeLeague)}`;
     }
 
@@ -1304,8 +1313,10 @@
         sectionDesc.innerHTML =
           `Defensiv Impact per match (DIM) är ett sammansatt nyckeltal som mäter hur mycket en spelare bidrar <br>` +
           `defensivt per match, oberoende av offensiv produktion. Fokus ligger på att stoppa anfall, bryta pucktempo och förhindra farliga avslut.`;
+      } else if(activeLeague === "goalies"){
+        sectionDesc.textContent = `Endast målvakter som spelat minst 50% av lagets matcher visas.`;
       } else {
-        sectionDesc.textContent = ``;
+        sectionDesc.textContent = `All visad statistik hämtas rått från JSON.`;
       }
     }
 
@@ -1314,12 +1325,19 @@
         setSortedTitleByKey(currentSort.key);
       } else {
         setBaseTitles();
+        if(activeLeague === "goalies"){
+          sectionDesc.textContent = `Endast målvakter som spelat minst 50% av lagets matcher visas.`;
+        }
       }
     }
 
     function renderTable(columns, rows){
       if(!rows.length){
-        tableHost.innerHTML = `<div class="empty-box">Ingen data att visa.</div>`;
+        if(activeLeague === "goalies"){
+          tableHost.innerHTML = `<div class="empty-box">Ingen målvakt uppfyller kravet på minst 50% av lagets matcher.</div>`;
+        } else {
+          tableHost.innerHTML = `<div class="empty-box">Ingen data att visa.</div>`;
+        }
         return;
       }
 
@@ -1371,7 +1389,7 @@
       if(activeLeague === "goalies"){
         filtered = filtered.filter(row => {
           const goalieGames = toNum(row.gp) || 0;
-          const teamGames = getTeamGamesForRow(row, filtered);
+          const teamGames = getTeamGamesForRow(row);
 
           if(!teamGames) return false;
 
