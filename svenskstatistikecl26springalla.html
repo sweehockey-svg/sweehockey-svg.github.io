@@ -1116,22 +1116,18 @@
         return;
       }
 
-      const qualifiedRows = rows.filter(row => {
-        if(activeLeague !== "goalies") return true;
+<script>
+const qualifiedRows = rows.filter(row => {
+  if(activeLeague !== "goalies") return true;
 
-        const goalieGames = toNum(row.gp) || 0;
-        const teamGames =
-          toNum(row.teamGames) ??
-          toNum(row.teamGP) ??
-          toNum(row.teamMatches) ??
-          toNum(row.teamMatchesPlayed) ??
-          toNum(row.lagmatcher) ??
-          0;
+  const goalieGames = toNum(row.gp) || 0;
+  const teamGames = getTeamGamesForRow(row, rows);
 
-        if(!teamGames) return false;
+  if(!teamGames) return false;
 
-        return goalieGames / teamGames >= 0.5;
-      });
+  return goalieGames / teamGames >= 0.5;
+});
+</script>
 
       const topRows = qualifiedRows.slice(0, 3);
 
