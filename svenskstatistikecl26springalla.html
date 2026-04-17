@@ -1110,6 +1110,23 @@
       return (value / max) * 100;
     }
 
+    function getTeamGamesForRow(row, allRows){
+      const teamName = safeText(row.team || "").trim();
+      if(!teamName) return 0;
+
+      const sameTeamRows = allRows.filter(r =>
+        safeText(r.team || "").trim() === teamName
+      );
+
+      const gpValues = sameTeamRows
+        .map(r => toNum(r.gp))
+        .filter(v => v !== null);
+
+      if(!gpValues.length) return 0;
+
+      return Math.max(...gpValues);
+    }
+
     function renderTop3(rows){
       if(!rows.length){
         top3.innerHTML = "";
@@ -1349,7 +1366,19 @@
     function renderCurrentView(){
       updateTitles();
 
-      const filtered = filterRows(currentRows, searchBox.value);
+      let filtered = filterRows(currentRows, searchBox.value);
+
+      if(activeLeague === "goalies"){
+        filtered = filtered.filter(row => {
+          const goalieGames = toNum(row.gp) || 0;
+          const teamGames = getTeamGamesForRow(row, filtered);
+
+          if(!teamGames) return false;
+
+          return goalieGames / teamGames >= 0.5;
+        });
+      }
+
       const tableSorted = sortRows(filtered, currentSort.key, currentSort.asc);
 
       const bestAsc = getBestSortDirection(currentSort.key);
