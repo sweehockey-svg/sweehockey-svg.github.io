@@ -1116,7 +1116,31 @@
         return;
       }
 
-      top3.innerHTML = rows.map((row, i) => {
+      const qualifiedRows = rows.filter(row => {
+        if(activeLeague !== "goalies") return true;
+
+        const goalieGames = toNum(row.gp) || 0;
+        const teamGames =
+          toNum(row.teamGames) ??
+          toNum(row.teamGP) ??
+          toNum(row.teamMatches) ??
+          toNum(row.teamMatchesPlayed) ??
+          toNum(row.lagmatcher) ??
+          0;
+
+        if(!teamGames) return false;
+
+        return goalieGames / teamGames >= 0.5;
+      });
+
+      const topRows = qualifiedRows.slice(0, 3);
+
+      if(!topRows.length){
+        top3.innerHTML = `<div class="empty-box">Inga målvakter uppfyller kravet på minst 50% av lagets matcher.</div>`;
+        return;
+      }
+
+      top3.innerHTML = topRows.map((row, i) => {
         const name = safeText(row.name || "Okänd");
         const team = safeText(row.team || "");
         const metrics = buildCardMetrics(row);
@@ -1161,7 +1185,7 @@
                     <span>${metric.raw}</span>
                   </div>
                   <div class="bar-track">
-                    <div class="bar-fill" style="width:${getMetricPercent(rows, metric)}%"></div>
+                    <div class="bar-fill" style="width:${getMetricPercent(topRows, metric)}%"></div>
                   </div>
                 </div>
               `).join("")}
@@ -1170,7 +1194,7 @@
         `;
       }).join("");
 
-      rows.forEach((row, i) => {
+      topRows.forEach((row, i) => {
         const card = top3.children[i];
         if(!card) return;
 
