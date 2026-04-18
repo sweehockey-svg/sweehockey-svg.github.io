@@ -1133,10 +1133,11 @@
       if(activeLeague !== "goalies") return true;
       return getGoalieMatchShare(row) >= 50;
     }
-        function getCardRows(rows){
-      if(activeLeague !== "goalies") return rows.slice(0, 3);
-      return rows.filter(goalieShouldShowOnCard).slice(0, 3);
-    }
+    
+function getCardRows(rows){
+  if(activeLeague !== "goalies") return rows.slice();
+  return rows.filter(goalieShouldShowOnCard);
+}
 
     function renderTop3(rows){
       const cardRows = getCardRows(rows);
