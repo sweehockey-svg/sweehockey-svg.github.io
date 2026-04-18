@@ -361,7 +361,7 @@
 
     .top3-container{
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px;
       margin-bottom: 18px;
     }
@@ -374,6 +374,7 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.55);
       background: linear-gradient(180deg, rgba(40,70,160,0.22), rgba(0,0,0,0.30));
       border: 1px solid rgba(255,255,255,0.10);
+      min-width: 0;
     }
     .player-card::after{
       content: "";
@@ -455,6 +456,11 @@
     }
     .player-points{ margin-top: 4px; font-size: 13px; }
     .player-ga{ font-size: 12px; color: rgba(255,255,255,0.78); }
+    .player-extra-info{
+      margin-top: 4px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.82);
+    }
 
     .stat-bars{ margin-top: 8px; }
     .bar-row{ margin-bottom: 3px; font-size: 11px; }
@@ -562,6 +568,12 @@
       }
     }
 
+    @media (max-width: 980px){
+      .top3-container{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
     @media (max-width: 860px){
       .nav{ display:none; }
       .hamburger{ display:inline-flex; }
@@ -588,6 +600,10 @@
         font-size: 11px;
         letter-spacing: .10em;
       }
+
+      .top3-container{
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -608,7 +624,6 @@
           </button>
           <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
-            <a class="menu__item" role="menuitem" href="/svenskamatcher.html">Svenska matcher</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
           </div>
@@ -637,7 +652,6 @@
       <div class="container mobile__inner">
         <a class="mobile__link" href="/">Startsida</a>
         <a class="mobile__link" href="/svenskaeclbyten.html">ECL – Byten</a>
-        <a class="mobile__link" href="/svenskamatcher.html">ECL – Svenska matcher</a>
         <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
         <a class="mobile__link is-active" href="/svenskstatistikecl26spring.html">ECL 26 Spring – Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
@@ -998,7 +1012,7 @@
       const statOrderByLeague = {
         skaters:   ["gp", "g", "a", "p", "ppg", "pen", "dim"],
         defenders: ["gp", "g", "a", "p", "ppg", "pen", "dim"],
-        goalies:   ["gp", "w", "sv", "gaa", "svp", "so"]
+        goalies:   ["gp", "teamMatches", "matchSharePct", "w", "sv", "gaa", "svp", "so"]
       };
 
       const statOrder = statOrderByLeague[league] || [];
@@ -1062,6 +1076,27 @@
       }));
     }
 
+    function getExtraInfo(row){
+      if(activeLeague === "goalies"){
+        const gp = safeText(row.gp);
+        const teamMatches = safeText(row.teamMatches);
+        const matchSharePct = safeText(row.matchSharePct);
+
+        const parts = [];
+        if(gp) parts.push(`Spelade matcher: ${gp}`);
+        if(teamMatches) parts.push(`Lagmatcher: ${teamMatches}`);
+        if(matchSharePct) parts.push(`Andel: ${matchSharePct}%`);
+
+        return parts.join(" · ");
+      }
+
+      if(["p", "g", "a"].includes(currentSort.key) && Object.prototype.hasOwnProperty.call(row, "gp")){
+        return `Spelade matcher: ${safeText(row.gp)}`;
+      }
+
+      return "";
+    }
+
     function getMetricPercent(rows, metric){
       const value = metric.num;
       if(value === null) return 0;
@@ -1083,25 +1118,55 @@
       return (value / max) * 100;
     }
 
+    function getGoalieMatchShare(row){
+      const explicitPct = toNum(row.matchSharePct);
+      if(explicitPct !== null) return explicitPct;
+
+      const goalieGames = toNum(row.gp) || 0;
+      const teamGames = toNum(row.teamMatches) || 0;
+      if(!teamGames) return 0;
+
+      return (goalieGames / teamGames) * 100;
+    }
+
+    function goalieShouldShowOnCard(row){
+      if(activeLeague !== "goalies") return true;
+      return getGoalieMatchShare(row) >= 50;
+    }
+        function getCardRows(rows){
+      if(activeLeague !== "goalies") return rows.slice(0, 3);
+      return rows.filter(goalieShouldShowOnCard).slice(0, 3);
+    }
+
     function renderTop3(rows){
-      if(!rows.length){
-        top3.innerHTML = "";
+      const cardRows = getCardRows(rows);
+
+      if(!cardRows.length){
+        if(activeLeague === "goalies"){
+          top3.innerHTML = `<div class="empty-box">Ingen målvakt uppfyller kravet på minst 50% av lagets matcher för kortvisning.</div>`;
+        } else {
+          top3.innerHTML = "";
+        }
         return;
       }
 
-      const topRows = rows.slice(0, 3);
-
-      top3.innerHTML = topRows.map((row, i) => {
+      top3.innerHTML = cardRows.map((row, i) => {
         const name = safeText(row.name || "Okänd");
         const team = safeText(row.team || "");
         const metrics = buildCardMetrics(row);
+        const medal = ["🥇", "🥈", "🥉"][i] || "";
+        const extraInfo = getExtraInfo(row);
 
         return `
           <div class="player-card">
             ${team ? `
               <div class="team-logo-wrap">
                 <img class="team-logo-card" alt="${team}">
-                <div class="player-ribbon">${["🥇", "🥈", "🥉"][i] || ""}</div>
+                ${medal ? `<div class="player-ribbon">${medal}</div>` : ""}
+              </div>
+            ` : medal ? `
+              <div class="team-logo-wrap">
+                <div class="player-ribbon">${medal}</div>
               </div>
             ` : ""}
 
@@ -1118,6 +1183,7 @@
                     ${[metrics[1], metrics[2]].filter(Boolean).map(m => `${m.label}: ${m.raw}`).join(" · ")}
                   </div>
                 ` : ""}
+                ${extraInfo ? `<div class="player-extra-info">${extraInfo}</div>` : ""}
               </div>
             </div>
 
@@ -1129,7 +1195,7 @@
                     <span>${metric.raw}</span>
                   </div>
                   <div class="bar-track">
-                    <div class="bar-fill" style="width:${getMetricPercent(rows, metric)}%"></div>
+                    <div class="bar-fill" style="width:${getMetricPercent(cardRows, metric)}%"></div>
                   </div>
                 </div>
               `).join("")}
@@ -1138,7 +1204,7 @@
         `;
       }).join("");
 
-      topRows.forEach((row, i) => {
+      cardRows.forEach((row, i) => {
         const card = top3.children[i];
         if(!card) return;
 
@@ -1186,7 +1252,7 @@
       const preferredKey = preferredByLeague[activeLeague];
       if(preferredKey && columns.includes(preferredKey)) return preferredKey;
 
-      const fallback = ["p", "svp", "gaa", "g", "a", "gp", "w", "sv", "so", "pen", "dim", "ppg"];
+      const fallback = ["p", "svp", "gaa", "g", "a", "gp", "w", "sv", "so", "pen", "dim", "ppg", "matchSharePct", "teamMatches"];
       for(const key of fallback){
         if(columns.includes(key)) return key;
       }
@@ -1255,6 +1321,8 @@
         sectionDesc.innerHTML =
           `Defensiv Impact per match (DIM) är ett sammansatt nyckeltal som mäter hur mycket en spelare bidrar <br>` +
           `defensivt per match, oberoende av offensiv produktion. Fokus ligger på att stoppa anfall, bryta pucktempo och förhindra farliga avslut.`;
+      } else if(activeLeague === "goalies"){
+        sectionDesc.textContent = `Alla målvakter visas i listan. Endast målvakter som spelat minst 50% av lagets matcher visas på korten.`;
       } else {
         sectionDesc.textContent = `All visad statistik hämtas rått från JSON.`;
       }
@@ -1265,6 +1333,9 @@
         setSortedTitleByKey(currentSort.key);
       } else {
         setBaseTitles();
+        if(activeLeague === "goalies"){
+          sectionDesc.textContent = `Alla målvakter visas i listan. Endast målvakter som spelat minst 50% av lagets matcher visas på korten.`;
+        }
       }
     }
 
@@ -1319,11 +1390,10 @@
 
       const filtered = filterRows(currentRows, searchBox.value);
       const tableSorted = sortRows(filtered, currentSort.key, currentSort.asc);
-
       const bestAsc = getBestSortDirection(currentSort.key);
-      const bestTop3 = sortRows(filtered, currentSort.key, bestAsc);
+      const bestCards = sortRows(filtered, currentSort.key, bestAsc);
 
-      renderTop3(bestTop3);
+      renderTop3(bestCards);
       renderTable(currentColumns, tableSorted);
 
       const upd = getUpdatedText(rawData);
