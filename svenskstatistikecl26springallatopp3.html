@@ -462,6 +462,9 @@
       font-size: 12px;
       color: rgba(255,255,255,0.78);
       line-height: 1.45;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .stat-bars{ margin-top: 8px; }
@@ -524,6 +527,11 @@
       .division-header{
         align-items:flex-start;
         flex-direction:column;
+      }
+      .player-sub{
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
       }
     }
   </style>
@@ -939,9 +947,8 @@
         const share = getGoalieMatchShare(row);
 
         const parts = [];
-        if(gp) parts.push(`Spelade matcher: ${gp}`);
-        if(teamMatches) parts.push(`Lagmatcher: ${teamMatches}`);
-        if(share) parts.push(`Andel: ${share.toFixed(0)}%`);
+        if(gp || teamMatches) parts.push(`Matcher: ${gp || "0"}/${teamMatches || "0"}`);
+        if(share) parts.push(`${share.toFixed(0)}%`);
         return parts.join(" · ");
       }
 
@@ -1126,12 +1133,13 @@
       const stages = getAvailableStages(rawData);
       activeStage = stages.includes("regular") ? "regular" : (stages[0] || "regular");
 
-      buildTabs(stageTabs, stages, activeStage, "stage", (value) => {
+      const handleStageClick = (value) => {
         activeStage = value;
-        buildTabs(stageTabs, stages, activeStage, "stage", arguments.callee);
+        buildTabs(stageTabs, stages, activeStage, "stage", handleStageClick);
         renderAll();
-      });
+      };
 
+      buildTabs(stageTabs, stages, activeStage, "stage", handleStageClick);
       renderAll();
     }
 
