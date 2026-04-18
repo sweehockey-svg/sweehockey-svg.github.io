@@ -1012,7 +1012,7 @@
       const statOrderByLeague = {
         skaters:   ["gp", "g", "a", "p", "ppg", "pen", "dim"],
         defenders: ["gp", "g", "a", "p", "ppg", "pen", "dim"],
-        goalies:   ["gp", "w", "sv", "gaa", "svp", "so"]
+        goalies:   ["gp", "teamMatches", "matchSharePct", "w", "sv", "gaa", "svp", "so"]
       };
 
       const statOrder = statOrderByLeague[league] || [];
@@ -1078,8 +1078,16 @@
 
     function getExtraInfo(row){
       if(activeLeague === "goalies"){
-        if(!Object.prototype.hasOwnProperty.call(row, "gp")) return "";
-        return `Spelade matcher: ${safeText(row.gp)}`;
+        const gp = safeText(row.gp);
+        const teamMatches = safeText(row.teamMatches);
+        const matchSharePct = safeText(row.matchSharePct);
+
+        const parts = [];
+        if(gp) parts.push(`Spelade matcher: ${gp}`);
+        if(teamMatches) parts.push(`Lagmatcher: ${teamMatches}`);
+        if(matchSharePct) parts.push(`Andel: ${matchSharePct}%`);
+
+        return parts.join(" · ");
       }
 
       if(["p", "g", "a"].includes(currentSort.key) && Object.prototype.hasOwnProperty.call(row, "gp")){
@@ -1110,39 +1118,39 @@
       return (value / max) * 100;
     }
 
-    function getTeamGamesForRow(row){
-      const teamName = safeText(row.team || "").trim();
-      if(!teamName) return 0;
+    function getGoalieMatchShare(row){
+      const explicitPct = toNum(row.matchSharePct);
+      if(explicitPct !== null) return explicitPct;
 
-      const leaguesToCheck = ["skaters", "defenders", "goalies"];
-      const gpValues = [];
+      const goalieGames = toNum(row.gp) || 0;
+      const teamGames = toNum(row.teamMatches) || 0;
+      if(!teamGames) return 0;
 
-      leaguesToCheck.forEach(leagueKey => {
-        const rows = getRows(rawData, activeStage, leagueKey, activeDivision);
+      return (goalieGames / teamGames) * 100;
+    }
 
-        rows.forEach(r => {
-          if(safeText(r.team || "").trim() !== teamName) return;
-
-          const gp = toNum(r.gp);
-          if(gp !== null) gpValues.push(gp);
-        });
-      });
-
-      if(!gpValues.length) return 0;
-      return Math.max(...gpValues);
+    function goalieShouldShowOnCard(row){
+      if(activeLeague !== "goalies") return true;
+      return getGoalieMatchShare(row) >= 50;
+    }
+        function getCardRows(rows){
+      if(activeLeague !== "goalies") return rows.slice(0, 3);
+      return rows.filter(goalieShouldShowOnCard).slice(0, 3);
     }
 
     function renderTop3(rows){
-      if(!rows.length){
+      const cardRows = getCardRows(rows);
+
+      if(!cardRows.length){
         if(activeLeague === "goalies"){
-          top3.innerHTML = `<div class="empty-box">Inga målvakter uppfyller kravet på minst 50% av lagets matcher.</div>`;
+          top3.innerHTML = `<div class="empty-box">Ingen målvakt uppfyller kravet på minst 50% av lagets matcher för kortvisning.</div>`;
         } else {
           top3.innerHTML = "";
         }
         return;
       }
 
-      top3.innerHTML = rows.map((row, i) => {
+      top3.innerHTML = cardRows.map((row, i) => {
         const name = safeText(row.name || "Okänd");
         const team = safeText(row.team || "");
         const metrics = buildCardMetrics(row);
@@ -1187,7 +1195,7 @@
                     <span>${metric.raw}</span>
                   </div>
                   <div class="bar-track">
-                    <div class="bar-fill" style="width:${getMetricPercent(rows, metric)}%"></div>
+                    <div class="bar-fill" style="width:${getMetricPercent(cardRows, metric)}%"></div>
                   </div>
                 </div>
               `).join("")}
@@ -1196,7 +1204,7 @@
         `;
       }).join("");
 
-      rows.forEach((row, i) => {
+      cardRows.forEach((row, i) => {
         const card = top3.children[i];
         if(!card) return;
 
@@ -1244,7 +1252,7 @@
       const preferredKey = preferredByLeague[activeLeague];
       if(preferredKey && columns.includes(preferredKey)) return preferredKey;
 
-      const fallback = ["p", "svp", "gaa", "g", "a", "gp", "w", "sv", "so", "pen", "dim", "ppg"];
+      const fallback = ["p", "svp", "gaa", "g", "a", "gp", "w", "sv", "so", "pen", "dim", "ppg", "matchSharePct", "teamMatches"];
       for(const key of fallback){
         if(columns.includes(key)) return key;
       }
@@ -1314,7 +1322,7 @@
           `Defensiv Impact per match (DIM) är ett sammansatt nyckeltal som mäter hur mycket en spelare bidrar <br>` +
           `defensivt per match, oberoende av offensiv produktion. Fokus ligger på att stoppa anfall, bryta pucktempo och förhindra farliga avslut.`;
       } else if(activeLeague === "goalies"){
-        sectionDesc.textContent = `Endast målvakter som spelat minst 50% av lagets matcher visas.`;
+        sectionDesc.textContent = `Alla målvakter visas i listan. Endast målvakter som spelat minst 50% av lagets matcher visas på korten.`;
       } else {
         sectionDesc.textContent = `All visad statistik hämtas rått från JSON.`;
       }
@@ -1326,18 +1334,14 @@
       } else {
         setBaseTitles();
         if(activeLeague === "goalies"){
-          sectionDesc.textContent = `Endast målvakter som spelat minst 50% av lagets matcher visas.`;
+          sectionDesc.textContent = `Alla målvakter visas i listan. Endast målvakter som spelat minst 50% av lagets matcher visas på korten.`;
         }
       }
     }
 
     function renderTable(columns, rows){
       if(!rows.length){
-        if(activeLeague === "goalies"){
-          tableHost.innerHTML = `<div class="empty-box">Ingen målvakt uppfyller kravet på minst 50% av lagets matcher.</div>`;
-        } else {
-          tableHost.innerHTML = `<div class="empty-box">Ingen data att visa.</div>`;
-        }
+        tableHost.innerHTML = `<div class="empty-box">Ingen data att visa.</div>`;
         return;
       }
 
@@ -1384,21 +1388,8 @@
     function renderCurrentView(){
       updateTitles();
 
-      let filtered = filterRows(currentRows, searchBox.value);
-
-      if(activeLeague === "goalies"){
-        filtered = filtered.filter(row => {
-          const goalieGames = toNum(row.gp) || 0;
-          const teamGames = getTeamGamesForRow(row);
-
-          if(!teamGames) return false;
-
-          return goalieGames / teamGames >= 0.5;
-        });
-      }
-
+      const filtered = filterRows(currentRows, searchBox.value);
       const tableSorted = sortRows(filtered, currentSort.key, currentSort.asc);
-
       const bestAsc = getBestSortDirection(currentSort.key);
       const bestCards = sortRows(filtered, currentSort.key, bestAsc);
 
