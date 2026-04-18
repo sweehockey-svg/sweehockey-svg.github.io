@@ -1154,7 +1154,7 @@
         const name = safeText(row.name || "Okänd");
         const team = safeText(row.team || "");
         const metrics = buildCardMetrics(row);
-        const medal = ["🥇", "🥈", "🥉"][i] || "";
+        const medal = i < 3 ? ["🥇", "🥈", "🥉"][i] : "";
         const extraInfo = getExtraInfo(row);
 
         return `
@@ -1385,20 +1385,35 @@
       });
     }
 
-    function renderCurrentView(){
-      updateTitles();
+function renderCurrentView(){
+  updateTitles();
 
-      const filtered = filterRows(currentRows, searchBox.value);
-      const tableSorted = sortRows(filtered, currentSort.key, currentSort.asc);
-      const bestAsc = getBestSortDirection(currentSort.key);
-      const bestCards = sortRows(filtered, currentSort.key, bestAsc);
+  const searchedRows = filterRows(currentRows, searchBox.value);
 
-      renderTop3(bestCards);
-      renderTable(currentColumns, tableSorted);
+  const tableRows = searchedRows.slice();
 
-      const upd = getUpdatedText(rawData);
-      updated.textContent = upd ? `Senast uppdaterad: ${upd}` : "";
-    }
+  let cardRows = searchedRows.slice();
+
+  if(activeLeague === "goalies"){
+    cardRows = cardRows.filter(row => {
+      const goalieGames = toNum(row.gp) || 0;
+      const teamGames = toNum(row.teamMatches) || 0;
+
+      if(!teamGames) return false;
+
+      return (goalieGames / teamGames) >= 0.5;
+    });
+  }
+
+  const tableSorted = sortRows(tableRows, currentSort.key, currentSort.asc);
+  const cardSorted = sortRows(cardRows, currentSort.key, getBestSortDirection(currentSort.key));
+
+  renderTop3(cardSorted);
+  renderTable(currentColumns, tableSorted);
+
+  const upd = getUpdatedText(rawData);
+  updated.textContent = upd ? `Senast uppdaterad: ${upd}` : "";
+}
 
     function syncDivisionIfNeeded(){
       const divisions = getAvailableDivisions(rawData, activeStage, activeLeague);
