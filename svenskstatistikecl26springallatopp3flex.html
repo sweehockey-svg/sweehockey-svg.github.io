@@ -783,10 +783,17 @@
       { id: "assists", title: "Assistligan", league: "skaters", statKey: "a", metricKeys: ["a", "p", "gp"], extraKeys: ["g", "ppg"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
       { id: "points", title: "Poängligan", league: "skaters", statKey: "p", metricKeys: ["p", "ppg", "gp"], extraKeys: ["g", "a"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
       { id: "pen", title: "Utvisningar", league: "skaters", statKey: "pen", metricKeys: ["pen", "gp", "p"], extraKeys: ["g", "a"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
+
+      { id: "defenderPoints", title: "Poängligan backar", league: "defenders", statKey: "p", metricKeys: ["p", "dim", "gp"], extraKeys: ["g", "a"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
+      { id: "defenderAssists", title: "Assistligan backar", league: "defenders", statKey: "a", metricKeys: ["a", "p", "gp"], extraKeys: ["g", "dim"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
+      { id: "defenderGoals", title: "Målkungar backar", league: "defenders", statKey: "g", metricKeys: ["g", "p", "gp"], extraKeys: ["a", "dim"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
+      { id: "defenderPen", title: "Utvisningar backar", league: "defenders", statKey: "pen", metricKeys: ["pen", "dim", "gp"], extraKeys: ["p"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
+
       { id: "svpercent", title: "Bästa SV%", league: "goalies", statKey: "svp", metricKeys: ["svp", "gaa", "so"], extraKeys: ["gp", "w"], eligibility: "goalie", note: "Minst 50% matcher", better: "desc" },
       { id: "gaa", title: "Bästa GAA", league: "goalies", statKey: "gaa", metricKeys: ["gaa", "svp", "so"], extraKeys: ["gp", "w"], eligibility: "goalie", note: "Minst 50% matcher", better: "asc" },
       { id: "wins", title: "Flest segrar", league: "goalies", statKey: "w", metricKeys: ["w", "svp", "gp"], extraKeys: ["gaa", "so"], eligibility: "goalie", note: "Minst 50% matcher", better: "desc" },
       { id: "shutouts", title: "Flest nollor", league: "goalies", statKey: "so", metricKeys: ["so", "svp", "gaa"], extraKeys: ["gp", "w"], eligibility: "goalie", note: "Minst 50% matcher", better: "desc" },
+
       { id: "dim", title: "DIM-ligan", league: "defenders", statKey: "dim", metricKeys: ["dim", "gp", "p"], extraKeys: ["pen"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" }
     ];
 
