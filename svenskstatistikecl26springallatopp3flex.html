@@ -691,7 +691,7 @@
     </div>
 
     <div class="section-desc" id="sectionDesc">
-      Här kan du själv välja vilken stat varje av de tre sektionerna ska visa. Kravet på minst 50% av lagets matcher används fortfarande för skater- och målvaktslistor.
+      Här kan du själv välja vilken stat varje av de tre sektionerna ska visa. Kravet på minst 50% av lagets matcher används bara för SV%, GAA, PPG, GPG, APG och DIM.
     </div>
 
     <div class="stat-pickers" id="statPickers">
@@ -778,23 +778,26 @@
     const DIVISION_ORDER = ["elite", "pro", "lite", "core", "neo"];
 
     const STAT_OPTIONS = [
-      { id: "ppg", title: "PPG-ligan", league: "skaters", statKey: "ppg", metricKeys: ["ppg", "p", "gp"], extraKeys: ["g", "a"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
-      { id: "goals", title: "Målkungar", league: "skaters", statKey: "g", metricKeys: ["g", "p", "gp"], extraKeys: ["a", "ppg"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
-      { id: "assists", title: "Assistligan", league: "skaters", statKey: "a", metricKeys: ["a", "p", "gp"], extraKeys: ["g", "ppg"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
-      { id: "points", title: "Poängligan", league: "skaters", statKey: "p", metricKeys: ["p", "ppg", "gp"], extraKeys: ["g", "a"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
-      { id: "pen", title: "Utvisningar", league: "skaters", statKey: "pen", metricKeys: ["pen", "gp", "p"], extraKeys: ["g", "a"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
+      { id: "ppg", title: "PPG-ligan", league: "skaters", statKey: "ppg", metricKeys: ["ppg", "p", "gp"], extraKeys: ["g", "a"], eligibility: "skater50", note: "Minst 50% matcher", better: "desc" },
+      { id: "gpg", title: "GPG-ligan", league: "skaters", statKey: "gpg", metricKeys: ["gpg", "g", "gp"], extraKeys: ["p", "a"], eligibility: "skater50", note: "Minst 50% matcher", better: "desc" },
+      { id: "apg", title: "APG-ligan", league: "skaters", statKey: "apg", metricKeys: ["apg", "a", "gp"], extraKeys: ["p", "g"], eligibility: "skater50", note: "Minst 50% matcher", better: "desc" },
 
-      { id: "defenderPoints", title: "Poängligan backar", league: "defenders", statKey: "p", metricKeys: ["p", "dim", "gp"], extraKeys: ["g", "a"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
-      { id: "defenderAssists", title: "Assistligan backar", league: "defenders", statKey: "a", metricKeys: ["a", "p", "gp"], extraKeys: ["g", "dim"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
-      { id: "defenderGoals", title: "Målkungar backar", league: "defenders", statKey: "g", metricKeys: ["g", "p", "gp"], extraKeys: ["a", "dim"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
-      { id: "defenderPen", title: "Utvisningar backar", league: "defenders", statKey: "pen", metricKeys: ["pen", "dim", "gp"], extraKeys: ["p"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" },
+      { id: "goals", title: "Målkungar", league: "skaters", statKey: "g", metricKeys: ["g", "p", "gp"], extraKeys: ["a", "ppg"], eligibility: "none", note: "Ingen matchgräns", better: "desc" },
+      { id: "assists", title: "Assistligan", league: "skaters", statKey: "a", metricKeys: ["a", "p", "gp"], extraKeys: ["g", "ppg"], eligibility: "none", note: "Ingen matchgräns", better: "desc" },
+      { id: "points", title: "Poängligan", league: "skaters", statKey: "p", metricKeys: ["p", "ppg", "gp"], extraKeys: ["g", "a"], eligibility: "none", note: "Ingen matchgräns", better: "desc" },
+      { id: "pen", title: "Utvisningar", league: "skaters", statKey: "pen", metricKeys: ["pen", "gp", "p"], extraKeys: ["g", "a"], eligibility: "none", note: "Ingen matchgräns", better: "desc" },
 
-      { id: "svpercent", title: "Bästa SV%", league: "goalies", statKey: "svp", metricKeys: ["svp", "gaa", "so"], extraKeys: ["gp", "w"], eligibility: "goalie", note: "Minst 50% matcher", better: "desc" },
-      { id: "gaa", title: "Bästa GAA", league: "goalies", statKey: "gaa", metricKeys: ["gaa", "svp", "so"], extraKeys: ["gp", "w"], eligibility: "goalie", note: "Minst 50% matcher", better: "asc" },
-      { id: "wins", title: "Flest segrar", league: "goalies", statKey: "w", metricKeys: ["w", "svp", "gp"], extraKeys: ["gaa", "so"], eligibility: "goalie", note: "Minst 50% matcher", better: "desc" },
-      { id: "shutouts", title: "Flest nollor", league: "goalies", statKey: "so", metricKeys: ["so", "svp", "gaa"], extraKeys: ["gp", "w"], eligibility: "goalie", note: "Minst 50% matcher", better: "desc" },
+      { id: "defenderPoints", title: "Poängligan backar", league: "defenders", statKey: "p", metricKeys: ["p", "dim", "gp"], extraKeys: ["g", "a"], eligibility: "none", note: "Ingen matchgräns", better: "desc" },
+      { id: "defenderAssists", title: "Assistligan backar", league: "defenders", statKey: "a", metricKeys: ["a", "p", "gp"], extraKeys: ["g", "dim"], eligibility: "none", note: "Ingen matchgräns", better: "desc" },
+      { id: "defenderGoals", title: "Målkungar backar", league: "defenders", statKey: "g", metricKeys: ["g", "p", "gp"], extraKeys: ["a", "dim"], eligibility: "none", note: "Ingen matchgräns", better: "desc" },
+      { id: "defenderPen", title: "Utvisningar backar", league: "defenders", statKey: "pen", metricKeys: ["pen", "dim", "gp"], extraKeys: ["p"], eligibility: "none", note: "Ingen matchgräns", better: "desc" },
 
-      { id: "dim", title: "DIM-ligan", league: "defenders", statKey: "dim", metricKeys: ["dim", "gp", "p"], extraKeys: ["pen"], eligibility: "skater", note: "Minst 50% matcher", better: "desc" }
+      { id: "svpercent", title: "Bästa SV%", league: "goalies", statKey: "svp", metricKeys: ["svp", "gaa", "so"], extraKeys: ["gp", "w"], eligibility: "goalie50", note: "Minst 50% matcher", better: "desc" },
+      { id: "gaa", title: "Bästa GAA", league: "goalies", statKey: "gaa", metricKeys: ["gaa", "svp", "so"], extraKeys: ["gp", "w"], eligibility: "goalie50", note: "Minst 50% matcher", better: "asc" },
+      { id: "wins", title: "Flest segrar", league: "goalies", statKey: "w", metricKeys: ["w", "svp", "gp"], extraKeys: ["gaa", "so"], eligibility: "none", note: "Ingen matchgräns", better: "desc" },
+      { id: "shutouts", title: "Flest nollor", league: "goalies", statKey: "so", metricKeys: ["so", "svp", "gaa"], extraKeys: ["gp", "w"], eligibility: "none", note: "Ingen matchgräns", better: "desc" },
+
+      { id: "dim", title: "DIM-ligan", league: "defenders", statKey: "dim", metricKeys: ["dim", "gp", "p"], extraKeys: ["pen"], eligibility: "skater50", note: "Minst 50% matcher", better: "desc" }
     ];
 
     const statMap = new Map(STAT_OPTIONS.map((item) => [item.id, item]));
@@ -846,6 +849,8 @@
         a: "A",
         gp: "GP",
         ppg: "PPG",
+        gpg: "GPG",
+        apg: "APG",
         pen: "Utv.",
         dim: "DIM",
         w: "W",
@@ -971,8 +976,8 @@
     }
 
     function rowEligible(row, rule){
-      if(rule === "goalie") return getGoalieMatchShare(row) >= 50;
-      if(rule === "skater") return getSkaterMatchShare(row) >= 50;
+      if(rule === "goalie50") return getGoalieMatchShare(row) >= 50;
+      if(rule === "skater50") return getSkaterMatchShare(row) >= 50;
       return true;
     }
 
@@ -1067,10 +1072,18 @@
       const parts = [];
       const gp = safeText(row.gp);
       const teamMatches = safeText(row.teamMatches);
-      const share = board.eligibility === "goalie" ? getGoalieMatchShare(row) : getSkaterMatchShare(row);
 
-      if(gp || teamMatches) parts.push(`Matcher: ${gp || "0"}/${teamMatches || "0"}`);
-      if(share) parts.push(`${share.toFixed(0)}%`);
+      if(board.eligibility === "goalie50"){
+        const share = getGoalieMatchShare(row);
+        if(gp || teamMatches) parts.push(`Matcher: ${gp || "0"}/${teamMatches || "0"}`);
+        if(share) parts.push(`${share.toFixed(0)}%`);
+      } else if(board.eligibility === "skater50"){
+        const share = getSkaterMatchShare(row);
+        if(gp || teamMatches) parts.push(`Matcher: ${gp || "0"}/${teamMatches || "0"}`);
+        if(share) parts.push(`${share.toFixed(0)}%`);
+      } else if(gp){
+        parts.push(`Matcher: ${gp}`);
+      }
 
       board.extraKeys.forEach((key) => {
         const raw = safeText(row[key]);
@@ -1203,7 +1216,7 @@
 
     function updateDescription(){
       const labels = activeBoards.map((id) => statMap.get(id)?.title).filter(Boolean);
-      sectionDesc.textContent = `Här kan du själv välja vilken stat varje av de tre sektionerna ska visa. Just nu visas ${labels.join(", ")}. Kravet på minst 50% av lagets matcher används fortfarande där det behövs.`;
+      sectionDesc.textContent = `Här kan du själv välja vilken stat varje av de tre sektionerna ska visa. Just nu visas ${labels.join(", ")}. 50%-regeln gäller bara för SV%, GAA, PPG, GPG, APG och DIM.`;
     }
 
     function syncPickers(){
