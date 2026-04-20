@@ -842,13 +842,29 @@
       return getGoalieMatchShare(row) >= 50;
     }
 
+    function getSkaterMatchShare(row){
+      const explicitPct = toNum(row.matchSharePct);
+      if(explicitPct !== null) return explicitPct;
+
+      const playerGames = toNum(row.gp) || 0;
+      const teamGames = toNum(row.teamMatches) || 0;
+      if(!teamGames) return 0;
+
+      return (playerGames / teamGames) * 100;
+    }
+
+    function dimEligible(row){
+      return getSkaterMatchShare(row) >= 59;
+    }
+
     function topPointsRows(division){
       const rows = getRows(activeStage, "skaters", division);
       return sortRows(rows, "p", false).slice(0, 3);
     }
 
     function topDimRows(division){
-      const rows = getRows(activeStage, "defenders", division);
+      const rows = getRows(activeStage, "defenders", division)
+        .filter(dimEligible);
       return sortRows(rows, "dim", false).slice(0, 3);
     }
 
@@ -973,8 +989,12 @@
 
       const gp = safeText(row.gp);
       const pen = safeText(row.pen);
+      const teamMatches = safeText(row.teamMatches);
+      const share = getSkaterMatchShare(row);
+
       const parts = [];
-      if(gp) parts.push(`Spelade matcher: ${gp}`);
+      if(gp || teamMatches) parts.push(`Matcher: ${gp || "0"}/${teamMatches || "0"}`);
+      if(share) parts.push(`${share.toFixed(0)}%`);
       if(pen) parts.push(`Utv. min: ${pen}`);
       return parts.join(" · ");
     }
@@ -1097,7 +1117,7 @@
           <div class="leaderboards">
             ${renderLeaderboard("Poängligan", "Topp 3", pointsRows, "points")}
             ${renderLeaderboard("Bästa målvakt", "Minst 50% matcher", goalieRows, "goalies")}
-            ${renderLeaderboard("Defensiva toppligan", "DIM topp 3", dimRows, "dim")}
+            ${renderLeaderboard("Defensiva toppligan", "Minst 59% matcher", dimRows, "dim")}
           </div>
         </section>
       `;
