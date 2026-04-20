@@ -854,7 +854,7 @@
     }
 
     function dimEligible(row){
-      return getSkaterMatchShare(row) >= 59;
+      return getSkaterMatchShare(row) >= 50;
     }
 
     function topPointsRows(division){
@@ -1117,7 +1117,7 @@
           <div class="leaderboards">
             ${renderLeaderboard("Poängligan", "Topp 3", pointsRows, "points")}
             ${renderLeaderboard("Bästa målvakt", "Minst 50% matcher", goalieRows, "goalies")}
-            ${renderLeaderboard("Defensiva toppligan", "Minst 59% matcher", dimRows, "dim")}
+            ${renderLeaderboard("Defensiva toppligan", "Minst 50% matcher", dimRows, "dim")}
           </div>
         </section>
       `;
