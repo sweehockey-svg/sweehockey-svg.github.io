@@ -287,38 +287,6 @@
       width:100%;
     }
 
-    .tabs{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-
-    .tab{
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.045);
-      color: var(--muted);
-      border-radius:14px;
-      padding:10px 14px;
-      font-size:14px;
-      font-weight:900;
-      letter-spacing:.2px;
-      cursor:pointer;
-      transition: background .16s ease, color .16s ease, border-color .16s ease, transform .16s ease;
-    }
-
-    .tab:hover{
-      color: var(--text);
-      background: rgba(255,255,255,0.07);
-      transform: translateY(-1px);
-    }
-
-    .tab.is-active{
-      color: var(--text);
-      border-color: rgba(245,195,75,0.34);
-      background: linear-gradient(180deg, rgba(245,195,75,0.18), rgba(245,195,75,0.08));
-      box-shadow: 0 10px 24px rgba(245,195,75,0.08);
-    }
-
     .search-wrap{
       width:min(100%, 410px);
       position:relative;
@@ -485,11 +453,9 @@
     }
 
     .team-flag{
-      font-size:12px;
-      font-weight:900;
-      color: var(--gold);
-      text-transform:uppercase;
-      letter-spacing:.38px;
+      min-height:18px;
+      font-size:16px;
+      line-height:1;
     }
 
     .match-center{
@@ -750,11 +716,9 @@
 
     .detail-team-note{
       margin-top:6px;
-      font-size:12px;
-      font-weight:900;
-      color: var(--gold);
-      letter-spacing:.38px;
-      text-transform:uppercase;
+      font-size:18px;
+      line-height:1;
+      min-height:18px;
     }
 
     .detail-center{
@@ -910,15 +874,6 @@
         align-items:stretch;
       }
 
-      .tabs{
-        width:100%;
-      }
-
-      .tab{
-        flex:1 1 calc(50% - 10px);
-        text-align:center;
-      }
-
       .search-wrap{
         width:100%;
         margin-left:0;
@@ -1040,18 +995,14 @@
 
   <main class="container">
     <section class="card">
-      <h1>Svenska matcher i ECL 🏒</h1>
+      <h1>Senaste svenska matcher i ECL 🏒</h1>
 
       <p>
-        Här samlas <strong>svenska matcher i ECL 26 Spring</strong> uppdelade per division. Sidan gör det enkelt att följa matcher där minst ett svenskt lag är med och snabbt få en överblick över resultat, grupper och speltider.
+        Här visas de <strong>20 senaste svenska matcherna i ECL 26 Spring</strong> från alla divisioner samlat i ett flöde. Perfekt när du snabbt vill se senaste resultaten utan att växla mellan Elite, Pro, Lite, Core och Neo.
       </p>
 
       <p>
-        Du kan växla mellan <strong>Elite, Pro, Lite, Core och Neo</strong>, söka på lag, grupp, datum eller match och öppna varje match i popup för att se full matchinfo och alla registrerade händelser.
-      </p>
-
-      <p>
-    
+        Du kan söka på lag, grupp, datum eller division och öppna varje match i popup för att se mer matchinfo och alla registrerade händelser.
       </p>
     </section>
 
@@ -1059,14 +1010,12 @@
       <div class="header-box">
         <div class="section-title">
           <div class="section-title__icon">🏒</div>
-          <h2>Svenska matcher</h2>
+          <h2>Senaste 20 matcher</h2>
         </div>
 
         <div class="controls">
-          <div class="tabs" id="divisionTabs" aria-label="Divisioner"></div>
-
           <div class="search-wrap">
-            <input type="text" id="searchMatches" placeholder="Sök lag, grupp, datum eller match...">
+            <input type="text" id="searchMatches" placeholder="Sök lag, grupp, datum eller division...">
           </div>
         </div>
       </div>
@@ -1143,6 +1092,7 @@
 
     (function () {
       const JSON_URL = "./svenskstatistikecl26spring.json";
+      const MAX_MATCHES = 20;
 
       const divisionOrder = ["elite", "pro", "lite", "core", "neo"];
       const divisionLabels = {
@@ -1157,7 +1107,6 @@
       const matchStats = document.getElementById("matchStats");
       const searchInput = document.getElementById("searchMatches");
       const lastUpdated = document.getElementById("lastUpdated");
-      const divisionTabs = document.getElementById("divisionTabs");
 
       const modal = document.getElementById("matchModal");
       const modalTitle = document.getElementById("modalTitle");
@@ -1166,7 +1115,6 @@
       const closeModalBtn = document.getElementById("closeModal");
 
       let allData = {};
-      let activeDivision = "elite";
       let currentMatches = [];
 
       function escapeHtml(value) {
@@ -1405,23 +1353,22 @@
         if (isNaN(d)) return value;
 
         return d.toLocaleDateString("sv-SE", {
-          day: "numeric",
-          month: "short"
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
         });
       }
 
       function formatUpdated(value) {
         if (!value) return "";
         const d = new Date(value);
-        if (isNaN(d)) return value;
+        if (isNaN(d)) {
+          const asDate = new Date(value + "T00:00:00");
+          if (isNaN(asDate)) return value;
+          return asDate.toLocaleDateString("sv-SE");
+        }
 
-        return d.toLocaleString("sv-SE", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
-        });
+        return d.toLocaleDateString("sv-SE");
       }
 
       function parseEvents(goalsSummary) {
@@ -1432,32 +1379,33 @@
           .filter(Boolean);
       }
 
-      function getDivisionMatches(division) {
-        const source = allData?.matcher?.[division];
-        return Array.isArray(source) ? source.slice() : [];
+      function isSwedishTeam(match, teamName) {
+        return match.svensktLag === teamName || match.svensktLag === "SWE vs SWE";
       }
 
-      function buildTabs() {
-        divisionTabs.innerHTML = divisionOrder.map((division) => {
-          const count = getDivisionMatches(division).length;
-          return `
-            <button
-              class="tab ${division === activeDivision ? "is-active" : ""}"
-              type="button"
-              data-division="${escapeHtml(division)}"
-            >
-              ${escapeHtml(divisionLabels[division])} (${count})
-            </button>
-          `;
-        }).join("");
+      function getDivisionMatches(division) {
+        const source = allData?.matcher?.[division];
+        if (!Array.isArray(source)) return [];
 
-        divisionTabs.querySelectorAll("[data-division]").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            activeDivision = btn.dataset.division;
-            buildTabs();
-            render();
-          });
-        });
+        return source.map((match) => ({
+          ...match,
+          division
+        }));
+      }
+
+      function getLatestMatches() {
+        return divisionOrder
+          .flatMap(getDivisionMatches)
+          .sort((a, b) => {
+            const aDate = new Date(`${a.date || ""}T${a.time || "00:00"}`);
+            const bDate = new Date(`${b.date || ""}T${b.time || "00:00"}`);
+            return bDate - aDate;
+          })
+          .slice(0, MAX_MATCHES);
+      }
+
+      function teamFlagMarkup(isSwedish) {
+        return isSwedish ? '<div class="team-flag" aria-label="Svenskt lag" title="Svenskt lag">🇸🇪</div>' : '<div class="team-flag" aria-hidden="true"></div>';
       }
 
       function matchCardMarkup(match, index) {
@@ -1471,7 +1419,7 @@
           match.svensktLag,
           match.date,
           match.time,
-          divisionLabels[activeDivision]
+          divisionLabels[match.division]
         ].join(" ").toLowerCase();
 
         return `
@@ -1491,7 +1439,7 @@
                   </div>
                   <div class="team-info">
                     <div class="team-title">${escapeHtml(match.awayTeam)}</div>
-                    <div class="team-flag">${match.svensktLag === match.awayTeam || match.svensktLag === "SWE vs SWE" ? "Svenskt lag" : "Motståndare"}</div>
+                    ${teamFlagMarkup(isSwedishTeam(match, match.awayTeam))}
                   </div>
                 </div>
 
@@ -1508,14 +1456,14 @@
                     <div class="meta-pill">${escapeHtml(formatDateShort(match.date))}</div>
                     <div class="meta-pill">${escapeHtml(match.time || "")}</div>
                     <div class="meta-pill">${escapeHtml(match.group || "")}</div>
-                    <div class="meta-pill">${escapeHtml(divisionLabels[activeDivision])}</div>
+                    <div class="meta-pill">${escapeHtml(divisionLabels[match.division] || "")}</div>
                   </div>
                 </div>
 
                 <div class="match-side match-side--home">
                   <div class="team-info">
                     <div class="team-title">${escapeHtml(match.homeTeam)}</div>
-                    <div class="team-flag">${match.svensktLag === match.homeTeam || match.svensktLag === "SWE vs SWE" ? "Svenskt lag" : "Motståndare"}</div>
+                    ${teamFlagMarkup(isSwedishTeam(match, match.homeTeam))}
                   </div>
                   <div class="team-badge">
                     <img
@@ -1539,6 +1487,7 @@
       }
 
       function renderStats(matches) {
+        const divisions = [...new Set(matches.map(match => divisionLabels[match.division]).filter(Boolean))];
         const swedishTeamCount = matches.reduce((acc, match) => {
           if (match.svensktLag === "SWE vs SWE") return acc + 2;
           if (match.svensktLag) return acc + 1;
@@ -1548,8 +1497,8 @@
         const otCount = matches.filter(match => String(match.ot || "").trim() !== "").length;
 
         matchStats.innerHTML = `
-          <div class="chip">Division <strong>${escapeHtml(divisionLabels[activeDivision])}</strong></div>
-          <div class="chip">Matcher <strong>${matches.length}</strong></div>
+          <div class="chip">Visar <strong>${matches.length}</strong></div>
+          <div class="chip">Divisioner <strong>${divisions.length}</strong></div>
           <div class="chip">Svenska laginslag <strong>${swedishTeamCount}</strong></div>
           <div class="chip">Övertid <strong>${otCount}</strong></div>
         `;
@@ -1557,15 +1506,9 @@
 
       function render() {
         const query = searchInput.value.toLowerCase().trim();
-        const matches = getDivisionMatches(activeDivision)
-          .sort((a, b) => {
-            const aDate = new Date(`${a.date || ""}T${a.time || "00:00"}`);
-            const bDate = new Date(`${b.date || ""}T${b.time || "00:00"}`);
-            return bDate - aDate;
-          });
+        const matches = getLatestMatches();
 
         currentMatches = matches;
-
         renderStats(matches);
 
         const filtered = matches.filter((match) => {
@@ -1576,18 +1519,19 @@
             match.stage,
             match.svensktLag,
             match.date,
-            match.time
+            match.time,
+            divisionLabels[match.division]
           ].join(" ").toLowerCase();
 
           return haystack.includes(query);
         });
 
         if (!filtered.length) {
-          matchList.innerHTML = `<div class="empty-state">Inga matcher hittades i ${escapeHtml(divisionLabels[activeDivision])}.</div>`;
+          matchList.innerHTML = '<div class="empty-state">Inga matcher hittades bland de senaste 20 matcherna.</div>';
           return;
         }
 
-        matchList.innerHTML = `<div class="matches-list">${filtered.map((match, index) => {
+        matchList.innerHTML = `<div class="matches-list">${filtered.map((match) => {
           const realIndex = matches.indexOf(match);
           return matchCardMarkup(match, realIndex);
         }).join("")}</div>`;
@@ -1616,7 +1560,7 @@
 
         modalTitle.textContent = `${match.awayTeam} ${match.awayScore}–${match.homeScore} ${match.homeTeam}`;
         modalSubtitle.innerHTML = `
-          <div class="meta-pill">${escapeHtml(divisionLabels[activeDivision])}</div>
+          <div class="meta-pill">${escapeHtml(divisionLabels[match.division] || "")}</div>
           <div class="meta-pill">${escapeHtml(match.stage || "Gruppspel")}</div>
           <div class="meta-pill">${escapeHtml(match.group || "")}</div>
           <div class="meta-pill">${escapeHtml(formatDate(match.date))}</div>
@@ -1638,7 +1582,7 @@
                 </div>
                 <div class="detail-team-text">
                   <div class="detail-team-name">${escapeHtml(match.awayTeam)}</div>
-                  <div class="detail-team-note">${match.svensktLag === match.awayTeam || match.svensktLag === "SWE vs SWE" ? "Svenskt lag" : "Motståndarlag"}</div>
+                  <div class="detail-team-note">${isSwedishTeam(match, match.awayTeam) ? "🇸🇪" : ""}</div>
                 </div>
               </div>
 
@@ -1663,7 +1607,7 @@
                 </div>
                 <div class="detail-team-text">
                   <div class="detail-team-name">${escapeHtml(match.homeTeam)}</div>
-                  <div class="detail-team-note">${match.svensktLag === match.homeTeam || match.svensktLag === "SWE vs SWE" ? "Svenskt lag" : "Motståndarlag"}</div>
+                  <div class="detail-team-note">${isSwedishTeam(match, match.homeTeam) ? "🇸🇪" : ""}</div>
                 </div>
               </div>
             </div>
@@ -1672,7 +1616,7 @@
           <section class="detail-grid">
             <div class="detail-box">
               <div class="detail-box__label">Division</div>
-              <div class="detail-box__value">${escapeHtml(divisionLabels[activeDivision])}</div>
+              <div class="detail-box__value">${escapeHtml(divisionLabels[match.division] || "-")}</div>
             </div>
             <div class="detail-box">
               <div class="detail-box__label">Fas</div>
@@ -1701,7 +1645,7 @@
             ${
               events.length
                 ? `<div class="events-list">${events.map(eventMarkup).join("")}</div>`
-                : `<div class="empty-state">Ingen matchinfo hittades för den här matchen.</div>`
+                : '<div class="empty-state">Ingen matchinfo hittades för den här matchen.</div>'
             }
           </section>
         `;
@@ -1744,21 +1688,13 @@
         .then((rawData) => {
           const parsed = extractJsonResultObject(rawData);
           allData = parsed || {};
-
-          buildTabs();
           render();
 
           const updatedValue = parsed.updated || rawData.updated || "";
           if (updatedValue) {
-            lastUpdated.textContent = "Senast uppdaterad: " + formatUpdated(updatedValue);
+            lastUpdated.textContent = "Rapporteringsdatum: " + formatUpdated(updatedValue);
           } else {
-            lastUpdated.textContent = "Senast uppdaterad: " + new Date().toLocaleString("sv-SE", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit"
-            });
+            lastUpdated.textContent = "Rapporteringsdatum: " + new Date().toLocaleDateString("sv-SE");
           }
         })
         .catch((err) => {
