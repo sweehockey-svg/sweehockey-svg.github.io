@@ -797,7 +797,7 @@
       { id: "wins", title: "Flest segrar", league: "goalies", statKey: "w", metricKeys: ["w", "svp", "gp"], extraKeys: ["gaa", "so"], eligibility: "none", note: "Ingen matchgräns", better: "desc" },
       { id: "shutouts", title: "Flest nollor", league: "goalies", statKey: "so", metricKeys: ["so", "svp", "gaa"], extraKeys: ["gp", "w"], eligibility: "none", note: "Ingen matchgräns", better: "desc" },
 
-      { id: "dim", title: "DIM-ligan", league: "defenders", statKey: "dim", metricKeys: ["dim", "gp", "p"], extraKeys: ["pen"], eligibility: "skater50", note: "Minst 50% matcher", better: "desc" }
+   { id: "dim", title: "DIM-ligan", league: "skaters", statKey: "dim", metricKeys: ["dim", "gp", "p"], extraKeys: ["pen"], eligibility: "skater50", note: "Minst 50% matcher", better: "desc" }
     ];
 
     const statMap = new Map(STAT_OPTIONS.map((item) => [item.id, item]));
