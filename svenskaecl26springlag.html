@@ -275,6 +275,15 @@
       line-height:1.05;
     }
 
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+      gap:12px;
+      flex:1;
+    }
+
     .search-wrap{
       width:min(100%, 410px);
       position:relative;
@@ -318,6 +327,52 @@
         0 0 0 4px rgba(245,195,75,.10),
         0 12px 30px rgba(0,0,0,.2);
       background: rgba(255,255,255,0.055);
+    }
+
+    .select-wrap{
+      position:relative;
+      width:min(100%, 190px);
+    }
+
+    .select-wrap::after{
+      content:"▾";
+      position:absolute;
+      right:15px;
+      top:50%;
+      transform:translateY(-50%);
+      color: var(--gold);
+      font-size:12px;
+      pointer-events:none;
+    }
+
+    .select-control{
+      width:100%;
+      appearance:none;
+      padding:14px 38px 14px 15px;
+      font-size:14px;
+      font-weight:850;
+      border:1px solid rgba(245,195,75,0.22);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
+      color: var(--text);
+      border-radius:18px;
+      outline:none;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 8px 24px rgba(0,0,0,.16);
+    }
+
+    .select-control:focus{
+      border-color: rgba(245,195,75,0.42);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 0 0 4px rgba(245,195,75,.10),
+        0 12px 30px rgba(0,0,0,.2);
+    }
+
+    .select-control option{
+      background:#101622;
+      color:#fff;
     }
 
     .teams-grid{
@@ -476,7 +531,15 @@
         align-items:stretch;
       }
 
+      .controls{
+        justify-content:flex-start;
+      }
+
       .search-wrap{
+        width:100%;
+      }
+
+      .select-wrap{
         width:100%;
       }
 
@@ -597,8 +660,29 @@
           <h2>Svenska lag</h2>
         </div>
 
-        <div class="search-wrap">
-          <input type="text" id="searchTeams" placeholder="Sök lag, division eller info...">
+        <div class="controls">
+          <div class="select-wrap">
+            <select id="divisionFilter" class="select-control" aria-label="Filtrera på division">
+              <option value="all">Alla divisioner</option>
+              <option value="Elite">Elite</option>
+              <option value="Pro">Pro</option>
+              <option value="Lite">Lite</option>
+              <option value="Core">Core</option>
+              <option value="Neo">Neo</option>
+            </select>
+          </div>
+
+          <div class="select-wrap">
+            <select id="sortTeams" class="select-control" aria-label="Sortera lag">
+              <option value="division">Sortera: division</option>
+              <option value="name-asc">Namn A-Ö</option>
+              <option value="name-desc">Namn Ö-A</option>
+            </select>
+          </div>
+
+          <div class="search-wrap">
+            <input type="text" id="searchTeams" placeholder="Sök lag eller division...">
+          </div>
         </div>
       </div>
 
@@ -661,7 +745,10 @@
       const JSON_URL = "./svenskstatistikecl26spring.json";
       const target = document.getElementById("teams-list");
       const search = document.getElementById("searchTeams");
+      const divisionFilter = document.getElementById("divisionFilter");
+      const sortTeams = document.getElementById("sortTeams");
       const updated = document.getElementById("lastUpdated");
+      let allTeams = [];
 
       const divisionOrder = ["elite", "pro", "lite", "core", "neo"];
       const divisionLabels = {
@@ -670,6 +757,13 @@
         lite: "Lite",
         core: "Core",
         neo: "Neo"
+      };
+      const divisionRank = {
+        elite: 1,
+        pro: 2,
+        lite: 3,
+        core: 4,
+        neo: 5
       };
 
       const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE", "SVENSK", "SVENSKA"]);
@@ -1215,6 +1309,20 @@
         return match.svensktLag === teamName || match.svensktLag === "SWE vs SWE";
       }
 
+      function normalizeDivision(value) {
+        const normalized = normalizeText(value);
+        if (normalized.includes("elite")) return "Elite";
+        if (normalized.includes("pro")) return "Pro";
+        if (normalized.includes("lite")) return "Lite";
+        if (normalized.includes("core")) return "Core";
+        if (normalized.includes("neo")) return "Neo";
+        return cleanDisplayTeamName(value) || "Svenskt lag";
+      }
+
+      function getDivisionRank(value) {
+        return divisionRank[normalizeText(value)] || 99;
+      }
+
       function getDivisionMatches(matcher, division) {
         const source = matcher?.[division];
         if (!Array.isArray(source)) return [];
@@ -1328,6 +1436,42 @@
         });
       }
 
+      function getVisibleTeams() {
+        const q = search.value.toLowerCase().trim();
+        const selectedDivision = divisionFilter.value;
+        const sortValue = sortTeams.value;
+
+        return allTeams
+          .filter((team) => {
+            const haystack = [
+              team.name,
+              team.division,
+              team.league,
+              team.location,
+              team.founded,
+              team.players,
+              team.description,
+              team.status,
+              team.searchExtra
+            ].join(" ").toLowerCase();
+
+            const matchesSearch = !q || haystack.includes(q);
+            const matchesDivision = selectedDivision === "all" || normalizeDivision(team.division) === selectedDivision;
+            return matchesSearch && matchesDivision;
+          })
+          .sort((a, b) => {
+            if (sortValue === "name-desc") {
+              return b.name.localeCompare(a.name, "sv");
+            }
+
+            if (sortValue === "name-asc") {
+              return a.name.localeCompare(b.name, "sv");
+            }
+
+            return getDivisionRank(a.division) - getDivisionRank(b.division) || a.name.localeCompare(b.name, "sv");
+          });
+      }
+
       function renderTeams(rows) {
         if (!rows.length) {
           target.innerHTML = `<div class="empty-state">Inga svenska lag hittades.</div>`;
@@ -1338,7 +1482,16 @@
         activateImages();
       }
 
+      function renderFilteredTeams() {
+        renderTeams(getVisibleTeams());
+      }
+
       function setupSearch() {
+        search.addEventListener("input", renderFilteredTeams);
+        divisionFilter.addEventListener("change", renderFilteredTeams);
+        sortTeams.addEventListener("change", renderFilteredTeams);
+        return;
+
         search.addEventListener("input", function () {
           const q = this.value.toLowerCase().trim();
           const cards = target.querySelectorAll(".team-card");
@@ -1370,9 +1523,9 @@
       fetchJson(JSON_URL)
         .then((rawData) => {
           const parsed = extractJsonResultObject(rawData);
-          const teams = collectTeams(parsed);
+          allTeams = collectTeams(parsed);
 
-          renderTeams(teams);
+          renderFilteredTeams();
           setupSearch();
 
           const updatedValue = parsed.updated || rawData.updated || "";
