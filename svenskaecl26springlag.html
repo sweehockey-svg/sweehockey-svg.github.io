@@ -1379,6 +1379,40 @@
         return divisionRank[normalizeText(value)] || 99;
       }
 
+      function playoffPlaceStatus(team) {
+        const division = normalizeDivision(team.division);
+        const position = Number(team.tablePosition || 0);
+        if (!position) return "";
+
+        if (division === "Elite") {
+          if (position <= 8) return "Ja";
+          if (position <= 12) return "Nej";
+          if (position <= 15) return "Kval";
+          return "Nedflyttning";
+        }
+
+        if (division === "Pro") {
+          if (position <= 8) return "Ja";
+          if (position <= 11) return "Nej";
+          if (position <= 14) return "Kval";
+          return "Nedflyttning";
+        }
+
+        if (division === "Lite" || division === "Core") {
+          if (position <= 10) return "Ja";
+          if (position === 11) return "Möjlig";
+          return "Nej";
+        }
+
+        if (division === "Neo") {
+          if (position <= 2) return "Runda 2";
+          if (position <= 6) return "Ja";
+          return "Nej";
+        }
+
+        return "";
+      }
+
       function getDivisionMatches(matcher, division) {
         const source = matcher?.[division];
         if (!Array.isArray(source)) return [];
@@ -1553,11 +1587,11 @@
           ? (Number(team.goalDiff) > 0 ? `+${team.goalDiff}` : String(team.goalDiff))
           : "";
 
-        const playoffText = team.playoffMatches || team.playoffStatus
-          ? (Number(team.playoffMatches || 0) > 0
-            ? `Ja ${team.playoffWins || 0}-${team.playoffLosses || 0}`
-            : "Nej")
+        const placementPlayoffText = playoffPlaceStatus(team);
+        const playedPlayoffText = Number(team.playoffMatches || 0) > 0
+          ? `Spelar ${team.playoffWins || 0}-${team.playoffLosses || 0}`
           : "";
+        const playoffText = playedPlayoffText || placementPlayoffText || "";
 
         const statsMarkup = [
           team.group ? ["Grupp", team.group] : null,
