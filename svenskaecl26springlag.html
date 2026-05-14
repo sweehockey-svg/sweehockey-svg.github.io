@@ -417,52 +417,12 @@
       gap:16px;
     }
 
-    .team-description{
-      margin:0;
-      min-height:54px;
-      color: rgba(255,255,255,0.72);
-      line-height:1.55;
-    }
-
-    .team-facts{
-      display:grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap:10px;
-    }
-
-    .fact{
-      min-height:68px;
-      padding:11px 10px;
-      border-radius:18px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.022));
-      border:1px solid rgba(255,255,255,0.08);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
-    }
-
-    .fact__label{
-      font-size:11px;
-      color: rgba(255,255,255,0.52);
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.36px;
-      margin-bottom:6px;
-    }
-
-    .fact__value{
-      font-size:14px;
-      color:#fff;
-      font-weight:900;
-      line-height:1.18;
-      word-break:break-word;
-    }
-
     .team-actions{
       display:flex;
       flex-wrap:wrap;
       gap:10px;
       align-items:center;
-      justify-content:space-between;
+      justify-content:flex-start;
     }
 
     .team-link{
@@ -483,21 +443,6 @@
     .team-link:hover{
       transform: translateY(-1px);
       filter: brightness(1.05);
-    }
-
-    .team-tag{
-      display:inline-flex;
-      align-items:center;
-      min-height:34px;
-      padding:8px 11px;
-      border-radius:999px;
-      color: rgba(255,255,255,0.74);
-      background: rgba(255,255,255,0.04);
-      border:1px solid rgba(255,255,255,0.08);
-      font-size:12px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.3px;
     }
 
     .empty-state{
@@ -577,14 +522,6 @@
 
       .team-name{
         font-size:22px;
-      }
-
-      .team-facts{
-        grid-template-columns: 1fr;
-      }
-
-      .team-description{
-        min-height:unset;
       }
 
       .lastUpdated{
@@ -1371,11 +1308,7 @@
 
         const linkMarkup = team.url
           ? `<a class="team-link" href="${escapeHtml(team.url)}" target="_blank" rel="noopener noreferrer">Öppna lagprofil</a>`
-          : `<span class="team-tag">Ingen länk ännu</span>`;
-
-        const transferText = team.transferCount
-          ? `${team.transferCount} träffar`
-          : (team.players || "-");
+          : "";
 
         const searchText = [
           team.name,
@@ -1408,27 +1341,7 @@
             </div>
 
             <div class="team-card__body">
-              <p class="team-description">${escapeHtml(team.description || "Svenskt eHockey-lag.")}</p>
-
-              <div class="team-facts" aria-label="Lagfakta">
-                <div class="fact">
-                  <div class="fact__label">Liga</div>
-                  <div class="fact__value">${escapeHtml(team.league || "ECL")}</div>
-                </div>
-                <div class="fact">
-                  <div class="fact__label">Ort</div>
-                  <div class="fact__value">${escapeHtml(team.location || "Sverige")}</div>
-                </div>
-                <div class="fact">
-                  <div class="fact__label">Info</div>
-                  <div class="fact__value">${escapeHtml(transferText)}</div>
-                </div>
-              </div>
-
-              <div class="team-actions">
-                ${linkMarkup}
-                <span class="team-tag">${escapeHtml(team.status || "Svenskt lag")}</span>
-              </div>
+              ${linkMarkup ? `<div class="team-actions">${linkMarkup}</div>` : ""}
             </div>
           </article>
         `;
