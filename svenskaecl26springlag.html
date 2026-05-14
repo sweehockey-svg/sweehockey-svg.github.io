@@ -479,6 +479,40 @@
       letter-spacing:.38px;
     }
 
+    .team-stats{
+      margin-top:18px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .team-stat{
+      min-width:76px;
+      padding:8px 10px;
+      border-radius:14px;
+      background: rgba(255,255,255,0.045);
+      border:1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+    }
+
+    .team-stat span{
+      display:block;
+      margin-bottom:3px;
+      color: rgba(255,255,255,0.52);
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.35px;
+    }
+
+    .team-stat strong{
+      display:block;
+      color:#fff;
+      font-size:15px;
+      font-weight:950;
+      line-height:1.1;
+    }
+
     .empty-state{
       padding:18px;
       border-radius:18px;
@@ -677,6 +711,9 @@
               <option value="division">Sortera: division</option>
               <option value="name-asc">Namn A-Ö</option>
               <option value="name-desc">Namn Ö-A</option>
+              <option value="players-desc">Flest spelare</option>
+              <option value="points-desc">Flest poäng</option>
+              <option value="matches-desc">Flest matcher</option>
             </select>
           </div>
 
@@ -1366,6 +1403,94 @@
         return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "sv"));
       }
 
+      function ensureTeamStats(map, teamName, division) {
+        const key = teamIdentityKey(teamName);
+        if (!key) return null;
+
+        if (!map.has(key)) {
+          map.set(key, {
+            players: new Set(),
+            division: normalizeDivision(division),
+            regularGames: 0,
+            regularPoints: 0,
+            playoffGames: 0,
+            playoffPoints: 0
+          });
+        }
+
+        return map.get(key);
+      }
+
+      function collectPlayerStats(statsMap, section, phase, includePoints) {
+        if (!section || typeof section !== "object") return;
+
+        divisionOrder.forEach((division) => {
+          const rows = section[division];
+          if (!Array.isArray(rows)) return;
+
+          rows.forEach((player) => {
+            const teamName = cleanDisplayTeamName(player.team);
+            if (!teamName || isWrongSeasonTeamName(teamName) || isWinterTeamName(teamName)) return;
+
+            const stats = ensureTeamStats(statsMap, teamName, divisionLabels[division] || division);
+            if (!stats) return;
+
+            if (player.name) {
+              stats.players.add(String(player.name).trim());
+            }
+
+            const teamMatches = Number(player.teamMatches || 0);
+            if (phase === "regular") {
+              stats.regularGames = Math.max(stats.regularGames, teamMatches);
+              if (includePoints) stats.regularPoints += Number(player.p || 0);
+            } else {
+              stats.playoffGames = Math.max(stats.playoffGames, teamMatches);
+              if (includePoints) stats.playoffPoints += Number(player.p || 0);
+            }
+          });
+        });
+      }
+
+      function teamStatsFromPlayerData(parsed) {
+        const statsMap = new Map();
+
+        collectPlayerStats(statsMap, parsed?.regular?.skaters, "regular", true);
+        collectPlayerStats(statsMap, parsed?.regular?.goalies, "regular", false);
+        collectPlayerStats(statsMap, parsed?.playoffs?.skaters, "playoffs", true);
+        collectPlayerStats(statsMap, parsed?.playoffs?.goalies, "playoffs", false);
+
+        return statsMap;
+      }
+
+      function applyOptionalTeamSummary(team, stats) {
+        return {
+          tablePosition: team.tablePosition || team.tabellPlacering || team.position || team.rank || stats?.tablePosition || "",
+          tablePoints: team.tablePoints || team.tabellPoang || team.pointsTable || team.points || stats?.tablePoints || "",
+          playoffStatus: team.playoffStatus || team.slutspelStatus || stats?.playoffStatus || ""
+        };
+      }
+
+      function enrichTeamsWithStats(teams, parsed) {
+        const statsMap = teamStatsFromPlayerData(parsed);
+
+        return teams.map((team) => {
+          const stats = statsMap.get(teamIdentityKey(team.name));
+          const optional = applyOptionalTeamSummary(team, stats);
+          const swedishPlayers = stats ? stats.players.size : Number(team.players || 0);
+
+          return {
+            ...team,
+            division: normalizeDivision(team.division || stats?.division),
+            swedishPlayers: swedishPlayers || "",
+            regularGames: stats?.regularGames || team.regularGames || team.teamMatches || "",
+            regularPoints: stats?.regularPoints || team.regularPoints || "",
+            playoffGames: stats?.playoffGames || team.playoffGames || "",
+            playoffPoints: stats?.playoffPoints || team.playoffPoints || "",
+            ...optional
+          };
+        });
+      }
+
       function collectTeams(parsed) {
         const map = new Map();
 
@@ -1381,7 +1506,8 @@
           teamsFromTransfers(parsed.overgangar).forEach((team) => addTeam(map, team));
         }
 
-        return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "sv"));
+        return enrichTeamsWithStats([...map.values()], parsed)
+          .sort((a, b) => a.name.localeCompare(b.name, "sv"));
       }
 
       function teamMarkup(team) {
@@ -1390,6 +1516,23 @@
           ...teamNameCandidates(team.name)
         ]);
 
+        const statsMarkup = [
+          team.swedishPlayers ? ["Spelare", team.swedishPlayers] : null,
+          team.regularGames ? ["Matcher", team.regularGames] : null,
+          team.regularPoints ? ["Poäng", team.regularPoints] : null,
+          team.tablePosition ? ["Tabell", "#" + team.tablePosition] : null,
+          team.tablePoints ? ["Tabellp", team.tablePoints] : null,
+          team.playoffStatus ? ["Slutspel", team.playoffStatus] : (team.playoffGames ? ["Slutspel", team.playoffGames + " m"] : null)
+        ]
+          .filter(Boolean)
+          .map(([label, value]) => `
+            <div class="team-stat">
+              <span>${escapeHtml(label)}</span>
+              <strong>${escapeHtml(value)}</strong>
+            </div>
+          `)
+          .join("");
+
         const searchText = [
           team.name,
           team.division,
@@ -1397,6 +1540,12 @@
           team.location,
           team.founded,
           team.players,
+          team.swedishPlayers,
+          team.regularGames,
+          team.regularPoints,
+          team.tablePosition,
+          team.tablePoints,
+          team.playoffStatus,
           team.description,
           team.status,
           team.searchExtra
@@ -1423,6 +1572,7 @@
                 <div class="team-heading">
                   <h3 class="team-name">${escapeHtml(team.name)}</h3>
                   <div class="team-division">${escapeHtml(team.division || "Svenskt lag")}</div>
+                  ${statsMarkup ? `<div class="team-stats">${statsMarkup}</div>` : ""}
                 </div>
               </div>
             </${wrapperTag}>
@@ -1466,6 +1616,18 @@
 
             if (sortValue === "name-asc") {
               return a.name.localeCompare(b.name, "sv");
+            }
+
+            if (sortValue === "players-desc") {
+              return Number(b.swedishPlayers || 0) - Number(a.swedishPlayers || 0) || a.name.localeCompare(b.name, "sv");
+            }
+
+            if (sortValue === "points-desc") {
+              return Number(b.regularPoints || 0) - Number(a.regularPoints || 0) || a.name.localeCompare(b.name, "sv");
+            }
+
+            if (sortValue === "matches-desc") {
+              return Number(b.regularGames || 0) - Number(a.regularGames || 0) || a.name.localeCompare(b.name, "sv");
             }
 
             return getDivisionRank(a.division) - getDivisionRank(b.division) || a.name.localeCompare(b.name, "sv");
