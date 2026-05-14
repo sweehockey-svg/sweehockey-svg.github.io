@@ -1323,6 +1323,7 @@
           tablePoints: row.tablePoints || row.TablePoints || row.tabellPoang || "",
           gamesPlayed: row.gamesPlayed || row.GamesPlayed || "",
           wins: row.wins || row.Wins || "",
+          overtimeWins: row.overtimeWins || row.OvertimeWins || row.otWins || row.OTWins || "",
           losses: row.losses || row.Losses || "",
           otLosses: row.otLosses || row.OTLosses || row.ot_losses || "",
           goalsFor: row.goalsFor || row.GoalsFor || "",
@@ -1575,6 +1576,7 @@
           tablePoints: team.tablePoints || team.tabellPoang || team.pointsTable || team.points || stats?.tablePoints || "",
           gamesPlayed: team.gamesPlayed || team.regularGames || team.teamMatches || stats?.regularGames || "",
           wins: team.wins || "",
+          overtimeWins: team.overtimeWins || "",
           losses: team.losses || "",
           otLosses: team.otLosses || "",
           goalsFor: team.goalsFor || "",
@@ -1631,9 +1633,9 @@
           ...teamNameCandidates(team.name)
         ]);
 
-        const record = [team.wins, team.losses, team.otLosses]
+        const record = [team.wins, team.overtimeWins, team.otLosses, team.losses]
           .some(value => value !== "" && value !== undefined && value !== null)
-          ? `${team.wins || 0}-${team.losses || 0}-${team.otLosses || 0}`
+          ? `${team.wins || 0}-${team.overtimeWins || 0}-${team.otLosses || 0}-${team.losses || 0}`
           : "";
 
         const goalDiff = team.goalDiff !== "" && team.goalDiff !== undefined && team.goalDiff !== null
@@ -1693,6 +1695,7 @@
           team.tablePoints,
           team.group,
           team.wins,
+          team.overtimeWins,
           team.losses,
           team.otLosses,
           team.goalDiff,
