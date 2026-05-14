@@ -290,7 +290,7 @@
     }
 
     .search-wrap::before{
-      content:"🔍";
+      content:"ðŸ”";
       position:absolute;
       left:16px;
       top:50%;
@@ -335,7 +335,7 @@
     }
 
     .select-wrap::after{
-      content:"▾";
+      content:"â–¾";
       position:absolute;
       right:15px;
       top:50%;
@@ -382,7 +382,7 @@
     }
 
     .team-card{
-      min-height:178px;
+      min-height:320px;
       background:
         radial-gradient(110% 150% at 0% 0%, rgba(245,195,75,0.10), transparent 38%),
         radial-gradient(80% 100% at 100% 100%, rgba(88,140,255,0.06), transparent 42%),
@@ -395,10 +395,9 @@
     }
 
     .team-card__link{
-      min-height:178px;
+      min-height:320px;
       height:100%;
-      display:flex;
-      align-items:center;
+      display:block;
       color:inherit;
       text-decoration:none;
     }
@@ -415,21 +414,30 @@
 
     .team-card__top{
       width:100%;
+      min-height:320px;
       padding:24px;
       display:flex;
-      align-items:center;
-      gap:22px;
+      flex-direction:column;
+      align-items:stretch;
+      gap:18px;
       background:
         linear-gradient(180deg, rgba(255,255,255,0.028), transparent),
         linear-gradient(90deg, rgba(255,255,255,0.02), transparent 65%);
     }
 
+    .team-main{
+      display:grid;
+      grid-template-columns: 104px 1fr;
+      gap:18px;
+      align-items:center;
+    }
+
     .team-logo{
-      width:108px;
-      height:108px;
+      width:104px;
+      height:104px;
       border-radius:26px;
       overflow:hidden;
-      flex:0 0 108px;
+      flex:0 0 104px;
       background:
         linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
       border:1px solid rgba(255,255,255,0.10);
@@ -456,7 +464,7 @@
     }
 
     .team-name{
-      font-size:30px;
+      font-size:29px;
       font-weight:950;
       color:#fff;
       line-height:1.04;
@@ -472,6 +480,9 @@
     }
 
     .team-division{
+      display:inline-flex;
+      align-items:center;
+      width:max-content;
       font-size:13px;
       color: var(--gold);
       font-weight:900;
@@ -479,30 +490,58 @@
       letter-spacing:.38px;
     }
 
-    .team-stats{
-      margin-top:18px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
+    .team-highlight{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:10px;
+      padding:12px;
+      border-radius:20px;
+      background:
+        linear-gradient(180deg, rgba(245,195,75,0.08), rgba(255,255,255,0.025));
+      border:1px solid rgba(245,195,75,0.16);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
     }
 
-    .team-stat{
-      min-width:76px;
-      padding:8px 10px;
-      border-radius:14px;
-      background: rgba(255,255,255,0.045);
-      border:1px solid rgba(255,255,255,0.08);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+    .team-highlight__item{
+      min-width:0;
     }
 
+    .team-highlight__item span,
     .team-stat span{
       display:block;
-      margin-bottom:3px;
+      margin-bottom:4px;
       color: rgba(255,255,255,0.52);
       font-size:10px;
       font-weight:900;
       text-transform:uppercase;
       letter-spacing:.35px;
+    }
+
+    .team-highlight__item strong{
+      display:block;
+      color:#fff;
+      font-size:20px;
+      font-weight:950;
+      line-height:1.08;
+    }
+
+    .team-highlight__item.is-gold strong{
+      color: var(--gold);
+    }
+
+    .team-stats{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:10px;
+    }
+
+    .team-stat{
+      min-width:0;
+      padding:10px 11px;
+      border-radius:14px;
+      background: rgba(255,255,255,0.045);
+      border:1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
     }
 
     .team-stat strong{
@@ -586,11 +625,21 @@
         gap:16px;
       }
 
+      .team-main{
+        grid-template-columns: 82px 1fr;
+        gap:14px;
+      }
+
       .team-logo{
         width:82px;
         height:82px;
         flex-basis:82px;
         border-radius:18px;
+      }
+
+      .team-highlight,
+      .team-stats{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .team-name{
@@ -605,6 +654,10 @@
     @media (max-width: 460px){
       .team-card__top{
         align-items:flex-start;
+      }
+
+      .team-main{
+        grid-template-columns: 1fr;
       }
 
       .team-name{
@@ -626,7 +679,7 @@
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button is-active" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            Svensk ECL Statistik <span>▾</span>
+            Svensk ECL Statistik <span>â–¾</span>
           </button>
           <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
@@ -641,17 +694,17 @@
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            Cuper <span>▾</span>
+            Cuper <span>â–¾</span>
           </button>
           <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
           </div>
         </div>
 
-        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">🔍</button>
+        <button class="iconbtn" type="button" aria-label="SÃ¶k (kommer snart)" title="SÃ¶k (kommer snart)">ðŸ”</button>
       </nav>
 
-      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
+      <button class="hamburger" type="button" aria-label="Ã–ppna meny" data-mobile-toggle>â˜°</button>
     </div>
 
     <div class="mobile" data-mobile-menu>
@@ -676,27 +729,27 @@
 
   <main class="container">
     <section class="card">
-      <h1>Svenska eHockey-lag 🏒</h1>
+      <h1>Svenska eHockey-lag ðŸ’</h1>
 
       <p>
-        Här samlas <strong>svenska lag inom eHockey</strong> med logga, division och en snabb överblick. Sidan är byggd för att göra det enkelt att hitta lag, känna igen profilerna och klicka vidare till lagens Sportsgamer-sidor när länk finns.
+        HÃ¤r samlas <strong>svenska lag inom eHockey</strong> med logga, division och en snabb Ã¶verblick. Sidan Ã¤r byggd fÃ¶r att gÃ¶ra det enkelt att hitta lag, kÃ¤nna igen profilerna och klicka vidare till lagens Sportsgamer-sidor nÃ¤r lÃ¤nk finns.
       </p>
 
       <p>
-        Listan hämtas från <strong>svenskstatistikecl26spring.json</strong> och visar endast svenska lag från ECL 26 Spring.
+        Listan hÃ¤mtas frÃ¥n <strong>svenskstatistikecl26spring.json</strong> och visar endast svenska lag frÃ¥n ECL 26 Spring.
       </p>
     </section>
 
     <section id="lag" class="teams" aria-label="Svenska lag">
       <div class="header-box">
         <div class="section-title">
-          <div class="section-title__icon">🏆</div>
+          <div class="section-title__icon">ðŸ†</div>
           <h2>Svenska lag</h2>
         </div>
 
         <div class="controls">
           <div class="select-wrap">
-            <select id="divisionFilter" class="select-control" aria-label="Filtrera på division">
+            <select id="divisionFilter" class="select-control" aria-label="Filtrera pÃ¥ division">
               <option value="all">Alla divisioner</option>
               <option value="Elite">Elite</option>
               <option value="Pro">Pro</option>
@@ -709,16 +762,16 @@
           <div class="select-wrap">
             <select id="sortTeams" class="select-control" aria-label="Sortera lag">
               <option value="division">Sortera: division</option>
-              <option value="name-asc">Namn A-Ö</option>
-              <option value="name-desc">Namn Ö-A</option>
+              <option value="name-asc">Namn A-Ã–</option>
+              <option value="name-desc">Namn Ã–-A</option>
               <option value="players-desc">Flest spelare</option>
-              <option value="points-desc">Flest poäng</option>
+              <option value="points-desc">Flest poÃ¤ng</option>
               <option value="matches-desc">Flest matcher</option>
             </select>
           </div>
 
           <div class="search-wrap">
-            <input type="text" id="searchTeams" placeholder="Sök lag eller division...">
+            <input type="text" id="searchTeams" placeholder="SÃ¶k lag eller division...">
           </div>
         </div>
       </div>
@@ -730,8 +783,8 @@
 
   <footer>
     <div class="container footer__inner">
-      <span>© <span id="year"></span> Svensk eHockey</span>
-      <span>•</span>
+      <span>Â© <span id="year"></span> Svensk eHockey</span>
+      <span>â€¢</span>
       <a href="#">Kontakt</a>
     </div>
   </footer>
@@ -810,46 +863,46 @@
         "almtuna",
         "bik karlskoga",
         "bjorkloven",
-        "björklöven",
+        "bjÃ¶rklÃ¶ven",
         "brynas",
-        "brynäs",
+        "brynÃ¤s",
         "djurgarden",
-        "djurgården",
+        "djurgÃ¥rden",
         "farjestad",
-        "färjestad",
+        "fÃ¤rjestad",
         "frolunda",
-        "frölunda",
+        "frÃ¶lunda",
         "hv71",
         "kalmar",
         "karlskoga",
         "karlskrona",
         "leksand",
         "linkoping",
-        "linköping",
+        "linkÃ¶ping",
         "lulea",
-        "luleå",
+        "luleÃ¥",
         "malmo",
-        "malmö",
+        "malmÃ¶",
         "modo",
         "mora",
         "nybro",
         "orebro",
-        "örebro",
+        "Ã¶rebro",
         "oskarshamn",
         "rogle",
-        "rögle",
+        "rÃ¶gle",
         "skelleftea",
-        "skellefteå",
+        "skellefteÃ¥",
         "sodertalje",
-        "södertälje",
+        "sÃ¶dertÃ¤lje",
         "timra",
-        "timrå",
+        "timrÃ¥",
         "troja",
         "trojans",
         "vaxjo",
-        "växjö",
+        "vÃ¤xjÃ¶",
         "vasteras",
-        "västerås",
+        "vÃ¤sterÃ¥s",
         "vimmerby"
       ];
 
@@ -946,7 +999,7 @@
         return removeDiacritics(value)
           .toLowerCase()
           .replace(/\u00A0/g, " ")
-          .replace(/[^a-z0-9åäö\s]/gi, " ")
+          .replace(/[^a-z0-9Ã¥Ã¤Ã¶\s]/gi, " ")
           .replace(/\s+/g, " ")
           .trim();
       }
@@ -1322,7 +1375,7 @@
               founded: "-",
               players: row.nationality ? 1 : "-",
               transferCount: 1,
-              description: "Svenskt ECL 26 Spring-lag som förekommer i statistiken.",
+              description: "Svenskt ECL 26 Spring-lag som fÃ¶rekommer i statistiken.",
               status: "ECL 26 Spring",
               url: row.FromTeamID && row.FromLeagueID ? `https://sportsgamer.gg/leagues/${encodeURIComponent(row.FromLeagueID)}/teams/${encodeURIComponent(row.FromTeamID)}` : "",
               logo: ""
@@ -1338,7 +1391,7 @@
               founded: "-",
               players: row.nationality ? 1 : "-",
               transferCount: 1,
-              description: "Svenskt ECL 26 Spring-lag som förekommer i statistiken.",
+              description: "Svenskt ECL 26 Spring-lag som fÃ¶rekommer i statistiken.",
               status: "ECL 26 Spring",
               url: row.ToTeamID && row.ToLeagueID ? `https://sportsgamer.gg/leagues/${encodeURIComponent(row.ToLeagueID)}/teams/${encodeURIComponent(row.ToTeamID)}` : "",
               logo: ""
@@ -1400,7 +1453,7 @@
 
         if (division === "Lite" || division === "Core") {
           if (position <= 10) return "Ja";
-          if (position === 11) return "Möjlig";
+          if (position === 11) return "MÃ¶jlig";
           return "Nej";
         }
 
@@ -1445,7 +1498,7 @@
                 founded: "-",
                 players: "-",
                 transferCount: 1,
-                description: "Svenskt ECL 26 Spring-lag som förekommer i matchdatan.",
+                description: "Svenskt ECL 26 Spring-lag som fÃ¶rekommer i matchdatan.",
                 status: "ECL 26 Spring",
                 url: "",
                 logo: ""
@@ -1593,16 +1646,27 @@
           : "";
         const playoffText = playedPlayoffText || placementPlayoffText || "";
 
+        const highlightMarkup = [
+          team.tablePoints !== "" && team.tablePoints !== undefined && team.tablePoints !== null ? ["Poäng", team.tablePoints, true] : null,
+          team.tablePosition ? ["Placering", "#" + team.tablePosition, false] : null,
+          playoffText ? ["Slutspel", playoffText, false] : null
+        ]
+          .filter(Boolean)
+          .map(([label, value, isGold]) => `
+            <div class="team-highlight__item ${isGold ? "is-gold" : ""}">
+              <span>${escapeHtml(label)}</span>
+              <strong>${escapeHtml(value)}</strong>
+            </div>
+          `)
+          .join("");
+
         const statsMarkup = [
           team.group ? ["Grupp", team.group] : null,
-          team.tablePosition ? ["Plac", "#" + team.tablePosition] : null,
-          team.tablePoints !== "" && team.tablePoints !== undefined && team.tablePoints !== null ? ["Poäng", team.tablePoints] : null,
           team.regularGames ? ["Matcher", team.regularGames] : null,
           record ? ["Record", record] : null,
           goalDiff ? ["Mål +/-", goalDiff] : null,
           team.swedishPlayers ? ["Sv spelare", team.swedishPlayers] : null,
-          team.swedishPoints ? ["Sv poäng", team.swedishPoints] : null,
-          playoffText ? ["Slutspel", playoffText] : null
+          team.swedishPoints ? ["Sv poäng", team.swedishPoints] : null
         ]
           .filter(Boolean)
           .map(([label, value]) => `
@@ -1647,26 +1711,28 @@
           <article class="team-card" data-search="${escapeHtml(searchText)}">
             <${wrapperTag} class="team-card__link" ${wrapperAttrs}>
               <div class="team-card__top">
-                <div class="team-logo">
-                  <img
-                    alt="${escapeHtml(team.name)}"
-                    data-team="${escapeHtml(team.name)}"
-                    data-candidates="${escapeHtml(encodeAttr(logoCandidates))}"
-                    loading="lazy"
-                    onerror="handleImageError(event)"
-                  >
+                <div class="team-main">
+                  <div class="team-logo">
+                    <img
+                      alt="${escapeHtml(team.name)}"
+                      data-team="${escapeHtml(team.name)}"
+                      data-candidates="${escapeHtml(encodeAttr(logoCandidates))}"
+                      loading="lazy"
+                      onerror="handleImageError(event)"
+                    >
+                  </div>
+                  <div class="team-heading">
+                    <h3 class="team-name">${escapeHtml(team.name)}</h3>
+                    <div class="team-division">${escapeHtml(team.division || "Svenskt lag")}</div>
+                  </div>
                 </div>
-                <div class="team-heading">
-                  <h3 class="team-name">${escapeHtml(team.name)}</h3>
-                  <div class="team-division">${escapeHtml(team.division || "Svenskt lag")}</div>
-                  ${statsMarkup ? `<div class="team-stats">${statsMarkup}</div>` : ""}
-                </div>
+                ${highlightMarkup ? `<div class="team-highlight">${highlightMarkup}</div>` : ""}
+                ${statsMarkup ? `<div class="team-stats">${statsMarkup}</div>` : ""}
               </div>
             </${wrapperTag}>
           </article>
         `;
       }
-
       function activateImages() {
         target.querySelectorAll("img[data-candidates]").forEach((img) => {
           setFirstCandidate(img);
@@ -1756,14 +1822,14 @@
           });
 
           if (!visible && cards.length) {
-            target.insertAdjacentHTML("beforeend", `<div class="empty-state" data-search-empty>Inga lag matchar din sökning.</div>`);
+            target.insertAdjacentHTML("beforeend", `<div class="empty-state" data-search-empty>Inga lag matchar din sÃ¶kning.</div>`);
           }
         });
       }
 
       async function fetchJson(url) {
         const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok) throw new Error(`Kunde inte läsa ${url} (${response.status})`);
+        if (!response.ok) throw new Error(`Kunde inte lÃ¤sa ${url} (${response.status})`);
         return response.json();
       }
 
@@ -1795,3 +1861,4 @@
   </script>
 </body>
 </html>
+
