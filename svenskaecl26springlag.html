@@ -1256,9 +1256,29 @@
           name: cleanTeamBaseName(name),
           division: row.division || row.Division || row.div || row.Div || "Svenskt lag",
           league: row.league || row.League || row.season || row.Season || "ECL 26 Spring",
+          group: row.group || row.Group || row.groupName || row.GroupName || "",
           location: row.location || row.Location || row.city || row.City || "Sverige",
           founded: row.founded || row.Founded || row.startYear || row.StartYear || "-",
           players: row.players || row.Players || row.swedishPlayers || row.SwedishPlayers || "-",
+          swedishPlayers: row.swedishPlayers || row.SwedishPlayers || "",
+          swedishSkaters: row.swedishSkaters || row.SwedishSkaters || "",
+          swedishGoalies: row.swedishGoalies || row.SwedishGoalies || "",
+          swedishGoals: row.swedishGoals || row.SwedishGoals || "",
+          swedishAssists: row.swedishAssists || row.SwedishAssists || "",
+          swedishPoints: row.swedishPoints || row.SwedishPoints || "",
+          tablePosition: row.tablePosition || row.TablePosition || row.tabellPlacering || "",
+          tablePoints: row.tablePoints || row.TablePoints || row.tabellPoang || "",
+          gamesPlayed: row.gamesPlayed || row.GamesPlayed || "",
+          wins: row.wins || row.Wins || "",
+          losses: row.losses || row.Losses || "",
+          otLosses: row.otLosses || row.OTLosses || row.ot_losses || "",
+          goalsFor: row.goalsFor || row.GoalsFor || "",
+          goalsAgainst: row.goalsAgainst || row.GoalsAgainst || "",
+          goalDiff: row.goalDiff || row.GoalDiff || "",
+          playoffMatches: row.playoffMatches || row.PlayoffMatches || "",
+          playoffWins: row.playoffWins || row.PlayoffWins || "",
+          playoffLosses: row.playoffLosses || row.PlayoffLosses || "",
+          playoffStatus: row.playoffStatus || row.PlayoffStatus || row.slutspelStatus || "",
           description: row.description || row.Description || row.info || row.Info || "Svenskt eHockey-lag med aktivitet i ECL-miljon.",
           status: row.status || row.Status || "Svenskt lag",
           url,
@@ -1464,8 +1484,16 @@
 
       function applyOptionalTeamSummary(team, stats) {
         return {
+          group: team.group || team.groupName || "",
           tablePosition: team.tablePosition || team.tabellPlacering || team.position || team.rank || stats?.tablePosition || "",
           tablePoints: team.tablePoints || team.tabellPoang || team.pointsTable || team.points || stats?.tablePoints || "",
+          gamesPlayed: team.gamesPlayed || team.regularGames || team.teamMatches || stats?.regularGames || "",
+          wins: team.wins || "",
+          losses: team.losses || "",
+          otLosses: team.otLosses || "",
+          goalsFor: team.goalsFor || "",
+          goalsAgainst: team.goalsAgainst || "",
+          goalDiff: team.goalDiff || "",
           playoffStatus: team.playoffStatus || team.slutspelStatus || stats?.playoffStatus || ""
         };
       }
@@ -1476,13 +1504,14 @@
         return teams.map((team) => {
           const stats = statsMap.get(teamIdentityKey(team.name));
           const optional = applyOptionalTeamSummary(team, stats);
-          const swedishPlayers = stats ? stats.players.size : Number(team.players || 0);
+          const listedSwedishPlayers = Number(team.swedishPlayers || team.SwedishPlayers || 0);
+          const swedishPlayers = listedSwedishPlayers || (stats ? stats.players.size : Number(team.players || 0));
 
           return {
             ...team,
             division: normalizeDivision(team.division || stats?.division),
             swedishPlayers: swedishPlayers || "",
-            regularGames: stats?.regularGames || team.regularGames || team.teamMatches || "",
+            regularGames: optional.gamesPlayed || stats?.regularGames || team.regularGames || team.teamMatches || "",
             regularPoints: stats?.regularPoints || team.regularPoints || "",
             playoffGames: stats?.playoffGames || team.playoffGames || "",
             playoffPoints: stats?.playoffPoints || team.playoffPoints || "",
@@ -1516,13 +1545,31 @@
           ...teamNameCandidates(team.name)
         ]);
 
+        const record = [team.wins, team.losses, team.otLosses]
+          .some(value => value !== "" && value !== undefined && value !== null)
+          ? `${team.wins || 0}-${team.losses || 0}-${team.otLosses || 0}`
+          : "";
+
+        const goalDiff = team.goalDiff !== "" && team.goalDiff !== undefined && team.goalDiff !== null
+          ? (Number(team.goalDiff) > 0 ? `+${team.goalDiff}` : String(team.goalDiff))
+          : "";
+
+        const playoffText = team.playoffMatches || team.playoffStatus
+          ? (Number(team.playoffMatches || 0) > 0
+            ? `Ja ${team.playoffWins || 0}-${team.playoffLosses || 0}`
+            : "Nej")
+          : "";
+
         const statsMarkup = [
-          team.swedishPlayers ? ["Spelare", team.swedishPlayers] : null,
+          team.group ? ["Grupp", team.group] : null,
+          team.tablePosition ? ["Plac", "#" + team.tablePosition] : null,
+          team.tablePoints !== "" && team.tablePoints !== undefined && team.tablePoints !== null ? ["Poäng", team.tablePoints] : null,
           team.regularGames ? ["Matcher", team.regularGames] : null,
-          team.regularPoints ? ["Poäng", team.regularPoints] : null,
-          team.tablePosition ? ["Tabell", "#" + team.tablePosition] : null,
-          team.tablePoints ? ["Tabellp", team.tablePoints] : null,
-          team.playoffStatus ? ["Slutspel", team.playoffStatus] : (team.playoffGames ? ["Slutspel", team.playoffGames + " m"] : null)
+          record ? ["Record", record] : null,
+          goalDiff ? ["Mål +/-", goalDiff] : null,
+          team.swedishPlayers ? ["Sv spelare", team.swedishPlayers] : null,
+          team.swedishPoints ? ["Sv poäng", team.swedishPoints] : null,
+          playoffText ? ["Slutspel", playoffText] : null
         ]
           .filter(Boolean)
           .map(([label, value]) => `
@@ -1541,10 +1588,17 @@
           team.founded,
           team.players,
           team.swedishPlayers,
+          team.swedishPoints,
           team.regularGames,
           team.regularPoints,
+          team.gamesPlayed,
           team.tablePosition,
           team.tablePoints,
+          team.group,
+          team.wins,
+          team.losses,
+          team.otLosses,
+          team.goalDiff,
           team.playoffStatus,
           team.description,
           team.status,
@@ -1623,7 +1677,7 @@
             }
 
             if (sortValue === "points-desc") {
-              return Number(b.regularPoints || 0) - Number(a.regularPoints || 0) || a.name.localeCompare(b.name, "sv");
+              return Number(b.tablePoints || 0) - Number(a.tablePoints || 0) || a.name.localeCompare(b.name, "sv");
             }
 
             if (sortValue === "matches-desc") {
