@@ -1,1 +1,1251 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Svensk eHockey - Svenska lag</title>
+  <link rel="icon" type="image/png" href="favicon.png?v=1">
+  <link rel="apple-touch-icon" href="favicon.png?v=1">
+  <meta name="description" content="Svenska eHockey-lag med logga och kort information." />
 
+  <style>
+    :root{
+      --bg: #07101d;
+      --bg-2: #0b1628;
+      --panel: rgba(255,255,255,0.055);
+      --panel-2: rgba(255,255,255,0.035);
+      --panel-3: rgba(255,255,255,0.025);
+      --text: rgba(255,255,255,0.95);
+      --muted: rgba(255,255,255,0.68);
+      --soft: rgba(255,255,255,0.10);
+      --border: rgba(255,255,255,0.11);
+      --gold: #f5c34b;
+      --gold-soft: rgba(245,195,75,0.18);
+      --gold-line: rgba(245,195,75,0.34);
+      --blue-soft: rgba(88,140,255,0.12);
+      --shadow: 0 24px 64px rgba(0,0,0,.42);
+      --shadow-2: 0 16px 36px rgba(0,0,0,.28);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background-color:#05101b;
+      background-image:
+        radial-gradient(1700px 980px at 50% -24%, rgba(245,195,75,0.07), transparent 72%),
+        radial-gradient(1450px 1100px at 8% 8%, rgba(46,96,235,0.10), transparent 76%),
+        radial-gradient(1100px 900px at 88% 22%, rgba(25,60,150,0.06), transparent 78%),
+        linear-gradient(180deg, #081322 0%, #06111d 58%, #05101b 100%);
+      background-repeat:no-repeat;
+      color: var(--text);
+    }
+
+    a{ color:inherit; text-decoration:none; }
+    .container{ width:min(1240px, calc(100% - 32px)); margin:0 auto; }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter: blur(12px);
+      background: rgba(7,12,20,0.78);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar__inner{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:14px 0;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      min-width:220px;
+    }
+
+    .brand__logo{
+      height:38px;
+      width:auto;
+      display:block;
+    }
+
+    .nav{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:14px;
+      flex:1;
+    }
+
+    .nav__link,
+    .nav__button{
+      font-size:14px;
+      color: var(--muted);
+      padding:10px 10px;
+      border-radius:10px;
+      white-space:nowrap;
+      background:transparent;
+      border:0;
+      cursor:pointer;
+      transition: background .16s ease, color .16s ease;
+    }
+
+    .nav__link:hover,
+    .nav__button:hover{
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
+
+    .nav__link.is-active,
+    .nav__button.is-active{ color: var(--text); }
+
+    .dropdown{ position:relative; }
+
+    .menu{
+      position:absolute;
+      top: calc(100% + 10px);
+      right:0;
+      width:290px;
+      padding:8px;
+      border-radius:14px;
+      background: rgba(16,22,34,0.97);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display:none;
+    }
+
+    .dropdown.open .menu{ display:block; }
+
+    .menu__item{
+      display:block;
+      padding:10px;
+      border-radius:10px;
+      color: var(--muted);
+      font-size:14px;
+      line-height:1.35;
+      transition: background .16s ease, color .16s ease;
+    }
+
+    .menu__item:hover{
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
+
+    .iconbtn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
+      transition: background .16s ease, border-color .16s ease;
+    }
+
+    .iconbtn:hover{
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.18);
+    }
+
+    .hamburger{
+      display:none;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor:pointer;
+      margin-left:auto;
+    }
+
+    .mobile{
+      display:none;
+      border-top: 1px solid var(--border);
+      background: rgba(10,14,22,0.88);
+    }
+
+    .mobile.open{ display:block; }
+
+    .mobile__inner{
+      padding: 12px 0 16px;
+      display:grid;
+      gap:8px;
+    }
+
+    .mobile__link{
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+    }
+
+    .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
+    .mobile__link.is-active{ color: var(--text); }
+
+    .banner-strip{
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,14,22,0.48);
+    }
+
+    .banner-strip__inner{
+      padding:18px 0;
+      display:flex;
+      justify-content:center;
+    }
+
+    .banner{
+      width:100%;
+      max-width:980px;
+      height:160px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,0.13);
+      box-shadow: var(--shadow);
+      background-image: url("svenakehocket.jpg");
+      background-size: cover;
+      background-position: center;
+      overflow:hidden;
+    }
+
+    main{ padding: 28px 0 54px; }
+
+    .card{
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 24px 22px;
+      box-shadow: var(--shadow);
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size: clamp(22px, 3vw, 30px);
+      letter-spacing:-0.4px;
+    }
+
+    p{
+      margin:10px 0;
+      color: var(--muted);
+      line-height:1.65;
+    }
+
+    .teams{
+      margin-top: 26px;
+    }
+
+    .header-box{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+      gap:18px;
+      margin: 0 0 18px;
+      padding: 2px 4px;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+    }
+
+    .section-title__icon{
+      width:34px;
+      height:34px;
+      display:grid;
+      place-items:center;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(245,195,75,0.14), rgba(245,195,75,0.06));
+      border:1px solid rgba(245,195,75,0.18);
+      color: var(--gold);
+      font-size:18px;
+      flex:0 0 34px;
+    }
+
+    .header-box h2{
+      margin:0;
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight:950;
+      letter-spacing:-0.7px;
+      line-height:1.05;
+    }
+
+    .search-wrap{
+      width:min(100%, 410px);
+      position:relative;
+    }
+
+    .search-wrap::before{
+      content:"🔍";
+      position:absolute;
+      left:16px;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:15px;
+      opacity:.7;
+      pointer-events:none;
+    }
+
+    #searchTeams{
+      width:100%;
+      padding:14px 16px 14px 42px;
+      font-size:15px;
+      border:1px solid rgba(245,195,75,0.22);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
+      color: var(--text);
+      border-radius:18px;
+      outline:none;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 8px 24px rgba(0,0,0,.16);
+      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+
+    #searchTeams::placeholder{
+      color: rgba(255,255,255,0.45);
+    }
+
+    #searchTeams:focus{
+      border-color: rgba(245,195,75,0.42);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 0 0 4px rgba(245,195,75,.10),
+        0 12px 30px rgba(0,0,0,.2);
+      background: rgba(255,255,255,0.055);
+    }
+
+    .teams-grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:18px;
+    }
+
+    .team-card{
+      min-height:260px;
+      background:
+        radial-gradient(110% 150% at 0% 0%, rgba(245,195,75,0.10), transparent 38%),
+        radial-gradient(80% 100% at 100% 100%, rgba(88,140,255,0.06), transparent 42%),
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      border:1px solid rgba(255,255,255,0.11);
+      border-radius:26px;
+      overflow:hidden;
+      box-shadow: 0 18px 42px rgba(0,0,0,.25);
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .team-card:hover{
+      transform: translateY(-3px);
+      border-color: rgba(245,195,75,0.24);
+      box-shadow: 0 26px 58px rgba(0,0,0,.34);
+    }
+
+    .team-card__top{
+      padding:22px;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.028), transparent),
+        linear-gradient(90deg, rgba(255,255,255,0.02), transparent 65%);
+    }
+
+    .team-logo{
+      width:82px;
+      height:82px;
+      border-radius:22px;
+      overflow:hidden;
+      flex:0 0 82px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      border:1px solid rgba(255,255,255,0.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position: relative;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 10px 22px rgba(0,0,0,.20);
+    }
+
+    .team-logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      padding:8px;
+    }
+
+    .team-heading{
+      min-width:0;
+      flex:1;
+    }
+
+    .team-name{
+      font-size:26px;
+      font-weight:950;
+      color:#fff;
+      line-height:1.04;
+      margin:0 0 8px;
+      letter-spacing:-0.6px;
+      word-break:break-word;
+      text-shadow: 0 2px 10px rgba(0,0,0,.16);
+      transition: color .15s ease;
+    }
+
+    .team-card:hover .team-name{
+      color: var(--gold);
+    }
+
+    .team-division{
+      font-size:13px;
+      color: var(--gold);
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.38px;
+    }
+
+    .team-card__body{
+      padding:18px 22px 22px;
+      display:grid;
+      gap:16px;
+    }
+
+    .team-description{
+      margin:0;
+      min-height:54px;
+      color: rgba(255,255,255,0.72);
+      line-height:1.55;
+    }
+
+    .team-facts{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:10px;
+    }
+
+    .fact{
+      min-height:68px;
+      padding:11px 10px;
+      border-radius:18px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.022));
+      border:1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+    }
+
+    .fact__label{
+      font-size:11px;
+      color: rgba(255,255,255,0.52);
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.36px;
+      margin-bottom:6px;
+    }
+
+    .fact__value{
+      font-size:14px;
+      color:#fff;
+      font-weight:900;
+      line-height:1.18;
+      word-break:break-word;
+    }
+
+    .team-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .team-link{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:11px 14px;
+      border-radius:14px;
+      color:#07101d;
+      background: var(--gold);
+      font-size:13px;
+      font-weight:950;
+      box-shadow: 0 12px 24px rgba(0,0,0,.18);
+      transition: transform .15s ease, filter .15s ease;
+    }
+
+    .team-link:hover{
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .team-tag{
+      display:inline-flex;
+      align-items:center;
+      min-height:34px;
+      padding:8px 11px;
+      border-radius:999px;
+      color: rgba(255,255,255,0.74);
+      background: rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.08);
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.3px;
+    }
+
+    .empty-state{
+      padding:18px;
+      border-radius:18px;
+      background: rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
+    }
+
+    .lastUpdated{
+      font-size:13px;
+      color: rgba(255,255,255,0.58);
+      margin-top:12px;
+      text-align:right;
+    }
+
+    footer{
+      border-top:1px solid var(--border);
+      background: rgba(8,12,20,0.8);
+    }
+
+    .footer__inner{
+      padding:16px 0;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      color: var(--muted);
+      font-size:13px;
+    }
+
+    @media (max-width: 1080px){
+      .teams-grid{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 860px){
+      .nav{ display:none; }
+      .hamburger{ display:inline-flex; }
+      .brand__logo{ height:32px; }
+      .brand{ min-width:160px; }
+      .banner{ height:120px; border-radius:16px; }
+      .banner-strip__inner{ padding:14px 0; }
+      .header-box h2{ font-size:24px; }
+    }
+
+    @media (max-width: 700px){
+      .header-box{
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .search-wrap{
+        width:100%;
+      }
+
+      .teams-grid{
+        grid-template-columns: 1fr;
+      }
+
+      .team-card__top{
+        padding:18px;
+      }
+
+      .team-card__body{
+        padding:16px 18px 18px;
+      }
+
+      .team-logo{
+        width:68px;
+        height:68px;
+        flex-basis:68px;
+        border-radius:18px;
+      }
+
+      .team-name{
+        font-size:22px;
+      }
+
+      .team-facts{
+        grid-template-columns: 1fr;
+      }
+
+      .team-description{
+        min-height:unset;
+      }
+
+      .lastUpdated{
+        text-align:left;
+      }
+    }
+
+    @media (max-width: 460px){
+      .team-card__top{
+        align-items:flex-start;
+      }
+
+      .team-name{
+        font-size:20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <a class="brand" href="/" aria-label="Svensk eHockey">
+        <img class="brand__logo" src="svenakehocket.png" alt="Svensk eHockey" />
+      </a>
+
+      <nav class="nav" aria-label="Huvudmeny">
+        <a class="nav__link" href="/">Startsida</a>
+
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button is-active" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            Svensk ECL Statistik <span>▾</span>
+          </button>
+          <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
+            <a class="menu__item" role="menuitem" href="/svenskamatcher.html">Svenska matcher</a>
+            <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
+            <a class="menu__item" role="menuitem" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
+            <a class="menu__item" role="menuitem" href="/svenskalag.html">Svenska lag</a>
+          </div>
+        </div>
+
+        <a class="nav__link" href="#">Nyheter</a>
+
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            Cuper <span>▾</span>
+          </button>
+          <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
+          </div>
+        </div>
+
+        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">🔍</button>
+      </nav>
+
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
+    </div>
+
+    <div class="mobile" data-mobile-menu>
+      <div class="container mobile__inner">
+        <a class="mobile__link" href="/">Startsida</a>
+        <a class="mobile__link" href="/svenskaeclbyten.html">ECL - Byten</a>
+        <a class="mobile__link" href="/svenskamatcher.html">ECL - Svenska matcher</a>
+        <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter - Statistik</a>
+        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring - Statistik</a>
+        <a class="mobile__link is-active" href="/svenskalag.html">Svenska lag</a>
+        <a class="mobile__link" href="#">Nyheter</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper - SEC</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="banner-strip" aria-label="Banner">
+    <div class="container banner-strip__inner">
+      <div class="banner" role="img" aria-label="Svensk eHockey banner"></div>
+    </div>
+  </section>
+
+  <main class="container">
+    <section class="card">
+      <h1>Svenska eHockey-lag 🏒</h1>
+
+      <p>
+        Här samlas <strong>svenska lag inom eHockey</strong> med logga, division och en snabb överblick. Sidan är byggd för att göra det enkelt att hitta lag, känna igen profilerna och klicka vidare till lagens Sportsgamer-sidor när länk finns.
+      </p>
+
+      <p>
+        Listan kan hämtas från <strong>svenskalag.json</strong> om du vill styra text och fakta manuellt. Finns inte den filen försöker sidan bygga laglistan från statistikfilen och visar den info som går att hitta där.
+      </p>
+    </section>
+
+    <section id="lag" class="teams" aria-label="Svenska lag">
+      <div class="header-box">
+        <div class="section-title">
+          <div class="section-title__icon">🏆</div>
+          <h2>Svenska lag</h2>
+        </div>
+
+        <div class="search-wrap">
+          <input type="text" id="searchTeams" placeholder="Sök lag, division eller info...">
+        </div>
+      </div>
+
+      <div id="teams-list"></div>
+      <p id="lastUpdated" class="lastUpdated"></p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer__inner">
+      <span>© <span id="year"></span> Svensk eHockey</span>
+      <span>•</span>
+      <a href="#">Kontakt</a>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const dropdowns = document.querySelectorAll("[data-dropdown]");
+    dropdowns.forEach((dd) => {
+      const btn = dd.querySelector("[data-dropdown-btn]");
+
+      const close = () => {
+        dd.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+      };
+      const open = () => {
+        dd.classList.add("open");
+        btn.setAttribute("aria-expanded", "true");
+      };
+
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dd.classList.contains("open") ? close() : open();
+
+        dropdowns.forEach((other) => {
+          if (other !== dd) {
+            other.classList.remove("open");
+            other.querySelector("[data-dropdown-btn]")?.setAttribute("aria-expanded", "false");
+          }
+        });
+      });
+
+      document.addEventListener("click", close);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+      });
+    });
+
+    const mobileBtn = document.querySelector("[data-mobile-toggle]");
+    const mobileMenu = document.querySelector("[data-mobile-menu]");
+    if (mobileBtn && mobileMenu) {
+      mobileBtn.addEventListener("click", () => {
+        mobileMenu.classList.toggle("open");
+      });
+    }
+
+    (function () {
+      const TEAM_JSON_URL = "./svenskalag.json";
+      const STATS_JSON_URL = "./svenskstatistikecl26spring.json";
+      const target = document.getElementById("teams-list");
+      const search = document.getElementById("searchTeams");
+      const updated = document.getElementById("lastUpdated");
+
+      const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE", "SVENSK", "SVENSKA"]);
+
+      function extractJsonResultObject(rawData) {
+        if (!rawData || typeof rawData !== "object") return {};
+
+        if (Array.isArray(rawData.lag) || Array.isArray(rawData.teams) || Array.isArray(rawData.overgangar)) {
+          return rawData;
+        }
+
+        if (rawData.json_result && typeof rawData.json_result === "object") {
+          return rawData.json_result;
+        }
+
+        if (rawData.json_result && typeof rawData.json_result === "string") {
+          try {
+            return JSON.parse(rawData.json_result);
+          } catch (e) {
+            return {};
+          }
+        }
+
+        if (Array.isArray(rawData.rows) && rawData.rows.length > 0) {
+          const firstRow = rawData.rows[0];
+
+          if (firstRow && (Array.isArray(firstRow.lag) || Array.isArray(firstRow.teams) || Array.isArray(firstRow.overgangar))) return firstRow;
+
+          if (firstRow && firstRow.json_result && typeof firstRow.json_result === "object") {
+            return firstRow.json_result;
+          }
+
+          if (firstRow && typeof firstRow.json_result === "string") {
+            try {
+              return JSON.parse(firstRow.json_result);
+            } catch (e) {
+              return {};
+            }
+          }
+        }
+
+        return {};
+      }
+
+      function formatUpdated(value) {
+        if (!value) return "";
+        const d = new Date(value);
+        if (isNaN(d)) return value;
+
+        return d.toLocaleString("sv-SE", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function encodeAttr(value) {
+        return encodeURIComponent(JSON.stringify(value));
+      }
+
+      function decodeAttr(value) {
+        try {
+          return JSON.parse(decodeURIComponent(value || ""));
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function normalizeFileBase(value) {
+        return String(value || "")
+          .trim()
+          .replace(/\u00A0/g, " ")
+          .replace(/\s+/g, " ")
+          .replace(/[\/\\:*?"<>|]/g, "");
+      }
+
+      function removeDiacritics(value) {
+        return String(value || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+      }
+
+      function stripParens(value) {
+        return String(value || "")
+          .replace(/\s*\([^)]*\)\s*/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function slugifyLoose(value) {
+        return removeDiacritics(value)
+          .toLowerCase()
+          .replace(/&/g, " and ")
+          .replace(/[^a-z0-9]+/g, "")
+          .trim();
+      }
+
+      function unique(values) {
+        return [...new Set(values.map(v => String(v || "").trim()).filter(Boolean))];
+      }
+
+      function buildPaths(folder, names, exts) {
+        const paths = [];
+        names.forEach((name) => {
+          exts.forEach((ext) => {
+            paths.push(`/${folder}/${name}.${ext}`);
+          });
+        });
+        return unique(paths);
+      }
+
+      function cleanDisplayTeamName(name) {
+        return String(name || "")
+          .replace(/\u00A0/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function teamNameCandidates(teamName) {
+        const displayName = cleanDisplayTeamName(teamName);
+        const raw = normalizeFileBase(displayName);
+        const noParens = stripParens(raw);
+        const noDiacritics = normalizeFileBase(removeDiacritics(noParens));
+
+        const short1 = noParens.replace(/\s+IF\s+Esport$/i, "").trim();
+        const short2 = noParens.replace(/\s+Esport$/i, "").trim();
+        const short3 = noParens.replace(/\s+Hockey$/i, "").trim();
+        const short4 = noParens.replace(/\s+Esports$/i, "").trim();
+
+        const names = unique([
+          noParens,
+          removeDiacritics(noParens),
+          short1,
+          removeDiacritics(short1),
+          short2,
+          removeDiacritics(short2),
+          short3,
+          removeDiacritics(short3),
+          short4,
+          removeDiacritics(short4),
+          noDiacritics,
+          noParens.toLowerCase(),
+          removeDiacritics(noParens).toLowerCase(),
+          short1.toLowerCase(),
+          removeDiacritics(short1).toLowerCase(),
+          short2.toLowerCase(),
+          removeDiacritics(short2).toLowerCase(),
+          short3.toLowerCase(),
+          removeDiacritics(short3).toLowerCase(),
+          slugifyLoose(noParens),
+          slugifyLoose(short1),
+          slugifyLoose(short2),
+          slugifyLoose(short3)
+        ]);
+
+        return buildPaths("teamlogos", names, ["png", "jpg", "jpeg", "webp", "PNG", "JPG", "JPEG", "WEBP"]);
+      }
+
+      function teamShortName(name) {
+        const cleaned = stripParens(cleanDisplayTeamName(name))
+          .replace(/\s+IF\s+Esport$/i, "")
+          .replace(/\s+Esport$/i, "")
+          .replace(/\s+Esports$/i, "")
+          .replace(/\s+Hockey$/i, "")
+          .trim();
+
+        return cleaned.slice(0, 3).toUpperCase() || "ECL";
+      }
+
+      function fallbackLogo(img) {
+        const team = img.getAttribute("data-team") || "";
+        const shortName = teamShortName(team);
+
+        img.onerror = null;
+        img.src =
+          "data:image/svg+xml;charset=UTF-8," +
+          encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220">
+              <defs>
+                <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#18233d"/>
+                  <stop offset="100%" stop-color="#0f172a"/>
+                </linearGradient>
+              </defs>
+              <rect width="220" height="220" rx="32" fill="url(#g)"/>
+              <path d="M110 38l52 20v37c0 39-22 67-52 88-30-21-52-49-52-88V58z" fill="#f5c34b" fill-opacity="0.18"/>
+              <text x="110" y="126" text-anchor="middle" fill="#f5c34b" font-family="Arial, sans-serif" font-weight="800" font-size="34">${shortName}</text>
+            </svg>
+          `);
+      }
+
+      function setFirstCandidate(img) {
+        const candidates = decodeAttr(img.dataset.candidates);
+        img.dataset.candidateIndex = "0";
+
+        if (candidates.length) {
+          img.src = candidates[0];
+        } else {
+          fallbackLogo(img);
+        }
+      }
+
+      function tryNextCandidate(img) {
+        const candidates = decodeAttr(img.dataset.candidates);
+        const currentIndex = Number(img.dataset.candidateIndex || "0");
+        const nextIndex = currentIndex + 1;
+
+        if (nextIndex < candidates.length) {
+          img.dataset.candidateIndex = String(nextIndex);
+          img.src = candidates[nextIndex];
+          return;
+        }
+
+        fallbackLogo(img);
+      }
+
+      window.handleImageError = function(event) {
+        tryNextCandidate(event.target);
+      };
+
+      function isSwedishTeam(team) {
+        const values = [
+          team.country,
+          team.nation,
+          team.nationality,
+          team.teamCountry,
+          team.TeamCountry,
+          team.Country
+        ].map(value => String(value || "").trim().toUpperCase());
+
+        if (values.some(value => swedishValues.has(value))) return true;
+
+        const name = String(team.name || team.Name || team.Team || "").toLowerCase();
+        return /\b(sweden|sverige|svensk|swe)\b/.test(name);
+      }
+
+      function normalizeTeamFromManual(row) {
+        const name = cleanDisplayTeamName(row.name || row.Name || row.Team || row.team || row.lag);
+        if (!name) return null;
+
+        const leagueId = row.leagueId || row.LeagueID || row.leagueID || row.league_id || "";
+        const teamId = row.teamId || row.TeamID || row.teamID || row.team_id || "";
+        const url = row.url || row.href || (teamId && leagueId ? `https://sportsgamer.gg/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(teamId)}` : "");
+
+        return {
+          name,
+          division: row.division || row.Division || row.div || row.Div || "Svenskt lag",
+          league: row.league || row.League || row.season || row.Season || "ECL",
+          location: row.location || row.Location || row.city || row.City || "Sverige",
+          founded: row.founded || row.Founded || row.startYear || row.StartYear || "-",
+          players: row.players || row.Players || row.swedishPlayers || row.SwedishPlayers || "-",
+          description: row.description || row.Description || row.info || row.Info || "Svenskt eHockey-lag med aktivitet i ECL-miljon.",
+          status: row.status || row.Status || "Svenskt lag",
+          url,
+          logo: row.logo || row.Logo || "",
+          searchExtra: row.search || row.Search || ""
+        };
+      }
+
+      function addTeam(map, item) {
+        if (!item || !item.name) return;
+        const key = cleanDisplayTeamName(item.name).toLowerCase();
+        const existing = map.get(key);
+
+        if (!existing) {
+          map.set(key, item);
+          return;
+        }
+
+        map.set(key, {
+          ...existing,
+          ...Object.fromEntries(Object.entries(item).filter(([, value]) => value !== "" && value !== "-" && value !== null && value !== undefined)),
+          players: Number(existing.players || 0) + Number(item.players || 0) || existing.players || item.players,
+          transferCount: Number(existing.transferCount || 0) + Number(item.transferCount || 0)
+        });
+      }
+
+      function teamsFromTransfers(rows) {
+        const map = new Map();
+
+        rows.forEach((row) => {
+          const fromName = cleanDisplayTeamName(row.From);
+          const toName = cleanDisplayTeamName(row.To);
+
+          if (fromName) {
+            addTeam(map, {
+              name: fromName,
+              division: row.FromDiv || "ECL",
+              league: row.FromLeague || row.League || "ECL",
+              location: "Sverige",
+              founded: "-",
+              players: row.nationality ? 1 : "-",
+              transferCount: 1,
+              description: "Svenskt kopplat ECL-lag som förekommer i statistiken över svenska spelare och lagbyten.",
+              status: "Från statistik",
+              url: row.FromTeamID && row.FromLeagueID ? `https://sportsgamer.gg/leagues/${encodeURIComponent(row.FromLeagueID)}/teams/${encodeURIComponent(row.FromTeamID)}` : "",
+              logo: ""
+            });
+          }
+
+          if (toName) {
+            addTeam(map, {
+              name: toName,
+              division: row.ToDiv || "ECL",
+              league: row.ToLeague || row.League || "ECL",
+              location: "Sverige",
+              founded: "-",
+              players: row.nationality ? 1 : "-",
+              transferCount: 1,
+              description: "Svenskt kopplat ECL-lag som förekommer i statistiken över svenska spelare och lagbyten.",
+              status: "Från statistik",
+              url: row.ToTeamID && row.ToLeagueID ? `https://sportsgamer.gg/leagues/${encodeURIComponent(row.ToLeagueID)}/teams/${encodeURIComponent(row.ToTeamID)}` : "",
+              logo: ""
+            });
+          }
+        });
+
+        return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "sv"));
+      }
+
+      function teamMarkup(team) {
+        const logoCandidates = unique([
+          team.logo,
+          ...teamNameCandidates(team.name)
+        ]);
+
+        const linkMarkup = team.url
+          ? `<a class="team-link" href="${escapeHtml(team.url)}" target="_blank" rel="noopener noreferrer">Öppna lagprofil</a>`
+          : `<span class="team-tag">Ingen länk ännu</span>`;
+
+        const transferText = team.transferCount
+          ? `${team.transferCount} träffar`
+          : (team.players || "-");
+
+        const searchText = [
+          team.name,
+          team.division,
+          team.league,
+          team.location,
+          team.founded,
+          team.players,
+          team.description,
+          team.status,
+          team.searchExtra
+        ].join(" ").toLowerCase();
+
+        return `
+          <article class="team-card" data-search="${escapeHtml(searchText)}">
+            <div class="team-card__top">
+              <div class="team-logo">
+                <img
+                  alt="${escapeHtml(team.name)}"
+                  data-team="${escapeHtml(team.name)}"
+                  data-candidates="${escapeHtml(encodeAttr(logoCandidates))}"
+                  loading="lazy"
+                  onerror="handleImageError(event)"
+                >
+              </div>
+              <div class="team-heading">
+                <h3 class="team-name">${escapeHtml(team.name)}</h3>
+                <div class="team-division">${escapeHtml(team.division || "Svenskt lag")}</div>
+              </div>
+            </div>
+
+            <div class="team-card__body">
+              <p class="team-description">${escapeHtml(team.description || "Svenskt eHockey-lag.")}</p>
+
+              <div class="team-facts" aria-label="Lagfakta">
+                <div class="fact">
+                  <div class="fact__label">Liga</div>
+                  <div class="fact__value">${escapeHtml(team.league || "ECL")}</div>
+                </div>
+                <div class="fact">
+                  <div class="fact__label">Ort</div>
+                  <div class="fact__value">${escapeHtml(team.location || "Sverige")}</div>
+                </div>
+                <div class="fact">
+                  <div class="fact__label">Info</div>
+                  <div class="fact__value">${escapeHtml(transferText)}</div>
+                </div>
+              </div>
+
+              <div class="team-actions">
+                ${linkMarkup}
+                <span class="team-tag">${escapeHtml(team.status || "Svenskt lag")}</span>
+              </div>
+            </div>
+          </article>
+        `;
+      }
+
+      function activateImages() {
+        target.querySelectorAll("img[data-candidates]").forEach((img) => {
+          setFirstCandidate(img);
+        });
+      }
+
+      function renderTeams(rows) {
+        if (!rows.length) {
+          target.innerHTML = `<div class="empty-state">Inga svenska lag hittades.</div>`;
+          return;
+        }
+
+        target.innerHTML = `<div class="teams-grid">${rows.map(teamMarkup).join("")}</div>`;
+        activateImages();
+      }
+
+      function setupSearch() {
+        search.addEventListener("input", function () {
+          const q = this.value.toLowerCase().trim();
+          const cards = target.querySelectorAll(".team-card");
+          let visible = 0;
+
+          cards.forEach((card) => {
+            const haystack = card.getAttribute("data-search") || "";
+            const match = haystack.includes(q);
+            card.style.display = match ? "" : "none";
+            if (match) visible++;
+          });
+
+          if (!visible && cards.length) {
+            target.insertAdjacentHTML("beforeend", `<div class="empty-state" data-search-empty>Inga lag matchar din sökning.</div>`);
+          } else {
+            target.querySelectorAll("[data-search-empty]").forEach((el) => el.remove());
+          }
+        });
+      }
+
+      async function fetchJson(url) {
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Kunde inte läsa ${url} (${response.status})`);
+        return response.json();
+      }
+
+      target.innerHTML = '<div class="empty-state">Laddar lag...</div>';
+
+      fetchJson(TEAM_JSON_URL)
+        .then((rawData) => {
+          const parsed = extractJsonResultObject(rawData);
+          const manualTeams = Array.isArray(parsed.lag) ? parsed.lag : (Array.isArray(parsed.teams) ? parsed.teams : []);
+          const teams = manualTeams
+            .map(normalizeTeamFromManual)
+            .filter(Boolean)
+            .filter((team, index, all) => all.findIndex(other => other.name.toLowerCase() === team.name.toLowerCase()) === index)
+            .sort((a, b) => a.name.localeCompare(b.name, "sv"));
+
+          renderTeams(teams);
+          setupSearch();
+
+          const updatedValue = parsed.updated || rawData.updated || "";
+          updated.textContent = "Senast uppdaterad: " + (formatUpdated(updatedValue) || new Date().toLocaleString("sv-SE", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+          }));
+        })
+        .catch(() => {
+          fetchJson(STATS_JSON_URL)
+            .then((rawData) => {
+              const parsed = extractJsonResultObject(rawData);
+              const allTransfers = Array.isArray(parsed.overgangar) ? parsed.overgangar : [];
+              const teams = Array.isArray(parsed.teams)
+                ? parsed.teams.filter(isSwedishTeam).map(normalizeTeamFromManual).filter(Boolean)
+                : teamsFromTransfers(allTransfers);
+
+              renderTeams(teams);
+              setupSearch();
+
+              const updatedValue = parsed.updated || rawData.updated || "";
+              updated.textContent = "Senast uppdaterad: " + (formatUpdated(updatedValue) || new Date().toLocaleString("sv-SE", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+              }));
+            })
+            .catch((err) => {
+              target.innerHTML = `<div class="empty-state">Fel vid laddning: ${escapeHtml(err.message)}. Lägg gärna till svenskalag.json för att fylla sidan med lag.</div>`;
+              updated.textContent = "";
+              setupSearch();
+            });
+        });
+    })();
+  </script>
+</body>
+</html>
