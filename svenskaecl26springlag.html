@@ -1354,7 +1354,6 @@
 
         rows
           .filter(isSpring26Team)
-          .filter(isSwedishTeam)
           .map(normalizeTeamFromManual)
           .filter(Boolean)
           .forEach((team) => addTeam(map, team));
