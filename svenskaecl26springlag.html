@@ -750,6 +750,15 @@
       const search = document.getElementById("searchTeams");
       const updated = document.getElementById("lastUpdated");
 
+      const divisionOrder = ["elite", "pro", "lite", "core", "neo"];
+      const divisionLabels = {
+        elite: "Elite",
+        pro: "Pro",
+        lite: "Lite",
+        core: "Core",
+        neo: "Neo"
+      };
+
       const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE", "SVENSK", "SVENSKA"]);
       const spring26Values = ["26 spring", "ecl 26 spring", "ecl26 spring", "spring 26"];
       const swedishTeamNameHints = [
@@ -1289,6 +1298,71 @@
         return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "sv"));
       }
 
+      function matchTeamIsSwedish(match, teamName) {
+        return match.svensktLag === teamName || match.svensktLag === "SWE vs SWE";
+      }
+
+      function getDivisionMatches(matcher, division) {
+        const source = matcher?.[division];
+        if (!Array.isArray(source)) return [];
+
+        return source.map((match) => ({
+          ...match,
+          division
+        }));
+      }
+
+      function teamsFromMatches(matcher) {
+        const map = new Map();
+
+        divisionOrder
+          .flatMap((division) => getDivisionMatches(matcher, division))
+          .forEach((match) => {
+            [
+              { name: match.awayTeam, side: "away" },
+              { name: match.homeTeam, side: "home" }
+            ].forEach((entry) => {
+              const name = cleanDisplayTeamName(entry.name);
+              if (!name || isWrongSeasonTeamName(name) || isWinterTeamName(name)) return;
+              if (!matchTeamIsSwedish(match, name)) return;
+
+              addTeam(map, {
+                name,
+                division: divisionLabels[match.division] || "ECL",
+                league: "ECL 26 Spring",
+                location: "Sverige",
+                founded: "-",
+                players: "-",
+                transferCount: 1,
+                description: "Svenskt ECL 26 Spring-lag som förekommer i matchdatan.",
+                status: "ECL 26 Spring",
+                url: "",
+                logo: ""
+              });
+            });
+          });
+
+        return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "sv"));
+      }
+
+      function collectTeams(parsed) {
+        const map = new Map();
+
+        if (parsed?.matcher && typeof parsed.matcher === "object") {
+          teamsFromMatches(parsed.matcher).forEach((team) => addTeam(map, team));
+        }
+
+        if (Array.isArray(parsed?.teams)) {
+          teamsFromTeamArray(parsed.teams).forEach((team) => addTeam(map, team));
+        }
+
+        if (Array.isArray(parsed?.overgangar)) {
+          teamsFromTransfers(parsed.overgangar).forEach((team) => addTeam(map, team));
+        }
+
+        return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "sv"));
+      }
+
       function teamMarkup(team) {
         const logoCandidates = unique([
           team.logo,
@@ -1408,10 +1482,7 @@
       fetchJson(JSON_URL)
         .then((rawData) => {
           const parsed = extractJsonResultObject(rawData);
-          const allTransfers = Array.isArray(parsed.overgangar) ? parsed.overgangar : [];
-          const teams = Array.isArray(parsed.teams)
-            ? teamsFromTeamArray(parsed.teams)
-            : teamsFromTransfers(allTransfers);
+          const teams = collectTeams(parsed);
 
           renderTeams(teams);
           setupSearch();
