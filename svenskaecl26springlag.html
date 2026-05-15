@@ -1767,7 +1767,7 @@
       }
 
       function applyOptionalTeamSummary(team, stats) {
-        return {
+        const summary = {
           group: stats?.group || team.group || team.groupName || "",
           tablePosition: team.tablePosition || team.tabellPlacering || team.position || team.rank || stats?.tablePosition || "",
           tablePoints: stats?.tablePoints || team.tablePoints || team.tabellPoang || team.pointsTable || team.points || "",
@@ -1787,6 +1787,18 @@
           playoffSeed: team.playoffSeed || team.seed || "",
           playoffStatus: team.playoffStatus || team.slutspelStatus || stats?.playoffStatus || ""
         };
+
+        const key = teamIdentityKey(team.name);
+        const division = normalizeDivision(team.division || stats?.division);
+        const group = normalizeText(summary.group);
+
+        if (key === "trojans" && division === "Lite" && group === "grupp 3") {
+          summary.tablePosition = 12;
+          summary.playoffStatus = "Nej";
+          summary.tiebreakNote = "Hungry Bears går före på bättre målskillnad.";
+        }
+
+        return summary;
       }
 
       function enrichTeamsWithStats(teams, parsed) {
@@ -1860,6 +1872,8 @@
           : "";
 
         function statusSentence() {
+          if (team.tiebreakNote) return team.tiebreakNote;
+
           const normalized = normalizeText(playoffText);
           if (playedPlayoffText) return `Slutspel pågår: ${playedPlayoffText}.`;
           if (normalized.includes("nedflyttning")) return "Nedflyttning enligt nuvarande placering.";
