@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Svensk eHockey – Svenska matcher</title>
+  <title>Svensk eHockey - Svenska matcher</title>
   <link rel="icon" type="image/png" href="favicon.png?v=1">
   <link rel="apple-touch-icon" href="favicon.png?v=1">
   <meta name="description" content="Svenska matcher i ECL 26 Spring." />
@@ -11,20 +11,11 @@
   <style>
     :root{
       --bg: #07101d;
-      --bg-2: #0b1628;
-      --panel: rgba(255,255,255,0.055);
-      --panel-2: rgba(255,255,255,0.035);
-      --panel-3: rgba(255,255,255,0.025);
       --text: rgba(255,255,255,0.95);
       --muted: rgba(255,255,255,0.68);
-      --soft: rgba(255,255,255,0.10);
       --border: rgba(255,255,255,0.11);
       --gold: #f5c34b;
-      --gold-soft: rgba(245,195,75,0.18);
-      --gold-line: rgba(245,195,75,0.34);
-      --blue-soft: rgba(88,140,255,0.12);
       --shadow: 0 24px 64px rgba(0,0,0,.42);
-      --shadow-2: 0 16px 36px rgba(0,0,0,.28);
       --danger: #ff6767;
     }
 
@@ -38,16 +29,12 @@
       background-image:
         radial-gradient(1700px 980px at 50% -24%, rgba(245,195,75,0.07), transparent 72%),
         radial-gradient(1450px 1100px at 8% 8%, rgba(46,96,235,0.10), transparent 76%),
-        radial-gradient(1100px 900px at 88% 22%, rgba(25,60,150,0.06), transparent 78%),
         linear-gradient(180deg, #081322 0%, #06111d 58%, #05101b 100%);
       background-repeat:no-repeat;
       color: var(--text);
     }
 
-    body.modal-open{
-      overflow:hidden;
-    }
-
+    body.modal-open{ overflow:hidden; }
     a{ color:inherit; text-decoration:none; }
     .container{ width:min(1240px, calc(100% - 32px)); margin:0 auto; }
 
@@ -91,7 +78,7 @@
     .nav__button{
       font-size:14px;
       color: var(--muted);
-      padding:10px 10px;
+      padding:10px;
       border-radius:10px;
       white-space:nowrap;
       background:transparent;
@@ -106,8 +93,8 @@
       color: var(--text);
     }
 
-    .nav__link.is-active{ color: var(--text); }
-
+    .nav__link.is-active,
+    .nav__button.is-active{ color: var(--text); }
     .dropdown{ position:relative; }
 
     .menu{
@@ -140,29 +127,19 @@
       color: var(--text);
     }
 
-    .iconbtn{
+    .iconbtn,
+    .hamburger{
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.04);
       color: var(--text);
       border-radius: 12px;
       padding: 8px 10px;
       cursor:pointer;
-      transition: background .16s ease, border-color .16s ease;
-    }
-
-    .iconbtn:hover{
-      background: rgba(255,255,255,0.07);
-      border-color: rgba(255,255,255,0.18);
     }
 
     .hamburger{
       display:none;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      color: var(--text);
-      border-radius: 12px;
       padding: 8px 12px;
-      cursor:pointer;
       margin-left:auto;
     }
 
@@ -187,8 +164,11 @@
       color: var(--muted);
     }
 
-    .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
-    .mobile__link.is-active{ color: var(--text); }
+    .mobile__link:hover,
+    .mobile__link.is-active{
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+    }
 
     .banner-strip{
       border-bottom: 1px solid var(--border);
@@ -217,8 +197,7 @@
     main{ padding: 28px 0 54px; }
 
     .card{
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03));
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03));
       border: 1px solid var(--border);
       border-radius: 22px;
       padding: 24px 22px;
@@ -237,9 +216,7 @@
       line-height:1.65;
     }
 
-    .matches{
-      margin-top: 26px;
-    }
+    .matches{ margin-top: 26px; }
 
     .header-box{
       display:flex;
@@ -287,14 +264,33 @@
       width:100%;
     }
 
+    .select-wrap,
+    .search-wrap{
+      position:relative;
+    }
+
+    .select-wrap{
+      width:min(100%, 210px);
+    }
+
+    .select-wrap::after{
+      content:"\25BE";
+      position:absolute;
+      right:15px;
+      top:50%;
+      transform:translateY(-50%);
+      color: var(--gold);
+      font-size:12px;
+      pointer-events:none;
+    }
+
     .search-wrap{
       width:min(100%, 410px);
-      position:relative;
       margin-left:auto;
     }
 
     .search-wrap::before{
-      content:"🔍";
+      content:"\1F50D";
       position:absolute;
       left:16px;
       top:50%;
@@ -304,32 +300,40 @@
       pointer-events:none;
     }
 
+    .select-control,
     #searchMatches{
       width:100%;
-      padding:14px 16px 14px 42px;
+      padding:14px 16px;
       font-size:15px;
       border:1px solid rgba(245,195,75,0.22);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
       color: var(--text);
       border-radius:18px;
       outline:none;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.04),
-        0 8px 24px rgba(0,0,0,.16);
-      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,.16);
     }
 
-    #searchMatches::placeholder{
-      color: rgba(255,255,255,0.45);
+    .select-control{
+      appearance:none;
+      padding-right:38px;
+      font-weight:850;
     }
 
+    .select-control option{
+      background:#101622;
+      color:#fff;
+    }
+
+    #searchMatches{
+      padding-left:42px;
+    }
+
+    #searchMatches::placeholder{ color: rgba(255,255,255,0.45); }
+
+    .select-control:focus,
     #searchMatches:focus{
       border-color: rgba(245,195,75,0.42);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.06),
-        0 0 0 4px rgba(245,195,75,.10),
-        0 12px 30px rgba(0,0,0,.2);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 4px rgba(245,195,75,.10), 0 12px 30px rgba(0,0,0,.2);
       background: rgba(255,255,255,0.055);
     }
 
@@ -504,9 +508,7 @@
       text-transform:uppercase;
     }
 
-    .ot-pill.is-hidden{
-      visibility:hidden;
-    }
+    .ot-pill.is-hidden{ visibility:hidden; }
 
     .match-meta{
       display:flex;
@@ -580,9 +582,7 @@
       padding:20px;
     }
 
-    .modal.open{
-      display:flex;
-    }
+    .modal.open{ display:flex; }
 
     .modal__backdrop{
       position:absolute;
@@ -598,8 +598,7 @@
       max-height:min(88vh, 920px);
       overflow:auto;
       border-radius:28px;
-      background:
-        linear-gradient(180deg, rgba(17,23,36,0.98), rgba(10,15,24,0.98));
+      background: linear-gradient(180deg, rgba(17,23,36,0.98), rgba(10,15,24,0.98));
       border:1px solid rgba(255,255,255,0.11);
       box-shadow: 0 30px 90px rgba(0,0,0,.48);
     }
@@ -645,9 +644,7 @@
       flex:0 0 44px;
     }
 
-    .modal__close:hover{
-      background: rgba(255,255,255,0.08);
-    }
+    .modal__close:hover{ background: rgba(255,255,255,0.08); }
 
     .modal__content{
       padding:22px;
@@ -656,8 +653,7 @@
     }
 
     .detail-card{
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
       border:1px solid rgba(255,255,255,0.08);
       border-radius:22px;
       padding:18px;
@@ -681,9 +677,7 @@
       text-align:right;
     }
 
-    .detail-team--home .detail-team-text{
-      order:-1;
-    }
+    .detail-team--home .detail-team-text{ order:-1; }
 
     .detail-team-logo{
       width:74px;
@@ -739,9 +733,7 @@
       margin:0 12px;
     }
 
-    .detail-ot{
-      margin-top:10px;
-    }
+    .detail-ot{ margin-top:10px; }
 
     .detail-grid{
       display:grid;
@@ -834,9 +826,7 @@
     }
 
     @media (max-width: 980px){
-      .detail-score{
-        grid-template-columns:1fr;
-      }
+      .detail-score{ grid-template-columns:1fr; }
 
       .detail-team,
       .detail-team--home{
@@ -844,13 +834,8 @@
         text-align:left;
       }
 
-      .detail-team--home .detail-team-text{
-        order:initial;
-      }
-
-      .detail-grid{
-        grid-template-columns:1fr 1fr;
-      }
+      .detail-team--home .detail-team-text{ order:initial; }
+      .detail-grid{ grid-template-columns:1fr 1fr; }
     }
 
     @media (max-width: 860px){
@@ -874,14 +859,13 @@
         align-items:stretch;
       }
 
-      .search-wrap{
+      .search-wrap,
+      .select-wrap{
         width:100%;
         margin-left:0;
       }
 
-      .match-row{
-        grid-template-columns:1fr;
-      }
+      .match-row{ grid-template-columns:1fr; }
 
       .match-side,
       .match-side--home{
@@ -889,43 +873,18 @@
         text-align:left;
       }
 
-      .score{
-        font-size:36px;
-      }
-
-      .team-title{
-        font-size:18px;
-      }
-
-      .detail-grid{
-        grid-template-columns:1fr;
-      }
-
-      .detail-team-name{
-        font-size:22px;
-      }
-
-      .detail-scoreline{
-        font-size:48px;
-      }
-
-      .lastUpdated{
-        text-align:left;
-      }
+      .score{ font-size:36px; }
+      .team-title{ font-size:18px; }
+      .detail-grid{ grid-template-columns:1fr; }
+      .detail-team-name{ font-size:22px; }
+      .detail-scoreline{ font-size:48px; }
+      .lastUpdated{ text-align:left; }
     }
 
     @media (max-width: 460px){
-      .team-title{
-        font-size:17px;
-      }
-
-      .score{
-        font-size:32px;
-      }
-
-      .modal{
-        padding:10px;
-      }
+      .team-title{ font-size:17px; }
+      .score{ font-size:32px; }
+      .modal{ padding:10px; }
 
       .modal__header,
       .modal__content{
@@ -947,11 +906,12 @@
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button is-active" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            Svensk ECL Statistik <span>▾</span>
+            Svensk ECL Statistik <span>&#9662;</span>
           </button>
           <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
             <a class="menu__item" role="menuitem" href="/svenskamatcher.html">Svenska matcher</a>
+            <a class="menu__item" role="menuitem" href="/svenskalag.html">Svenska lag</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
           </div>
@@ -961,28 +921,29 @@
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            Cuper <span>▾</span>
+            Cuper <span>&#9662;</span>
           </button>
           <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
           </div>
         </div>
 
-        <button class="iconbtn" type="button" aria-label="Sök matcher" title="Sök matcher" onclick="document.getElementById('searchMatches')?.focus()">🔍</button>
+        <button class="iconbtn" type="button" aria-label="Sök matcher" title="Sök matcher" onclick="document.getElementById('searchMatches')?.focus()">&#128269;</button>
       </nav>
 
-      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>&#9776;</button>
     </div>
 
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link" href="/">Startsida</a>
-        <a class="mobile__link" href="/svenskaeclbyten.html">ECL – Byten</a>
-        <a class="mobile__link is-active" href="/svenskamatcher.html">ECL – Svenska matcher</a>
-        <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
-        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring – Statistik</a>
+        <a class="mobile__link" href="/svenskaeclbyten.html">ECL - Byten</a>
+        <a class="mobile__link is-active" href="/svenskamatcher.html">ECL - Svenska matcher</a>
+        <a class="mobile__link" href="/svenskalag.html">Svenska lag</a>
+        <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter - Statistik</a>
+        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring - Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
-        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper - SEC</a>
       </div>
     </div>
   </header>
@@ -995,25 +956,32 @@
 
   <main class="container">
     <section class="card">
-      <h1>Senaste svenska matcher i ECL 🏒</h1>
+      <h1>Svenska matcher i ECL 26 Spring</h1>
 
       <p>
-        Här visas de <strong>20 senaste svenska matcherna i ECL 26 Spring</strong> från alla divisioner samlat i ett flöde. Perfekt när du snabbt vill se senaste resultaten utan att växla mellan Elite, Pro, Lite, Core och Neo.
-      </p>
-
-      <p>
-        Du kan söka på lag, grupp, datum eller division och öppna varje match i popup för att se mer matchinfo och alla registrerade händelser.
+        Här visas alla svenska matcher från ECL 26 Spring samlat i ett flöde. Filtrera på division eller sök på lag, grupp och datum för att snabbt hitta rätt match.
       </p>
     </section>
 
     <section id="matcher" class="matches" aria-label="Svenska matcher">
       <div class="header-box">
         <div class="section-title">
-          <div class="section-title__icon">🏒</div>
-          <h2>Senaste 20 matcher</h2>
+          <div class="section-title__icon">&#127954;</div>
+          <h2>Alla svenska matcher</h2>
         </div>
 
         <div class="controls">
+          <div class="select-wrap">
+            <select id="divisionFilter" class="select-control" aria-label="Filtrera på division">
+              <option value="all">Alla divisioner</option>
+              <option value="elite">Elite</option>
+              <option value="pro">Pro</option>
+              <option value="lite">Lite</option>
+              <option value="core">Core</option>
+              <option value="neo">Neo</option>
+            </select>
+          </div>
+
           <div class="search-wrap">
             <input type="text" id="searchMatches" placeholder="Sök lag, grupp, datum eller division...">
           </div>
@@ -1034,7 +1002,7 @@
           <h3 class="modal__title" id="modalTitle">Matchinfo</h3>
           <div class="modal__subtitle" id="modalSubtitle"></div>
         </div>
-        <button class="modal__close" type="button" aria-label="Stäng popup" id="closeModal">✕</button>
+        <button class="modal__close" type="button" aria-label="Stäng popup" id="closeModal">&#10005;</button>
       </div>
       <div class="modal__content" id="modalContent"></div>
     </div>
@@ -1042,8 +1010,8 @@
 
   <footer>
     <div class="container footer__inner">
-      <span>© <span id="year"></span> Svensk eHockey</span>
-      <span>•</span>
+      <span>&copy; <span id="year"></span> Svensk eHockey</span>
+      <span>&bull;</span>
       <a href="#">Kontakt</a>
     </div>
   </footer>
@@ -1092,7 +1060,6 @@
 
     (function () {
       const JSON_URL = "./svenskstatistikecl26spring.json";
-      const MAX_MATCHES = 20;
 
       const divisionOrder = ["elite", "pro", "lite", "core", "neo"];
       const divisionLabels = {
@@ -1106,6 +1073,7 @@
       const matchList = document.getElementById("matchList");
       const matchStats = document.getElementById("matchStats");
       const searchInput = document.getElementById("searchMatches");
+      const divisionFilter = document.getElementById("divisionFilter");
       const lastUpdated = document.getElementById("lastUpdated");
 
       const modal = document.getElementById("matchModal");
@@ -1128,7 +1096,6 @@
 
       function extractJsonResultObject(rawData) {
         if (!rawData || typeof rawData !== "object") return {};
-
         if (rawData.matcher && typeof rawData.matcher === "object") return rawData;
 
         if (rawData.json_result && typeof rawData.json_result === "object") {
@@ -1145,7 +1112,6 @@
 
         if (Array.isArray(rawData.rows) && rawData.rows.length > 0) {
           const firstRow = rawData.rows[0];
-
           if (firstRow && firstRow.matcher && typeof firstRow.matcher === "object") return firstRow;
 
           if (firstRow && firstRow.json_result && typeof firstRow.json_result === "object") {
@@ -1393,19 +1359,40 @@
         }));
       }
 
-      function getLatestMatches() {
+      function getAllMatches() {
         return divisionOrder
           .flatMap(getDivisionMatches)
           .sort((a, b) => {
             const aDate = new Date(`${a.date || ""}T${a.time || "00:00"}`);
             const bDate = new Date(`${b.date || ""}T${b.time || "00:00"}`);
             return bDate - aDate;
-          })
-          .slice(0, MAX_MATCHES);
+          });
+      }
+
+      function getFilteredMatches() {
+        const query = searchInput.value.toLowerCase().trim();
+        const selectedDivision = divisionFilter.value;
+
+        return getAllMatches().filter((match) => {
+          const haystack = [
+            match.awayTeam,
+            match.homeTeam,
+            match.group,
+            match.stage,
+            match.svensktLag,
+            match.date,
+            match.time,
+            divisionLabels[match.division]
+          ].join(" ").toLowerCase();
+
+          const matchesSearch = !query || haystack.includes(query);
+          const matchesDivision = selectedDivision === "all" || match.division === selectedDivision;
+          return matchesSearch && matchesDivision;
+        });
       }
 
       function teamFlagMarkup(isSwedish) {
-        return isSwedish ? '<div class="team-flag" aria-label="Svenskt lag" title="Svenskt lag">🇸🇪</div>' : '<div class="team-flag" aria-hidden="true"></div>';
+        return isSwedish ? '<div class="team-flag" aria-label="Svenskt lag" title="Svenskt lag">&#127480;&#127466;</div>' : '<div class="team-flag" aria-hidden="true"></div>';
       }
 
       function matchCardMarkup(match, index) {
@@ -1446,7 +1433,7 @@
                 <div class="match-center">
                   <div class="scoreline">
                     <div class="score">${escapeHtml(match.awayScore)}</div>
-                    <div class="score-sep">–</div>
+                    <div class="score-sep">-</div>
                     <div class="score">${escapeHtml(match.homeScore)}</div>
                   </div>
 
@@ -1478,7 +1465,7 @@
                 </div>
 
                 <div class="match-sideinfo">
-                  <div class="open-match">Öppna match <span>›</span></div>
+                  <div class="open-match">Öppna match <span>&rsaquo;</span></div>
                 </div>
               </div>
             </button>
@@ -1487,6 +1474,7 @@
       }
 
       function renderStats(matches) {
+        const allMatches = getAllMatches();
         const divisions = [...new Set(matches.map(match => divisionLabels[match.division]).filter(Boolean))];
         const swedishTeamCount = matches.reduce((acc, match) => {
           if (match.svensktLag === "SWE vs SWE") return acc + 2;
@@ -1497,7 +1485,7 @@
         const otCount = matches.filter(match => String(match.ot || "").trim() !== "").length;
 
         matchStats.innerHTML = `
-          <div class="chip">Visar <strong>${matches.length}</strong></div>
+          <div class="chip">Visar <strong>${matches.length}</strong> av <strong>${allMatches.length}</strong></div>
           <div class="chip">Divisioner <strong>${divisions.length}</strong></div>
           <div class="chip">Svenska laginslag <strong>${swedishTeamCount}</strong></div>
           <div class="chip">Övertid <strong>${otCount}</strong></div>
@@ -1505,36 +1493,17 @@
       }
 
       function render() {
-        const query = searchInput.value.toLowerCase().trim();
-        const matches = getLatestMatches();
+        const filtered = getFilteredMatches();
 
-        currentMatches = matches;
-        renderStats(matches);
-
-        const filtered = matches.filter((match) => {
-          const haystack = [
-            match.awayTeam,
-            match.homeTeam,
-            match.group,
-            match.stage,
-            match.svensktLag,
-            match.date,
-            match.time,
-            divisionLabels[match.division]
-          ].join(" ").toLowerCase();
-
-          return haystack.includes(query);
-        });
+        currentMatches = filtered;
+        renderStats(filtered);
 
         if (!filtered.length) {
-          matchList.innerHTML = '<div class="empty-state">Inga matcher hittades bland de senaste 20 matcherna.</div>';
+          matchList.innerHTML = '<div class="empty-state">Inga matcher hittades.</div>';
           return;
         }
 
-        matchList.innerHTML = `<div class="matches-list">${filtered.map((match) => {
-          const realIndex = matches.indexOf(match);
-          return matchCardMarkup(match, realIndex);
-        }).join("")}</div>`;
+        matchList.innerHTML = `<div class="matches-list">${filtered.map((match, index) => matchCardMarkup(match, index)).join("")}</div>`;
 
         activateImages(matchList);
 
@@ -1558,7 +1527,7 @@
         const homeCandidates = teamNameCandidates(match.homeTeam);
         const events = parseEvents(match.goalsSummary);
 
-        modalTitle.textContent = `${match.awayTeam} ${match.awayScore}–${match.homeScore} ${match.homeTeam}`;
+        modalTitle.textContent = `${match.awayTeam} ${match.awayScore}-${match.homeScore} ${match.homeTeam}`;
         modalSubtitle.innerHTML = `
           <div class="meta-pill">${escapeHtml(divisionLabels[match.division] || "")}</div>
           <div class="meta-pill">${escapeHtml(match.stage || "Gruppspel")}</div>
@@ -1582,13 +1551,13 @@
                 </div>
                 <div class="detail-team-text">
                   <div class="detail-team-name">${escapeHtml(match.awayTeam)}</div>
-                  <div class="detail-team-note">${isSwedishTeam(match, match.awayTeam) ? "🇸🇪" : ""}</div>
+                  <div class="detail-team-note">${isSwedishTeam(match, match.awayTeam) ? "&#127480;&#127466;" : ""}</div>
                 </div>
               </div>
 
               <div class="detail-center">
                 <div class="detail-scoreline">
-                  ${escapeHtml(match.awayScore)} <span>–</span> ${escapeHtml(match.homeScore)}
+                  ${escapeHtml(match.awayScore)} <span>-</span> ${escapeHtml(match.homeScore)}
                 </div>
                 <div class="detail-ot">
                   <span class="ot-pill ${match.ot ? "" : "is-hidden"}">${escapeHtml(match.ot || "OT")}</span>
@@ -1607,7 +1576,7 @@
                 </div>
                 <div class="detail-team-text">
                   <div class="detail-team-name">${escapeHtml(match.homeTeam)}</div>
-                  <div class="detail-team-note">${isSwedishTeam(match, match.homeTeam) ? "🇸🇪" : ""}</div>
+                  <div class="detail-team-note">${isSwedishTeam(match, match.homeTeam) ? "&#127480;&#127466;" : ""}</div>
                 </div>
               </div>
             </div>
@@ -1675,8 +1644,9 @@
       });
 
       searchInput.addEventListener("input", render);
+      divisionFilter.addEventListener("change", render);
 
-      matchList.innerHTML = '<div class="empty-state">Laddar …</div>';
+      matchList.innerHTML = '<div class="empty-state">Laddar matcher...</div>';
 
       fetch(JSON_URL, { cache: "no-store" })
         .then((response) => {
