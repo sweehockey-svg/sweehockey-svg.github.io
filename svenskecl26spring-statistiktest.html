@@ -775,6 +775,53 @@
     @media (max-width:980px){
       .stats-menu{ grid-template-columns:1fr; }
     }
+
+    @media (max-width:680px){
+      .top3-container{
+        grid-template-columns:1fr !important;
+        gap:12px;
+      }
+
+      .top3-container .player-card{
+        min-height:0;
+        display:grid;
+        grid-template-columns:72px minmax(0, 1fr);
+        align-items:center;
+        gap:12px;
+        padding:12px;
+      }
+
+      .top3-container .player-img-wrap{
+        width:72px;
+        height:92px;
+        flex:0 0 72px;
+        border-radius:10px;
+      }
+
+      .top3-container .player-name{
+        margin-right:42px;
+        font-size:16px;
+        line-height:1.08;
+      }
+
+      .top3-container .stat-bars{
+        grid-column:1 / -1;
+        margin-top:0;
+      }
+
+      .top3-container .team-logo-wrap{
+        position:absolute;
+        top:10px;
+        right:10px;
+        margin:0;
+        float:none;
+      }
+
+      .top3-container .team-logo-card{
+        width:34px;
+        height:34px;
+      }
+    }
   </style>
 </head>
 
