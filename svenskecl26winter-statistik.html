@@ -23,14 +23,15 @@
     }
 
     *{ box-sizing:border-box; }
-    html,body{ height:100%; }
+    html,body{ min-height:100%; }
     body{
       margin:0;
-      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans","Helvetica Neue",sans-serif;
-      background:
-        radial-gradient(1200px 600px at 50% -10%, rgba(245,195,75,0.12), transparent 60%),
-        radial-gradient(900px 500px at 10% 10%, rgba(120,155,255,0.12), transparent 55%),
-        var(--bg);
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background-color:#05101b;
+      background-image:
+        radial-gradient(1500px 850px at 50% -20%, rgba(245,195,75,0.10), transparent 68%),
+        radial-gradient(1100px 760px at 10% 12%, rgba(70,115,255,0.12), transparent 70%),
+        linear-gradient(180deg, #081322 0%, #06111d 58%, #05101b 100%);
       color:var(--text);
     }
     a{ color:inherit; text-decoration:none; }
@@ -41,7 +42,7 @@
       top:0;
       z-index:50;
       backdrop-filter:blur(10px);
-      background:rgba(10,14,22,0.78);
+      background:rgba(10,14,22,0.80);
       border-bottom:1px solid var(--border);
     }
     .topbar__inner{
@@ -179,18 +180,10 @@
       background-image:url("svenakehocket.jpg");
       background-size:cover;
       background-position:center;
-      position:relative;
       overflow:hidden;
     }
-    .banner::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.35));
-      pointer-events:none;
-    }
 
-    main{ padding:28px 0 46px; }
+    main{ padding:28px 0 50px; }
     .stats-wrap{ width:100%; padding:0; }
     .ecl-tabs{
       display:inline-flex;
@@ -199,74 +192,85 @@
       padding:6px 8px;
       border-radius:999px;
       background:rgba(0,0,0,0.35);
-      box-shadow:0 14px 40px rgba(0,0,0,0.55);
+      box-shadow:0 14px 40px rgba(0,0,0,0.45);
       flex-wrap:wrap;
     }
     .ecl-tab{
       border:0;
-      padding:7px 16px;
+      min-height:34px;
+      padding:8px 15px;
       border-radius:999px;
-      font-size:13px;
+      font-size:12px;
       cursor:pointer;
       background:rgba(255,255,255,0.06);
-      color:rgba(255,255,255,0.70);
-      font-weight:700;
+      color:rgba(255,255,255,0.84);
+      font-weight:900;
       text-transform:uppercase;
       letter-spacing:.08em;
-      transition:.18s;
       white-space:nowrap;
     }
+    .ecl-tab:hover{ color:#fff; }
     .ecl-tab.active{
       background:linear-gradient(135deg, var(--accent-orange), var(--accent-yellow));
-      color:#141320;
-      box-shadow:0 0 0 1px rgba(0,0,0,0.4), 0 10px 26px rgba(0,0,0,0.55);
-      transform:translateY(-1px);
+      color:#10131c;
+      box-shadow:0 0 0 1px rgba(0,0,0,0.35), 0 10px 26px rgba(0,0,0,0.45);
     }
     .page-title{
       display:flex;
       align-items:center;
-      gap:10px;
-      margin:8px 0 14px;
-      color:var(--text-main);
-      text-shadow:0 3px 18px rgba(0,0,0,0.9);
+      gap:12px;
+      margin:8px 0 16px;
     }
-    .page-title-icon{ font-size:26px; }
+    .page-title-icon{
+      width:38px;
+      height:38px;
+      display:grid;
+      place-items:center;
+      border-radius:14px;
+      background:rgba(245,195,75,0.13);
+      border:1px solid rgba(245,195,75,0.22);
+      color:var(--accent-yellow);
+      font-size:19px;
+      font-weight:950;
+      flex:0 0 38px;
+    }
     .page-title-text{
       font-size:20px;
-      font-weight:900;
+      font-weight:950;
       text-transform:uppercase;
-      letter-spacing:.08em;
+      letter-spacing:.04em;
+      line-height:1.1;
     }
     .page-sub{
       font-size:12px;
       color:rgba(255,255,255,0.70);
       text-transform:uppercase;
       letter-spacing:.16em;
-      margin-top:2px;
+      margin-top:4px;
     }
     .header-box{
       display:flex;
       flex-wrap:wrap;
       justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      margin:10px 0 16px;
+      align-items:flex-start;
+      gap:14px;
+      margin:12px 0 18px;
     }
     .header-box h2{
       font-size:18px;
-      font-weight:900;
+      font-weight:950;
       text-transform:uppercase;
       color:var(--text-main);
       margin:0;
     }
     .header-box input{
-      padding:9px 12px;
-      background:rgba(255,255,255,0.05);
+      width:min(100%, 330px);
+      padding:11px 14px;
+      background:rgba(255,255,255,0.045);
       border-radius:999px;
-      border:1px solid rgba(255,255,255,0.18);
+      border:1px solid rgba(245,195,75,0.24);
       color:white;
       outline:0;
-      min-width:260px;
     }
     #sectionDesc{
       font-size:11px;
@@ -283,21 +287,23 @@
     }
     .player-card{
       position:relative;
+      min-width:0;
       border-radius:18px;
-      padding:12px;
+      padding:14px;
       overflow:hidden;
-      box-shadow:0 10px 30px rgba(0,0,0,0.55);
-      background:linear-gradient(180deg, rgba(40,70,160,0.22), rgba(0,0,0,0.30));
-      border:1px solid rgba(255,255,255,0.10);
+      box-shadow:0 12px 32px rgba(0,0,0,0.32);
+      background:
+        radial-gradient(120% 140% at 0% 0%, rgba(245,195,75,0.10), transparent 38%),
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border:1px solid rgba(255,255,255,0.11);
     }
     .team-logo-wrap{
       position:absolute;
-      top:10px;
-      right:10px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:2px;
+      top:12px;
+      right:12px;
+      display:grid;
+      justify-items:center;
+      gap:6px;
     }
     .team-logo-card{
       width:46px;
@@ -317,6 +323,8 @@
       display:flex;
       gap:12px;
       align-items:center;
+      min-width:0;
+      padding-right:52px;
     }
     .player-img-wrap{
       flex:0 0 90px;
@@ -348,6 +356,8 @@
     .player-points{
       margin-top:4px;
       font-size:13px;
+      font-weight:850;
+      color:#fff;
     }
     .player-ga{
       font-size:12px;
@@ -361,11 +371,15 @@
     .bar-label{
       display:flex;
       justify-content:space-between;
+      gap:8px;
+      color:rgba(255,255,255,0.82);
     }
     .bar-track{
       background:rgba(255,255,255,0.10);
       height:6px;
+      margin-top:3px;
       border-radius:999px;
+      overflow:hidden;
     }
     .bar-fill{
       height:6px;
@@ -377,16 +391,16 @@
       overflow:hidden;
       border:1px solid rgba(255,255,255,0.10);
       background:rgba(0,0,0,0.28);
-      box-shadow:0 10px 30px rgba(0,0,0,0.55);
+      box-shadow:0 10px 30px rgba(0,0,0,0.45);
     }
     .table-header-strip{
       background:linear-gradient(90deg, #f6983f, #f3c34a);
       color:#111;
-      padding:6px 10px;
+      padding:8px 12px;
       font-size:12px;
-      font-weight:900;
+      font-weight:950;
       text-transform:uppercase;
-      letter-spacing:.16em;
+      letter-spacing:.14em;
     }
     .table-container{
       overflow-x:auto;
@@ -396,7 +410,7 @@
       width:100%;
       border-collapse:collapse;
       font-size:13px;
-      min-width:700px;
+      min-width:760px;
     }
     thead{ background:rgba(9,21,64,0.85); }
     thead th{
@@ -406,11 +420,13 @@
       text-align:center;
       cursor:pointer;
       user-select:none;
+      white-space:nowrap;
     }
     tbody td{
       padding:8px 10px;
       border-bottom:1px solid rgba(255,255,255,0.06);
       text-align:center;
+      white-space:nowrap;
     }
     tbody tr:nth-child(even){ background:rgba(255,255,255,0.03); }
     tbody tr:hover{ background:rgba(255,200,100,0.12); }
@@ -424,7 +440,7 @@
       font-size:11px;
       color:rgba(255,255,255,0.65);
       text-align:right;
-      margin-top:6px;
+      margin-top:8px;
     }
     footer{
       border-top:1px solid var(--border);
@@ -472,8 +488,8 @@
             <a class="menu__item" role="menuitem" href="/svenskecl26spring-byten.html">Svenska ECL 26 Spring Byten</a>
             <a class="menu__item" role="menuitem" href="/svenskecl26spring-matcher.html">Svenska matcher ECL 26 Spring</a>
             <a class="menu__item" role="menuitem" href="/svenskecl26spring-lag.html">Svenska lag ECL 26 Spring</a>
-            <a class="menu__item" role="menuitem" href="/svenskecl26winter-statistik.html">Svensk statistik ECL 26 Winter</a>
             <a class="menu__item" role="menuitem" href="/svenskecl26spring-statistik.html">Svensk statistik ECL 26 Spring</a>
+            <a class="menu__item" role="menuitem" href="/svenskecl26winter-statistik.html">Svensk statistik ECL 26 Winter</a>
           </div>
         </div>
 
@@ -500,8 +516,8 @@
         <a class="mobile__link" href="/svenskecl26spring-byten.html">ECL 26 Spring - Byten</a>
         <a class="mobile__link" href="/svenskecl26spring-matcher.html">ECL 26 Spring - Svenska matcher</a>
         <a class="mobile__link" href="/svenskecl26spring-lag.html">ECL 26 Spring - Svenska lag</a>
-        <a class="mobile__link is-active" href="/svenskecl26winter-statistik.html">ECL 26 Winter - Statistik</a>
         <a class="mobile__link" href="/svenskecl26spring-statistik.html">ECL 26 Spring - Statistik</a>
+        <a class="mobile__link is-active" href="/svenskecl26winter-statistik.html">ECL 26 Winter - Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
         <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper - SEC</a>
       </div>
@@ -536,7 +552,7 @@
       </div>
 
       <div class="page-title">
-        <div class="page-title-icon" id="titleIcon">&#127942;</div>
+        <div class="page-title-icon" id="titleIcon">P</div>
         <div>
           <div class="page-title-text" id="titleText">ECL 26 Winter - Svenska poängligor</div>
           <div class="page-sub" id="titleSub">GRUNDSERIE</div>
