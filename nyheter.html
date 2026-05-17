@@ -361,6 +361,18 @@
     .article-section{
       max-width:920px;
     }
+    .article-section__image{
+      width:100%;
+      margin:0 0 14px;
+      border-radius:8px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.10);
+      background:#061018;
+    }
+    .article-section__image img{
+      width:100%;
+      display:block;
+    }
     .article-section h4{
       margin:0 0 8px;
       color:var(--gold);
@@ -614,6 +626,8 @@
         sections: [
           {
             title: "vNexs I bäst av svensklagen i Elite",
+            image: "/nyhetsbilder/eg.jpg",
+            imageAlt: "Elite: gruppspelets svenska vinnare",
             text: [
               "På den högsta nivån var det vNexs I som stod för det starkaste svenska gruppspelet. Laget slutade trea i Elite Grupp 1 efter att ha spelat in 66 poäng på 30 matcher.",
               "Med ett record på 20-1-4-5, en målskillnad på +57 och hela 260 gjorda mål visade vNexs I upp både offensiv spets och stabilitet över tid.",
@@ -635,6 +649,8 @@
           },
           {
             title: "SSK Prospects och Västerås IK starka i Pro",
+            image: "/nyhetsbilder/pg.jpg",
+            imageAlt: "Pro: gruppspelets svenska vinnare",
             text: [
               "I Pro blev det flera svenska slutspelslag, med SSK Prospects och Västerås IK som de tydligaste styrkebeskeden.",
               "SSK Prospects slutade femma i Grupp 2 med 57 poäng på 30 matcher. Laget hade ett starkt record på 17-2-2-9, en målskillnad på +45 och bara 94 insläppta mål. Det ger SSK Prospects ett stabilt utgångsläge inför slutspelet, där Unique väntar.",
@@ -651,6 +667,8 @@
           },
           {
             title: "Lite med stor svensk bredd",
+            image: "/nyhetsbilder/lg.jpg",
+            imageAlt: "Lite: gruppspelets svenska vinnare",
             text: [
               "Lite blev en av de mest svensktäta divisionerna. Flera lag tog sig vidare, och flera andra fanns med i kampen under stora delar av gruppspelet.",
               "Starkast gick vNexs Vipers, som slutade tvåa i Grupp 1 med 58 poäng på 30 matcher. Laget hade ett record på 15-6-1-8, målskillnaden +46 och bara 56 insläppta mål. Defensiven blev lagets stora fundament inför slutspelet.",
@@ -664,6 +682,8 @@
           },
           {
             title: "Core blev ett svenskt styrkebesked",
+            image: "/nyhetsbilder/cg.jpg",
+            imageAlt: "Core: gruppspelets svenska vinnare",
             text: [
               "Core blev kanske den tydligaste divisionen när det gäller svensk bredd i slutspelsbilden. Flera lag tog sig vidare med starka placeringar, och Style gick allra bäst.",
               "Laget slutade tvåa i Grupp 2 med 52 poäng på 24 matcher, recordet 16-2-0-6 och målskillnaden +45. Med 93 gjorda och 48 insläppta mål visade Style upp både offensiv spets och defensiv kontroll.",
@@ -677,6 +697,8 @@
           },
           {
             title: "Free From Rodents bär det svenska hoppet i Neo",
+            image: "/nyhetsbilder/ng.png",
+            imageAlt: "Neo: gruppspelets svenska vinnare",
             text: "Neo hade färre svenska lag i toppen, men Free From Rodents stod för ett tydligt styrkebesked. Laget slutade fyra i Grupp 1 med 34 poäng på 18 matcher, recordet 10-1-2-5 och målskillnaden +10. Med 57 gjorda och 47 insläppta mål visade laget en bra balans, och avslutningen på gruppspelet var stark med 7-2-1 på de tio senaste matcherna. Free From Rodents går därför in i slutspelet som det svenska laget att följa i Neo. Sir_Wasp var främsta svensk i laget med 41 poäng, och med tio svenska spelare samt 148 svenska poäng fanns en tydlig blågul prägel i produktionen."
           },
           {
@@ -774,6 +796,11 @@
           <div class="article-full" id="${escapeHtml(fullId)}">
             ${article.sections.map(section => `
               <section class="article-section">
+                ${section.image ? `
+                  <figure class="article-section__image">
+                    <img src="${escapeHtml(section.image)}" alt="${escapeHtml(section.imageAlt || section.title)}" loading="lazy">
+                  </figure>
+                ` : ""}
                 <h4>${escapeHtml(section.title)}</h4>
                 ${(Array.isArray(section.text) ? section.text : [section.text]).map(part => `<p>${escapeHtml(part)}</p>`).join("")}
               </section>
