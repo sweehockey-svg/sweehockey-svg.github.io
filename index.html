@@ -6,261 +6,288 @@
   <title>Svensk eHockey</title>
   <link rel="icon" type="image/png" href="favicon.png?v=1">
   <link rel="apple-touch-icon" href="favicon.png?v=1">
-  <meta name="description" content="Svensk eHockey – ECL, nyheter och Svenska eHockey Cupen (SEC)." />
+  <meta name="description" content="Svensk eHockey - ECL, nyheter och Svenska eHockey Cupen (SEC)." />
   <style>
     :root{
-      --bg: #0b0f17;
-      --panel: rgba(255,255,255,0.06);
-      --panel2: rgba(255,255,255,0.08);
-      --text: rgba(255,255,255,0.92);
-      --muted: rgba(255,255,255,0.70);
-      --border: rgba(255,255,255,0.12);
-      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --bg:#0b0f17;
+      --panel:rgba(255,255,255,0.06);
+      --panel2:rgba(255,255,255,0.08);
+      --text:rgba(255,255,255,0.92);
+      --muted:rgba(255,255,255,0.70);
+      --border:rgba(255,255,255,0.12);
+      --shadow:0 20px 60px rgba(0,0,0,.45);
+      --gold:#f5c34b;
     }
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans","Helvetica Neue",sans-serif;
       background:
         radial-gradient(1200px 600px at 50% -10%, rgba(245,195,75,0.12), transparent 60%),
         radial-gradient(900px 500px at 10% 10%, rgba(120,155,255,0.12), transparent 55%),
         var(--bg);
-      color: var(--text);
+      color:var(--text);
     }
     a{ color:inherit; text-decoration:none; }
     .container{ width:min(1100px, calc(100% - 32px)); margin:0 auto; }
 
-    /* Topbar */
     .topbar{
-      position:sticky; top:0; z-index:50;
-      backdrop-filter: blur(10px);
-      background: rgba(10,14,22,0.78);
-      border-bottom: 1px solid var(--border);
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter:blur(10px);
+      background:rgba(10,14,22,0.78);
+      border-bottom:1px solid var(--border);
     }
     .topbar__inner{
-      display:flex; align-items:center; gap:16px;
-      padding: 14px 0;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:14px 0;
     }
     .brand{
-      display:flex; align-items:center; gap:12px;
-      min-width: 220px;
-      font-weight: 900;
-      letter-spacing: .6px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:220px;
+      font-weight:900;
+      letter-spacing:.6px;
     }
     .brand__logo{
-      height: 38px;
-      width: auto;
+      height:38px;
+      width:auto;
       display:block;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      filter:drop-shadow(0 10px 18px rgba(0,0,0,.35));
       user-select:none;
     }
-
     .nav{
-      display:flex; align-items:center; justify-content:flex-end;
-      gap:14px; flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:14px;
+      flex:1;
     }
-    .nav__link{
-      font-size:14px;
-      color: var(--muted);
-      padding: 10px 10px;
-      border-radius: 10px;
-      white-space: nowrap;
-    }
-    .nav__link:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
-    .nav__link.is-active{ color: var(--text); }
-
-    .dropdown{ position:relative; }
+    .nav__link,
     .nav__button{
-      border:0; background:transparent; cursor:pointer;
-      font: inherit; color: var(--muted);
-      padding: 10px 10px;
-      border-radius: 10px;
-      display:flex; align-items:center; gap:6px;
-      white-space: nowrap;
+      font-size:14px;
+      color:var(--muted);
+      padding:10px;
+      border-radius:10px;
+      white-space:nowrap;
     }
-    .nav__button:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
+    .nav__button{
+      border:0;
+      background:transparent;
+      cursor:pointer;
+      font:inherit;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .nav__link:hover,
+    .nav__button:hover{
+      background:rgba(255,255,255,0.06);
+      color:var(--text);
+    }
+    .nav__link.is-active{ color:var(--text); }
     .chev{ opacity:.75; }
-
+    .dropdown{ position:relative; }
     .menu{
       position:absolute;
-      top: calc(100% + 10px);
-      right: 0;
-      width: 290px;
-      padding: 8px;
-      border-radius: 14px;
-      background: rgba(20,26,38,0.96);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
+      top:calc(100% + 10px);
+      right:0;
+      width:290px;
+      padding:8px;
+      border-radius:14px;
+      background:rgba(20,26,38,0.96);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
       display:none;
     }
     .dropdown.open .menu{ display:block; }
-
     .menu__item{
       display:block;
-      padding: 10px 10px;
-      border-radius: 10px;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.35;
+      padding:10px;
+      border-radius:10px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.35;
     }
-    .menu__item:hover{ background: rgba(255,255,255,0.06); color: var(--text); }
-
-    .iconbtn{
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      color: var(--text);
-      border-radius: 12px;
-      padding: 8px 10px;
+    .menu__item:hover{
+      background:rgba(255,255,255,0.06);
+      color:var(--text);
+    }
+    .iconbtn,
+    .hamburger{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,0.04);
+      color:var(--text);
+      border-radius:12px;
+      padding:8px 10px;
       cursor:pointer;
     }
-
     .hamburger{
       display:none;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      color: var(--text);
-      border-radius: 12px;
-      padding: 8px 12px;
-      cursor:pointer;
+      padding:8px 12px;
       margin-left:auto;
     }
     .mobile{
       display:none;
-      border-top: 1px solid var(--border);
-      background: rgba(10,14,22,0.85);
+      border-top:1px solid var(--border);
+      background:rgba(10,14,22,0.85);
     }
     .mobile.open{ display:block; }
-    .mobile__inner{ padding: 12px 0 16px; display:grid; gap:8px; }
-    .mobile__link{
-      padding: 12px 12px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.04);
-      color: var(--muted);
+    .mobile__inner{
+      padding:12px 0 16px;
+      display:grid;
+      gap:8px;
     }
-    .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
-    .mobile__link.is-active{ color: var(--text); }
+    .mobile__link{
+      padding:12px;
+      border-radius:12px;
+      background:rgba(255,255,255,0.04);
+      color:var(--muted);
+    }
+    .mobile__link:hover,
+    .mobile__link.is-active{
+      background:rgba(255,255,255,0.07);
+      color:var(--text);
+    }
 
-    /* Banner-ruta under navbar */
     .banner-strip{
-      border-bottom: 1px solid var(--border);
+      border-bottom:1px solid var(--border);
       background:
         radial-gradient(900px 220px at 50% 0%, rgba(255,255,255,0.05), transparent 70%),
         rgba(10,14,22,0.55);
     }
     .banner-strip__inner{
-      padding: 18px 0;
+      padding:18px 0;
       display:flex;
       justify-content:center;
     }
     .banner{
-      width: 100%;
-      max-width: 980px;
-      height: 160px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.14);
-      box-shadow: var(--shadow);
-      background-image: url("svenakehocket.jpg");
-      background-size: cover;
-      background-position: center;
-      position: relative;
-      overflow: hidden;
+      width:100%;
+      max-width:980px;
+      height:160px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,0.14);
+      box-shadow:var(--shadow);
+      background-image:url("svenakehocket.jpg");
+      background-size:cover;
+      background-position:center;
+      position:relative;
+      overflow:hidden;
     }
     .banner::after{
       content:"";
-      position:absolute; inset:0;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.35));
+      position:absolute;
+      inset:0;
+      background:linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.35));
       pointer-events:none;
     }
 
-    /* Content */
-    main{ padding: 28px 0 46px; }
-
+    main{ padding:28px 0 46px; }
     .card{
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 22px 20px;
-      box-shadow: var(--shadow);
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:22px 20px;
+      box-shadow:var(--shadow);
     }
     h1{
-      margin: 0 0 10px;
-      font-size: clamp(22px, 3vw, 30px);
-      letter-spacing: .2px;
+      margin:0 0 10px;
+      font-size:clamp(22px, 3vw, 30px);
+      letter-spacing:.2px;
     }
     p{
-      margin: 10px 0;
-      color: var(--muted);
-      line-height: 1.65;
+      margin:10px 0;
+      color:var(--muted);
+      line-height:1.65;
     }
     .cta{
-      margin-top: 16px;
-      display:flex; gap:12px; flex-wrap:wrap;
+      margin-top:16px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
     }
     .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding: 11px 14px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-weight: 650;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:11px 14px;
+      border-radius:12px;
+      background:rgba(255,255,255,0.06);
+      border:1px solid var(--border);
+      color:var(--text);
+      font-weight:650;
     }
-    .btn:hover{ filter: brightness(1.08); }
+    .btn:hover{ filter:brightness(1.08); }
     .btn--primary{
-      background: rgba(245,195,75,0.14);
-      border-color: rgba(245,195,75,0.35);
+      background:rgba(245,195,75,0.14);
+      border-color:rgba(245,195,75,0.35);
     }
 
-    /* Snabblänkar */
     .grid{
-      margin-top: 18px;
+      margin-top:18px;
       display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
+      grid-template-columns:repeat(5, 1fr);
+      gap:14px;
     }
     .tile{
-      background: var(--panel2);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px 16px 14px;
-      box-shadow: var(--shadow);
+      background:var(--panel2);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:16px 16px 14px;
+      box-shadow:var(--shadow);
     }
-    .tile h2{ margin: 0 0 6px; font-size: 18px; }
-    .tile p{ margin: 0 0 12px; color: var(--muted); }
+    .tile h2{
+      margin:0 0 6px;
+      font-size:18px;
+    }
+    .tile p{
+      margin:0 0 12px;
+      color:var(--muted);
+    }
     .tile__link{
       display:inline-block;
-      font-weight: 650;
-      opacity: .9;
+      font-weight:650;
+      opacity:.9;
     }
-    .tile__link:hover{ opacity:1; text-decoration: underline; }
+    .tile__link:hover{
+      opacity:1;
+      text-decoration:underline;
+    }
 
-    /* Footer */
     footer{
-      border-top: 1px solid var(--border);
-      background: rgba(10,14,22,0.78);
+      border-top:1px solid var(--border);
+      background:rgba(10,14,22,0.78);
     }
     .footer__inner{
-      padding: 16px 0;
-      display:flex; gap:10px;
-      align-items:center; justify-content:center;
-      color: var(--muted);
-      font-size: 13px;
+      padding:16px 0;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:13px;
     }
     .sep{ opacity:.5; }
 
-    @media (max-width: 980px){
-      .grid{ grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 1120px){
+      .grid{ grid-template-columns:repeat(3, 1fr); }
     }
-
+    @media (max-width: 980px){
+      .grid{ grid-template-columns:repeat(2, 1fr); }
+    }
     @media (max-width: 860px){
       .nav{ display:none; }
       .hamburger{ display:inline-flex; }
-      .grid{ grid-template-columns: 1fr; }
-      .brand__logo{ height: 32px; }
-      .brand{ min-width: 160px; }
-      .banner{ height: 120px; border-radius: 16px; }
-      .banner-strip__inner{ padding: 14px 0; }
+      .grid{ grid-template-columns:1fr; }
+      .brand__logo{ height:32px; }
+      .brand{ min-width:160px; }
+      .banner{ height:120px; border-radius:16px; }
+      .banner-strip__inner{ padding:14px 0; }
     }
   </style>
 </head>
@@ -277,11 +304,12 @@
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            Svensk ECL Statistik <span class="chev">▾</span>
+            Svensk ECL Statistik <span class="chev">&#9662;</span>
           </button>
           <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
             <a class="menu__item" role="menuitem" href="/svenskamatcher.html">Svenska matcher</a>
+            <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/svenskaecl26springlag.html">Svenska lag ECL 26 Spring</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
           </div>
@@ -291,7 +319,7 @@
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            Cuper <span class="chev">▾</span>
+            Cuper <span class="chev">&#9662;</span>
           </button>
           <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
@@ -299,22 +327,23 @@
         </div>
 
         <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">
-          🔍
+          &#128269;
         </button>
       </nav>
 
-      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>&#9776;</button>
     </div>
 
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link is-active" href="/">Startsida</a>
-        <a class="mobile__link" href="/svenskaeclbyten.html">ECL – Byten</a>
-        <a class="mobile__link" href="/svenskamatcher.html">ECL – Svenska matcher</a>
-        <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
-        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring – Statistik</a>
+        <a class="mobile__link" href="/svenskaeclbyten.html">ECL - Byten</a>
+        <a class="mobile__link" href="/svenskamatcher.html">ECL - Svenska matcher</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/svenskaecl26springlag.html">ECL 26 Spring - Svenska lag</a>
+        <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter - Statistik</a>
+        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring - Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
-        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper - SEC</a>
       </div>
     </div>
   </header>
@@ -327,21 +356,22 @@
 
   <main class="container">
     <section class="card">
-      <h1>Välkommen till Svensk eHockey! 🏒</h1>
+      <h1>Välkommen till Svensk eHockey!</h1>
 
       <p>
-        Svensk eHockey är mötesplatsen för alla som följer den svenska eHockeyscenen – från intensiva matcher i
+        Svensk eHockey är mötesplatsen för alla som följer den svenska eHockeyscenen - från intensiva matcher i
         <strong>ECL</strong> till turneringar som <strong>Svenska eHockey Cupen (SEC)</strong>.
       </p>
 
       <p>
-        Just nu: svenska spelare som bytt ECL-lag, svenska matcher i ECL 26 Spring och svensk statistik.
+        Just nu: svenska spelare som bytt ECL-lag, svenska matcher i ECL 26 Spring, svenska lag och svensk statistik.
       </p>
 
       <div class="cta">
         <a class="btn btn--primary" href="https://www.svenskehockey.se/SEC/">Gå till SEC</a>
         <a class="btn" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
         <a class="btn" href="/svenskamatcher.html">Svenska matcher</a>
+        <a class="btn" href="https://www.svenskehockey.se/svenskaecl26springlag.html">Svenska lag ECL 26 Spring</a>
         <a class="btn" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
       </div>
     </section>
@@ -350,33 +380,39 @@
       <article class="tile">
         <h2>SEC</h2>
         <p>Statistik, tabeller, matcher och topplistor för Svenska eHockey Cupen.</p>
-        <a class="tile__link" href="https://www.svenskehockey.se/SEC/">Öppna →</a>
+        <a class="tile__link" href="https://www.svenskehockey.se/SEC/">Öppna &rarr;</a>
       </article>
 
       <article class="tile">
         <h2>Svenska ECL Byten</h2>
         <p>Lista över svenska spelare som bytt ECL-lag.</p>
-        <a class="tile__link" href="/svenskaeclbyten.html">Öppna →</a>
+        <a class="tile__link" href="/svenskaeclbyten.html">Öppna &rarr;</a>
       </article>
 
       <article class="tile">
         <h2>Svenska matcher</h2>
         <p>Alla matcher med svenska lag i ECL 26 Spring, med matchinfo i popup.</p>
-        <a class="tile__link" href="/svenskamatcher.html">Öppna →</a>
+        <a class="tile__link" href="/svenskamatcher.html">Öppna &rarr;</a>
       </article>
 
       <article class="tile">
-        <h2>Svensk statistik (ECL 26 Spring)</h2>
+        <h2>Svenska lag</h2>
+        <p>Svenska lag i ECL 26 Spring med tabellplacering, poäng och slutspelsstatus.</p>
+        <a class="tile__link" href="https://www.svenskehockey.se/svenskaecl26springlag.html">Öppna &rarr;</a>
+      </article>
+
+      <article class="tile">
+        <h2>Svensk statistik</h2>
         <p>Poängligor, backligor och målvaktsligor per division.</p>
-        <a class="tile__link" href="/svenskstatistikecl26spring.html">Öppna →</a>
+        <a class="tile__link" href="/svenskstatistikecl26spring.html">Öppna &rarr;</a>
       </article>
     </section>
   </main>
 
   <footer>
     <div class="container footer__inner">
-      <span>© <span id="year"></span> Svensk eHockey</span>
-      <span class="sep">•</span>
+      <span>&copy; <span id="year"></span> Svensk eHockey</span>
+      <span class="sep">&bull;</span>
       <a href="#">Kontakt</a>
     </div>
   </footer>
@@ -417,9 +453,11 @@
 
     const mobileBtn = document.querySelector("[data-mobile-toggle]");
     const mobileMenu = document.querySelector("[data-mobile-menu]");
-    mobileBtn.addEventListener("click", () => {
-      mobileMenu.classList.toggle("open");
-    });
+    if (mobileBtn && mobileMenu) {
+      mobileBtn.addEventListener("click", () => {
+        mobileMenu.classList.toggle("open");
+      });
+    }
   </script>
 </body>
 </html>
