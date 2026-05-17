@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Svensk statistik - ECL 26 Spring Test</title>
+  <link rel="icon" type="image/png" href="favicon.png?v=1">
+  <link rel="apple-touch-icon" href="favicon.png?v=1">
+  <meta name="description" content="Publik testdesign for svensk ECL 26 Spring-statistik." />
+
+  <style>
+    :root{
+      --bg:#07111d;
+      --surface:#101b27;
+      --surface2:#142433;
+      --text:#f7fbff;
+      --muted:#a7b9ca;
+      --line:rgba(255,255,255,.12);
+      --line2:rgba(255,200,74,.32);
+      --gold:#ffc84b;
+      --orange:#ff9d35;
+      --blue:#5da7ff;
+      --shadow:0 24px 70px rgba(0,0,0,.40);
+    }
+
+    *{ box-sizing:border-box; letter-spacing:0; }
+    html,body{ min-height:100%; }
+    body{
+      margin:0;
+      font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1100px 620px at 50% -18%, rgba(255,200,74,.14), transparent 66%),
+        radial-gradient(860px 560px at 8% 16%, rgba(93,167,255,.13), transparent 64%),
+        linear-gradient(180deg, #081421 0%, #07111d 48%, #050b12 100%);
+    }
+
+    a{ color:inherit; text-decoration:none; }
+    button,input{ font:inherit; }
+    .container{ width:min(1180px, calc(100% - 36px)); margin:0 auto; }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:rgba(6,11,18,.84);
+      border-bottom:1px solid var(--line);
+      backdrop-filter:blur(12px);
+    }
+
+    .topbar__inner{
+      min-height:62px;
+      display:flex;
+      align-items:center;
+      gap:18px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      min-width:190px;
+    }
+
+    .brand img{
+      height:36px;
+      width:auto;
+      display:block;
+      filter:drop-shadow(0 10px 18px rgba(0,0,0,.38));
+    }
+
+    .nav{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:10px;
+      flex:1;
+    }
+
+    .nav__link,
+    .nav__button{
+      border:0;
+      border-radius:999px;
+      background:transparent;
+      color:var(--muted);
+      padding:10px 12px;
+      font-size:14px;
+      font-weight:750;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .nav__link:hover,
+    .nav__button:hover{
+      color:#fff;
+      background:rgba(255,255,255,.06);
+    }
+
+    .dropdown{ position:relative; }
+    .menu{
+      position:absolute;
+      top:calc(100% + 12px);
+      right:0;
+      width:320px;
+      padding:8px;
+      display:none;
+      border-radius:12px;
+      background:rgba(12,18,27,.98);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+    }
+    .dropdown.open .menu{ display:block; }
+    .menu__item{
+      display:block;
+      padding:11px 12px;
+      border-radius:9px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .menu__item:hover{
+      color:#fff;
+      background:rgba(255,255,255,.06);
+    }
+
+    .hamburger{
+      display:none;
+      margin-left:auto;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      padding:9px 12px;
+    }
+
+    .mobile{
+      display:none;
+      border-top:1px solid var(--line);
+      background:rgba(8,13,20,.92);
+    }
+    .mobile.open{ display:block; }
+    .mobile__inner{
+      padding:12px 0 16px;
+      display:grid;
+      gap:8px;
+    }
+    .mobile__link{
+      padding:12px;
+      border-radius:10px;
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+    }
+    .mobile__link:hover,
+    .mobile__link.is-active{
+      color:#fff;
+      background:rgba(255,255,255,.08);
+    }
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      border-bottom:1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(5,10,16,.42), rgba(5,10,16,.18)),
+        url("svenakehocket.jpg") center/cover no-repeat;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      inset:auto 0 0;
+      height:34%;
+      background:linear-gradient(180deg, transparent, rgba(7,17,29,.94));
+      pointer-events:none;
+    }
+
+    .hero__inner{
+      position:relative;
+      z-index:1;
+      min-height:300px;
+      display:flex;
+      align-items:flex-end;
+      padding:42px 0 28px;
+    }
+
+    .hero-copy{
+      max-width:820px;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      min-height:30px;
+      padding:6px 10px;
+      border-radius:999px;
+      color:#10131c;
+      background:linear-gradient(135deg, var(--orange), var(--gold));
+      font-size:12px;
+      font-weight:950;
+      text-transform:uppercase;
+    }
+
+    h1{
+      margin:14px 0 10px;
+      font-size:clamp(32px, 6vw, 68px);
+      line-height:.95;
+      text-transform:uppercase;
+      text-shadow:0 8px 28px rgba(0,0,0,.42);
+    }
+
+    .lede{
+      margin:0;
+      max-width:760px;
+      color:#d7e7f8;
+      font-size:16px;
+      line-height:1.55;
+      text-shadow:0 4px 18px rgba(0,0,0,.42);
+    }
+
+    main{
+      padding:22px 0 50px;
+    }
+
+    .controls{
+      position:relative;
+      z-index:2;
+      margin-top:-26px;
+      margin-bottom:24px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(12,20,30,.94);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(12px);
+      padding:14px;
+      display:grid;
+      gap:12px;
+    }
+
+    .control-row{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:10px;
+    }
+
+    .seg{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      padding:4px;
+      border-radius:999px;
+      background:#07111a;
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .seg button{
+      min-height:36px;
+      padding:8px 14px;
+      border:0;
+      border-radius:999px;
+      color:#dbe8f6;
+      background:transparent;
+      cursor:pointer;
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+
+    .seg button:hover{ background:rgba(255,255,255,.06); }
+
+    .seg button.active{
+      color:#10131c;
+      background:linear-gradient(135deg, var(--orange), var(--gold));
+    }
+
+    .search{
+      flex:1 1 320px;
+      min-width:220px;
+    }
+
+    .search input{
+      width:100%;
+      min-height:44px;
+      padding:0 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,200,74,.24);
+      background:#07111a;
+      color:#fff;
+      outline:none;
+    }
+
+    .search input:focus{
+      border-color:rgba(255,200,74,.52);
+      box-shadow:0 0 0 4px rgba(255,200,74,.08);
+    }
+
+    .summary{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:12px;
+      margin-bottom:22px;
+    }
+
+    .summary-card{
+      min-height:92px;
+      padding:14px;
+      border-radius:12px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.035)),
+        var(--surface);
+      border:1px solid var(--line);
+      box-shadow:0 14px 34px rgba(0,0,0,.22);
+    }
+
+    .summary-card span{
+      display:block;
+      color:var(--muted);
+      font-size:11px;
+      font-weight:950;
+      text-transform:uppercase;
+    }
+
+    .summary-card strong{
+      display:block;
+      margin-top:8px;
+      font-size:28px;
+      line-height:1;
+    }
+
+    .section-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:end;
+      gap:14px;
+      margin-bottom:14px;
+    }
+
+    .section-head h2{
+      margin:0;
+      font-size:24px;
+      text-transform:uppercase;
+    }
+
+    .section-head p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .updated{
+      color:#8498aa;
+      font-size:12px;
+      white-space:nowrap;
+    }
+
+    .spotlight{
+      display:grid;
+      grid-template-columns:1.22fr .89fr .89fr;
+      gap:14px;
+      margin-bottom:22px;
+    }
+
+    .player-card{
+      position:relative;
+      min-width:0;
+      overflow:hidden;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:
+        radial-gradient(120% 140% at 0% 0%, rgba(255,200,74,.13), transparent 42%),
+        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035)),
+        var(--surface);
+      box-shadow:0 18px 44px rgba(0,0,0,.26);
+      padding:16px;
+      display:grid;
+      grid-template-columns:92px minmax(0, 1fr);
+      gap:14px;
+      align-items:center;
+    }
+
+    .player-card:first-child{
+      min-height:220px;
+      border-color:rgba(255,200,74,.32);
+    }
+
+    .rank{
+      position:absolute;
+      top:12px;
+      right:12px;
+      min-width:38px;
+      height:30px;
+      display:grid;
+      place-items:center;
+      border-radius:999px;
+      color:#10131c;
+      background:var(--gold);
+      font-size:13px;
+      font-weight:950;
+    }
+
+    .player-img-wrap{
+      width:92px;
+      height:122px;
+      border-radius:12px;
+      overflow:hidden;
+      background:#050b12;
+      border:1px solid rgba(255,255,255,.20);
+      box-shadow:0 12px 28px rgba(0,0,0,.26);
+    }
+
+    .player-img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .player-name{
+      margin-right:44px;
+      font-size:21px;
+      font-weight:950;
+      line-height:1.06;
+      text-transform:uppercase;
+      word-break:break-word;
+    }
+
+    .player-team{
+      margin-top:7px;
+      color:#abc0d4;
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+
+    .metric-row{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:8px;
+      margin-top:14px;
+    }
+
+    .metric{
+      padding:8px;
+      border-radius:10px;
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .metric span{
+      display:block;
+      color:#8fa4b8;
+      font-size:10px;
+      font-weight:950;
+      text-transform:uppercase;
+    }
+
+    .metric strong{
+      display:block;
+      margin-top:3px;
+      font-size:18px;
+      line-height:1;
+    }
+
+    .table-shell{
+      overflow:hidden;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#07111a;
+      box-shadow:0 18px 44px rgba(0,0,0,.30);
+    }
+
+    .table-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:12px 14px;
+      background:#101d29;
+      border-bottom:1px solid rgba(255,200,74,.18);
+    }
+
+    .table-title strong{
+      color:var(--gold);
+      font-size:12px;
+      text-transform:uppercase;
+    }
+
+    .table-title span{
+      color:#8fa4b8;
+      font-size:12px;
+    }
+
+    .table-container{ overflow:auto; }
+
+    table{
+      width:100%;
+      min-width:820px;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+
+    th{
+      padding:10px 12px;
+      color:#ffdb75;
+      background:#132230;
+      text-align:center;
+      text-transform:uppercase;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    td{
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      text-align:center;
+      white-space:nowrap;
+    }
+
+    th:nth-child(1), th:nth-child(2), th:nth-child(3),
+    td:nth-child(1), td:nth-child(2), td:nth-child(3){ text-align:left; }
+    tbody tr:nth-child(even){ background:rgba(255,255,255,.026); }
+    tbody tr:hover{ background:rgba(255,200,74,.09); }
+
+    .empty{
+      padding:18px;
+      color:var(--muted);
+    }
+
+    footer{
+      padding:18px 0 24px;
+      color:#7d92a5;
+      font-size:12px;
+      text-align:center;
+    }
+
+    @media (max-width:980px){
+      .nav{ display:none; }
+      .hamburger{ display:inline-flex; }
+      .hero__inner{ min-height:250px; }
+      .summary{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .spotlight{ grid-template-columns:1fr; }
+    }
+
+    @media (max-width:620px){
+      .container{ width:min(100% - 24px, 1180px); }
+      .hero__inner{ min-height:230px; padding:30px 0 24px; }
+      .controls{ margin-top:-18px; padding:12px; }
+      .summary{ grid-template-columns:1fr; }
+      .player-card{ grid-template-columns:76px minmax(0, 1fr); }
+      .player-img-wrap{ width:76px; height:98px; }
+      .metric-row{ grid-template-columns:1fr; }
+      .section-head{ align-items:flex-start; flex-direction:column; }
+      .updated{ white-space:normal; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <a class="brand" href="/" aria-label="Svensk eHockey">
+        <img src="svenakehocket.png" alt="Svensk eHockey" />
+      </a>
+
+      <nav class="nav" aria-label="Huvudmeny">
+        <a class="nav__link" href="/">Startsida</a>
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            Svensk ECL Statistik <span>&#9662;</span>
+          </button>
+          <div class="menu" role="menu" aria-label="Svensk ECL Statistik">
+            <a class="menu__item" href="/svenskecl26spring-byten.html">Svenska ECL 26 Spring Byten</a>
+            <a class="menu__item" href="/svenskecl26spring-matcher.html">Svenska matcher ECL 26 Spring</a>
+            <a class="menu__item" href="/svenskecl26spring-lag.html">Svenska lag ECL 26 Spring</a>
+            <a class="menu__item" href="/svenskecl26spring-statistik.html">Svensk statistik ECL 26 Spring</a>
+            <a class="menu__item" href="/svenskecl26winter-statistik.html">Svensk statistik ECL 26 Winter</a>
+          </div>
+        </div>
+        <a class="nav__link" href="#">Nyheter</a>
+        <a class="nav__link" href="https://www.svenskehockey.se/SEC/">SEC</a>
+      </nav>
+
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>&#9776;</button>
+    </div>
+    <div class="mobile" data-mobile-menu>
+      <div class="container mobile__inner">
+        <a class="mobile__link" href="/">Startsida</a>
+        <a class="mobile__link" href="/svenskecl26spring-byten.html">ECL 26 Spring - Byten</a>
+        <a class="mobile__link" href="/svenskecl26spring-matcher.html">ECL 26 Spring - Svenska matcher</a>
+        <a class="mobile__link" href="/svenskecl26spring-lag.html">ECL 26 Spring - Svenska lag</a>
+        <a class="mobile__link is-active" href="/svenskecl26spring-statistik.html">ECL 26 Spring - Statistik</a>
+        <a class="mobile__link" href="/svenskecl26winter-statistik.html">ECL 26 Winter - Statistik</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container hero__inner">
+      <div class="hero-copy">
+        <div class="eyebrow" id="titleSub">ECL 26 Spring</div>
+        <h1 id="titleText">Svensk statistik</h1>
+        <p class="lede" id="sectionDesc">
+          En publik testvy för svenska spelare, backar och målvakter. Snabb filtrering, tydlig ranking och tabellen i fokus.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+    <section class="controls" aria-label="Statistikfilter">
+      <div class="control-row">
+        <div class="seg" id="stageTabs" aria-label="Spelform"></div>
+        <div class="seg" id="leagueTabs" aria-label="Spelartyp"></div>
+        <div class="seg" id="divisionTabs" aria-label="Division"></div>
+      </div>
+      <div class="control-row">
+        <div class="search">
+          <input id="searchBox" placeholder="Sök spelare, lag eller värde..." />
+        </div>
+      </div>
+    </section>
+
+    <section class="summary" id="summaryCards" aria-label="Sammanfattning"></section>
+
+    <section class="section-head">
+      <div>
+        <h2 id="sectionTitle">Topplista</h2>
+        <p id="viewMeta">Klicka på en tabellkolumn för att byta ranking.</p>
+      </div>
+      <div class="updated" id="updated">Laddar...</div>
+    </section>
+
+    <section class="spotlight" id="top3" aria-label="Topp tre"></section>
+
+    <section class="table-shell">
+      <div class="table-title">
+        <strong id="tableStrip">Topplista</strong>
+        <span>Klicka på rubrikerna för att sortera</span>
+      </div>
+      <div class="table-container" id="tableHost"></div>
+    </section>
+  </main>
+
+  <footer>Svensk eHockey · testdesign</footer>
+
+  <script>
+    const dropdowns = document.querySelectorAll("[data-dropdown]");
+    dropdowns.forEach((dd) => {
+      const btn = dd.querySelector("[data-dropdown-btn]");
+      const close = () => {
+        dd.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+      };
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dd.classList.toggle("open");
+        btn.setAttribute("aria-expanded", dd.classList.contains("open") ? "true" : "false");
+      });
+      document.addEventListener("click", close);
+      document.addEventListener("keydown", (e) => {
+        if(e.key === "Escape") close();
+      });
+    });
+
+    const mobileBtn = document.querySelector("[data-mobile-toggle]");
+    const mobileMenu = document.querySelector("[data-mobile-menu]");
+    if(mobileBtn && mobileMenu){
+      mobileBtn.addEventListener("click", () => mobileMenu.classList.toggle("open"));
+    }
+  </script>
+
+  <script>
+  (function(){
+    const JSON_URL = "./svenskstatistikecl26spring.json";
+    const DEFAULT_IMG = "/players/1DEFAULTBILDID.jpg";
+    const STAGE_ORDER = ["regular", "playoffs"];
+    const LEAGUE_ORDER = ["skaters", "defenders", "goalies"];
+    const DIVISION_ORDER = ["elite", "pro", "lite", "core", "neo"];
+
+    const LABELS = {
+      regular:"Grundserie",
+      playoffs:"Slutspel",
+      skaters:"Spelare",
+      defenders:"Backar",
+      goalies:"Målvakter",
+      elite:"Elite",
+      pro:"Pro",
+      lite:"Lite",
+      core:"Core",
+      neo:"Neo",
+      name:"Namn",
+      team:"Lag",
+      gp:"GP",
+      teamMatches:"Lagmatcher",
+      matchSharePct:"Matchandel %",
+      g:"G",
+      a:"A",
+      p:"P",
+      ppg:"PPG",
+      pen:"PEN",
+      dim:"DIM",
+      w:"W",
+      sv:"SV",
+      gaa:"GAA",
+      svp:"SV%",
+      so:"SO"
+    };
+
+    const SORT_TITLES = {
+      gp:"Matchligan",
+      g:"Målligan",
+      a:"Assistligan",
+      p:"Poängliga",
+      ppg:"Poäng per match",
+      pen:"Busligan",
+      dim:"Defensiv impact",
+      w:"Vinstligan",
+      sv:"Räddningar",
+      gaa:"GAA",
+      svp:"Räddningsprocent",
+      so:"Nollor"
+    };
+
+    const stageTabs = document.getElementById("stageTabs");
+    const leagueTabs = document.getElementById("leagueTabs");
+    const divisionTabs = document.getElementById("divisionTabs");
+    const titleSub = document.getElementById("titleSub");
+    const titleText = document.getElementById("titleText");
+    const sectionTitle = document.getElementById("sectionTitle");
+    const sectionDesc = document.getElementById("sectionDesc");
+    const viewMeta = document.getElementById("viewMeta");
+    const summaryCards = document.getElementById("summaryCards");
+    const tableStrip = document.getElementById("tableStrip");
+    const tableHost = document.getElementById("tableHost");
+    const top3 = document.getElementById("top3");
+    const updated = document.getElementById("updated");
+    const searchBox = document.getElementById("searchBox");
+
+    let rawData = null;
+    let activeStage = "regular";
+    let activeLeague = "skaters";
+    let activeDivision = "elite";
+    let currentRows = [];
+    let currentColumns = [];
+    let currentSort = { key:"p", asc:false };
+
+    function safe(value){
+      if(value === null || value === undefined) return "";
+      return String(value);
+    }
+
+    function escapeHtml(value){
+      return safe(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function normalize(value){
+      return safe(value)
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function slugify(value){
+      return safe(value)
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase();
+    }
+
+    function num(value){
+      const parsed = parseFloat(safe(value).replace(",", ".").replace("%", "").trim());
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+
+    function label(key){
+      return LABELS[key] || key;
+    }
+
+    function unwrap(data){
+      if(data && data.regular && data.playoffs) return data;
+      if(data?.json_result){
+        return typeof data.json_result === "string" ? JSON.parse(data.json_result) : data.json_result;
+      }
+      if(Array.isArray(data?.rows) && data.rows.length){
+        const value = data.rows[0].json_result;
+        return typeof value === "string" ? JSON.parse(value) : value;
+      }
+      throw new Error("JSON-formatet känns inte igen.");
+    }
+
+    async function loadJson(){
+      const res = await fetch(JSON_URL, { cache:"no-store" });
+      if(!res.ok) throw new Error(`Kunde inte läsa ${JSON_URL} (${res.status})`);
+      return unwrap(await res.json());
+    }
+
+    function getStages(){
+      return STAGE_ORDER.filter(key => rawData?.[key] && typeof rawData[key] === "object");
+    }
+
+    function getLeagues(){
+      return LEAGUE_ORDER.filter(key => rawData?.[activeStage]?.[key] && typeof rawData[activeStage][key] === "object");
+    }
+
+    function getDivisions(){
+      return DIVISION_ORDER.filter(key => Array.isArray(rawData?.[activeStage]?.[activeLeague]?.[key]));
+    }
+
+    function rows(){
+      const source = rawData?.[activeStage]?.[activeLeague]?.[activeDivision];
+      return Array.isArray(source) ? source.slice() : [];
+    }
+
+    function buildTabs(host, items, active, onClick){
+      host.innerHTML = items.map(item => `
+        <button class="${item === active ? "active" : ""}" type="button" data-value="${escapeHtml(item)}">
+          ${escapeHtml(label(item))}
+        </button>
+      `).join("");
+
+      host.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => onClick(btn.dataset.value));
+      });
+    }
+
+    function orderedColumns(dataRows){
+      const hidden = new Set(["teamLogo", "playerImage", "userID", "playerID", "image", "img", "photo"]);
+      const out = ["name", "team"];
+      const order = activeLeague === "goalies"
+        ? ["gp", "teamMatches", "matchSharePct", "w", "sv", "gaa", "svp", "so"]
+        : ["gp", "teamMatches", "matchSharePct", "g", "a", "p", "ppg", "pen", "dim"];
+
+      order.forEach(key => {
+        if(dataRows.some(row => Object.prototype.hasOwnProperty.call(row, key))) out.push(key);
+      });
+
+      dataRows.forEach(row => {
+        Object.keys(row).forEach(key => {
+          if(!hidden.has(key) && !out.includes(key)) out.push(key);
+        });
+      });
+
+      return out.filter(key => dataRows.some(row => Object.prototype.hasOwnProperty.call(row, key)));
+    }
+
+    function defaultSort(columns){
+      const preferred = activeLeague === "goalies" ? ["svp", "gaa", "w", "sv", "so", "gp"] : ["p", "g", "a", "ppg", "gp", "dim"];
+      return preferred.find(key => columns.includes(key)) || columns.find(key => key !== "name" && key !== "team") || columns[0] || "name";
+    }
+
+    function ascFor(key){
+      return key === "gaa";
+    }
+
+    function compare(a, b, asc){
+      const na = num(a);
+      const nb = num(b);
+      if(na !== null && nb !== null) return asc ? na - nb : nb - na;
+      return asc ? safe(a).localeCompare(safe(b), "sv") : safe(b).localeCompare(safe(a), "sv");
+    }
+
+    function sortData(dataRows, key, asc){
+      return dataRows.slice().sort((a, b) => {
+        const primary = compare(a[key], b[key], asc);
+        if(primary) return primary;
+        if(key === "p" && Object.prototype.hasOwnProperty.call(a, "g")){
+          const goals = compare(a.g, b.g, false);
+          if(goals) return goals;
+        }
+        return compare(a.name, b.name, true);
+      });
+    }
+
+    function filteredRows(){
+      const query = normalize(searchBox.value);
+      if(!query) return currentRows.slice();
+      return currentRows.filter(row => Object.values(row).some(value => normalize(value).includes(query)));
+    }
+
+    function imageCandidates(folder, explicit, name){
+      const out = [];
+      const explicitValue = safe(explicit).trim();
+      const raw = safe(name).trim();
+      const slug = slugify(raw);
+
+      if(explicitValue){
+        out.push(explicitValue.startsWith("/") || explicitValue.startsWith("http") ? explicitValue : `${folder}/${explicitValue}`);
+      }
+
+      if(raw) ["png", "jpg", "jpeg", "webp"].forEach(ext => out.push(`${folder}/${raw}.${ext}`));
+      if(slug) ["png", "jpg", "jpeg", "webp"].forEach(ext => out.push(`${folder}/${slug}.${ext}`));
+      return [...new Set(out)];
+    }
+
+    function setImg(img, candidates, fallback){
+      let i = 0;
+      img.onerror = () => {
+        i++;
+        if(i < candidates.length) img.src = candidates[i];
+        else if(fallback){
+          img.onerror = null;
+          img.src = fallback;
+        } else {
+          img.style.display = "none";
+        }
+      };
+      img.src = candidates[0] || fallback || "";
+    }
+
+    function metricKeys(row){
+      const key = currentSort.key;
+      if(activeLeague === "goalies"){
+        if(key === "gaa") return ["gaa", "svp", "so"];
+        if(key === "w") return ["w", "svp", "gaa"];
+        if(key === "sv") return ["sv", "svp", "gaa"];
+        if(key === "so") return ["so", "svp", "gaa"];
+        return ["svp", "gaa", "so"];
+      }
+      if(key === "g") return ["g", "p", "a"];
+      if(key === "a") return ["a", "p", "g"];
+      if(key === "pen") return ["pen", "gp", "p"];
+      if(key === "dim") return ["dim", "gp", "p"];
+      if(key === "ppg") return ["ppg", "p", "gp"];
+      if(key === "gp") return ["gp", "p", "g"];
+      return ["p", "g", "a"];
+    }
+
+    function goalieShare(row){
+      const explicit = num(row.matchSharePct);
+      if(explicit !== null) return explicit;
+      const gp = num(row.gp) || 0;
+      const team = num(row.teamMatches) || 0;
+      return team ? (gp / team) * 100 : 100;
+    }
+
+    function cardRows(dataRows){
+      if(activeLeague !== "goalies") return dataRows.slice(0, 3);
+      const eligible = dataRows.filter(row => goalieShare(row) >= 50);
+      return (eligible.length ? eligible : dataRows).slice(0, 3);
+    }
+
+    function renderSpotlight(dataRows){
+      const cards = cardRows(dataRows);
+      if(!cards.length){
+        top3.innerHTML = `<div class="empty">Ingen data att visa.</div>`;
+        return;
+      }
+
+      top3.innerHTML = cards.map((row, index) => {
+        const metrics = metricKeys(row)
+          .filter(key => Object.prototype.hasOwnProperty.call(row, key))
+          .slice(0, 3);
+
+        return `
+          <article class="player-card">
+            <div class="rank">#${index + 1}</div>
+            <div class="player-img-wrap">
+              <img class="player-img" alt="${escapeHtml(row.name || "Spelare")}">
+            </div>
+            <div>
+              <div class="player-name">${escapeHtml(row.name || "Okänd")}</div>
+              <div class="player-team">${escapeHtml(row.team || "")}</div>
+              <div class="metric-row">
+                ${metrics.map(key => `
+                  <div class="metric">
+                    <span>${escapeHtml(label(key))}</span>
+                    <strong>${escapeHtml(row[key])}</strong>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      cards.forEach((row, index) => {
+        const img = top3.children[index]?.querySelector(".player-img");
+        if(!img) return;
+        setImg(img, imageCandidates("/players", row.playerImage || row.image || row.img || row.photo, row.name), DEFAULT_IMG);
+      });
+    }
+
+    function renderSummary(dataRows){
+      const teams = new Set(dataRows.map(row => row.team).filter(Boolean)).size;
+      const leader = dataRows[0];
+      const sortLabel = SORT_TITLES[currentSort.key] || label(currentSort.key);
+
+      summaryCards.innerHTML = `
+        <article class="summary-card"><span>Rader</span><strong>${dataRows.length}</strong></article>
+        <article class="summary-card"><span>Lag</span><strong>${teams}</strong></article>
+        <article class="summary-card"><span>Ledare</span><strong>${escapeHtml(leader?.name || "-")}</strong></article>
+        <article class="summary-card"><span>${escapeHtml(sortLabel)}</span><strong>${escapeHtml(leader?.[currentSort.key] ?? "-")}</strong></article>
+      `;
+    }
+
+    function renderTable(dataRows){
+      if(!dataRows.length){
+        tableHost.innerHTML = `<div class="empty">Ingen data att visa.</div>`;
+        return;
+      }
+
+      tableHost.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              ${currentColumns.map(col => `<th data-key="${escapeHtml(col)}">${escapeHtml(label(col))}</th>`).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${dataRows.map((row, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                ${currentColumns.map(col => `<td>${escapeHtml(row[col])}</td>`).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+
+      tableHost.querySelectorAll("th[data-key]").forEach(th => {
+        th.addEventListener("click", () => {
+          const key = th.dataset.key;
+          if(currentSort.key === key) currentSort.asc = !currentSort.asc;
+          else {
+            currentSort.key = key;
+            currentSort.asc = ascFor(key);
+          }
+          render();
+        });
+      });
+    }
+
+    function setTitles(){
+      const sortTitle = SORT_TITLES[currentSort.key] || label(currentSort.key);
+      const stage = label(activeStage);
+      const league = label(activeLeague);
+      const division = label(activeDivision);
+      const suffix = activeStage === "playoffs" ? " slutspel" : "";
+
+      titleSub.textContent = `${stage} / ${league} / ${division}`;
+      titleText.textContent = `ECL 26 Spring ${sortTitle}`;
+      sectionTitle.textContent = `${division} ${sortTitle}`;
+      tableStrip.textContent = `${division} ${sortTitle}${suffix}`;
+      sectionDesc.textContent = "En publik testvy för svenska spelare, backar och målvakter. Snabb filtrering, tydlig ranking och tabellen i fokus.";
+      viewMeta.textContent = `${stage}. ${league}. ${division}. Klicka i tabellen för att byta ranking.`;
+    }
+
+    function render(){
+      setTitles();
+      const filtered = filteredRows();
+      const sorted = sortData(filtered, currentSort.key, currentSort.asc);
+      const best = sortData(filtered, currentSort.key, ascFor(currentSort.key));
+
+      renderSummary(sorted);
+      renderSpotlight(best);
+      renderTable(sorted);
+
+      const stamp = safe(rawData?.updated || rawData?.lastUpdated || "");
+      updated.textContent = stamp ? `Senast uppdaterad: ${stamp}` : "Live från JSON";
+    }
+
+    function syncFilters(){
+      const leagues = getLeagues();
+      if(!leagues.includes(activeLeague)) activeLeague = leagues[0] || "skaters";
+      const divisions = getDivisions();
+      if(!divisions.includes(activeDivision)) activeDivision = divisions[0] || "elite";
+    }
+
+    function rebuildTabs(){
+      buildTabs(stageTabs, getStages(), activeStage, value => {
+        activeStage = value;
+        syncFilters();
+        refresh();
+      });
+
+      buildTabs(leagueTabs, getLeagues(), activeLeague, value => {
+        activeLeague = value;
+        syncFilters();
+        refresh();
+      });
+
+      buildTabs(divisionTabs, getDivisions(), activeDivision, value => {
+        activeDivision = value;
+        refresh();
+      });
+    }
+
+    function refresh(){
+      currentRows = rows();
+      currentColumns = orderedColumns(currentRows);
+      currentSort.key = defaultSort(currentColumns);
+      currentSort.asc = ascFor(currentSort.key);
+      searchBox.value = "";
+      rebuildTabs();
+      render();
+    }
+
+    async function init(){
+      tableHost.innerHTML = `<div class="empty">Laddar statistik...</div>`;
+      rawData = await loadJson();
+      syncFilters();
+      refresh();
+    }
+
+    searchBox.addEventListener("input", render);
+
+    init().catch(err => {
+      tableHost.innerHTML = `<div class="empty">Fel vid laddning: ${escapeHtml(err.message)}</div>`;
+      updated.textContent = "";
+    });
+  })();
+  </script>
+</body>
+</html>
