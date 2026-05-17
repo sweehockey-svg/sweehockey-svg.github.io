@@ -312,7 +312,7 @@
     .article-body{
       margin-top:14px;
       display:grid;
-      gap:10px;
+      gap:12px;
     }
     .article-body p{
       margin:0;
@@ -337,39 +337,43 @@
       justify-content:center;
       width:max-content;
       margin-top:14px;
-      padding:9px 12px;
+      padding:0;
       border:0;
-      border-radius:6px;
-      color:#081019;
-      background:linear-gradient(180deg, #ffd86d, #ffae34);
-      font-size:12px;
+      color:var(--gold);
+      background:transparent;
+      font-size:14px;
       font-weight:950;
       cursor:pointer;
     }
+    .read-more-btn:hover{
+      color:#ffe08a;
+    }
     .article-full{
       display:none;
-      margin-top:16px;
-      padding-top:16px;
+      margin-top:18px;
+      padding-top:18px;
       border-top:1px solid rgba(255,255,255,0.10);
     }
     .article-full.is-open{
       display:grid;
-      gap:14px;
+      gap:20px;
     }
     .article-section{
-      padding:12px;
-      border-radius:8px;
-      background:rgba(0,0,0,0.18);
-      border:1px solid rgba(255,255,255,0.08);
+      max-width:920px;
     }
     .article-section h4{
       margin:0 0 8px;
       color:var(--gold);
-      font-size:14px;
+      font-size:18px;
       text-transform:uppercase;
     }
     .article-section p{
-      margin:0;
+      margin:0 0 10px;
+      color:#d7e4f0;
+      line-height:1.72;
+    }
+    .article-section p:last-child{
+      margin-bottom:0;
     }
 
     .news-grid{
@@ -610,11 +614,20 @@
         sections: [
           {
             title: "vNexs I bäst av svensklagen i Elite",
-            text: "På den högsta nivån var det vNexs I som stod för det starkaste svenska gruppspelet. Laget slutade trea i Elite Grupp 1 efter att ha spelat in 66 poäng på 30 matcher. Med ett record på 20-1-4-5, en målskillnad på +57 och hela 260 gjorda mål visade vNexs I upp både offensiv spets och stabilitet över tid. Det var siffror som placerade laget tydligt i toppen, men också som gör dem till ett av de mest intressanta svenska namnen inför slutspelet. Med 2,20 poäng per match var vNexs I bäst av de svenska Elite-lagen sett över hela gruppspelet. Nu väntar kvartsfinal mot Tohorit, där laget får chansen att bekräfta den höga nivå man visat."
+            text: [
+              "På den högsta nivån var det vNexs I som stod för det starkaste svenska gruppspelet. Laget slutade trea i Elite Grupp 1 efter att ha spelat in 66 poäng på 30 matcher.",
+              "Med ett record på 20-1-4-5, en målskillnad på +57 och hela 260 gjorda mål visade vNexs I upp både offensiv spets och stabilitet över tid.",
+              "Det var siffror som placerade laget tydligt i toppen, men också som gör dem till ett av de mest intressanta svenska namnen inför slutspelet. Med 2,20 poäng per match var vNexs I bäst av de svenska Elite-lagen sett över hela gruppspelet. Nu väntar kvartsfinal mot Tohorit, där laget får chansen att bekräfta den höga nivå man visat."
+            ]
           },
           {
             title: "Elite: AFTERLIFE vidare, Unwanted precis utanför",
-            text: "Även AFTERLIFE lyckades ta sig vidare till kvartsfinal. Laget slutade åtta med 45 poäng, efter ett gruppspel som blev betydligt mer dramatiskt. Recordet 13-2-2-13 och målskillnaden +4 visar hur jämn resan var. Offensiven fanns där, med 224 gjorda mål, men många matcher levde länge på små marginaler. I kvartsfinalen väntar Parasite. För Unwanted blev det en bitter niondeplats. Laget landade på 43 poäng, bara två bakom AFTERLIFE och slutspelsstrecket. Med 208 gjorda mål fanns kapaciteten framåt, men målskillnaden -23 visar att defensiven inte riktigt höll över 30 matcher. SSK ESPORTS slutade elva med 40 poäng, målskillnaden -3 och ett record på 9-4-5-12. Även där var känslan att laget ofta var nära, men inte fick med sig tillräckligt mycket i nyckellägena."
+            text: [
+              "Även AFTERLIFE lyckades ta sig vidare till kvartsfinal. Laget slutade åtta med 45 poäng, efter ett gruppspel som blev betydligt mer dramatiskt.",
+              "Recordet 13-2-2-13 och målskillnaden +4 visar hur jämn resan var. Offensiven fanns där, med 224 gjorda mål, men många matcher levde länge på små marginaler. I kvartsfinalen väntar Parasite.",
+              "För Unwanted blev det en bitter niondeplats. Laget landade på 43 poäng, bara två bakom AFTERLIFE och slutspelsstrecket. Med 208 gjorda mål fanns kapaciteten framåt, men målskillnaden -23 visar att defensiven inte riktigt höll över 30 matcher.",
+              "SSK ESPORTS slutade elva med 40 poäng, målskillnaden -3 och ett record på 9-4-5-12. Även där var känslan att laget ofta var nära, men inte fick med sig tillräckligt mycket i nyckellägena."
+            ]
           },
           {
             title: "Elite: svenska toppar",
@@ -622,7 +635,11 @@
           },
           {
             title: "SSK Prospects och Västerås IK starka i Pro",
-            text: "I Pro blev det flera svenska slutspelslag, med SSK Prospects och Västerås IK som de tydligaste styrkebeskeden. SSK Prospects slutade femma i Grupp 2 med 57 poäng på 30 matcher. Laget hade ett starkt record på 17-2-2-9, en målskillnad på +45 och bara 94 insläppta mål. Det ger SSK Prospects ett stabilt utgångsläge inför slutspelet, där Unique väntar. Västerås IK följde tätt bakom sett till svensk prestation. Laget slutade sexa i Grupp 1 med 55 poäng på 32 matcher. Recordet 16-3-1-12 visar ett lag som vann ofta i en tuff grupp, även om målskillnaden +12 vittnar om att flera matcher var jämna. I första slutspelsrundan väntar Carpe Diem."
+            text: [
+              "I Pro blev det flera svenska slutspelslag, med SSK Prospects och Västerås IK som de tydligaste styrkebeskeden.",
+              "SSK Prospects slutade femma i Grupp 2 med 57 poäng på 30 matcher. Laget hade ett starkt record på 17-2-2-9, en målskillnad på +45 och bara 94 insläppta mål. Det ger SSK Prospects ett stabilt utgångsläge inför slutspelet, där Unique väntar.",
+              "Västerås IK följde tätt bakom sett till svensk prestation. Laget slutade sexa i Grupp 1 med 55 poäng på 32 matcher. Recordet 16-3-1-12 visar ett lag som vann ofta i en tuff grupp, även om målskillnaden +12 vittnar om att flera matcher var jämna. I första slutspelsrundan väntar Carpe Diem."
+            ]
           },
           {
             title: "Pro: Brynäs vidare, vNexs II och Sunne utanför",
@@ -634,7 +651,12 @@
           },
           {
             title: "Lite med stor svensk bredd",
-            text: "Lite blev en av de mest svensktäta divisionerna. Flera lag tog sig vidare, och flera andra fanns med i kampen under stora delar av gruppspelet. Starkast gick vNexs Vipers, som slutade tvåa i Grupp 1 med 58 poäng på 30 matcher. Laget hade ett record på 15-6-1-8, målskillnaden +46 och bara 56 insläppta mål. Defensiven blev lagets stora fundament inför slutspelet. Macho HC slutade sexa i Grupp 1 med 53 poäng och ett record på 16-1-3-10. Med 94-70 i målskillnad visade laget en bra balans mellan offensiv och defensiv. I Grupp 2 tog SSK Adepts en femteplats med 49 poäng på 28 matcher, medan Refuse Too Lose slutade sjua med 46 poäng. Båda lagen säkrade slutspel efter gruppspel där de visade tillräcklig stabilitet för att hålla sig på rätt sida strecket."
+            text: [
+              "Lite blev en av de mest svensktäta divisionerna. Flera lag tog sig vidare, och flera andra fanns med i kampen under stora delar av gruppspelet.",
+              "Starkast gick vNexs Vipers, som slutade tvåa i Grupp 1 med 58 poäng på 30 matcher. Laget hade ett record på 15-6-1-8, målskillnaden +46 och bara 56 insläppta mål. Defensiven blev lagets stora fundament inför slutspelet.",
+              "Macho HC slutade sexa i Grupp 1 med 53 poäng och ett record på 16-1-3-10. Med 94-70 i målskillnad visade laget en bra balans mellan offensiv och defensiv.",
+              "I Grupp 2 tog SSK Adepts en femteplats med 49 poäng på 28 matcher, medan Refuse Too Lose slutade sjua med 46 poäng. Båda lagen säkrade slutspel efter gruppspel där de visade tillräcklig stabilitet för att hålla sig på rätt sida strecket."
+            ]
           },
           {
             title: "Lite: ojämnare resor och starka spelare",
@@ -642,7 +664,12 @@
           },
           {
             title: "Core blev ett svenskt styrkebesked",
-            text: "Core blev kanske den tydligaste divisionen när det gäller svensk bredd i slutspelsbilden. Flera lag tog sig vidare med starka placeringar, och Style gick allra bäst. Laget slutade tvåa i Grupp 2 med 52 poäng på 24 matcher, recordet 16-2-0-6 och målskillnaden +45. Med 93 gjorda och 48 insläppta mål visade Style upp både offensiv spets och defensiv kontroll. vNexs Wisemen följde tätt bakom med en fjärdeplats i Grupp 1 och 51 poäng på 26 matcher. Laget hade målskillnaden +29 och släppte bara in 47 mål, vilket gav en stabil grund inför slutspelet. Northern Ztars Hockey slutade trea i Grupp 2 med 50 poäng, och stack framför allt ut offensivt med 101 gjorda mål."
+            text: [
+              "Core blev kanske den tydligaste divisionen när det gäller svensk bredd i slutspelsbilden. Flera lag tog sig vidare med starka placeringar, och Style gick allra bäst.",
+              "Laget slutade tvåa i Grupp 2 med 52 poäng på 24 matcher, recordet 16-2-0-6 och målskillnaden +45. Med 93 gjorda och 48 insläppta mål visade Style upp både offensiv spets och defensiv kontroll.",
+              "vNexs Wisemen följde tätt bakom med en fjärdeplats i Grupp 1 och 51 poäng på 26 matcher. Laget hade målskillnaden +29 och släppte bara in 47 mål, vilket gav en stabil grund inför slutspelet.",
+              "Northern Ztars Hockey slutade trea i Grupp 2 med 50 poäng, och stack framför allt ut offensivt med 101 gjorda mål."
+            ]
           },
           {
             title: "Core: många svenska spår att följa",
@@ -658,7 +685,11 @@
           },
           {
             title: "Svensk bredd - och flera lag med chans att gå långt",
-            text: "När gruppspelet summeras är bilden tydlig: svensk eHockey står starkt i flera divisioner. vNexs I går in i Elite-slutspelet som det stora svenska affischnamnet, medan AFTERLIFE också finns med i kvartsfinalerna. I Pro har SSK Prospects, Västerås IK och Brynäs IF Esport alla tagit sig vidare, med olika men intressanta utgångslägen. I Lite och Core är den svenska bredden som störst. Där finns flera lag som kan bygga vidare på starka gruppspel, men också lag som går in mer som utmanare och kan växa när matcherna blir större. I Neo är det framför allt Free From Rodents som bär det svenska hoppet vidare."
+            text: [
+              "När gruppspelet summeras är bilden tydlig: svensk eHockey står starkt i flera divisioner.",
+              "vNexs I går in i Elite-slutspelet som det stora svenska affischnamnet, medan AFTERLIFE också finns med i kvartsfinalerna. I Pro har SSK Prospects, Västerås IK och Brynäs IF Esport alla tagit sig vidare, med olika men intressanta utgångslägen.",
+              "I Lite och Core är den svenska bredden som störst. Där finns flera lag som kan bygga vidare på starka gruppspel, men också lag som går in mer som utmanare och kan växa när matcherna blir större. I Neo är det framför allt Free From Rodents som bär det svenska hoppet vidare."
+            ]
           },
           {
             title: "Nu börjar det på riktigt",
@@ -738,13 +769,13 @@
       const full = Array.isArray(article.sections) && article.sections.length
         ? `
           <button class="read-more-btn" type="button" data-read-more="${escapeHtml(fullId)}" aria-expanded="false">
-            Läs hela artikeln
+            Läs mer →
           </button>
           <div class="article-full" id="${escapeHtml(fullId)}">
             ${article.sections.map(section => `
               <section class="article-section">
                 <h4>${escapeHtml(section.title)}</h4>
-                <p>${escapeHtml(section.text)}</p>
+                ${(Array.isArray(section.text) ? section.text : [section.text]).map(part => `<p>${escapeHtml(part)}</p>`).join("")}
               </section>
             `).join("")}
           </div>
@@ -800,7 +831,7 @@
           if (!target) return;
           const open = target.classList.toggle("is-open");
           btn.setAttribute("aria-expanded", open ? "true" : "false");
-          btn.textContent = open ? "Dölj artikeln" : "Läs hela artikeln";
+          btn.textContent = open ? "Visa mindre ↑" : "Läs mer →";
         });
       });
     }
