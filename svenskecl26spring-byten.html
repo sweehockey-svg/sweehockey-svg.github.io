@@ -815,6 +815,44 @@
       .footer__inner{ align-items:flex-start; flex-direction:column; }
       .footer-links{ justify-content:flex-start; }
     }
+
+
+    html{ overflow-x:hidden; }
+    body{
+      overflow-x:hidden;
+      max-width:100%;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      z-index:-1;
+      pointer-events:none;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,0.026) 1px, transparent 1px),
+        linear-gradient(180deg, #07111b 0%, #081622 44%, #061018 100%);
+      background-size:64px 64px, 64px 64px, 100% 100%;
+    }
+
+    .topbar,
+    .banner-strip,
+    main,
+    footer{
+      position:relative;
+      z-index:1;
+    }
+
+    .card,
+    .tile,
+    .team-card,
+    .match-card,
+    .transfer-card,
+    .table-shell{
+      backdrop-filter:saturate(1.08);
+    }
+
     /* /Svensk eHockey datatavla design */
 
   </style>
