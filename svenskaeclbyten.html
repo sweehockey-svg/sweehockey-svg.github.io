@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Svensk eHockey – Svenska byten</title>
+  <title>Svensk eHockey - Svenska byten</title>
   <link rel="icon" type="image/png" href="favicon.png?v=1">
   <link rel="apple-touch-icon" href="favicon.png?v=1">
   <meta name="description" content="Svenska spelare som bytt ECL-lag." />
@@ -11,20 +11,11 @@
   <style>
     :root{
       --bg: #07101d;
-      --bg-2: #0b1628;
-      --panel: rgba(255,255,255,0.055);
-      --panel-2: rgba(255,255,255,0.035);
-      --panel-3: rgba(255,255,255,0.025);
       --text: rgba(255,255,255,0.95);
       --muted: rgba(255,255,255,0.68);
-      --soft: rgba(255,255,255,0.10);
       --border: rgba(255,255,255,0.11);
       --gold: #f5c34b;
-      --gold-soft: rgba(245,195,75,0.18);
-      --gold-line: rgba(245,195,75,0.34);
-      --blue-soft: rgba(88,140,255,0.12);
       --shadow: 0 24px 64px rgba(0,0,0,.42);
-      --shadow-2: 0 16px 36px rgba(0,0,0,.28);
     }
 
     *{ box-sizing:border-box; }
@@ -86,7 +77,7 @@
     .nav__button{
       font-size:14px;
       color: var(--muted);
-      padding:10px 10px;
+      padding:10px;
       border-radius:10px;
       white-space:nowrap;
       background:transparent;
@@ -101,8 +92,7 @@
       color: var(--text);
     }
 
-    .nav__link.is-active{ color: var(--text); }
-
+    .nav__button.is-active{ color: var(--text); }
     .dropdown{ position:relative; }
 
     .menu{
@@ -135,29 +125,19 @@
       color: var(--text);
     }
 
-    .iconbtn{
+    .iconbtn,
+    .hamburger{
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.04);
       color: var(--text);
       border-radius: 12px;
       padding: 8px 10px;
       cursor:pointer;
-      transition: background .16s ease, border-color .16s ease;
-    }
-
-    .iconbtn:hover{
-      background: rgba(255,255,255,0.07);
-      border-color: rgba(255,255,255,0.18);
     }
 
     .hamburger{
       display:none;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      color: var(--text);
-      border-radius: 12px;
       padding: 8px 12px;
-      cursor:pointer;
       margin-left:auto;
     }
 
@@ -182,8 +162,11 @@
       color: var(--muted);
     }
 
-    .mobile__link:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
-    .mobile__link.is-active{ color: var(--text); }
+    .mobile__link:hover,
+    .mobile__link.is-active{
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+    }
 
     .banner-strip{
       border-bottom: 1px solid var(--border);
@@ -212,8 +195,7 @@
     main{ padding: 28px 0 54px; }
 
     .card{
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03));
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03));
       border: 1px solid var(--border);
       border-radius: 22px;
       padding: 24px 22px;
@@ -232,9 +214,7 @@
       line-height:1.65;
     }
 
-    .transfers{
-      margin-top: 26px;
-    }
+    .transfers{ margin-top: 26px; }
 
     .header-box{
       display:flex;
@@ -280,7 +260,7 @@
     }
 
     .search-wrap::before{
-      content:"🔍";
+      content:"\1F50D";
       position:absolute;
       left:16px;
       top:50%;
@@ -295,27 +275,18 @@
       padding:14px 16px 14px 42px;
       font-size:15px;
       border:1px solid rgba(245,195,75,0.22);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
       color: var(--text);
       border-radius:18px;
       outline:none;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.04),
-        0 8px 24px rgba(0,0,0,.16);
-      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,.16);
     }
 
-    #searchTransfers::placeholder{
-      color: rgba(255,255,255,0.45);
-    }
+    #searchTransfers::placeholder{ color: rgba(255,255,255,0.45); }
 
     #searchTransfers:focus{
       border-color: rgba(245,195,75,0.42);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.06),
-        0 0 0 4px rgba(245,195,75,.10),
-        0 12px 30px rgba(0,0,0,.2);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 4px rgba(245,195,75,.10), 0 12px 30px rgba(0,0,0,.2);
       background: rgba(255,255,255,0.055);
     }
 
@@ -335,7 +306,7 @@
       border-radius:26px;
       overflow:hidden;
       box-shadow: 0 18px 42px rgba(0,0,0,.25);
-      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
     }
 
     .transfer-card:hover{
@@ -356,9 +327,7 @@
       display:flex;
       align-items:center;
       gap:16px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.028), transparent),
-        linear-gradient(90deg, rgba(255,255,255,0.02), transparent 65%);
+      background: linear-gradient(180deg, rgba(255,255,255,0.028), transparent), linear-gradient(90deg, rgba(255,255,255,0.02), transparent 65%);
     }
 
     .player-link{
@@ -370,9 +339,7 @@
       text-decoration:none;
     }
 
-    .player-link:hover .player-name{
-      color: var(--gold);
-    }
+    .player-link:hover .player-name{ color: var(--gold); }
 
     .player-avatar{
       width:78px;
@@ -380,13 +347,10 @@
       border-radius:20px;
       overflow:hidden;
       flex:0 0 78px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
       border:1px solid rgba(255,255,255,0.12);
       position: relative;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.04),
-        0 10px 22px rgba(0,0,0,.22);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 22px rgba(0,0,0,.22);
     }
 
     .player-avatar img{
@@ -448,17 +412,14 @@
       transform: translateY(-1px);
     }
 
-    .team-link:hover .team-name{
-      color: var(--gold);
-    }
+    .team-link:hover .team-name{ color: var(--gold); }
 
     .team-box{
       display:grid;
       grid-template-columns: 70px 1fr;
       gap:14px;
       align-items:center;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.022));
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.022));
       border:1px solid rgba(255,255,255,0.08);
       border-radius:20px;
       padding:14px 16px;
@@ -472,8 +433,7 @@
       height:70px;
       border-radius:18px;
       overflow:hidden;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
       border:1px solid rgba(255,255,255,0.08);
       display:flex;
       align-items:center;
@@ -488,10 +448,6 @@
       object-fit:contain;
       display:block;
       padding:6px;
-    }
-
-    .team-label{
-      display:none;
     }
 
     .team-name{
@@ -520,16 +476,13 @@
       width:64px;
       height:64px;
       border-radius:999px;
-      background:
-        radial-gradient(circle at 50% 35%, rgba(245,195,75,0.11), rgba(245,195,75,0.05));
+      background: radial-gradient(circle at 50% 35%, rgba(245,195,75,0.11), rgba(245,195,75,0.05));
       border:1px solid rgba(245,195,75,0.22);
       color: var(--gold);
       font-size:30px;
       font-weight:900;
       margin: 0 auto;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.04),
-        0 10px 22px rgba(0,0,0,.16);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 22px rgba(0,0,0,.16);
     }
 
     .empty-state{
@@ -563,36 +516,19 @@
     }
 
     @media (max-width: 1120px){
-      .transfer-row{
-        grid-template-columns: 390px 1fr;
-      }
-
-      .player-name{
-        font-size:30px;
-      }
-
-      .team-name{
-        font-size:19px;
-      }
+      .transfer-row{ grid-template-columns: 390px 1fr; }
+      .player-name{ font-size:30px; }
+      .team-name{ font-size:19px; }
     }
 
     @media (max-width: 980px){
-      .transfer-row{
-        grid-template-columns: 1fr;
-      }
-
+      .transfer-row{ grid-template-columns: 1fr; }
       .transfer-player{
         border-right:0;
         border-bottom:1px solid rgba(255,255,255,0.08);
       }
-
-      .player-name{
-        font-size:28px;
-      }
-
-      .team-name{
-        font-size:19px;
-      }
+      .player-name{ font-size:28px; }
+      .team-name{ font-size:19px; }
     }
 
     @media (max-width: 860px){
@@ -610,36 +546,23 @@
         flex-direction:column;
         align-items:stretch;
       }
-
-      .search-wrap{
-        width:100%;
-      }
-
-      .transfer-player{
-        padding:16px;
-      }
-
-      .player-link{
-        gap:14px;
-      }
-
+      .search-wrap{ width:100%; }
+      .transfer-player{ padding:16px; }
+      .player-link{ gap:14px; }
       .player-avatar{
         width:68px;
         height:96px;
         flex-basis:68px;
       }
-
       .player-name{
         font-size:24px;
         white-space:normal;
       }
-
       .transfer-move{
         grid-template-columns: 1fr;
         gap:12px;
         padding:16px;
       }
-
       .transfer-arrow{
         width:100%;
         height:auto;
@@ -647,30 +570,20 @@
         border-radius:16px;
         font-size:24px;
       }
-
       .team-box{
         grid-template-columns: 58px 1fr;
         min-height:unset;
       }
-
       .team-logo{
         width:58px;
         height:58px;
       }
-
-      .team-name{
-        font-size:18px;
-      }
-
-      .lastUpdated{
-        text-align:left;
-      }
+      .team-name{ font-size:18px; }
+      .lastUpdated{ text-align:left; }
     }
 
     @media (max-width: 460px){
-      .player-name{
-        font-size:21px;
-      }
+      .player-name{ font-size:21px; }
     }
   </style>
 </head>
@@ -687,11 +600,12 @@
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button is-active" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            Svensk ECL Statistik <span>▾</span>
+            Svensk ECL Statistik <span>&#9662;</span>
           </button>
           <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
             <a class="menu__item" role="menuitem" href="/svenskamatcher.html">Svenska matcher</a>
+            <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/svenskaecl26springlag.html">Svenska lag ECL 26 Spring</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
             <a class="menu__item" role="menuitem" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
           </div>
@@ -701,28 +615,29 @@
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            Cuper <span>▾</span>
+            Cuper <span>&#9662;</span>
           </button>
           <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
           </div>
         </div>
 
-        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">🔍</button>
+        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">&#128269;</button>
       </nav>
 
-      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>&#9776;</button>
     </div>
 
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link" href="/">Startsida</a>
-        <a class="mobile__link is-active" href="/svenskaeclbyten.html">ECL – Byten</a>
-        <a class="mobile__link" href="/svenskamatcher.html">ECL – Svenska matcher</a>
-        <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter – Statistik</a>
-        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring – Statistik</a>
+        <a class="mobile__link is-active" href="/svenskaeclbyten.html">ECL - Byten</a>
+        <a class="mobile__link" href="/svenskamatcher.html">ECL - Svenska matcher</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/svenskaecl26springlag.html">ECL 26 Spring - Svenska lag</a>
+        <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter - Statistik</a>
+        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring - Statistik</a>
         <a class="mobile__link" href="#">Nyheter</a>
-        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper – SEC</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper - SEC</a>
       </div>
     </div>
   </header>
@@ -735,7 +650,7 @@
 
   <main class="container">
     <section class="card">
-      <h1>Svenska ECL-byten 🏒</h1>
+      <h1>Svenska ECL-byten</h1>
 
       <p>
         Här visas <strong>svenska spelare som bytt ECL-lag</strong> inför eller under säsongen. Sidan är till för att ge en snabb överblick över vilka svenska namn som lämnat ett lag och gått vidare till ett annat.
@@ -744,15 +659,12 @@
       <p>
         Varje kort visar <strong>spelare, datum för bytet, tidigare lag och nytt lag</strong>. Du kan också använda sökfältet nedan för att filtrera på spelare eller lag och snabbt hitta rätt övergång.
       </p>
-
-      <p>
-      </p>
     </section>
 
     <section id="byten" class="transfers" aria-label="Svenska byten">
       <div class="header-box">
         <div class="section-title">
-          <div class="section-title__icon">📋</div>
+          <div class="section-title__icon">&#128203;</div>
           <h2>Svenska spelare som bytt ECL-lag</h2>
         </div>
 
@@ -768,8 +680,8 @@
 
   <footer>
     <div class="container footer__inner">
-      <span>© <span id="year"></span> Svensk eHockey</span>
-      <span>•</span>
+      <span>&copy; <span id="year"></span> Svensk eHockey</span>
+      <span>&bull;</span>
       <a href="#">Kontakt</a>
     </div>
   </footer>
@@ -826,7 +738,6 @@
 
       function extractJsonResultObject(rawData) {
         if (!rawData || typeof rawData !== "object") return {};
-
         if (Array.isArray(rawData.overgangar)) return rawData;
 
         if (rawData.json_result && typeof rawData.json_result === "object") {
@@ -843,7 +754,6 @@
 
         if (Array.isArray(rawData.rows) && rawData.rows.length > 0) {
           const firstRow = rawData.rows[0];
-
           if (firstRow && Array.isArray(firstRow.overgangar)) return firstRow;
 
           if (firstRow && firstRow.json_result && typeof firstRow.json_result === "object") {
@@ -968,14 +878,7 @@
         const noDiacriticsLower = noDiacritics.toLowerCase();
         const slug = slugifyLoose(clean);
 
-        const names = unique([
-          clean,
-          noDiacritics,
-          lower,
-          noDiacriticsLower,
-          slug
-        ]);
-
+        const names = unique([clean, noDiacritics, lower, noDiacriticsLower, slug]);
         return buildPaths("players", names, ["jpg", "jpeg", "png", "webp", "JPG", "JPEG", "PNG", "WEBP"]);
       }
 
@@ -1100,13 +1003,10 @@
       function cardMarkup(player) {
         const fromDisplay = cleanDisplayTeamName(player.From);
         const toDisplay = cleanDisplayTeamName(player.To);
-
         const playerCandidates = playerImageCandidates(player.Player);
         const fromCandidates = teamNameCandidates(player.From);
         const toCandidates = teamNameCandidates(player.To);
-
         const profileUrl = playerUrl(player);
-
         const fromTeamUrl = teamUrl(player.FromTeamID, player.FromLeagueID);
         const toTeamUrl = teamUrl(player.ToTeamID, player.ToLeagueID);
 
@@ -1129,13 +1029,7 @@
           ].join(" ").toLowerCase())}">
             <div class="transfer-row">
               <div class="transfer-player">
-                <a
-                  class="player-link"
-                  href="${escapeHtml(profileUrl)}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Öppna spelarprofil för ${escapeHtml(player.Player)}"
-                >
+                <a class="player-link" href="${escapeHtml(profileUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna spelarprofil för ${escapeHtml(player.Player)}">
                   <div class="player-avatar">
                     <img
                       alt="${escapeHtml(player.Player)}"
@@ -1173,7 +1067,7 @@
                   </div>
                 </a>
 
-                <div class="transfer-arrow">→</div>
+                <div class="transfer-arrow">&rarr;</div>
 
                 <a ${toLinkAttrs}>
                   <div class="team-box">
@@ -1215,7 +1109,7 @@
         activateImages();
       }
 
-      target.innerHTML = '<div class="empty-state">Laddar …</div>';
+      target.innerHTML = '<div class="empty-state">Laddar...</div>';
 
       fetch(JSON_URL, { cache: "no-store" })
         .then((response) => {
