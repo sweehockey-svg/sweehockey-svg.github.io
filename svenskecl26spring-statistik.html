@@ -1088,7 +1088,7 @@
         if(row.gp !== undefined) parts.push(`Spelade matcher: ${safeText(row.gp)}`);
         if(row.teamMatches !== undefined) parts.push(`Lagmatcher: ${safeText(row.teamMatches)}`);
         if(row.matchSharePct !== undefined) parts.push(`Andel: ${safeText(row.matchSharePct)}%`);
-        return parts.join(" Â· ");
+        return parts.join(" · ");
       }
 
       if(row.gp !== undefined) return `Spelade matcher: ${safeText(row.gp)}`;
@@ -1129,7 +1129,7 @@
                 ${metrics[0] ? `<div class="player-points">${escapeHtml(metrics[0].label)}: ${escapeHtml(metrics[0].raw)}</div>` : ""}
                 ${metrics[1] || metrics[2] ? `
                   <div class="player-ga">
-                    ${[metrics[1], metrics[2]].filter(Boolean).map(metric => `${escapeHtml(metric.label)}: ${escapeHtml(metric.raw)}`).join(" Â· ")}
+                    ${[metrics[1], metrics[2]].filter(Boolean).map(metric => `${escapeHtml(metric.label)}: ${escapeHtml(metric.raw)}`).join(" · ")}
                   </div>
                 ` : ""}
                 ${info ? `<div class="player-extra-info">${escapeHtml(info)}</div>` : ""}
