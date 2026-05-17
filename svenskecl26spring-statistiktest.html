@@ -1031,7 +1031,7 @@
       pen: "Busligan",
       dim: "Defensiva toppligan",
       teamMatches: "Lagmatcher",
-      matchSharePct: "Matchandel",
+      matchSharePct: "GP%",
       w: "Vinstligan",
       sv: "Raddningsligan",
       gaa: "GAA-ligan",
@@ -1115,7 +1115,7 @@
         team: "Lag",
         gp: "GP",
         teamMatches: "Lagmatcher",
-        matchSharePct: "Matchandel %",
+        matchSharePct: "GP%",
         g: "G",
         a: "A",
         p: "P",
@@ -1250,12 +1250,12 @@
     }
 
     function getOrderedColumns(rows, league){
-      const hidden = new Set(["teamLogo", "playerImage", "userID", "playerID", "image", "img", "photo"]);
+      const hidden = new Set(["teamLogo", "playerImage", "userID", "playerID", "image", "img", "photo", "teamMatches"]);
       const columns = ["name", "team"];
       const statOrder = {
-        skaters: ["gp", "teamMatches", "matchSharePct", "g", "a", "p", "ppg", "pen", "dim"],
-        defenders: ["gp", "teamMatches", "matchSharePct", "g", "a", "p", "ppg", "pen", "dim"],
-        goalies: ["gp", "teamMatches", "matchSharePct", "w", "sv", "gaa", "svp", "so"]
+        skaters: ["gp", "matchSharePct", "g", "a", "p", "ppg", "pen", "dim"],
+        defenders: ["gp", "matchSharePct", "g", "a", "p", "ppg", "pen", "dim"],
+        goalies: ["gp", "matchSharePct", "w", "sv", "gaa", "svp", "so"]
       }[league] || [];
 
       statOrder.forEach(key => {
@@ -1383,8 +1383,7 @@
       if(activeLeague === "goalies"){
         const parts = [];
         if(row.gp !== undefined) parts.push(`Spelade matcher: ${safeText(row.gp)}`);
-        if(row.teamMatches !== undefined) parts.push(`Lagmatcher: ${safeText(row.teamMatches)}`);
-        if(row.matchSharePct !== undefined) parts.push(`Andel: ${safeText(row.matchSharePct)}%`);
+        if(row.matchSharePct !== undefined) parts.push(`GP%: ${safeText(row.matchSharePct)}%`);
         return parts.join(" · ");
       }
 
