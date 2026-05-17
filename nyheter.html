@@ -331,6 +331,46 @@
       font-size:12px;
       font-weight:950;
     }
+    .read-more-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:max-content;
+      margin-top:14px;
+      padding:9px 12px;
+      border:0;
+      border-radius:6px;
+      color:#081019;
+      background:linear-gradient(180deg, #ffd86d, #ffae34);
+      font-size:12px;
+      font-weight:950;
+      cursor:pointer;
+    }
+    .article-full{
+      display:none;
+      margin-top:16px;
+      padding-top:16px;
+      border-top:1px solid rgba(255,255,255,0.10);
+    }
+    .article-full.is-open{
+      display:grid;
+      gap:14px;
+    }
+    .article-section{
+      padding:12px;
+      border-radius:8px;
+      background:rgba(0,0,0,0.18);
+      border:1px solid rgba(255,255,255,0.08);
+    }
+    .article-section h4{
+      margin:0 0 8px;
+      color:var(--gold);
+      font-size:14px;
+      text-transform:uppercase;
+    }
+    .article-section p{
+      margin:0;
+    }
 
     .news-grid{
       display:grid;
@@ -564,12 +604,29 @@
         excerpt: "Gruppspelet i ECL 26 Spring är färdigspelat. Här är den svenska genomgången: vilka lag som tog sig vidare mot slutspel, vilka som fick det tyngre och vilka svenska spelare som toppade poängligor, backligor och målvaktslistor.",
         url: "#gruppspel-svensk-overblick",
         body: [
-          "Nu är gruppspelet i ECL 26 Spring färdigspelat, och den svenska scenen fick med lag i slutspelsläge i samtliga divisioner. I Elite stack vNexs I ut tydligast med en tredjeplats och 66 poäng. AFTERLIFE tog också en slutspelsplats från åttonde plats med 45 poäng, medan Unwanted och SSK ESPORTS hamnade precis utanför på nionde respektive elfte plats.",
-          "I Pro gick SSK Prospects starkt med 57 poäng och femteplats, tätt följt av Västerås IK på sjätte plats med 55 poäng. Brynäs IF Esport knep åttondeplatsen med 43 poäng. vNexs II slutade tolva och Sunne IK Esport fick ett tungt gruppspel med sextondeplats och 19 poäng.",
-          "Lite-divisionen hade flera svenska lag runt strecket. vNexs Vipers blev tvåa med 58 poäng, SSK Adepts femma med 49 poäng, Macho HC sexa med 53 poäng och Refuse Too Lose sjua med 46 poäng. SSK Academy, TROJANS, Invasion Hockey och Sjukstugan hamnade utanför topp åtta, där Sjukstugan fick det tyngst med 19 poäng.",
-          "I Core tog flera svenska lag fina placeringar: Style blev tvåa med 52 poäng, Northern Ztars Hockey trea med 50 poäng, vNexs Wisemen fyra med 51 poäng, PRIMA fyra med 44 poäng, Carolus Icemen femma med 44 poäng och BIK Karlskoga Esport sjua med 31 poäng. I Neo gick Free From Rodents bäst med fjärdeplats och 34 poäng, medan BIK Karlskoga Academy slutade åtta och N E O N X nia.",
-          "Individuellt toppade AntonLxnd den svenska Elite-poängligan med 105 poäng för vNexs I. I Pro toppade MrXbox79 med 72 poäng för Västerås IK. I Lite var Invasion Hockey-duon xlcelQx och RookieLIAMOVIC etta och tvåa med 91 respektive 89 poäng. I Core toppade RHannu med 73 poäng för Style, och i Neo toppade SweJaguar med 53 poäng.",
-          "Bland backarna stack NerazzuriSWE, Svampify, Wikstrom1891, Daanks__TTV och Runhager96 ut i respektive division sett till DIM. På målvaktssidan toppade Brokenrice2000 i Elite, therozz94 i Pro, kecke72 i Lite, Redhawk1765 i Core och xXJunior1998Xx i Neo räddningsprocentlistorna."
+          "Nu är gruppspelet i ECL 26 Spring färdigspelat, och den svenska scenen fick med lag i slutspelsläge i samtliga divisioner. vNexs I, SSK Prospects, vNexs Vipers, Style och Free From Rodents var några av lagen som stack ut, samtidigt som flera svenska spelare toppade sina respektive listor."
+        ],
+        sections: [
+          {
+            title: "Elite",
+            text: "vNexs I gjorde starkast svenskt avtryck i Elite med en tredjeplats och 66 poäng. AFTERLIFE tog också en slutspelsplats från åttonde plats med 45 poäng. Unwanted slutade nia med 43 poäng och SSK ESPORTS elva med 40 poäng, precis utanför den roligare delen av tabellen. I poängligan toppade AntonLxnd med 105 poäng för vNexs I. Bland backarna stack NerazzuriSWE ut i DIM, och Brokenrice2000 toppade målvakternas räddningsprocent."
+          },
+          {
+            title: "Pro",
+            text: "I Pro gick SSK Prospects starkt med 57 poäng och femteplats, tätt följt av Västerås IK på sjätte plats med 55 poäng. Brynäs IF Esport tog åttondeplatsen med 43 poäng. vNexs II slutade tolva med 42 poäng, medan Sunne IK Esport fick ett tungt gruppspel med sextondeplats och 19 poäng. MrXbox79 toppade den svenska poängligan med 72 poäng för Västerås IK, Svampify stack ut bland backarna och therozz94 toppade målvaktslistan."
+          },
+          {
+            title: "Lite",
+            text: "Lite blev en svensk tät division. vNexs Vipers slutade tvåa med 58 poäng, SSK Adepts femma med 49 poäng, Macho HC sexa med 53 poäng och Refuse Too Lose sjua med 46 poäng. Utanför topp åtta fanns SSK Academy, TROJANS, Invasion Hockey och Sjukstugan, där Sjukstugan hade det tyngst med 19 poäng. Poängligan toppades av Invasion Hockey-duon xlcelQx och RookieLIAMOVIC med 91 respektive 89 poäng. Wikstrom1891 toppade DIM-noteringen och kecke72 var starkast bland målvakterna."
+          },
+          {
+            title: "Core",
+            text: "Core bjöd på flera fina svenska placeringar: Style blev tvåa med 52 poäng, Northern Ztars Hockey trea med 50 poäng, vNexs Wisemen fyra med 51 poäng, PRIMA fyra med 44 poäng, Carolus Icemen femma med 44 poäng och BIK Karlskoga Esport sjua med 31 poäng. RHannu toppade poängligan med 73 poäng för Style. Daanks__TTV stack ut i DIM och Redhawk1765 toppade målvakternas räddningsprocent."
+          },
+          {
+            title: "Neo",
+            text: "I Neo gick Free From Rodents bäst av de svenska lagen med fjärdeplats och 34 poäng. BIK Karlskoga Academy tog åttondeplatsen med 16 poäng, medan N E O N X slutade nia med 9 poäng. SweJaguar toppade den svenska poängligan med 53 poäng. Runhager96 stack ut bland backarna, och xXJunior1998Xx toppade räddningsprocentlistan."
+          }
         ],
         links: [
           { label: "Se svenska lag", url: "/svenskecl26spring-lag.html" },
@@ -640,6 +697,22 @@
       const links = Array.isArray(article.links) && article.links.length
         ? `<div class="article-actions">${article.links.map(link => `<a href="${escapeHtml(link.url)}">${escapeHtml(link.label)}</a>`).join("")}</div>`
         : `<a class="article-link" href="${escapeHtml(article.url || "#")}">Läs mer →</a>`;
+      const fullId = `article-full-${article.title.toLowerCase().replace(/[^a-z0-9åäö]+/gi, "-")}`;
+      const full = Array.isArray(article.sections) && article.sections.length
+        ? `
+          <button class="read-more-btn" type="button" data-read-more="${escapeHtml(fullId)}" aria-expanded="false">
+            Läs hela artikeln
+          </button>
+          <div class="article-full" id="${escapeHtml(fullId)}">
+            ${article.sections.map(section => `
+              <section class="article-section">
+                <h4>${escapeHtml(section.title)}</h4>
+                <p>${escapeHtml(section.text)}</p>
+              </section>
+            `).join("")}
+          </div>
+        `
+        : "";
 
       return `
         <article class="article-card ${featured ? "is-featured" : ""}">
@@ -650,6 +723,7 @@
           </div>
           <${heading}>${escapeHtml(article.title)}</${heading}>
           ${body}
+          ${full}
           ${links}
         </article>
       `;
@@ -683,6 +757,15 @@
 
       featuredHost.innerHTML = articleMarkup(rows[0], true);
       gridHost.innerHTML = rows.slice(1).map(article => articleMarkup(article)).join("");
+      document.querySelectorAll("[data-read-more]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const target = document.getElementById(btn.dataset.readMore);
+          if (!target) return;
+          const open = target.classList.toggle("is-open");
+          btn.setAttribute("aria-expanded", open ? "true" : "false");
+          btn.textContent = open ? "Dölj artikeln" : "Läs hela artikeln";
+        });
+      });
     }
 
     searchInput.addEventListener("input", render);
