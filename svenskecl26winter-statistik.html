@@ -6,7 +6,7 @@
   <title>Svensk statistik - ECL 26 Winter</title>
   <link rel="icon" type="image/png" href="favicon.png?v=1">
   <link rel="apple-touch-icon" href="favicon.png?v=1">
-  <meta name="description" content="Svensk statistik fÃ¶r ECL 26 Winter - grundserie och slutspel." />
+  <meta name="description" content="Svensk statistik för ECL 26 Winter - grundserie och slutspel." />
 
   <style>
     :root{
@@ -488,10 +488,10 @@
           </div>
         </div>
 
-        <button class="iconbtn" type="button" aria-label="SÃ¶k (kommer snart)" title="SÃ¶k (kommer snart)">&#128269;</button>
+        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">&#128269;</button>
       </nav>
 
-      <button class="hamburger" type="button" aria-label="Ã–ppna meny" data-mobile-toggle>&#9776;</button>
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>&#9776;</button>
     </div>
 
     <div class="mobile" data-mobile-menu>
@@ -524,7 +524,7 @@
       <div class="ecl-tabs" aria-label="Roll">
         <button class="ecl-tab active" data-league="skaters">Spelare</button>
         <button class="ecl-tab" data-league="defenders">Backar</button>
-        <button class="ecl-tab" data-league="goalies">MÃ¥lvakter</button>
+        <button class="ecl-tab" data-league="goalies">Målvakter</button>
       </div>
 
       <div class="ecl-tabs" aria-label="Division">
@@ -538,17 +538,17 @@
       <div class="page-title">
         <div class="page-title-icon" id="titleIcon">&#127942;</div>
         <div>
-          <div class="page-title-text" id="titleText">ECL 26 Winter - Svenska poÃ¤ngligor</div>
+          <div class="page-title-text" id="titleText">ECL 26 Winter - Svenska poängligor</div>
           <div class="page-sub" id="titleSub">GRUNDSERIE</div>
         </div>
       </div>
 
       <div class="header-box">
         <div>
-          <h2 id="sectionTitle">Elite PoÃ¤ngliga</h2>
+          <h2 id="sectionTitle">Elite Poängliga</h2>
           <div id="sectionDesc" class="page-sub"></div>
         </div>
-        <input id="searchBox" placeholder="SÃ¶k spelare/mÃ¥lvakt eller lag..." />
+        <input id="searchBox" placeholder="Sök spelare/målvakt eller lag..." />
       </div>
 
       <div id="top3" class="top3-container"></div>
@@ -626,13 +626,13 @@
     const DATA_SHEETS_REGULAR = {
       skaters: sheetUrl("Utespelare"),
       defenders: sheetUrl("Backar"),
-      goalies: sheetUrl("MÃ¥lvakter")
+      goalies: sheetUrl("Målvakter")
     };
 
     const DATA_SHEETS_PLAYOFFS = {
       skaters: sheetUrl("Utespelare slut"),
       defenders: sheetUrl("Backar slut"),
-      goalies: sheetUrl("MÃ¥lvakter slut")
+      goalies: sheetUrl("Målvakter slut")
     };
 
     const LOGO_SHEET = sheetUrl("Loggor");
@@ -646,14 +646,14 @@
     const stageLabels = { regular:"Grundserie", playoffs:"Slutspel" };
 
     const sortTitles = {
-      p: "PoÃ¤ngliga",
-      m: "MÃ¥lligan",
+      p: "Poängliga",
+      m: "Målligan",
       a: "Assistligan",
       u: "Busligan",
       ma: "Matchligan",
       dim: "Defensiv Impact-ligan",
-      "sv%": "BÃ¤sta rÃ¤ddningsprocent",
-      svp: "BÃ¤sta rÃ¤ddningsprocent",
+      "sv%": "Bästa räddningsprocent",
+      svp: "Bästa räddningsprocent",
       gaa: "GAA-ligan",
       nollor: "Nolligan",
       so: "Nolligan"
@@ -704,7 +704,7 @@
     }
 
     function findDivIndex(header){
-      const candidates = ["division", "div", "liga", "league", "nivÃ¥", "niva", "level"];
+      const candidates = ["division", "div", "liga", "league", "nivå", "niva", "level"];
       const norm = header.map(h => normalize(h));
       for(let i = 0; i < norm.length; i++){
         if(candidates.includes(norm[i])) return i;
@@ -802,13 +802,13 @@
       if(!key){
         if(activeLeague === "goalies"){
           return {
-            main: `${formatSVP(p.svp)} rÃ¤ddningsprocent`,
-            sub: `M ${p.games} Â· GAA ${formatGAA(p.gaa)} Â· Nollor ${p.shutouts}`
+            main: `${formatSVP(p.svp)} räddningsprocent`,
+            sub: `M ${p.games} · GAA ${formatGAA(p.gaa)} · Nollor ${p.shutouts}`
           };
         }
         return {
-          main: `${p.points} poÃ¤ng`,
-          sub: `GP ${p.games} Â· G ${p.goals} Â· A ${p.assists}`
+          main: `${p.points} poäng`,
+          sub: `GP ${p.games} · G ${p.goals} · A ${p.assists}`
         };
       }
 
@@ -818,41 +818,41 @@
       if(activeLeague === "goalies"){
         if(key === "svp" || key === "sv%"){
           return {
-            main: `${formatSVP(raw)} rÃ¤ddningsprocent`,
-            sub: `M ${p.games} Â· GAA ${formatGAA(p.gaa)} Â· Nollor ${p.shutouts}`
+            main: `${formatSVP(raw)} räddningsprocent`,
+            sub: `M ${p.games} · GAA ${formatGAA(p.gaa)} · Nollor ${p.shutouts}`
           };
         }
         if(key === "gaa"){
           return {
             main: `GAA ${formatGAA(raw)}`,
-            sub: `M ${p.games} Â· SV% ${formatSVP(p.svp)} Â· Nollor ${p.shutouts}`
+            sub: `M ${p.games} · SV% ${formatSVP(p.svp)} · Nollor ${p.shutouts}`
           };
         }
         if(key === "so" || key === "nollor"){
           return {
             main: `Nollor ${toNum(raw)}`,
-            sub: `M ${p.games} Â· SV% ${formatSVP(p.svp)} Â· GAA ${formatGAA(p.gaa)}`
+            sub: `M ${p.games} · SV% ${formatSVP(p.svp)} · GAA ${formatGAA(p.gaa)}`
           };
         }
         return {
           main: `${num}`,
-          sub: `M ${p.games} Â· SV% ${formatSVP(p.svp)} Â· GAA ${formatGAA(p.gaa)}`
+          sub: `M ${p.games} · SV% ${formatSVP(p.svp)} · GAA ${formatGAA(p.gaa)}`
         };
       }
 
-      if(key === "p") return { main: `${p.points} poÃ¤ng`, sub: `GP ${p.games} Â· G ${p.goals} Â· A ${p.assists}` };
-      if(key === "m") return { main: `${p.goals} mÃ¥l`, sub: `GP ${p.games} Â· P ${p.points} Â· A ${p.assists}` };
-      if(key === "a") return { main: `${p.assists} assists`, sub: `GP ${p.games} Â· P ${p.points} Â· G ${p.goals}` };
-      if(key === "u") return { main: `${toNum(raw)} utv`, sub: `GP ${p.games} Â· P ${p.points} Â· G ${p.goals} Â· A ${p.assists}` };
-      if(key === "ma") return { main: `${toNum(raw)} matcher`, sub: `P ${p.points} Â· G ${p.goals} Â· A ${p.assists}` };
-      if(key === "dim") return { main: `DIM ${raw}`, sub: `GP ${p.games} Â· P ${p.points} Â· G ${p.goals} Â· A ${p.assists}` };
-      return { main: `${raw}`, sub: `GP ${p.games} Â· P ${p.points} Â· G ${p.goals} Â· A ${p.assists}` };
+      if(key === "p") return { main: `${p.points} poäng`, sub: `GP ${p.games} · G ${p.goals} · A ${p.assists}` };
+      if(key === "m") return { main: `${p.goals} mål`, sub: `GP ${p.games} · P ${p.points} · A ${p.assists}` };
+      if(key === "a") return { main: `${p.assists} assists`, sub: `GP ${p.games} · P ${p.points} · G ${p.goals}` };
+      if(key === "u") return { main: `${toNum(raw)} utv`, sub: `GP ${p.games} · P ${p.points} · G ${p.goals} · A ${p.assists}` };
+      if(key === "ma") return { main: `${toNum(raw)} matcher`, sub: `P ${p.points} · G ${p.goals} · A ${p.assists}` };
+      if(key === "dim") return { main: `DIM ${raw}`, sub: `GP ${p.games} · P ${p.points} · G ${p.goals} · A ${p.assists}` };
+      return { main: `${raw}`, sub: `GP ${p.games} · P ${p.points} · G ${p.goals} · A ${p.assists}` };
     }
 
     function medalForRank(i){
-      if(i === 0) return "ðŸ¥‡";
-      if(i === 1) return "ðŸ¥ˆ";
-      if(i === 2) return "ðŸ¥‰";
+      if(i === 0) return "#1";
+      if(i === 1) return "#2";
+      if(i === 2) return "#3";
       return "";
     }
 
@@ -883,9 +883,9 @@
       const maxP = Math.max(...players.map(x => x.points), 1);
 
       return [
-        { label:"MÃ¥l", value:p.goals, percent:(p.goals / maxG) * 100 },
+        { label:"Mål", value:p.goals, percent:(p.goals / maxG) * 100 },
         { label:"Assists", value:p.assists, percent:(p.assists / maxA) * 100 },
-        { label:"PoÃ¤ng", value:p.points, percent:(p.points / maxP) * 100 }
+        { label:"Poäng", value:p.points, percent:(p.points / maxP) * 100 }
       ];
     }
 
@@ -959,7 +959,7 @@
                 <div class="bar-track"><div class="bar-fill" style="width:${(p.games / maxM) * 100}%"></div></div>
               </div>
               <div class="bar-row">
-                <div class="bar-label"><span>RÃ¤ddnings%</span><span>${formatSVP(p.svp)}</span></div>
+                <div class="bar-label"><span>Räddnings%</span><span>${formatSVP(p.svp)}</span></div>
                 <div class="bar-track"><div class="bar-fill" style="width:${(p.svpVal / maxSV) * 100}%"></div></div>
               </div>
               <div class="bar-row">
@@ -998,7 +998,7 @@
 
       if(activeLeague === "goalies"){
         const hn = header.map(h => normalize(h));
-        const svIdx = hn.findIndex(x => ["sv", "sv%", "svp", "svprocent", "rÃ¤ddningsprocent"].includes(x));
+        const svIdx = hn.findIndex(x => ["sv", "sv%", "svp", "svprocent", "räddningsprocent"].includes(x));
 
         if(svIdx >= 0){
           sortState.idx = svIdx + 1;
@@ -1160,19 +1160,19 @@
       titleSub.textContent = (stageLabels[activeStage] || "").toUpperCase();
 
       if(activeLeague === "skaters"){
-        titleIcon.textContent = "ðŸ†";
-        titleText.textContent = "ECL 26 Winter - Svenska poÃ¤ngligor" + stageSuffix();
-        sectionTitle.textContent = `${divName} PoÃ¤ngliga` + (activeStage === "playoffs" ? " - Slutspel" : "");
+        titleIcon.textContent = "P";
+        titleText.textContent = "ECL 26 Winter - Svenska poängligor" + stageSuffix();
+        sectionTitle.textContent = `${divName} Poängliga` + (activeStage === "playoffs" ? " - Slutspel" : "");
         tableStrip.textContent = `Topplista ${divName}` + (activeStage === "playoffs" ? " - Slutspel" : "");
       } else if(activeLeague === "defenders"){
-        titleIcon.textContent = "ðŸ’";
+        titleIcon.textContent = "B";
         titleText.textContent = "ECL 26 Winter - Svenska backligan" + stageSuffix();
         sectionTitle.textContent = `${divName} Backliga` + (activeStage === "playoffs" ? " - Slutspel" : "");
         tableStrip.textContent = `Topplista ${divName}` + (activeStage === "playoffs" ? " - Slutspel" : "");
       } else {
-        titleIcon.textContent = "ðŸ¥…";
-        titleText.textContent = "ECL 26 Winter - Svenska mÃ¥lvaktsligan" + stageSuffix();
-        sectionTitle.textContent = `${divName} MÃ¥lvaktsliga` + (activeStage === "playoffs" ? " - Slutspel" : "");
+        titleIcon.textContent = "M";
+        titleText.textContent = "ECL 26 Winter - Svenska målvaktsligan" + stageSuffix();
+        sectionTitle.textContent = `${divName} Målvaktsliga` + (activeStage === "playoffs" ? " - Slutspel" : "");
         tableStrip.textContent = `Topplista ${divName}` + (activeStage === "playoffs" ? " - Slutspel" : "");
       }
 
@@ -1190,26 +1190,26 @@
       titleSub.textContent = (stageLabels[activeStage] || "").toUpperCase();
 
       if(activeLeague === "skaters"){
-        titleIcon.textContent = "ðŸ†";
+        titleIcon.textContent = "P";
         titleText.textContent = `ECL 26 Winter - Svenska ${leagueLabel.toLowerCase()}` + stageSuffix();
         sectionTitle.textContent = `${divName} ${leagueLabel}` + (activeStage === "playoffs" ? " - Slutspel" : "");
         return;
       }
 
       if(activeLeague === "defenders"){
-        titleIcon.textContent = "ðŸ’";
+        titleIcon.textContent = "B";
         titleText.textContent = `ECL 26 Winter - Svenska ${leagueLabel.toLowerCase()}` + stageSuffix();
         sectionTitle.textContent = `${divName} ${leagueLabel}` + (activeStage === "playoffs" ? " - Slutspel" : "");
         if(key === "dim" && descEl){
           descEl.innerHTML =
-            `Defensiv Impact per match (DIM) Ã¤r ett sammansatt nyckeltal som mÃ¤ter hur mycket en spelare bidrar <br/>` +
-            `defensivt per match, oberoende av offensiv produktion. Fokus ligger pÃ¥ att stoppa anfall, bryta pucktempo och fÃ¶rhindra farliga avslut.`;
+            `Defensiv Impact per match (DIM) är ett sammansatt nyckeltal som mäter hur mycket en spelare bidrar <br/>` +
+            `defensivt per match, oberoende av offensiv produktion. Fokus ligger på att stoppa anfall, bryta pucktempo och förhindra farliga avslut.`;
         }
         return;
       }
 
       if(activeLeague === "goalies"){
-        titleIcon.textContent = "ðŸ¥…";
+        titleIcon.textContent = "M";
         titleText.textContent = `ECL 26 Winter - Svenska ${leagueLabel.toLowerCase()}` + stageSuffix();
         sectionTitle.textContent = `${divName} ${leagueLabel}` + (activeStage === "playoffs" ? " - Slutspel" : "");
       }
@@ -1240,7 +1240,7 @@
             const filtered = divIdx >= 0 ? rows.filter(r => isRowInDivision(r[divIdx], divLabels[activeDiv])) : rows;
 
             if(!filtered.length){
-              tableHost.innerHTML = `<div style="padding:10px;color:#fff;">Ingen data fÃ¶r ${divLabels[activeDiv]}.</div>`;
+              tableHost.innerHTML = `<div style="padding:10px;color:#fff;">Ingen data för ${divLabels[activeDiv]}.</div>`;
               return;
             }
 
@@ -1249,9 +1249,9 @@
               const idxName = hn.findIndex(x => ["namn", "name", "psn"].includes(x));
               const idxTeam = hn.findIndex(x => ["lag", "team"].includes(x));
               const idxGP = hn.findIndex(x => ["gp", "matcher", "games", "ma"].includes(x));
-              const idxG = hn.findIndex(x => ["m", "mal", "mÃ¥l", "goals", "g"].includes(x));
+              const idxG = hn.findIndex(x => ["m", "mal", "mål", "goals", "g"].includes(x));
               const idxA = hn.findIndex(x => ["a", "assists", "assist"].includes(x));
-              const idxP = hn.findIndex(x => ["p", "poang", "poÃ¤ng", "points"].includes(x));
+              const idxP = hn.findIndex(x => ["p", "poang", "poäng", "points"].includes(x));
 
               const players = filtered.map(r => {
                 const name = (r[idxName >= 0 ? idxName : 0] || "").trim();
@@ -1275,7 +1275,7 @@
               const idxTeam = hn.findIndex(x => ["lag", "team"].includes(x));
               const idxM = hn.findIndex(x => ["m", "ma", "matcher", "games", "gp"].includes(x));
               const idxGAA = hn.findIndex(x => ["gaa"].includes(x));
-              const idxSV = hn.findIndex(x => ["sv", "sv%", "svp", "svprocent", "rÃ¤ddningsprocent", "save%", "savepercentage"].includes(x));
+              const idxSV = hn.findIndex(x => ["sv", "sv%", "svp", "svprocent", "räddningsprocent", "save%", "savepercentage"].includes(x));
               const idxSO = hn.findIndex(x => ["nollor", "so", "shutouts"].includes(x));
 
               const goalies = filtered.map(r => {
