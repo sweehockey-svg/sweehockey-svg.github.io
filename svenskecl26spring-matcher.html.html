@@ -928,10 +928,10 @@
           </div>
         </div>
 
-        <button class="iconbtn" type="button" aria-label="SÃ¶k matcher" title="SÃ¶k matcher" onclick="document.getElementById('searchMatches')?.focus()">&#128269;</button>
+        <button class="iconbtn" type="button" aria-label="Sök matcher" title="Sök matcher" onclick="document.getElementById('searchMatches')?.focus()">&#128269;</button>
       </nav>
 
-      <button class="hamburger" type="button" aria-label="Ã–ppna meny" data-mobile-toggle>&#9776;</button>
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>&#9776;</button>
     </div>
 
     <div class="mobile" data-mobile-menu>
@@ -959,7 +959,7 @@
       <h1>Svenska matcher i ECL 26 Spring</h1>
 
       <p>
-        HÃ¤r visas alla svenska matcher frÃ¥n ECL 26 Spring samlat i ett flÃ¶de. Filtrera pÃ¥ division eller sÃ¶k pÃ¥ lag, grupp och datum fÃ¶r att snabbt hitta rÃ¤tt match.
+        Här visas alla svenska matcher från ECL 26 Spring samlat i ett flöde. Filtrera på division eller sök på lag, grupp och datum för att snabbt hitta rätt match.
       </p>
     </section>
 
@@ -972,7 +972,7 @@
 
         <div class="controls">
           <div class="select-wrap">
-            <select id="divisionFilter" class="select-control" aria-label="Filtrera pÃ¥ division">
+            <select id="divisionFilter" class="select-control" aria-label="Filtrera på division">
               <option value="all">Alla divisioner</option>
               <option value="elite">Elite</option>
               <option value="pro">Pro</option>
@@ -983,7 +983,7 @@
           </div>
 
           <div class="search-wrap">
-            <input type="text" id="searchMatches" placeholder="SÃ¶k lag, grupp, datum eller division...">
+            <input type="text" id="searchMatches" placeholder="Sök lag, grupp, datum eller division...">
           </div>
         </div>
       </div>
@@ -1002,7 +1002,7 @@
           <h3 class="modal__title" id="modalTitle">Matchinfo</h3>
           <div class="modal__subtitle" id="modalSubtitle"></div>
         </div>
-        <button class="modal__close" type="button" aria-label="StÃ¤ng popup" id="closeModal">&#10005;</button>
+        <button class="modal__close" type="button" aria-label="Stäng popup" id="closeModal">&#10005;</button>
       </div>
       <div class="modal__content" id="modalContent"></div>
     </div>
@@ -1465,7 +1465,7 @@
                 </div>
 
                 <div class="match-sideinfo">
-                  <div class="open-match">Ã–ppna match <span>&rsaquo;</span></div>
+                  <div class="open-match">Öppna match <span>&rsaquo;</span></div>
                 </div>
               </div>
             </button>
@@ -1488,7 +1488,7 @@
           <div class="chip">Visar <strong>${matches.length}</strong> av <strong>${allMatches.length}</strong></div>
           <div class="chip">Divisioner <strong>${divisions.length}</strong></div>
           <div class="chip">Svenska laginslag <strong>${swedishTeamCount}</strong></div>
-          <div class="chip">Ã–vertid <strong>${otCount}</strong></div>
+          <div class="chip">Övertid <strong>${otCount}</strong></div>
         `;
       }
 
@@ -1610,11 +1610,11 @@
           </section>
 
           <section class="detail-card">
-            <h4 class="events-title">MatchhÃ¤ndelser</h4>
+            <h4 class="events-title">Matchhändelser</h4>
             ${
               events.length
                 ? `<div class="events-list">${events.map(eventMarkup).join("")}</div>`
-                : '<div class="empty-state">Ingen matchinfo hittades fÃ¶r den hÃ¤r matchen.</div>'
+                : '<div class="empty-state">Ingen matchinfo hittades för den här matchen.</div>'
             }
           </section>
         `;
@@ -1651,7 +1651,7 @@
       fetch(JSON_URL, { cache: "no-store" })
         .then((response) => {
           if (!response.ok) {
-            throw new Error(`Kunde inte lÃ¤sa ${JSON_URL} (${response.status})`);
+            throw new Error(`Kunde inte läsa ${JSON_URL} (${response.status})`);
           }
           return response.json();
         })
