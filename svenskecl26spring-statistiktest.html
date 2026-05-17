@@ -784,11 +784,16 @@
 
       .top3-container .player-card{
         min-height:0;
+        display:block;
+        padding:12px;
+      }
+
+      .top3-container .player-top-row{
         display:grid;
         grid-template-columns:72px minmax(0, 1fr);
         align-items:center;
         gap:12px;
-        padding:12px;
+        padding-right:58px;
       }
 
       .top3-container .player-img-wrap{
@@ -799,14 +804,16 @@
       }
 
       .top3-container .player-name{
-        margin-right:42px;
+        margin-right:0;
         font-size:16px;
         line-height:1.08;
+        word-break:normal;
+        overflow-wrap:break-word;
+        hyphens:none;
       }
 
       .top3-container .stat-bars{
-        grid-column:1 / -1;
-        margin-top:0;
+        margin-top:12px;
       }
 
       .top3-container .team-logo-wrap{
