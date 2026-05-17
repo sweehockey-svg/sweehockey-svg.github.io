@@ -778,55 +778,82 @@
 
     @media (max-width:680px){
       .top3-container{
-        grid-template-columns:1fr !important;
-        gap:12px;
+        grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+        gap:8px;
       }
 
       .top3-container .player-card{
         min-height:0;
         display:block;
-        padding:12px;
+        padding:9px 7px 10px;
       }
 
       .top3-container .player-top-row{
-        display:grid;
-        grid-template-columns:72px minmax(0, 1fr);
-        align-items:center;
-        gap:12px;
-        padding-right:58px;
+        display:block;
+        padding-right:0;
       }
 
       .top3-container .player-img-wrap{
-        width:72px;
-        height:92px;
-        flex:0 0 72px;
-        border-radius:10px;
+        width:min(100%, 86px);
+        height:108px;
+        margin:0 auto;
+        border-radius:9px;
       }
 
       .top3-container .player-name{
-        margin-right:0;
-        font-size:16px;
-        line-height:1.08;
-        word-break:normal;
-        overflow-wrap:break-word;
-        hyphens:none;
+        display:none;
+      }
+
+      .top3-container .player-team,
+      .top3-container .player-points,
+      .top3-container .player-ga,
+      .top3-container .player-extra-info{
+        display:none;
       }
 
       .top3-container .stat-bars{
-        margin-top:12px;
+        margin-top:10px;
+      }
+
+      .top3-container .bar-row{
+        margin-bottom:6px;
+        font-size:11px;
+      }
+
+      .top3-container .bar-label{
+        gap:4px;
+      }
+
+      .top3-container .bar-track{
+        height:6px;
       }
 
       .top3-container .team-logo-wrap{
-        position:absolute;
-        top:10px;
-        right:10px;
-        margin:0;
+        position:relative;
+        top:auto;
+        right:auto;
+        display:grid;
+        justify-items:center;
+        gap:4px;
+        min-height:56px;
+        margin:0 auto 8px;
         float:none;
       }
 
       .top3-container .team-logo-card{
-        width:34px;
-        height:34px;
+        width:40px;
+        height:40px;
+      }
+
+      .top3-container .player-ribbon{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:34px;
+        min-height:26px;
+        padding:3px 7px;
+        border-radius:8px;
+        font-size:13px;
       }
     }
   </style>
