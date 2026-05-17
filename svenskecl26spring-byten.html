@@ -622,10 +622,10 @@
           </div>
         </div>
 
-        <button class="iconbtn" type="button" aria-label="SÃ¶k (kommer snart)" title="SÃ¶k (kommer snart)">&#128269;</button>
+        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">&#128269;</button>
       </nav>
 
-      <button class="hamburger" type="button" aria-label="Ã–ppna meny" data-mobile-toggle>&#9776;</button>
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>&#9776;</button>
     </div>
 
     <div class="mobile" data-mobile-menu>
@@ -653,11 +653,11 @@
       <h1>Svenska ECL-byten</h1>
 
       <p>
-        HÃ¤r visas <strong>svenska spelare som bytt ECL-lag</strong> infÃ¶r eller under sÃ¤songen. Sidan Ã¤r till fÃ¶r att ge en snabb Ã¶verblick Ã¶ver vilka svenska namn som lÃ¤mnat ett lag och gÃ¥tt vidare till ett annat.
+        Här visas <strong>svenska spelare som bytt ECL-lag</strong> inför eller under säsongen. Sidan är till för att ge en snabb överblick över vilka svenska namn som lämnat ett lag och gått vidare till ett annat.
       </p>
 
       <p>
-        Varje kort visar <strong>spelare, datum fÃ¶r bytet, tidigare lag och nytt lag</strong>. Du kan ocksÃ¥ anvÃ¤nda sÃ¶kfÃ¤ltet nedan fÃ¶r att filtrera pÃ¥ spelare eller lag och snabbt hitta rÃ¤tt Ã¶vergÃ¥ng.
+        Varje kort visar <strong>spelare, datum för bytet, tidigare lag och nytt lag</strong>. Du kan också använda sökfältet nedan för att filtrera på spelare eller lag och snabbt hitta rätt övergång.
       </p>
     </section>
 
@@ -669,7 +669,7 @@
         </div>
 
         <div class="search-wrap">
-          <input type="text" id="searchTransfers" placeholder="SÃ¶k spelare eller lag...">
+          <input type="text" id="searchTransfers" placeholder="Sök spelare eller lag...">
         </div>
       </div>
 
@@ -1012,11 +1012,11 @@
 
         const fromLinkAttrs = fromTeamUrl === "#"
           ? 'class="team-link" aria-disabled="true"'
-          : `class="team-link" href="${escapeHtml(fromTeamUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Ã–ppna lagprofil fÃ¶r ${escapeHtml(fromDisplay)}"`;
+          : `class="team-link" href="${escapeHtml(fromTeamUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna lagprofil för ${escapeHtml(fromDisplay)}"`;
 
         const toLinkAttrs = toTeamUrl === "#"
           ? 'class="team-link" aria-disabled="true"'
-          : `class="team-link" href="${escapeHtml(toTeamUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Ã–ppna lagprofil fÃ¶r ${escapeHtml(toDisplay)}"`;
+          : `class="team-link" href="${escapeHtml(toTeamUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna lagprofil för ${escapeHtml(toDisplay)}"`;
 
         return `
           <article class="transfer-card" data-search="${escapeHtml([
@@ -1029,7 +1029,7 @@
           ].join(" ").toLowerCase())}">
             <div class="transfer-row">
               <div class="transfer-player">
-                <a class="player-link" href="${escapeHtml(profileUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Ã–ppna spelarprofil fÃ¶r ${escapeHtml(player.Player)}">
+                <a class="player-link" href="${escapeHtml(profileUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna spelarprofil för ${escapeHtml(player.Player)}">
                   <div class="player-avatar">
                     <img
                       alt="${escapeHtml(player.Player)}"
@@ -1114,7 +1114,7 @@
       fetch(JSON_URL, { cache: "no-store" })
         .then((response) => {
           if (!response.ok) {
-            throw new Error(`Kunde inte lÃ¤sa ${JSON_URL} (${response.status})`);
+            throw new Error(`Kunde inte läsa ${JSON_URL} (${response.status})`);
           }
           return response.json();
         })
