@@ -309,6 +309,28 @@
       color:var(--gold);
       font-weight:950;
     }
+    .article-body{
+      margin-top:14px;
+      display:grid;
+      gap:10px;
+    }
+    .article-body p{
+      margin:0;
+    }
+    .article-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
+    }
+    .article-actions a{
+      padding:8px 10px;
+      border-radius:6px;
+      color:#081019;
+      background:linear-gradient(180deg, #ffd86d, #ffae34);
+      font-size:12px;
+      font-weight:950;
+    }
 
     .news-grid{
       display:grid;
@@ -535,6 +557,24 @@
   <script>
     const ARTICLES = [
       {
+        title: "Gruppspelet i ECL 26 Spring: svensk överblick",
+        date: "2026-05-18",
+        tag: "ECL",
+        author: "Svensk eHockey",
+        excerpt: "Gruppspelet gav en tydlig bild av de svenska lagen i ECL 26 Spring: vilka som satte sig i bra läge inför slutspelet, vilka som fick jaga i tabellen och vilka svenska spelare som stack ut i poängligor, backligor och målvaktsstatistik.",
+        url: "#gruppspel-svensk-overblick",
+        body: [
+          "ECL 26 Spring-gruppspelet blev en bra temperaturmätare för den svenska scenen. På lagsidan gick det att följa hur de svenska lagen placerade sig division för division, vilka som byggde slutspelsläge och vilka som fick kämpa hela vägen in i de sista omgångarna.",
+          "På spelarfronten var bredden kanske det mest intressanta. Svenska namn dök upp i flera olika typer av listor: rena poängligor för forwards, backligor där både produktion och defensiv impact vägde tungt, och målvaktslistor där räddningsprocent, GAA och nollor gav en tydligare bild av vilka som bar sina lag.",
+          "För att följa alla lag mer exakt finns lagöversikten med tabellplacering, poäng och slutspelsstatus. För spelarna finns statistikvyn där du kan växla mellan grundserie/slutspel, spelartyp och division."
+        ],
+        links: [
+          { label: "Se svenska lag", url: "/svenskecl26spring-lag.html" },
+          { label: "Se svensk statistik", url: "/svenskecl26spring-statistik.html" },
+          { label: "Se svenska matcher", url: "/svenskecl26spring-matcher.html" }
+        ]
+      },
+      {
         title: "Nyhetssidan är live",
         date: "2026-05-18",
         tag: "Sajt",
@@ -591,6 +631,13 @@
 
     function articleMarkup(article, featured = false) {
       const heading = featured ? "h2" : "h3";
+      const body = Array.isArray(article.body) && article.body.length
+        ? `<div class="article-body">${article.body.map(part => `<p>${escapeHtml(part)}</p>`).join("")}</div>`
+        : `<p>${escapeHtml(article.excerpt)}</p>`;
+      const links = Array.isArray(article.links) && article.links.length
+        ? `<div class="article-actions">${article.links.map(link => `<a href="${escapeHtml(link.url)}">${escapeHtml(link.label)}</a>`).join("")}</div>`
+        : `<a class="article-link" href="${escapeHtml(article.url || "#")}">Läs mer →</a>`;
+
       return `
         <article class="article-card ${featured ? "is-featured" : ""}">
           <div class="article-meta">
@@ -599,8 +646,8 @@
             <span>${escapeHtml(article.author)}</span>
           </div>
           <${heading}>${escapeHtml(article.title)}</${heading}>
-          <p>${escapeHtml(article.excerpt)}</p>
-          <a class="article-link" href="${escapeHtml(article.url || "#")}">Läs mer →</a>
+          ${body}
+          ${links}
         </article>
       `;
     }
