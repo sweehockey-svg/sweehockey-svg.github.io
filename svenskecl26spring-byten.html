@@ -585,6 +585,237 @@
     @media (max-width: 460px){
       .player-name{ font-size:21px; }
     }
+
+    /* Svensk eHockey datatavla design */
+    *{ letter-spacing:0 !important; }
+
+    :root{
+      --bg:#061018;
+      --panel:#101a24;
+      --panel2:#172331;
+      --text:#f7fbff;
+      --muted:#a8b8c9;
+      --border:rgba(190,213,235,0.16);
+      --gold:#ffc84a;
+      --gold2:#ff9f2e;
+      --line:#203246;
+      --shadow:0 18px 46px rgba(0,0,0,.34);
+    }
+
+    body{
+      background-color:#061018;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,0.026) 1px, transparent 1px),
+        linear-gradient(180deg, #07111b 0%, #081622 44%, #061018 100%);
+      background-size:64px 64px, 64px 64px, 100% 100%;
+      color:var(--text);
+    }
+
+    .container{ width:min(1180px, calc(100% - 36px)); }
+
+    .topbar{
+      background:rgba(4,9,15,0.88);
+      border-bottom:1px solid rgba(255,200,74,0.20);
+    }
+
+    .topbar__inner{ padding:10px 0; }
+    .brand__logo{ height:34px; }
+
+    .nav__link,
+    .nav__button,
+    .iconbtn,
+    .hamburger{ border-radius:6px; }
+
+    .nav__link:hover,
+    .nav__button:hover{ background:rgba(255,200,74,0.10); }
+
+    .menu{
+      border-radius:8px;
+      background:rgba(9,15,23,0.98);
+      border-color:rgba(255,200,74,0.18);
+    }
+
+    .menu__item{ border-radius:6px; }
+
+    .banner-strip{
+      background:#07111b;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+
+    .banner-strip__inner{ padding:12px 0; }
+
+    .banner{
+      max-width:1180px;
+      height:118px;
+      border-radius:8px;
+      border-color:rgba(255,200,74,0.16);
+      box-shadow:0 14px 34px rgba(0,0,0,.32);
+    }
+
+    main{ padding:22px 0 48px; }
+
+    .card,
+    .tile,
+    .team-card,
+    .match-card,
+    .transfer-card,
+    .table-shell,
+    .modal__dialog,
+    .detail-card{
+      border-radius:8px !important;
+      background:#0b141e !important;
+      border-color:rgba(255,255,255,0.12) !important;
+      box-shadow:0 16px 38px rgba(0,0,0,0.28) !important;
+    }
+
+    .card,
+    .tile,
+    .team-card,
+    .match-card,
+    .transfer-card{
+      background:
+        linear-gradient(90deg, rgba(255,200,74,0.09), transparent 34%),
+        linear-gradient(180deg, #13202c, #0d1823) !important;
+    }
+
+    .btn,
+    .ecl-tab,
+    .mobile__link,
+    .summary-chip,
+    .chip,
+    .meta-pill,
+    .team-highlight__item,
+    .team-stat,
+    .detail-box{
+      border-radius:6px !important;
+    }
+
+    .btn--primary,
+    .ecl-tab.active{
+      color:#081019 !important;
+      background:linear-gradient(180deg, #ffd86d, #ffae34) !important;
+      border-color:transparent !important;
+      box-shadow:none !important;
+    }
+
+    .header-box,
+    .page-title{
+      border-bottom:1px solid rgba(255,255,255,0.10);
+      padding-bottom:14px;
+    }
+
+    .section-title__icon,
+    .page-title-icon{
+      border-radius:8px !important;
+      background:#12202e !important;
+      border-color:rgba(255,200,74,0.42) !important;
+      box-shadow:inset 4px 0 0 var(--gold);
+      color:var(--gold) !important;
+    }
+
+    .table-header-strip{
+      background:#101c28 !important;
+      color:var(--gold) !important;
+      border-bottom:1px solid rgba(255,200,74,0.22);
+    }
+
+    thead{ background:#132230 !important; }
+    th{ color:#ffd66b !important; }
+    td{ border-bottom-color:rgba(255,255,255,0.07) !important; }
+    tbody tr:nth-child(even){ background:rgba(255,255,255,0.025) !important; }
+    tbody tr:hover{ background:rgba(255,200,74,0.10) !important; }
+
+    input,
+    select,
+    #searchBox,
+    #searchTeams,
+    #searchMatches,
+    #searchTransfers,
+    .select-control{
+      border-radius:8px !important;
+      border-color:rgba(255,200,74,0.30) !important;
+      background:#0b141e !important;
+      color:var(--text) !important;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.04) !important;
+    }
+
+    .player-card{
+      border-radius:8px !important;
+      background:
+        linear-gradient(90deg, rgba(255,200,74,0.16), transparent 34%),
+        linear-gradient(180deg, #13202c, #0d1823) !important;
+      border:1px solid rgba(255,255,255,0.10) !important;
+      box-shadow:0 14px 30px rgba(0,0,0,0.25) !important;
+    }
+
+    .player-card::before{
+      content:"";
+      position:absolute;
+      inset:0 auto 0 0;
+      width:4px;
+      background:linear-gradient(180deg, var(--gold), var(--gold2));
+    }
+
+    .bar-fill{ background:linear-gradient(90deg, #ffae34, #ffe08a) !important; }
+
+    footer{
+      background:#061018 !important;
+      border-top:1px solid rgba(255,255,255,0.10) !important;
+    }
+
+    .footer__inner{
+      justify-content:space-between !important;
+      gap:18px !important;
+      padding:22px 0 !important;
+      border-top:1px solid rgba(255,200,74,0.10);
+    }
+
+    .footer-brand{ display:grid; gap:4px; min-width:0; }
+
+    .footer-brand__name{
+      color:#fff;
+      font-size:14px;
+      font-weight:950;
+      text-transform:uppercase;
+    }
+
+    .footer-brand__meta{ color:#8ea2b5; font-size:12px; }
+
+    .footer-links{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      gap:8px;
+    }
+
+    .footer-links a{
+      padding:7px 10px;
+      border-radius:6px;
+      color:#c7d6e6;
+      background:rgba(255,255,255,0.035);
+      border:1px solid rgba(255,255,255,0.08);
+      font-size:12px;
+      font-weight:850;
+    }
+
+    .footer-links a:hover{
+      color:#081019;
+      background:linear-gradient(180deg, #ffd86d, #ffae34);
+      border-color:transparent;
+    }
+
+    @media (max-width:860px){
+      .brand__logo{ height:32px; }
+      .banner{ height:118px; }
+    }
+
+    @media (max-width:680px){
+      .footer__inner{ align-items:flex-start; flex-direction:column; }
+      .footer-links{ justify-content:flex-start; }
+    }
+    /* /Svensk eHockey datatavla design */
+
   </style>
 </head>
 
@@ -681,9 +912,19 @@
 
   <footer>
     <div class="container footer__inner">
-      <span>&copy; <span id="year"></span> Svensk eHockey</span>
-      <span>&bull;</span>
-      <a href="#">Kontakt</a>
+      <div class="footer-brand">
+        <div class="footer-brand__name">Svensk eHockey</div>
+        <div class="footer-brand__meta">&copy; <span id="year"></span> Svensk ECL-bevakning</div>
+      </div>
+
+      <nav class="footer-links" aria-label="Sidfot">
+        <a href="/svenskecl26spring-byten.html">Byten</a>
+        <a href="/svenskecl26spring-matcher.html">Matcher</a>
+        <a href="/svenskecl26spring-lag.html">Svenska lag</a>
+        <a href="/svenskecl26spring-statistik.html">Spring statistik</a>
+        <a href="/svenskecl26winter-statistik.html">Winter statistik</a>
+        <a href="https://www.svenskehockey.se/SEC/">SEC</a>
+      </nav>
     </div>
   </footer>
 
