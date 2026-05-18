@@ -738,6 +738,23 @@
       border-bottom-color:var(--gold);
     }
 
+    .table-team-cell{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+    }
+
+    .table-team-logo{
+      width:24px;
+      height:24px;
+      flex:0 0 24px;
+      object-fit:contain;
+      border-radius:5px;
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.10);
+    }
+
     .player-name{ font-size:17px; }
 
     .team-logo-card{
@@ -1205,10 +1222,40 @@
       return `<a class="entity-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
     }
 
+    function tableTeamLogoMarkup(row){
+      const team = safeText(row.team);
+      const candidates = fileCandidates("/teamlogos", row.teamLogo || row.logo || row.laglogo, team);
+      const src = candidates[0] || "";
+      if(!src) return "";
+
+      return `<img class="table-team-logo" src="${escapeHtml(src)}" alt="" loading="lazy" data-fallbacks="${escapeHtml(encodeURIComponent(JSON.stringify(candidates.slice(1))))}" data-fallback-index="0" onerror="handleTableLogoError(event)">`;
+    }
+
+    window.handleTableLogoError = function(event){
+      const img = event.target;
+      let fallbacks = [];
+
+      try {
+        fallbacks = JSON.parse(decodeURIComponent(img.dataset.fallbacks || "%5B%5D"));
+      } catch(err) {
+        fallbacks = [];
+      }
+
+      const index = Number(img.dataset.fallbackIndex || "0");
+      if(index < fallbacks.length){
+        img.dataset.fallbackIndex = String(index + 1);
+        img.src = fallbacks[index];
+        return;
+      }
+
+      img.onerror = null;
+      img.style.display = "none";
+    };
+
     function cellMarkup(row, col){
       const value = safeText(row[col]);
       if(col === "team"){
-        return entityLink(teamUrlByName.get(normalize(value)), value);
+        return `<span class="table-team-cell">${tableTeamLogoMarkup(row)}${entityLink(teamUrlByName.get(normalize(value)), value)}</span>`;
       }
       if(col === "name"){
         return entityLink(playerUrlByName.get(normalize(value)), value);

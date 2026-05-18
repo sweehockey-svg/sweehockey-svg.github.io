@@ -430,6 +430,21 @@
     }
     tbody tr:nth-child(even){ background:rgba(255,255,255,0.03); }
     tbody tr:hover{ background:rgba(255,200,100,0.12); }
+    .table-team-cell{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+    }
+    .table-team-logo{
+      width:24px;
+      height:24px;
+      flex:0 0 24px;
+      object-fit:contain;
+      border-radius:5px;
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.10);
+    }
     thead th:nth-child(1),
     thead th:nth-child(2),
     thead th:nth-child(3),
@@ -1046,6 +1061,15 @@
         .toLowerCase();
     }
 
+    function escapeHtml(value){
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
     function resolveSortKey(colName){
       const k = normalize(colName);
       if(k === "sv" || k === "svprocent" || k === "raddningsprocent") return "svp";
@@ -1332,20 +1356,38 @@
 
     function renderTableGeneric(header, rows, host, searchEl, rowObjects, top3Host, top3Renderer){
       const fullHeader = ["#"].concat(header);
+      const teamColIndex = header.map(h => normalize(h)).findIndex(x => ["lag", "team"].includes(x));
       let data = rows.map((r, i) => ({ rank:i + 1, row:r, rowIndex:i }));
+
+      function tableTeamLogoMarkup(rowIndex){
+        const player = rowObjects?.[rowIndex] || {};
+        if(!player.teamLogo) return "";
+        return `<img class="table-team-logo" src="${escapeHtml(player.teamLogo)}" alt="" loading="lazy" onerror="this.onerror=null;this.style.display='none'">`;
+      }
+
+      function cellMarkup(x, colIndex){
+        const value = x.row[colIndex] ?? "";
+        const text = escapeHtml(value);
+
+        if(colIndex === teamColIndex){
+          return `<span class="table-team-cell">${tableTeamLogoMarkup(x.rowIndex)}${text}</span>`;
+        }
+
+        return text;
+      }
 
       function htmlBody(arr){
         return arr.map((x) => `
           <tr>
             <td>${x.rank}</td>
-            ${x.row.map(c => `<td>${c ?? ""}</td>`).join("")}
+            ${x.row.map((c, colIndex) => `<td>${cellMarkup(x, colIndex)}</td>`).join("")}
           </tr>
         `).join("");
       }
 
       host.innerHTML = `
         <table>
-          <thead><tr>${fullHeader.map((h, idx) => `<th data-idx="${idx}">${h}</th>`).join("")}</tr></thead>
+          <thead><tr>${fullHeader.map((h, idx) => `<th data-idx="${idx}">${escapeHtml(h)}</th>`).join("")}</tr></thead>
           <tbody>${htmlBody(data)}</tbody>
         </table>
       `;
