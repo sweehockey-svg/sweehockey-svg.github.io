@@ -700,6 +700,16 @@
       padding:6px;
     }
 
+    .entity-link{
+      color:inherit;
+      text-decoration:none;
+      border-bottom:1px solid rgba(255,200,74,0.34);
+    }
+    .entity-link:hover{
+      color:var(--gold);
+      border-bottom-color:var(--gold);
+    }
+
     .detail-team-name{
       font-size:24px;
       font-weight:950;
@@ -1734,6 +1744,25 @@
         });
       }
 
+      function buildTeamLinkMap(data){
+        teamUrlByName = new Map();
+        (data?.teams || []).forEach((team) => {
+          if(team?.name && team?.url){
+            teamUrlByName.set(normalizeForFile(team.name), team.url);
+          }
+        });
+      }
+
+      function entityLink(url, label){
+        const text = escapeHtml(label);
+        if(!url) return text;
+        return `<a class="entity-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+      }
+
+      function teamProfileLink(teamName){
+        return teamUrlByName.get(normalizeForFile(teamName));
+      }
+
       function teamFlagMarkup(isSwedish) {
         return isSwedish ? '<div class="team-flag" aria-label="Svenskt lag" title="Svenskt lag">&#127480;&#127466;</div>' : '<div class="team-flag" aria-hidden="true"></div>';
       }
@@ -1754,7 +1783,7 @@
 
         return `
           <article class="match-card" data-search="${escapeHtml(searchData)}">
-            <button class="match-button" type="button" data-match-index="${index}">
+            <div class="match-button" role="button" tabindex="0" data-match-index="${index}">
               <div class="match-row">
                 <div class="match-side">
                   <div class="team-badge">
@@ -1768,7 +1797,7 @@
                     >
                   </div>
                   <div class="team-info">
-                    <div class="team-title">${escapeHtml(match.awayTeam)}</div>
+                    <div class="team-title">${entityLink(teamProfileLink(match.awayTeam), match.awayTeam)}</div>
                     ${teamFlagMarkup(isSwedishTeam(match, match.awayTeam))}
                   </div>
                 </div>
@@ -1792,7 +1821,7 @@
 
                 <div class="match-side match-side--home">
                   <div class="team-info">
-                    <div class="team-title">${escapeHtml(match.homeTeam)}</div>
+                    <div class="team-title">${entityLink(teamProfileLink(match.homeTeam), match.homeTeam)}</div>
                     ${teamFlagMarkup(isSwedishTeam(match, match.homeTeam))}
                   </div>
                   <div class="team-badge">
@@ -1811,7 +1840,7 @@
                   <div class="open-match">Öppna match <span>&rsaquo;</span></div>
                 </div>
               </div>
-            </button>
+            </div>
           </article>
         `;
       }
@@ -1851,7 +1880,14 @@
         activateImages(matchList);
 
         matchList.querySelectorAll("[data-match-index]").forEach((btn) => {
-          btn.addEventListener("click", () => {
+          btn.addEventListener("click", (event) => {
+            if(event.target.closest("a")) return;
+            const idx = Number(btn.dataset.matchIndex);
+            openModal(currentMatches[idx]);
+          });
+          btn.addEventListener("keydown", (event) => {
+            if(event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
             const idx = Number(btn.dataset.matchIndex);
             openModal(currentMatches[idx]);
           });
@@ -1893,7 +1929,7 @@
                   >
                 </div>
                 <div class="detail-team-text">
-                  <div class="detail-team-name">${escapeHtml(match.awayTeam)}</div>
+                  <div class="detail-team-name">${entityLink(teamProfileLink(match.awayTeam), match.awayTeam)}</div>
                   <div class="detail-team-note">${isSwedishTeam(match, match.awayTeam) ? "&#127480;&#127466;" : ""}</div>
                 </div>
               </div>
@@ -1918,7 +1954,7 @@
                   >
                 </div>
                 <div class="detail-team-text">
-                  <div class="detail-team-name">${escapeHtml(match.homeTeam)}</div>
+                  <div class="detail-team-name">${entityLink(teamProfileLink(match.homeTeam), match.homeTeam)}</div>
                   <div class="detail-team-note">${isSwedishTeam(match, match.homeTeam) ? "&#127480;&#127466;" : ""}</div>
                 </div>
               </div>
@@ -2001,6 +2037,7 @@
         .then((rawData) => {
           const parsed = extractJsonResultObject(rawData);
           allData = parsed || {};
+          buildTeamLinkMap(allData);
           render();
 
           const updatedValue = parsed.updated || rawData.updated || "";
