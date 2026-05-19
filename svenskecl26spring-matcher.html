@@ -1488,6 +1488,14 @@
           .replace(/[\u0300-\u036f]/g, "");
       }
 
+      function normalizeForFile(value) {
+        return removeDiacritics(stripParens(normalizeFileBase(value)))
+          .toLowerCase()
+          .replace(/&/g, " and ")
+          .replace(/[^a-z0-9]+/g, "")
+          .trim();
+      }
+
       function stripParens(value) {
         return String(value || "")
           .replace(/\s*\([^)]*\)\s*/g, " ")
