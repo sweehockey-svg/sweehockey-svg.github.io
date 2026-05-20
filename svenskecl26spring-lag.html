@@ -583,6 +583,23 @@
       gap:10px;
     }
 
+    .team-stats-section{
+      display:grid;
+      gap:10px;
+    }
+
+    .team-stats-title{
+      color: var(--gold);
+      font-size:11px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .team-stats + .team-stats-section{
+      margin-top:-2px;
+    }
+
     .team-stat{
       min-width:0;
       padding:10px 11px;
@@ -2279,6 +2296,12 @@
         const goalsText = team.goalsFor !== "" && team.goalsAgainst !== ""
           ? `${team.goalsFor}-${team.goalsAgainst}`
           : "";
+        const playoffRecord = Number(team.playoffMatches || 0) > 0
+          ? `${team.playoffWins || 0}-${team.playoffLosses || 0}`
+          : "";
+        const playoffGoalsText = team.playoffGoalsFor !== "" && team.playoffGoalsAgainst !== ""
+          ? `${team.playoffGoalsFor}-${team.playoffGoalsAgainst}`
+          : "";
         const seedText = team.playoffSeed ? `Seed #${team.playoffSeed}` : "";
         const topPlayerText = team.topSwedishPlayer
           ? `${team.topSwedishPlayer}${team.topSwedishPoints !== "" ? `, ${team.topSwedishPoints}p` : ""}`
@@ -2310,8 +2333,8 @@
 
         const highlightMarkup = [
           team.tablePoints !== "" && team.tablePoints !== undefined && team.tablePoints !== null ? ["Poäng", team.tablePoints, true] : null,
-          team.tablePosition ? ["Placering", "#" + team.tablePosition, false] : null,
-          playoffText ? ["Slutspel", playoffText, false] : null
+          team.tablePosition ? ["Gruppplacering", "#" + team.tablePosition, false] : null,
+          ["Slutspel", playoffText || "-", false]
         ]
           .filter(Boolean)
           .map(([label, value, isGold]) => `
@@ -2324,13 +2347,11 @@
 
         const statsMarkup = [
           team.group ? ["Grupp", team.group] : null,
-          playoffText ? ["Slutspel", playoffText] : null,
           team.regularGames ? ["Matcher", team.regularGames] : null,
           record ? ["Record", record] : null,
           team.pointsPerGame ? ["P/G", team.pointsPerGame] : null,
           team.last10 ? ["L10", team.last10] : null,
           goalsText ? ["GF-GA", goalsText] : null,
-          team.playoffMatches ? ["Slutspelsmatcher", team.playoffMatches] : null,
           goalDiff ? ["Mål +/-", goalDiff] : null,
           team.swedishPlayers ? ["Sv spelare", team.swedishPlayers] : null,
           team.swedishPoints ? ["Sv poäng", team.swedishPoints] : null
@@ -2343,6 +2364,24 @@
             </div>
           `)
           .join("");
+
+        const playoffStatsMarkup = Number(team.playoffMatches || 0) > 0
+          ? [
+              ["Status", playedPlayoffText],
+              ["Matcher", team.playoffMatches],
+              playoffRecord ? ["Record", playoffRecord] : null,
+              playoffGoalsText ? ["GF-GA", playoffGoalsText] : null,
+              team.playoffPoints ? ["Sv poÃ¤ng", team.playoffPoints] : null
+            ]
+              .filter(Boolean)
+              .map(([label, value]) => `
+                <div class="team-stat">
+                  <span>${escapeHtml(label)}</span>
+                  <strong>${escapeHtml(value)}</strong>
+                </div>
+              `)
+              .join("")
+          : "";
 
         const searchText = [
           team.name,
@@ -2401,7 +2440,8 @@
                   </div>
                 </div>
                 ${highlightMarkup ? `<div class="team-highlight">${highlightMarkup}</div>` : ""}
-                ${statsMarkup ? `<div class="team-stats">${statsMarkup}</div>` : ""}
+                ${statsMarkup ? `<div class="team-stats-section"><div class="team-stats-title">Gruppspel</div><div class="team-stats">${statsMarkup}</div></div>` : ""}
+                ${playoffStatsMarkup ? `<div class="team-stats-section"><div class="team-stats-title">Slutspel</div><div class="team-stats">${playoffStatsMarkup}</div></div>` : ""}
                 ${
                   topPlayerText || statusSentence()
                     ? `<div class="team-note">${topPlayerText ? `<strong>Topp svensk:</strong> ${escapeHtml(topPlayerText)}` : ""}${topPlayerText && statusSentence() ? "<br>" : ""}${escapeHtml(statusSentence())}</div>`
