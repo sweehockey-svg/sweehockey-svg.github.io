@@ -381,41 +381,6 @@
       gap:18px;
     }
 
-    .summary-bar{
-      display:grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap:12px;
-      margin: 0 0 18px;
-    }
-
-    .summary-chip{
-      min-height:62px;
-      padding:12px 14px;
-      border-radius:16px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.025));
-      border:1px solid rgba(255,255,255,0.09);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
-    }
-
-    .summary-chip span{
-      display:block;
-      margin-bottom:5px;
-      color: rgba(255,255,255,0.54);
-      font-size:10px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.36px;
-    }
-
-    .summary-chip strong{
-      display:block;
-      color:#fff;
-      font-size:22px;
-      font-weight:950;
-      line-height:1;
-    }
-
     .team-card{
       min-height:320px;
       background:
@@ -565,18 +530,6 @@
       color: var(--gold);
     }
 
-    .team-highlight__item.is-positive strong{
-      color:#79f2b0;
-    }
-
-    .team-highlight__item.is-warning strong{
-      color:#ffd166;
-    }
-
-    .team-highlight__item.is-danger strong{
-      color:#ff7b7b;
-    }
-
     .team-stats{
       display:grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -668,10 +621,6 @@
         grid-template-columns: 1fr;
       }
 
-      .summary-bar{
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
       .team-card__top{
         padding:18px;
         gap:16px;
@@ -717,10 +666,6 @@
       }
 
       .team-highlight{
-        grid-template-columns: 1fr;
-      }
-
-      .summary-bar{
         grid-template-columns: 1fr;
       }
     }
@@ -836,7 +781,6 @@
         </div>
       </div>
 
-      <div id="teams-summary" class="summary-bar" aria-label="Översikt svenska lag"></div>
       <div id="teams-list"></div>
       <p id="lastUpdated" class="lastUpdated"></p>
     </section>
@@ -895,7 +839,6 @@
     (function () {
       const JSON_URL = "./svenskstatistikecl26spring.json";
       const target = document.getElementById("teams-list");
-      const summaryTarget = document.getElementById("teams-summary");
       const search = document.getElementById("searchTeams");
       const divisionFilter = document.getElementById("divisionFilter");
       const sortTeams = document.getElementById("sortTeams");
@@ -1710,16 +1653,6 @@
           : "";
         const playoffText = playedPlayoffText || placementPlayoffText || "";
 
-        function highlightClass(label, value, isGold) {
-          if (isGold) return "is-gold";
-          if (label !== "Slutspel") return "";
-
-          const normalized = normalizeText(value);
-          if (normalized.includes("nedflyttning") || normalized === "nej") return "is-danger";
-          if (normalized.includes("kval") || normalized.includes("mojlig")) return "is-warning";
-          return "is-positive";
-        }
-
         const highlightMarkup = [
           team.tablePoints !== "" && team.tablePoints !== undefined && team.tablePoints !== null ? ["Poäng", team.tablePoints, true] : null,
           team.tablePosition ? ["Placering", "#" + team.tablePosition, false] : null,
@@ -1727,7 +1660,7 @@
         ]
           .filter(Boolean)
           .map(([label, value, isGold]) => `
-            <div class="team-highlight__item ${highlightClass(label, value, isGold)}">
+            <div class="team-highlight__item ${isGold ? "is-gold" : ""}">
               <span>${escapeHtml(label)}</span>
               <strong>${escapeHtml(value)}</strong>
             </div>
@@ -1828,18 +1761,6 @@
               team.location,
               team.founded,
               team.players,
-              team.swedishPlayers,
-              team.swedishPoints,
-              team.regularGames,
-              team.tablePosition,
-              team.tablePoints,
-              team.group,
-              team.wins,
-              team.overtimeWins,
-              team.losses,
-              team.otLosses,
-              team.goalDiff,
-              team.playoffStatus,
               team.description,
               team.status,
               team.searchExtra
@@ -1874,38 +1795,6 @@
           });
       }
 
-      function getTeamPlayoffText(team) {
-        if (Number(team.playoffMatches || 0) > 0) {
-          return `Spelar ${team.playoffWins || 0}-${team.playoffLosses || 0}`;
-        }
-
-        return playoffPlaceStatus(team) || "";
-      }
-
-      function renderSummary(rows) {
-        if (!summaryTarget) return;
-
-        const total = rows.length;
-        const playoff = rows.filter((team) => {
-          const text = normalizeText(getTeamPlayoffText(team));
-          return text === "ja" || text.includes("spelar") || text.includes("runda");
-        }).length;
-        const qualification = rows.filter((team) => {
-          const text = normalizeText(getTeamPlayoffText(team));
-          return text.includes("kval") || text.includes("mojlig");
-        }).length;
-        const relegation = rows.filter((team) => normalizeText(getTeamPlayoffText(team)).includes("nedflyttning")).length;
-        const swedishPlayers = rows.reduce((sum, team) => sum + Number(team.swedishPlayers || 0), 0);
-
-        summaryTarget.innerHTML = `
-          <div class="summary-chip"><span>Visar lag</span><strong>${escapeHtml(total)}</strong></div>
-          <div class="summary-chip"><span>Slutspel</span><strong>${escapeHtml(playoff)}</strong></div>
-          <div class="summary-chip"><span>Kval/möjlig</span><strong>${escapeHtml(qualification)}</strong></div>
-          <div class="summary-chip"><span>Nedflyttning</span><strong>${escapeHtml(relegation)}</strong></div>
-          <div class="summary-chip"><span>Sv spelare</span><strong>${escapeHtml(swedishPlayers)}</strong></div>
-        `;
-      }
-
       function renderTeams(rows) {
         if (!rows.length) {
           target.innerHTML = `<div class="empty-state">Inga svenska lag hittades.</div>`;
@@ -1917,9 +1806,7 @@
       }
 
       function renderFilteredTeams() {
-        const rows = getVisibleTeams();
-        renderSummary(rows);
-        renderTeams(rows);
+        renderTeams(getVisibleTeams());
       }
 
       function setupSearch() {
