@@ -275,13 +275,22 @@
       line-height:1.05;
     }
 
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+      gap:12px;
+      flex:1;
+    }
+
     .search-wrap{
       width:min(100%, 410px);
       position:relative;
     }
 
     .search-wrap::before{
-      content:"🔍";
+      content:"\1F50D";
       position:absolute;
       left:16px;
       top:50%;
@@ -320,14 +329,95 @@
       background: rgba(255,255,255,0.055);
     }
 
+    .select-wrap{
+      position:relative;
+      width:min(100%, 190px);
+    }
+
+    .select-wrap::after{
+      content:"\25BE";
+      position:absolute;
+      right:15px;
+      top:50%;
+      transform:translateY(-50%);
+      color: var(--gold);
+      font-size:12px;
+      pointer-events:none;
+    }
+
+    .select-control{
+      width:100%;
+      appearance:none;
+      padding:14px 38px 14px 15px;
+      font-size:14px;
+      font-weight:850;
+      border:1px solid rgba(245,195,75,0.22);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
+      color: var(--text);
+      border-radius:18px;
+      outline:none;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 8px 24px rgba(0,0,0,.16);
+    }
+
+    .select-control:focus{
+      border-color: rgba(245,195,75,0.42);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 0 0 4px rgba(245,195,75,.10),
+        0 12px 30px rgba(0,0,0,.2);
+    }
+
+    .select-control option{
+      background:#101622;
+      color:#fff;
+    }
+
     .teams-grid{
       display:grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap:18px;
     }
 
+    .summary-bar{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap:12px;
+      margin: 0 0 18px;
+    }
+
+    .summary-chip{
+      min-height:62px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.025));
+      border:1px solid rgba(255,255,255,0.09);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+    }
+
+    .summary-chip span{
+      display:block;
+      margin-bottom:5px;
+      color: rgba(255,255,255,0.54);
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.36px;
+    }
+
+    .summary-chip strong{
+      display:block;
+      color:#fff;
+      font-size:22px;
+      font-weight:950;
+      line-height:1;
+    }
+
     .team-card{
-      min-height:260px;
+      min-height:390px;
       background:
         radial-gradient(110% 150% at 0% 0%, rgba(245,195,75,0.10), transparent 38%),
         radial-gradient(80% 100% at 100% 100%, rgba(88,140,255,0.06), transparent 42%),
@@ -339,6 +429,18 @@
       transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
 
+    .team-card__link{
+      min-height:390px;
+      height:100%;
+      display:block;
+      color:inherit;
+      text-decoration:none;
+    }
+
+    .team-card__link[aria-disabled="true"]{
+      cursor:default;
+    }
+
     .team-card:hover{
       transform: translateY(-3px);
       border-color: rgba(245,195,75,0.24);
@@ -346,22 +448,31 @@
     }
 
     .team-card__top{
-      padding:22px;
+      width:100%;
+      min-height:390px;
+      padding:24px;
       display:flex;
-      align-items:center;
-      gap:16px;
-      border-bottom:1px solid rgba(255,255,255,0.08);
+      flex-direction:column;
+      align-items:stretch;
+      gap:18px;
       background:
         linear-gradient(180deg, rgba(255,255,255,0.028), transparent),
         linear-gradient(90deg, rgba(255,255,255,0.02), transparent 65%);
     }
 
+    .team-main{
+      display:grid;
+      grid-template-columns: 104px 1fr;
+      gap:18px;
+      align-items:center;
+    }
+
     .team-logo{
-      width:82px;
-      height:82px;
-      border-radius:22px;
+      width:104px;
+      height:104px;
+      border-radius:26px;
       overflow:hidden;
-      flex:0 0 82px;
+      flex:0 0 104px;
       background:
         linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
       border:1px solid rgba(255,255,255,0.10);
@@ -379,7 +490,7 @@
       height:100%;
       object-fit:contain;
       display:block;
-      padding:8px;
+      padding:10px;
     }
 
     .team-heading{
@@ -388,7 +499,7 @@
     }
 
     .team-name{
-      font-size:26px;
+      font-size:29px;
       font-weight:950;
       color:#fff;
       line-height:1.04;
@@ -404,6 +515,9 @@
     }
 
     .team-division{
+      display:inline-flex;
+      align-items:center;
+      width:max-content;
       font-size:13px;
       color: var(--gold);
       font-weight:900;
@@ -411,93 +525,96 @@
       letter-spacing:.38px;
     }
 
-    .team-card__body{
-      padding:18px 22px 22px;
+    .team-highlight{
       display:grid;
-      gap:16px;
+      grid-template-columns: minmax(64px, .78fr) minmax(88px, 1fr) minmax(116px, 1.32fr);
+      gap:10px;
+      padding:12px;
+      border-radius:20px;
+      background:
+        linear-gradient(180deg, rgba(245,195,75,0.08), rgba(255,255,255,0.025));
+      border:1px solid rgba(245,195,75,0.16);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
     }
 
-    .team-description{
-      margin:0;
-      min-height:54px;
-      color: rgba(255,255,255,0.72);
-      line-height:1.55;
+    .team-highlight__item{
+      min-width:0;
     }
 
-    .team-facts{
+    .team-highlight__item span,
+    .team-stat span{
+      display:block;
+      margin-bottom:4px;
+      color: rgba(255,255,255,0.52);
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.35px;
+    }
+
+    .team-highlight__item strong{
+      display:block;
+      color:#fff;
+      font-size:20px;
+      font-weight:950;
+      line-height:1.08;
+      overflow-wrap:anywhere;
+    }
+
+    .team-highlight__item.is-gold strong{
+      color: var(--gold);
+    }
+
+    .team-highlight__item.is-positive strong{
+      color:#79f2b0;
+    }
+
+    .team-highlight__item.is-warning strong{
+      color:#ffd166;
+    }
+
+    .team-highlight__item.is-danger strong{
+      color:#ff7b7b;
+    }
+
+    .team-stats{
       display:grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap:10px;
     }
 
-    .fact{
-      min-height:68px;
-      padding:11px 10px;
-      border-radius:18px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.022));
+    .team-stat{
+      min-width:0;
+      padding:10px 11px;
+      border-radius:14px;
+      background: rgba(255,255,255,0.045);
       border:1px solid rgba(255,255,255,0.08);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
     }
 
-    .fact__label{
-      font-size:11px;
-      color: rgba(255,255,255,0.52);
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.36px;
-      margin-bottom:6px;
-    }
-
-    .fact__value{
-      font-size:14px;
+    .team-stat strong{
+      display:block;
       color:#fff;
-      font-weight:900;
-      line-height:1.18;
-      word-break:break-word;
-    }
-
-    .team-actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-    }
-
-    .team-link{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:42px;
-      padding:11px 14px;
-      border-radius:14px;
-      color:#07101d;
-      background: var(--gold);
-      font-size:13px;
+      font-size:15px;
       font-weight:950;
-      box-shadow: 0 12px 24px rgba(0,0,0,.18);
-      transition: transform .15s ease, filter .15s ease;
+      line-height:1.1;
     }
 
-    .team-link:hover{
-      transform: translateY(-1px);
-      filter: brightness(1.05);
-    }
-
-    .team-tag{
-      display:inline-flex;
-      align-items:center;
-      min-height:34px;
-      padding:8px 11px;
-      border-radius:999px;
-      color: rgba(255,255,255,0.74);
-      background: rgba(255,255,255,0.04);
+    .team-note{
+      margin-top:auto;
+      padding:12px 13px;
+      border-radius:16px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.022));
       border:1px solid rgba(255,255,255,0.08);
-      font-size:12px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.3px;
+      color: rgba(255,255,255,0.76);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .team-note strong{
+      color:#fff;
+      font-weight:950;
     }
 
     .empty-state{
@@ -552,7 +669,15 @@
         align-items:stretch;
       }
 
+      .controls{
+        justify-content:flex-start;
+      }
+
       .search-wrap{
+        width:100%;
+      }
+
+      .select-wrap{
         width:100%;
       }
 
@@ -560,31 +685,34 @@
         grid-template-columns: 1fr;
       }
 
-      .team-card__top{
-        padding:18px;
+      .summary-bar{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .team-card__body{
-        padding:16px 18px 18px;
+      .team-card__top{
+        padding:18px;
+        gap:16px;
+      }
+
+      .team-main{
+        grid-template-columns: 82px 1fr;
+        gap:14px;
       }
 
       .team-logo{
-        width:68px;
-        height:68px;
-        flex-basis:68px;
+        width:82px;
+        height:82px;
+        flex-basis:82px;
         border-radius:18px;
       }
 
+      .team-highlight,
+      .team-stats{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .team-name{
-        font-size:22px;
-      }
-
-      .team-facts{
-        grid-template-columns: 1fr;
-      }
-
-      .team-description{
-        min-height:unset;
+        font-size:24px;
       }
 
       .lastUpdated{
@@ -597,10 +725,353 @@
         align-items:flex-start;
       }
 
+      .team-main{
+        grid-template-columns: 1fr;
+      }
+
       .team-name{
         font-size:20px;
       }
+
+      .team-highlight{
+        grid-template-columns: 1fr;
+      }
+
+      .summary-bar{
+        grid-template-columns: 1fr;
+      }
     }
+
+    /* Svensk eHockey datatavla design */
+    *{ letter-spacing:0 !important; }
+
+    :root{
+      --bg:#061018;
+      --panel:#101a24;
+      --panel2:#172331;
+      --text:#f7fbff;
+      --muted:#a8b8c9;
+      --border:rgba(190,213,235,0.16);
+      --gold:#ffc84a;
+      --gold2:#ff9f2e;
+      --line:#203246;
+      --shadow:0 18px 46px rgba(0,0,0,.34);
+    }
+
+    html,
+    body{
+      background-color:#061018 !important;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,0.026) 1px, transparent 1px),
+        linear-gradient(180deg, #07111b 0%, #081622 44%, #061018 100%) !important;
+      background-size:64px 64px, 64px 64px, 100% 100% !important;
+      color:var(--text);
+    }
+
+    .container{ width:min(1180px, calc(100% - 36px)); }
+
+    .topbar{
+      background:rgba(4,9,15,0.88);
+      border-bottom:1px solid rgba(255,200,74,0.20);
+    }
+
+    .topbar__inner{ padding:10px 0; }
+    .brand__logo{ height:34px; }
+
+    .nav__link,
+    .nav__button,
+    .iconbtn,
+    .hamburger{ border-radius:6px; }
+
+    .nav__link:hover,
+    .nav__button:hover{ background:rgba(255,200,74,0.10); }
+
+    .menu{
+      border-radius:8px;
+      background:rgba(9,15,23,0.98);
+      border-color:rgba(255,200,74,0.18);
+    }
+
+    .menu__item{ border-radius:6px; }
+
+    .banner-strip{
+      background:#07111b;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+
+    .banner-strip__inner{ padding:12px 0; }
+
+    .banner{
+      max-width:1180px;
+      height:118px;
+      border-radius:8px;
+      border-color:rgba(255,200,74,0.16);
+      box-shadow:0 14px 34px rgba(0,0,0,.32);
+    }
+
+    main{ padding:22px 0 48px; }
+
+    .card,
+    .tile,
+    .team-card,
+    .match-card,
+    .transfer-card,
+    .table-shell,
+    .modal__dialog,
+    .detail-card{
+      border-radius:8px !important;
+      background:#0b141e !important;
+      border-color:rgba(255,255,255,0.12) !important;
+      box-shadow:0 16px 38px rgba(0,0,0,0.28) !important;
+    }
+
+    .card,
+    .tile,
+    .team-card,
+    .match-card,
+    .transfer-card{
+      background:
+        linear-gradient(90deg, rgba(255,200,74,0.09), transparent 34%),
+        linear-gradient(180deg, #13202c, #0d1823) !important;
+    }
+
+    .btn,
+    .ecl-tab,
+    .mobile__link,
+    .summary-chip,
+    .chip,
+    .meta-pill,
+    .team-highlight__item,
+    .team-stat,
+    .detail-box{
+      border-radius:6px !important;
+    }
+
+    .btn--primary,
+    .ecl-tab.active{
+      color:#081019 !important;
+      background:linear-gradient(180deg, #ffd86d, #ffae34) !important;
+      border-color:transparent !important;
+      box-shadow:none !important;
+    }
+
+    .header-box,
+    .page-title{
+      border-bottom:1px solid rgba(255,255,255,0.10);
+      padding-bottom:14px;
+    }
+
+    .section-title__icon,
+    .page-title-icon{
+      border-radius:8px !important;
+      background:#12202e !important;
+      border-color:rgba(255,200,74,0.42) !important;
+      box-shadow:inset 4px 0 0 var(--gold);
+      color:var(--gold) !important;
+    }
+
+    .table-header-strip{
+      background:#101c28 !important;
+      color:var(--gold) !important;
+      border-bottom:1px solid rgba(255,200,74,0.22);
+    }
+
+    thead{ background:#132230 !important; }
+    th{ color:#ffd66b !important; }
+    td{ border-bottom-color:rgba(255,255,255,0.07) !important; }
+    tbody tr:nth-child(even){ background:rgba(255,255,255,0.025) !important; }
+    tbody tr:hover{ background:rgba(255,200,74,0.10) !important; }
+
+    input,
+    select,
+    #searchBox,
+    #searchTeams,
+    #searchMatches,
+    #searchTransfers,
+    .select-control{
+      border-radius:8px !important;
+      border-color:rgba(255,200,74,0.30) !important;
+      background:#0b141e !important;
+      color:var(--text) !important;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.04) !important;
+    }
+
+    .player-card{
+      border-radius:8px !important;
+      background:
+        linear-gradient(90deg, rgba(255,200,74,0.16), transparent 34%),
+        linear-gradient(180deg, #13202c, #0d1823) !important;
+      border:1px solid rgba(255,255,255,0.10) !important;
+      box-shadow:0 14px 30px rgba(0,0,0,0.25) !important;
+    }
+
+    .player-card::before{
+      content:"";
+      position:absolute;
+      inset:0 auto 0 0;
+      width:4px;
+      background:linear-gradient(180deg, var(--gold), var(--gold2));
+    }
+
+    .bar-fill{ background:linear-gradient(90deg, #ffae34, #ffe08a) !important; }
+
+    footer{
+      background:#061018 !important;
+      border-top:1px solid rgba(255,255,255,0.10) !important;
+    }
+
+    .footer__inner{
+      justify-content:space-between !important;
+      gap:18px !important;
+      padding:22px 0 !important;
+      border-top:1px solid rgba(255,200,74,0.10);
+    }
+
+    .footer-brand{ display:grid; gap:4px; min-width:0; }
+
+    .footer-brand__name{
+      color:#fff;
+      font-size:14px;
+      font-weight:950;
+      text-transform:uppercase;
+    }
+
+    .footer-brand__meta{ color:#8ea2b5; font-size:12px; }
+
+    .footer-links{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      gap:8px;
+    }
+
+    .footer-links a{
+      padding:7px 10px;
+      border-radius:6px;
+      color:#c7d6e6;
+      background:rgba(255,255,255,0.035);
+      border:1px solid rgba(255,255,255,0.08);
+      font-size:12px;
+      font-weight:850;
+    }
+
+    .footer-links a:hover{
+      color:#081019;
+      background:linear-gradient(180deg, #ffd86d, #ffae34);
+      border-color:transparent;
+    }
+
+    @media (max-width:860px){
+      .brand__logo{ height:32px; }
+      .banner{ height:118px; }
+    }
+
+    @media (max-width:680px){
+      .footer__inner{ align-items:flex-start; flex-direction:column; }
+      .footer-links{ justify-content:flex-start; }
+    }
+
+
+    html{ overflow-x:hidden; }
+    body{
+      overflow-x:hidden;
+      max-width:100%;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      z-index:-1;
+      pointer-events:none;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,0.026) 1px, transparent 1px),
+        linear-gradient(180deg, #07111b 0%, #081622 44%, #061018 100%);
+      background-size:64px 64px, 64px 64px, 100% 100%;
+    }
+
+    .topbar,
+    .banner-strip,
+    main,
+    footer{
+      position:relative;
+      z-index:1;
+    }
+
+    .card,
+    .tile,
+    .team-card,
+    .match-card,
+    .transfer-card,
+    .table-shell{
+      backdrop-filter:saturate(1.08);
+    }
+
+
+
+    html,
+    body{
+      min-height:100%;
+      background-color:#061018 !important;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,0.060) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,0.045) 1px, transparent 1px),
+        linear-gradient(180deg, #07111b 0%, #081622 44%, #061018 100%) !important;
+      background-size:64px 64px, 64px 64px, 100% 100% !important;
+      background-repeat:repeat, repeat, no-repeat !important;
+      background-attachment:fixed, fixed, fixed !important;
+      background-position:0 0, 0 0, 0 0 !important;
+    }
+
+    body::before{ display:none !important; }
+
+
+
+    /* Rutnat och menyfix */
+    :root{
+      --grid-bg:
+        linear-gradient(90deg, rgba(255,255,255,0.070) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,0.050) 1px, transparent 1px),
+        linear-gradient(180deg, #07111b 0%, #081622 44%, #061018 100%);
+    }
+
+    html,
+    body,
+    .banner-strip,
+    main,
+    footer{
+      background-color:#061018 !important;
+      background-image:var(--grid-bg) !important;
+      background-size:64px 64px, 64px 64px, 100% 100% !important;
+      background-repeat:repeat, repeat, no-repeat !important;
+      background-position:0 0, 0 0, 0 0 !important;
+    }
+
+    .topbar{
+      z-index:10000 !important;
+      overflow:visible !important;
+    }
+
+    .topbar__inner,
+    .dropdown{
+      overflow:visible !important;
+    }
+
+    .menu{
+      z-index:10001 !important;
+    }
+
+    .banner-strip,
+    main,
+    footer{
+      z-index:1 !important;
+    }
+    /* /Rutnat och menyfix */
+
+    /* /Svensk eHockey datatavla design */
+
   </style>
 </head>
 
@@ -616,44 +1087,38 @@
 
         <div class="dropdown" data-dropdown>
           <button class="nav__button is-active" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            Svensk ECL Statistik <span>▾</span>
+            Svensk ECL Statistik <span>&#9662;</span>
           </button>
           <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
-            <a class="menu__item" role="menuitem" href="/svenskaeclbyten.html">Svenska ECL Byten</a>
-            <a class="menu__item" role="menuitem" href="/svenskamatcher.html">Svenska matcher</a>
-            <a class="menu__item" role="menuitem" href="/svenskstatistikecl26winter.html">Svensk statistik ECL 26 Winter</a>
-            <a class="menu__item" role="menuitem" href="/svenskstatistikecl26spring.html">Svensk statistik ECL 26 Spring</a>
-            <a class="menu__item" role="menuitem" href="/svenskalag.html">Svenska lag</a>
+            <a class="menu__item" role="menuitem" href="/svenskecl26spring-byten.html">Svenska ECL 26 Spring Byten</a>
+            <a class="menu__item" role="menuitem" href="/svenskecl26spring-matcher.html">Svenska matcher ECL 26 Spring</a>
+            <a class="menu__item" role="menuitem" href="/svenskecl26spring-lag.html">Svenska lag ECL 26 Spring</a>
+            <a class="menu__item" role="menuitem" href="/svenskecl26spring-statistik.html">Svensk statistik ECL 26 Spring</a>
+            <a class="menu__item" role="menuitem" href="/svenskecl26winter-statistik.html">Svensk statistik ECL 26 Winter</a>
           </div>
         </div>
 
-        <a class="nav__link" href="#">Nyheter</a>
+        <a class="nav__link" href="/nyheter.html">Nyheter</a>
 
-        <div class="dropdown" data-dropdown>
-          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
-            Cuper <span>▾</span>
-          </button>
-          <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
-            <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
-          </div>
-        </div>
+        <a class="nav__link" href="https://www.svenskehockey.se/SEC/">SEC</a>
 
-        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">🔍</button>
+        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">&#128269;</button>
       </nav>
 
-      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>☰</button>
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>&#9776;</button>
     </div>
 
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link" href="/">Startsida</a>
-        <a class="mobile__link" href="/svenskaeclbyten.html">ECL - Byten</a>
-        <a class="mobile__link" href="/svenskamatcher.html">ECL - Svenska matcher</a>
-        <a class="mobile__link" href="/svenskstatistikecl26winter.html">ECL 26 Winter - Statistik</a>
-        <a class="mobile__link" href="/svenskstatistikecl26spring.html">ECL 26 Spring - Statistik</a>
-        <a class="mobile__link is-active" href="/svenskalag.html">Svenska lag</a>
-        <a class="mobile__link" href="#">Nyheter</a>
-        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper - SEC</a>
+        <a class="mobile__link" href="/svenskecl26spring-byten.html">ECL 26 Spring - Byten</a>
+        <a class="mobile__link" href="/svenskecl26spring-matcher.html">ECL 26 Spring - Svenska matcher</a>
+        <a class="mobile__link is-active" href="/svenskecl26spring-lag.html">ECL 26 Spring - Svenska lag</a>
+        <a class="mobile__link" href="/svenskecl26spring-statistik.html">ECL 26 Spring - Statistik</a>
+        <a class="mobile__link" href="/svenskecl26winter-statistik.html">ECL 26 Winter - Statistik</a>
+        <a class="mobile__link" href="/svenskecl26spring-statistik.html">ECL 26 Spring - Statistik</a>
+        <a class="mobile__link" href="/nyheter.html">Nyheter</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">SEC</a>
       </div>
     </div>
   </header>
@@ -666,29 +1131,57 @@
 
   <main class="container">
     <section class="card">
-      <h1>Svenska eHockey-lag 🏒</h1>
+      <h1>Svenska eHockey-lag</h1>
 
       <p>
-        Här samlas <strong>svenska lag inom eHockey</strong> med logga, division och en snabb överblick. Sidan är byggd för att göra det enkelt att hitta lag, känna igen profilerna och klicka vidare till lagens Sportsgamer-sidor när länk finns.
+        Här samlas <strong>svenska lag i ECL 26 Spring</strong> med division, tabellplacering, poäng och aktuell slutspelsstatus.
       </p>
 
       <p>
-        Listan hämtas från <strong>svenskstatistikecl26spring.json</strong> och visar endast svenska lag från ECL 26 Spring.
+        Använd filtrering, sortering och sök för att snabbt hitta rätt lag och jämföra hur de svenska lagen ligger till.
       </p>
     </section>
 
     <section id="lag" class="teams" aria-label="Svenska lag">
       <div class="header-box">
         <div class="section-title">
-          <div class="section-title__icon">🏆</div>
+          <div class="section-title__icon">&#127942;</div>
           <h2>Svenska lag</h2>
         </div>
 
-        <div class="search-wrap">
-          <input type="text" id="searchTeams" placeholder="Sök lag, division eller info...">
+        <div class="controls">
+          <div class="select-wrap">
+            <select id="divisionFilter" class="select-control" aria-label="Filtrera på division">
+              <option value="all">Alla divisioner</option>
+              <option value="Elite">Elite</option>
+              <option value="Pro">Pro</option>
+              <option value="Lite">Lite</option>
+              <option value="Core">Core</option>
+              <option value="Neo">Neo</option>
+            </select>
+          </div>
+
+          <div class="select-wrap">
+            <select id="sortTeams" class="select-control" aria-label="Sortera lag">
+              <option value="division">Sortera: division</option>
+              <option value="name-asc">Namn A-Ö</option>
+              <option value="name-desc">Namn Ö-A</option>
+              <option value="players-desc">Flest spelare</option>
+              <option value="points-desc">Flest poäng</option>
+              <option value="ppg-desc">Bäst poängsnitt</option>
+              <option value="form-desc">Bäst form</option>
+              <option value="swedish-points-desc">Flest svenska poäng</option>
+              <option value="matches-desc">Flest matcher</option>
+            </select>
+          </div>
+
+          <div class="search-wrap">
+            <input type="text" id="searchTeams" placeholder="Sök lag eller division...">
+          </div>
         </div>
       </div>
 
+      <div id="teams-summary" class="summary-bar" aria-label="Översikt svenska lag"></div>
       <div id="teams-list"></div>
       <p id="lastUpdated" class="lastUpdated"></p>
     </section>
@@ -696,9 +1189,20 @@
 
   <footer>
     <div class="container footer__inner">
-      <span>© <span id="year"></span> Svensk eHockey</span>
-      <span>•</span>
-      <a href="#">Kontakt</a>
+      <div class="footer-brand">
+        <div class="footer-brand__name">Svensk eHockey</div>
+        <div class="footer-brand__meta">&copy; <span id="year"></span> Svensk ECL-bevakning</div>
+      </div>
+
+      <nav class="footer-links" aria-label="Sidfot">
+        <a href="/nyheter.html">Nyheter</a>
+        <a href="/svenskecl26spring-byten.html">Byten</a>
+        <a href="/svenskecl26spring-matcher.html">Matcher</a>
+        <a href="/svenskecl26spring-lag.html">Svenska lag</a>
+        <a href="/svenskecl26spring-statistik.html">Spring statistik</a>
+        <a href="/svenskecl26winter-statistik.html">Winter statistik</a>
+        <a href="https://www.svenskehockey.se/SEC/">SEC</a>
+      </nav>
     </div>
   </footer>
 
@@ -747,8 +1251,28 @@
     (function () {
       const JSON_URL = "./svenskstatistikecl26spring.json";
       const target = document.getElementById("teams-list");
+      const summaryTarget = document.getElementById("teams-summary");
       const search = document.getElementById("searchTeams");
+      const divisionFilter = document.getElementById("divisionFilter");
+      const sortTeams = document.getElementById("sortTeams");
       const updated = document.getElementById("lastUpdated");
+      let allTeams = [];
+
+      const divisionOrder = ["elite", "pro", "lite", "core", "neo"];
+      const divisionLabels = {
+        elite: "Elite",
+        pro: "Pro",
+        lite: "Lite",
+        core: "Core",
+        neo: "Neo"
+      };
+      const divisionRank = {
+        elite: 1,
+        pro: 2,
+        lite: 3,
+        core: 4,
+        neo: 5
+      };
 
       const swedishValues = new Set(["SE", "SWE", "SWEDEN", "SVERIGE", "SVENSK", "SVENSKA"]);
       const spring26Values = ["26 spring", "ecl 26 spring", "ecl26 spring", "spring 26"];
@@ -936,7 +1460,7 @@
 
       function cleanTeamBaseName(name) {
         return cleanDisplayTeamName(name)
-          .replace(/\s*\((?:26S|26W|ECL\s*26\s*Spring|ECL\s*26\s*Winter)\)\s*$/i, "")
+          .replace(/\s*\((?:\d{2}[SW]|ECL\s*\d{2}\s*(?:Spring|Winter))\)\s*$/i, "")
           .replace(/\s+/g, " ")
           .trim();
       }
@@ -951,6 +1475,21 @@
 
       function isSpringTeamName(name) {
         return /\(\s*26S\s*\)/i.test(String(name || "")) || /\bECL\s*26\s*Spring\b/i.test(String(name || ""));
+      }
+
+      function isWrongSeasonTeamName(name) {
+        const value = String(name || "");
+        const shortSeason = value.match(/\(\s*(\d{2})([SW])\s*\)/i);
+        if (shortSeason) {
+          return shortSeason[1] !== "26" || shortSeason[2].toUpperCase() !== "S";
+        }
+
+        const longSeason = value.match(/\bECL\s*(\d{2})\s*(Spring|Winter)\b/i);
+        if (longSeason) {
+          return longSeason[1] !== "26" || longSeason[2].toLowerCase() !== "spring";
+        }
+
+        return false;
       }
 
       function mergeTeam(existing, item) {
@@ -1157,7 +1696,7 @@
         if (hasCountryField) return false;
 
         const name = team.name || team.Name || team.Team || team.team || team.lag || "";
-        if (isWinterTeamName(name)) return false;
+        if (isWrongSeasonTeamName(name) || isWinterTeamName(name)) return false;
         return hasSwedishNameHint(name);
       }
 
@@ -1172,13 +1711,13 @@
         }
 
         const name = side === "from" ? row.From : row.To;
-        if (isWinterTeamName(name)) return false;
+        if (isWrongSeasonTeamName(name) || isWinterTeamName(name)) return false;
         return hasSwedishNameHint(name);
       }
 
       function normalizeTeamFromManual(row) {
         const name = cleanDisplayTeamName(row.name || row.Name || row.Team || row.team || row.lag);
-        if (!name || isWinterTeamName(name)) return null;
+        if (!name || isWrongSeasonTeamName(name) || isWinterTeamName(name)) return null;
 
         const leagueId = row.leagueId || row.LeagueID || row.leagueID || row.league_id || "";
         const teamId = row.teamId || row.TeamID || row.teamID || row.team_id || "";
@@ -1188,9 +1727,30 @@
           name: cleanTeamBaseName(name),
           division: row.division || row.Division || row.div || row.Div || "Svenskt lag",
           league: row.league || row.League || row.season || row.Season || "ECL 26 Spring",
+          group: row.group || row.Group || row.groupName || row.GroupName || "",
           location: row.location || row.Location || row.city || row.City || "Sverige",
           founded: row.founded || row.Founded || row.startYear || row.StartYear || "-",
           players: row.players || row.Players || row.swedishPlayers || row.SwedishPlayers || "-",
+          swedishPlayers: row.swedishPlayers || row.SwedishPlayers || "",
+          swedishSkaters: row.swedishSkaters || row.SwedishSkaters || "",
+          swedishGoalies: row.swedishGoalies || row.SwedishGoalies || "",
+          swedishGoals: row.swedishGoals || row.SwedishGoals || "",
+          swedishAssists: row.swedishAssists || row.SwedishAssists || "",
+          swedishPoints: row.swedishPoints || row.SwedishPoints || "",
+          tablePosition: row.tablePosition || row.TablePosition || row.tabellPlacering || "",
+          tablePoints: row.tablePoints || row.TablePoints || row.tabellPoang || "",
+          gamesPlayed: row.gamesPlayed || row.GamesPlayed || "",
+          wins: row.wins || row.Wins || "",
+          overtimeWins: row.overtimeWins || row.OvertimeWins || row.otWins || row.OTWins || "",
+          losses: row.losses || row.Losses || "",
+          otLosses: row.otLosses || row.OTLosses || row.ot_losses || "",
+          goalsFor: row.goalsFor || row.GoalsFor || "",
+          goalsAgainst: row.goalsAgainst || row.GoalsAgainst || "",
+          goalDiff: row.goalDiff || row.GoalDiff || "",
+          playoffMatches: row.playoffMatches || row.PlayoffMatches || "",
+          playoffWins: row.playoffWins || row.PlayoffWins || "",
+          playoffLosses: row.playoffLosses || row.PlayoffLosses || "",
+          playoffStatus: row.playoffStatus || row.PlayoffStatus || row.slutspelStatus || "",
           description: row.description || row.Description || row.info || row.Info || "Svenskt eHockey-lag med aktivitet i ECL-miljon.",
           status: row.status || row.Status || "Svenskt lag",
           url,
@@ -1201,7 +1761,7 @@
 
       function addTeam(map, item) {
         if (!item || !item.name) return;
-        if (isWinterTeamName(item.name)) return;
+        if (isWrongSeasonTeamName(item.name) || isWinterTeamName(item.name)) return;
 
         item.name = cleanTeamBaseName(item.name);
         item.league = "ECL 26 Spring";
@@ -1266,12 +1826,387 @@
 
         rows
           .filter(isSpring26Team)
-          .filter(isSwedishTeam)
           .map(normalizeTeamFromManual)
           .filter(Boolean)
           .forEach((team) => addTeam(map, team));
 
         return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "sv"));
+      }
+
+      function matchTeamIsSwedish(match, teamName) {
+        return match.svensktLag === teamName || match.svensktLag === "SWE vs SWE";
+      }
+
+      function normalizeDivision(value) {
+        const normalized = normalizeText(value);
+        if (normalized.includes("elite")) return "Elite";
+        if (normalized.includes("pro")) return "Pro";
+        if (normalized.includes("lite")) return "Lite";
+        if (normalized.includes("core")) return "Core";
+        if (normalized.includes("neo")) return "Neo";
+        return cleanDisplayTeamName(value) || "Svenskt lag";
+      }
+
+      function getDivisionRank(value) {
+        return divisionRank[normalizeText(value)] || 99;
+      }
+
+      function playoffPlaceStatus(team) {
+        const division = normalizeDivision(team.division);
+        const position = Number(team.tablePosition || 0);
+        if (!position) return "";
+
+        if (division === "Elite") {
+          if (position <= 8) return "Ja";
+          if (position <= 12) return "Nej";
+          if (position <= 15) return "Kval";
+          return "Nedflyttning";
+        }
+
+        if (division === "Pro") {
+          if (position <= 8) return "Ja";
+          if (position <= 11) return "Nej";
+          if (position <= 14) return "Kval";
+          return "Nedflyttning";
+        }
+
+        if (division === "Lite" || division === "Core") {
+          if (position <= 10) return "Ja";
+          if (position === 11) return "Möjlig";
+          return "Nej";
+        }
+
+        if (division === "Neo") {
+          if (position <= 2) return "Runda 2";
+          if (position <= 6) return "Ja";
+          return "Nej";
+        }
+
+        return "";
+      }
+
+      function getDivisionMatches(matcher, division) {
+        const source = matcher?.[division];
+        if (!Array.isArray(source)) return [];
+
+        return source.map((match) => ({
+          ...match,
+          division
+        }));
+      }
+
+      function teamsFromMatches(matcher) {
+        const map = new Map();
+
+        divisionOrder
+          .flatMap((division) => getDivisionMatches(matcher, division))
+          .forEach((match) => {
+            [
+              { name: match.awayTeam, side: "away" },
+              { name: match.homeTeam, side: "home" }
+            ].forEach((entry) => {
+              const name = cleanDisplayTeamName(entry.name);
+              if (!name || isWrongSeasonTeamName(name) || isWinterTeamName(name)) return;
+              if (!matchTeamIsSwedish(match, name)) return;
+
+              addTeam(map, {
+                name,
+                division: divisionLabels[match.division] || "ECL",
+                league: "ECL 26 Spring",
+                location: "Sverige",
+                founded: "-",
+                players: "-",
+                transferCount: 1,
+                description: "Svenskt ECL 26 Spring-lag som förekommer i matchdatan.",
+                status: "ECL 26 Spring",
+                url: "",
+                logo: ""
+              });
+            });
+          });
+
+        return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "sv"));
+      }
+
+      function ensureTeamStats(map, teamName, division) {
+        const key = teamIdentityKey(teamName);
+        if (!key) return null;
+
+        if (!map.has(key)) {
+          map.set(key, {
+            players: new Set(),
+            division: normalizeDivision(division),
+            regularGames: 0,
+            regularPoints: 0,
+            playoffMatches: 0,
+            playoffWins: 0,
+            playoffLosses: 0,
+            playoffGames: 0,
+            playoffPoints: 0,
+            playoffGoalsFor: 0,
+            playoffGoalsAgainst: 0,
+            tablePoints: "",
+            pointsPerGame: "",
+            wins: "",
+            overtimeWins: "",
+            losses: "",
+            otLosses: "",
+            goalsFor: "",
+            goalsAgainst: "",
+            goalDiff: "",
+            last10: "",
+            formScore: 0,
+            topSwedishPlayer: "",
+            topSwedishPoints: ""
+          });
+        }
+
+        return map.get(key);
+      }
+
+      function matchDateValue(match) {
+        return new Date(`${match.date || ""}T${match.time || "00:00"}`).getTime() || 0;
+      }
+
+      function isPlayoffMatch(match) {
+        const stage = normalizeText(match?.stage || "");
+        return stage && !stage.includes("grupp");
+      }
+
+      function addMatchResult(stats, goalsFor, goalsAgainst, isOvertime, dateValue, playoffMatch) {
+        if (playoffMatch) {
+          stats.playoffMatches = Number(stats.playoffMatches || 0) + 1;
+          stats.playoffGoalsFor = Number(stats.playoffGoalsFor || 0) + Number(goalsFor || 0);
+          stats.playoffGoalsAgainst = Number(stats.playoffGoalsAgainst || 0) + Number(goalsAgainst || 0);
+
+          if (Number(goalsFor || 0) > Number(goalsAgainst || 0)) {
+            stats.playoffWins = Number(stats.playoffWins || 0) + 1;
+          } else if (Number(goalsFor || 0) < Number(goalsAgainst || 0)) {
+            stats.playoffLosses = Number(stats.playoffLosses || 0) + 1;
+          }
+
+          return;
+        }
+
+        stats.regularGames = Number(stats.regularGames || 0) + 1;
+        stats.goalsFor = Number(stats.goalsFor || 0) + Number(goalsFor || 0);
+        stats.goalsAgainst = Number(stats.goalsAgainst || 0) + Number(goalsAgainst || 0);
+
+        let result = "L";
+        let points = 0;
+
+        if (goalsFor > goalsAgainst && isOvertime) {
+          stats.overtimeWins = Number(stats.overtimeWins || 0) + 1;
+          result = "OTW";
+          points = 2;
+        } else if (goalsFor > goalsAgainst) {
+          stats.wins = Number(stats.wins || 0) + 1;
+          result = "W";
+          points = 3;
+        } else if (goalsFor < goalsAgainst && isOvertime) {
+          stats.otLosses = Number(stats.otLosses || 0) + 1;
+          result = "OTL";
+          points = 1;
+        } else {
+          stats.losses = Number(stats.losses || 0) + 1;
+        }
+
+        stats.tablePoints = Number(stats.tablePoints || 0) + points;
+        if (!stats.results) stats.results = [];
+        stats.results.push({ dateValue, result });
+      }
+
+      function finalizeMatchStats(statsMap) {
+        statsMap.forEach((stats) => {
+          const games = Number(stats.regularGames || 0);
+          const points = Number(stats.tablePoints || 0);
+          const gf = Number(stats.goalsFor || 0);
+          const ga = Number(stats.goalsAgainst || 0);
+
+          if (games) {
+            stats.pointsPerGame = (points / games).toFixed(2);
+          }
+
+          stats.goalDiff = gf - ga;
+
+          if (Array.isArray(stats.results) && stats.results.length) {
+            const last = [...stats.results]
+              .sort((a, b) => b.dateValue - a.dateValue)
+              .slice(0, 10);
+            const wins = last.filter((item) => item.result === "W" || item.result === "OTW").length;
+            const losses = last.filter((item) => item.result === "L").length;
+            const otLosses = last.filter((item) => item.result === "OTL").length;
+            stats.last10 = `${wins}-${losses}-${otLosses}`;
+            stats.formScore = wins * 3 + otLosses;
+          }
+        });
+      }
+
+      function collectMatchStats(statsMap, matcher) {
+        if (!matcher || typeof matcher !== "object") return;
+
+        divisionOrder.forEach((division) => {
+          const rows = matcher[division];
+          if (!Array.isArray(rows)) return;
+
+          rows.forEach((match) => {
+            const dateValue = matchDateValue(match);
+            const isOvertime = String(match.ot || "").trim() !== "";
+            const playoffMatch = isPlayoffMatch(match);
+
+            [
+              {
+                name: match.awayTeam,
+                goalsFor: Number(match.awayScore || 0),
+                goalsAgainst: Number(match.homeScore || 0)
+              },
+              {
+                name: match.homeTeam,
+                goalsFor: Number(match.homeScore || 0),
+                goalsAgainst: Number(match.awayScore || 0)
+              }
+            ].forEach((entry) => {
+              const name = cleanDisplayTeamName(entry.name);
+              if (!name || isWrongSeasonTeamName(name) || isWinterTeamName(name)) return;
+              if (!matchTeamIsSwedish(match, name)) return;
+
+              const stats = ensureTeamStats(statsMap, name, divisionLabels[division] || division);
+              if (!stats) return;
+
+              stats.group = stats.group || match.group || "";
+              addMatchResult(stats, entry.goalsFor, entry.goalsAgainst, isOvertime, dateValue, playoffMatch);
+            });
+          });
+        });
+      }
+
+      function collectPlayerStats(statsMap, section, phase, includePoints) {
+        if (!section || typeof section !== "object") return;
+
+        divisionOrder.forEach((division) => {
+          const rows = section[division];
+          if (!Array.isArray(rows)) return;
+
+          rows.forEach((player) => {
+            const teamName = cleanDisplayTeamName(player.team);
+            if (!teamName || isWrongSeasonTeamName(teamName) || isWinterTeamName(teamName)) return;
+
+            const stats = ensureTeamStats(statsMap, teamName, divisionLabels[division] || division);
+            if (!stats) return;
+
+            if (player.name) {
+              stats.players.add(String(player.name).trim());
+            }
+
+            const teamMatches = Number(player.teamMatches || 0);
+            if (phase === "regular") {
+              stats.regularGames = Math.max(stats.regularGames, teamMatches);
+              if (includePoints) stats.regularPoints += Number(player.p || 0);
+              if (includePoints && Number(player.p || 0) > Number(stats.topSwedishPoints || 0)) {
+                stats.topSwedishPlayer = player.name || "";
+                stats.topSwedishPoints = Number(player.p || 0);
+              }
+            } else {
+              stats.playoffGames = Math.max(stats.playoffGames, teamMatches);
+              if (includePoints) stats.playoffPoints += Number(player.p || 0);
+            }
+          });
+        });
+      }
+
+      function teamStatsFromPlayerData(parsed) {
+        const statsMap = new Map();
+
+        collectMatchStats(statsMap, parsed?.matcher);
+        collectPlayerStats(statsMap, parsed?.regular?.skaters, "regular", true);
+        collectPlayerStats(statsMap, parsed?.regular?.goalies, "regular", false);
+        collectPlayerStats(statsMap, parsed?.playoffs?.skaters, "playoffs", true);
+        collectPlayerStats(statsMap, parsed?.playoffs?.goalies, "playoffs", false);
+        finalizeMatchStats(statsMap);
+
+        return statsMap;
+      }
+
+      function applyOptionalTeamSummary(team, stats) {
+        const summary = {
+          group: stats?.group || team.group || team.groupName || "",
+          tablePosition: team.tablePosition || team.tabellPlacering || team.position || team.rank || stats?.tablePosition || "",
+          tablePoints: stats?.tablePoints || team.tablePoints || team.tabellPoang || team.pointsTable || team.points || "",
+          gamesPlayed: stats?.regularGames || team.gamesPlayed || team.regularGames || team.teamMatches || "",
+          wins: stats?.wins || team.wins || "",
+          overtimeWins: stats?.overtimeWins || team.overtimeWins || "",
+          losses: stats?.losses || team.losses || "",
+          otLosses: stats?.otLosses || team.otLosses || "",
+          goalsFor: stats?.goalsFor || team.goalsFor || "",
+          goalsAgainst: stats?.goalsAgainst || team.goalsAgainst || "",
+          goalDiff: stats?.goalDiff !== "" && stats?.goalDiff !== undefined ? stats.goalDiff : team.goalDiff || "",
+          pointsPerGame: stats?.pointsPerGame || team.pointsPerGame || team.ppg || "",
+          last10: stats?.last10 || team.last10 || team.form || "",
+          formScore: stats?.formScore || team.formScore || "",
+          topSwedishPlayer: stats?.topSwedishPlayer || team.topSwedishPlayer || team.topPlayer || "",
+          topSwedishPoints: stats?.topSwedishPoints || team.topSwedishPoints || team.topPlayerPoints || "",
+          playoffSeed: team.playoffSeed || team.seed || "",
+          playoffStatus: team.playoffStatus || team.slutspelStatus || stats?.playoffStatus || ""
+        };
+
+        const key = teamIdentityKey(team.name);
+        const division = normalizeDivision(team.division || stats?.division);
+        const group = normalizeText(summary.group);
+
+        if (key === "trojans" && division === "Lite" && group === "grupp 3") {
+          summary.tablePosition = 12;
+          summary.playoffStatus = "Nej";
+          summary.tiebreakNote = "Utanför slutspel.";
+        }
+
+        return summary;
+      }
+
+      function enrichTeamsWithStats(teams, parsed) {
+        const statsMap = teamStatsFromPlayerData(parsed);
+
+        return teams.map((team) => {
+          const stats = statsMap.get(teamIdentityKey(team.name));
+          const optional = applyOptionalTeamSummary(team, stats);
+          const listedSwedishPlayers = Number(team.swedishPlayers || team.SwedishPlayers || 0);
+          const swedishPlayers = listedSwedishPlayers || (stats ? stats.players.size : Number(team.players || 0));
+
+          return {
+            ...team,
+            division: normalizeDivision(team.division || stats?.division),
+            swedishPlayers: swedishPlayers || "",
+            regularGames: optional.gamesPlayed || stats?.regularGames || team.regularGames || team.teamMatches || "",
+            regularPoints: stats?.regularPoints || team.regularPoints || "",
+            playoffMatches: stats?.playoffMatches || team.playoffMatches || "",
+            playoffWins: stats?.playoffWins || team.playoffWins || "",
+            playoffLosses: stats?.playoffLosses || team.playoffLosses || "",
+            playoffGames: stats?.playoffGames || team.playoffGames || "",
+            playoffPoints: stats?.playoffPoints || team.playoffPoints || "",
+            playoffGoalsFor: stats?.playoffGoalsFor || team.playoffGoalsFor || "",
+            playoffGoalsAgainst: stats?.playoffGoalsAgainst || team.playoffGoalsAgainst || "",
+            swedishPoints: stats?.regularPoints || team.swedishPoints || team.SwedishPoints || "",
+            ...optional
+          };
+        });
+      }
+
+      function collectTeams(parsed) {
+        const map = new Map();
+
+        if (parsed?.matcher && typeof parsed.matcher === "object") {
+          teamsFromMatches(parsed.matcher).forEach((team) => addTeam(map, team));
+        }
+
+        if (Array.isArray(parsed?.teams)) {
+          teamsFromTeamArray(parsed.teams).forEach((team) => addTeam(map, team));
+        }
+
+        if (Array.isArray(parsed?.overgangar)) {
+          teamsFromTransfers(parsed.overgangar).forEach((team) => addTeam(map, team));
+        }
+
+        return enrichTeamsWithStats([...map.values()], parsed)
+          .sort((a, b) => a.name.localeCompare(b.name, "sv"));
       }
 
       function teamMarkup(team) {
@@ -1280,13 +2215,85 @@
           ...teamNameCandidates(team.name)
         ]);
 
-        const linkMarkup = team.url
-          ? `<a class="team-link" href="${escapeHtml(team.url)}" target="_blank" rel="noopener noreferrer">Öppna lagprofil</a>`
-          : `<span class="team-tag">Ingen länk ännu</span>`;
+        const record = [team.wins, team.overtimeWins, team.otLosses, team.losses]
+          .some(value => value !== "" && value !== undefined && value !== null)
+          ? `${team.wins || 0}-${team.overtimeWins || 0}-${team.otLosses || 0}-${team.losses || 0}`
+          : "";
 
-        const transferText = team.transferCount
-          ? `${team.transferCount} träffar`
-          : (team.players || "-");
+        const goalDiff = team.goalDiff !== "" && team.goalDiff !== undefined && team.goalDiff !== null
+          ? (Number(team.goalDiff) > 0 ? `+${team.goalDiff}` : String(team.goalDiff))
+          : "";
+
+        const placementPlayoffText = playoffPlaceStatus(team);
+        const playedPlayoffText = Number(team.playoffMatches || 0) > 0
+          ? `Spelar ${team.playoffWins || 0}-${team.playoffLosses || 0}`
+          : "";
+        const playoffText = playedPlayoffText || placementPlayoffText || "";
+        const goalsText = team.goalsFor !== "" && team.goalsAgainst !== ""
+          ? `${team.goalsFor}-${team.goalsAgainst}`
+          : "";
+        const seedText = team.playoffSeed ? `Seed #${team.playoffSeed}` : "";
+        const topPlayerText = team.topSwedishPlayer
+          ? `${team.topSwedishPlayer}${team.topSwedishPoints !== "" ? `, ${team.topSwedishPoints}p` : ""}`
+          : "";
+
+        function statusSentence() {
+          if (team.tiebreakNote) return team.tiebreakNote;
+
+          const normalized = normalizeText(playoffText);
+          if (playedPlayoffText) return `Slutspel pågår: ${playedPlayoffText}.`;
+          if (normalized.includes("nedflyttning")) return "Nedflyttning enligt nuvarande placering.";
+          if (normalized.includes("kval")) return "Kvalplats enligt nuvarande placering.";
+          if (normalized.includes("mojlig")) return "Kan nå slutspel som en av de bästa elvorna.";
+          if (normalized === "ja" || normalized.includes("runda")) return seedText ? `Klar för slutspel, ${seedText.toLowerCase()}.` : "Klar för slutspel.";
+          if (normalized === "nej") return "Utanför slutspel enligt nuvarande placering.";
+          return "";
+        }
+
+        function highlightClass(label, value, isGold) {
+          if (isGold) return "is-gold";
+          if (label !== "Slutspel") return "";
+
+          const normalized = normalizeText(value);
+          if (normalized.includes("nedflyttning") || normalized === "nej") return "is-danger";
+          if (normalized.includes("kval") || normalized.includes("mojlig")) return "is-warning";
+          return "is-positive";
+        }
+
+        const highlightMarkup = [
+          team.tablePoints !== "" && team.tablePoints !== undefined && team.tablePoints !== null ? ["Poäng", team.tablePoints, true] : null,
+          team.tablePosition ? ["Placering", "#" + team.tablePosition, false] : null,
+          playoffText ? ["Slutspel", playoffText, false] : null
+        ]
+          .filter(Boolean)
+          .map(([label, value, isGold]) => `
+            <div class="team-highlight__item ${highlightClass(label, value, isGold)}">
+              <span>${escapeHtml(label)}</span>
+              <strong>${escapeHtml(value)}</strong>
+            </div>
+          `)
+          .join("");
+
+        const statsMarkup = [
+          team.group ? ["Grupp", team.group] : null,
+          team.regularGames ? ["Matcher", team.regularGames] : null,
+          record ? ["Record", record] : null,
+          team.pointsPerGame ? ["P/G", team.pointsPerGame] : null,
+          team.last10 ? ["L10", team.last10] : null,
+          goalsText ? ["GF-GA", goalsText] : null,
+          team.playoffMatches ? ["Slutspelsmatcher", team.playoffMatches] : null,
+          goalDiff ? ["Mål +/-", goalDiff] : null,
+          team.swedishPlayers ? ["Sv spelare", team.swedishPlayers] : null,
+          team.swedishPoints ? ["Sv poäng", team.swedishPoints] : null
+        ]
+          .filter(Boolean)
+          .map(([label, value]) => `
+            <div class="team-stat">
+              <span>${escapeHtml(label)}</span>
+              <strong>${escapeHtml(value)}</strong>
+            </div>
+          `)
+          .join("");
 
         const searchText = [
           team.name,
@@ -1295,60 +2302,175 @@
           team.location,
           team.founded,
           team.players,
+          team.swedishPlayers,
+          team.swedishPoints,
+          team.regularGames,
+          team.regularPoints,
+          team.gamesPlayed,
+          team.tablePosition,
+          team.tablePoints,
+          team.pointsPerGame,
+          team.group,
+          team.last10,
+          team.wins,
+          team.overtimeWins,
+          team.losses,
+          team.otLosses,
+          team.goalsFor,
+          team.goalsAgainst,
+          team.goalDiff,
+          team.topSwedishPlayer,
+          team.topSwedishPoints,
+          team.playoffStatus,
           team.description,
           team.status,
           team.searchExtra
         ].join(" ").toLowerCase();
 
+        const wrapperTag = team.url ? "a" : "div";
+        const wrapperAttrs = team.url
+          ? `href="${escapeHtml(team.url)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna lagprofil för ${escapeHtml(team.name)}"`
+          : `aria-disabled="true"`;
+
         return `
           <article class="team-card" data-search="${escapeHtml(searchText)}">
-            <div class="team-card__top">
-              <div class="team-logo">
-                <img
-                  alt="${escapeHtml(team.name)}"
-                  data-team="${escapeHtml(team.name)}"
-                  data-candidates="${escapeHtml(encodeAttr(logoCandidates))}"
-                  loading="lazy"
-                  onerror="handleImageError(event)"
-                >
-              </div>
-              <div class="team-heading">
-                <h3 class="team-name">${escapeHtml(team.name)}</h3>
-                <div class="team-division">${escapeHtml(team.division || "Svenskt lag")}</div>
-              </div>
-            </div>
-
-            <div class="team-card__body">
-              <p class="team-description">${escapeHtml(team.description || "Svenskt eHockey-lag.")}</p>
-
-              <div class="team-facts" aria-label="Lagfakta">
-                <div class="fact">
-                  <div class="fact__label">Liga</div>
-                  <div class="fact__value">${escapeHtml(team.league || "ECL")}</div>
+            <${wrapperTag} class="team-card__link" ${wrapperAttrs}>
+              <div class="team-card__top">
+                <div class="team-main">
+                  <div class="team-logo">
+                    <img
+                      alt="${escapeHtml(team.name)}"
+                      data-team="${escapeHtml(team.name)}"
+                      data-candidates="${escapeHtml(encodeAttr(logoCandidates))}"
+                      loading="lazy"
+                      onerror="handleImageError(event)"
+                    >
+                  </div>
+                  <div class="team-heading">
+                    <h3 class="team-name">${escapeHtml(team.name)}</h3>
+                    <div class="team-division">${escapeHtml(team.division || "Svenskt lag")}</div>
+                  </div>
                 </div>
-                <div class="fact">
-                  <div class="fact__label">Ort</div>
-                  <div class="fact__value">${escapeHtml(team.location || "Sverige")}</div>
-                </div>
-                <div class="fact">
-                  <div class="fact__label">Info</div>
-                  <div class="fact__value">${escapeHtml(transferText)}</div>
-                </div>
+                ${highlightMarkup ? `<div class="team-highlight">${highlightMarkup}</div>` : ""}
+                ${statsMarkup ? `<div class="team-stats">${statsMarkup}</div>` : ""}
+                ${
+                  topPlayerText || statusSentence()
+                    ? `<div class="team-note">${topPlayerText ? `<strong>Topp svensk:</strong> ${escapeHtml(topPlayerText)}` : ""}${topPlayerText && statusSentence() ? "<br>" : ""}${escapeHtml(statusSentence())}</div>`
+                    : ""
+                }
               </div>
-
-              <div class="team-actions">
-                ${linkMarkup}
-                <span class="team-tag">${escapeHtml(team.status || "Svenskt lag")}</span>
-              </div>
-            </div>
+            </${wrapperTag}>
           </article>
         `;
       }
-
       function activateImages() {
         target.querySelectorAll("img[data-candidates]").forEach((img) => {
           setFirstCandidate(img);
         });
+      }
+
+      function getVisibleTeams() {
+        const q = search.value.toLowerCase().trim();
+        const selectedDivision = divisionFilter.value;
+        const sortValue = sortTeams.value;
+
+        return allTeams
+          .filter((team) => {
+            const haystack = [
+              team.name,
+              team.division,
+              team.league,
+              team.location,
+              team.founded,
+              team.players,
+              team.swedishPlayers,
+              team.swedishPoints,
+              team.regularGames,
+              team.tablePosition,
+              team.tablePoints,
+              team.group,
+              team.wins,
+              team.overtimeWins,
+              team.losses,
+              team.otLosses,
+              team.goalDiff,
+              team.playoffStatus,
+              team.description,
+              team.status,
+              team.searchExtra
+            ].join(" ").toLowerCase();
+
+            const matchesSearch = !q || haystack.includes(q);
+            const matchesDivision = selectedDivision === "all" || normalizeDivision(team.division) === selectedDivision;
+            return matchesSearch && matchesDivision;
+          })
+          .sort((a, b) => {
+            if (sortValue === "name-desc") {
+              return b.name.localeCompare(a.name, "sv");
+            }
+
+            if (sortValue === "name-asc") {
+              return a.name.localeCompare(b.name, "sv");
+            }
+
+            if (sortValue === "players-desc") {
+              return Number(b.swedishPlayers || 0) - Number(a.swedishPlayers || 0) || a.name.localeCompare(b.name, "sv");
+            }
+
+            if (sortValue === "points-desc") {
+              return Number(b.tablePoints || 0) - Number(a.tablePoints || 0) || a.name.localeCompare(b.name, "sv");
+            }
+
+            if (sortValue === "ppg-desc") {
+              return Number(b.pointsPerGame || 0) - Number(a.pointsPerGame || 0) || Number(b.tablePoints || 0) - Number(a.tablePoints || 0) || a.name.localeCompare(b.name, "sv");
+            }
+
+            if (sortValue === "form-desc") {
+              return Number(b.formScore || 0) - Number(a.formScore || 0) || Number(b.tablePoints || 0) - Number(a.tablePoints || 0) || a.name.localeCompare(b.name, "sv");
+            }
+
+            if (sortValue === "swedish-points-desc") {
+              return Number(b.swedishPoints || 0) - Number(a.swedishPoints || 0) || a.name.localeCompare(b.name, "sv");
+            }
+
+            if (sortValue === "matches-desc") {
+              return Number(b.regularGames || 0) - Number(a.regularGames || 0) || a.name.localeCompare(b.name, "sv");
+            }
+
+            return getDivisionRank(a.division) - getDivisionRank(b.division) || a.name.localeCompare(b.name, "sv");
+          });
+      }
+
+      function getTeamPlayoffText(team) {
+        if (Number(team.playoffMatches || 0) > 0) {
+          return `Spelar ${team.playoffWins || 0}-${team.playoffLosses || 0}`;
+        }
+
+        return playoffPlaceStatus(team) || "";
+      }
+
+      function renderSummary(rows) {
+        if (!summaryTarget) return;
+
+        const total = rows.length;
+        const playoff = rows.filter((team) => {
+          const text = normalizeText(getTeamPlayoffText(team));
+          return text === "ja" || text.includes("spelar") || text.includes("runda");
+        }).length;
+        const qualification = rows.filter((team) => {
+          const text = normalizeText(getTeamPlayoffText(team));
+          return text.includes("kval") || text.includes("mojlig");
+        }).length;
+        const relegation = rows.filter((team) => normalizeText(getTeamPlayoffText(team)).includes("nedflyttning")).length;
+        const swedishPlayers = rows.reduce((sum, team) => sum + Number(team.swedishPlayers || 0), 0);
+
+        summaryTarget.innerHTML = `
+          <div class="summary-chip"><span>Visar lag</span><strong>${escapeHtml(total)}</strong></div>
+          <div class="summary-chip"><span>Slutspel</span><strong>${escapeHtml(playoff)}</strong></div>
+          <div class="summary-chip"><span>Kval/möjlig</span><strong>${escapeHtml(qualification)}</strong></div>
+          <div class="summary-chip"><span>Nedflyttning</span><strong>${escapeHtml(relegation)}</strong></div>
+          <div class="summary-chip"><span>Sv spelare</span><strong>${escapeHtml(swedishPlayers)}</strong></div>
+        `;
       }
 
       function renderTeams(rows) {
@@ -1361,7 +2483,18 @@
         activateImages();
       }
 
+      function renderFilteredTeams() {
+        const rows = getVisibleTeams();
+        renderSummary(rows);
+        renderTeams(rows);
+      }
+
       function setupSearch() {
+        search.addEventListener("input", renderFilteredTeams);
+        divisionFilter.addEventListener("change", renderFilteredTeams);
+        sortTeams.addEventListener("change", renderFilteredTeams);
+        return;
+
         search.addEventListener("input", function () {
           const q = this.value.toLowerCase().trim();
           const cards = target.querySelectorAll(".team-card");
@@ -1393,12 +2526,9 @@
       fetchJson(JSON_URL)
         .then((rawData) => {
           const parsed = extractJsonResultObject(rawData);
-          const allTransfers = Array.isArray(parsed.overgangar) ? parsed.overgangar : [];
-          const teams = Array.isArray(parsed.teams)
-            ? teamsFromTeamArray(parsed.teams)
-            : teamsFromTransfers(allTransfers);
+          allTeams = collectTeams(parsed);
 
-          renderTeams(teams);
+          renderFilteredTeams();
           setupSearch();
 
           const updatedValue = parsed.updated || rawData.updated || "";
@@ -1419,3 +2549,4 @@
   </script>
 </body>
 </html>
+
