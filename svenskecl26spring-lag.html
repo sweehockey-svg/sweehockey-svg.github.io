@@ -1938,13 +1938,8 @@
             division: normalizeDivision(division),
             regularGames: 0,
             regularPoints: 0,
-            playoffMatches: 0,
-            playoffWins: 0,
-            playoffLosses: 0,
             playoffGames: 0,
             playoffPoints: 0,
-            playoffGoalsFor: 0,
-            playoffGoalsAgainst: 0,
             tablePoints: "",
             pointsPerGame: "",
             wins: "",
@@ -1968,26 +1963,7 @@
         return new Date(`${match.date || ""}T${match.time || "00:00"}`).getTime() || 0;
       }
 
-      function isPlayoffMatch(match) {
-        const stage = normalizeText(match?.stage || "");
-        return stage && !stage.includes("grupp");
-      }
-
-      function addMatchResult(stats, goalsFor, goalsAgainst, isOvertime, dateValue, playoffMatch) {
-        if (playoffMatch) {
-          stats.playoffMatches = Number(stats.playoffMatches || 0) + 1;
-          stats.playoffGoalsFor = Number(stats.playoffGoalsFor || 0) + Number(goalsFor || 0);
-          stats.playoffGoalsAgainst = Number(stats.playoffGoalsAgainst || 0) + Number(goalsAgainst || 0);
-
-          if (Number(goalsFor || 0) > Number(goalsAgainst || 0)) {
-            stats.playoffWins = Number(stats.playoffWins || 0) + 1;
-          } else if (Number(goalsFor || 0) < Number(goalsAgainst || 0)) {
-            stats.playoffLosses = Number(stats.playoffLosses || 0) + 1;
-          }
-
-          return;
-        }
-
+      function addMatchResult(stats, goalsFor, goalsAgainst, isOvertime, dateValue) {
         stats.regularGames = Number(stats.regularGames || 0) + 1;
         stats.goalsFor = Number(stats.goalsFor || 0) + Number(goalsFor || 0);
         stats.goalsAgainst = Number(stats.goalsAgainst || 0) + Number(goalsAgainst || 0);
@@ -2052,7 +2028,6 @@
           rows.forEach((match) => {
             const dateValue = matchDateValue(match);
             const isOvertime = String(match.ot || "").trim() !== "";
-            const playoffMatch = isPlayoffMatch(match);
 
             [
               {
@@ -2074,7 +2049,7 @@
               if (!stats) return;
 
               stats.group = stats.group || match.group || "";
-              addMatchResult(stats, entry.goalsFor, entry.goalsAgainst, isOvertime, dateValue, playoffMatch);
+              addMatchResult(stats, entry.goalsFor, entry.goalsAgainst, isOvertime, dateValue);
             });
           });
         });
@@ -2177,13 +2152,8 @@
             swedishPlayers: swedishPlayers || "",
             regularGames: optional.gamesPlayed || stats?.regularGames || team.regularGames || team.teamMatches || "",
             regularPoints: stats?.regularPoints || team.regularPoints || "",
-            playoffMatches: stats?.playoffMatches || team.playoffMatches || "",
-            playoffWins: stats?.playoffWins || team.playoffWins || "",
-            playoffLosses: stats?.playoffLosses || team.playoffLosses || "",
             playoffGames: stats?.playoffGames || team.playoffGames || "",
             playoffPoints: stats?.playoffPoints || team.playoffPoints || "",
-            playoffGoalsFor: stats?.playoffGoalsFor || team.playoffGoalsFor || "",
-            playoffGoalsAgainst: stats?.playoffGoalsAgainst || team.playoffGoalsAgainst || "",
             swedishPoints: stats?.regularPoints || team.swedishPoints || team.SwedishPoints || "",
             ...optional
           };
@@ -2281,7 +2251,6 @@
           team.pointsPerGame ? ["P/G", team.pointsPerGame] : null,
           team.last10 ? ["L10", team.last10] : null,
           goalsText ? ["GF-GA", goalsText] : null,
-          team.playoffMatches ? ["Slutspelsmatcher", team.playoffMatches] : null,
           goalDiff ? ["Mål +/-", goalDiff] : null,
           team.swedishPlayers ? ["Sv spelare", team.swedishPlayers] : null,
           team.swedishPoints ? ["Sv poäng", team.swedishPoints] : null
@@ -2549,4 +2518,3 @@
   </script>
 </body>
 </html>
-
