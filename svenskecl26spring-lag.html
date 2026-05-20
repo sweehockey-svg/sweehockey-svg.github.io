@@ -381,43 +381,8 @@
       gap:18px;
     }
 
-    .summary-bar{
-      display:grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap:12px;
-      margin: 0 0 18px;
-    }
-
-    .summary-chip{
-      min-height:62px;
-      padding:12px 14px;
-      border-radius:16px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.025));
-      border:1px solid rgba(255,255,255,0.09);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
-    }
-
-    .summary-chip span{
-      display:block;
-      margin-bottom:5px;
-      color: rgba(255,255,255,0.54);
-      font-size:10px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.36px;
-    }
-
-    .summary-chip strong{
-      display:block;
-      color:#fff;
-      font-size:22px;
-      font-weight:950;
-      line-height:1;
-    }
-
     .team-card{
-      min-height:390px;
+      min-height:320px;
       background:
         radial-gradient(110% 150% at 0% 0%, rgba(245,195,75,0.10), transparent 38%),
         radial-gradient(80% 100% at 100% 100%, rgba(88,140,255,0.06), transparent 42%),
@@ -430,7 +395,7 @@
     }
 
     .team-card__link{
-      min-height:390px;
+      min-height:320px;
       height:100%;
       display:block;
       color:inherit;
@@ -449,7 +414,7 @@
 
     .team-card__top{
       width:100%;
-      min-height:390px;
+      min-height:320px;
       padding:24px;
       display:flex;
       flex-direction:column;
@@ -565,18 +530,6 @@
       color: var(--gold);
     }
 
-    .team-highlight__item.is-positive strong{
-      color:#79f2b0;
-    }
-
-    .team-highlight__item.is-warning strong{
-      color:#ffd166;
-    }
-
-    .team-highlight__item.is-danger strong{
-      color:#ff7b7b;
-    }
-
     .team-stats{
       display:grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -598,23 +551,6 @@
       font-size:15px;
       font-weight:950;
       line-height:1.1;
-    }
-
-    .team-note{
-      margin-top:auto;
-      padding:12px 13px;
-      border-radius:16px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.022));
-      border:1px solid rgba(255,255,255,0.08);
-      color: rgba(255,255,255,0.76);
-      font-size:13px;
-      line-height:1.35;
-    }
-
-    .team-note strong{
-      color:#fff;
-      font-weight:950;
     }
 
     .empty-state{
@@ -685,10 +621,6 @@
         grid-template-columns: 1fr;
       }
 
-      .summary-bar{
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
       .team-card__top{
         padding:18px;
         gap:16px;
@@ -734,10 +666,6 @@
       }
 
       .team-highlight{
-        grid-template-columns: 1fr;
-      }
-
-      .summary-bar{
         grid-template-columns: 1fr;
       }
     }
@@ -843,9 +771,6 @@
               <option value="name-desc">Namn Ö-A</option>
               <option value="players-desc">Flest spelare</option>
               <option value="points-desc">Flest poäng</option>
-              <option value="ppg-desc">Bäst poängsnitt</option>
-              <option value="form-desc">Bäst form</option>
-              <option value="swedish-points-desc">Flest svenska poäng</option>
               <option value="matches-desc">Flest matcher</option>
             </select>
           </div>
@@ -856,7 +781,6 @@
         </div>
       </div>
 
-      <div id="teams-summary" class="summary-bar" aria-label="Översikt svenska lag"></div>
       <div id="teams-list"></div>
       <p id="lastUpdated" class="lastUpdated"></p>
     </section>
@@ -915,7 +839,6 @@
     (function () {
       const JSON_URL = "./svenskstatistikecl26spring.json";
       const target = document.getElementById("teams-list");
-      const summaryTarget = document.getElementById("teams-summary");
       const search = document.getElementById("searchTeams");
       const divisionFilter = document.getElementById("divisionFilter");
       const sortTeams = document.getElementById("sortTeams");
@@ -1603,120 +1526,11 @@
             regularGames: 0,
             regularPoints: 0,
             playoffGames: 0,
-            playoffPoints: 0,
-            tablePoints: "",
-            pointsPerGame: "",
-            wins: "",
-            overtimeWins: "",
-            losses: "",
-            otLosses: "",
-            goalsFor: "",
-            goalsAgainst: "",
-            goalDiff: "",
-            last10: "",
-            formScore: 0,
-            topSwedishPlayer: "",
-            topSwedishPoints: ""
+            playoffPoints: 0
           });
         }
 
         return map.get(key);
-      }
-
-      function matchDateValue(match) {
-        return new Date(`${match.date || ""}T${match.time || "00:00"}`).getTime() || 0;
-      }
-
-      function addMatchResult(stats, goalsFor, goalsAgainst, isOvertime, dateValue) {
-        stats.regularGames = Number(stats.regularGames || 0) + 1;
-        stats.goalsFor = Number(stats.goalsFor || 0) + Number(goalsFor || 0);
-        stats.goalsAgainst = Number(stats.goalsAgainst || 0) + Number(goalsAgainst || 0);
-
-        let result = "L";
-        let points = 0;
-
-        if (goalsFor > goalsAgainst && isOvertime) {
-          stats.overtimeWins = Number(stats.overtimeWins || 0) + 1;
-          result = "OTW";
-          points = 2;
-        } else if (goalsFor > goalsAgainst) {
-          stats.wins = Number(stats.wins || 0) + 1;
-          result = "W";
-          points = 3;
-        } else if (goalsFor < goalsAgainst && isOvertime) {
-          stats.otLosses = Number(stats.otLosses || 0) + 1;
-          result = "OTL";
-          points = 1;
-        } else {
-          stats.losses = Number(stats.losses || 0) + 1;
-        }
-
-        stats.tablePoints = Number(stats.tablePoints || 0) + points;
-        if (!stats.results) stats.results = [];
-        stats.results.push({ dateValue, result });
-      }
-
-      function finalizeMatchStats(statsMap) {
-        statsMap.forEach((stats) => {
-          const games = Number(stats.regularGames || 0);
-          const points = Number(stats.tablePoints || 0);
-          const gf = Number(stats.goalsFor || 0);
-          const ga = Number(stats.goalsAgainst || 0);
-
-          if (games) {
-            stats.pointsPerGame = (points / games).toFixed(2);
-          }
-
-          stats.goalDiff = gf - ga;
-
-          if (Array.isArray(stats.results) && stats.results.length) {
-            const last = [...stats.results]
-              .sort((a, b) => b.dateValue - a.dateValue)
-              .slice(0, 10);
-            const wins = last.filter((item) => item.result === "W" || item.result === "OTW").length;
-            const losses = last.filter((item) => item.result === "L").length;
-            const otLosses = last.filter((item) => item.result === "OTL").length;
-            stats.last10 = `${wins}-${losses}-${otLosses}`;
-            stats.formScore = wins * 3 + otLosses;
-          }
-        });
-      }
-
-      function collectMatchStats(statsMap, matcher) {
-        if (!matcher || typeof matcher !== "object") return;
-
-        divisionOrder.forEach((division) => {
-          const rows = matcher[division];
-          if (!Array.isArray(rows)) return;
-
-          rows.forEach((match) => {
-            const dateValue = matchDateValue(match);
-            const isOvertime = String(match.ot || "").trim() !== "";
-
-            [
-              {
-                name: match.awayTeam,
-                goalsFor: Number(match.awayScore || 0),
-                goalsAgainst: Number(match.homeScore || 0)
-              },
-              {
-                name: match.homeTeam,
-                goalsFor: Number(match.homeScore || 0),
-                goalsAgainst: Number(match.awayScore || 0)
-              }
-            ].forEach((entry) => {
-              const name = cleanDisplayTeamName(entry.name);
-              if (!name || isWrongSeasonTeamName(name) || isWinterTeamName(name)) return;
-              if (!matchTeamIsSwedish(match, name)) return;
-
-              const stats = ensureTeamStats(statsMap, name, divisionLabels[division] || division);
-              if (!stats) return;
-
-              stats.group = stats.group || match.group || "";
-              addMatchResult(stats, entry.goalsFor, entry.goalsAgainst, isOvertime, dateValue);
-            });
-          });
-        });
       }
 
       function collectPlayerStats(statsMap, section, phase, includePoints) {
@@ -1741,10 +1555,6 @@
             if (phase === "regular") {
               stats.regularGames = Math.max(stats.regularGames, teamMatches);
               if (includePoints) stats.regularPoints += Number(player.p || 0);
-              if (includePoints && Number(player.p || 0) > Number(stats.topSwedishPoints || 0)) {
-                stats.topSwedishPlayer = player.name || "";
-                stats.topSwedishPoints = Number(player.p || 0);
-              }
             } else {
               stats.playoffGames = Math.max(stats.playoffGames, teamMatches);
               if (includePoints) stats.playoffPoints += Number(player.p || 0);
@@ -1756,49 +1566,29 @@
       function teamStatsFromPlayerData(parsed) {
         const statsMap = new Map();
 
-        collectMatchStats(statsMap, parsed?.matcher);
         collectPlayerStats(statsMap, parsed?.regular?.skaters, "regular", true);
         collectPlayerStats(statsMap, parsed?.regular?.goalies, "regular", false);
         collectPlayerStats(statsMap, parsed?.playoffs?.skaters, "playoffs", true);
         collectPlayerStats(statsMap, parsed?.playoffs?.goalies, "playoffs", false);
-        finalizeMatchStats(statsMap);
 
         return statsMap;
       }
 
       function applyOptionalTeamSummary(team, stats) {
-        const summary = {
-          group: stats?.group || team.group || team.groupName || "",
+        return {
+          group: team.group || team.groupName || "",
           tablePosition: team.tablePosition || team.tabellPlacering || team.position || team.rank || stats?.tablePosition || "",
-          tablePoints: stats?.tablePoints || team.tablePoints || team.tabellPoang || team.pointsTable || team.points || "",
-          gamesPlayed: stats?.regularGames || team.gamesPlayed || team.regularGames || team.teamMatches || "",
-          wins: stats?.wins || team.wins || "",
-          overtimeWins: stats?.overtimeWins || team.overtimeWins || "",
-          losses: stats?.losses || team.losses || "",
-          otLosses: stats?.otLosses || team.otLosses || "",
-          goalsFor: stats?.goalsFor || team.goalsFor || "",
-          goalsAgainst: stats?.goalsAgainst || team.goalsAgainst || "",
-          goalDiff: stats?.goalDiff !== "" && stats?.goalDiff !== undefined ? stats.goalDiff : team.goalDiff || "",
-          pointsPerGame: stats?.pointsPerGame || team.pointsPerGame || team.ppg || "",
-          last10: stats?.last10 || team.last10 || team.form || "",
-          formScore: stats?.formScore || team.formScore || "",
-          topSwedishPlayer: stats?.topSwedishPlayer || team.topSwedishPlayer || team.topPlayer || "",
-          topSwedishPoints: stats?.topSwedishPoints || team.topSwedishPoints || team.topPlayerPoints || "",
-          playoffSeed: team.playoffSeed || team.seed || "",
+          tablePoints: team.tablePoints || team.tabellPoang || team.pointsTable || team.points || stats?.tablePoints || "",
+          gamesPlayed: team.gamesPlayed || team.regularGames || team.teamMatches || stats?.regularGames || "",
+          wins: team.wins || "",
+          overtimeWins: team.overtimeWins || "",
+          losses: team.losses || "",
+          otLosses: team.otLosses || "",
+          goalsFor: team.goalsFor || "",
+          goalsAgainst: team.goalsAgainst || "",
+          goalDiff: team.goalDiff || "",
           playoffStatus: team.playoffStatus || team.slutspelStatus || stats?.playoffStatus || ""
         };
-
-        const key = teamIdentityKey(team.name);
-        const division = normalizeDivision(team.division || stats?.division);
-        const group = normalizeText(summary.group);
-
-        if (key === "trojans" && division === "Lite" && group === "grupp 3") {
-          summary.tablePosition = 12;
-          summary.playoffStatus = "Nej";
-          summary.tiebreakNote = "Utanför slutspel.";
-        }
-
-        return summary;
       }
 
       function enrichTeamsWithStats(teams, parsed) {
@@ -1818,7 +1608,6 @@
             regularPoints: stats?.regularPoints || team.regularPoints || "",
             playoffGames: stats?.playoffGames || team.playoffGames || "",
             playoffPoints: stats?.playoffPoints || team.playoffPoints || "",
-            swedishPoints: stats?.regularPoints || team.swedishPoints || team.SwedishPoints || "",
             ...optional
           };
         });
@@ -1863,36 +1652,6 @@
           ? `Spelar ${team.playoffWins || 0}-${team.playoffLosses || 0}`
           : "";
         const playoffText = playedPlayoffText || placementPlayoffText || "";
-        const goalsText = team.goalsFor !== "" && team.goalsAgainst !== ""
-          ? `${team.goalsFor}-${team.goalsAgainst}`
-          : "";
-        const seedText = team.playoffSeed ? `Seed #${team.playoffSeed}` : "";
-        const topPlayerText = team.topSwedishPlayer
-          ? `${team.topSwedishPlayer}${team.topSwedishPoints !== "" ? `, ${team.topSwedishPoints}p` : ""}`
-          : "";
-
-        function statusSentence() {
-          if (team.tiebreakNote) return team.tiebreakNote;
-
-          const normalized = normalizeText(playoffText);
-          if (playedPlayoffText) return `Slutspel pågår: ${playedPlayoffText}.`;
-          if (normalized.includes("nedflyttning")) return "Nedflyttning enligt nuvarande placering.";
-          if (normalized.includes("kval")) return "Kvalplats enligt nuvarande placering.";
-          if (normalized.includes("mojlig")) return "Kan nå slutspel som en av de bästa elvorna.";
-          if (normalized === "ja" || normalized.includes("runda")) return seedText ? `Klar för slutspel, ${seedText.toLowerCase()}.` : "Klar för slutspel.";
-          if (normalized === "nej") return "Utanför slutspel enligt nuvarande placering.";
-          return "";
-        }
-
-        function highlightClass(label, value, isGold) {
-          if (isGold) return "is-gold";
-          if (label !== "Slutspel") return "";
-
-          const normalized = normalizeText(value);
-          if (normalized.includes("nedflyttning") || normalized === "nej") return "is-danger";
-          if (normalized.includes("kval") || normalized.includes("mojlig")) return "is-warning";
-          return "is-positive";
-        }
 
         const highlightMarkup = [
           team.tablePoints !== "" && team.tablePoints !== undefined && team.tablePoints !== null ? ["Poäng", team.tablePoints, true] : null,
@@ -1901,7 +1660,7 @@
         ]
           .filter(Boolean)
           .map(([label, value, isGold]) => `
-            <div class="team-highlight__item ${highlightClass(label, value, isGold)}">
+            <div class="team-highlight__item ${isGold ? "is-gold" : ""}">
               <span>${escapeHtml(label)}</span>
               <strong>${escapeHtml(value)}</strong>
             </div>
@@ -1912,9 +1671,6 @@
           team.group ? ["Grupp", team.group] : null,
           team.regularGames ? ["Matcher", team.regularGames] : null,
           record ? ["Record", record] : null,
-          team.pointsPerGame ? ["P/G", team.pointsPerGame] : null,
-          team.last10 ? ["L10", team.last10] : null,
-          goalsText ? ["GF-GA", goalsText] : null,
           goalDiff ? ["Mål +/-", goalDiff] : null,
           team.swedishPlayers ? ["Sv spelare", team.swedishPlayers] : null,
           team.swedishPoints ? ["Sv poäng", team.swedishPoints] : null
@@ -1942,18 +1698,12 @@
           team.gamesPlayed,
           team.tablePosition,
           team.tablePoints,
-          team.pointsPerGame,
           team.group,
-          team.last10,
           team.wins,
           team.overtimeWins,
           team.losses,
           team.otLosses,
-          team.goalsFor,
-          team.goalsAgainst,
           team.goalDiff,
-          team.topSwedishPlayer,
-          team.topSwedishPoints,
           team.playoffStatus,
           team.description,
           team.status,
@@ -1986,11 +1736,6 @@
                 </div>
                 ${highlightMarkup ? `<div class="team-highlight">${highlightMarkup}</div>` : ""}
                 ${statsMarkup ? `<div class="team-stats">${statsMarkup}</div>` : ""}
-                ${
-                  topPlayerText || statusSentence()
-                    ? `<div class="team-note">${topPlayerText ? `<strong>Topp svensk:</strong> ${escapeHtml(topPlayerText)}` : ""}${topPlayerText && statusSentence() ? "<br>" : ""}${escapeHtml(statusSentence())}</div>`
-                    : ""
-                }
               </div>
             </${wrapperTag}>
           </article>
@@ -2016,18 +1761,6 @@
               team.location,
               team.founded,
               team.players,
-              team.swedishPlayers,
-              team.swedishPoints,
-              team.regularGames,
-              team.tablePosition,
-              team.tablePoints,
-              team.group,
-              team.wins,
-              team.overtimeWins,
-              team.losses,
-              team.otLosses,
-              team.goalDiff,
-              team.playoffStatus,
               team.description,
               team.status,
               team.searchExtra
@@ -2054,56 +1787,12 @@
               return Number(b.tablePoints || 0) - Number(a.tablePoints || 0) || a.name.localeCompare(b.name, "sv");
             }
 
-            if (sortValue === "ppg-desc") {
-              return Number(b.pointsPerGame || 0) - Number(a.pointsPerGame || 0) || Number(b.tablePoints || 0) - Number(a.tablePoints || 0) || a.name.localeCompare(b.name, "sv");
-            }
-
-            if (sortValue === "form-desc") {
-              return Number(b.formScore || 0) - Number(a.formScore || 0) || Number(b.tablePoints || 0) - Number(a.tablePoints || 0) || a.name.localeCompare(b.name, "sv");
-            }
-
-            if (sortValue === "swedish-points-desc") {
-              return Number(b.swedishPoints || 0) - Number(a.swedishPoints || 0) || a.name.localeCompare(b.name, "sv");
-            }
-
             if (sortValue === "matches-desc") {
               return Number(b.regularGames || 0) - Number(a.regularGames || 0) || a.name.localeCompare(b.name, "sv");
             }
 
             return getDivisionRank(a.division) - getDivisionRank(b.division) || a.name.localeCompare(b.name, "sv");
           });
-      }
-
-      function getTeamPlayoffText(team) {
-        if (Number(team.playoffMatches || 0) > 0) {
-          return `Spelar ${team.playoffWins || 0}-${team.playoffLosses || 0}`;
-        }
-
-        return playoffPlaceStatus(team) || "";
-      }
-
-      function renderSummary(rows) {
-        if (!summaryTarget) return;
-
-        const total = rows.length;
-        const playoff = rows.filter((team) => {
-          const text = normalizeText(getTeamPlayoffText(team));
-          return text === "ja" || text.includes("spelar") || text.includes("runda");
-        }).length;
-        const qualification = rows.filter((team) => {
-          const text = normalizeText(getTeamPlayoffText(team));
-          return text.includes("kval") || text.includes("mojlig");
-        }).length;
-        const relegation = rows.filter((team) => normalizeText(getTeamPlayoffText(team)).includes("nedflyttning")).length;
-        const swedishPlayers = rows.reduce((sum, team) => sum + Number(team.swedishPlayers || 0), 0);
-
-        summaryTarget.innerHTML = `
-          <div class="summary-chip"><span>Visar lag</span><strong>${escapeHtml(total)}</strong></div>
-          <div class="summary-chip"><span>Slutspel</span><strong>${escapeHtml(playoff)}</strong></div>
-          <div class="summary-chip"><span>Kval/möjlig</span><strong>${escapeHtml(qualification)}</strong></div>
-          <div class="summary-chip"><span>Nedflyttning</span><strong>${escapeHtml(relegation)}</strong></div>
-          <div class="summary-chip"><span>Sv spelare</span><strong>${escapeHtml(swedishPlayers)}</strong></div>
-        `;
       }
 
       function renderTeams(rows) {
@@ -2117,9 +1806,7 @@
       }
 
       function renderFilteredTeams() {
-        const rows = getVisibleTeams();
-        renderSummary(rows);
-        renderTeams(rows);
+        renderTeams(getVisibleTeams());
       }
 
       function setupSearch() {
