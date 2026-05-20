@@ -2175,27 +2175,44 @@
 
       function enrichTeamsWithStats(teams, parsed) {
         const statsMap = teamStatsFromPlayerData(parsed);
+        const teamMetaMap = new Map();
+
+        if (Array.isArray(parsed?.teams)) {
+          parsed.teams
+            .filter(isSpring26Team)
+            .map(normalizeTeamFromManual)
+            .filter(Boolean)
+            .forEach((team) => {
+              teamMetaMap.set(teamIdentityKey(team.name), team);
+            });
+        }
 
         return teams.map((team) => {
-          const stats = statsMap.get(teamIdentityKey(team.name));
-          const optional = applyOptionalTeamSummary(team, stats);
-          const listedSwedishPlayers = Number(team.swedishPlayers || team.SwedishPlayers || 0);
-          const swedishPlayers = listedSwedishPlayers || (stats ? stats.players.size : Number(team.players || 0));
+          const key = teamIdentityKey(team.name);
+          const meta = teamMetaMap.get(key) || {};
+          const mergedTeam = {
+            ...team,
+            ...Object.fromEntries(Object.entries(meta).filter(([, value]) => value !== "" && value !== "-" && value !== null && value !== undefined))
+          };
+          const stats = statsMap.get(key);
+          const optional = applyOptionalTeamSummary(mergedTeam, stats);
+          const listedSwedishPlayers = Number(mergedTeam.swedishPlayers || mergedTeam.SwedishPlayers || 0);
+          const swedishPlayers = listedSwedishPlayers || (stats ? stats.players.size : Number(mergedTeam.players || 0));
 
           return {
-            ...team,
-            division: normalizeDivision(team.division || stats?.division),
+            ...mergedTeam,
+            division: normalizeDivision(mergedTeam.division || stats?.division),
             swedishPlayers: swedishPlayers || "",
-            regularGames: optional.gamesPlayed || stats?.regularGames || team.regularGames || team.teamMatches || "",
-            regularPoints: stats?.regularPoints || team.regularPoints || "",
-            playoffMatches: stats?.playoffMatches || team.playoffMatches || "",
-            playoffWins: stats?.playoffWins || team.playoffWins || "",
-            playoffLosses: stats?.playoffLosses || team.playoffLosses || "",
-            playoffGames: stats?.playoffGames || team.playoffGames || "",
-            playoffPoints: stats?.playoffPoints || team.playoffPoints || "",
-            playoffGoalsFor: stats?.playoffGoalsFor || team.playoffGoalsFor || "",
-            playoffGoalsAgainst: stats?.playoffGoalsAgainst || team.playoffGoalsAgainst || "",
-            swedishPoints: stats?.regularPoints || team.swedishPoints || team.SwedishPoints || "",
+            regularGames: optional.gamesPlayed || stats?.regularGames || mergedTeam.regularGames || mergedTeam.teamMatches || "",
+            regularPoints: stats?.regularPoints || mergedTeam.regularPoints || "",
+            playoffMatches: stats?.playoffMatches || mergedTeam.playoffMatches || "",
+            playoffWins: stats?.playoffWins || mergedTeam.playoffWins || "",
+            playoffLosses: stats?.playoffLosses || mergedTeam.playoffLosses || "",
+            playoffGames: stats?.playoffGames || mergedTeam.playoffGames || "",
+            playoffPoints: stats?.playoffPoints || mergedTeam.playoffPoints || "",
+            playoffGoalsFor: stats?.playoffGoalsFor || mergedTeam.playoffGoalsFor || "",
+            playoffGoalsAgainst: stats?.playoffGoalsAgainst || mergedTeam.playoffGoalsAgainst || "",
+            swedishPoints: stats?.regularPoints || mergedTeam.swedishPoints || mergedTeam.SwedishPoints || "",
             ...optional
           };
         });
