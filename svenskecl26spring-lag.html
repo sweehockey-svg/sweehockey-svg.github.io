@@ -2230,21 +2230,8 @@
         });
 
         byDivision.forEach((teams) => {
-          const sorted = teams.slice().sort((a, b) => {
-            const ap = Number(a.tablePosition || 0);
-            const bp = Number(b.tablePosition || 0);
-            if (ap && bp && ap !== bp) return ap - bp;
-            if (ap && !bp) return -1;
-            if (!ap && bp) return 1;
-
-            return Number(b.tablePoints || 0) - Number(a.tablePoints || 0)
-              || Number(b.goalDiff || 0) - Number(a.goalDiff || 0)
-              || String(a.name || "").localeCompare(String(b.name || ""), "sv");
-          });
-
-          sorted.forEach((team, index) => {
-            if (!team.tablePosition) team.tablePosition = index + 1;
-            team.computedPlayoffStatus = playoffPlaceStatus(team);
+          teams.forEach((team) => {
+            team.computedPlayoffStatus = team.tablePosition ? playoffPlaceStatus(team) : "";
           });
         });
 
