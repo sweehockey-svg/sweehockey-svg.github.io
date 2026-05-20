@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="sv">
 <head>
   <meta charset="utf-8" />
@@ -1009,67 +1009,6 @@
       backdrop-filter:saturate(1.08);
     }
 
-
-
-    html,
-    body{
-      min-height:100%;
-      background-color:#061018 !important;
-      background-image:
-        linear-gradient(90deg, rgba(255,255,255,0.060) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(255,255,255,0.045) 1px, transparent 1px),
-        linear-gradient(180deg, #07111b 0%, #081622 44%, #061018 100%) !important;
-      background-size:64px 64px, 64px 64px, 100% 100% !important;
-      background-repeat:repeat, repeat, no-repeat !important;
-      background-attachment:fixed, fixed, fixed !important;
-      background-position:0 0, 0 0, 0 0 !important;
-    }
-
-    body::before{ display:none !important; }
-
-
-
-    /* Rutnat och menyfix */
-    :root{
-      --grid-bg:
-        linear-gradient(90deg, rgba(255,255,255,0.070) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(255,255,255,0.050) 1px, transparent 1px),
-        linear-gradient(180deg, #07111b 0%, #081622 44%, #061018 100%);
-    }
-
-    html,
-    body,
-    .banner-strip,
-    main,
-    footer{
-      background-color:#061018 !important;
-      background-image:var(--grid-bg) !important;
-      background-size:64px 64px, 64px 64px, 100% 100% !important;
-      background-repeat:repeat, repeat, no-repeat !important;
-      background-position:0 0, 0 0, 0 0 !important;
-    }
-
-    .topbar{
-      z-index:10000 !important;
-      overflow:visible !important;
-    }
-
-    .topbar__inner,
-    .dropdown{
-      overflow:visible !important;
-    }
-
-    .menu{
-      z-index:10001 !important;
-    }
-
-    .banner-strip,
-    main,
-    footer{
-      z-index:1 !important;
-    }
-    /* /Rutnat och menyfix */
-
     /* /Svensk eHockey datatavla design */
 
   </style>
@@ -1098,9 +1037,16 @@
           </div>
         </div>
 
-        <a class="nav__link" href="/nyheter.html">Nyheter</a>
+        <a class="nav__link" href="#">Nyheter</a>
 
-        <a class="nav__link" href="https://www.svenskehockey.se/SEC/">SEC</a>
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            Cuper <span>&#9662;</span>
+          </button>
+          <div class="menu" role="menu" aria-label="Cuper" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="https://www.svenskehockey.se/SEC/">Svenska eHockey Cupen (SEC)</a>
+          </div>
+        </div>
 
         <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">&#128269;</button>
       </nav>
@@ -1117,8 +1063,8 @@
         <a class="mobile__link" href="/svenskecl26spring-statistik.html">ECL 26 Spring - Statistik</a>
         <a class="mobile__link" href="/svenskecl26winter-statistik.html">ECL 26 Winter - Statistik</a>
         <a class="mobile__link" href="/svenskecl26spring-statistik.html">ECL 26 Spring - Statistik</a>
-        <a class="mobile__link" href="/nyheter.html">Nyheter</a>
-        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">SEC</a>
+        <a class="mobile__link" href="#">Nyheter</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">Cuper - SEC</a>
       </div>
     </div>
   </header>
@@ -1195,7 +1141,6 @@
       </div>
 
       <nav class="footer-links" aria-label="Sidfot">
-        <a href="/nyheter.html">Nyheter</a>
         <a href="/svenskecl26spring-byten.html">Byten</a>
         <a href="/svenskecl26spring-matcher.html">Matcher</a>
         <a href="/svenskecl26spring-lag.html">Svenska lag</a>
