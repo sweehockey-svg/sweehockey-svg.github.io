@@ -1781,6 +1781,8 @@
           playoffMatches: row.playoffMatches || row.PlayoffMatches || "",
           playoffWins: row.playoffWins || row.PlayoffWins || "",
           playoffLosses: row.playoffLosses || row.PlayoffLosses || "",
+          playoffBestOf: row.playoffBestOf || row.PlayoffBestOf || "",
+          playoffWinsNeeded: row.playoffWinsNeeded || row.PlayoffWinsNeeded || "",
           playoffStatus: row.playoffStatus || row.PlayoffStatus || row.slutspelStatus || "",
           description: row.description || row.Description || row.info || row.Info || "Svenskt eHockey-lag med aktivitet i ECL-miljon.",
           status: row.status || row.Status || "Svenskt lag",
@@ -2231,6 +2233,8 @@
             playoffMatches: stats?.playoffMatches || mergedTeam.playoffMatches || "",
             playoffWins: stats?.playoffWins || mergedTeam.playoffWins || "",
             playoffLosses: stats?.playoffLosses || mergedTeam.playoffLosses || "",
+            playoffBestOf: mergedTeam.playoffBestOf || "",
+            playoffWinsNeeded: mergedTeam.playoffWinsNeeded || "",
             playoffGames: stats?.playoffGames || mergedTeam.playoffGames || "",
             playoffPoints: stats?.playoffPoints || mergedTeam.playoffPoints || "",
             playoffGoalsFor: stats?.playoffGoalsFor || mergedTeam.playoffGoalsFor || "",
@@ -2298,6 +2302,8 @@
             groupPosition: source.tablePosition || team.groupPosition,
             tablePoints: source.tablePoints || team.tablePoints,
             playoffStatus: source.playoffStatus || team.playoffStatus,
+            playoffBestOf: source.playoffBestOf || team.playoffBestOf,
+            playoffWinsNeeded: source.playoffWinsNeeded || team.playoffWinsNeeded,
             gamesPlayed: source.gamesPlayed || team.gamesPlayed,
             wins: source.wins || team.wins,
             overtimeWins: source.overtimeWins || team.overtimeWins,
@@ -2350,6 +2356,8 @@
           groupPosition: source.tablePosition || team.groupPosition,
           tablePoints: source.tablePoints || team.tablePoints,
           playoffStatus: source.playoffStatus || team.playoffStatus,
+          playoffBestOf: source.playoffBestOf || team.playoffBestOf,
+          playoffWinsNeeded: source.playoffWinsNeeded || team.playoffWinsNeeded,
           gamesPlayed: source.gamesPlayed || team.gamesPlayed,
           wins: source.wins || team.wins,
           overtimeWins: source.overtimeWins || team.overtimeWins,
@@ -2417,6 +2425,7 @@
         const playoffGoalsText = team.playoffGoalsFor !== "" && team.playoffGoalsAgainst !== ""
           ? `${team.playoffGoalsFor}-${team.playoffGoalsAgainst}`
           : "";
+        const playoffFormatText = team.playoffBestOf ? `BO${team.playoffBestOf}` : "";
         const seedText = team.playoffSeed ? `Seed #${team.playoffSeed}` : "";
         const topPlayerText = team.topSwedishPlayer
           ? `${team.topSwedishPlayer}${team.topSwedishPoints !== "" ? `, ${team.topSwedishPoints}p` : ""}`
@@ -2483,6 +2492,7 @@
         const playoffStatsMarkup = Number(team.playoffMatches || 0) > 0
           ? [
               ["Status", playedPlayoffText],
+              playoffFormatText ? ["Format", playoffFormatText] : null,
               ["Matcher", team.playoffMatches],
               playoffRecord ? ["Record", playoffRecord] : null,
               playoffGoalsText ? ["GF-GA", playoffGoalsText] : null,
