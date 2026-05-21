@@ -2065,9 +2065,9 @@
         return `Spelar ${roundText}${wins}-${losses}`;
       }
 
-      function addMatchResult(stats, goalsFor, goalsAgainst, isOvertime, dateValue, playoffMatch) {
+      function addMatchResult(stats, goalsFor, goalsAgainst, isOvertime, dateValue, playoffMatch, matchStage) {
         if (playoffMatch) {
-          const roundLabel = normalizePlayoffRoundLabel(match?.stage) || "Runda 1";
+          const roundLabel = normalizePlayoffRoundLabel(matchStage) || "Runda 1";
           stats.playoffRound = roundLabel;
           stats.nextPlayoffRound = nextPlayoffRoundLabel(roundLabel);
           stats.playoffMatches = Number(stats.playoffMatches || 0) + 1;
@@ -2169,7 +2169,7 @@
               if (!stats) return;
 
               stats.group = stats.group || match.group || "";
-              addMatchResult(stats, entry.goalsFor, entry.goalsAgainst, isOvertime, dateValue, playoffMatch);
+              addMatchResult(stats, entry.goalsFor, entry.goalsAgainst, isOvertime, dateValue, playoffMatch, match.stage);
             });
           });
         });
