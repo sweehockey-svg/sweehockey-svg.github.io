@@ -1148,7 +1148,7 @@
 
   <main class="container">
     <section class="card">
-      <h1>Svenska eHockey-lag syns deta så är de inte cachen</h1>
+      <h1>Svenska eHockey-lag</h1>
 
       <p>
         Här samlas <strong>svenska lag i ECL 26 Spring</strong> med division, tabellplacering, poäng och aktuell slutspelsstatus.
@@ -1275,6 +1275,7 @@
       const updated = document.getElementById("lastUpdated");
       let allTeams = [];
       let sourceTeamByKey = new Map();
+      let sourceTeams = [];
 
       const divisionOrder = ["elite", "pro", "lite", "core", "neo"];
       const divisionLabels = {
@@ -2188,16 +2189,6 @@
           playoffStatus: team.playoffStatus || team.slutspelStatus || stats?.playoffStatus || ""
         };
 
-        const key = teamIdentityKey(team.name);
-        const division = normalizeDivision(team.division || stats?.division);
-        const group = normalizeText(summary.group);
-
-        if (key === "trojans" && division === "Lite" && group === "grupp 3") {
-          summary.tablePosition = 12;
-          summary.playoffStatus = "Nej";
-          summary.tiebreakNote = "Utanför slutspel.";
-        }
-
         return summary;
       }
 
@@ -2323,23 +2314,35 @@
 
       function buildSourceTeamMap(parsed) {
         sourceTeamByKey = new Map();
+        sourceTeams = [];
         if (!Array.isArray(parsed?.teams)) return;
 
-        parsed.teams
+        sourceTeams = parsed.teams
           .filter(isSpring26Team)
           .map(normalizeTeamFromManual)
-          .filter(Boolean)
-          .forEach((team) => {
-            teamIdentityKeys(team.name).forEach((key) => {
-              if (key) sourceTeamByKey.set(key, team);
-            });
+          .filter(Boolean);
+
+        sourceTeams.forEach((team) => {
+          teamIdentityKeys(team.name).forEach((key) => {
+            if (key) sourceTeamByKey.set(key, team);
           });
+        });
       }
 
       function hydrateTeamForCard(team) {
-        const source = teamIdentityKeys(team.name)
+        let source = teamIdentityKeys(team.name)
           .map((key) => sourceTeamByKey.get(key))
           .find(Boolean);
+
+        if (!source) {
+          const teamKeys = teamIdentityKeys(team.name);
+          source = sourceTeams.find((candidate) => {
+            const candidateKeys = teamIdentityKeys(candidate.name);
+            return teamKeys.some((key) => candidateKeys.includes(key))
+              || teamKeys.some((key) => candidateKeys.some((candidateKey) => candidateKey.includes(key) || key.includes(candidateKey)));
+          });
+        }
+
         if (!source) return team;
 
         return {
@@ -2376,12 +2379,12 @@
           ? (Number(team.goalDiff) > 0 ? `+${team.goalDiff}` : String(team.goalDiff))
           : "";
 
-        const placementPlayoffText = team.computedPlayoffStatus || playoffPlaceStatus(team);
+        const placementPlayoffText = playoffPlaceStatus(team) || team.computedPlayoffStatus;
         const explicitPlayoffText = normalizePlayoffStatusText(team.playoffStatus);
         const playedPlayoffText = Number(team.playoffMatches || 0) > 0
           ? `Spelar ${team.playoffWins || 0}-${team.playoffLosses || 0}`
           : "";
-        const playoffText = playedPlayoffText || explicitPlayoffText || placementPlayoffText || "";
+        const playoffText = playedPlayoffText || placementPlayoffText || explicitPlayoffText || "";
         const goalsText = team.goalsFor !== "" && team.goalsAgainst !== ""
           ? `${team.goalsFor}-${team.goalsAgainst}`
           : "";
