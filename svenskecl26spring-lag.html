@@ -1751,6 +1751,7 @@
         const leagueId = row.leagueId || row.LeagueID || row.leagueID || row.league_id || "";
         const teamId = row.teamId || row.TeamID || row.teamID || row.team_id || "";
         const url = row.url || row.href || (teamId && leagueId ? `https://sportsgamer.gg/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(teamId)}` : "");
+        const tablePosition = row.tablePosition || row.TablePosition || row.tabellPlacering || "";
 
         return {
           name: cleanTeamBaseName(name),
@@ -1766,7 +1767,8 @@
           swedishGoals: row.swedishGoals || row.SwedishGoals || "",
           swedishAssists: row.swedishAssists || row.SwedishAssists || "",
           swedishPoints: row.swedishPoints || row.SwedishPoints || "",
-          tablePosition: row.tablePosition || row.TablePosition || row.tabellPlacering || "",
+          tablePosition,
+          groupPosition: tablePosition,
           tablePoints: row.tablePoints || row.TablePoints || row.tabellPoang || "",
           gamesPlayed: row.gamesPlayed || row.GamesPlayed || "",
           wins: row.wins || row.Wins || "",
@@ -2259,36 +2261,13 @@
       }
 
       function applyComputedPlayoffStatuses(rows) {
-        const byGroup = new Map();
-
         rows.forEach((team) => {
-          const division = normalizeDivision(team.division);
-          const group = normalizeText(team.group || "");
-          const key = `${division}::${group}`;
-          if (!byGroup.has(key)) byGroup.set(key, []);
-          byGroup.get(key).push(team);
-        });
-
-        byGroup.forEach((teams) => {
-          const sorted = teams.slice().sort((a, b) => {
-            const ap = Number(a.tablePosition || 0);
-            const bp = Number(b.tablePosition || 0);
-            if (ap && bp && ap !== bp) return ap - bp;
-            if (ap && !bp) return -1;
-            if (!ap && bp) return 1;
-
-            return Number(b.tablePoints || 0) - Number(a.tablePoints || 0)
-              || Number(b.goalDiff || 0) - Number(a.goalDiff || 0)
-              || String(a.name || "").localeCompare(String(b.name || ""), "sv");
-          });
-
-          sorted.forEach((team, index) => {
-            team.groupPosition = team.tablePosition || index + 1;
-            team.computedPlayoffStatus = playoffPlaceStatus({
-              ...team,
-              tablePosition: team.groupPosition
-            });
-          });
+          const position = team.groupPosition || team.tablePosition || "";
+          team.groupPosition = position;
+          team.computedPlayoffStatus = position ? playoffPlaceStatus({
+            ...team,
+            tablePosition: position
+          }) : "";
         });
 
         return rows;
