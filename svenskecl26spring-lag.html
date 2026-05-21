@@ -2272,6 +2272,40 @@
         return rows;
       }
 
+      function hydrateTeamsFromSource(rows, parsed) {
+        if (!Array.isArray(parsed?.teams)) return rows;
+
+        const sourceMap = new Map();
+        parsed.teams
+          .filter(isSpring26Team)
+          .map(normalizeTeamFromManual)
+          .filter(Boolean)
+          .forEach((team) => {
+            sourceMap.set(teamIdentityKey(team.name), team);
+          });
+
+        return rows.map((team) => {
+          const source = sourceMap.get(teamIdentityKey(team.name));
+          if (!source) return team;
+
+          return {
+            ...team,
+            group: source.group || team.group,
+            tablePosition: source.tablePosition || team.tablePosition,
+            tablePoints: source.tablePoints || team.tablePoints,
+            playoffStatus: source.playoffStatus || team.playoffStatus,
+            gamesPlayed: source.gamesPlayed || team.gamesPlayed,
+            wins: source.wins || team.wins,
+            overtimeWins: source.overtimeWins || team.overtimeWins,
+            losses: source.losses || team.losses,
+            otLosses: source.otLosses || team.otLosses,
+            goalsFor: source.goalsFor || team.goalsFor,
+            goalsAgainst: source.goalsAgainst || team.goalsAgainst,
+            goalDiff: source.goalDiff || team.goalDiff
+          };
+        });
+      }
+
       function teamMarkup(team) {
         const logoCandidates = unique([
           team.logo,
@@ -2616,7 +2650,7 @@
       fetchJson(JSON_URL)
         .then((rawData) => {
           const parsed = extractJsonResultObject(rawData);
-          allTeams = collectTeams(parsed);
+          allTeams = applyComputedPlayoffStatuses(hydrateTeamsFromSource(collectTeams(parsed), parsed));
 
           renderFilteredTeams();
           setupSearch();
