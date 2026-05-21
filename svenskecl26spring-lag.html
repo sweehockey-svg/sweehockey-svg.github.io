@@ -2490,13 +2490,17 @@
         const playoffRoundText = normalizePlayoffRoundLabel(team.playoffRound || team.playoffStage) || (Number(team.playoffMatches || 0) > 0 ? "Runda 1" : "");
         const nextPlayoffText = team.nextPlayoffRound || nextPlayoffRoundLabel(playoffRoundText);
         const playoffTopText = (() => {
-          if (Number(team.playoffMatches || 0) <= 0) return playoffText || "";
+          if (Number(team.playoffMatches || 0) > 0) return "Ja";
+          return playoffText || "";
+        })();
+        const playoffStatusText = (() => {
+          if (Number(team.playoffMatches || 0) <= 0) return "";
           const wins = Number(team.playoffWins || 0);
           const losses = Number(team.playoffLosses || 0);
           const winsNeeded = playoffWinsNeededForTeam(team);
-          if (wins >= winsNeeded) return `Vann ${wins}-${losses}`;
-          if (losses >= winsNeeded) return `Utslagen ${wins}-${losses}`;
-          return `Spelar ${wins}-${losses}`;
+          if (wins >= winsNeeded) return `Vidare från ${playoffRoundText.toLowerCase()}`;
+          if (losses >= winsNeeded) return `Utslagen i ${playoffRoundText.toLowerCase()}`;
+          return `Spelar ${playoffRoundText.toLowerCase()}`;
         })();
         const goalsText = team.goalsFor !== "" && team.goalsAgainst !== ""
           ? `${team.goalsFor}-${team.goalsAgainst}`
@@ -2579,12 +2583,10 @@
 
         const playoffStatsMarkup = Number(team.playoffMatches || 0) > 0
           ? [
-              ["Status", playoffTopText],
-              playoffRoundText ? ["Runda", playoffRoundText] : null,
+              ["Status", playoffStatusText],
               nextPlayoffText ? ["Nästa", nextPlayoffText] : null,
               playoffFormatText ? ["Format", playoffFormatText] : null,
-              ["Matcher", team.playoffMatches],
-              playoffRecord ? ["Record", playoffRecord] : null,
+              playoffRecord ? ["Matcher", playoffRecord] : null,
               playoffGoalsText ? ["GF-GA", playoffGoalsText] : null,
               team.playoffPoints ? ["Sv poÃ¤ng", team.playoffPoints] : null
             ]
