@@ -1145,6 +1145,159 @@
 
     /* /Svensk eHockey datatavla design */
 
+    @media (max-width: 560px){
+      .container{ width:min(100% - 18px, 1180px); }
+      main{ padding:14px 0 34px; }
+      .card{ padding:18px 14px; }
+
+      .header-box{
+        gap:14px;
+        padding:0 0 12px;
+      }
+
+      .section-title{ gap:10px; }
+      .section-title__icon{
+        width:32px;
+        height:32px;
+        flex-basis:32px;
+      }
+      .header-box h2{ font-size:28px; }
+
+      .controls{
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap:9px;
+        width:100%;
+      }
+
+      .select-wrap,
+      .search-wrap{
+        width:100%;
+        flex:initial;
+      }
+
+      .search-wrap,
+      .playoff-toggle{
+        grid-column:1 / -1;
+      }
+
+      .select-control,
+      #searchTeams,
+      .playoff-toggle{
+        min-height:44px;
+        border-radius:12px;
+      }
+
+      .select-control{
+        padding:12px 32px 12px 12px;
+        font-size:13px;
+      }
+
+      #searchTeams{
+        padding:12px 14px 12px 38px;
+        font-size:14px;
+      }
+
+      .playoff-toggle{
+        justify-content:center;
+        padding:0 12px;
+      }
+
+      .summary-bar{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap:9px;
+      }
+
+      .summary-chip{
+        min-height:56px;
+        padding:10px 11px;
+      }
+
+      .teams-grid{ gap:12px; }
+
+      .team-card,
+      .team-card__link,
+      .team-card__top{
+        min-height:0;
+      }
+
+      .team-card__top{
+        padding:14px;
+        gap:13px;
+      }
+
+      .team-main{
+        grid-template-columns: 76px minmax(0, 1fr);
+        gap:12px;
+        align-items:center;
+      }
+
+      .team-logo{
+        width:76px;
+        height:76px;
+        flex-basis:76px;
+        border-radius:14px;
+      }
+
+      .team-logo img{ padding:7px; }
+
+      .team-name{
+        font-size:24px;
+        line-height:1.02;
+      }
+
+      .team-division{
+        margin-top:6px;
+        font-size:12px;
+      }
+
+      .team-highlight{
+        grid-template-columns: .8fr 1fr .9fr;
+        gap:7px;
+        padding:9px;
+      }
+
+      .team-highlight__item span,
+      .team-stat span{
+        font-size:9px;
+        line-height:1.1;
+        margin-bottom:5px;
+      }
+
+      .team-highlight__item strong{ font-size:20px; }
+
+      .team-highlight__item.is-status strong{
+        font-size:16px;
+        padding:3px 8px;
+      }
+
+      .team-stats{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap:8px;
+      }
+
+      .team-stats-section{ gap:8px; }
+      .team-stats-title{
+        font-size:11px;
+        margin-top:2px;
+      }
+
+      .team-stat{
+        min-height:68px;
+        padding:10px;
+      }
+
+      .team-stat strong{
+        font-size:20px;
+        line-height:1.05;
+      }
+
+      .team-note{
+        padding:11px;
+        font-size:12px;
+      }
+    }
+
   </style>
 </head>
 
