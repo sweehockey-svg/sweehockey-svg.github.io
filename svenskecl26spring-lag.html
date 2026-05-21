@@ -1237,7 +1237,7 @@
 
           <div class="select-wrap">
             <select id="sortTeams" class="select-control" aria-label="Sortera lag">
-              <option value="division">Sortera: division</option>
+              <option value="division">Sortera: division + poäng</option>
               <option value="name-asc">Namn A-Ö</option>
               <option value="name-desc">Namn Ö-A</option>
               <option value="players-desc">Flest spelare</option>
@@ -2802,7 +2802,10 @@
               return Number(b.regularGames || 0) - Number(a.regularGames || 0) || a.name.localeCompare(b.name, "sv");
             }
 
-            return getDivisionRank(a.division) - getDivisionRank(b.division) || a.name.localeCompare(b.name, "sv");
+            return getDivisionRank(a.division) - getDivisionRank(b.division)
+              || Number(b.tablePoints || 0) - Number(a.tablePoints || 0)
+              || Number(b.pointsPerGame || 0) - Number(a.pointsPerGame || 0)
+              || a.name.localeCompare(b.name, "sv");
           });
       }
 
