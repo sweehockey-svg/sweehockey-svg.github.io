@@ -2361,6 +2361,26 @@
         };
       }
 
+      function applySourceTeamFacts(rows) {
+        if (!sourceTeams.length) return rows;
+
+        return rows.map((team) => {
+          const source = hydrateTeamForCard(team);
+          const position = source.groupPosition || source.tablePosition || "";
+          const playoffStatus = position ? playoffPlaceStatus({
+            ...source,
+            tablePosition: position
+          }) : "";
+
+          return {
+            ...source,
+            tablePosition: position,
+            groupPosition: position,
+            computedPlayoffStatus: playoffStatus
+          };
+        });
+      }
+
       function teamMarkup(team) {
         team = hydrateTeamForCard(team);
 
@@ -2645,15 +2665,16 @@
         if (!summaryTarget) return;
 
         const total = rows.length;
-        const playoff = rows.filter((team) => {
+        const summaryRows = applySourceTeamFacts(rows);
+        const playoff = summaryRows.filter((team) => {
           const text = normalizeText(getTeamPlayoffText(team));
           return text === "ja" || text.includes("spelar") || text.includes("runda");
         }).length;
-        const qualification = rows.filter((team) => {
+        const qualification = summaryRows.filter((team) => {
           const text = normalizeText(getTeamPlayoffText(team));
           return text.includes("kval") || text.includes("mojlig");
         }).length;
-        const relegation = rows.filter((team) => normalizeText(getTeamPlayoffText(team)).includes("nedflyttning")).length;
+        const relegation = summaryRows.filter((team) => normalizeText(getTeamPlayoffText(team)).includes("nedflyttning")).length;
         const swedishPlayers = rows.reduce((sum, team) => sum + Number(team.swedishPlayers || 0), 0);
 
         summaryTarget.innerHTML = `
@@ -2719,7 +2740,7 @@
         .then((rawData) => {
           const parsed = extractJsonResultObject(rawData);
           buildSourceTeamMap(parsed);
-          allTeams = applyComputedPlayoffStatuses(hydrateTeamsFromSource(collectTeams(parsed), parsed));
+          allTeams = applySourceTeamFacts(applyComputedPlayoffStatuses(hydrateTeamsFromSource(collectTeams(parsed), parsed)));
 
           renderFilteredTeams();
           setupSearch();
