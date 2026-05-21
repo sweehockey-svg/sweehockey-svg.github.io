@@ -1274,6 +1274,7 @@
       const sortTeams = document.getElementById("sortTeams");
       const updated = document.getElementById("lastUpdated");
       let allTeams = [];
+      let sourceTeamByKey = new Map();
 
       const divisionOrder = ["elite", "pro", "lite", "core", "neo"];
       const divisionLabels = {
@@ -2306,7 +2307,43 @@
         });
       }
 
+      function buildSourceTeamMap(parsed) {
+        sourceTeamByKey = new Map();
+        if (!Array.isArray(parsed?.teams)) return;
+
+        parsed.teams
+          .filter(isSpring26Team)
+          .map(normalizeTeamFromManual)
+          .filter(Boolean)
+          .forEach((team) => {
+            sourceTeamByKey.set(teamIdentityKey(team.name), team);
+          });
+      }
+
+      function hydrateTeamForCard(team) {
+        const source = sourceTeamByKey.get(teamIdentityKey(team.name));
+        if (!source) return team;
+
+        return {
+          ...team,
+          group: source.group || team.group,
+          tablePosition: source.tablePosition || team.tablePosition,
+          tablePoints: source.tablePoints || team.tablePoints,
+          playoffStatus: source.playoffStatus || team.playoffStatus,
+          gamesPlayed: source.gamesPlayed || team.gamesPlayed,
+          wins: source.wins || team.wins,
+          overtimeWins: source.overtimeWins || team.overtimeWins,
+          losses: source.losses || team.losses,
+          otLosses: source.otLosses || team.otLosses,
+          goalsFor: source.goalsFor || team.goalsFor,
+          goalsAgainst: source.goalsAgainst || team.goalsAgainst,
+          goalDiff: source.goalDiff || team.goalDiff
+        };
+      }
+
       function teamMarkup(team) {
+        team = hydrateTeamForCard(team);
+
         const logoCandidates = unique([
           team.logo,
           ...teamNameCandidates(team.name)
@@ -2566,6 +2603,8 @@
       }
 
       function getTeamPlayoffText(team) {
+        team = hydrateTeamForCard(team);
+
         if (Number(team.playoffMatches || 0) > 0) {
           return `Spelar ${team.playoffWins || 0}-${team.playoffLosses || 0}`;
         }
@@ -2650,6 +2689,7 @@
       fetchJson(JSON_URL)
         .then((rawData) => {
           const parsed = extractJsonResultObject(rawData);
+          buildSourceTeamMap(parsed);
           allTeams = applyComputedPlayoffStatuses(hydrateTeamsFromSource(collectTeams(parsed), parsed));
 
           renderFilteredTeams();
