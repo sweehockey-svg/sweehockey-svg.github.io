@@ -1487,6 +1487,16 @@
         return normalizeText(cleanTeamBaseName(name));
       }
 
+      function teamIdentityKeys(name) {
+        const base = cleanTeamBaseName(name);
+        return unique([
+          teamIdentityKey(base),
+          normalizeText(stripParens(base)),
+          slugifyLoose(base),
+          slugifyLoose(stripParens(base))
+        ]);
+      }
+
       function isWinterTeamName(name) {
         return /\(\s*26W\s*\)/i.test(String(name || "")) || /\bECL\s*26\s*Winter\b/i.test(String(name || ""));
       }
@@ -2193,7 +2203,7 @@
 
       function enrichTeamsWithStats(teams, parsed) {
         const statsMap = teamStatsFromPlayerData(parsed);
-        const teamMetaMap = new Map();
+          const teamMetaMap = new Map();
 
         if (Array.isArray(parsed?.teams)) {
           parsed.teams
@@ -2201,13 +2211,15 @@
             .map(normalizeTeamFromManual)
             .filter(Boolean)
             .forEach((team) => {
-              teamMetaMap.set(teamIdentityKey(team.name), team);
+              teamIdentityKeys(team.name).forEach((key) => {
+                if (key) teamMetaMap.set(key, team);
+              });
             });
         }
 
         return teams.map((team) => {
           const key = teamIdentityKey(team.name);
-          const meta = teamMetaMap.get(key) || {};
+          const meta = teamIdentityKeys(team.name).map((k) => teamMetaMap.get(k)).find(Boolean) || {};
           const mergedTeam = {
             ...team,
             ...Object.fromEntries(Object.entries(meta).filter(([, value]) => value !== "" && value !== "-" && value !== null && value !== undefined))
@@ -2282,11 +2294,13 @@
           .map(normalizeTeamFromManual)
           .filter(Boolean)
           .forEach((team) => {
-            sourceMap.set(teamIdentityKey(team.name), team);
+            teamIdentityKeys(team.name).forEach((key) => {
+              if (key) sourceMap.set(key, team);
+            });
           });
 
         return rows.map((team) => {
-          const source = sourceMap.get(teamIdentityKey(team.name));
+          const source = teamIdentityKeys(team.name).map((key) => sourceMap.get(key)).find(Boolean);
           if (!source) return team;
 
           return {
@@ -2316,12 +2330,16 @@
           .map(normalizeTeamFromManual)
           .filter(Boolean)
           .forEach((team) => {
-            sourceTeamByKey.set(teamIdentityKey(team.name), team);
+            teamIdentityKeys(team.name).forEach((key) => {
+              if (key) sourceTeamByKey.set(key, team);
+            });
           });
       }
 
       function hydrateTeamForCard(team) {
-        const source = sourceTeamByKey.get(teamIdentityKey(team.name));
+        const source = teamIdentityKeys(team.name)
+          .map((key) => sourceTeamByKey.get(key))
+          .find(Boolean);
         if (!source) return team;
 
         return {
