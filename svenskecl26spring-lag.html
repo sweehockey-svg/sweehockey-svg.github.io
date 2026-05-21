@@ -2412,9 +2412,15 @@
           tablePosition: displayGroupPosition
         });
         const explicitPlayoffText = normalizePlayoffStatusText(team.playoffStatus);
-        const playedPlayoffText = Number(team.playoffMatches || 0) > 0
-          ? `Spelar ${team.playoffWins || 0}-${team.playoffLosses || 0}`
-          : "";
+        const winsNeeded = Number(team.playoffWinsNeeded || (normalizeDivision(team.division) === "Neo" ? 3 : 4));
+        const playedPlayoffText = (() => {
+          if (Number(team.playoffMatches || 0) <= 0) return "";
+          const wins = Number(team.playoffWins || 0);
+          const losses = Number(team.playoffLosses || 0);
+          if (wins >= winsNeeded) return `Vann ${wins}-${losses}`;
+          if (losses >= winsNeeded) return `Utslagen ${wins}-${losses}`;
+          return `Spelar ${wins}-${losses}`;
+        })();
         const playoffText = playedPlayoffText || placementPlayoffText || explicitPlayoffText || "";
         const goalsText = team.goalsFor !== "" && team.goalsAgainst !== ""
           ? `${team.goalsFor}-${team.goalsAgainst}`
@@ -2436,7 +2442,13 @@
 
           const normalized = normalizeText(playoffText);
           if (normalized.includes("ej slutspel")) return "Ej slutspel enligt nuvarande status.";
-          if (playedPlayoffText) return `Slutspel pågår: ${playedPlayoffText}.`;
+          if (playedPlayoffText) {
+            const playedState = normalizeText(playedPlayoffText);
+            if (playedState.includes("vann") || playedState.includes("utslagen")) {
+              return `Slutspel: ${playedPlayoffText}.`;
+            }
+            return `Slutspel pågår: ${playedPlayoffText}.`;
+          }
           if (normalized.includes("nedflyttning")) return "Nedflyttning enligt nuvarande placering.";
           if (normalized.includes("kval")) return "Kvalplats enligt nuvarande placering.";
           if (normalized.includes("mojlig")) return "Kan nå slutspel som en av de bästa elvorna.";
@@ -2450,7 +2462,7 @@
           if (label !== "Slutspel") return "";
 
           const normalized = normalizeText(value);
-          if (normalized.includes("nedflyttning") || normalized.includes("ej slutspel") || normalized === "nej") return "is-danger";
+          if (normalized.includes("nedflyttning") || normalized.includes("ej slutspel") || normalized.includes("utslagen") || normalized === "nej") return "is-danger";
           if (normalized.includes("kval") || normalized.includes("mojlig")) return "is-warning";
           return "is-positive";
         }
@@ -2661,7 +2673,12 @@
         team = hydrateTeamForCard(team);
 
         if (Number(team.playoffMatches || 0) > 0) {
-          return `Spelar ${team.playoffWins || 0}-${team.playoffLosses || 0}`;
+          const wins = Number(team.playoffWins || 0);
+          const losses = Number(team.playoffLosses || 0);
+          const winsNeeded = Number(team.playoffWinsNeeded || (normalizeDivision(team.division) === "Neo" ? 3 : 4));
+          if (wins >= winsNeeded) return `Vann ${wins}-${losses}`;
+          if (losses >= winsNeeded) return `Utslagen ${wins}-${losses}`;
+          return `Spelar ${wins}-${losses}`;
         }
 
         const groupPosition = team.groupPosition || team.tablePosition || "";
@@ -2678,7 +2695,7 @@
         const summaryRows = applySourceTeamFacts(rows);
         const playoff = summaryRows.filter((team) => {
           const text = normalizeText(getTeamPlayoffText(team));
-          return text === "ja" || text.includes("spelar") || text.includes("runda");
+          return text === "ja" || text.includes("spelar") || text.includes("runda") || text.includes("vann") || text.includes("utslagen");
         }).length;
         const qualification = summaryRows.filter((team) => {
           const text = normalizeText(getTeamPlayoffText(team));
