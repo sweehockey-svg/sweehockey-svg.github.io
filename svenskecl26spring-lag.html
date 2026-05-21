@@ -2259,17 +2259,35 @@
       }
 
       function applyComputedPlayoffStatuses(rows) {
-        const byDivision = new Map();
+        const byGroup = new Map();
 
         rows.forEach((team) => {
           const division = normalizeDivision(team.division);
-          if (!byDivision.has(division)) byDivision.set(division, []);
-          byDivision.get(division).push(team);
+          const group = normalizeText(team.group || "");
+          const key = `${division}::${group}`;
+          if (!byGroup.has(key)) byGroup.set(key, []);
+          byGroup.get(key).push(team);
         });
 
-        byDivision.forEach((teams) => {
-          teams.forEach((team) => {
-            team.computedPlayoffStatus = team.tablePosition ? playoffPlaceStatus(team) : "";
+        byGroup.forEach((teams) => {
+          const sorted = teams.slice().sort((a, b) => {
+            const ap = Number(a.tablePosition || 0);
+            const bp = Number(b.tablePosition || 0);
+            if (ap && bp && ap !== bp) return ap - bp;
+            if (ap && !bp) return -1;
+            if (!ap && bp) return 1;
+
+            return Number(b.tablePoints || 0) - Number(a.tablePoints || 0)
+              || Number(b.goalDiff || 0) - Number(a.goalDiff || 0)
+              || String(a.name || "").localeCompare(String(b.name || ""), "sv");
+          });
+
+          sorted.forEach((team, index) => {
+            team.groupPosition = team.tablePosition || index + 1;
+            team.computedPlayoffStatus = playoffPlaceStatus({
+              ...team,
+              tablePosition: team.groupPosition
+            });
           });
         });
 
@@ -2298,6 +2316,7 @@
             ...team,
             group: source.group || team.group,
             tablePosition: source.tablePosition || team.tablePosition,
+            groupPosition: source.tablePosition || team.groupPosition,
             tablePoints: source.tablePoints || team.tablePoints,
             playoffStatus: source.playoffStatus || team.playoffStatus,
             gamesPlayed: source.gamesPlayed || team.gamesPlayed,
@@ -2349,6 +2368,7 @@
           ...team,
           group: source.group || team.group,
           tablePosition: source.tablePosition || team.tablePosition,
+          groupPosition: source.tablePosition || team.groupPosition,
           tablePoints: source.tablePoints || team.tablePoints,
           playoffStatus: source.playoffStatus || team.playoffStatus,
           gamesPlayed: source.gamesPlayed || team.gamesPlayed,
@@ -2379,7 +2399,11 @@
           ? (Number(team.goalDiff) > 0 ? `+${team.goalDiff}` : String(team.goalDiff))
           : "";
 
-        const placementPlayoffText = playoffPlaceStatus(team) || team.computedPlayoffStatus;
+        const displayGroupPosition = team.groupPosition || team.tablePosition || "";
+        const placementPlayoffText = team.computedPlayoffStatus || playoffPlaceStatus({
+          ...team,
+          tablePosition: displayGroupPosition
+        });
         const explicitPlayoffText = normalizePlayoffStatusText(team.playoffStatus);
         const playedPlayoffText = Number(team.playoffMatches || 0) > 0
           ? `Spelar ${team.playoffWins || 0}-${team.playoffLosses || 0}`
@@ -2425,7 +2449,7 @@
 
         const highlightMarkup = [
           team.tablePoints !== "" && team.tablePoints !== undefined && team.tablePoints !== null ? ["Poäng", team.tablePoints, true] : null,
-          team.tablePosition ? ["Gruppplacering", "#" + team.tablePosition, false] : null,
+          displayGroupPosition ? ["Gruppplacering", "#" + displayGroupPosition, false] : null,
           ["Slutspel", playoffText || "-", false]
         ]
           .filter(Boolean)
@@ -2488,6 +2512,7 @@
           team.regularPoints,
           team.gamesPlayed,
           team.tablePosition,
+          team.groupPosition,
           team.tablePoints,
           team.pointsPerGame,
           team.group,
@@ -2630,7 +2655,11 @@
           return `Spelar ${team.playoffWins || 0}-${team.playoffLosses || 0}`;
         }
 
-        return normalizePlayoffStatusText(team.playoffStatus) || team.computedPlayoffStatus || playoffPlaceStatus(team) || "";
+        const groupPosition = team.groupPosition || team.tablePosition || "";
+        return team.computedPlayoffStatus || playoffPlaceStatus({
+          ...team,
+          tablePosition: groupPosition
+        }) || normalizePlayoffStatusText(team.playoffStatus) || "";
       }
 
       function renderSummary(rows) {
