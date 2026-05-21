@@ -1783,6 +1783,8 @@
           playoffLosses: row.playoffLosses || row.PlayoffLosses || "",
           playoffBestOf: row.playoffBestOf || row.PlayoffBestOf || "",
           playoffWinsNeeded: row.playoffWinsNeeded || row.PlayoffWinsNeeded || "",
+          playoffRound: row.playoffRound || row.PlayoffRound || row.playoffStage || row.PlayoffStage || "",
+          nextPlayoffRound: row.nextPlayoffRound || row.NextPlayoffRound || "",
           playoffStatus: row.playoffStatus || row.PlayoffStatus || row.slutspelStatus || "",
           description: row.description || row.Description || row.info || row.Info || "Svenskt eHockey-lag med aktivitet i ECL-miljon.",
           status: row.status || row.Status || "Svenskt lag",
@@ -1982,10 +1984,12 @@
             division: normalizeDivision(division),
             regularGames: 0,
             regularPoints: 0,
-            playoffMatches: 0,
-            playoffWins: 0,
-            playoffLosses: 0,
-            playoffGames: 0,
+          playoffMatches: 0,
+          playoffWins: 0,
+          playoffLosses: 0,
+          playoffRound: "",
+          nextPlayoffRound: "",
+          playoffGames: 0,
             playoffPoints: 0,
             playoffGoalsFor: 0,
             playoffGoalsAgainst: 0,
@@ -2017,8 +2021,55 @@
         return stage && !stage.includes("grupp");
       }
 
+      function normalizePlayoffRoundLabel(value) {
+        const text = String(value || "").trim();
+        const normalized = normalizeText(text);
+        if (!normalized || normalized === "slutspel") return "";
+        if (normalized.includes("final")) return "Final";
+        if (normalized.includes("semi")) return "Semifinal";
+        if (normalized.includes("kvart")) return "Kvartsfinal";
+        if (normalized.includes("atton") || normalized.includes("åtton")) return "Åttondelsfinal";
+        const roundMatch = normalized.match(/runda\s*(\d+)/);
+        if (roundMatch) return `Runda ${roundMatch[1]}`;
+        return text;
+      }
+
+      function nextPlayoffRoundLabel(roundLabel) {
+        const normalized = normalizeText(roundLabel);
+        const roundMatch = normalized.match(/runda\s*(\d+)/);
+        if (roundMatch) return `Runda ${Number(roundMatch[1]) + 1}`;
+        if (normalized.includes("atton") || normalized.includes("åtton")) return "Kvartsfinal";
+        if (normalized.includes("kvart")) return "Semifinal";
+        if (normalized.includes("semi")) return "Final";
+        if (normalized.includes("final")) return "";
+        return "";
+      }
+
+      function playoffWinsNeededForTeam(team) {
+        return Number(team.playoffWinsNeeded || (normalizeDivision(team.division) === "Neo" ? 3 : 4));
+      }
+
+      function playedPlayoffStatusText(team) {
+        if (Number(team.playoffMatches || 0) <= 0) return "";
+
+        const wins = Number(team.playoffWins || 0);
+        const losses = Number(team.playoffLosses || 0);
+        const winsNeeded = playoffWinsNeededForTeam(team);
+        const roundLabel = normalizePlayoffRoundLabel(team.playoffRound || team.playoffStage) || "Runda 1";
+        const roundText = roundLabel ? `${roundLabel.toLowerCase()} ` : "";
+        const nextRound = team.nextPlayoffRound || nextPlayoffRoundLabel(roundLabel);
+        const nextText = nextRound ? `, vidare till ${nextRound.toLowerCase()}` : "";
+
+        if (wins >= winsNeeded) return `Vann ${roundText}${wins}-${losses}${nextText}`;
+        if (losses >= winsNeeded) return `Utslagen i ${roundText}${wins}-${losses}`;
+        return `Spelar ${roundText}${wins}-${losses}`;
+      }
+
       function addMatchResult(stats, goalsFor, goalsAgainst, isOvertime, dateValue, playoffMatch) {
         if (playoffMatch) {
+          const roundLabel = normalizePlayoffRoundLabel(match?.stage) || "Runda 1";
+          stats.playoffRound = roundLabel;
+          stats.nextPlayoffRound = nextPlayoffRoundLabel(roundLabel);
           stats.playoffMatches = Number(stats.playoffMatches || 0) + 1;
           stats.playoffGoalsFor = Number(stats.playoffGoalsFor || 0) + Number(goalsFor || 0);
           stats.playoffGoalsAgainst = Number(stats.playoffGoalsAgainst || 0) + Number(goalsAgainst || 0);
@@ -2190,6 +2241,8 @@
           topSwedishPlayer: stats?.topSwedishPlayer || team.topSwedishPlayer || team.topPlayer || "",
           topSwedishPoints: stats?.topSwedishPoints || team.topSwedishPoints || team.topPlayerPoints || "",
           playoffSeed: team.playoffSeed || team.seed || "",
+          playoffRound: team.playoffRound || stats?.playoffRound || "",
+          nextPlayoffRound: team.nextPlayoffRound || stats?.nextPlayoffRound || "",
           playoffStatus: team.playoffStatus || team.slutspelStatus || stats?.playoffStatus || ""
         };
 
@@ -2235,6 +2288,8 @@
             playoffLosses: stats?.playoffLosses || mergedTeam.playoffLosses || "",
             playoffBestOf: mergedTeam.playoffBestOf || "",
             playoffWinsNeeded: mergedTeam.playoffWinsNeeded || "",
+            playoffRound: mergedTeam.playoffRound || stats?.playoffRound || "",
+            nextPlayoffRound: mergedTeam.nextPlayoffRound || stats?.nextPlayoffRound || "",
             playoffGames: stats?.playoffGames || mergedTeam.playoffGames || "",
             playoffPoints: stats?.playoffPoints || mergedTeam.playoffPoints || "",
             playoffGoalsFor: stats?.playoffGoalsFor || mergedTeam.playoffGoalsFor || "",
@@ -2304,6 +2359,8 @@
             playoffStatus: source.playoffStatus || team.playoffStatus,
             playoffBestOf: source.playoffBestOf || team.playoffBestOf,
             playoffWinsNeeded: source.playoffWinsNeeded || team.playoffWinsNeeded,
+            playoffRound: source.playoffRound || team.playoffRound,
+            nextPlayoffRound: source.nextPlayoffRound || team.nextPlayoffRound,
             gamesPlayed: source.gamesPlayed || team.gamesPlayed,
             wins: source.wins || team.wins,
             overtimeWins: source.overtimeWins || team.overtimeWins,
@@ -2358,6 +2415,8 @@
           playoffStatus: source.playoffStatus || team.playoffStatus,
           playoffBestOf: source.playoffBestOf || team.playoffBestOf,
           playoffWinsNeeded: source.playoffWinsNeeded || team.playoffWinsNeeded,
+          playoffRound: source.playoffRound || team.playoffRound,
+          nextPlayoffRound: source.nextPlayoffRound || team.nextPlayoffRound,
           gamesPlayed: source.gamesPlayed || team.gamesPlayed,
           wins: source.wins || team.wins,
           overtimeWins: source.overtimeWins || team.overtimeWins,
@@ -2412,15 +2471,7 @@
           tablePosition: displayGroupPosition
         });
         const explicitPlayoffText = normalizePlayoffStatusText(team.playoffStatus);
-        const winsNeeded = Number(team.playoffWinsNeeded || (normalizeDivision(team.division) === "Neo" ? 3 : 4));
-        const playedPlayoffText = (() => {
-          if (Number(team.playoffMatches || 0) <= 0) return "";
-          const wins = Number(team.playoffWins || 0);
-          const losses = Number(team.playoffLosses || 0);
-          if (wins >= winsNeeded) return `Vann ${wins}-${losses}`;
-          if (losses >= winsNeeded) return `Utslagen ${wins}-${losses}`;
-          return `Spelar ${wins}-${losses}`;
-        })();
+        const playedPlayoffText = playedPlayoffStatusText(team);
         const playoffText = playedPlayoffText || placementPlayoffText || explicitPlayoffText || "";
         const goalsText = team.goalsFor !== "" && team.goalsAgainst !== ""
           ? `${team.goalsFor}-${team.goalsAgainst}`
@@ -2673,12 +2724,7 @@
         team = hydrateTeamForCard(team);
 
         if (Number(team.playoffMatches || 0) > 0) {
-          const wins = Number(team.playoffWins || 0);
-          const losses = Number(team.playoffLosses || 0);
-          const winsNeeded = Number(team.playoffWinsNeeded || (normalizeDivision(team.division) === "Neo" ? 3 : 4));
-          if (wins >= winsNeeded) return `Vann ${wins}-${losses}`;
-          if (losses >= winsNeeded) return `Utslagen ${wins}-${losses}`;
-          return `Spelar ${wins}-${losses}`;
+          return playedPlayoffStatusText(team);
         }
 
         const groupPosition = team.groupPosition || team.tablePosition || "";
