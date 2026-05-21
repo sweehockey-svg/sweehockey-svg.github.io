@@ -561,6 +561,20 @@
       overflow-wrap:anywhere;
     }
 
+    .team-highlight__item.is-status strong{
+      display:inline-flex;
+      align-items:center;
+      width:max-content;
+      max-width:100%;
+      padding:3px 8px;
+      border-radius:999px;
+      background: rgba(255,255,255,0.055);
+      border:1px solid rgba(255,255,255,0.08);
+      font-size:16px;
+      line-height:1.05;
+      white-space:nowrap;
+    }
+
     .team-highlight__item.is-gold strong{
       color: var(--gold);
     }
@@ -2473,6 +2487,17 @@
         const explicitPlayoffText = normalizePlayoffStatusText(team.playoffStatus);
         const playedPlayoffText = playedPlayoffStatusText(team);
         const playoffText = playedPlayoffText || placementPlayoffText || explicitPlayoffText || "";
+        const playoffRoundText = normalizePlayoffRoundLabel(team.playoffRound || team.playoffStage) || (Number(team.playoffMatches || 0) > 0 ? "Runda 1" : "");
+        const nextPlayoffText = team.nextPlayoffRound || nextPlayoffRoundLabel(playoffRoundText);
+        const playoffTopText = (() => {
+          if (Number(team.playoffMatches || 0) <= 0) return playoffText || "";
+          const wins = Number(team.playoffWins || 0);
+          const losses = Number(team.playoffLosses || 0);
+          const winsNeeded = playoffWinsNeededForTeam(team);
+          if (wins >= winsNeeded) return `Vann ${wins}-${losses}`;
+          if (losses >= winsNeeded) return `Utslagen ${wins}-${losses}`;
+          return `Spelar ${wins}-${losses}`;
+        })();
         const goalsText = team.goalsFor !== "" && team.goalsAgainst !== ""
           ? `${team.goalsFor}-${team.goalsAgainst}`
           : "";
@@ -2521,11 +2546,11 @@
         const highlightMarkup = [
           team.tablePoints !== "" && team.tablePoints !== undefined && team.tablePoints !== null ? ["Poäng", team.tablePoints, true] : null,
           displayGroupPosition ? ["Gruppplacering", "#" + displayGroupPosition, false] : null,
-          ["Slutspel", playoffText || "-", false]
+          ["Slutspel", playoffTopText || "-", false]
         ]
           .filter(Boolean)
           .map(([label, value, isGold]) => `
-            <div class="team-highlight__item ${highlightClass(label, value, isGold)}">
+            <div class="team-highlight__item ${label === "Slutspel" ? "is-status" : ""} ${highlightClass(label, value, isGold)}">
               <span>${escapeHtml(label)}</span>
               <strong>${escapeHtml(value)}</strong>
             </div>
@@ -2554,7 +2579,9 @@
 
         const playoffStatsMarkup = Number(team.playoffMatches || 0) > 0
           ? [
-              ["Status", playedPlayoffText],
+              ["Status", playoffTopText],
+              playoffRoundText ? ["Runda", playoffRoundText] : null,
+              nextPlayoffText ? ["Nästa", nextPlayoffText] : null,
               playoffFormatText ? ["Format", playoffFormatText] : null,
               ["Matcher", team.playoffMatches],
               playoffRecord ? ["Record", playoffRecord] : null,
