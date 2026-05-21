@@ -1253,7 +1253,7 @@
 
       .team-highlight{
         width:100%;
-        grid-template-columns: .75fr 1.25fr .75fr;
+        grid-template-columns: .7fr 1.1fr minmax(92px, .9fr);
         gap:7px;
         padding:9px;
       }
@@ -1268,17 +1268,16 @@
       .team-highlight__item strong{ font-size:20px; }
 
       .team-highlight__item.is-status strong{
-        font-size:16px;
-        padding:3px 8px;
+        font-size:clamp(13px, 3.7vw, 16px);
+        padding:3px 7px;
+        max-width:100%;
+        white-space:normal;
+        overflow-wrap:anywhere;
       }
 
       .team-stats{
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap:8px;
-      }
-
-      .team-stats-section:nth-of-type(3) .team-stats{
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap:8px;
       }
 
       .team-stats-section{ gap:8px; }
