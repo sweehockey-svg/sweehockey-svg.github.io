@@ -1275,10 +1275,15 @@
         overflow-wrap:anywhere;
       }
 
-      .team-stats{
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap:8px;
+      .team-stats-section--regular .team-stats{
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
+
+      .team-stats-section--playoff .team-stats{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .team-stats{ gap:8px; }
 
       .team-stats-section{ gap:8px; }
       .team-stats-title{
@@ -1292,8 +1297,9 @@
       }
 
       .team-stat strong{
-        font-size:17px;
+        font-size:clamp(14px, 3.9vw, 17px);
         line-height:1.05;
+        white-space:nowrap;
       }
 
       .team-note{
@@ -2863,8 +2869,8 @@
                   </div>
                 </div>
                 ${highlightMarkup ? `<div class="team-highlight">${highlightMarkup}</div>` : ""}
-                ${statsMarkup ? `<div class="team-stats-section"><div class="team-stats-title">Gruppspel</div><div class="team-stats">${statsMarkup}</div></div>` : ""}
-                ${playoffStatsMarkup ? `<div class="team-stats-section"><div class="team-stats-title">Slutspel</div><div class="team-stats">${playoffStatsMarkup}</div></div>` : ""}
+                ${statsMarkup ? `<div class="team-stats-section team-stats-section--regular"><div class="team-stats-title">Gruppspel</div><div class="team-stats">${statsMarkup}</div></div>` : ""}
+                ${playoffStatsMarkup ? `<div class="team-stats-section team-stats-section--playoff"><div class="team-stats-title">Slutspel</div><div class="team-stats">${playoffStatsMarkup}</div></div>` : ""}
                 ${
                   topPlayerText || statusSentence()
                     ? `<div class="team-note">${topPlayerText ? `<strong>Topp svensk:</strong> ${escapeHtml(topPlayerText)}` : ""}${topPlayerText && statusSentence() ? "<br>" : ""}${escapeHtml(statusSentence())}</div>`
