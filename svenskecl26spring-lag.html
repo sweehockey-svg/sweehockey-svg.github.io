@@ -1346,10 +1346,10 @@
 
         <a class="nav__link" href="https://www.svenskehockey.se/SEC/">SEC</a>
 
-        <button class="iconbtn" type="button" aria-label="SÃ¶k (kommer snart)" title="SÃ¶k (kommer snart)">&#128269;</button>
+        <button class="iconbtn" type="button" aria-label="Sök (kommer snart)" title="Sök (kommer snart)">&#128269;</button>
       </nav>
 
-      <button class="hamburger" type="button" aria-label="Ã–ppna meny" data-mobile-toggle>&#9776;</button>
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>&#9776;</button>
     </div>
 
     <div class="mobile" data-mobile-menu>
@@ -1378,11 +1378,11 @@
       <h1>Svenska eHockey-lag</h1>
 
       <p>
-        HÃ¤r samlas <strong>svenska lag i ECL 26 Spring</strong> med division, tabellplacering, poÃ¤ng och aktuell slutspelsstatus.
+        Här samlas <strong>svenska lag i ECL 26 Spring</strong> med division, tabellplacering, poäng och aktuell slutspelsstatus.
       </p>
 
       <p>
-        AnvÃ¤nd filtrering, sortering och sÃ¶k fÃ¶r att snabbt hitta rÃ¤tt lag och jÃ¤mfÃ¶ra hur de svenska lagen ligger till.
+        Använd filtrering, sortering och sök för att snabbt hitta rätt lag och jämföra hur de svenska lagen ligger till.
       </p>
     </section>
 
@@ -1395,7 +1395,7 @@
 
         <div class="controls">
           <div class="select-wrap">
-            <select id="divisionFilter" class="select-control" aria-label="Filtrera pÃ¥ division">
+            <select id="divisionFilter" class="select-control" aria-label="Filtrera på division">
               <option value="all">Alla divisioner</option>
               <option value="Elite">Elite</option>
               <option value="Pro">Pro</option>
@@ -1407,20 +1407,20 @@
 
           <div class="select-wrap">
             <select id="sortTeams" class="select-control" aria-label="Sortera lag">
-              <option value="division">Sortera: division + poÃ¤ng</option>
-              <option value="name-asc">Namn A-Ã–</option>
-              <option value="name-desc">Namn Ã–-A</option>
+              <option value="division">Sortera: division + poäng</option>
+              <option value="name-asc">Namn A-Ö</option>
+              <option value="name-desc">Namn Ö-A</option>
               <option value="players-desc">Flest spelare</option>
-              <option value="points-desc">Flest poÃ¤ng</option>
-              <option value="ppg-desc">BÃ¤st poÃ¤ngsnitt</option>
-              <option value="form-desc">BÃ¤st form</option>
-              <option value="swedish-points-desc">Flest svenska poÃ¤ng</option>
+              <option value="points-desc">Flest poäng</option>
+              <option value="ppg-desc">Bäst poängsnitt</option>
+              <option value="form-desc">Bäst form</option>
+              <option value="swedish-points-desc">Flest svenska poäng</option>
               <option value="matches-desc">Flest matcher</option>
             </select>
           </div>
 
           <div class="search-wrap">
-            <input type="text" id="searchTeams" placeholder="SÃ¶k lag eller division...">
+            <input type="text" id="searchTeams" placeholder="Sök lag eller division...">
           </div>
           <label class="playoff-toggle">
             <input type="checkbox" id="playoffOnly">
@@ -1433,7 +1433,7 @@
         </div>
       </div>
 
-      <div id="teams-summary" class="summary-bar" aria-label="Ã–versikt svenska lag"></div>
+      <div id="teams-summary" class="summary-bar" aria-label="Översikt svenska lag"></div>
       <div id="teams-list"></div>
       <p id="lastUpdated" class="lastUpdated"></p>
     </section>
@@ -1537,46 +1537,46 @@
         "almtuna",
         "bik karlskoga",
         "bjorkloven",
-        "bjÃ¶rklÃ¶ven",
+        "björklöven",
         "brynas",
-        "brynÃ¤s",
+        "brynäs",
         "djurgarden",
-        "djurgÃ¥rden",
+        "djurgården",
         "farjestad",
-        "fÃ¤rjestad",
+        "färjestad",
         "frolunda",
-        "frÃ¶lunda",
+        "frölunda",
         "hv71",
         "kalmar",
         "karlskoga",
         "karlskrona",
         "leksand",
         "linkoping",
-        "linkÃ¶ping",
+        "linköping",
         "lulea",
-        "luleÃ¥",
+        "luleå",
         "malmo",
-        "malmÃ¶",
+        "malmö",
         "modo",
         "mora",
         "nybro",
         "orebro",
-        "Ã¶rebro",
+        "örebro",
         "oskarshamn",
         "rogle",
-        "rÃ¶gle",
+        "rögle",
         "skelleftea",
-        "skellefteÃ¥",
+        "skellefteå",
         "sodertalje",
-        "sÃ¶dertÃ¤lje",
+        "södertälje",
         "timra",
-        "timrÃ¥",
+        "timrå",
         "troja",
         "trojans",
         "vaxjo",
-        "vÃ¤xjÃ¶",
+        "växjö",
         "vasteras",
-        "vÃ¤sterÃ¥s",
+        "västerås",
         "vimmerby"
       ];
 
@@ -1673,7 +1673,7 @@
         return removeDiacritics(value)
           .toLowerCase()
           .replace(/\u00A0/g, " ")
-          .replace(/[^a-z0-9Ã¥Ã¤Ã¶\s]/gi, " ")
+          .replace(/[^a-z0-9åäö\s]/gi, " ")
           .replace(/\s+/g, " ")
           .trim();
       }
@@ -2066,7 +2066,7 @@
               founded: "-",
               players: row.nationality ? 1 : "-",
               transferCount: 1,
-              description: "Svenskt ECL 26 Spring-lag som fÃ¶rekommer i statistiken.",
+              description: "Svenskt ECL 26 Spring-lag som förekommer i statistiken.",
               status: "ECL 26 Spring",
               url: row.FromTeamID && row.FromLeagueID ? `https://sportsgamer.gg/leagues/${encodeURIComponent(row.FromLeagueID)}/teams/${encodeURIComponent(row.FromTeamID)}` : "",
               logo: ""
@@ -2082,7 +2082,7 @@
               founded: "-",
               players: row.nationality ? 1 : "-",
               transferCount: 1,
-              description: "Svenskt ECL 26 Spring-lag som fÃ¶rekommer i statistiken.",
+              description: "Svenskt ECL 26 Spring-lag som förekommer i statistiken.",
               status: "ECL 26 Spring",
               url: row.ToTeamID && row.ToLeagueID ? `https://sportsgamer.gg/leagues/${encodeURIComponent(row.ToLeagueID)}/teams/${encodeURIComponent(row.ToTeamID)}` : "",
               logo: ""
@@ -2144,7 +2144,7 @@
 
         if (division === "Lite" || division === "Core") {
           if (position <= 10) return "Ja";
-          if (position === 11) return "MÃ¶jlig";
+          if (position === 11) return "Möjlig";
           return "Nej";
         }
 
@@ -2200,7 +2200,7 @@
                 founded: "-",
                 players: "-",
                 transferCount: 1,
-                description: "Svenskt ECL 26 Spring-lag som fÃ¶rekommer i matchdatan.",
+                description: "Svenskt ECL 26 Spring-lag som förekommer i matchdatan.",
                 status: "ECL 26 Spring",
                 url: "",
                 logo: ""
@@ -2262,7 +2262,7 @@
         const text = String(value || "").trim();
         const normalized = normalizeText(text);
         if (!normalized || normalized === "slutspel") return "";
-        if (normalized.includes("atton") || normalized.includes("Ã¥tton")) return "Ã…ttondelsfinal";
+        if (normalized.includes("atton") || normalized.includes("åtton")) return "Åttondelsfinal";
         if (normalized.includes("kvart") || normalized.includes("quarter")) return "Kvartsfinal";
         if (normalized.includes("semi")) return "Semifinal";
         if (normalized.includes("final")) return "Final";
@@ -2275,7 +2275,7 @@
         const normalized = normalizeText(roundLabel);
         const roundMatch = normalized.match(/runda\s*(\d+)/);
         if (roundMatch) return `Runda ${Number(roundMatch[1]) + 1}`;
-        if (normalized.includes("atton") || normalized.includes("Ã¥tton")) return "Kvartsfinal";
+        if (normalized.includes("atton") || normalized.includes("åtton")) return "Kvartsfinal";
         if (normalized.includes("kvart")) return "Semifinal";
         if (normalized.includes("semi")) return "Final";
         if (normalized.includes("final")) return "";
@@ -2771,7 +2771,7 @@
           const wins = Number(team.playoffWins || 0);
           const losses = Number(team.playoffLosses || 0);
           const winsNeeded = playoffWinsNeededForTeam(team);
-          if (wins >= winsNeeded) return `Vidare frÃ¥n ${playoffRoundText.toLowerCase()}`;
+          if (wins >= winsNeeded) return `Vidare från ${playoffRoundText.toLowerCase()}`;
           if (losses >= winsNeeded) return `Utslagen i ${playoffRoundText.toLowerCase()}`;
           return `Spelar ${playoffRoundText.toLowerCase()}`;
         })();
@@ -2800,13 +2800,13 @@
             if (playedState.includes("vann") || playedState.includes("utslagen")) {
               return `Slutspel: ${playedPlayoffText}.`;
             }
-            return `Slutspel pÃ¥gÃ¥r: ${playedPlayoffText}.`;
+            return `Slutspel pågår: ${playedPlayoffText}.`;
           }
           if (normalized.includes("nedflyttning")) return "Nedflyttning enligt nuvarande placering.";
           if (normalized.includes("kval")) return "Kvalplats enligt nuvarande placering.";
-          if (normalized.includes("mojlig")) return "Kan nÃ¥ slutspel som en av de bÃ¤sta elvorna.";
-          if (normalized === "ja" || normalized.includes("runda")) return seedText ? `Klar fÃ¶r slutspel, ${seedText.toLowerCase()}.` : "Klar fÃ¶r slutspel.";
-          if (normalized === "nej") return "UtanfÃ¶r slutspel enligt nuvarande placering.";
+          if (normalized.includes("mojlig")) return "Kan nå slutspel som en av de bästa elvorna.";
+          if (normalized === "ja" || normalized.includes("runda")) return seedText ? `Klar för slutspel, ${seedText.toLowerCase()}.` : "Klar för slutspel.";
+          if (normalized === "nej") return "Utanför slutspel enligt nuvarande placering.";
           return "";
         }
 
@@ -2821,7 +2821,7 @@
         }
 
         const highlightMarkup = [
-          team.tablePoints !== "" && team.tablePoints !== undefined && team.tablePoints !== null ? ["PoÃ¤ng", team.tablePoints, true] : null,
+          team.tablePoints !== "" && team.tablePoints !== undefined && team.tablePoints !== null ? ["Poäng", team.tablePoints, true] : null,
           displayGroupPosition ? ["Gruppplacering", "#" + displayGroupPosition, false] : null,
           ["Slutspel", playoffTopText || "-", false]
         ]
@@ -2841,9 +2841,9 @@
           team.pointsPerGame ? ["P/G", team.pointsPerGame] : null,
           team.last10 ? ["L10", team.last10] : null,
           goalsText ? ["GF-GA", goalsText] : null,
-          goalDiff ? ["MÃ¥l +/-", goalDiff] : null,
+          goalDiff ? ["Mål +/-", goalDiff] : null,
           team.swedishPlayers ? ["Sv spelare", team.swedishPlayers] : null,
-          team.swedishPoints ? ["Sv poÃ¤ng", team.swedishPoints] : null
+          team.swedishPoints ? ["Sv poäng", team.swedishPoints] : null
         ]
           .filter(Boolean)
           .map(([label, value]) => `
@@ -2857,11 +2857,11 @@
         const playoffStatsMarkup = Number(team.playoffMatches || 0) > 0
           ? [
               ["Status", playoffStatusText],
-              nextPlayoffText ? ["NÃ¤sta", nextPlayoffText] : null,
+              nextPlayoffText ? ["Nästa", nextPlayoffText] : null,
               playoffFormatText ? ["Format", playoffFormatText] : null,
               playoffRecord ? ["Matcher", playoffRecord] : null,
               playoffGoalsText ? ["GF-GA", playoffGoalsText] : null,
-              team.playoffPoints ? ["Sv poÃƒÂ¤ng", team.playoffPoints] : null
+              team.playoffPoints ? ["Sv poäng", team.playoffPoints] : null
             ]
               .filter(Boolean)
               .map(([label, value]) => `
@@ -2908,7 +2908,7 @@
 
         const wrapperTag = team.url ? "a" : "div";
         const wrapperAttrs = team.url
-          ? `href="${escapeHtml(team.url)}" target="_blank" rel="noopener noreferrer" aria-label="Ã–ppna lagprofil fÃ¶r ${escapeHtml(team.name)}"`
+          ? `href="${escapeHtml(team.url)}" target="_blank" rel="noopener noreferrer" aria-label="Öppna lagprofil för ${escapeHtml(team.name)}"`
           : `aria-disabled="true"`;
 
         return `
@@ -3077,7 +3077,7 @@
         summaryTarget.innerHTML = `
           <div class="summary-chip"><span>Visar lag</span><strong>${escapeHtml(total)}</strong></div>
           <div class="summary-chip"><span>Slutspel</span><strong>${escapeHtml(playoff)}</strong></div>
-          <div class="summary-chip"><span>Kval/mÃ¶jlig</span><strong>${escapeHtml(qualification)}</strong></div>
+          <div class="summary-chip"><span>Kval/möjlig</span><strong>${escapeHtml(qualification)}</strong></div>
           <div class="summary-chip"><span>Nedflyttning</span><strong>${escapeHtml(relegation)}</strong></div>
           <div class="summary-chip"><span>Sv spelare</span><strong>${escapeHtml(swedishPlayers)}</strong></div>
         `;
@@ -3122,14 +3122,14 @@
           });
 
           if (!visible && cards.length) {
-            target.insertAdjacentHTML("beforeend", `<div class="empty-state" data-search-empty>Inga lag matchar din sÃ¶kning.</div>`);
+            target.insertAdjacentHTML("beforeend", `<div class="empty-state" data-search-empty>Inga lag matchar din sökning.</div>`);
           }
         });
       }
 
       async function fetchJson(url) {
         const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok) throw new Error(`Kunde inte lÃ¤sa ${url} (${response.status})`);
+        if (!response.ok) throw new Error(`Kunde inte läsa ${url} (${response.status})`);
         return response.json();
       }
 
