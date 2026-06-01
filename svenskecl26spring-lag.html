@@ -2282,7 +2282,7 @@
         return "";
       }
 
-      function playoffRoundFromDate(matchStage, dateValue) {
+      function playoffRoundFromDate(matchStage, dateValue, division) {
         const explicit = normalizePlayoffRoundLabel(matchStage);
         if (explicit) return explicit;
 
@@ -2290,13 +2290,16 @@
 
         const d = new Date(dateValue);
         const stamp = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
-        const qf = Date.UTC(2026, 5, 1);
-        const sf = Date.UTC(2026, 5, 8);
-        const final = Date.UTC(2026, 5, 15);
+        const lowerDivision = ["Lite", "Core", "Neo"].includes(normalizeDivision(division));
+        const round2 = lowerDivision ? Date.UTC(2026, 4, 31) : null;
+        const qf = lowerDivision ? Date.UTC(2026, 5, 9) : Date.UTC(2026, 5, 1);
+        const sf = lowerDivision ? Date.UTC(2026, 5, 16) : Date.UTC(2026, 5, 8);
+        const final = lowerDivision ? Date.UTC(2026, 5, 23) : Date.UTC(2026, 5, 15);
 
         if (stamp >= final) return "Final";
         if (stamp >= sf) return "Semifinal";
         if (stamp >= qf) return "Kvartsfinal";
+        if (round2 && stamp >= round2) return "Runda 2";
         return "Runda 1";
       }
 
@@ -2322,7 +2325,7 @@
 
       function addMatchResult(stats, goalsFor, goalsAgainst, isOvertime, dateValue, playoffMatch, matchStage) {
         if (playoffMatch) {
-          const roundLabel = playoffRoundFromDate(matchStage, dateValue);
+          const roundLabel = playoffRoundFromDate(matchStage, dateValue, stats.division);
           if (!stats.playoffRounds) stats.playoffRounds = {};
           if (!stats.playoffRounds[roundLabel]) {
             stats.playoffRounds[roundLabel] = {
