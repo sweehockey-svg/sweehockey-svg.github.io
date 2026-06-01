@@ -2467,7 +2467,7 @@
             ].forEach((entry) => {
               const name = cleanDisplayTeamName(entry.name);
               if (!name || isWrongSeasonTeamName(name) || isWinterTeamName(name)) return;
-              if (!matchTeamIsSwedish(match, name)) return;
+              if (!matchTeamIsSwedish(match, name) && !statsMap.has(teamIdentityKey(name))) return;
 
               const stats = ensureTeamStats(statsMap, name, divisionLabels[division] || division);
               if (!stats) return;
@@ -2515,6 +2515,12 @@
 
       function teamStatsFromPlayerData(parsed) {
         const statsMap = new Map();
+
+        if (Array.isArray(parsed?.teams)) {
+          teamsFromTeamArray(parsed.teams).forEach((team) => {
+            ensureTeamStats(statsMap, team.name, team.division);
+          });
+        }
 
         collectMatchStats(statsMap, parsed?.matcher);
         collectPlayerStats(statsMap, parsed?.regular?.skaters, "regular", true);
