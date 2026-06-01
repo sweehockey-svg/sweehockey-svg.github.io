@@ -2255,7 +2255,19 @@
 
       function isPlayoffMatch(match) {
         const stage = normalizeText(match?.stage || "");
-        return stage && !stage.includes("grupp");
+        if (!stage || stage.includes("grupp")) return false;
+
+        const leagueId = Number(match?.leagueID || 0);
+        const dateValue = matchDateValue(match);
+        const stamp = Number.isFinite(dateValue)
+          ? (() => {
+              const d = new Date(dateValue);
+              return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+            })()
+          : 0;
+
+        if (leagueId === 510 && stamp && stamp < Date.UTC(2026, 5, 2)) return false;
+        return true;
       }
 
       function normalizePlayoffRoundLabel(value) {
@@ -2290,8 +2302,13 @@
 
         const d = new Date(dateValue);
         const stamp = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
-        const lowerDivision = ["Lite", "Core", "Neo"].includes(normalizeDivision(division));
-        const round2 = lowerDivision ? Date.UTC(2026, 4, 31) : null;
+        const normalizedDivision = normalizeDivision(division);
+        const lowerDivision = ["Lite", "Core", "Neo"].includes(normalizedDivision);
+        const round2 = (() => {
+          if (normalizedDivision === "Core") return Date.UTC(2026, 5, 2);
+          if (normalizedDivision === "Lite" || normalizedDivision === "Neo") return Date.UTC(2026, 4, 31);
+          return null;
+        })();
         const qf = lowerDivision ? Date.UTC(2026, 5, 9) : Date.UTC(2026, 5, 1);
         const sf = lowerDivision ? Date.UTC(2026, 5, 16) : Date.UTC(2026, 5, 8);
         const final = lowerDivision ? Date.UTC(2026, 5, 23) : Date.UTC(2026, 5, 15);
