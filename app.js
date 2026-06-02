@@ -3664,10 +3664,14 @@ function renderTeamSignupPage() {
                     </div>
                   </div>
 
-                  <label class="signup-field signup-field-full">
-                    <span>Extra info</span>
-                    <textarea name="notes" placeholder="Tillgänglighet, önskemål eller annat cupadmin bör veta."></textarea>
-                  </label>
+                  <div class="signup-section">
+                    <h3>Extra info</h3>
+                    <p class="signup-help">Skriv om ni önskar division 2, har särskilda tider eller annat cupadmin bör veta.</p>
+                    <label class="signup-field signup-field-full">
+                      <span>Extra info</span>
+                      <textarea name="notes" placeholder="Tillgänglighet, önskemål, eventuell division 2 eller annan info."></textarea>
+                    </label>
+                  </div>
 
                   <div class="signup-actions">
                     <div class="signup-status" data-signup-status></div>
