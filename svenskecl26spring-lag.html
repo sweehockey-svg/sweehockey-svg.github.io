@@ -2320,6 +2320,32 @@
         return "Runda 1";
       }
 
+      function inferredCurrentPlayoffRound(team, playoffText) {
+        const normalized = normalizeText(playoffText);
+        if (!normalized || normalized.includes("nej") || normalized.includes("kval") || normalized.includes("nedflyttning") || normalized.includes("ej slutspel")) return "";
+
+        const division = normalizeDivision(team.division);
+        const now = new Date();
+        const stamp = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+        const lowerDivision = ["Lite", "Core", "Neo"].includes(division);
+        const round2 = (() => {
+          if (division === "Core") return Date.UTC(2026, 5, 2);
+          if (division === "Lite" || division === "Neo") return Date.UTC(2026, 4, 31);
+          return null;
+        })();
+        const qf = lowerDivision ? Date.UTC(2026, 5, 9) : Date.UTC(2026, 5, 1);
+        const sf = lowerDivision ? Date.UTC(2026, 5, 16) : Date.UTC(2026, 5, 8);
+        const final = lowerDivision ? Date.UTC(2026, 5, 23) : Date.UTC(2026, 5, 15);
+
+        if (stamp >= final) return "Final";
+        if (stamp >= sf) return "Semifinal";
+        if (stamp >= qf) return "Kvartsfinal";
+        if (round2 && stamp >= round2) return "Runda 2";
+        if (normalized.includes("runda")) return normalizePlayoffRoundLabel(playoffText);
+        if (normalized === "ja") return lowerDivision ? "Runda 1" : "Kvartsfinal";
+        return "";
+      }
+
       function playoffWinsNeededForTeam(team) {
         return Number(team.playoffWinsNeeded || (normalizeDivision(team.division) === "Neo" ? 3 : 4));
       }
@@ -2783,14 +2809,15 @@
         const explicitPlayoffText = normalizePlayoffStatusText(team.playoffStatus);
         const playedPlayoffText = playedPlayoffStatusText(team);
         const playoffText = playedPlayoffText || placementPlayoffText || explicitPlayoffText || "";
-        const playoffRoundText = normalizePlayoffRoundLabel(team.playoffRound || team.playoffStage) || (Number(team.playoffMatches || 0) > 0 ? "Runda 1" : "");
+        const playoffRoundText = normalizePlayoffRoundLabel(team.playoffRound || team.playoffStage) || inferredCurrentPlayoffRound(team, playoffText) || (Number(team.playoffMatches || 0) > 0 ? "Runda 1" : "");
+        const hasPlayoffSeries = Number(team.playoffMatches || 0) > 0 || Boolean(playoffRoundText && normalizeText(playoffText).includes("ja"));
         const nextPlayoffText = team.nextPlayoffRound || nextPlayoffRoundLabel(playoffRoundText);
         const playoffTopText = (() => {
-          if (Number(team.playoffMatches || 0) > 0) return "Ja";
+          if (hasPlayoffSeries) return "Ja";
           return playoffText || "";
         })();
         const playoffStatusText = (() => {
-          if (Number(team.playoffMatches || 0) <= 0) return "";
+          if (!hasPlayoffSeries) return "";
           const wins = Number(team.playoffWins || 0);
           const losses = Number(team.playoffLosses || 0);
           const winsNeeded = playoffWinsNeededForTeam(team);
@@ -2803,7 +2830,7 @@
           : "";
         const playoffRecord = Number(team.playoffMatches || 0) > 0
           ? `${team.playoffWins || 0}-${team.playoffLosses || 0}`
-          : "";
+          : (hasPlayoffSeries ? "0-0" : "");
         const playoffGoalsText = team.playoffGoalsFor !== "" && team.playoffGoalsAgainst !== ""
           ? `${team.playoffGoalsFor}-${team.playoffGoalsAgainst}`
           : "";
@@ -2825,6 +2852,7 @@
             }
             return `Slutspel pågår: ${playedPlayoffText}.`;
           }
+          if (hasPlayoffSeries && playoffStatusText && playoffRecord) return `Slutspel pågår: ${playoffStatusText} ${playoffRecord}.`;
           if (normalized.includes("nedflyttning")) return "Nedflyttning enligt nuvarande placering.";
           if (normalized.includes("kval")) return "Kvalplats enligt nuvarande placering.";
           if (normalized.includes("mojlig")) return "Kan nå slutspel som en av de bästa elvorna.";
@@ -2877,7 +2905,7 @@
           `)
           .join("");
 
-        const playoffStatsMarkup = Number(team.playoffMatches || 0) > 0
+        const playoffStatsMarkup = hasPlayoffSeries
           ? [
               ["Status", playoffStatusText],
               nextPlayoffText ? ["Nästa", nextPlayoffText] : null,
