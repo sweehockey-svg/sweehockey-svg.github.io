@@ -305,7 +305,7 @@
       <h1>Svenska lag i ECL</h1>
       <p>
         Här samlas svenska lag som spelat ECL genom åren. Välj om listan ska grupperas via lag-ID eller via lagnamn.
-        Lag-ID visar samma organisation genom åren, medan lagnamn listar varje historiskt lagnamn separat.
+        Lag-ID visar samma organisation genom åren, medan lagnamn listar historiska lagnamn separat. DNF/DSQ tas bort från visningen och snarlika namn med samma lag-ID slås ihop.
       </p>
       <p>
         Sidan laddar tre separata JSON-filer: <strong>svenska-lag-historia.json</strong>,
@@ -491,15 +491,17 @@
         const seasonName = getSeasonTeamName(team);
 
         if (mode === "name") {
-          return `name:${normalizeText(seasonName)}`;
+          const idPart = team.teamID !== undefined && team.teamID !== null && String(team.teamID).trim() !== "" ? String(team.teamID).trim() : "noid";
+          return `name:${idPart}:${teamNameMergeKey(seasonName)}`;
         }
 
         if (team.teamID !== undefined && team.teamID !== null && String(team.teamID).trim() !== "") return `id:${team.teamID}`;
-        return `name:${normalizeText(seasonName)}`;
+        return `name:noid:${teamNameMergeKey(seasonName)}`;
       }
 
       function teamDisplayName(team) {
-        return getCurrentViewMode() === "name" ? getSeasonTeamName(team) : (team.currentName || team.mappedName || team.name || getSeasonTeamName(team));
+        const name = getCurrentViewMode() === "name" ? getSeasonTeamName(team) : (team.currentName || team.mappedName || team.name || getSeasonTeamName(team));
+        return cleanDisplayTeamName(name);
       }
 
       function extractJsonResultObject(rawData) {
@@ -558,8 +560,26 @@
         return unique(paths);
       }
 
+      function stripTeamStatusTags(name) {
+        return String(name || "")
+          .replace(/\((?:\s*)(?:DNF|DSQ)(?:\s*)\)/gi, " ")
+          .replace(/\b(?:DNF|DSQ)\b/gi, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
       function cleanDisplayTeamName(name) {
-        return String(name || "").replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
+        return stripTeamStatusTags(String(name || "")
+          .replace(/\u00A0/g, " ")
+          .replace(/\s+/g, " ")
+          .trim());
+      }
+
+      function teamNameMergeKey(name) {
+        return normalizeText(cleanDisplayTeamName(name))
+          .replace(/\b(?:esport|esports|e sports|gaming)\b/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
       }
 
       function teamNameCandidates(teamName, logo) {
@@ -655,10 +675,11 @@
       }
 
       function teamLogoMarkup(team, className = "team-logo") {
-        const candidates = teamNameCandidates(team.name, team.logo);
+        const logoName = cleanDisplayTeamName(team.name);
+        const candidates = teamNameCandidates(logoName, team.logo);
         return `
           <div class="${className}">
-            <img alt="${escapeHtml(team.name)}" data-team="${escapeHtml(team.name)}" data-candidates="${escapeHtml(encodeAttr(candidates))}" onerror="handleImageError(event)">
+            <img alt="${escapeHtml(logoName)}" data-team="${escapeHtml(logoName)}" data-candidates="${escapeHtml(encodeAttr(candidates))}" onerror="handleImageError(event)">
           </div>
         `;
       }
@@ -731,8 +752,8 @@
           }
 
           if (team.division) agg.divisions.add(team.division);
-          if (team.name) agg.teamNames.add(team.name);
-          if (team.seasonTeamName) agg.teamNames.add(team.seasonTeamName);
+          if (team.name) agg.teamNames.add(cleanDisplayTeamName(team.name));
+          if (team.seasonTeamName) agg.teamNames.add(cleanDisplayTeamName(team.seasonTeamName));
           if (getSeasonTeamName(team)) agg.teamNames.add(getSeasonTeamName(team));
           const sKey = teamSeasonKey(team);
           if (!agg.seasonKeys.has(sKey)) {
@@ -929,7 +950,7 @@
                 <div class="history-item">
                   <b>${escapeHtml(item.seasonLabel || item.season || "ECL")}</b>
                   ${item.division ? `• ${escapeHtml(item.division)}` : ""}
-                  ${item.teamName ? `• ${escapeHtml(item.teamName)}` : ""}
+                  ${item.teamName ? `• ${escapeHtml(cleanDisplayTeamName(item.teamName))}` : ""}
                   <span class="small">
                     ${safeNumber(item.gamesPlayed || item.games || item.totalGames) ? `Matcher: ${safeNumber(item.gamesPlayed || item.games || item.totalGames)}` : ""}
                     ${safeNumber(item.points) ? ` • Poäng: ${safeNumber(item.points)}` : ""}
@@ -990,7 +1011,7 @@
                     <tr>
                       <td><strong>${escapeHtml(item.seasonLabel || "ECL")}</strong><div class="small">LeagueID: ${escapeHtml(item.leagueID || "-")}</div></td>
                       <td>${escapeHtml(item.division || "-")}</td>
-                      <td>${teamUrl ? `<a href="${escapeHtml(teamUrl)}" target="_blank" rel="noopener noreferrer"><strong>${escapeHtml(item.teamName || team.name)}</strong></a>` : `<strong>${escapeHtml(item.teamName || team.name)}</strong>`}</td>
+                      <td>${teamUrl ? `<a href="${escapeHtml(teamUrl)}" target="_blank" rel="noopener noreferrer"><strong>${escapeHtml(cleanDisplayTeamName(item.teamName || team.name))}</strong></a>` : `<strong>${escapeHtml(cleanDisplayTeamName(item.teamName || team.name))}</strong>`}</td>
                       <td>${safeNumber(s.gamesPlayed)}</td>
                       <td>${safeNumber(s.wins)}-${safeNumber(s.losses)}</td>
                       <td>${safeNumber(s.goalsFor)}-${safeNumber(s.goalsAgainst)}</td>
@@ -1018,7 +1039,7 @@
                   return `
                     <tr>
                       <td><strong>${escapeHtml(detail.seasonLabel || seasonCard.seasonLabel || "ECL")}</strong><div class="small">LeagueID: ${escapeHtml(detail.leagueID || "-")}</div></td>
-                      <td>${escapeHtml(detail.seasonTeamName || detail.name || seasonCard.seasonTeamName || seasonCard.name || "-")}</td>
+                      <td>${escapeHtml(cleanDisplayTeamName(detail.seasonTeamName || detail.name || seasonCard.seasonTeamName || seasonCard.name || "-"))}</td>
                       <td>${escapeHtml(detail.division || "-")}</td>
                       <td>${players}</td>
                       <td>${safeNumber(s.gamesPlayed)}</td>
