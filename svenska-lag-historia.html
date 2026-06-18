@@ -136,7 +136,7 @@
     .teams-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
     .team-card{ min-height:330px; overflow:hidden; transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease; }
     .team-card:hover{ transform:translateY(-3px); border-color:rgba(255,200,74,0.26); box-shadow:0 26px 58px rgba(0,0,0,.34); }
-    .team-card__button{ width:100%; min-height:330px; height:100%; display:block; text-align:left; color:inherit; background:transparent; border:0; cursor:pointer; padding:0; font:inherit; }
+    .team-card__button{ width:100%; min-height:330px; height:100%; display:block; text-align:left; color:inherit; background:transparent; border:0; cursor:pointer; padding:0; font:inherit; text-decoration:none; }
     .team-card__inner{ min-height:330px; padding:20px; display:flex; flex-direction:column; gap:15px; }
     .team-main{ display:grid; grid-template-columns:88px 1fr; gap:16px; align-items:center; }
     .team-logo{ width:88px; height:88px; border-radius:8px; overflow:hidden; background:rgba(255,255,255,0.045); border:1px solid rgba(255,255,255,0.12); display:grid; place-items:center; }
@@ -809,12 +809,27 @@
         `;
       }
 
+      function teamPageUrl(team) {
+        return `${location.pathname}?team=${encodeURIComponent(team.key)}`;
+      }
+
+      function getTeamParam() {
+        return new URLSearchParams(location.search).get("team") || "";
+      }
+
+      function setDetailMode(enabled) {
+        const intro = document.querySelector("main > .card");
+        const listSection = document.getElementById("lag");
+        if (intro) intro.style.display = enabled ? "none" : "";
+        if (listSection) listSection.style.display = enabled ? "none" : "";
+      }
+
       function teamCardMarkup(team) {
         const stats = team.stats;
         const gdClass = team.goalDiff > 0 ? "positive" : team.goalDiff < 0 ? "negative" : "";
         return `
           <article class="team-card">
-            <button class="team-card__button" type="button" data-team-key="${escapeHtml(team.key)}">
+            <a class="team-card__button" href="${escapeHtml(teamPageUrl(team))}" aria-label="Öppna lagsida för ${escapeHtml(team.name)}">
               <div class="team-card__inner">
                 <div class="team-main">
                   ${teamLogoMarkup(team)}
@@ -841,7 +856,7 @@
                   <strong>Senast:</strong> ${escapeHtml(team.latestSeasonLabel || "-")} ${team.latestDivision ? `• ${escapeHtml(team.latestDivision)}` : ""}
                 </div>
               </div>
-            </button>
+            </a>
           </article>
         `;
       }
@@ -858,9 +873,7 @@
         target.innerHTML = `<div class="teams-grid">${rows.map(teamCardMarkup).join("")}</div>`;
         activateImages(target);
 
-        target.querySelectorAll("[data-team-key]").forEach(btn => {
-          btn.addEventListener("click", () => openTeam(btn.dataset.teamKey));
-        });
+        // Lagkort är vanliga länkar till egen lagsida via ?team=...
       }
 
       function historyEntriesForTeam(team) {
@@ -1028,24 +1041,35 @@
       function openTeam(teamKey) {
         const team = aggregates.find(t => t.key === teamKey);
         if (!team) return;
-        location.hash = `team=${encodeURIComponent(team.key)}`;
-        renderTeamPage(team);
-        teamPage.scrollIntoView({ behavior: "smooth", block: "start" });
+        window.location.href = teamPageUrl(team);
       }
 
       function closeTeamPage() {
-        teamPage.classList.remove("open");
-        teamPage.innerHTML = "";
-        if (location.hash.startsWith("#team=")) history.pushState("", document.title, location.pathname + location.search);
-        document.getElementById("lag").scrollIntoView({ behavior: "smooth", block: "start" });
+        window.location.href = location.pathname;
+      }
+
+      function renderTeamNotFound(teamKey) {
+        setDetailMode(true);
+        teamPage.classList.add("open");
+        teamPage.innerHTML = `
+          <div class="back-row">
+            <a class="btn" href="${escapeHtml(location.pathname)}">&#8592; Tillbaka till alla lag</a>
+          </div>
+          <section class="panel">
+            <h2>Laget hittades inte</h2>
+            <p class="panel-sub">Kunde inte hitta någon lagsida för <strong>${escapeHtml(teamKey || "-")}</strong>. Kontrollera att JSON-filerna är uppdaterade.</p>
+          </section>
+        `;
       }
 
       function renderTeamPage(team) {
         const stats = team.stats;
+        setDetailMode(true);
+        document.title = `${team.name} - Svensk eHockey laghistoria`;
         teamPage.classList.add("open");
         teamPage.innerHTML = `
           <div class="back-row">
-            <button class="btn" type="button" id="backToTeams">&#8592; Tillbaka till lagen</button>
+            <a class="btn" href="${escapeHtml(location.pathname)}">&#8592; Tillbaka till alla lag</a>
             ${team.latestTeamUrl ? `<a class="btn" href="${escapeHtml(team.latestTeamUrl)}" target="_blank" rel="noopener noreferrer">Öppna senaste SportsGamer-sida</a>` : ""}
           </div>
 
@@ -1092,14 +1116,16 @@
           </div>
         `;
         activateImages(teamPage);
-        document.getElementById("backToTeams")?.addEventListener("click", closeTeamPage);
+        window.scrollTo({ top: 0, behavior: "auto" });
       }
 
-      function openHashTeam() {
-        if (!location.hash.startsWith("#team=")) return;
-        const key = decodeURIComponent(location.hash.replace("#team=", ""));
+      function openTeamFromQuery() {
+        const key = getTeamParam();
+        if (!key) return false;
         const team = aggregates.find(t => t.key === key);
         if (team) renderTeamPage(team);
+        else renderTeamNotFound(key);
+        return true;
       }
 
       async function init() {
@@ -1117,18 +1143,19 @@
 
         buildIndexes();
         aggregateTeams();
-        renderTeams();
 
         const updateValues = [cardData.updated, teamsData.updated, playerHistoryData.updated, teamHistoryData.updated].filter(Boolean);
         updated.textContent = updateValues.length ? `Uppdaterad: ${escapeHtml(updateValues[0])}` : "";
-        openHashTeam();
+
+        if (!openTeamFromQuery()) {
+          setDetailMode(false);
+          renderTeams();
+        }
       }
 
       searchInput.addEventListener("input", renderTeams);
       divisionFilter.addEventListener("change", renderTeams);
       sortTeams.addEventListener("change", renderTeams);
-      window.addEventListener("hashchange", openHashTeam);
-
       init().catch(err => {
         console.error(err);
         target.innerHTML = `<div class="empty-state">Fel vid laddning: ${escapeHtml(err.message)}</div>`;
