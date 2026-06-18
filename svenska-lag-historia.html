@@ -304,8 +304,8 @@
     <section class="card">
       <h1>Svenska lag i ECL</h1>
       <p>
-        Här samlas svenska lag som spelat ECL genom åren. Klicka på ett lag för att se lagets ECL-historik,
-        spelarstatistik och spelarnas tidigare ECL-säsonger.
+        Här samlas svenska lag som spelat ECL genom åren. Välj om listan ska grupperas via lag-ID eller via lagnamn.
+        Lag-ID visar samma organisation genom åren, medan lagnamn listar varje historiskt lagnamn separat.
       </p>
       <p>
         Sidan laddar tre separata JSON-filer: <strong>svenska-lag-historia.json</strong>,
@@ -321,6 +321,13 @@
         </div>
 
         <div class="controls">
+          <div class="select-wrap">
+            <select id="viewMode" class="select-control" aria-label="Visa lag efter">
+              <option value="id">Visa via lag-ID</option>
+              <option value="name">Visa via lagnamn</option>
+            </select>
+          </div>
+
           <div class="select-wrap">
             <select id="divisionFilter" class="select-control" aria-label="Filtrera på division">
               <option value="all">Alla divisioner</option>
@@ -417,6 +424,7 @@
       const summaryTarget = document.getElementById("teams-summary");
       const teamPage = document.getElementById("teamPage");
       const searchInput = document.getElementById("searchTeams");
+      const viewMode = document.getElementById("viewMode");
       const divisionFilter = document.getElementById("divisionFilter");
       const sortTeams = document.getElementById("sortTeams");
       const updated = document.getElementById("lastUpdated");
@@ -470,9 +478,28 @@
         return `${team.leagueID || ""}:${team.teamID || ""}`;
       }
 
+      function getCurrentViewMode() {
+        return viewMode?.value === "name" ? "name" : "id";
+      }
+
+      function getSeasonTeamName(team) {
+        return cleanDisplayTeamName(team.seasonTeamName || team.name || team.teamName || team.currentName || "");
+      }
+
       function teamGroupKey(team) {
+        const mode = getCurrentViewMode();
+        const seasonName = getSeasonTeamName(team);
+
+        if (mode === "name") {
+          return `name:${normalizeText(seasonName)}`;
+        }
+
         if (team.teamID !== undefined && team.teamID !== null && String(team.teamID).trim() !== "") return `id:${team.teamID}`;
-        return `name:${normalizeText(team.name)}`;
+        return `name:${normalizeText(seasonName)}`;
+      }
+
+      function teamDisplayName(team) {
+        return getCurrentViewMode() === "name" ? getSeasonTeamName(team) : (team.currentName || team.mappedName || team.name || getSeasonTeamName(team));
       }
 
       function extractJsonResultObject(rawData) {
@@ -655,11 +682,12 @@
           if (!team || !team.name) return;
           const key = teamGroupKey(team);
           if (!map.has(key)) {
+            const displayName = teamDisplayName(team);
             map.set(key, {
               key,
               teamID: team.teamID,
-              name: team.name,
-              originalName: team.originalName || team.name,
+              name: displayName,
+              originalName: team.originalName || team.name || displayName,
               logo: team.logo || "",
               latestTeamUrl: team.teamUrl || "",
               latestSeasonLabel: team.seasonLabel || "",
@@ -699,12 +727,13 @@
             agg.latestDivision = team.division || agg.latestDivision;
             agg.latestTeamUrl = team.teamUrl || agg.latestTeamUrl;
             agg.logo = team.logo || agg.logo;
-            agg.name = team.name || agg.name;
+            agg.name = teamDisplayName(team) || agg.name;
           }
 
           if (team.division) agg.divisions.add(team.division);
           if (team.name) agg.teamNames.add(team.name);
           if (team.seasonTeamName) agg.teamNames.add(team.seasonTeamName);
+          if (getSeasonTeamName(team)) agg.teamNames.add(getSeasonTeamName(team));
           const sKey = teamSeasonKey(team);
           if (!agg.seasonKeys.has(sKey)) {
             agg.seasonKeys.add(sKey);
@@ -797,8 +826,8 @@
         rows.forEach(team => team.playerIDs.forEach(id => players.add(id)));
 
         summaryTarget.innerHTML = `
-          <div class="summary-chip"><span>Visar lag</span><strong>${rows.length}</strong></div>
-          <div class="summary-chip"><span>Alla lag</span><strong>${all.length}</strong></div>
+          <div class="summary-chip"><span>Visar ${getCurrentViewMode() === "name" ? "lagnamn" : "lag"}</span><strong>${rows.length}</strong></div>
+          <div class="summary-chip"><span>Alla ${getCurrentViewMode() === "name" ? "lagnamn" : "lag"}</span><strong>${all.length}</strong></div>
           <div class="summary-chip"><span>ECL-säsonger</span><strong>${seasons}</strong></div>
           <div class="summary-chip"><span>Divisioner</span><strong>${uniqueDivisions.size}</strong></div>
           <div class="summary-chip"><span>Matcher / vinster</span><strong>${matches} / ${wins}</strong></div>
@@ -806,11 +835,16 @@
       }
 
       function teamPageUrl(team) {
-        return `${location.pathname}?team=${encodeURIComponent(team.key)}`;
+        const mode = getCurrentViewMode();
+        return `${location.pathname}?view=${encodeURIComponent(mode)}&team=${encodeURIComponent(team.key)}`;
       }
 
       function getTeamParam() {
         return new URLSearchParams(location.search).get("team") || "";
+      }
+
+      function getViewParam() {
+        return new URLSearchParams(location.search).get("view") || "";
       }
 
       function setDetailMode(enabled) {
@@ -1048,7 +1082,7 @@
         teamPage.classList.add("open");
         teamPage.innerHTML = `
           <div class="back-row">
-            <a class="btn" href="${escapeHtml(location.pathname)}">&#8592; Tillbaka till alla lag</a>
+            <a class="btn" href="${escapeHtml(location.pathname)}?view=${escapeHtml(getCurrentViewMode())}">&#8592; Tillbaka till alla lag</a>
           </div>
           <section class="panel">
             <h2>Laget hittades inte</h2>
@@ -1064,7 +1098,7 @@
         teamPage.classList.add("open");
         teamPage.innerHTML = `
           <div class="back-row">
-            <a class="btn" href="${escapeHtml(location.pathname)}">&#8592; Tillbaka till alla lag</a>
+            <a class="btn" href="${escapeHtml(location.pathname)}?view=${escapeHtml(getCurrentViewMode())}">&#8592; Tillbaka till alla lag</a>
             ${team.latestTeamUrl ? `<a class="btn" href="${escapeHtml(team.latestTeamUrl)}" target="_blank" rel="noopener noreferrer">Öppna senaste SportsGamer-sida</a>` : ""}
           </div>
 
@@ -1077,6 +1111,7 @@
                 ${team.latestDivision ? `<span class="meta-pill">Senaste division: ${escapeHtml(team.latestDivision)}</span>` : ""}
                 <span class="meta-pill">${team.seasons.length} ECL-säsonger</span>
                 <span class="meta-pill">${team.playerCount} spelare</span>
+                <span class="meta-pill">Visning: ${getCurrentViewMode() === "name" ? "lagnamn" : "lag-ID"}</span>
               </div>
 
               <div class="detail-grid">
@@ -1128,6 +1163,9 @@
         teamsData = teams || { teams: [] };
         playerHistoryData = playerHistory || { playerHistory: [] };
 
+        const requestedView = getViewParam();
+        if (requestedView === "name" || requestedView === "id") viewMode.value = requestedView;
+
         buildIndexes();
         aggregateTeams();
 
@@ -1141,6 +1179,14 @@
       }
 
       searchInput.addEventListener("input", renderTeams);
+      viewMode.addEventListener("change", () => {
+        aggregateTeams();
+        if (getTeamParam()) {
+          window.location.href = `${location.pathname}?view=${encodeURIComponent(getCurrentViewMode())}`;
+          return;
+        }
+        renderTeams();
+      });
       divisionFilter.addEventListener("change", renderTeams);
       sortTeams.addEventListener("change", renderTeams);
       init().catch(err => {
