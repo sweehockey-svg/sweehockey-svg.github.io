@@ -308,9 +308,8 @@
         spelarstatistik och spelarnas tidigare ECL-säsonger.
       </p>
       <p>
-        Sidan laddar fyra separata JSON-filer: <strong>svenska-lag-historia.json</strong>,
-        <strong>svenska-lag-historia-teams.json</strong>, <strong>svenska-lag-historia-player-history.json</strong>
-        och <strong>svenska-lag-historia-team-history.json</strong>.
+        Sidan laddar tre separata JSON-filer: <strong>svenska-lag-historia.json</strong>,
+        <strong>svenska-lag-historia-teams.json</strong> och <strong>svenska-lag-historia-player-history.json</strong>.
       </p>
     </section>
 
@@ -411,8 +410,7 @@
       const FILES = {
         cards: "./svenska-lag-historia.json",
         teams: "./svenska-lag-historia-teams.json",
-        playerHistory: "./svenska-lag-historia-player-history.json",
-        teamHistory: "./svenska-lag-historia-team-history.json"
+        playerHistory: "./svenska-lag-historia-player-history.json"
       };
 
       const target = document.getElementById("teams-list");
@@ -429,12 +427,10 @@
       let cardData = { teams: [] };
       let teamsData = { teams: [] };
       let playerHistoryData = { playerHistory: [] };
-      let teamHistoryData = { teamHistory: [] };
 
       let aggregates = [];
       let teamDetailsBySeasonKey = new Map();
       let playerHistoryById = new Map();
-      let teamHistoryById = new Map();
 
       function escapeHtml(value) {
         return String(value ?? "")
@@ -646,9 +642,6 @@
 
         playerHistoryById = new Map();
         (playerHistoryData.playerHistory || []).forEach(item => playerHistoryById.set(String(item.playerID), item.history || []));
-
-        teamHistoryById = new Map();
-        (teamHistoryData.teamHistory || []).forEach(item => teamHistoryById.set(String(item.teamID), item.history || []));
       }
 
       function aggregateTeams() {
@@ -877,8 +870,6 @@
       }
 
       function historyEntriesForTeam(team) {
-        const fromFile = team.teamID !== undefined ? (teamHistoryById.get(String(team.teamID)) || []) : [];
-        if (fromFile.length) return fromFile;
         return team.seasons.map(season => ({
           leagueID: season.leagueID,
           teamID: season.teamID,
@@ -1103,12 +1094,6 @@
             </section>
 
             <section class="panel">
-              <h3>Laghistorik</h3>
-              <p class="panel-sub">Historik från <strong>svenska-lag-historia-team-history.json</strong>, om den finns.</p>
-              ${renderTeamHistoryTable(team)}
-            </section>
-
-            <section class="panel">
               <h3>Spelare och spelarhistorik</h3>
               <p class="panel-sub">Samlad spelarstatistik för laget, med spelarhistorik från <strong>svenska-lag-historia-player-history.json</strong>.</p>
               ${renderPlayersTable(team)}
@@ -1129,22 +1114,20 @@
       }
 
       async function init() {
-        const [cards, teams, playerHistory, teamHistory] = await Promise.all([
+        const [cards, teams, playerHistory] = await Promise.all([
           loadJson(FILES.cards, { teams: [] }),
           loadJson(FILES.teams, { teams: [] }),
-          loadJson(FILES.playerHistory, { playerHistory: [] }),
-          loadJson(FILES.teamHistory, { teamHistory: [] })
+          loadJson(FILES.playerHistory, { playerHistory: [] })
         ]);
 
         cardData = cards || { teams: [] };
         teamsData = teams || { teams: [] };
         playerHistoryData = playerHistory || { playerHistory: [] };
-        teamHistoryData = teamHistory || { teamHistory: [] };
 
         buildIndexes();
         aggregateTeams();
 
-        const updateValues = [cardData.updated, teamsData.updated, playerHistoryData.updated, teamHistoryData.updated].filter(Boolean);
+        const updateValues = [cardData.updated, teamsData.updated, playerHistoryData.updated].filter(Boolean);
         updated.textContent = updateValues.length ? `Uppdaterad: ${escapeHtml(updateValues[0])}` : "";
 
         if (!openTeamFromQuery()) {
