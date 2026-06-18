@@ -491,8 +491,7 @@
         const seasonName = getSeasonTeamName(team);
 
         if (mode === "name") {
-          const idPart = team.teamID !== undefined && team.teamID !== null && String(team.teamID).trim() !== "" ? String(team.teamID).trim() : "noid";
-          return `name:${idPart}:${teamNameMergeKey(seasonName)}`;
+          return `name:${teamNameMergeKey(seasonName)}`;
         }
 
         if (team.teamID !== undefined && team.teamID !== null && String(team.teamID).trim() !== "") return `id:${team.teamID}`;
