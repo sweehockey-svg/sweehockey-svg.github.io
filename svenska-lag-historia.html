@@ -1,0 +1,1623 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Svensk eHockey - Svenska laghistoria</title>
+  <link rel="icon" type="image/png" href="favicon.png?v=1">
+  <link rel="apple-touch-icon" href="favicon.png?v=1">
+  <meta name="description" content="Svenska ECL-lag med laghistorik, spelarhistorik och nuvarande roster." />
+
+  <style>
+    :root{
+      --bg:#061018;
+      --panel:#101a24;
+      --panel2:#172331;
+      --text:#f7fbff;
+      --muted:#a8b8c9;
+      --border:rgba(190,213,235,0.16);
+      --gold:#ffc84a;
+      --gold2:#ff9f2e;
+      --ok:#79f2b0;
+      --danger:#ff7b7b;
+      --blue:#8ab8ff;
+      --shadow:0 18px 46px rgba(0,0,0,.34);
+      --grid-bg:
+        linear-gradient(90deg, rgba(255,255,255,0.070) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,0.050) 1px, transparent 1px),
+        linear-gradient(180deg, #07111b 0%, #081622 44%, #061018 100%);
+    }
+
+    *{ box-sizing:border-box; letter-spacing:0 !important; }
+    html,body{ min-height:100%; overflow-x:hidden; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background-color:#061018;
+      background-image:var(--grid-bg);
+      background-size:64px 64px, 64px 64px, 100% 100%;
+      background-repeat:repeat, repeat, no-repeat;
+      background-position:0 0, 0 0, 0 0;
+      color:var(--text);
+    }
+
+    a{ color:inherit; text-decoration:none; }
+    .container{ width:min(1180px, calc(100% - 36px)); margin:0 auto; }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:10000;
+      overflow:visible;
+      background:rgba(4,9,15,0.88);
+      border-bottom:1px solid rgba(255,200,74,0.20);
+      backdrop-filter:blur(12px);
+    }
+    .topbar__inner{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:10px 0;
+      overflow:visible;
+    }
+    .brand{ display:flex; align-items:center; min-width:220px; }
+    .brand__logo{ height:34px; width:auto; display:block; }
+    .nav{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:14px;
+      flex:1;
+    }
+    .nav__link,
+    .nav__button{
+      font-size:14px;
+      color:var(--muted);
+      padding:10px;
+      border-radius:6px;
+      white-space:nowrap;
+      background:transparent;
+      border:0;
+      cursor:pointer;
+    }
+    .nav__link:hover,
+    .nav__button:hover{
+      background:rgba(255,200,74,0.10);
+      color:var(--text);
+    }
+    .nav__link.is-active,
+    .nav__button.is-active{ color:var(--text); }
+    .dropdown{ position:relative; overflow:visible; }
+    .menu{
+      position:absolute;
+      top:calc(100% + 10px);
+      right:0;
+      width:310px;
+      padding:8px;
+      border-radius:8px;
+      background:rgba(9,15,23,0.98);
+      border:1px solid rgba(255,200,74,0.18);
+      box-shadow:var(--shadow);
+      display:none;
+      z-index:10001;
+    }
+    .dropdown.open .menu{ display:block; }
+    .menu__item{
+      display:block;
+      padding:10px;
+      border-radius:6px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.35;
+    }
+    .menu__item:hover{
+      background:rgba(255,255,255,0.06);
+      color:var(--text);
+    }
+    .iconbtn,
+    .hamburger{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,0.04);
+      color:var(--text);
+      border-radius:6px;
+      padding:8px 10px;
+      cursor:pointer;
+    }
+    .hamburger{ display:none; margin-left:auto; padding:8px 12px; }
+    .mobile{
+      display:none;
+      border-top:1px solid var(--border);
+      background:rgba(10,14,22,0.88);
+    }
+    .mobile.open{ display:block; }
+    .mobile__inner{
+      padding:12px 0 16px;
+      display:grid;
+      gap:8px;
+    }
+    .mobile__link{
+      padding:12px;
+      border-radius:6px;
+      background:rgba(255,255,255,0.04);
+      color:var(--muted);
+    }
+    .mobile__link:hover,
+    .mobile__link.is-active{
+      background:rgba(255,200,74,0.10);
+      color:var(--text);
+    }
+
+    .banner-strip{
+      position:relative;
+      z-index:1;
+      background-color:#061018;
+      background-image:var(--grid-bg);
+      background-size:64px 64px, 64px 64px, 100% 100%;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+    .banner-strip__inner{
+      padding:12px 0;
+      display:flex;
+      justify-content:center;
+    }
+    .banner{
+      width:100%;
+      max-width:1180px;
+      height:118px;
+      border-radius:8px;
+      border:1px solid rgba(255,200,74,0.16);
+      box-shadow:0 14px 34px rgba(0,0,0,.32);
+      background-image:url("svenakehocket.jpg");
+      background-size:cover;
+      background-position:center;
+      overflow:hidden;
+    }
+
+    main{
+      position:relative;
+      z-index:1;
+      padding:22px 0 48px;
+    }
+    .card,
+    .team-card,
+    .detail-card,
+    .table-shell,
+    .summary-chip,
+    .team-stat,
+    .history-item,
+    .player-card{
+      border-radius:8px;
+      background:
+        linear-gradient(90deg, rgba(255,200,74,0.09), transparent 34%),
+        linear-gradient(180deg, #13202c, #0d1823);
+      border:1px solid rgba(255,255,255,0.12);
+      box-shadow:0 16px 38px rgba(0,0,0,0.28);
+    }
+    .card{
+      padding:24px 22px;
+      margin-bottom:24px;
+    }
+    h1{
+      margin:0 0 10px;
+      font-size:clamp(24px, 3vw, 34px);
+      line-height:1.05;
+      font-weight:950;
+    }
+    h2,h3,h4{ margin:0; }
+    p{
+      margin:10px 0;
+      color:var(--muted);
+      line-height:1.65;
+    }
+    strong{ color:#fff; }
+
+    .header-box{
+      display:grid;
+      grid-template-columns:auto minmax(0, 1fr);
+      align-items:center;
+      gap:18px;
+      margin:0 0 18px;
+      padding:0 4px 14px;
+      border-bottom:1px solid rgba(255,255,255,0.10);
+    }
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+    }
+    .section-title__icon{
+      width:34px;
+      height:34px;
+      display:grid;
+      place-items:center;
+      border-radius:8px;
+      background:#12202e;
+      border:1px solid rgba(255,200,74,0.42);
+      box-shadow:inset 4px 0 0 var(--gold);
+      color:var(--gold);
+      font-size:18px;
+      flex:0 0 34px;
+    }
+    .section-title h2{
+      font-size:clamp(24px, 3vw, 32px);
+      font-weight:950;
+      line-height:1.05;
+    }
+    .controls{
+      display:flex;
+      flex-wrap:nowrap;
+      justify-content:flex-end;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .search-wrap{ flex:0 1 270px; position:relative; }
+    .search-wrap::before{
+      content:"\1F50D";
+      position:absolute;
+      left:14px;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:15px;
+      opacity:.72;
+      pointer-events:none;
+    }
+    .select-wrap{ position:relative; flex:0 0 168px; }
+    .select-wrap::after{
+      content:"\25BE";
+      position:absolute;
+      right:13px;
+      top:50%;
+      transform:translateY(-50%);
+      color:var(--gold);
+      pointer-events:none;
+      font-size:12px;
+    }
+    input,
+    select{
+      width:100%;
+      min-height:46px;
+      border-radius:8px;
+      border:1px solid rgba(255,200,74,0.30);
+      background:#0b141e;
+      color:var(--text);
+      outline:none;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+      font-size:14px;
+    }
+    input{ padding:12px 14px 12px 38px; }
+    select{
+      appearance:none;
+      padding:12px 34px 12px 12px;
+      font-weight:850;
+    }
+    option{ background:#101622; color:#fff; }
+    input:focus,
+    select:focus{
+      border-color:rgba(255,200,74,0.55);
+      box-shadow:0 0 0 4px rgba(255,200,74,0.10);
+    }
+
+    .summary-bar{
+      display:grid;
+      grid-template-columns:repeat(5, minmax(0, 1fr));
+      gap:12px;
+      margin:0 0 18px;
+    }
+    .summary-chip{
+      min-height:62px;
+      padding:12px 14px;
+    }
+    .summary-chip span,
+    .team-stat span,
+    .meta-label{
+      display:block;
+      margin-bottom:5px;
+      color:rgba(255,255,255,0.54);
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+    .summary-chip strong{
+      display:block;
+      color:#fff;
+      font-size:22px;
+      font-weight:950;
+      line-height:1;
+    }
+
+    .teams-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:18px;
+    }
+    .team-card{
+      min-height:270px;
+      overflow:hidden;
+      transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .team-card:hover{
+      transform:translateY(-3px);
+      border-color:rgba(255,200,74,0.28);
+      box-shadow:0 26px 58px rgba(0,0,0,.34);
+    }
+    .team-card__link{
+      min-height:270px;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      padding:20px;
+      color:inherit;
+      cursor:pointer;
+    }
+    .team-main{
+      display:grid;
+      grid-template-columns:88px 1fr;
+      gap:16px;
+      align-items:center;
+      min-width:0;
+    }
+    .team-logo{
+      width:88px;
+      height:88px;
+      border-radius:8px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+    .team-logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      padding:8px;
+    }
+    .team-name{
+      margin:0 0 7px;
+      color:#fff;
+      font-size:26px;
+      line-height:1.04;
+      font-weight:950;
+      overflow-wrap:anywhere;
+    }
+    .team-card:hover .team-name{ color:var(--gold); }
+    .team-division{
+      color:var(--gold);
+      font-size:13px;
+      font-weight:950;
+      text-transform:uppercase;
+    }
+    .team-highlight,
+    .team-stats{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:9px;
+    }
+    .team-stat{
+      min-height:62px;
+      padding:10px;
+      box-shadow:none;
+    }
+    .team-stat strong{
+      display:block;
+      color:#fff;
+      font-size:18px;
+      font-weight:950;
+      line-height:1.05;
+      overflow-wrap:anywhere;
+    }
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:max-content;
+      max-width:100%;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(255,255,255,0.06);
+      color:#fff;
+      font-size:12px;
+      font-weight:950;
+      line-height:1.1;
+    }
+    .status-pill.ok{ color:var(--ok); }
+    .status-pill.warn{ color:#ffd166; }
+    .status-pill.danger{ color:var(--danger); }
+    .team-note{
+      margin-top:auto;
+      padding:11px;
+      border-radius:8px;
+      background:rgba(255,255,255,0.035);
+      border:1px solid rgba(255,255,255,0.08);
+      color:rgba(255,255,255,0.78);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .team-view{ display:none; }
+    .team-view.is-active{ display:block; }
+    .back-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:16px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:42px;
+      padding:10px 14px;
+      border-radius:8px;
+      border:1px solid rgba(255,200,74,0.30);
+      background:rgba(255,200,74,0.10);
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .btn:hover{
+      background:linear-gradient(180deg, #ffd86d, #ffae34);
+      color:#081019;
+      border-color:transparent;
+    }
+
+    .team-hero{
+      display:grid;
+      grid-template-columns:150px 1fr;
+      gap:22px;
+      align-items:center;
+      margin-bottom:18px;
+      padding:22px;
+      border-radius:8px;
+      background:
+        radial-gradient(90% 130% at 0% 0%, rgba(255,200,74,0.12), transparent 45%),
+        linear-gradient(180deg, #13202c, #0d1823);
+      border:1px solid rgba(255,255,255,0.12);
+      box-shadow:var(--shadow);
+    }
+    .team-hero .team-logo{
+      width:150px;
+      height:150px;
+      border-radius:10px;
+    }
+    .team-hero h1{
+      font-size:clamp(32px, 5vw, 54px);
+      margin:0 0 10px;
+    }
+    .team-hero-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+    .meta-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.055);
+      border:1px solid rgba(255,255,255,0.10);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:850;
+    }
+    .meta-pill.gold{
+      color:#081019;
+      background:linear-gradient(180deg, #ffd86d, #ffae34);
+      border-color:transparent;
+    }
+
+    .detail-grid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:12px;
+      margin-bottom:18px;
+    }
+    .detail-card{
+      padding:18px;
+      margin-bottom:18px;
+    }
+    .detail-card h3{
+      margin:0 0 14px;
+      color:#fff;
+      font-size:20px;
+      font-weight:950;
+    }
+
+    .table-shell{
+      overflow:hidden;
+      margin-bottom:18px;
+    }
+    .table-scroll{ overflow:auto; }
+    table{
+      width:100%;
+      min-width:840px;
+      border-collapse:collapse;
+    }
+    th,td{
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,0.07);
+      text-align:left;
+      vertical-align:top;
+      font-size:14px;
+    }
+    th{
+      background:#132230;
+      color:#ffd66b;
+      font-size:11px;
+      text-transform:uppercase;
+      font-weight:950;
+    }
+    tbody tr:nth-child(even){ background:rgba(255,255,255,0.025); }
+    tbody tr:hover{ background:rgba(255,200,74,0.10); }
+    .player-name{
+      color:#fff;
+      font-weight:950;
+    }
+    .muted{ color:var(--muted); }
+    .division-badge{
+      display:inline-flex;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.06);
+      font-size:11px;
+      font-weight:950;
+      text-transform:uppercase;
+    }
+    .division-badge.elite{ color:#ff9cab; border-color:rgba(255,107,127,.28); background:rgba(255,107,127,.12); }
+    .division-badge.pro{ color:#ffd166; border-color:rgba(255,209,102,.25); background:rgba(255,209,102,.10); }
+    .division-badge.lite{ color:#ffe08a; border-color:rgba(255,224,138,.25); background:rgba(255,224,138,.10); }
+    .division-badge.core{ color:#9ec5ff; border-color:rgba(158,197,255,.25); background:rgba(158,197,255,.10); }
+    .division-badge.neo{ color:#9ef0c5; border-color:rgba(158,240,197,.25); background:rgba(158,240,197,.10); }
+
+    .player-history-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:14px;
+    }
+    .player-card{
+      padding:15px;
+      position:relative;
+      overflow:hidden;
+    }
+    .player-card::before{
+      content:"";
+      position:absolute;
+      inset:0 auto 0 0;
+      width:4px;
+      background:linear-gradient(180deg, var(--gold), var(--gold2));
+    }
+    .player-card-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:12px;
+    }
+    .player-card h4{
+      color:#fff;
+      font-size:18px;
+      font-weight:950;
+      line-height:1.15;
+      overflow-wrap:anywhere;
+    }
+    .history-list{
+      display:grid;
+      gap:8px;
+    }
+    .history-item{
+      box-shadow:none;
+      padding:10px;
+      background:rgba(255,255,255,0.035);
+    }
+    .history-team{
+      color:#fff;
+      font-weight:950;
+      margin-bottom:4px;
+      overflow-wrap:anywhere;
+    }
+    .history-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:750;
+    }
+    .empty-state{
+      padding:18px;
+      border-radius:8px;
+      background:rgba(255,255,255,0.035);
+      border:1px solid rgba(255,255,255,0.08);
+      color:var(--muted);
+    }
+    .lastUpdated{
+      margin-top:12px;
+      text-align:right;
+      color:rgba(255,255,255,0.58);
+      font-size:13px;
+    }
+
+    footer{
+      position:relative;
+      z-index:1;
+      background-color:#061018;
+      background-image:var(--grid-bg);
+      background-size:64px 64px, 64px 64px, 100% 100%;
+      border-top:1px solid rgba(255,255,255,0.10);
+    }
+    .footer__inner{
+      padding:22px 0;
+      display:flex;
+      gap:18px;
+      align-items:center;
+      justify-content:space-between;
+      color:var(--muted);
+      font-size:13px;
+      border-top:1px solid rgba(255,200,74,0.10);
+    }
+    .footer-brand{ display:grid; gap:4px; min-width:0; }
+    .footer-brand__name{
+      color:#fff;
+      font-size:14px;
+      font-weight:950;
+      text-transform:uppercase;
+    }
+    .footer-brand__meta{ color:#8ea2b5; font-size:12px; }
+    .footer-links{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      gap:8px;
+    }
+    .footer-links a{
+      padding:7px 10px;
+      border-radius:6px;
+      color:#c7d6e6;
+      background:rgba(255,255,255,0.035);
+      border:1px solid rgba(255,255,255,0.08);
+      font-size:12px;
+      font-weight:850;
+    }
+    .footer-links a:hover{
+      color:#081019;
+      background:linear-gradient(180deg, #ffd86d, #ffae34);
+      border-color:transparent;
+    }
+
+    @media (max-width:1080px){
+      .header-box{ grid-template-columns:1fr; }
+      .controls{ justify-content:flex-start; flex-wrap:wrap; }
+      .teams-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .detail-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .player-history-grid{ grid-template-columns:1fr; }
+    }
+    @media (max-width:860px){
+      .nav{ display:none; }
+      .hamburger{ display:inline-flex; }
+      .brand__logo{ height:32px; }
+      .brand{ min-width:160px; }
+      .banner{ height:118px; }
+      .team-hero{ grid-template-columns:1fr; }
+    }
+    @media (max-width:700px){
+      .container{ width:min(100% - 18px, 1180px); }
+      main{ padding:14px 0 34px; }
+      .card{ padding:18px 14px; }
+      .controls{ display:grid; grid-template-columns:1fr 1fr; width:100%; gap:9px; }
+      .search-wrap{ grid-column:1 / -1; width:100%; }
+      .select-wrap{ width:100%; flex:initial; }
+      .summary-bar{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:9px; }
+      .teams-grid{ grid-template-columns:1fr; gap:12px; }
+      .team-card,
+      .team-card__link{ min-height:0; }
+      .team-card__link{ padding:14px; }
+      .team-main{ grid-template-columns:76px minmax(0, 1fr); gap:12px; }
+      .team-logo{ width:76px; height:76px; }
+      .team-name{ font-size:24px; }
+      .team-highlight,
+      .team-stats{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .detail-grid{ grid-template-columns:1fr; }
+      .footer__inner{ align-items:flex-start; flex-direction:column; }
+      .footer-links{ justify-content:flex-start; }
+      .lastUpdated{ text-align:left; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <a class="brand" href="/" aria-label="Svensk eHockey">
+        <img class="brand__logo" src="svenakehocket.png" alt="Svensk eHockey" />
+      </a>
+
+      <nav class="nav" aria-label="Huvudmeny">
+        <a class="nav__link" href="/">Startsida</a>
+
+        <div class="dropdown" data-dropdown>
+          <button class="nav__button is-active" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            Svensk ECL Statistik <span>&#9662;</span>
+          </button>
+          <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
+            <a class="menu__item" role="menuitem" href="/svenskecl26spring-byten.html">Svenska ECL 26 Spring Byten</a>
+            <a class="menu__item" role="menuitem" href="/svenskecl26spring-matcher.html">Svenska matcher ECL 26 Spring</a>
+            <a class="menu__item" role="menuitem" href="/svenskecl26spring-lag.html">Svenska lag ECL 26 Spring</a>
+            <a class="menu__item" role="menuitem" href="/svenska-lag-historia.html">Svenska laghistoria</a>
+            <a class="menu__item" role="menuitem" href="/svenskecl26spring-statistik.html">Svensk statistik ECL 26 Spring</a>
+            <a class="menu__item" role="menuitem" href="/svenskecl26winter-statistik.html">Svensk statistik ECL 26 Winter</a>
+          </div>
+        </div>
+
+        <a class="nav__link" href="/nyheter.html">Nyheter</a>
+        <a class="nav__link" href="https://www.svenskehockey.se/SEC/">SEC</a>
+        <button class="iconbtn" type="button" aria-label="Sök lag" title="Sök lag" onclick="document.getElementById('searchTeams')?.focus()">&#128269;</button>
+      </nav>
+
+      <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>&#9776;</button>
+    </div>
+
+    <div class="mobile" data-mobile-menu>
+      <div class="container mobile__inner">
+        <a class="mobile__link" href="/">Startsida</a>
+        <a class="mobile__link" href="/svenskecl26spring-byten.html">ECL 26 Spring - Byten</a>
+        <a class="mobile__link" href="/svenskecl26spring-matcher.html">ECL 26 Spring - Svenska matcher</a>
+        <a class="mobile__link" href="/svenskecl26spring-lag.html">ECL 26 Spring - Svenska lag</a>
+        <a class="mobile__link is-active" href="/svenska-lag-historia.html">Svenska laghistoria</a>
+        <a class="mobile__link" href="/svenskecl26spring-statistik.html">ECL 26 Spring - Statistik</a>
+        <a class="mobile__link" href="/svenskecl26winter-statistik.html">ECL 26 Winter - Statistik</a>
+        <a class="mobile__link" href="/nyheter.html">Nyheter</a>
+        <a class="mobile__link" href="https://www.svenskehockey.se/SEC/">SEC</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="banner-strip" aria-label="Banner">
+    <div class="container banner-strip__inner">
+      <div class="banner" role="img" aria-label="Svensk eHockey banner"></div>
+    </div>
+  </section>
+
+  <main class="container">
+    <section id="introCard" class="card">
+      <h1>Svenska laghistoria</h1>
+      <p>
+        Här listas svenska ECL-lag. Klicka på ett lag för att öppna en lagsida med lagöversikt, nuvarande roster, spelarstatistik och historik.
+      </p>
+      <p>
+        Sidan läser från <strong>svenskstatistikecl26spring.json</strong>. Om JSON:en innehåller spelarhistorik visas den automatiskt per spelare.
+      </p>
+    </section>
+
+    <section id="listView" class="list-view" aria-label="Svenska lag">
+      <div class="header-box">
+        <div class="section-title">
+          <div class="section-title__icon">&#127942;</div>
+          <h2>Svenska lag</h2>
+        </div>
+
+        <div class="controls">
+          <div class="select-wrap">
+            <select id="divisionFilter" aria-label="Filtrera på division">
+              <option value="all">Alla divisioner</option>
+              <option value="Elite">Elite</option>
+              <option value="Pro">Pro</option>
+              <option value="Lite">Lite</option>
+              <option value="Core">Core</option>
+              <option value="Neo">Neo</option>
+            </select>
+          </div>
+
+          <div class="select-wrap">
+            <select id="sortTeams" aria-label="Sortera lag">
+              <option value="division">Division + poäng</option>
+              <option value="name-asc">Namn A-Ö</option>
+              <option value="name-desc">Namn Ö-A</option>
+              <option value="points-desc">Flest poäng</option>
+              <option value="players-desc">Flest spelare</option>
+              <option value="swedish-points-desc">Flest svenska poäng</option>
+            </select>
+          </div>
+
+          <div class="search-wrap">
+            <input type="text" id="searchTeams" placeholder="Sök lag, spelare eller division...">
+          </div>
+        </div>
+      </div>
+
+      <div id="teamsSummary" class="summary-bar" aria-label="Översikt svenska lag"></div>
+      <div id="teamsList"></div>
+      <p id="lastUpdated" class="lastUpdated"></p>
+    </section>
+
+    <section id="teamView" class="team-view" aria-label="Lagsida"></section>
+  </main>
+
+  <footer>
+    <div class="container footer__inner">
+      <div class="footer-brand">
+        <div class="footer-brand__name">Svensk eHockey</div>
+        <div class="footer-brand__meta">&copy; <span id="year"></span> Svensk ECL-bevakning</div>
+      </div>
+
+      <nav class="footer-links" aria-label="Sidfot">
+        <a href="/nyheter.html">Nyheter</a>
+        <a href="/svenskecl26spring-byten.html">Byten</a>
+        <a href="/svenskecl26spring-matcher.html">Matcher</a>
+        <a href="/svenskecl26spring-lag.html">Svenska lag</a>
+        <a href="/svenska-lag-historia.html">Laghistoria</a>
+        <a href="/svenskecl26spring-statistik.html">Spring statistik</a>
+        <a href="/svenskecl26winter-statistik.html">Winter statistik</a>
+        <a href="https://www.svenskehockey.se/SEC/">SEC</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    document.querySelectorAll("[data-dropdown]").forEach((dd) => {
+      const btn = dd.querySelector("[data-dropdown-btn]");
+      const close = () => {
+        dd.classList.remove("open");
+        btn?.setAttribute("aria-expanded", "false");
+      };
+      btn?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = dd.classList.toggle("open");
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+        document.querySelectorAll("[data-dropdown]").forEach((other) => {
+          if (other !== dd) {
+            other.classList.remove("open");
+            other.querySelector("[data-dropdown-btn]")?.setAttribute("aria-expanded", "false");
+          }
+        });
+      });
+      document.addEventListener("click", close);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+      });
+    });
+
+    const mobileBtn = document.querySelector("[data-mobile-toggle]");
+    const mobileMenu = document.querySelector("[data-mobile-menu]");
+    if (mobileBtn && mobileMenu) {
+      mobileBtn.addEventListener("click", () => mobileMenu.classList.toggle("open"));
+    }
+
+    (function () {
+      const JSON_URL = "./svenskstatistikecl26spring.json";
+      const listView = document.getElementById("listView");
+      const teamView = document.getElementById("teamView");
+      const introCard = document.getElementById("introCard");
+      const teamsList = document.getElementById("teamsList");
+      const teamsSummary = document.getElementById("teamsSummary");
+      const searchTeams = document.getElementById("searchTeams");
+      const divisionFilter = document.getElementById("divisionFilter");
+      const sortTeams = document.getElementById("sortTeams");
+      const lastUpdated = document.getElementById("lastUpdated");
+
+      const divisionOrder = ["Elite", "Pro", "Lite", "Core", "Neo"];
+      const divisionRank = { Elite: 1, Pro: 2, Lite: 3, Core: 4, Neo: 5 };
+      let rawData = {};
+      let teams = [];
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function removeDiacritics(value) {
+        return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+
+      function normalizeText(value) {
+        return removeDiacritics(value)
+          .toLowerCase()
+          .replace(/\u00A0/g, " ")
+          .replace(/[^a-z0-9åäö\s_-]/gi, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function slugify(value) {
+        return removeDiacritics(value)
+          .toLowerCase()
+          .replace(/&/g, " and ")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+      }
+
+      function clean(value) {
+        return String(value ?? "").replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
+      }
+
+      function number(value, fallback = 0) {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : fallback;
+      }
+
+      function first(obj, keys, fallback = "") {
+        for (const key of keys) {
+          if (obj && obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== "") return obj[key];
+        }
+        return fallback;
+      }
+
+      function extractJsonResultObject(data) {
+        if (!data || typeof data !== "object") return {};
+        if (Array.isArray(data.lag) || Array.isArray(data.teams) || Array.isArray(data.svenskaLag)) return data;
+        if (data.json_result && typeof data.json_result === "object") return data.json_result;
+        if (data.json_result && typeof data.json_result === "string") {
+          try { return JSON.parse(data.json_result); } catch (e) { return {}; }
+        }
+        if (Array.isArray(data.rows) && data.rows.length) {
+          const firstRow = data.rows[0];
+          if (firstRow && (Array.isArray(firstRow.lag) || Array.isArray(firstRow.teams) || Array.isArray(firstRow.svenskaLag))) return firstRow;
+          if (firstRow?.json_result && typeof firstRow.json_result === "object") return firstRow.json_result;
+          if (typeof firstRow?.json_result === "string") {
+            try { return JSON.parse(firstRow.json_result); } catch (e) { return {}; }
+          }
+        }
+        return {};
+      }
+
+      function normalizeDivision(value) {
+        const v = normalizeText(value);
+        if (v.includes("elite")) return "Elite";
+        if (v.includes("pro")) return "Pro";
+        if (v.includes("lite")) return "Lite";
+        if (v.includes("core")) return "Core";
+        if (v.includes("neo")) return "Neo";
+        return clean(value) || "ECL";
+      }
+
+      function encodeAttr(value) {
+        return encodeURIComponent(JSON.stringify(value));
+      }
+
+      function decodeAttr(value) {
+        try { return JSON.parse(decodeURIComponent(value || "")); } catch (e) { return []; }
+      }
+
+      function unique(values) {
+        return [...new Set(values.map(v => String(v || "").trim()).filter(Boolean))];
+      }
+
+      function stripParens(value) {
+        return String(value || "").replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim();
+      }
+
+      function normalizeFileBase(value) {
+        return String(value || "").trim().replace(/\u00A0/g, " ").replace(/\s+/g, " ").replace(/[\/\\:*?"<>|]/g, "");
+      }
+
+      function buildPaths(folder, names, exts) {
+        const paths = [];
+        names.forEach((name) => exts.forEach((ext) => paths.push(`/${folder}/${name}.${ext}`)));
+        return unique(paths);
+      }
+
+      function teamNameCandidates(teamName) {
+        const raw = normalizeFileBase(stripParens(clean(teamName)));
+        const noDiacritics = normalizeFileBase(removeDiacritics(raw));
+        const short1 = raw.replace(/\s+IF\s+Esport$/i, "").trim();
+        const short2 = raw.replace(/\s+Esport$/i, "").trim();
+        const short3 = raw.replace(/\s+Esports$/i, "").trim();
+        const short4 = raw.replace(/\s+Hockey$/i, "").trim();
+
+        const names = unique([
+          raw,
+          noDiacritics,
+          short1,
+          removeDiacritics(short1),
+          short2,
+          removeDiacritics(short2),
+          short3,
+          removeDiacritics(short3),
+          short4,
+          removeDiacritics(short4),
+          raw.toLowerCase(),
+          noDiacritics.toLowerCase(),
+          slugify(raw).replaceAll("-", ""),
+          slugify(short1).replaceAll("-", ""),
+          slugify(short2).replaceAll("-", ""),
+          slugify(short3).replaceAll("-", ""),
+          slugify(short4).replaceAll("-", "")
+        ]);
+
+        return buildPaths("teamlogos", names, ["png", "jpg", "jpeg", "webp", "PNG", "JPG", "JPEG", "WEBP"]);
+      }
+
+      function teamShortName(name) {
+        return stripParens(clean(name))
+          .replace(/\s+IF\s+Esport$/i, "")
+          .replace(/\s+Esport$/i, "")
+          .replace(/\s+Esports$/i, "")
+          .replace(/\s+Hockey$/i, "")
+          .trim()
+          .slice(0, 3)
+          .toUpperCase() || "ECL";
+      }
+
+      function fallbackLogo(img) {
+        const team = img.getAttribute("data-team") || "";
+        const shortName = teamShortName(team);
+        img.onerror = null;
+        img.src = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220">
+            <defs>
+              <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stop-color="#18233d"/>
+                <stop offset="100%" stop-color="#0f172a"/>
+              </linearGradient>
+            </defs>
+            <rect width="220" height="220" rx="18" fill="url(#g)"/>
+            <path d="M110 38l52 20v37c0 39-22 67-52 88-30-21-52-49-52-88V58z" fill="#ffc84a" fill-opacity="0.18"/>
+            <text x="110" y="126" text-anchor="middle" fill="#ffc84a" font-family="Arial, sans-serif" font-weight="800" font-size="34">${shortName}</text>
+          </svg>
+        `);
+      }
+
+      window.handleLogoError = function(event) {
+        const img = event.target;
+        const candidates = decodeAttr(img.dataset.candidates);
+        const current = Number(img.dataset.candidateIndex || "0");
+        const next = current + 1;
+
+        if (next < candidates.length) {
+          img.dataset.candidateIndex = String(next);
+          img.src = candidates[next];
+          return;
+        }
+
+        fallbackLogo(img);
+      };
+
+      function activateImages(scope = document) {
+        scope.querySelectorAll("img[data-candidates]").forEach((img) => {
+          const candidates = decodeAttr(img.dataset.candidates);
+          img.dataset.candidateIndex = "0";
+          if (candidates.length) img.src = candidates[0];
+          else fallbackLogo(img);
+        });
+      }
+
+      function formatUpdated(value) {
+        if (!value) return "";
+        const d = new Date(value);
+        if (isNaN(d)) return String(value);
+        return d.toLocaleString("sv-SE", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+      }
+
+      function isSwedishTeam(row) {
+        const country = String(first(row, ["country", "Country", "teamCountry", "TeamCountry", "nation", "Nation"], "")).toUpperCase();
+        if (["SWE", "SE", "SWEDEN", "SVERIGE"].includes(country)) return true;
+        if (row.isSwedish === true || row.swedish === true) return true;
+        if (row.svensktLag === true || row.svensktLag === "1") return true;
+        return !country;
+      }
+
+      function collectPlayers(row) {
+        const direct = first(row, ["players", "Players", "roster", "Roster", "spelare", "currentRoster"], null);
+        if (Array.isArray(direct)) return direct.map(normalizePlayer).filter(Boolean);
+
+        const swedes = first(row, ["swedishPlayerList", "svenskaSpelare", "swedishPlayersList"], null);
+        if (Array.isArray(swedes)) return swedes.map(normalizePlayer).filter(Boolean);
+
+        return [];
+      }
+
+      function normalizePlayer(player) {
+        if (!player) return null;
+        if (typeof player === "string") {
+          return { name: player, position: "", nationality: "", games: "", goals: "", assists: "", points: "", history: [] };
+        }
+
+        const history = first(player, ["history", "History", "playerHistory", "previousTeams", "teamHistory", "seasons"], []);
+        return {
+          id: first(player, ["playerID", "playerId", "id", "userID", "userId"], ""),
+          name: clean(first(player, ["name", "playerName", "Player", "tag", "psn", "psntag", "gamertag"], "")),
+          position: first(player, ["position", "Position", "pos", "mainPosition"], ""),
+          nationality: first(player, ["nationality", "country", "nation", "Nationality"], ""),
+          games: first(player, ["games", "gamesPlayed", "GP", "matches"], ""),
+          goals: first(player, ["goals", "G"], ""),
+          assists: first(player, ["assists", "A"], ""),
+          points: first(player, ["points", "PTS", "P"], ""),
+          plusMinus: first(player, ["plusMinus", "+/-", "plusminus"], ""),
+          history: Array.isArray(history) ? history.map(normalizeHistoryItem).filter(Boolean) : []
+        };
+      }
+
+      function normalizeHistoryItem(item) {
+        if (!item) return null;
+        if (typeof item === "string") return { teamName: item, division: "", season: "", games: "", points: "" };
+        return {
+          teamName: clean(first(item, ["teamName", "Team", "team", "name"], "")),
+          division: normalizeDivision(first(item, ["division", "divisionName", "Div", "leagueDivision"], "")),
+          season: clean(first(item, ["season", "Season", "league", "leagueName", "competition"], "")),
+          games: first(item, ["games", "gamesPlayed", "matches", "totalMatches", "Total"], ""),
+          points: first(item, ["points", "PTS", "P"], ""),
+          goals: first(item, ["goals", "G"], ""),
+          assists: first(item, ["assists", "A"], "")
+        };
+      }
+
+      function collectTeamHistory(row) {
+        const history = first(row, ["history", "History", "teamHistory", "lagHistorik", "seasons"], []);
+        if (!Array.isArray(history)) return [];
+        return history.map(normalizeHistoryItem).filter(Boolean);
+      }
+
+      function normalizeTeam(row, index) {
+        const name = clean(first(row, ["name", "teamName", "Team", "team", "lag"], ""));
+        if (!name) return null;
+
+        const leagueID = first(row, ["leagueID", "leagueId", "LeagueID"], "");
+        const teamID = first(row, ["teamID", "teamId", "TeamID", "id"], "");
+        const division = normalizeDivision(first(row, ["division", "Division", "divisionName", "Div"], ""));
+        const players = collectPlayers(row);
+        const teamHistory = collectTeamHistory(row);
+
+        return {
+          source: row,
+          key: String(teamID || row.slug || slugify(name) || index),
+          slug: slugify(teamID ? `${teamID}-${name}` : name),
+          name,
+          division,
+          league: clean(first(row, ["league", "League", "season", "Season"], "ECL 26 Spring")),
+          group: first(row, ["group", "Group", "groupName"], ""),
+          url: first(row, ["url", "href"], teamID && leagueID ? `https://sportsgamer.gg/leagues/${encodeURIComponent(leagueID)}/teams/${encodeURIComponent(teamID)}` : ""),
+          leagueID,
+          teamID,
+          points: first(row, ["points", "tablePoints", "Poang", "P", "PTS"], ""),
+          groupPosition: first(row, ["groupPosition", "tablePosition", "rank", "standing", "position"], ""),
+          record: first(row, ["record", "Record"], ""),
+          gamesPlayed: first(row, ["gamesPlayed", "GP", "matches"], ""),
+          wins: first(row, ["wins", "W"], ""),
+          otWins: first(row, ["overtimeWins", "OTW", "otWins"], ""),
+          losses: first(row, ["losses", "L"], ""),
+          otLosses: first(row, ["otLosses", "OTL"], ""),
+          goalsFor: first(row, ["goalsFor", "GF"], ""),
+          goalsAgainst: first(row, ["goalsAgainst", "GA"], ""),
+          goalDiff: first(row, ["goalDiff", "GD", "plusMinus"], ""),
+          ppg: first(row, ["ppg", "pointsPerGame", "pointsPerMatch"], ""),
+          playoffStatus: first(row, ["playoffStatus", "slutspelStatus", "status"], ""),
+          playoffRound: first(row, ["playoffRound", "playoffStage"], ""),
+          nextPlayoffRound: first(row, ["nextPlayoffRound", "nextRound"], ""),
+          playoffSeries: first(row, ["playoffSeries", "playoffRecord", "playoffMatches"], ""),
+          playoffWins: first(row, ["playoffWins"], ""),
+          playoffLosses: first(row, ["playoffLosses"], ""),
+          playoffBestOf: first(row, ["playoffBestOf"], ""),
+          swedishPlayers: first(row, ["swedishPlayers", "svenskaSpelare"], players.length || ""),
+          swedishPoints: first(row, ["swedishPoints", "svenskaPoang"], ""),
+          topSwede: first(row, ["topSwede", "topSwedishPlayer", "toppSvensk"], ""),
+          description: first(row, ["description", "info", "note"], ""),
+          players,
+          teamHistory
+        };
+      }
+
+      function getSourceTeams(data) {
+        const candidates = [];
+        if (Array.isArray(data.lag)) candidates.push(...data.lag);
+        if (Array.isArray(data.teams)) candidates.push(...data.teams);
+        if (Array.isArray(data.svenskaLag)) candidates.push(...data.svenskaLag);
+        return candidates;
+      }
+
+      function buildTeams(data) {
+        const rows = getSourceTeams(data);
+        const map = new Map();
+
+        rows.forEach((row, index) => {
+          if (!isSwedishTeam(row)) return;
+          const team = normalizeTeam(row, index);
+          if (!team) return;
+
+          const key = normalizeText(team.name);
+          if (!map.has(key)) {
+            map.set(key, team);
+          } else {
+            const old = map.get(key);
+            map.set(key, {
+              ...old,
+              ...Object.fromEntries(Object.entries(team).filter(([, value]) => value !== "" && value !== null && value !== undefined)),
+              players: old.players.length ? old.players : team.players,
+              teamHistory: old.teamHistory.length ? old.teamHistory : team.teamHistory
+            });
+          }
+        });
+
+        return [...map.values()];
+      }
+
+      function playerSearchText(team) {
+        return team.players.map(p => `${p.name} ${p.position} ${p.nationality} ${p.history.map(h => `${h.teamName} ${h.division} ${h.season}`).join(" ")}`).join(" ");
+      }
+
+      function filteredTeams() {
+        const q = normalizeText(searchTeams.value);
+        const div = divisionFilter.value;
+
+        let rows = teams.filter((team) => {
+          const haystack = normalizeText([
+            team.name,
+            team.division,
+            team.group,
+            team.playoffStatus,
+            team.topSwede,
+            playerSearchText(team)
+          ].join(" "));
+
+          const matchesSearch = !q || haystack.includes(q);
+          const matchesDivision = div === "all" || team.division === div;
+          return matchesSearch && matchesDivision;
+        });
+
+        const sort = sortTeams.value;
+        rows.sort((a, b) => {
+          if (sort === "name-asc") return a.name.localeCompare(b.name, "sv");
+          if (sort === "name-desc") return b.name.localeCompare(a.name, "sv");
+          if (sort === "points-desc") return number(b.points) - number(a.points) || a.name.localeCompare(b.name, "sv");
+          if (sort === "players-desc") return number(b.swedishPlayers || b.players.length) - number(a.swedishPlayers || a.players.length) || a.name.localeCompare(b.name, "sv");
+          if (sort === "swedish-points-desc") return number(b.swedishPoints) - number(a.swedishPoints) || a.name.localeCompare(b.name, "sv");
+          return (divisionRank[a.division] || 99) - (divisionRank[b.division] || 99)
+            || number(b.points) - number(a.points)
+            || a.name.localeCompare(b.name, "sv");
+        });
+
+        return rows;
+      }
+
+      function statusClass(status) {
+        const s = normalizeText(status);
+        if (s.includes("vann") || s.includes("final") || s.includes("spelar")) return "ok";
+        if (s.includes("utslagen") || s.includes("förlor")) return "danger";
+        if (s.includes("slutspel")) return "warn";
+        return "";
+      }
+
+      function divisionBadge(division) {
+        const cls = normalizeText(division);
+        return `<span class="division-badge ${escapeHtml(cls)}">${escapeHtml(division || "-")}</span>`;
+      }
+
+      function logoMarkup(team, sizeClass = "") {
+        const candidates = teamNameCandidates(team.name);
+        return `
+          <div class="team-logo ${sizeClass}">
+            <img
+              alt="${escapeHtml(team.name)}"
+              data-team="${escapeHtml(team.name)}"
+              data-candidates="${escapeHtml(encodeAttr(candidates))}"
+              onerror="handleLogoError(event)"
+              loading="lazy"
+            >
+          </div>
+        `;
+      }
+
+      function renderSummary(rows) {
+        const activeDivisions = new Set(rows.map(t => t.division).filter(Boolean));
+        const playerCount = rows.reduce((sum, t) => sum + number(t.swedishPlayers || t.players.length), 0);
+        const playoffCount = rows.filter(t => String(t.playoffStatus || t.playoffRound || t.nextPlayoffRound).trim()).length;
+        const historyCount = rows.reduce((sum, t) => sum + t.players.reduce((pSum, p) => pSum + p.history.length, 0), 0);
+
+        teamsSummary.innerHTML = `
+          <div class="summary-chip"><span>Lag</span><strong>${rows.length}</strong></div>
+          <div class="summary-chip"><span>Divisioner</span><strong>${activeDivisions.size}</strong></div>
+          <div class="summary-chip"><span>Svenska spelare</span><strong>${playerCount || "-"}</strong></div>
+          <div class="summary-chip"><span>Slutspelslag</span><strong>${playoffCount || "-"}</strong></div>
+          <div class="summary-chip"><span>Historikrader</span><strong>${historyCount || "-"}</strong></div>
+        `;
+      }
+
+      function teamCard(team) {
+        const status = team.playoffStatus || team.playoffRound || "ECL 26 Spring";
+        const topSwedeText = typeof team.topSwede === "object"
+          ? `${team.topSwede.name || "-"}${team.topSwede.points ? ", " + team.topSwede.points + "p" : ""}`
+          : (team.topSwede || "-");
+
+        return `
+          <article class="team-card">
+            <a class="team-card__link" href="#team=${encodeURIComponent(team.slug)}">
+              <div class="team-main">
+                ${logoMarkup(team)}
+                <div>
+                  <h3 class="team-name">${escapeHtml(team.name)}</h3>
+                  <div class="team-division">${escapeHtml(team.division)}</div>
+                </div>
+              </div>
+
+              <div class="team-highlight">
+                <div class="team-stat">
+                  <span>Poäng</span>
+                  <strong>${escapeHtml(team.points || "-")}</strong>
+                </div>
+                <div class="team-stat">
+                  <span>Gruppplacering</span>
+                  <strong>${team.groupPosition ? "#" + escapeHtml(team.groupPosition) : "-"}</strong>
+                </div>
+                <div class="team-stat">
+                  <span>Status</span>
+                  <strong><span class="status-pill ${statusClass(status)}">${escapeHtml(status || "-")}</span></strong>
+                </div>
+              </div>
+
+              <div class="team-stats">
+                <div class="team-stat">
+                  <span>Matcher</span>
+                  <strong>${escapeHtml(team.gamesPlayed || "-")}</strong>
+                </div>
+                <div class="team-stat">
+                  <span>Record</span>
+                  <strong>${escapeHtml(team.record || [team.wins, team.otWins, team.otLosses, team.losses].filter(v => v !== "").join("-") || "-")}</strong>
+                </div>
+                <div class="team-stat">
+                  <span>SV spelare</span>
+                  <strong>${escapeHtml(team.swedishPlayers || team.players.length || "-")}</strong>
+                </div>
+              </div>
+
+              <div class="team-note">
+                <strong>Topp svensk:</strong> ${escapeHtml(topSwedeText)}
+              </div>
+            </a>
+          </article>
+        `;
+      }
+
+      function renderList() {
+        const rows = filteredTeams();
+        renderSummary(rows);
+
+        if (!rows.length) {
+          teamsList.innerHTML = `<div class="empty-state">Inga lag hittades.</div>`;
+          return;
+        }
+
+        teamsList.innerHTML = `<div class="teams-grid">${rows.map(teamCard).join("")}</div>`;
+        activateImages(teamsList);
+      }
+
+      function findTeamBySlug(slug) {
+        const decoded = decodeURIComponent(slug || "");
+        return teams.find(t => t.slug === decoded || t.key === decoded || slugify(t.name) === decoded);
+      }
+
+      function statBox(label, value) {
+        return `
+          <div class="team-stat">
+            <span>${escapeHtml(label)}</span>
+            <strong>${escapeHtml(value || "-")}</strong>
+          </div>
+        `;
+      }
+
+      function renderRoster(team) {
+        if (!team.players.length) {
+          return `<div class="empty-state">Ingen roster hittades i JSON:en för det här laget.</div>`;
+        }
+
+        return `
+          <div class="table-shell">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Spelare</th>
+                    <th>Pos</th>
+                    <th>Nationalitet</th>
+                    <th>Matcher</th>
+                    <th>Mål</th>
+                    <th>Assist</th>
+                    <th>Poäng</th>
+                    <th>Historik</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${team.players.map((p) => `
+                    <tr>
+                      <td><span class="player-name">${escapeHtml(p.name || "-")}</span></td>
+                      <td>${escapeHtml(p.position || "-")}</td>
+                      <td>${escapeHtml(p.nationality || "-")}</td>
+                      <td>${escapeHtml(p.games || "-")}</td>
+                      <td>${escapeHtml(p.goals || "-")}</td>
+                      <td>${escapeHtml(p.assists || "-")}</td>
+                      <td><strong>${escapeHtml(p.points || "-")}</strong></td>
+                      <td>${escapeHtml(p.history.length || "-")}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
+      function historyItemMarkup(item) {
+        return `
+          <div class="history-item">
+            <div class="history-team">${escapeHtml(item.teamName || "-")}</div>
+            <div class="history-meta">
+              ${item.division ? divisionBadge(item.division) : ""}
+              ${item.season ? `<span>${escapeHtml(item.season)}</span>` : ""}
+              ${item.games !== "" ? `<span>Matcher: ${escapeHtml(item.games)}</span>` : ""}
+              ${item.points !== "" ? `<span>Poäng: ${escapeHtml(item.points)}</span>` : ""}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderPlayerHistory(team) {
+        if (!team.players.length) {
+          return `<div class="empty-state">Ingen spelarlista hittades för laget.</div>`;
+        }
+
+        return `
+          <div class="player-history-grid">
+            ${team.players.map((p) => `
+              <article class="player-card">
+                <div class="player-card-head">
+                  <div>
+                    <h4>${escapeHtml(p.name || "-")}</h4>
+                    <div class="muted">${escapeHtml([p.position, p.nationality].filter(Boolean).join(" • ") || "Spelare")}</div>
+                  </div>
+                  <div>${p.points !== "" ? `<span class="meta-pill gold">${escapeHtml(p.points)}p</span>` : ""}</div>
+                </div>
+
+                <div class="history-list">
+                  ${p.history.length
+                    ? p.history.map(historyItemMarkup).join("")
+                    : `<div class="empty-state">Ingen historik hittades för spelaren.</div>`
+                  }
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      function renderTeamHistory(team) {
+        if (!team.teamHistory.length) {
+          return `<div class="empty-state">Ingen laghistorik hittades i JSON:en för det här laget.</div>`;
+        }
+
+        return `<div class="history-list">${team.teamHistory.map(historyItemMarkup).join("")}</div>`;
+      }
+
+      function renderTeamPage(team) {
+        const status = team.playoffStatus || team.playoffRound || "ECL 26 Spring";
+        const record = team.record || [team.wins, team.otWins, team.otLosses, team.losses].filter(v => v !== "").join("-") || "-";
+        const gfga = team.goalsFor || team.goalsAgainst ? `${team.goalsFor || 0}-${team.goalsAgainst || 0}` : "-";
+
+        introCard.style.display = "none";
+        listView.style.display = "none";
+        teamView.classList.add("is-active");
+
+        teamView.innerHTML = `
+          <div class="back-row">
+            <a class="btn" href="#">&#8592; Tillbaka till alla lag</a>
+            ${team.url ? `<a class="btn" href="${escapeHtml(team.url)}" target="_blank" rel="noopener noreferrer">Öppna på SportsGamer &#8599;</a>` : ""}
+          </div>
+
+          <section class="team-hero">
+            ${logoMarkup(team)}
+            <div>
+              <h1>${escapeHtml(team.name)}</h1>
+              <div class="team-division">${escapeHtml(team.division)} • ${escapeHtml(team.league || "ECL 26 Spring")}</div>
+              <div class="team-hero-meta">
+                <span class="meta-pill gold">${escapeHtml(team.points || "-")} poäng</span>
+                <span class="meta-pill">${team.groupPosition ? "Grupp #" + escapeHtml(team.groupPosition) : "Gruppplacering -"}</span>
+                <span class="meta-pill">${escapeHtml(status)}</span>
+                ${team.group ? `<span class="meta-pill">${escapeHtml(team.group)}</span>` : ""}
+              </div>
+              ${team.description ? `<p>${escapeHtml(team.description)}</p>` : ""}
+            </div>
+          </section>
+
+          <section class="detail-grid">
+            ${statBox("Matcher", team.gamesPlayed)}
+            ${statBox("Record", record)}
+            ${statBox("Mål +/-", team.goalDiff || "-")}
+            ${statBox("GF-GA", gfga)}
+            ${statBox("Svenska spelare", team.swedishPlayers || team.players.length)}
+            ${statBox("SV poäng", team.swedishPoints)}
+            ${statBox("Slutspel", team.playoffRound || status)}
+            ${statBox("Nästa", team.nextPlayoffRound)}
+          </section>
+
+          <section class="detail-card">
+            <h3>Nuvarande roster</h3>
+            ${renderRoster(team)}
+          </section>
+
+          <section class="detail-card">
+            <h3>Spelarhistorik</h3>
+            ${renderPlayerHistory(team)}
+          </section>
+
+          <section class="detail-card">
+            <h3>Laghistorik</h3>
+            ${renderTeamHistory(team)}
+          </section>
+        `;
+
+        activateImages(teamView);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function route() {
+        const hash = window.location.hash || "";
+        const match = hash.match(/^#team=(.+)$/);
+
+        if (match) {
+          const team = findTeamBySlug(match[1]);
+          if (team) {
+            renderTeamPage(team);
+            return;
+          }
+        }
+
+        introCard.style.display = "";
+        listView.style.display = "";
+        teamView.classList.remove("is-active");
+        teamView.innerHTML = "";
+        renderList();
+      }
+
+      function setupEvents() {
+        [searchTeams, divisionFilter, sortTeams].forEach((el) => el.addEventListener("input", renderList));
+        divisionFilter.addEventListener("change", renderList);
+        sortTeams.addEventListener("change", renderList);
+        window.addEventListener("hashchange", route);
+      }
+
+      teamsList.innerHTML = `<div class="empty-state">Laddar lag...</div>`;
+
+      fetch(JSON_URL, { cache: "no-store" })
+        .then((response) => {
+          if (!response.ok) throw new Error(`Kunde inte läsa ${JSON_URL} (${response.status})`);
+          return response.json();
+        })
+        .then((loaded) => {
+          rawData = extractJsonResultObject(loaded);
+          teams = buildTeams(rawData);
+
+          if (!teams.length) {
+            teamsList.innerHTML = `<div class="empty-state">Inga lag hittades i JSON:en. Sidan letar efter <strong>lag</strong>, <strong>teams</strong> eller <strong>svenskaLag</strong>.</div>`;
+            teamsSummary.innerHTML = "";
+          } else {
+            route();
+          }
+
+          const updated = rawData.updated || loaded.updated || "";
+          lastUpdated.textContent = updated ? "Senast uppdaterad: " + formatUpdated(updated) : "Senast uppdaterad: " + new Date().toLocaleDateString("sv-SE");
+          setupEvents();
+        })
+        .catch((err) => {
+          teamsList.innerHTML = `<div class="empty-state">Fel vid laddning: ${escapeHtml(err.message)}</div>`;
+          teamsSummary.innerHTML = "";
+          lastUpdated.textContent = "";
+          setupEvents();
+        });
+    })();
+  </script>
+</body>
+</html>
