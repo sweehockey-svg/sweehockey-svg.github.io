@@ -6,7 +6,7 @@
   <title>Svensk eHockey - Svenska laghistoria</title>
   <link rel="icon" type="image/png" href="favicon.png?v=1">
   <link rel="apple-touch-icon" href="favicon.png?v=1">
-  <meta name="description" content="Alla svenska lag i ECL med laghistorik, spelarhistorik och statistik." />
+  <meta name="description" content="Svenska ECL-lag med laghistorik, spelarhistorik och nuvarande roster." />
 
   <style>
     :root{
@@ -18,9 +18,9 @@
       --border:rgba(190,213,235,0.16);
       --gold:#ffc84a;
       --gold2:#ff9f2e;
-      --green:#79f2b0;
-      --red:#ff7b7b;
-      --line:#203246;
+      --ok:#79f2b0;
+      --danger:#ff7b7b;
+      --blue:#8ab8ff;
       --shadow:0 18px 46px rgba(0,0,0,.34);
       --grid-bg:
         linear-gradient(90deg, rgba(255,255,255,0.070) 1px, transparent 1px),
@@ -29,157 +29,727 @@
     }
 
     *{ box-sizing:border-box; letter-spacing:0 !important; }
-    html,body{ min-height:100%; margin:0; overflow-x:hidden; }
+    html,body{ min-height:100%; overflow-x:hidden; }
     body{
+      margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background-color:#061018;
       background-image:var(--grid-bg);
       background-size:64px 64px, 64px 64px, 100% 100%;
       background-repeat:repeat, repeat, no-repeat;
+      background-position:0 0, 0 0, 0 0;
       color:var(--text);
     }
+
     a{ color:inherit; text-decoration:none; }
     .container{ width:min(1180px, calc(100% - 36px)); margin:0 auto; }
 
-    .topbar{ position:sticky; top:0; z-index:10000; background:rgba(4,9,15,0.88); border-bottom:1px solid rgba(255,200,74,0.20); backdrop-filter:blur(12px); overflow:visible; }
-    .topbar__inner{ display:flex; align-items:center; gap:16px; padding:10px 0; overflow:visible; }
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:10000;
+      overflow:visible;
+      background:rgba(4,9,15,0.88);
+      border-bottom:1px solid rgba(255,200,74,0.20);
+      backdrop-filter:blur(12px);
+    }
+    .topbar__inner{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:10px 0;
+      overflow:visible;
+    }
     .brand{ display:flex; align-items:center; min-width:220px; }
     .brand__logo{ height:34px; width:auto; display:block; }
-    .nav{ display:flex; align-items:center; justify-content:flex-end; gap:14px; flex:1; }
-    .nav__link,.nav__button,.iconbtn,.hamburger{ border-radius:6px; }
-    .nav__link,.nav__button{ font-size:14px; color:var(--muted); padding:10px; white-space:nowrap; background:transparent; border:0; cursor:pointer; }
-    .nav__link:hover,.nav__button:hover{ background:rgba(255,200,74,0.10); color:var(--text); }
-    .nav__link.is-active,.nav__button.is-active{ color:var(--text); }
+    .nav{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:14px;
+      flex:1;
+    }
+    .nav__link,
+    .nav__button{
+      font-size:14px;
+      color:var(--muted);
+      padding:10px;
+      border-radius:6px;
+      white-space:nowrap;
+      background:transparent;
+      border:0;
+      cursor:pointer;
+    }
+    .nav__link:hover,
+    .nav__button:hover{
+      background:rgba(255,200,74,0.10);
+      color:var(--text);
+    }
+    .nav__link.is-active,
+    .nav__button.is-active{ color:var(--text); }
     .dropdown{ position:relative; overflow:visible; }
-    .menu{ position:absolute; top:calc(100% + 10px); right:0; width:300px; padding:8px; border-radius:8px; background:rgba(9,15,23,0.98); border:1px solid rgba(255,200,74,0.18); box-shadow:var(--shadow); display:none; z-index:10001; }
-    .dropdown.open .menu{ display:block; }
-    .menu__item{ display:block; padding:10px; border-radius:6px; color:var(--muted); font-size:14px; line-height:1.35; }
-    .menu__item:hover{ background:rgba(255,255,255,0.06); color:var(--text); }
-    .iconbtn,.hamburger,.btn{ border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--text); padding:8px 10px; cursor:pointer; }
-    .hamburger{ display:none; margin-left:auto; padding:8px 12px; }
-    .mobile{ display:none; border-top:1px solid var(--border); background:rgba(10,14,22,0.88); }
-    .mobile.open{ display:block; }
-    .mobile__inner{ padding:12px 0 16px; display:grid; gap:8px; }
-    .mobile__link{ padding:12px; border-radius:6px; background:rgba(255,255,255,0.04); color:var(--muted); }
-    .mobile__link:hover,.mobile__link.is-active{ color:var(--text); background:rgba(255,200,74,0.10); }
-
-    .banner-strip{ background:#07111b; border-bottom:1px solid rgba(255,255,255,0.08); }
-    .banner-strip__inner{ padding:12px 0; display:flex; justify-content:center; }
-    .banner{ width:100%; max-width:1180px; height:118px; border-radius:8px; border:1px solid rgba(255,200,74,0.16); box-shadow:0 14px 34px rgba(0,0,0,.32); background-image:url("svenakehocket.jpg"); background-size:cover; background-position:center; }
-
-    main{ padding:22px 0 48px; }
-    .card,.team-card,.detail-card,.table-shell,.team-hero,.summary-chip,.team-stat,.history-item,.player-card{
+    .menu{
+      position:absolute;
+      top:calc(100% + 10px);
+      right:0;
+      width:310px;
+      padding:8px;
       border-radius:8px;
-      background:linear-gradient(90deg, rgba(255,200,74,0.09), transparent 34%), linear-gradient(180deg, #13202c, #0d1823);
+      background:rgba(9,15,23,0.98);
+      border:1px solid rgba(255,200,74,0.18);
+      box-shadow:var(--shadow);
+      display:none;
+      z-index:10001;
+    }
+    .dropdown.open .menu{ display:block; }
+    .menu__item{
+      display:block;
+      padding:10px;
+      border-radius:6px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.35;
+    }
+    .menu__item:hover{
+      background:rgba(255,255,255,0.06);
+      color:var(--text);
+    }
+    .iconbtn,
+    .hamburger{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,0.04);
+      color:var(--text);
+      border-radius:6px;
+      padding:8px 10px;
+      cursor:pointer;
+    }
+    .hamburger{ display:none; margin-left:auto; padding:8px 12px; }
+    .mobile{
+      display:none;
+      border-top:1px solid var(--border);
+      background:rgba(10,14,22,0.88);
+    }
+    .mobile.open{ display:block; }
+    .mobile__inner{
+      padding:12px 0 16px;
+      display:grid;
+      gap:8px;
+    }
+    .mobile__link{
+      padding:12px;
+      border-radius:6px;
+      background:rgba(255,255,255,0.04);
+      color:var(--muted);
+    }
+    .mobile__link:hover,
+    .mobile__link.is-active{
+      background:rgba(255,200,74,0.10);
+      color:var(--text);
+    }
+
+    .banner-strip{
+      position:relative;
+      z-index:1;
+      background-color:#061018;
+      background-image:var(--grid-bg);
+      background-size:64px 64px, 64px 64px, 100% 100%;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+    .banner-strip__inner{
+      padding:12px 0;
+      display:flex;
+      justify-content:center;
+    }
+    .banner{
+      width:100%;
+      max-width:1180px;
+      height:118px;
+      border-radius:8px;
+      border:1px solid rgba(255,200,74,0.16);
+      box-shadow:0 14px 34px rgba(0,0,0,.32);
+      background-image:url("svenakehocket.jpg");
+      background-size:cover;
+      background-position:center;
+      overflow:hidden;
+    }
+
+    main{
+      position:relative;
+      z-index:1;
+      padding:22px 0 48px;
+    }
+    .card,
+    .team-card,
+    .detail-card,
+    .table-shell,
+    .summary-chip,
+    .team-stat,
+    .history-item,
+    .player-card{
+      border-radius:8px;
+      background:
+        linear-gradient(90deg, rgba(255,200,74,0.09), transparent 34%),
+        linear-gradient(180deg, #13202c, #0d1823);
       border:1px solid rgba(255,255,255,0.12);
       box-shadow:0 16px 38px rgba(0,0,0,0.28);
     }
-    .card{ padding:24px 22px; }
-    h1{ margin:0 0 10px; font-size:clamp(24px,3vw,34px); line-height:1.05; }
-    h2{ margin:0; font-size:clamp(24px,3vw,32px); line-height:1.05; }
-    h3{ margin:0 0 14px; font-size:22px; }
-    p{ margin:10px 0; color:var(--muted); line-height:1.65; }
+    .card{
+      padding:24px 22px;
+      margin-bottom:24px;
+    }
+    h1{
+      margin:0 0 10px;
+      font-size:clamp(24px, 3vw, 34px);
+      line-height:1.05;
+      font-weight:950;
+    }
+    h2,h3,h4{ margin:0; }
+    p{
+      margin:10px 0;
+      color:var(--muted);
+      line-height:1.65;
+    }
+    strong{ color:#fff; }
 
-    .header-box{ display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:18px; margin:26px 0 18px; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.10); }
-    .section-title{ display:flex; align-items:center; gap:14px; min-width:0; }
-    .section-title__icon{ width:34px; height:34px; display:grid; place-items:center; border-radius:8px; background:#12202e; border:1px solid rgba(255,200,74,0.42); box-shadow:inset 4px 0 0 var(--gold); color:var(--gold); font-size:18px; flex:0 0 34px; }
-    .controls{ display:flex; flex-wrap:nowrap; align-items:center; justify-content:flex-end; gap:10px; min-width:0; }
-    .select-wrap,.search-wrap{ position:relative; }
-    .select-wrap{ flex:0 0 178px; }
-    .search-wrap{ flex:0 1 310px; }
-    .search-wrap::before{ content:"\1F50D"; position:absolute; left:14px; top:50%; transform:translateY(-50%); opacity:.7; pointer-events:none; }
-    .select-wrap::after{ content:"\25BE"; position:absolute; right:13px; top:50%; transform:translateY(-50%); color:var(--gold); font-size:12px; pointer-events:none; }
-    input,select{ width:100%; min-height:46px; border-radius:8px; border:1px solid rgba(255,200,74,0.30); background:#0b141e; color:var(--text); outline:none; box-shadow:inset 0 1px 0 rgba(255,255,255,0.04); font-size:14px; font-weight:850; }
-    select{ appearance:none; padding:12px 34px 12px 12px; }
+    .header-box{
+      display:grid;
+      grid-template-columns:auto minmax(0, 1fr);
+      align-items:center;
+      gap:18px;
+      margin:0 0 18px;
+      padding:0 4px 14px;
+      border-bottom:1px solid rgba(255,255,255,0.10);
+    }
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+    }
+    .section-title__icon{
+      width:34px;
+      height:34px;
+      display:grid;
+      place-items:center;
+      border-radius:8px;
+      background:#12202e;
+      border:1px solid rgba(255,200,74,0.42);
+      box-shadow:inset 4px 0 0 var(--gold);
+      color:var(--gold);
+      font-size:18px;
+      flex:0 0 34px;
+    }
+    .section-title h2{
+      font-size:clamp(24px, 3vw, 32px);
+      font-weight:950;
+      line-height:1.05;
+    }
+    .controls{
+      display:flex;
+      flex-wrap:nowrap;
+      justify-content:flex-end;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .search-wrap{ flex:0 1 270px; position:relative; }
+    .search-wrap::before{
+      content:"\1F50D";
+      position:absolute;
+      left:14px;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:15px;
+      opacity:.72;
+      pointer-events:none;
+    }
+    .select-wrap{ position:relative; flex:0 0 168px; }
+    .select-wrap::after{
+      content:"\25BE";
+      position:absolute;
+      right:13px;
+      top:50%;
+      transform:translateY(-50%);
+      color:var(--gold);
+      pointer-events:none;
+      font-size:12px;
+    }
+    input,
+    select{
+      width:100%;
+      min-height:46px;
+      border-radius:8px;
+      border:1px solid rgba(255,200,74,0.30);
+      background:#0b141e;
+      color:var(--text);
+      outline:none;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+      font-size:14px;
+    }
     input{ padding:12px 14px 12px 38px; }
+    select{
+      appearance:none;
+      padding:12px 34px 12px 12px;
+      font-weight:850;
+    }
     option{ background:#101622; color:#fff; }
+    input:focus,
+    select:focus{
+      border-color:rgba(255,200,74,0.55);
+      box-shadow:0 0 0 4px rgba(255,200,74,0.10);
+    }
 
-    .summary-bar{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
-    .summary-chip{ padding:12px 14px; min-height:62px; }
-    .summary-chip span,.team-stat span{ display:block; margin-bottom:5px; color:rgba(255,255,255,0.58); font-size:10px; font-weight:950; text-transform:uppercase; }
-    .summary-chip strong{ display:block; color:#fff; font-size:23px; font-weight:950; line-height:1; }
+    .summary-bar{
+      display:grid;
+      grid-template-columns:repeat(5, minmax(0, 1fr));
+      gap:12px;
+      margin:0 0 18px;
+    }
+    .summary-chip{
+      min-height:62px;
+      padding:12px 14px;
+    }
+    .summary-chip span,
+    .team-stat span,
+    .meta-label{
+      display:block;
+      margin-bottom:5px;
+      color:rgba(255,255,255,0.54);
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+    .summary-chip strong{
+      display:block;
+      color:#fff;
+      font-size:22px;
+      font-weight:950;
+      line-height:1;
+    }
 
-    .teams-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
-    .team-card{ overflow:hidden; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
-    .team-card:hover{ transform:translateY(-3px); border-color:rgba(255,200,74,0.28); box-shadow:0 26px 58px rgba(0,0,0,.34); }
-    .team-card__link{ display:block; min-height:378px; padding:20px; color:inherit; }
-    .team-main{ display:grid; grid-template-columns:88px 1fr; gap:16px; align-items:center; margin-bottom:16px; }
-    .team-logo{ width:88px; height:88px; border-radius:12px; overflow:hidden; background:rgba(255,255,255,0.045); border:1px solid rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; }
-    .team-logo img{ width:100%; height:100%; object-fit:contain; padding:8px; display:block; }
-    .team-name{ margin:0 0 7px; font-size:26px; font-weight:950; line-height:1.04; word-break:break-word; }
+    .teams-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:18px;
+    }
+    .team-card{
+      min-height:270px;
+      overflow:hidden;
+      transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .team-card:hover{
+      transform:translateY(-3px);
+      border-color:rgba(255,200,74,0.28);
+      box-shadow:0 26px 58px rgba(0,0,0,.34);
+    }
+    .team-card__link{
+      min-height:270px;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      padding:20px;
+      color:inherit;
+      cursor:pointer;
+    }
+    .team-main{
+      display:grid;
+      grid-template-columns:88px 1fr;
+      gap:16px;
+      align-items:center;
+      min-width:0;
+    }
+    .team-logo{
+      width:88px;
+      height:88px;
+      border-radius:8px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+    .team-logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      padding:8px;
+    }
+    .team-name{
+      margin:0 0 7px;
+      color:#fff;
+      font-size:26px;
+      line-height:1.04;
+      font-weight:950;
+      overflow-wrap:anywhere;
+    }
     .team-card:hover .team-name{ color:var(--gold); }
-    .team-division{ color:var(--gold); font-size:13px; font-weight:950; text-transform:uppercase; }
-    .season-line{ color:var(--muted); font-size:12px; margin-top:5px; font-weight:850; }
-    .team-highlight{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:12px; }
-    .team-stats{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:12px; }
-    .team-stat{ min-width:0; padding:10px 11px; min-height:64px; background:rgba(255,255,255,0.045); }
-    .team-stat strong{ display:block; color:#fff; font-size:16px; font-weight:950; line-height:1.12; overflow-wrap:anywhere; }
-    .team-stat.is-gold strong{ color:var(--gold); }
-    .team-stat.is-green strong{ color:var(--green); }
-    .team-note{ margin-top:auto; padding:11px 12px; border-radius:8px; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.09); color:rgba(255,255,255,0.80); font-size:13px; line-height:1.35; }
-    .team-note strong{ color:#fff; }
-    .badge-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
-    .division-badge,.meta-pill{ display:inline-flex; align-items:center; padding:5px 8px; border-radius:999px; background:rgba(255,255,255,0.055); border:1px solid rgba(255,255,255,0.10); color:#d8e6f5; font-size:11px; font-weight:950; }
-    .division-badge.elite{ background:rgba(255,92,92,.14); color:#ffaaaa; border-color:rgba(255,92,92,.25); }
-    .division-badge.pro{ background:rgba(255,150,70,.14); color:#ffc49b; border-color:rgba(255,150,70,.25); }
-    .division-badge.lite{ background:rgba(255,200,74,.14); color:#ffd66b; border-color:rgba(255,200,74,.25); }
-    .division-badge.core{ background:rgba(88,140,255,.14); color:#b9d1ff; border-color:rgba(88,140,255,.25); }
-    .division-badge.neo{ background:rgba(121,242,176,.12); color:#a7f6c8; border-color:rgba(121,242,176,.24); }
-    .meta-pill.gold{ color:#081019; background:linear-gradient(180deg,#ffd86d,#ffae34); border-color:transparent; }
-    .meta-pill.green{ color:#082114; background:rgba(121,242,176,.82); border-color:transparent; }
-    .empty-state{ padding:18px; border-radius:8px; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.10); color:var(--muted); }
-    .lastUpdated{ margin-top:12px; color:#8ea2b5; font-size:13px; text-align:right; }
+    .team-division{
+      color:var(--gold);
+      font-size:13px;
+      font-weight:950;
+      text-transform:uppercase;
+    }
+    .team-highlight,
+    .team-stats{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:9px;
+    }
+    .team-stat{
+      min-height:62px;
+      padding:10px;
+      box-shadow:none;
+    }
+    .team-stat strong{
+      display:block;
+      color:#fff;
+      font-size:18px;
+      font-weight:950;
+      line-height:1.05;
+      overflow-wrap:anywhere;
+    }
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:max-content;
+      max-width:100%;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(255,255,255,0.06);
+      color:#fff;
+      font-size:12px;
+      font-weight:950;
+      line-height:1.1;
+    }
+    .status-pill.ok{ color:var(--ok); }
+    .status-pill.warn{ color:#ffd166; }
+    .status-pill.danger{ color:var(--danger); }
+    .team-note{
+      margin-top:auto;
+      padding:11px;
+      border-radius:8px;
+      background:rgba(255,255,255,0.035);
+      border:1px solid rgba(255,255,255,0.08);
+      color:rgba(255,255,255,0.78);
+      font-size:13px;
+      line-height:1.35;
+    }
 
     .team-view{ display:none; }
     .team-view.is-active{ display:block; }
-    .back-row{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
-    .btn{ display:inline-flex; align-items:center; gap:8px; border-radius:8px; font-weight:900; min-height:42px; padding:10px 13px; }
-    .btn:hover{ background:rgba(255,200,74,0.10); border-color:rgba(255,200,74,0.28); }
-    .team-hero{ display:grid; grid-template-columns:120px 1fr; gap:22px; align-items:center; padding:22px; margin-bottom:18px; }
-    .team-hero .team-logo{ width:120px; height:120px; }
-    .team-hero-meta{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
-    .detail-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
-    .detail-card{ padding:18px; margin-bottom:18px; }
+    .back-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:16px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:42px;
+      padding:10px 14px;
+      border-radius:8px;
+      border:1px solid rgba(255,200,74,0.30);
+      background:rgba(255,200,74,0.10);
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .btn:hover{
+      background:linear-gradient(180deg, #ffd86d, #ffae34);
+      color:#081019;
+      border-color:transparent;
+    }
+
+    .team-hero{
+      display:grid;
+      grid-template-columns:150px 1fr;
+      gap:22px;
+      align-items:center;
+      margin-bottom:18px;
+      padding:22px;
+      border-radius:8px;
+      background:
+        radial-gradient(90% 130% at 0% 0%, rgba(255,200,74,0.12), transparent 45%),
+        linear-gradient(180deg, #13202c, #0d1823);
+      border:1px solid rgba(255,255,255,0.12);
+      box-shadow:var(--shadow);
+    }
+    .team-hero .team-logo{
+      width:150px;
+      height:150px;
+      border-radius:10px;
+    }
+    .team-hero h1{
+      font-size:clamp(32px, 5vw, 54px);
+      margin:0 0 10px;
+    }
+    .team-hero-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+    .meta-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.055);
+      border:1px solid rgba(255,255,255,0.10);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:850;
+    }
+    .meta-pill.gold{
+      color:#081019;
+      background:linear-gradient(180deg, #ffd86d, #ffae34);
+      border-color:transparent;
+    }
+
+    .detail-grid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:12px;
+      margin-bottom:18px;
+    }
+    .detail-card{
+      padding:18px;
+      margin-bottom:18px;
+    }
+    .detail-card h3{
+      margin:0 0 14px;
+      color:#fff;
+      font-size:20px;
+      font-weight:950;
+    }
+
+    .table-shell{
+      overflow:hidden;
+      margin-bottom:18px;
+    }
     .table-scroll{ overflow:auto; }
-    table{ width:100%; border-collapse:collapse; min-width:860px; }
-    th,td{ padding:11px 12px; border-bottom:1px solid rgba(255,255,255,0.07); text-align:left; vertical-align:top; font-size:13px; }
-    th{ background:#132230; color:#ffd66b; text-transform:uppercase; font-size:11px; font-weight:950; }
+    table{
+      width:100%;
+      min-width:840px;
+      border-collapse:collapse;
+    }
+    th,td{
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,0.07);
+      text-align:left;
+      vertical-align:top;
+      font-size:14px;
+    }
+    th{
+      background:#132230;
+      color:#ffd66b;
+      font-size:11px;
+      text-transform:uppercase;
+      font-weight:950;
+    }
     tbody tr:nth-child(even){ background:rgba(255,255,255,0.025); }
-    tbody tr:hover{ background:rgba(255,200,74,0.08); }
-    .player-name{ font-weight:950; color:#fff; }
+    tbody tr:hover{ background:rgba(255,200,74,0.10); }
+    .player-name{
+      color:#fff;
+      font-weight:950;
+    }
     .muted{ color:var(--muted); }
-    .history-list{ display:grid; gap:10px; }
-    .history-item{ padding:12px; background:rgba(255,255,255,0.035); }
-    .history-team{ font-weight:950; margin-bottom:6px; }
-    .history-meta{ display:flex; flex-wrap:wrap; gap:7px; color:var(--muted); font-size:12px; font-weight:850; }
-    .player-history-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-    .player-card{ padding:14px; background:linear-gradient(90deg, rgba(255,200,74,0.12), transparent 34%), linear-gradient(180deg, #13202c, #0d1823); }
-    .player-card-head{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:12px; }
-    .player-card h4{ margin:0 0 4px; font-size:18px; }
+    .division-badge{
+      display:inline-flex;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.06);
+      font-size:11px;
+      font-weight:950;
+      text-transform:uppercase;
+    }
+    .division-badge.elite{ color:#ff9cab; border-color:rgba(255,107,127,.28); background:rgba(255,107,127,.12); }
+    .division-badge.pro{ color:#ffd166; border-color:rgba(255,209,102,.25); background:rgba(255,209,102,.10); }
+    .division-badge.lite{ color:#ffe08a; border-color:rgba(255,224,138,.25); background:rgba(255,224,138,.10); }
+    .division-badge.core{ color:#9ec5ff; border-color:rgba(158,197,255,.25); background:rgba(158,197,255,.10); }
+    .division-badge.neo{ color:#9ef0c5; border-color:rgba(158,240,197,.25); background:rgba(158,240,197,.10); }
 
-    footer{ background:#061018; border-top:1px solid rgba(255,255,255,0.10); }
-    .footer__inner{ padding:22px 0; display:flex; gap:18px; align-items:center; justify-content:space-between; color:var(--muted); border-top:1px solid rgba(255,200,74,0.10); }
-    .footer-brand{ display:grid; gap:4px; }
-    .footer-brand__name{ color:#fff; font-size:14px; font-weight:950; text-transform:uppercase; }
+    .player-history-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:14px;
+    }
+    .player-card{
+      padding:15px;
+      position:relative;
+      overflow:hidden;
+    }
+    .player-card::before{
+      content:"";
+      position:absolute;
+      inset:0 auto 0 0;
+      width:4px;
+      background:linear-gradient(180deg, var(--gold), var(--gold2));
+    }
+    .player-card-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:12px;
+    }
+    .player-card h4{
+      color:#fff;
+      font-size:18px;
+      font-weight:950;
+      line-height:1.15;
+      overflow-wrap:anywhere;
+    }
+    .history-list{
+      display:grid;
+      gap:8px;
+    }
+    .history-item{
+      box-shadow:none;
+      padding:10px;
+      background:rgba(255,255,255,0.035);
+    }
+    .history-team{
+      color:#fff;
+      font-weight:950;
+      margin-bottom:4px;
+      overflow-wrap:anywhere;
+    }
+    .history-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:750;
+    }
+    .empty-state{
+      padding:18px;
+      border-radius:8px;
+      background:rgba(255,255,255,0.035);
+      border:1px solid rgba(255,255,255,0.08);
+      color:var(--muted);
+    }
+    .lastUpdated{
+      margin-top:12px;
+      text-align:right;
+      color:rgba(255,255,255,0.58);
+      font-size:13px;
+    }
+
+    footer{
+      position:relative;
+      z-index:1;
+      background-color:#061018;
+      background-image:var(--grid-bg);
+      background-size:64px 64px, 64px 64px, 100% 100%;
+      border-top:1px solid rgba(255,255,255,0.10);
+    }
+    .footer__inner{
+      padding:22px 0;
+      display:flex;
+      gap:18px;
+      align-items:center;
+      justify-content:space-between;
+      color:var(--muted);
+      font-size:13px;
+      border-top:1px solid rgba(255,200,74,0.10);
+    }
+    .footer-brand{ display:grid; gap:4px; min-width:0; }
+    .footer-brand__name{
+      color:#fff;
+      font-size:14px;
+      font-weight:950;
+      text-transform:uppercase;
+    }
     .footer-brand__meta{ color:#8ea2b5; font-size:12px; }
-    .footer-links{ display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
-    .footer-links a{ padding:7px 10px; border-radius:6px; color:#c7d6e6; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.08); font-size:12px; font-weight:850; }
-    .footer-links a:hover{ color:#081019; background:linear-gradient(180deg,#ffd86d,#ffae34); border-color:transparent; }
+    .footer-links{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      gap:8px;
+    }
+    .footer-links a{
+      padding:7px 10px;
+      border-radius:6px;
+      color:#c7d6e6;
+      background:rgba(255,255,255,0.035);
+      border:1px solid rgba(255,255,255,0.08);
+      font-size:12px;
+      font-weight:850;
+    }
+    .footer-links a:hover{
+      color:#081019;
+      background:linear-gradient(180deg, #ffd86d, #ffae34);
+      border-color:transparent;
+    }
 
-    @media (max-width:1080px){ .header-box{ grid-template-columns:1fr; } .controls{ justify-content:flex-start; flex-wrap:wrap; } .teams-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } .detail-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
-    @media (max-width:860px){ .nav{ display:none; } .hamburger{ display:inline-flex; } .brand{ min-width:160px; } .brand__logo{ height:32px; } .banner{ height:118px; } .player-history-grid{ grid-template-columns:1fr; } }
-    @media (max-width:700px){ .container{ width:min(100% - 18px,1180px); } main{ padding:14px 0 34px; } .card{ padding:18px 14px; } .controls{ display:grid; grid-template-columns:1fr 1fr; width:100%; gap:9px; } .search-wrap{ grid-column:1/-1; } .select-wrap,.search-wrap{ width:100%; flex:initial; } .summary-bar{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; } .teams-grid{ grid-template-columns:1fr; gap:12px; } .team-card__link{ min-height:0; padding:14px; } .team-main{ grid-template-columns:76px 1fr; gap:12px; } .team-logo{ width:76px; height:76px; } .team-name{ font-size:24px; } .team-highlight,.team-stats{ gap:8px; } .team-stat{ padding:9px 8px; min-height:58px; } .team-stat strong{ font-size:15px; } .team-hero{ grid-template-columns:1fr; padding:16px; } .team-hero .team-logo{ width:96px; height:96px; } .detail-grid{ grid-template-columns:1fr 1fr; } .lastUpdated{ text-align:left; } .footer__inner{ align-items:flex-start; flex-direction:column; } .footer-links{ justify-content:flex-start; } }
-    @media (max-width:460px){ .team-highlight,.team-stats,.detail-grid{ grid-template-columns:1fr 1fr; } .summary-bar{ grid-template-columns:1fr 1fr; } }
+    @media (max-width:1080px){
+      .header-box{ grid-template-columns:1fr; }
+      .controls{ justify-content:flex-start; flex-wrap:wrap; }
+      .teams-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .detail-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .player-history-grid{ grid-template-columns:1fr; }
+    }
+    @media (max-width:860px){
+      .nav{ display:none; }
+      .hamburger{ display:inline-flex; }
+      .brand__logo{ height:32px; }
+      .brand{ min-width:160px; }
+      .banner{ height:118px; }
+      .team-hero{ grid-template-columns:1fr; }
+    }
+    @media (max-width:700px){
+      .container{ width:min(100% - 18px, 1180px); }
+      main{ padding:14px 0 34px; }
+      .card{ padding:18px 14px; }
+      .controls{ display:grid; grid-template-columns:1fr 1fr; width:100%; gap:9px; }
+      .search-wrap{ grid-column:1 / -1; width:100%; }
+      .select-wrap{ width:100%; flex:initial; }
+      .summary-bar{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:9px; }
+      .teams-grid{ grid-template-columns:1fr; gap:12px; }
+      .team-card,
+      .team-card__link{ min-height:0; }
+      .team-card__link{ padding:14px; }
+      .team-main{ grid-template-columns:76px minmax(0, 1fr); gap:12px; }
+      .team-logo{ width:76px; height:76px; }
+      .team-name{ font-size:24px; }
+      .team-highlight,
+      .team-stats{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .detail-grid{ grid-template-columns:1fr; }
+      .footer__inner{ align-items:flex-start; flex-direction:column; }
+      .footer-links{ justify-content:flex-start; }
+      .lastUpdated{ text-align:left; }
+    }
   </style>
 </head>
+
 <body>
   <header class="topbar">
     <div class="container topbar__inner">
-      <a class="brand" href="/" aria-label="Svensk eHockey"><img class="brand__logo" src="svenakehocket.png" alt="Svensk eHockey" /></a>
+      <a class="brand" href="/" aria-label="Svensk eHockey">
+        <img class="brand__logo" src="svenakehocket.png" alt="Svensk eHockey" />
+      </a>
+
       <nav class="nav" aria-label="Huvudmeny">
         <a class="nav__link" href="/">Startsida</a>
+
         <div class="dropdown" data-dropdown>
-          <button class="nav__button is-active" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>Svensk ECL Statistik <span>&#9662;</span></button>
+          <button class="nav__button is-active" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-btn>
+            Svensk ECL Statistik <span>&#9662;</span>
+          </button>
           <div class="menu" role="menu" aria-label="Svensk ECL Statistik" data-dropdown-menu>
             <a class="menu__item" role="menuitem" href="/svenskecl26spring-byten.html">Svenska ECL 26 Spring Byten</a>
             <a class="menu__item" role="menuitem" href="/svenskecl26spring-matcher.html">Svenska matcher ECL 26 Spring</a>
@@ -189,12 +759,15 @@
             <a class="menu__item" role="menuitem" href="/svenskecl26winter-statistik.html">Svensk statistik ECL 26 Winter</a>
           </div>
         </div>
+
         <a class="nav__link" href="/nyheter.html">Nyheter</a>
         <a class="nav__link" href="https://www.svenskehockey.se/SEC/">SEC</a>
-        <button class="iconbtn" type="button" aria-label="Sök" title="Sök" onclick="document.getElementById('searchTeams')?.focus()">&#128269;</button>
+        <button class="iconbtn" type="button" aria-label="Sök lag" title="Sök lag" onclick="document.getElementById('searchTeams')?.focus()">&#128269;</button>
       </nav>
+
       <button class="hamburger" type="button" aria-label="Öppna meny" data-mobile-toggle>&#9776;</button>
     </div>
+
     <div class="mobile" data-mobile-menu>
       <div class="container mobile__inner">
         <a class="mobile__link" href="/">Startsida</a>
@@ -210,35 +783,84 @@
     </div>
   </header>
 
-  <section class="banner-strip" aria-label="Banner"><div class="container banner-strip__inner"><div class="banner" role="img" aria-label="Svensk eHockey banner"></div></div></section>
+  <section class="banner-strip" aria-label="Banner">
+    <div class="container banner-strip__inner">
+      <div class="banner" role="img" aria-label="Svensk eHockey banner"></div>
+    </div>
+  </section>
 
   <main class="container">
-    <section class="card" id="introCard">
-      <h1>Svenska lag i ECL</h1>
-      <p>Här listas svenska lag genom ECL-historiken. Klicka på ett lag för att se lagets ECL-säsonger, spelarlista, spelarhistorik och samlad statistik.</p>
+    <section id="introCard" class="card">
+      <h1>Svenska laghistoria</h1>
+      <p>
+        Här listas svenska ECL-lag. Klicka på ett lag för att öppna en lagsida med lagöversikt, nuvarande roster, spelarstatistik och historik.
+      </p>
+      <p>
+        Sidan läser från <strong>svenskstatistikecl26spring.json</strong>. Om JSON:en innehåller spelarhistorik visas den automatiskt per spelare.
+      </p>
     </section>
 
-    <section id="listView">
+    <section id="listView" class="list-view" aria-label="Svenska lag">
       <div class="header-box">
-        <div class="section-title"><div class="section-title__icon">&#127942;</div><h2>Alla svenska lag</h2></div>
+        <div class="section-title">
+          <div class="section-title__icon">&#127942;</div>
+          <h2>Svenska lag</h2>
+        </div>
+
         <div class="controls">
-          <div class="select-wrap"><select id="divisionFilter" aria-label="Filtrera division"><option value="all">Alla divisioner</option><option value="ELITE">Elite</option><option value="PRO">Pro</option><option value="LITE">Lite</option><option value="CORE">Core</option><option value="NEO">Neo</option></select></div>
-          <div class="select-wrap"><select id="sortTeams" aria-label="Sortera"><option value="latest">Senast aktiva</option><option value="name-asc">Namn A-Ö</option><option value="seasons-desc">Flest ECL</option><option value="players-desc">Flest spelare</option><option value="wins-desc">Flest vinster</option><option value="winpct-desc">Bäst vinst%</option><option value="matches-desc">Flest matcher</option><option value="division-best">Högsta division</option></select></div>
-          <div class="search-wrap"><input id="searchTeams" type="text" placeholder="Sök lag, spelare, ECL eller division..."></div>
+          <div class="select-wrap">
+            <select id="divisionFilter" aria-label="Filtrera på division">
+              <option value="all">Alla divisioner</option>
+              <option value="Elite">Elite</option>
+              <option value="Pro">Pro</option>
+              <option value="Lite">Lite</option>
+              <option value="Core">Core</option>
+              <option value="Neo">Neo</option>
+            </select>
+          </div>
+
+          <div class="select-wrap">
+            <select id="sortTeams" aria-label="Sortera lag">
+              <option value="division">Division + poäng</option>
+              <option value="name-asc">Namn A-Ö</option>
+              <option value="name-desc">Namn Ö-A</option>
+              <option value="points-desc">Flest poäng</option>
+              <option value="players-desc">Flest spelare</option>
+              <option value="swedish-points-desc">Flest svenska poäng</option>
+            </select>
+          </div>
+
+          <div class="search-wrap">
+            <input type="text" id="searchTeams" placeholder="Sök lag, spelare eller division...">
+          </div>
         </div>
       </div>
-      <div id="teamsSummary" class="summary-bar"></div>
-      <div id="teamsList"><div class="empty-state">Laddar laghistorik...</div></div>
+
+      <div id="teamsSummary" class="summary-bar" aria-label="Översikt svenska lag"></div>
+      <div id="teamsList"></div>
       <p id="lastUpdated" class="lastUpdated"></p>
     </section>
 
-    <section id="teamView" class="team-view"></section>
+    <section id="teamView" class="team-view" aria-label="Lagsida"></section>
   </main>
 
   <footer>
     <div class="container footer__inner">
-      <div class="footer-brand"><div class="footer-brand__name">Svensk eHockey</div><div class="footer-brand__meta">&copy; <span id="year"></span> Svensk ECL-bevakning</div></div>
-      <nav class="footer-links" aria-label="Sidfot"><a href="/nyheter.html">Nyheter</a><a href="/svenskecl26spring-byten.html">Byten</a><a href="/svenskecl26spring-matcher.html">Matcher</a><a href="/svenskecl26spring-lag.html">Svenska lag</a><a href="/svenska-lag-historia.html">Laghistoria</a><a href="/svenskecl26spring-statistik.html">Spring statistik</a><a href="https://www.svenskehockey.se/SEC/">SEC</a></nav>
+      <div class="footer-brand">
+        <div class="footer-brand__name">Svensk eHockey</div>
+        <div class="footer-brand__meta">&copy; <span id="year"></span> Svensk ECL-bevakning</div>
+      </div>
+
+      <nav class="footer-links" aria-label="Sidfot">
+        <a href="/nyheter.html">Nyheter</a>
+        <a href="/svenskecl26spring-byten.html">Byten</a>
+        <a href="/svenskecl26spring-matcher.html">Matcher</a>
+        <a href="/svenskecl26spring-lag.html">Svenska lag</a>
+        <a href="/svenska-lag-historia.html">Laghistoria</a>
+        <a href="/svenskecl26spring-statistik.html">Spring statistik</a>
+        <a href="/svenskecl26winter-statistik.html">Winter statistik</a>
+        <a href="https://www.svenskehockey.se/SEC/">SEC</a>
+      </nav>
     </div>
   </footer>
 
@@ -247,275 +869,471 @@
 
     document.querySelectorAll("[data-dropdown]").forEach((dd) => {
       const btn = dd.querySelector("[data-dropdown-btn]");
-      const close = () => { dd.classList.remove("open"); btn?.setAttribute("aria-expanded", "false"); };
-      btn?.addEventListener("click", (e) => { e.stopPropagation(); dd.classList.toggle("open"); btn.setAttribute("aria-expanded", dd.classList.contains("open") ? "true" : "false"); });
+      const close = () => {
+        dd.classList.remove("open");
+        btn?.setAttribute("aria-expanded", "false");
+      };
+      btn?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = dd.classList.toggle("open");
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+        document.querySelectorAll("[data-dropdown]").forEach((other) => {
+          if (other !== dd) {
+            other.classList.remove("open");
+            other.querySelector("[data-dropdown-btn]")?.setAttribute("aria-expanded", "false");
+          }
+        });
+      });
       document.addEventListener("click", close);
-      document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+      });
     });
-    document.querySelector("[data-mobile-toggle]")?.addEventListener("click", () => document.querySelector("[data-mobile-menu]")?.classList.toggle("open"));
 
-    (function(){
+    const mobileBtn = document.querySelector("[data-mobile-toggle]");
+    const mobileMenu = document.querySelector("[data-mobile-menu]");
+    if (mobileBtn && mobileMenu) {
+      mobileBtn.addEventListener("click", () => mobileMenu.classList.toggle("open"));
+    }
+
+    (function () {
       const JSON_URL = "./svenska-lag-historia.json";
-      const introCard = document.getElementById("introCard");
       const listView = document.getElementById("listView");
       const teamView = document.getElementById("teamView");
+      const introCard = document.getElementById("introCard");
       const teamsList = document.getElementById("teamsList");
       const teamsSummary = document.getElementById("teamsSummary");
-      const lastUpdated = document.getElementById("lastUpdated");
       const searchTeams = document.getElementById("searchTeams");
       const divisionFilter = document.getElementById("divisionFilter");
       const sortTeams = document.getElementById("sortTeams");
+      const lastUpdated = document.getElementById("lastUpdated");
+
+      const divisionOrder = ["Elite", "Pro", "Lite", "Core", "Neo"];
+      const divisionRank = { Elite: 1, Pro: 2, Lite: 3, Core: 4, Neo: 5 };
+      let rawData = {};
       let teams = [];
 
-      const divisionRank = { ELITE:5, PRO:4, LITE:3, CORE:2, NEO:1, "ELITE QUALIFIER":4.5, "PRO QUALIFIER":3.5, "PRO WILDCARD BATTLE":3.5 };
-      const divisionClass = (d) => String(d || "").toLowerCase().split(" ")[0];
-      const divLabel = (d) => String(d || "-").replace(/_/g," ");
-      const number = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
-      const clean = (v) => String(v ?? "").replace(/\u00A0/g," ").replace(/\s+/g," ").trim();
-      const normalize = (v) => clean(v).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-      const slugify = (v) => normalize(v).replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
-      const escapeHtml = (v) => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-      const encodeAttr = (v) => encodeURIComponent(JSON.stringify(v));
-      const decodeAttr = (v) => { try { return JSON.parse(decodeURIComponent(v || "")); } catch(e) { return []; } };
-      const uniq = (arr) => [...new Set(arr.map(x => clean(x)).filter(Boolean))];
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
 
-      function extract(raw){
-        if (!raw || typeof raw !== "object") return {};
-        if (Array.isArray(raw.teams)) return raw;
-        if (raw.json_result && typeof raw.json_result === "object") return raw.json_result;
-        if (raw.json_result && typeof raw.json_result === "string") { try { return JSON.parse(raw.json_result); } catch(e) {} }
-        if (Array.isArray(raw.rows) && raw.rows.length) {
-          const r = raw.rows[0];
-          if (r?.json_result && typeof r.json_result === "object") return r.json_result;
-          if (typeof r?.json_result === "string") { try { return JSON.parse(r.json_result); } catch(e) {} }
+      function removeDiacritics(value) {
+        return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+
+      function normalizeText(value) {
+        return removeDiacritics(value)
+          .toLowerCase()
+          .replace(/\u00A0/g, " ")
+          .replace(/[^a-z0-9åäö\s_-]/gi, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function slugify(value) {
+        return removeDiacritics(value)
+          .toLowerCase()
+          .replace(/&/g, " and ")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+      }
+
+      function clean(value) {
+        return String(value ?? "").replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
+      }
+
+      function number(value, fallback = 0) {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : fallback;
+      }
+
+      function first(obj, keys, fallback = "") {
+        for (const key of keys) {
+          if (obj && obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== "") return obj[key];
         }
-        return raw;
+        return fallback;
       }
 
-      function formatUpdated(value){
-        if (!value) return "";
-        const d = new Date(value);
-        if (isNaN(d)) return clean(value);
-        return d.toLocaleString("sv-SE", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+      function extractJsonResultObject(data) {
+        if (!data || typeof data !== "object") return {};
+        if (Array.isArray(data.lag) || Array.isArray(data.teams) || Array.isArray(data.svenskaLag)) return data;
+        if (data.json_result && typeof data.json_result === "object") return data.json_result;
+        if (data.json_result && typeof data.json_result === "string") {
+          try { return JSON.parse(data.json_result); } catch (e) { return {}; }
+        }
+        if (Array.isArray(data.rows) && data.rows.length) {
+          const firstRow = data.rows[0];
+          if (firstRow && (Array.isArray(firstRow.lag) || Array.isArray(firstRow.teams) || Array.isArray(firstRow.svenskaLag))) return firstRow;
+          if (firstRow?.json_result && typeof firstRow.json_result === "object") return firstRow.json_result;
+          if (typeof firstRow?.json_result === "string") {
+            try { return JSON.parse(firstRow.json_result); } catch (e) { return {}; }
+          }
+        }
+        return {};
       }
 
-      function logoCandidates(name){
-        const base = clean(name).replace(/\s*\([^)]*\)\s*/g," ").trim();
-        const simple = base.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const variants = uniq([base, simple, base.toLowerCase(), simple.toLowerCase(), slugify(base), slugify(simple)]);
-        return uniq(variants.flatMap(n => ["png","jpg","jpeg","webp","PNG","JPG","JPEG","WEBP"].map(ext => `/teamlogos/${n}.${ext}`)));
+      function normalizeDivision(value) {
+        const v = normalizeText(value);
+        if (v.includes("elite")) return "Elite";
+        if (v.includes("pro")) return "Pro";
+        if (v.includes("lite")) return "Lite";
+        if (v.includes("core")) return "Core";
+        if (v.includes("neo")) return "Neo";
+        return clean(value) || "ECL";
       }
 
-      window.handleImageError = function(event){
+      function encodeAttr(value) {
+        return encodeURIComponent(JSON.stringify(value));
+      }
+
+      function decodeAttr(value) {
+        try { return JSON.parse(decodeURIComponent(value || "")); } catch (e) { return []; }
+      }
+
+      function unique(values) {
+        return [...new Set(values.map(v => String(v || "").trim()).filter(Boolean))];
+      }
+
+      function stripParens(value) {
+        return String(value || "").replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim();
+      }
+
+      function normalizeFileBase(value) {
+        return String(value || "").trim().replace(/\u00A0/g, " ").replace(/\s+/g, " ").replace(/[\/\\:*?"<>|]/g, "");
+      }
+
+      function buildPaths(folder, names, exts) {
+        const paths = [];
+        names.forEach((name) => exts.forEach((ext) => paths.push(`/${folder}/${name}.${ext}`)));
+        return unique(paths);
+      }
+
+      function teamNameCandidates(teamName) {
+        const raw = normalizeFileBase(stripParens(clean(teamName)));
+        const noDiacritics = normalizeFileBase(removeDiacritics(raw));
+        const short1 = raw.replace(/\s+IF\s+Esport$/i, "").trim();
+        const short2 = raw.replace(/\s+Esport$/i, "").trim();
+        const short3 = raw.replace(/\s+Esports$/i, "").trim();
+        const short4 = raw.replace(/\s+Hockey$/i, "").trim();
+
+        const names = unique([
+          raw,
+          noDiacritics,
+          short1,
+          removeDiacritics(short1),
+          short2,
+          removeDiacritics(short2),
+          short3,
+          removeDiacritics(short3),
+          short4,
+          removeDiacritics(short4),
+          raw.toLowerCase(),
+          noDiacritics.toLowerCase(),
+          slugify(raw).replaceAll("-", ""),
+          slugify(short1).replaceAll("-", ""),
+          slugify(short2).replaceAll("-", ""),
+          slugify(short3).replaceAll("-", ""),
+          slugify(short4).replaceAll("-", "")
+        ]);
+
+        return buildPaths("teamlogos", names, ["png", "jpg", "jpeg", "webp", "PNG", "JPG", "JPEG", "WEBP"]);
+      }
+
+      function teamShortName(name) {
+        return stripParens(clean(name))
+          .replace(/\s+IF\s+Esport$/i, "")
+          .replace(/\s+Esport$/i, "")
+          .replace(/\s+Esports$/i, "")
+          .replace(/\s+Hockey$/i, "")
+          .trim()
+          .slice(0, 3)
+          .toUpperCase() || "ECL";
+      }
+
+      function fallbackLogo(img) {
+        const team = img.getAttribute("data-team") || "";
+        const shortName = teamShortName(team);
+        img.onerror = null;
+        img.src = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220">
+            <defs>
+              <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stop-color="#18233d"/>
+                <stop offset="100%" stop-color="#0f172a"/>
+              </linearGradient>
+            </defs>
+            <rect width="220" height="220" rx="18" fill="url(#g)"/>
+            <path d="M110 38l52 20v37c0 39-22 67-52 88-30-21-52-49-52-88V58z" fill="#ffc84a" fill-opacity="0.18"/>
+            <text x="110" y="126" text-anchor="middle" fill="#ffc84a" font-family="Arial, sans-serif" font-weight="800" font-size="34">${shortName}</text>
+          </svg>
+        `);
+      }
+
+      window.handleLogoError = function(event) {
         const img = event.target;
         const candidates = decodeAttr(img.dataset.candidates);
         const current = Number(img.dataset.candidateIndex || "0");
         const next = current + 1;
-        if (next < candidates.length) { img.dataset.candidateIndex = String(next); img.src = candidates[next]; return; }
-        const shortName = clean(img.getAttribute("data-team") || "ECL").slice(0,3).toUpperCase();
-        img.onerror = null;
-        img.src = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#18233d"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs><rect width="220" height="220" rx="28" fill="url(#g)"/><path d="M110 38l52 20v37c0 39-22 67-52 88-30-21-52-49-52-88V58z" fill="#ffc84a" fill-opacity="0.18"/><text x="110" y="126" text-anchor="middle" fill="#ffc84a" font-family="Arial" font-weight="900" font-size="34">${escapeHtml(shortName)}</text></svg>`);
+
+        if (next < candidates.length) {
+          img.dataset.candidateIndex = String(next);
+          img.src = candidates[next];
+          return;
+        }
+
+        fallbackLogo(img);
       };
 
-      function activateImages(scope=document){
-        scope.querySelectorAll("img[data-candidates]").forEach(img => {
+      function activateImages(scope = document) {
+        scope.querySelectorAll("img[data-candidates]").forEach((img) => {
           const candidates = decodeAttr(img.dataset.candidates);
           img.dataset.candidateIndex = "0";
           if (candidates.length) img.src = candidates[0];
-          else window.handleImageError({ target: img });
+          else fallbackLogo(img);
         });
       }
 
-      function logoMarkup(team){
-        return `<div class="team-logo"><img alt="${escapeHtml(team.name)}" data-team="${escapeHtml(team.name)}" data-candidates="${escapeHtml(encodeAttr(logoCandidates(team.name)))}" onerror="handleImageError(event)"></div>`;
+      function formatUpdated(value) {
+        if (!value) return "";
+        const d = new Date(value);
+        if (isNaN(d)) return String(value);
+        return d.toLocaleString("sv-SE", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
       }
 
-      function divisionBadge(d){
-        return `<span class="division-badge ${divisionClass(d)}">${escapeHtml(divLabel(d))}</span>`;
+      function isSwedishTeam(row) {
+        const country = String(first(row, ["country", "Country", "teamCountry", "TeamCountry", "nation", "Nation"], "")).toUpperCase();
+        if (["SWE", "SE", "SWEDEN", "SVERIGE"].includes(country)) return true;
+        if (row.isSwedish === true || row.swedish === true) return true;
+        if (row.svensktLag === true || row.svensktLag === "1") return true;
+        return !country;
       }
 
-      function normalizePlayer(player){
-        const history = Array.isArray(player.history) ? player.history : [];
+      function collectPlayers(row) {
+        const direct = first(row, ["players", "Players", "roster", "Roster", "spelare", "currentRoster"], null);
+        if (Array.isArray(direct)) return direct.map(normalizePlayer).filter(Boolean);
+
+        const swedes = first(row, ["swedishPlayerList", "svenskaSpelare", "swedishPlayersList"], null);
+        if (Array.isArray(swedes)) return swedes.map(normalizePlayer).filter(Boolean);
+
+        return [];
+      }
+
+      function normalizePlayer(player) {
+        if (!player) return null;
+        if (typeof player === "string") {
+          return { name: player, position: "", nationality: "", games: "", goals: "", assists: "", points: "", history: [] };
+        }
+
+        const history = first(player, ["history", "History", "playerHistory", "previousTeams", "teamHistory", "seasons"], []);
         return {
-          playerID: player.playerID || player.id || "",
-          userID: player.userID || "",
-          name: clean(player.name || player.playerName || player.tag || ""),
-          country: clean(player.country || player.nationality || ""),
-          primaryRole: clean(player.primaryRole || player.position || ""),
-          played: player.played !== false,
-          gamesPlayed: number(player.gamesPlayed ?? player.games ?? player.matches),
-          regularGames: number(player.regularGames),
-          playoffGames: number(player.playoffGames),
-          goals: number(player.goals),
-          assists: number(player.assists),
-          points: number(player.points),
-          ppg: player.ppg ?? "",
-          goalieGames: number(player.goalieGames),
-          goalieWins: number(player.goalieWins),
-          saves: number(player.saves),
-          goalsAllowed: number(player.goalsAllowed),
-          savePct: player.savePct ?? "",
-          shutouts: number(player.shutouts),
-          profileUrl: player.profileUrl || (player.playerID ? `https://sportsgamer.gg/players/${player.playerID}` : ""),
-          history: history.map(h => ({
-            leagueID: h.leagueID || "",
-            teamID: h.teamID || "",
-            teamName: clean(h.teamName || h.team || h.name || ""),
-            division: clean(h.division || h.divisionName || ""),
-            seasonLabel: clean(h.seasonLabel || h.season || h.league || ""),
-            gamesPlayed: number(h.gamesPlayed ?? h.games),
-            regularGames: number(h.regularGames),
-            playoffGames: number(h.playoffGames),
-            goals: number(h.goals),
-            assists: number(h.assists),
-            points: number(h.points),
-            primaryRole: clean(h.primaryRole || ""),
-            played: h.played !== false,
-            teamUrl: h.teamUrl || ""
-          }))
+          id: first(player, ["playerID", "playerId", "id", "userID", "userId"], ""),
+          name: clean(first(player, ["name", "playerName", "Player", "tag", "psn", "psntag", "gamertag"], "")),
+          position: first(player, ["position", "Position", "pos", "mainPosition"], ""),
+          nationality: first(player, ["nationality", "country", "nation", "Nationality"], ""),
+          games: first(player, ["games", "gamesPlayed", "GP", "matches"], ""),
+          goals: first(player, ["goals", "G"], ""),
+          assists: first(player, ["assists", "A"], ""),
+          points: first(player, ["points", "PTS", "P"], ""),
+          plusMinus: first(player, ["plusMinus", "+/-", "plusminus"], ""),
+          history: Array.isArray(history) ? history.map(normalizeHistoryItem).filter(Boolean) : []
         };
       }
 
-      function normalizeSeason(row){
-        const stats = row.stats || {};
-        const players = Array.isArray(row.players) ? row.players.map(normalizePlayer).filter(p => p.name) : [];
-        const teamHistory = Array.isArray(row.teamHistory) ? row.teamHistory : [];
+      function normalizeHistoryItem(item) {
+        if (!item) return null;
+        if (typeof item === "string") return { teamName: item, division: "", season: "", games: "", points: "" };
         return {
-          leagueID: row.leagueID || "",
-          teamID: row.teamID || "",
-          name: clean(row.name || row.teamName || row.Team || ""),
-          originalName: clean(row.originalName || row.name || ""),
-          country: clean(row.country || row.teamCountry || ""),
-          division: clean(row.division || row.divisionName || ""),
-          divisionRank: number(row.divisionRank ?? divisionRank[row.division] ?? 0),
-          seasonLabel: clean(row.seasonLabel || row.season || row.league || ""),
-          seasonYear: number(row.seasonYear),
-          seasonName: clean(row.seasonName || ""),
-          teamUrl: row.teamUrl || row.url || (row.leagueID && row.teamID ? `https://sportsgamer.gg/leagues/${row.leagueID}/teams/${row.teamID}` : ""),
-          gamesPlayed: number(stats.gamesPlayed ?? row.gamesPlayed),
-          wins: number(stats.wins ?? row.wins),
-          losses: number(stats.losses ?? row.losses),
-          overtimeWins: number(stats.overtimeWins ?? row.overtimeWins),
-          overtimeLosses: number(stats.overtimeLosses ?? row.overtimeLosses),
-          goalsFor: number(stats.goalsFor ?? row.goalsFor),
-          goalsAgainst: number(stats.goalsAgainst ?? row.goalsAgainst),
-          goalDiff: number(stats.goalDiff ?? row.goalDiff),
-          regularGames: number(stats.regularGames ?? row.regularGames),
-          regularWins: number(stats.regularWins ?? row.regularWins),
-          regularLosses: number(stats.regularLosses ?? row.regularLosses),
-          regularPoints: number(stats.regularPoints ?? row.regularPoints),
-          playoffGames: number(stats.playoffGames ?? row.playoffGames),
-          playoffWins: number(stats.playoffWins ?? row.playoffWins),
-          playoffLosses: number(stats.playoffLosses ?? row.playoffLosses),
+          teamName: clean(first(item, ["teamName", "Team", "team", "name"], "")),
+          division: normalizeDivision(first(item, ["division", "divisionName", "Div", "leagueDivision"], "")),
+          season: clean(first(item, ["season", "Season", "league", "leagueName", "competition"], "")),
+          games: first(item, ["games", "gamesPlayed", "matches", "totalMatches", "Total"], ""),
+          points: first(item, ["points", "PTS", "P"], ""),
+          goals: first(item, ["goals", "G"], ""),
+          assists: first(item, ["assists", "A"], "")
+        };
+      }
+
+      function collectTeamHistory(row) {
+        const history = first(row, ["history", "History", "teamHistory", "lagHistorik", "seasons"], []);
+        if (!Array.isArray(history)) return [];
+        return history.map(normalizeHistoryItem).filter(Boolean);
+      }
+
+      function normalizeTeam(row, index) {
+        const name = clean(first(row, ["name", "teamName", "Team", "team", "lag"], ""));
+        if (!name) return null;
+
+        const leagueID = first(row, ["leagueID", "leagueId", "LeagueID"], "");
+        const teamID = first(row, ["teamID", "teamId", "TeamID", "id"], "");
+        const division = normalizeDivision(first(row, ["division", "Division", "divisionName", "Div"], ""));
+        const players = collectPlayers(row);
+        const teamHistory = collectTeamHistory(row);
+
+        return {
+          source: row,
+          key: String(teamID || row.slug || slugify(name) || index),
+          slug: slugify(teamID ? `${teamID}-${name}` : name),
+          name,
+          division,
+          league: clean(first(row, ["league", "League", "season", "Season"], "ECL 26 Spring")),
+          group: first(row, ["group", "Group", "groupName"], ""),
+          url: first(row, ["url", "href"], teamID && leagueID ? `https://sportsgamer.gg/leagues/${encodeURIComponent(leagueID)}/teams/${encodeURIComponent(teamID)}` : ""),
+          leagueID,
+          teamID,
+          points: first(row, ["points", "tablePoints", "Poang", "P", "PTS"], ""),
+          groupPosition: first(row, ["groupPosition", "tablePosition", "rank", "standing", "position"], ""),
+          record: first(row, ["record", "Record"], ""),
+          gamesPlayed: first(row, ["gamesPlayed", "GP", "matches"], ""),
+          wins: first(row, ["wins", "W"], ""),
+          otWins: first(row, ["overtimeWins", "OTW", "otWins"], ""),
+          losses: first(row, ["losses", "L"], ""),
+          otLosses: first(row, ["otLosses", "OTL"], ""),
+          goalsFor: first(row, ["goalsFor", "GF"], ""),
+          goalsAgainst: first(row, ["goalsAgainst", "GA"], ""),
+          goalDiff: first(row, ["goalDiff", "GD", "plusMinus"], ""),
+          ppg: first(row, ["ppg", "pointsPerGame", "pointsPerMatch"], ""),
+          playoffStatus: first(row, ["playoffStatus", "slutspelStatus", "status"], ""),
+          playoffRound: first(row, ["playoffRound", "playoffStage"], ""),
+          nextPlayoffRound: first(row, ["nextPlayoffRound", "nextRound"], ""),
+          playoffSeries: first(row, ["playoffSeries", "playoffRecord", "playoffMatches"], ""),
+          playoffWins: first(row, ["playoffWins"], ""),
+          playoffLosses: first(row, ["playoffLosses"], ""),
+          playoffBestOf: first(row, ["playoffBestOf"], ""),
+          swedishPlayers: first(row, ["swedishPlayers", "svenskaSpelare"], players.length || ""),
+          swedishPoints: first(row, ["swedishPoints", "svenskaPoang"], ""),
+          topSwede: first(row, ["topSwede", "topSwedishPlayer", "toppSvensk"], ""),
+          description: first(row, ["description", "info", "note"], ""),
           players,
-          teamHistory: teamHistory.map(h => ({
-            leagueID: h.leagueID || "",
-            teamID: h.teamID || "",
-            teamName: clean(h.teamName || row.name || ""),
-            division: clean(h.division || h.divisionName || ""),
-            seasonLabel: clean(h.seasonLabel || h.season || ""),
-            gamesPlayed: number(h.gamesPlayed),
-            wins: number(h.wins),
-            losses: number(h.losses),
-            regularPoints: number(h.regularPoints),
-            goalsFor: number(h.goalsFor),
-            goalsAgainst: number(h.goalsAgainst),
-            teamUrl: h.teamUrl || ""
-          }))
+          teamHistory
         };
       }
 
-      function aggregateTeams(data){
-        const rows = Array.isArray(data.teams) ? data.teams.map(normalizeSeason).filter(t => t.name) : [];
+      function getSourceTeams(data) {
+        const candidates = [];
+        if (Array.isArray(data.lag)) candidates.push(...data.lag);
+        if (Array.isArray(data.teams)) candidates.push(...data.teams);
+        if (Array.isArray(data.svenskaLag)) candidates.push(...data.svenskaLag);
+        return candidates;
+      }
+
+      function buildTeams(data) {
+        const rows = getSourceTeams(data);
         const map = new Map();
-        rows.forEach(season => {
-          const key = season.teamID ? `id-${season.teamID}` : `name-${slugify(season.name)}`;
+
+        rows.forEach((row, index) => {
+          if (!isSwedishTeam(row)) return;
+          const team = normalizeTeam(row, index);
+          if (!team) return;
+
+          const key = normalizeText(team.name);
           if (!map.has(key)) {
-            map.set(key, { key, slug: slugify(`${season.teamID || "team"}-${season.name}`), name: season.name, teamID: season.teamID, latest: season, seasons: [], playersById: new Map() });
+            map.set(key, team);
+          } else {
+            const old = map.get(key);
+            map.set(key, {
+              ...old,
+              ...Object.fromEntries(Object.entries(team).filter(([, value]) => value !== "" && value !== null && value !== undefined)),
+              players: old.players.length ? old.players : team.players,
+              teamHistory: old.teamHistory.length ? old.teamHistory : team.teamHistory
+            });
           }
-          const team = map.get(key);
-          team.seasons.push(season);
-          season.players.forEach(p => {
-            const pkey = p.playerID ? `id-${p.playerID}` : `name-${normalize(p.name)}`;
-            const old = team.playersById.get(pkey) || { ...p, gamesPlayed:0, regularGames:0, playoffGames:0, goals:0, assists:0, points:0, goalieGames:0, goalieWins:0, saves:0, goalsAllowed:0, shutouts:0, seasons:[], history:p.history };
-            old.gamesPlayed += p.gamesPlayed;
-            old.regularGames += p.regularGames;
-            old.playoffGames += p.playoffGames;
-            old.goals += p.goals;
-            old.assists += p.assists;
-            old.points += p.points;
-            old.goalieGames += p.goalieGames;
-            old.goalieWins += p.goalieWins;
-            old.saves += p.saves;
-            old.goalsAllowed += p.goalsAllowed;
-            old.shutouts += p.shutouts;
-            old.played = old.played || p.played;
-            old.seasons.push({ seasonLabel: season.seasonLabel, division: season.division, teamName: season.name, gamesPlayed: p.gamesPlayed, points: p.points });
-            if ((!old.history || !old.history.length) && p.history.length) old.history = p.history;
-            team.playersById.set(pkey, old);
-          });
         });
 
-        return [...map.values()].map(team => {
-          team.seasons.sort((a,b) => (b.seasonYear - a.seasonYear) || (b.seasonName === "Spring" ? 1 : 0) - (a.seasonName === "Spring" ? 1 : 0) || (number(b.leagueID) - number(a.leagueID)));
-          team.latest = team.seasons[0];
-          team.players = [...team.playersById.values()].sort((a,b) => b.gamesPlayed - a.gamesPlayed || b.points - a.points || a.name.localeCompare(b.name,"sv"));
-          const divisions = uniq(team.seasons.map(s => s.division));
-          const ecls = uniq(team.seasons.map(s => s.seasonLabel));
-          const bestDivision = divisions.sort((a,b) => (divisionRank[b] || 0) - (divisionRank[a] || 0))[0] || "-";
-          const total = team.seasons.reduce((acc,s) => {
-            acc.gamesPlayed += s.gamesPlayed; acc.wins += s.wins; acc.losses += s.losses; acc.overtimeWins += s.overtimeWins; acc.overtimeLosses += s.overtimeLosses; acc.goalsFor += s.goalsFor; acc.goalsAgainst += s.goalsAgainst; acc.regularPoints += s.regularPoints; acc.playoffGames += s.playoffGames; acc.playoffWins += s.playoffWins; acc.playoffLosses += s.playoffLosses; acc.highestRank = Math.max(acc.highestRank, divisionRank[s.division] || s.divisionRank || 0); return acc;
-          }, { gamesPlayed:0,wins:0,losses:0,overtimeWins:0,overtimeLosses:0,goalsFor:0,goalsAgainst:0,regularPoints:0,playoffGames:0,playoffWins:0,playoffLosses:0,highestRank:0 });
-          total.goalDiff = total.goalsFor - total.goalsAgainst;
-          total.winPct = total.gamesPlayed ? Math.round((total.wins / total.gamesPlayed) * 1000) / 10 : 0;
-          const topPlayer = [...team.players].sort((a,b) => b.points - a.points || b.gamesPlayed - a.gamesPlayed)[0] || null;
-          return { ...team, divisions, ecls, bestDivision, total, topPlayer };
-        });
+        return [...map.values()];
       }
 
-      function searchText(team){
-        return normalize([team.name, team.bestDivision, team.divisions.join(" "), team.ecls.join(" "), team.players.map(p => `${p.name} ${p.country}`).join(" ")].join(" "));
+      function playerSearchText(team) {
+        return team.players.map(p => `${p.name} ${p.position} ${p.nationality} ${p.history.map(h => `${h.teamName} ${h.division} ${h.season}`).join(" ")}`).join(" ");
       }
 
-      function filteredTeams(){
-        const q = normalize(searchTeams.value);
+      function filteredTeams() {
+        const q = normalizeText(searchTeams.value);
         const div = divisionFilter.value;
-        let rows = teams.filter(team => (!q || searchText(team).includes(q)) && (div === "all" || team.divisions.includes(div)));
-        const sort = sortTeams.value;
-        rows.sort((a,b) => {
-          if (sort === "name-asc") return a.name.localeCompare(b.name,"sv");
-          if (sort === "seasons-desc") return b.seasons.length - a.seasons.length || a.name.localeCompare(b.name,"sv");
-          if (sort === "players-desc") return b.players.length - a.players.length || a.name.localeCompare(b.name,"sv");
-          if (sort === "wins-desc") return b.total.wins - a.total.wins || a.name.localeCompare(b.name,"sv");
-          if (sort === "winpct-desc") return b.total.winPct - a.total.winPct || b.total.gamesPlayed - a.total.gamesPlayed || a.name.localeCompare(b.name,"sv");
-          if (sort === "matches-desc") return b.total.gamesPlayed - a.total.gamesPlayed || a.name.localeCompare(b.name,"sv");
-          if (sort === "division-best") return b.total.highestRank - a.total.highestRank || a.name.localeCompare(b.name,"sv");
-          return (number(b.latest.seasonYear) - number(a.latest.seasonYear)) || (number(b.latest.leagueID) - number(a.latest.leagueID)) || a.name.localeCompare(b.name,"sv");
+
+        let rows = teams.filter((team) => {
+          const haystack = normalizeText([
+            team.name,
+            team.division,
+            team.group,
+            team.playoffStatus,
+            team.topSwede,
+            playerSearchText(team)
+          ].join(" "));
+
+          const matchesSearch = !q || haystack.includes(q);
+          const matchesDivision = div === "all" || team.division === div;
+          return matchesSearch && matchesDivision;
         });
+
+        const sort = sortTeams.value;
+        rows.sort((a, b) => {
+          if (sort === "name-asc") return a.name.localeCompare(b.name, "sv");
+          if (sort === "name-desc") return b.name.localeCompare(a.name, "sv");
+          if (sort === "points-desc") return number(b.points) - number(a.points) || a.name.localeCompare(b.name, "sv");
+          if (sort === "players-desc") return number(b.swedishPlayers || b.players.length) - number(a.swedishPlayers || a.players.length) || a.name.localeCompare(b.name, "sv");
+          if (sort === "swedish-points-desc") return number(b.swedishPoints) - number(a.swedishPoints) || a.name.localeCompare(b.name, "sv");
+          return (divisionRank[a.division] || 99) - (divisionRank[b.division] || 99)
+            || number(b.points) - number(a.points)
+            || a.name.localeCompare(b.name, "sv");
+        });
+
         return rows;
       }
 
-      function renderSummary(rows){
-        const uniquePlayers = new Set();
-        rows.forEach(t => t.players.forEach(p => uniquePlayers.add(p.playerID || normalize(p.name))));
-        const ecls = new Set(rows.flatMap(t => t.ecls));
-        const matches = rows.reduce((sum,t) => sum + t.total.gamesPlayed, 0);
-        const wins = rows.reduce((sum,t) => sum + t.total.wins, 0);
-        teamsSummary.innerHTML = `
-          <div class="summary-chip"><span>Lag</span><strong>${rows.length}</strong></div>
-          <div class="summary-chip"><span>ECL-säsonger</span><strong>${ecls.size}</strong></div>
-          <div class="summary-chip"><span>Unika spelare</span><strong>${uniquePlayers.size || "-"}</strong></div>
-          <div class="summary-chip"><span>Matcher</span><strong>${matches || "-"}</strong></div>
-          <div class="summary-chip"><span>Vinster</span><strong>${wins || "-"}</strong></div>
+      function statusClass(status) {
+        const s = normalizeText(status);
+        if (s.includes("vann") || s.includes("final") || s.includes("spelar")) return "ok";
+        if (s.includes("utslagen") || s.includes("förlor")) return "danger";
+        if (s.includes("slutspel")) return "warn";
+        return "";
+      }
+
+      function divisionBadge(division) {
+        const cls = normalizeText(division);
+        return `<span class="division-badge ${escapeHtml(cls)}">${escapeHtml(division || "-")}</span>`;
+      }
+
+      function logoMarkup(team, sizeClass = "") {
+        const candidates = teamNameCandidates(team.name);
+        return `
+          <div class="team-logo ${sizeClass}">
+            <img
+              alt="${escapeHtml(team.name)}"
+              data-team="${escapeHtml(team.name)}"
+              data-candidates="${escapeHtml(encodeAttr(candidates))}"
+              onerror="handleLogoError(event)"
+              loading="lazy"
+            >
+          </div>
         `;
       }
 
-      function teamCard(team){
-        const t = team.total;
-        const record = `${t.wins}-${t.losses}`;
-        const gfga = `${t.goalsFor}-${t.goalsAgainst}`;
-        const divPreview = team.divisions.slice(0,4).map(divisionBadge).join("");
-        const moreDivs = team.divisions.length > 4 ? `<span class="division-badge">+${team.divisions.length - 4}</span>` : "";
+      function renderSummary(rows) {
+        const activeDivisions = new Set(rows.map(t => t.division).filter(Boolean));
+        const playerCount = rows.reduce((sum, t) => sum + number(t.swedishPlayers || t.players.length), 0);
+        const playoffCount = rows.filter(t => String(t.playoffStatus || t.playoffRound || t.nextPlayoffRound).trim()).length;
+        const historyCount = rows.reduce((sum, t) => sum + t.players.reduce((pSum, p) => pSum + p.history.length, 0), 0);
+
+        teamsSummary.innerHTML = `
+          <div class="summary-chip"><span>Lag</span><strong>${rows.length}</strong></div>
+          <div class="summary-chip"><span>Divisioner</span><strong>${activeDivisions.size}</strong></div>
+          <div class="summary-chip"><span>Svenska spelare</span><strong>${playerCount || "-"}</strong></div>
+          <div class="summary-chip"><span>Slutspelslag</span><strong>${playoffCount || "-"}</strong></div>
+          <div class="summary-chip"><span>Historikrader</span><strong>${historyCount || "-"}</strong></div>
+        `;
+      }
+
+      function teamCard(team) {
+        const status = team.playoffStatus || team.playoffRound || "ECL 26 Spring";
+        const topSwedeText = typeof team.topSwede === "object"
+          ? `${team.topSwede.name || "-"}${team.topSwede.points ? ", " + team.topSwede.points + "p" : ""}`
+          : (team.topSwede || "-");
+
         return `
           <article class="team-card">
             <a class="team-card__link" href="#team=${encodeURIComponent(team.slug)}">
@@ -523,121 +1341,281 @@
                 ${logoMarkup(team)}
                 <div>
                   <h3 class="team-name">${escapeHtml(team.name)}</h3>
-                  <div class="team-division">Bäst: ${escapeHtml(team.bestDivision)}</div>
-                  <div class="season-line">Senast: ${escapeHtml(team.latest.seasonLabel || "-")} • ${escapeHtml(team.latest.division || "-")}</div>
+                  <div class="team-division">${escapeHtml(team.division)}</div>
                 </div>
               </div>
 
               <div class="team-highlight">
-                <div class="team-stat is-gold"><span>Spelare</span><strong>${team.players.length || "-"}</strong></div>
-                <div class="team-stat"><span>ECL</span><strong>${team.ecls.length || "-"}</strong></div>
-                <div class="team-stat"><span>Divisioner</span><strong>${team.divisions.length || "-"}</strong></div>
+                <div class="team-stat">
+                  <span>Poäng</span>
+                  <strong>${escapeHtml(team.points || "-")}</strong>
+                </div>
+                <div class="team-stat">
+                  <span>Gruppplacering</span>
+                  <strong>${team.groupPosition ? "#" + escapeHtml(team.groupPosition) : "-"}</strong>
+                </div>
+                <div class="team-stat">
+                  <span>Status</span>
+                  <strong><span class="status-pill ${statusClass(status)}">${escapeHtml(status || "-")}</span></strong>
+                </div>
               </div>
 
               <div class="team-stats">
-                <div class="team-stat"><span>Matcher</span><strong>${t.gamesPlayed || "-"}</strong></div>
-                <div class="team-stat is-green"><span>Vinster</span><strong>${t.wins || "-"}</strong></div>
-                <div class="team-stat"><span>Förluster</span><strong>${t.losses || "-"}</strong></div>
-                <div class="team-stat"><span>Record</span><strong>${record}</strong></div>
-                <div class="team-stat"><span>Vinst%</span><strong>${t.winPct ? t.winPct + "%" : "-"}</strong></div>
-                <div class="team-stat"><span>GF-GA</span><strong>${gfga}</strong></div>
+                <div class="team-stat">
+                  <span>Matcher</span>
+                  <strong>${escapeHtml(team.gamesPlayed || "-")}</strong>
+                </div>
+                <div class="team-stat">
+                  <span>Record</span>
+                  <strong>${escapeHtml(team.record || [team.wins, team.otWins, team.otLosses, team.losses].filter(v => v !== "").join("-") || "-")}</strong>
+                </div>
+                <div class="team-stat">
+                  <span>SV spelare</span>
+                  <strong>${escapeHtml(team.swedishPlayers || team.players.length || "-")}</strong>
+                </div>
               </div>
 
               <div class="team-note">
-                <strong>Divisioner:</strong>
-                <div class="badge-row">${divPreview}${moreDivs}</div>
-                <div style="margin-top:9px;"><strong>Topp poäng:</strong> ${escapeHtml(team.topPlayer ? `${team.topPlayer.name}, ${team.topPlayer.points}p` : "-")}</div>
+                <strong>Topp svensk:</strong> ${escapeHtml(topSwedeText)}
               </div>
             </a>
           </article>
         `;
       }
 
-      function renderList(){
+      function renderList() {
         const rows = filteredTeams();
         renderSummary(rows);
-        if (!rows.length) { teamsList.innerHTML = `<div class="empty-state">Inga lag hittades.</div>`; return; }
+
+        if (!rows.length) {
+          teamsList.innerHTML = `<div class="empty-state">Inga lag hittades.</div>`;
+          return;
+        }
+
         teamsList.innerHTML = `<div class="teams-grid">${rows.map(teamCard).join("")}</div>`;
         activateImages(teamsList);
       }
 
-      function statBox(label, value, extra=""){
-        return `<div class="team-stat ${extra}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value || value === 0 ? value : "-")}</strong></div>`;
-      }
-
-      function historyItem(item){
-        const gfga = (item.goalsFor || item.goalsAgainst) ? `${item.goalsFor}-${item.goalsAgainst}` : "-";
-        const record = `${item.wins || 0}-${item.losses || 0}`;
-        return `<div class="history-item"><div class="history-team">${item.teamUrl ? `<a href="${escapeHtml(item.teamUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.seasonLabel || "-")}</a>` : escapeHtml(item.seasonLabel || "-")}</div><div class="history-meta">${divisionBadge(item.division)}<span>Matcher: ${escapeHtml(item.gamesPlayed || 0)}</span><span>Record: ${escapeHtml(record)}</span><span>Poäng: ${escapeHtml(item.regularPoints || 0)}</span><span>GF-GA: ${escapeHtml(gfga)}</span></div></div>`;
-      }
-
-      function renderRoster(team){
-        if (!team.players.length) return `<div class="empty-state">Ingen spelarlista hittades.</div>`;
-        return `<div class="table-shell"><div class="table-scroll"><table><thead><tr><th>Spelare</th><th>Roll</th><th>Land</th><th>Matcher</th><th>Grund</th><th>Slutspel</th><th>Mål</th><th>Assist</th><th>Poäng</th><th>Mv-matcher</th><th>Rädd%</th><th>ECL-rader</th></tr></thead><tbody>${team.players.map(p => `<tr><td><span class="player-name">${p.profileUrl ? `<a href="${escapeHtml(p.profileUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(p.name)}</a>` : escapeHtml(p.name)}</span>${!p.played ? `<div class="muted">Listad, 0 matcher</div>` : ""}</td><td>${escapeHtml(p.primaryRole || "-")}</td><td>${escapeHtml(p.country || "-")}</td><td>${p.gamesPlayed || "-"}</td><td>${p.regularGames || "-"}</td><td>${p.playoffGames || "-"}</td><td>${p.goals || "-"}</td><td>${p.assists || "-"}</td><td><strong>${p.points || "-"}</strong></td><td>${p.goalieGames || "-"}</td><td>${p.savePct || "-"}</td><td>${p.history.length || p.seasons.length || "-"}</td></tr>`).join("")}</tbody></table></div></div>`;
-      }
-
-      function playerHistoryItem(h){
-        return `<div class="history-item"><div class="history-team">${h.teamUrl ? `<a href="${escapeHtml(h.teamUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(h.teamName || "-")}</a>` : escapeHtml(h.teamName || "-")}</div><div class="history-meta">${divisionBadge(h.division)}<span>${escapeHtml(h.seasonLabel || "-")}</span><span>Matcher: ${escapeHtml(h.gamesPlayed || 0)}</span><span>Poäng: ${escapeHtml(h.points || 0)}</span>${h.played ? "" : "<span>Listad, 0 matcher</span>"}</div></div>`;
-      }
-
-      function renderPlayerHistory(team){
-        if (!team.players.length) return `<div class="empty-state">Ingen spelarhistorik hittades.</div>`;
-        const players = team.players.filter(p => p.history.length).slice(0, 80);
-        if (!players.length) return `<div class="empty-state">Ingen spelarhistorik hittades i JSON:en.</div>`;
-        return `<div class="player-history-grid">${players.map(p => `<article class="player-card"><div class="player-card-head"><div><h4>${escapeHtml(p.name)}</h4><div class="muted">${escapeHtml([p.primaryRole, p.country].filter(Boolean).join(" • ") || "Spelare")}</div></div><div><span class="meta-pill gold">${escapeHtml(p.points || 0)}p</span></div></div><div class="history-list">${p.history.slice(0,10).map(playerHistoryItem).join("")}</div></article>`).join("")}</div>`;
-      }
-
-      function renderTeamPage(team){
-        introCard.style.display = "none";
-        listView.style.display = "none";
-        teamView.classList.add("is-active");
-        const t = team.total;
-        const latestUrl = team.latest.teamUrl;
-        teamView.innerHTML = `
-          <div class="back-row"><a class="btn" href="#">&#8592; Tillbaka till alla lag</a>${latestUrl ? `<a class="btn" href="${escapeHtml(latestUrl)}" target="_blank" rel="noopener noreferrer">Öppna senaste SportsGamer &#8599;</a>` : ""}</div>
-          <section class="team-hero">${logoMarkup(team)}<div><h1>${escapeHtml(team.name)}</h1><div class="team-division">Bäst: ${escapeHtml(team.bestDivision)} • Senast: ${escapeHtml(team.latest.seasonLabel || "-")} ${team.latest.division ? "• " + escapeHtml(team.latest.division) : ""}</div><div class="team-hero-meta"><span class="meta-pill gold">${team.ecls.length} ECL-säsonger</span><span class="meta-pill">${team.players.length} spelare</span><span class="meta-pill green">${t.wins} vinster</span><span class="meta-pill">${t.gamesPlayed} matcher</span>${team.divisions.map(divisionBadge).join("")}</div></div></section>
-          <section class="detail-grid">${statBox("Antal spelare", team.players.length, "is-gold")}${statBox("ECL-säsonger", team.ecls.length)}${statBox("Divisioner", team.divisions.length)}${statBox("Högsta division", team.bestDivision)}${statBox("Matcher", t.gamesPlayed)}${statBox("Vinster", t.wins, "is-green")}${statBox("Förluster", t.losses)}${statBox("Vinst%", t.winPct ? t.winPct + "%" : "-")}${statBox("Grundseriepoäng", t.regularPoints)}${statBox("Slutspelsmatcher", t.playoffGames)}${statBox("Slutspelsvinster", t.playoffWins)}${statBox("GF-GA", `${t.goalsFor}-${t.goalsAgainst}`)}</section>
-          <section class="detail-card"><h3>Laghistorik per ECL</h3><div class="history-list">${team.seasons.map(historyItem).join("")}</div></section>
-          <section class="detail-card"><h3>Spelare och statistik i laget</h3>${renderRoster(team)}</section>
-          <section class="detail-card"><h3>Spelarhistorik</h3>${renderPlayerHistory(team)}</section>
-        `;
-        activateImages(teamView);
-        window.scrollTo({ top:0, behavior:"smooth" });
-      }
-
-      function findTeam(slug){
+      function findTeamBySlug(slug) {
         const decoded = decodeURIComponent(slug || "");
         return teams.find(t => t.slug === decoded || t.key === decoded || slugify(t.name) === decoded);
       }
 
-      function route(){
-        const match = location.hash.match(/^#team=(.+)$/);
-        if (match) {
-          const team = findTeam(match[1]);
-          if (team) { renderTeamPage(team); return; }
+      function statBox(label, value) {
+        return `
+          <div class="team-stat">
+            <span>${escapeHtml(label)}</span>
+            <strong>${escapeHtml(value || "-")}</strong>
+          </div>
+        `;
+      }
+
+      function renderRoster(team) {
+        if (!team.players.length) {
+          return `<div class="empty-state">Ingen roster hittades i JSON:en för det här laget.</div>`;
         }
-        introCard.style.display = "block";
-        listView.style.display = "block";
+
+        return `
+          <div class="table-shell">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Spelare</th>
+                    <th>Pos</th>
+                    <th>Nationalitet</th>
+                    <th>Matcher</th>
+                    <th>Mål</th>
+                    <th>Assist</th>
+                    <th>Poäng</th>
+                    <th>Historik</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${team.players.map((p) => `
+                    <tr>
+                      <td><span class="player-name">${escapeHtml(p.name || "-")}</span></td>
+                      <td>${escapeHtml(p.position || "-")}</td>
+                      <td>${escapeHtml(p.nationality || "-")}</td>
+                      <td>${escapeHtml(p.games || "-")}</td>
+                      <td>${escapeHtml(p.goals || "-")}</td>
+                      <td>${escapeHtml(p.assists || "-")}</td>
+                      <td><strong>${escapeHtml(p.points || "-")}</strong></td>
+                      <td>${escapeHtml(p.history.length || "-")}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
+      function historyItemMarkup(item) {
+        return `
+          <div class="history-item">
+            <div class="history-team">${escapeHtml(item.teamName || "-")}</div>
+            <div class="history-meta">
+              ${item.division ? divisionBadge(item.division) : ""}
+              ${item.season ? `<span>${escapeHtml(item.season)}</span>` : ""}
+              ${item.games !== "" ? `<span>Matcher: ${escapeHtml(item.games)}</span>` : ""}
+              ${item.points !== "" ? `<span>Poäng: ${escapeHtml(item.points)}</span>` : ""}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderPlayerHistory(team) {
+        if (!team.players.length) {
+          return `<div class="empty-state">Ingen spelarlista hittades för laget.</div>`;
+        }
+
+        return `
+          <div class="player-history-grid">
+            ${team.players.map((p) => `
+              <article class="player-card">
+                <div class="player-card-head">
+                  <div>
+                    <h4>${escapeHtml(p.name || "-")}</h4>
+                    <div class="muted">${escapeHtml([p.position, p.nationality].filter(Boolean).join(" • ") || "Spelare")}</div>
+                  </div>
+                  <div>${p.points !== "" ? `<span class="meta-pill gold">${escapeHtml(p.points)}p</span>` : ""}</div>
+                </div>
+
+                <div class="history-list">
+                  ${p.history.length
+                    ? p.history.map(historyItemMarkup).join("")
+                    : `<div class="empty-state">Ingen historik hittades för spelaren.</div>`
+                  }
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      function renderTeamHistory(team) {
+        if (!team.teamHistory.length) {
+          return `<div class="empty-state">Ingen laghistorik hittades i JSON:en för det här laget.</div>`;
+        }
+
+        return `<div class="history-list">${team.teamHistory.map(historyItemMarkup).join("")}</div>`;
+      }
+
+      function renderTeamPage(team) {
+        const status = team.playoffStatus || team.playoffRound || "ECL 26 Spring";
+        const record = team.record || [team.wins, team.otWins, team.otLosses, team.losses].filter(v => v !== "").join("-") || "-";
+        const gfga = team.goalsFor || team.goalsAgainst ? `${team.goalsFor || 0}-${team.goalsAgainst || 0}` : "-";
+
+        introCard.style.display = "none";
+        listView.style.display = "none";
+        teamView.classList.add("is-active");
+
+        teamView.innerHTML = `
+          <div class="back-row">
+            <a class="btn" href="#">&#8592; Tillbaka till alla lag</a>
+            ${team.url ? `<a class="btn" href="${escapeHtml(team.url)}" target="_blank" rel="noopener noreferrer">Öppna på SportsGamer &#8599;</a>` : ""}
+          </div>
+
+          <section class="team-hero">
+            ${logoMarkup(team)}
+            <div>
+              <h1>${escapeHtml(team.name)}</h1>
+              <div class="team-division">${escapeHtml(team.division)} • ${escapeHtml(team.league || "ECL 26 Spring")}</div>
+              <div class="team-hero-meta">
+                <span class="meta-pill gold">${escapeHtml(team.points || "-")} poäng</span>
+                <span class="meta-pill">${team.groupPosition ? "Grupp #" + escapeHtml(team.groupPosition) : "Gruppplacering -"}</span>
+                <span class="meta-pill">${escapeHtml(status)}</span>
+                ${team.group ? `<span class="meta-pill">${escapeHtml(team.group)}</span>` : ""}
+              </div>
+              ${team.description ? `<p>${escapeHtml(team.description)}</p>` : ""}
+            </div>
+          </section>
+
+          <section class="detail-grid">
+            ${statBox("Matcher", team.gamesPlayed)}
+            ${statBox("Record", record)}
+            ${statBox("Mål +/-", team.goalDiff || "-")}
+            ${statBox("GF-GA", gfga)}
+            ${statBox("Svenska spelare", team.swedishPlayers || team.players.length)}
+            ${statBox("SV poäng", team.swedishPoints)}
+            ${statBox("Slutspel", team.playoffRound || status)}
+            ${statBox("Nästa", team.nextPlayoffRound)}
+          </section>
+
+          <section class="detail-card">
+            <h3>Nuvarande roster</h3>
+            ${renderRoster(team)}
+          </section>
+
+          <section class="detail-card">
+            <h3>Spelarhistorik</h3>
+            ${renderPlayerHistory(team)}
+          </section>
+
+          <section class="detail-card">
+            <h3>Laghistorik</h3>
+            ${renderTeamHistory(team)}
+          </section>
+        `;
+
+        activateImages(teamView);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function route() {
+        const hash = window.location.hash || "";
+        const match = hash.match(/^#team=(.+)$/);
+
+        if (match) {
+          const team = findTeamBySlug(match[1]);
+          if (team) {
+            renderTeamPage(team);
+            return;
+          }
+        }
+
+        introCard.style.display = "";
+        listView.style.display = "";
         teamView.classList.remove("is-active");
         teamView.innerHTML = "";
         renderList();
       }
 
-      [searchTeams, divisionFilter, sortTeams].forEach(el => el.addEventListener("input", renderList));
-      [divisionFilter, sortTeams].forEach(el => el.addEventListener("change", renderList));
-      window.addEventListener("hashchange", route);
+      function setupEvents() {
+        [searchTeams, divisionFilter, sortTeams].forEach((el) => el.addEventListener("input", renderList));
+        divisionFilter.addEventListener("change", renderList);
+        sortTeams.addEventListener("change", renderList);
+        window.addEventListener("hashchange", route);
+      }
 
-      fetch(JSON_URL, { cache:"no-store" })
-        .then(res => { if (!res.ok) throw new Error(`Kunde inte läsa ${JSON_URL} (${res.status})`); return res.json(); })
-        .then(raw => {
-          const data = extract(raw);
-          teams = aggregateTeams(data);
-          lastUpdated.textContent = data.updated ? "Uppdaterad: " + formatUpdated(data.updated) : "";
-          route();
+      teamsList.innerHTML = `<div class="empty-state">Laddar lag...</div>`;
+
+      fetch(JSON_URL, { cache: "no-store" })
+        .then((response) => {
+          if (!response.ok) throw new Error(`Kunde inte läsa ${JSON_URL} (${response.status})`);
+          return response.json();
         })
-        .catch(err => {
-          teamsList.innerHTML = `<div class="empty-state">Fel vid laddning: ${escapeHtml(err.message)}. Kontrollera att svenska-lag-historia.json finns i samma mapp.</div>`;
+        .then((loaded) => {
+          rawData = extractJsonResultObject(loaded);
+          teams = buildTeams(rawData);
+
+          if (!teams.length) {
+            teamsList.innerHTML = `<div class="empty-state">Inga lag hittades i JSON:en. Sidan letar efter <strong>lag</strong>, <strong>teams</strong> eller <strong>svenskaLag</strong>.</div>`;
+            teamsSummary.innerHTML = "";
+          } else {
+            route();
+          }
+
+          const updated = rawData.updated || loaded.updated || "";
+          lastUpdated.textContent = updated ? "Senast uppdaterad: " + formatUpdated(updated) : "Senast uppdaterad: " + new Date().toLocaleDateString("sv-SE");
+          setupEvents();
+        })
+        .catch((err) => {
+          teamsList.innerHTML = `<div class="empty-state">Fel vid laddning: ${escapeHtml(err.message)}</div>`;
           teamsSummary.innerHTML = "";
+          lastUpdated.textContent = "";
+          setupEvents();
         });
     })();
   </script>
