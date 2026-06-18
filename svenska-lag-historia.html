@@ -670,6 +670,7 @@
               seasonKeys: new Set(),
               playerIDs: new Set(),
               playerNames: new Set(),
+              teamNames: new Set(),
               stats: {
                 gamesPlayed: 0,
                 wins: 0,
@@ -702,6 +703,8 @@
           }
 
           if (team.division) agg.divisions.add(team.division);
+          if (team.name) agg.teamNames.add(team.name);
+          if (team.seasonTeamName) agg.teamNames.add(team.seasonTeamName);
           const sKey = teamSeasonKey(team);
           if (!agg.seasonKeys.has(sKey)) {
             agg.seasonKeys.add(sKey);
@@ -846,7 +849,7 @@
 
                 <div class="team-note">
                   <strong>Topp spelare:</strong> ${escapeHtml(team.topPlayerName || "-")}${team.topPlayerName ? `, ${team.topPlayerPoints}p` : ""}<br>
-                  <strong>Senast:</strong> ${escapeHtml(team.latestSeasonLabel || "-")} ${team.latestDivision ? `• ${escapeHtml(team.latestDivision)}` : ""}
+                  <strong>Senast:</strong> ${escapeHtml(team.latestSeasonLabel || "-")} ${team.latestDivision ? `• ${escapeHtml(team.latestDivision)}` : ""}${team.teamNames && team.teamNames.size > 1 ? `<br><strong>Namn genom åren:</strong> ${[...team.teamNames].slice(0, 4).map(escapeHtml).join(", ")}${team.teamNames.size > 4 ? " ..." : ""}` : ""}
                 </div>
               </div>
             </a>
@@ -972,7 +975,7 @@
         return `
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Säsong</th><th>Division</th><th>Spelare</th><th>Matcher</th><th>Record</th><th>Poäng</th><th>GF-GA</th><th>Länk</th></tr></thead>
+              <thead><tr><th>Säsong</th><th>Lagnamn då</th><th>Division</th><th>Spelare</th><th>Matcher</th><th>Record</th><th>Poäng</th><th>GF-GA</th><th>Länk</th></tr></thead>
               <tbody>
                 ${team.seasons.map(seasonCard => {
                   const detail = teamDetailsBySeasonKey.get(teamSeasonKey(seasonCard)) || seasonCard;
@@ -981,6 +984,7 @@
                   return `
                     <tr>
                       <td><strong>${escapeHtml(detail.seasonLabel || seasonCard.seasonLabel || "ECL")}</strong><div class="small">LeagueID: ${escapeHtml(detail.leagueID || "-")}</div></td>
+                      <td>${escapeHtml(detail.seasonTeamName || detail.name || seasonCard.seasonTeamName || seasonCard.name || "-")}</td>
                       <td>${escapeHtml(detail.division || "-")}</td>
                       <td>${players}</td>
                       <td>${safeNumber(s.gamesPlayed)}</td>
