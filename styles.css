@@ -1,0 +1,62 @@
+:root {
+  color-scheme: dark;
+  --bg: #05070b;
+  --panel: rgba(3, 6, 10, 0.9);
+  --line: rgba(156, 219, 215, 0.18);
+  --gold: #e9c56e;
+  --ice: #69e1d4;
+  --text: #eef7f6;
+  --muted: #9eacb7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(120, 223, 241, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(120, 223, 241, 0.06) 1px, transparent 1px),
+    radial-gradient(900px 440px at 8% -12%, rgba(233, 197, 110, 0.11), transparent 58%),
+    linear-gradient(180deg, #07141b 0%, #061116 56%, #04090d 100%);
+  background-size: 64px 64px, 64px 64px, 100% 100%, 100% 100%;
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.boot {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--gold);
+  font-weight: 800;
+}
+
+.spa-shell {
+  height: 100%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  background:
+    linear-gradient(90deg, rgba(120, 223, 241, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(120, 223, 241, 0.06) 1px, transparent 1px),
+    linear-gradient(135deg, rgba(5, 10, 14, 0.94), rgba(4, 9, 13, 0.98)),
+    url("./assets/bgsommar.png") center / cover fixed;
+  background-size: 64px 64px, 64px 64px, cover, cover;
+}
+
+
+.legacy-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #061018;
+}
