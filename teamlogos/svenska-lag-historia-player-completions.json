@@ -1,0 +1,9 @@
+{
+  "source": "manual player stat completions",
+  "updated": "2026-06-25 00:00:00",
+  "notes": [
+    "Kompletterar saknade spelar-GP där SportsGamer/all-time-underlag visar fler matcher än nhlgamer_playerStats-exporten.",
+    "Kval kan ingå i spelarstatistik, men kval räknas fortfarande inte som ECL-säsong på lagkorten."
+  ],
+  "completions": []
+}
