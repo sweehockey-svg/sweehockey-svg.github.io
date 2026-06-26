@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#05070b">
   <link rel="icon" type="image/png" href="./assets/SECLOGGA.png">
   <link rel="apple-touch-icon" href="./assets/SECLOGGA.png">
-  <link rel="stylesheet" href="./styles.css?v=logo-exact-srcdoc-20260627">
+  <link rel="stylesheet" href="./styles.css?v=logo-cache-bust-20260627">
 </head>
 <body>
   <div id="app">
@@ -16,14 +16,14 @@
   </div>
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=logo-exact-srcdoc-20260627").catch(function () {});
+      navigator.serviceWorker.register("./sw.js?v=logo-cache-bust-20260627").catch(function () {});
       navigator.serviceWorker.addEventListener("controllerchange", function () {
-        if (sessionStorage.getItem("svensk-ehockey-sw-reloaded") === "1") return;
+        if (sessionStorage.getItem("svensk-ehockey-sw-reloaded-logo-cache-bust-20260627") === "1") return;
         sessionStorage.setItem("svensk-ehockey-sw-reloaded", "1");
         location.reload();
       });
     }
   </script>
-  <script src="./app.js?v=logo-exact-srcdoc-20260627"></script>
+  <script src="./app.js?v=logo-cache-bust-20260627"></script>
 </body>
 </html>

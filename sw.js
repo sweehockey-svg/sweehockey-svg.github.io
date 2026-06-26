@@ -1,4 +1,4 @@
-const PLACEHOLDER_VERSION = "logo-fallback-20260627";
+const PLACEHOLDER_VERSION = "logo-cache-bust-20260627";
 
 function teamShortNameFromUrl(url) {
   const file = decodeURIComponent(url.pathname.split("/").pop() || "Lag");
@@ -32,7 +32,7 @@ function logoPlaceholder(url) {
     status: 200,
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=86400",
+      "Cache-Control": "no-store",
       "X-Svensk-Ehockey-Fallback": PLACEHOLDER_VERSION
     }
   });
