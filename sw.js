@@ -1,4 +1,4 @@
-const ASSET_VERSION = "sw-image-rescue-20260627d";
+const ASSET_VERSION = "sw-image-rescue-20260627f";
 const MANIFESTS = {
   players: { file: "players.json", folder: "players", items: null, promise: null },
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }
@@ -175,11 +175,6 @@ self.addEventListener("fetch", (event) => {
   if (isKnownStatic) return;
 
   event.respondWith((async () => {
-    try {
-      const response = await fetch(event.request);
-      if (response.ok) return response;
-    } catch (error) {}
-
     const type = isPlayer ? "players" : "teamlogos";
     const resolved = await resolveAsset(url, type);
     if (resolved) {
