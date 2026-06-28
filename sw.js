@@ -1,4 +1,4 @@
-﻿const ASSET_VERSION = "sw-image-rescue-20260628e";
+﻿const ASSET_VERSION = "sw-image-rescue-20260628f";
 const MANIFESTS = {
   players: { file: "players.json", folder: "players", items: null, promise: null },
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }
