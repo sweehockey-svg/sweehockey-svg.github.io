@@ -146,7 +146,7 @@ function injectBridge(html) {
   const bridge = `
 <script>
 (function () {
-  const ASSET_VERSION = "sw-image-rescue-20260628l";
+  const ASSET_VERSION = "sw-image-rescue-20260629a";
   const nativeFetch = window.fetch.bind(window);
   window.fetch = function (input, init) {
     try {
@@ -182,11 +182,24 @@ function injectBridge(html) {
     return "";
   }
 
+  function isSecHref(href) {
+    try {
+      const url = new URL(href, parent.location.href);
+      return url.pathname.replace(/\\/+$/, "").toLowerCase() === "/sec";
+    } catch (error) {}
+    return false;
+  }
+
   document.addEventListener("click", function (event) {
     const link = event.target.closest && event.target.closest("a[href]");
     if (!link) return;
     const href = link.getAttribute("href") || "";
     if (href.startsWith("#")) return;
+    if (isSecHref(href)) {
+      event.preventDefault();
+      parent.location.href = new URL("/SEC/", parent.location.href).toString();
+      return;
+    }
     const route = routeFromHref(href);
     if (!route) return;
     event.preventDefault();
@@ -532,11 +545,24 @@ function injectBridge(html) {
     return "";
   }
 
+  function isSecHref(href) {
+    try {
+      const url = new URL(href, parent.location.href);
+      return url.pathname.replace(/\\/+$/, "").toLowerCase() === "/sec";
+    } catch (error) {}
+    return false;
+  }
+
   document.addEventListener("click", function (event) {
     const link = event.target.closest && event.target.closest("a[href]");
     if (!link) return;
     const href = link.getAttribute("href") || "";
     if (href.startsWith("#")) return;
+    if (isSecHref(href)) {
+      event.preventDefault();
+      parent.location.href = new URL("/SEC/", parent.location.href).toString();
+      return;
+    }
     const route = routeFromHref(href);
     if (!route) return;
     event.preventDefault();
@@ -564,7 +590,15 @@ function navMarkup(active) {
   `).join("");
 }
 
+function cleanNavParam() {
+  const url = new URL(location.href);
+  if (!url.searchParams.has("_nav")) return;
+  url.searchParams.delete("_nav");
+  history.replaceState(null, "", url.pathname + url.search + url.hash);
+}
+
 function render() {
+  cleanNavParam();
   const route = routeFromHash();
   const page = PAGES.find((item) => item.id === route) || PAGES[0];
   const html = PAGE_HTML[page.id] || PAGE_HTML.hem;
@@ -595,7 +629,7 @@ window.addEventListener("message", (event) => {
   }
   const nextUrl = new URL(location.href);
   nextUrl.hash = nextHash;
-  nextUrl.searchParams.set("_nav", String(Date.now()));
+  nextUrl.searchParams.delete("_nav");
   location.href = nextUrl.toString();
 });
 
