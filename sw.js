@@ -1,4 +1,4 @@
-const ASSET_VERSION = "sw-image-rescue-20260628c";
+const ASSET_VERSION = "sw-image-rescue-20260628k";
 const MANIFESTS = {
   players: { file: "players.json", folder: "players", items: null, promise: null },
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }
@@ -66,7 +66,9 @@ function svgPlaceholder(url, kind = "team") {
 }
 
 function assetUrl(folder, file) {
-  return "/" + folder + "/" + String(file || "")
+  const cleanFile = String(file || "").trim().replace(/^\/+|\/+$/g, "");
+  if (!cleanFile || !/\.(?:png|jpe?g|webp)$/i.test(cleanFile)) return "";
+  return "/" + folder + "/" + cleanFile
     .split("/")
     .map(encodeURIComponent)
     .join("/") + "?v=" + ASSET_VERSION;
@@ -83,7 +85,7 @@ async function readManifest(type) {
           ? files
               .filter((file) => /\.(?:png|jpe?g|webp)$/i.test(file))
               .map((file) => ({ file, key: slug(file), url: assetUrl(config.folder, file) }))
-              .filter((item) => item.key.length >= 3)
+              .filter((item) => item.url && item.key.length >= 3)
           : [];
         return config.items;
       })
