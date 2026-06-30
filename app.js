@@ -146,7 +146,7 @@ function injectBridge(html) {
   const bridge = `
 <script>
 (function () {
-  const ASSET_VERSION = "sw-image-rescue-20260629a";
+  const ASSET_VERSION = "sw-image-rescue-20260629b";
   const nativeFetch = window.fetch.bind(window);
   window.fetch = function (input, init) {
     try {
@@ -188,6 +188,74 @@ function injectBridge(html) {
       return url.pathname.replace(/\\/+$/, "").toLowerCase() === "/sec";
     } catch (error) {}
     return false;
+  }
+
+  function isActiveRoute(route) {
+    try {
+      return parent.location.hash.replace(/^#\\/?/, "") === route;
+    } catch (error) {}
+    return false;
+  }
+
+  function enhanceMainMenu() {
+    if (document.documentElement.dataset.svenskMenuEnhanced === "1") return;
+    document.documentElement.dataset.svenskMenuEnhanced = "1";
+
+    const style = document.createElement("style");
+    style.textContent = \`
+      .menu__group-label{
+        display:block;
+        margin:6px 8px 4px;
+        color:#69e1d4;
+        font-size:11px;
+        font-weight:950;
+        letter-spacing:.04em !important;
+        text-transform:uppercase;
+      }
+      .menu__divider{
+        height:1px;
+        margin:8px 4px;
+        background:rgba(255,255,255,.10);
+      }
+    \`;
+    document.head.appendChild(style);
+
+    const menuHtml = \`
+      <span class="menu__group-label">ECL 26 Spring</span>
+      <a class="menu__item" role="menuitem" href="/svenskecl26spring-byten.html">Byten</a>
+      <a class="menu__item" role="menuitem" href="/svenskecl26spring-matcher.html">Matcher</a>
+      <a class="menu__item" role="menuitem" href="/svenskecl26spring-lag.html">Lag</a>
+      <a class="menu__item" role="menuitem" href="/svenskecl26spring-statistik.html">Statistik</a>
+      <div class="menu__divider" aria-hidden="true"></div>
+      <span class="menu__group-label">ECL 26 Winter</span>
+      <a class="menu__item" role="menuitem" href="/svenskecl26winter-statistik.html">Statistik</a>
+    \`;
+
+    document.querySelectorAll("nav.nav").forEach((nav) => {
+      const dropdown = nav.querySelector(".dropdown");
+      const button = dropdown?.querySelector("[data-dropdown-btn]");
+      const menu = dropdown?.querySelector("[data-dropdown-menu]");
+      if (!dropdown || !button || !menu || !button.textContent.includes("Svensk ECL Statistik")) return;
+
+      menu.innerHTML = menuHtml;
+
+      if (!nav.querySelector("[data-laghistoria-main]")) {
+        const historyLink = document.createElement("a");
+        historyLink.className = "nav__link" + (isActiveRoute("laghistoria") ? " is-active" : "");
+        historyLink.href = "/svenska-lag-historia.html";
+        historyLink.dataset.laghistoriaMain = "true";
+        historyLink.textContent = "Laghistoria";
+        dropdown.insertAdjacentElement("afterend", historyLink);
+      }
+
+      if (isActiveRoute("laghistoria")) button.classList.remove("is-active", "active");
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", enhanceMainMenu, { once: true });
+  } else {
+    enhanceMainMenu();
   }
 
   document.addEventListener("click", function (event) {
