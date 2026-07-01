@@ -10,6 +10,11 @@ const PAGES = [
     "title": "Nyheter"
   },
   {
+    "id": "admin",
+    "file": "admin.html",
+    "title": "Admin"
+  },
+  {
     "id": "spring-byten",
     "file": "svenskecl26spring-byten.html",
     "title": "ECL 26 Spring - Byten"
@@ -45,6 +50,7 @@ const FILE_TO_ROUTE = new Map([
   ["", "hem"],
   ["/", "hem"],
   ["index.html", "hem"],
+  ["admin.html", "admin"],
   ["nyheter.html", "nyheter"],
   ["svenskecl26spring-byten.html", "spring-byten"],
   ["svenskecl26spring-matcher.html", "spring-matcher"],
@@ -59,6 +65,7 @@ const ROUTE_ALIASES = new Map([
   ["matcher", "spring-matcher"],
   ["byten", "spring-byten"],
   ["historia", "laghistoria"],
+  ["admin", "admin"],
   ["statistik", "spring-statistik"],
   ["spring", "spring-statistik"],
   ["winter", "winter-statistik"]
@@ -146,7 +153,7 @@ function injectBridge(html) {
   const bridge = `
 <script>
 (function () {
-  const ASSET_VERSION = "sw-image-rescue-20260629b";
+  const ASSET_VERSION = "admin-prompt-20260701b";
   const nativeFetch = window.fetch.bind(window);
   window.fetch = function (input, init) {
     try {
@@ -163,6 +170,7 @@ function injectBridge(html) {
     "": "hem",
     "/": "hem",
     "index.html": "hem",
+    "admin.html": "admin",
     "nyheter.html": "nyheter",
     "svenskecl26spring-byten.html": "spring-byten",
     "svenskecl26spring-matcher.html": "spring-matcher",
@@ -221,6 +229,8 @@ function injectBridge(html) {
     document.head.appendChild(style);
 
     const menuHtml = \`
+      <a class="menu__item" role="menuitem" href="/svenska-lag-historia.html">Laghistoria</a>
+      <div class="menu__divider" aria-hidden="true"></div>
       <span class="menu__group-label">ECL 26 Spring</span>
       <a class="menu__item" role="menuitem" href="/svenskecl26spring-byten.html">Byten</a>
       <a class="menu__item" role="menuitem" href="/svenskecl26spring-matcher.html">Matcher</a>
@@ -239,13 +249,17 @@ function injectBridge(html) {
 
       menu.innerHTML = menuHtml;
 
-      if (!nav.querySelector("[data-laghistoria-main]")) {
-        const historyLink = document.createElement("a");
-        historyLink.className = "nav__link" + (isActiveRoute("laghistoria") ? " is-active" : "");
-        historyLink.href = "/svenska-lag-historia.html";
-        historyLink.dataset.laghistoriaMain = "true";
-        historyLink.textContent = "Laghistoria";
-        dropdown.insertAdjacentElement("afterend", historyLink);
+      nav.querySelectorAll("[data-laghistoria-main]").forEach((link) => link.remove());
+
+      if (!nav.querySelector("[data-admin-main]")) {
+        const adminLink = document.createElement("a");
+        adminLink.className = "nav__link" + (isActiveRoute("admin") ? " is-active" : "");
+        adminLink.href = "/admin.html";
+        adminLink.dataset.adminMain = "true";
+        adminLink.textContent = "Admin";
+        const searchButton = nav.querySelector(".iconbtn");
+        if (searchButton) searchButton.insertAdjacentElement("beforebegin", adminLink);
+        else nav.appendChild(adminLink);
       }
 
       if (isActiveRoute("laghistoria")) button.classList.remove("is-active", "active");
@@ -665,10 +679,447 @@ function cleanNavParam() {
   history.replaceState(null, "", url.pathname + url.search + url.hash);
 }
 
+const ADMIN_WORKER_STORAGE_KEY = "svensk-ehockey-admin-worker-url";
+const ADMIN_TOKEN_STORAGE_KEY = "svensk-ehockey-admin-token";
+const ADMIN_PENDING_PASSWORD_KEY = "svensk-ehockey-admin-pending-password";
+const ADMIN_JSON_FILES = [
+  "svenskstatistikecl26spring.json",
+  "svenska-lag-historia.json",
+  "svenska-lag-historia-teams.json",
+  "svenska-lag-historia-team-history.json",
+  "svenska-lag-historia-player-history.json",
+  "svenska-lag-historia-player-completions.json",
+  "svenska-lag-historia-podiums.json",
+  "teamlogos.json",
+  "players.json"
+];
+
+function hasAdminSession() {
+  return Boolean(sessionStorage.getItem(ADMIN_TOKEN_STORAGE_KEY));
+}
+
+function getAdminWorkerUrl() {
+  return localStorage.getItem(ADMIN_WORKER_STORAGE_KEY) || "";
+}
+
+function normalizeAdminWorkerUrl(value) {
+  return String(value || "").trim().replace(/\/+$/, "");
+}
+
+function renderAdminCancelled(panel) {
+  panel.innerHTML = `
+    <div class="admin-login">
+      <p class="admin-status">Inloggning avbruten.</p>
+      <div class="admin-login__row">
+        <button type="button" id="retryAdminLogin">Forsok igen</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("retryAdminLogin").addEventListener("click", () => {
+    renderAdminCloudflare();
+  });
+}
+
+function captureAdminPassword() {
+  const password = window.prompt("Admin-losenord:");
+  if (password === null) return false;
+  sessionStorage.setItem(ADMIN_PENDING_PASSWORD_KEY, password);
+  return true;
+}
+
+function renderAdminLoginButton(panel) {
+  panel.innerHTML = `
+    <div class="admin-login">
+      <p class="admin-status">Logga in for att oppna adminpanelen.</p>
+      <div class="admin-login__row">
+        <button type="button" id="openAdminPrompt">Logga in</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("openAdminPrompt").addEventListener("click", () => {
+    if (captureAdminPassword()) {
+      renderAdminCloudflare();
+    } else {
+      renderAdminCancelled(panel);
+    }
+  });
+}
+
+function renderAdminWorkerSetup(panel, statusText = "") {
+  panel.innerHTML = `
+    <form class="admin-login" id="adminWorkerSetup">
+      <label for="adminWorkerUrl">Cloudflare Worker-URL</label>
+      <div class="admin-login__row">
+        <input id="adminWorkerUrl" type="url" autocomplete="url" placeholder="https://din-worker.workers.dev" value="${escapeHtml(getAdminWorkerUrl())}">
+        <button type="submit">Anslut</button>
+      </div>
+      <p class="admin-status" id="adminStatus">${escapeHtml(statusText || "Losenordet ar taget. Klistra in Worker-URL for att oppna adminpanelen.")}</p>
+    </form>
+  `;
+
+  document.getElementById("adminWorkerSetup").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const status = document.getElementById("adminStatus");
+    const workerUrl = normalizeAdminWorkerUrl(document.getElementById("adminWorkerUrl").value);
+    const password = sessionStorage.getItem(ADMIN_PENDING_PASSWORD_KEY) || "";
+    if (!workerUrl) {
+      status.textContent = "Fyll i Cloudflare Worker-URL.";
+      return;
+    }
+    if (!password) {
+      status.textContent = "Losenord saknas. Oppna admin igen.";
+      return;
+    }
+    localStorage.setItem(ADMIN_WORKER_STORAGE_KEY, workerUrl);
+    status.textContent = "Loggar in via Cloudflare...";
+    try {
+      const result = await adminWorkerRequest("login", { password });
+      sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, result.token || password);
+      sessionStorage.removeItem(ADMIN_PENDING_PASSWORD_KEY);
+      renderAdminCloudflare();
+    } catch (error) {
+      status.textContent = "Fel vid inloggning: " + error.message;
+    }
+  });
+}
+
+function renderAdminPromptLogin(panel) {
+  if (!sessionStorage.getItem(ADMIN_PENDING_PASSWORD_KEY)) {
+    renderAdminLoginButton(panel);
+    return;
+  }
+
+  const password = sessionStorage.getItem(ADMIN_PENDING_PASSWORD_KEY) || "";
+  if (!getAdminWorkerUrl()) {
+    renderAdminWorkerSetup(panel);
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="admin-login">
+      <p class="admin-status">Loggar in via Cloudflare...</p>
+    </div>
+  `;
+
+  adminWorkerRequest("login", { password })
+    .then((result) => {
+      sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, result.token || password);
+      sessionStorage.removeItem(ADMIN_PENDING_PASSWORD_KEY);
+      renderAdminCloudflare();
+    })
+    .catch((error) => {
+      sessionStorage.removeItem(ADMIN_PENDING_PASSWORD_KEY);
+      renderAdminWorkerSetup(panel, "Fel vid inloggning: " + error.message);
+    });
+}
+
+async function adminWorkerRequest(action, payload = {}) {
+  const endpoint = normalizeAdminWorkerUrl(getAdminWorkerUrl());
+  if (!endpoint) throw new Error("Saknar Cloudflare Worker-URL.");
+
+  const token = sessionStorage.getItem(ADMIN_TOKEN_STORAGE_KEY) || "";
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: "Bearer " + token } : {})
+    },
+    body: JSON.stringify({ action, ...payload })
+  });
+
+  const text = await response.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { ok: false, error: text || "Ogiltigt svar fran Cloudflare Worker." };
+  }
+
+  if (!response.ok || data.ok === false) {
+    throw new Error(data.error || "Cloudflare Worker svarade med HTTP " + response.status);
+  }
+  return data;
+}
+
+function renderAdmin() {
+  document.title = "Admin - Svensk eHockey";
+  app.innerHTML = `
+    <main class="admin-page">
+      <section class="admin-hero">
+        <p class="admin-kicker">ADMIN</p>
+        <h1>JSON-hantering</h1>
+        <p>Ladda in nya JSON-filer, validera dem och använd dem direkt på sidan som lokala overrides.</p>
+      </section>
+      <section class="admin-panel" id="adminPanel"></section>
+    </main>
+  `;
+
+  const panel = document.getElementById("adminPanel");
+  if (!hasAdminSession()) {
+    panel.innerHTML = `
+      <form class="admin-login" id="adminLogin">
+        <label for="adminPassword">Lösenord</label>
+        <div class="admin-login__row">
+          <input id="adminPassword" type="password" autocomplete="current-password" placeholder="Adminlösenord">
+          <button type="submit">Logga in</button>
+        </div>
+        <p class="admin-status" id="adminStatus"></p>
+      </form>
+    `;
+    document.getElementById("adminLogin").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const password = document.getElementById("adminPassword").value;
+      if (password !== ADMIN_PASSWORD) {
+        document.getElementById("adminStatus").textContent = "Fel lösenord.";
+        return;
+      }
+      sessionStorage.setItem("svensk-ehockey-admin", "1");
+      renderAdmin();
+    });
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="admin-toolbar">
+      <button type="button" id="reloadSite">Ladda om sidan</button>
+      <button type="button" id="logoutAdmin">Logga ut</button>
+    </div>
+    <form class="admin-uploader" id="jsonUploader">
+      <label>
+        JSON-fil på sidan
+        <select id="jsonTarget">
+          ${ADMIN_JSON_FILES.map((file) => `<option value="${escapeHtml(file)}">${escapeHtml(file)}</option>`).join("")}
+        </select>
+      </label>
+      <label>
+        Välj ny fil
+        <input id="jsonFile" type="file" accept="application/json,.json">
+      </label>
+      <button type="submit">Ladda JSON</button>
+      <p class="admin-status" id="jsonStatus"></p>
+    </form>
+    <div class="admin-file-grid" id="adminFileGrid"></div>
+  `;
+
+  const grid = document.getElementById("adminFileGrid");
+  const renderList = () => {
+    grid.innerHTML = ADMIN_JSON_FILES.map((file) => {
+      const meta = JSON.parse(localStorage.getItem(jsonOverrideMetaKey(file)) || "null");
+      return `
+        <article class="admin-file-card">
+          <div>
+            <strong>${escapeHtml(file)}</strong>
+            <span>${meta ? `Override: ${escapeHtml(meta.name)} · ${escapeHtml(meta.size)} · ${escapeHtml(meta.time)}` : "Originalfil används"}</span>
+          </div>
+          <div class="admin-file-actions">
+            <button type="button" data-download="${escapeHtml(file)}" ${meta ? "" : "disabled"}>Exportera</button>
+            <button type="button" data-clear="${escapeHtml(file)}" ${meta ? "" : "disabled"}>Rensa</button>
+          </div>
+        </article>
+      `;
+    }).join("");
+  };
+
+  renderList();
+
+  document.getElementById("logoutAdmin").addEventListener("click", () => {
+    sessionStorage.removeItem("svensk-ehockey-admin");
+    renderAdmin();
+  });
+
+  document.getElementById("reloadSite").addEventListener("click", () => {
+    location.href = location.pathname + "?v=admin-prompt-20260701b#/" + routeFromHash();
+    location.reload();
+  });
+
+  document.getElementById("jsonUploader").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const status = document.getElementById("jsonStatus");
+    const target = document.getElementById("jsonTarget").value;
+    const file = document.getElementById("jsonFile").files[0];
+    if (!file) {
+      status.textContent = "Välj en JSON-fil först.";
+      return;
+    }
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const pretty = JSON.stringify(parsed, null, 2);
+      localStorage.setItem(jsonOverrideKey(target), pretty);
+      localStorage.setItem(jsonOverrideMetaKey(target), JSON.stringify({
+        name: file.name,
+        size: Math.round(file.size / 1024) + " kB",
+        time: new Date().toLocaleString("sv-SE")
+      }));
+      status.textContent = target + " laddad och validerad.";
+      renderList();
+    } catch (error) {
+      status.textContent = "JSON-fel: " + error.message;
+    }
+  });
+
+  grid.addEventListener("click", (event) => {
+    const clearFile = event.target.closest("[data-clear]")?.dataset.clear;
+    const downloadFile = event.target.closest("[data-download]")?.dataset.download;
+    if (clearFile) {
+      localStorage.removeItem(jsonOverrideKey(clearFile));
+      localStorage.removeItem(jsonOverrideMetaKey(clearFile));
+      renderList();
+      return;
+    }
+    if (downloadFile) {
+      const data = localStorage.getItem(jsonOverrideKey(downloadFile));
+      if (!data) return;
+      const blob = new Blob([data], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = downloadFile;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+  });
+}
+
+function renderAdminCloudflare() {
+  document.title = "Admin - Svensk eHockey";
+  app.innerHTML = `
+    <main class="admin-page">
+      <section class="admin-hero">
+        <p class="admin-kicker">ADMIN</p>
+        <h1>Cloudflare JSON-admin</h1>
+        <p>Ladda upp JSON-filer via Cloudflare Worker. Workern skriver filerna till GitHub-repot, sa andringen blir permanent pa sidan.</p>
+      </section>
+      <section class="admin-panel" id="adminPanel"></section>
+    </main>
+  `;
+
+  const panel = document.getElementById("adminPanel");
+  if (!hasAdminSession()) {
+    renderAdminPromptLogin(panel);
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="admin-toolbar">
+      <span class="admin-endpoint">${escapeHtml(getAdminWorkerUrl())}</span>
+      <button type="button" id="refreshFiles">Uppdatera lista</button>
+      <button type="button" id="reloadSite">Ladda om sidan</button>
+      <button type="button" id="logoutAdmin">Logga ut</button>
+    </div>
+    <form class="admin-uploader" id="jsonUploader">
+      <label>
+        JSON-fil pa sidan
+        <select id="jsonTarget">
+          ${ADMIN_JSON_FILES.map((file) => `<option value="${escapeHtml(file)}">${escapeHtml(file)}</option>`).join("")}
+        </select>
+      </label>
+      <label>
+        Valj ny fil
+        <input id="jsonFile" type="file" accept="application/json,.json">
+      </label>
+      <button type="submit">Ladda upp till GitHub</button>
+      <p class="admin-status" id="jsonStatus"></p>
+    </form>
+    <div class="admin-file-grid" id="adminFileGrid"></div>
+  `;
+
+  const grid = document.getElementById("adminFileGrid");
+  const renderList = async () => {
+    grid.innerHTML = `<article class="admin-file-card"><strong>Laddar Cloudflare-status...</strong></article>`;
+    let files = {};
+    try {
+      const result = await adminWorkerRequest("list", { files: ADMIN_JSON_FILES });
+      files = result.files || {};
+    } catch (error) {
+      grid.innerHTML = `<article class="admin-file-card"><strong>Fel vid laddning</strong><span>${escapeHtml(error.message)}</span></article>`;
+      return;
+    }
+
+    grid.innerHTML = ADMIN_JSON_FILES.map((file) => {
+      const meta = files[file] || null;
+      return `
+        <article class="admin-file-card">
+          <div>
+            <strong>${escapeHtml(file)}</strong>
+            <span>${meta?.exists ? `GitHub: ${escapeHtml(meta.sha || "")} - ${escapeHtml(meta.updated || "uppladdad")}` : "Ingen fil hittad via Workern"}</span>
+          </div>
+          <div class="admin-file-actions">
+            <button type="button" data-download="${escapeHtml(file)}" ${meta?.exists ? "" : "disabled"}>Visa fil</button>
+            <button type="button" data-clear="${escapeHtml(file)}" ${meta?.exists ? "" : "disabled"}>Ta bort</button>
+          </div>
+        </article>
+      `;
+    }).join("");
+  };
+
+  renderList();
+
+  document.getElementById("refreshFiles").addEventListener("click", () => {
+    renderList();
+  });
+
+  document.getElementById("logoutAdmin").addEventListener("click", () => {
+    sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+    renderAdminCloudflare();
+  });
+
+  document.getElementById("reloadSite").addEventListener("click", () => {
+    location.href = location.pathname + "?v=admin-prompt-20260701b#/" + routeFromHash();
+    location.reload();
+  });
+
+  document.getElementById("jsonUploader").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const status = document.getElementById("jsonStatus");
+    const target = document.getElementById("jsonTarget").value;
+    const file = document.getElementById("jsonFile").files[0];
+    if (!file) {
+      status.textContent = "Valj en JSON-fil forst.";
+      return;
+    }
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const pretty = JSON.stringify(parsed, null, 2);
+      status.textContent = "Laddar upp " + target + " via Cloudflare...";
+      await adminWorkerRequest("upload", {
+        file: target,
+        content: pretty,
+        sourceName: file.name
+      });
+      status.textContent = target + " uppladdad till GitHub.";
+      renderList();
+    } catch (error) {
+      status.textContent = "Fel: " + error.message;
+    }
+  });
+
+  grid.addEventListener("click", async (event) => {
+    const clearFile = event.target.closest("[data-clear]")?.dataset.clear;
+    const downloadFile = event.target.closest("[data-download]")?.dataset.download;
+    if (clearFile) {
+      try {
+        await adminWorkerRequest("delete", { file: clearFile });
+        renderList();
+      } catch (error) {
+        alert("Kunde inte ta bort: " + error.message);
+      }
+      return;
+    }
+    if (downloadFile) {
+      window.open(normalizeAdminWorkerUrl(getAdminWorkerUrl()) + "?file=" + encodeURIComponent(downloadFile), "_blank", "noopener");
+    }
+  });
+}
+
 function render() {
   cleanNavParam();
   const route = routeFromHash();
   const page = PAGES.find((item) => item.id === route) || PAGES[0];
+  if (page.id === "admin") {
+    renderAdminCloudflare();
+    return;
+  }
   const html = PAGE_HTML[page.id] || PAGE_HTML.hem;
 
   document.title = page.title + " - Svensk eHockey";
@@ -690,6 +1141,9 @@ window.addEventListener("message", (event) => {
   if (event.data?.type !== "svensk-ehockey-route") return;
   const route = event.data.route;
   if (!PAGES.some((page) => page.id === route)) return;
+  if (route === "admin" && !hasAdminSession() && !sessionStorage.getItem(ADMIN_PENDING_PASSWORD_KEY)) {
+    if (!captureAdminPassword()) return;
+  }
   const nextHash = "#/" + route;
   if (location.hash === nextHash) {
     render();

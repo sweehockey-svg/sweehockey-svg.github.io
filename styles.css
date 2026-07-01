@@ -60,3 +60,162 @@ body {
   border: 0;
   background: #061018;
 }
+
+.admin-page {
+  min-height: 100vh;
+  overflow: auto;
+  padding: 40px clamp(18px, 4vw, 56px);
+  color: #eef7f6;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(105,225,212,.16), transparent 28%),
+    linear-gradient(135deg, #07111b, #05070b 70%);
+}
+
+.admin-hero,
+.admin-panel {
+  width: min(1120px, 100%);
+  margin: 0 auto 18px;
+  border: 1px solid rgba(156,219,215,.20);
+  border-radius: 16px;
+  background: rgba(8, 14, 22, .88);
+  box-shadow: 0 24px 70px rgba(0,0,0,.40);
+}
+
+.admin-hero { padding: 34px; }
+
+.admin-kicker {
+  margin: 0 0 8px;
+  color: #69e1d4;
+  font-weight: 950;
+  letter-spacing: .04em;
+}
+
+.admin-hero h1 {
+  margin: 0 0 12px;
+  color: #e9c56e;
+  font-size: clamp(38px, 6vw, 72px);
+  line-height: .95;
+}
+
+.admin-hero p,
+.admin-status,
+.admin-file-card span { color: #a8b8c9; }
+
+.admin-panel { padding: 24px; }
+
+.admin-login,
+.admin-uploader { display: grid; gap: 16px; }
+
+.admin-login__row,
+.admin-toolbar,
+.admin-file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-toolbar {
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.admin-endpoint {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  flex: 1 1 280px;
+  min-width: 0;
+  padding: 0 12px;
+  border: 1px solid rgba(156,219,215,.16);
+  border-radius: 10px;
+  background: rgba(255,255,255,.035);
+  color: #a8b8c9;
+  font-size: 13px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-login label,
+.admin-uploader label {
+  display: grid;
+  gap: 8px;
+  color: #e9c56e;
+  font-weight: 900;
+}
+
+.admin-login input,
+.admin-uploader input,
+.admin-uploader select {
+  min-height: 48px;
+  border: 1px solid rgba(233,197,110,.35);
+  border-radius: 10px;
+  padding: 0 14px;
+  background: #050a10;
+  color: #eef7f6;
+  font: inherit;
+  font-weight: 800;
+}
+
+.admin-login button,
+.admin-uploader button,
+.admin-toolbar button,
+.admin-file-actions button {
+  min-height: 42px;
+  border: 1px solid rgba(233,197,110,.45);
+  border-radius: 10px;
+  padding: 0 16px;
+  background: rgba(233,197,110,.12);
+  color: #fff;
+  font: inherit;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.admin-login button:hover,
+.admin-uploader button:hover,
+.admin-toolbar button:hover,
+.admin-file-actions button:hover {
+  background: rgba(233,197,110,.22);
+}
+
+.admin-file-actions button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.admin-file-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.admin-file-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid rgba(156,219,215,.16);
+  border-radius: 12px;
+  background: rgba(255,255,255,.035);
+}
+
+.admin-file-card div:first-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-file-card strong {
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .admin-file-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
