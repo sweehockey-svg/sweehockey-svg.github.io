@@ -226,6 +226,7 @@ WHERE podium_rows.teamID IS NOT NULL
     OR COALESCE(', @league_name_column, ', '''') LIKE ''%eSHL%''
     OR COALESCE(', @league_name_column, ', '''') LIKE ''SCL 6v6%''
     OR COALESCE(', @league_name_column, ', '''') LIKE ''%Swedish Championship League%''
+    OR podium_rows.leagueID = 520
   )
   AND COALESCE(', @league_name_column, ', '''') NOT LIKE ''%Warmup%''
   AND COALESCE(', @league_name_column, ', '''') NOT LIKE ''%Pre-Season%''

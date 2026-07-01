@@ -123,6 +123,7 @@ ecl_league_map_raw AS (
   UNION ALL SELECT 476, 'SEC', NULL, NULL, 'SEC 19'
   UNION ALL SELECT 497, 'SEC DIV 1', NULL, NULL, 'SEC 20 DIV 1'
   UNION ALL SELECT 498, 'SEC DIV 2', NULL, NULL, 'SEC 20 DIV 2'
+  UNION ALL SELECT 520, 'SEC', NULL, NULL, 'SEC 21'
 ),
 
 ecl_league_map AS (
@@ -135,7 +136,7 @@ ecl_league_map AS (
     CASE
       WHEN leagueID IN (47,83,148,233,310,369,447) THEN 'SCL'
       WHEN leagueID IN (60,268) THEN 'ESHL'
-      WHEN leagueID IN (358,393,398,441,470,476,497,498) THEN 'SEC'
+      WHEN leagueID IN (358,393,398,441,470,476,497,498,520) THEN 'SEC'
       ELSE 'ECL'
     END AS leagueFamily,
     CASE
@@ -178,6 +179,7 @@ ecl_league_map AS (
       WHEN leagueID = 476 THEN 'SEC 19'
       WHEN leagueID = 497 THEN 'SEC 20 DIV 1'
       WHEN leagueID = 498 THEN 'SEC 20 DIV 2'
+      WHEN leagueID = 520 THEN 'SEC 21'
       ELSE CONCAT('League ', leagueID)
     END AS seasonLabel,
     LOWER(REPLACE(divisionName, ' ', '-')) AS divisionKey
@@ -409,6 +411,7 @@ swedish_team_seasons AS (
   WHERE (
      lm.leagueFamily IN ('SCL', 'ESHL')
      OR lt.country = 'SE'
+     OR lm.leagueID = 520
      OR mst.teamID IS NOT NULL
     )
     AND LOWER(TRIM(COALESCE(NULLIF(lt.teamName, ''), t.teamName, ''))) <> 'hidden gemz'
