@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#05070b">
   <link rel="icon" type="image/png" href="./assets/SECLOGGA.png">
   <link rel="apple-touch-icon" href="./assets/SECLOGGA.png">
-  <link rel="stylesheet" href="./styles.css?v=home-admin-entry-20260701">
+  <link rel="stylesheet" href="./styles.css?v=json-workflow-update-20260701">
 </head>
 <body>
   <div id="app">
@@ -16,14 +16,14 @@
   </div>
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=home-admin-entry-20260701").catch(function () {});
+      navigator.serviceWorker.register("./sw.js?v=json-workflow-update-20260701").catch(function () {});
       navigator.serviceWorker.addEventListener("controllerchange", function () {
-        if (sessionStorage.getItem("svensk-ehockey-sw-reloaded-home-admin-entry-20260701") === "1") return;
-        sessionStorage.setItem("svensk-ehockey-sw-reloaded-home-admin-entry-20260701", "1");
+        if (sessionStorage.getItem("svensk-ehockey-sw-reloaded-json-workflow-update-20260701") === "1") return;
+        sessionStorage.setItem("svensk-ehockey-sw-reloaded-json-workflow-update-20260701", "1");
         location.reload();
       });
     }
   </script>
-  <script src="./app.js?v=home-admin-entry-20260701"></script>
+  <script src="./app.js?v=json-workflow-update-20260701"></script>
 </body>
 </html>

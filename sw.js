@@ -1,4 +1,4 @@
-const ASSET_VERSION = "home-admin-entry-20260701";
+const ASSET_VERSION = "json-workflow-update-20260701";
 const MANIFESTS = {
   players: { file: "players.json", folder: "players", items: null, promise: null },
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }

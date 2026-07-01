@@ -153,7 +153,7 @@ function injectBridge(html) {
   const bridge = `
 <script>
 (function () {
-  const ASSET_VERSION = "home-admin-entry-20260701";
+  const ASSET_VERSION = "json-workflow-update-20260701";
   const nativeFetch = window.fetch.bind(window);
   window.fetch = function (input, init) {
     try {
@@ -740,6 +740,14 @@ const ADMIN_JSON_FILES = [
   "teamlogos.json",
   "players.json"
 ];
+const ADMIN_AUTO_UPDATE_FILES = new Set([
+  "svenskstatistikecl26spring.json",
+  "svenska-lag-historia.json",
+  "svenska-lag-historia-teams.json",
+  "svenska-lag-historia-player-history.json",
+  "svenska-lag-historia-player-completions.json",
+  "svenska-lag-historia-podiums.json"
+]);
 
 function hasAdminSession() {
   return Boolean(sessionStorage.getItem(ADMIN_TOKEN_STORAGE_KEY));
@@ -979,7 +987,7 @@ function renderAdmin() {
   });
 
   document.getElementById("reloadSite").addEventListener("click", () => {
-    location.href = location.pathname + "?v=home-admin-entry-20260701#/" + routeFromHash();
+    location.href = location.pathname + "?v=json-workflow-update-20260701#/" + routeFromHash();
     location.reload();
   });
 
@@ -1038,7 +1046,7 @@ function renderAdminCloudflare() {
       <section class="admin-hero">
         <p class="admin-kicker">ADMIN</p>
         <h1>Cloudflare JSON-admin</h1>
-        <p>Ladda upp JSON-filer via Cloudflare Worker. Workern skriver filerna till GitHub-repot, sa andringen blir permanent pa sidan.</p>
+        <p>Klicka pa den JSON-fil som ska uppdateras. Workern triggar GitHub Actions via Cloudflare, sa filen byggs om och hamnar i GitHub.</p>
       </section>
       <section class="admin-panel" id="adminPanel"></section>
     </main>
@@ -1053,10 +1061,12 @@ function renderAdminCloudflare() {
   panel.innerHTML = `
     <div class="admin-toolbar">
       <span class="admin-endpoint">${escapeHtml(getAdminWorkerUrl())}</span>
+      <button type="button" id="updateAllJson">Uppdatera alla JSON</button>
       <button type="button" id="refreshFiles">Uppdatera lista</button>
       <button type="button" id="reloadSite">Ladda om sidan</button>
       <button type="button" id="logoutAdmin">Logga ut</button>
     </div>
+    <p class="admin-status" id="jsonUpdateStatus"></p>
     <form class="admin-uploader" id="jsonUploader">
       <label>
         JSON-fil pa sidan
@@ -1088,6 +1098,7 @@ function renderAdminCloudflare() {
 
     grid.innerHTML = ADMIN_JSON_FILES.map((file) => {
       const meta = files[file] || null;
+      const canAutoUpdate = ADMIN_AUTO_UPDATE_FILES.has(file);
       return `
         <article class="admin-file-card">
           <div>
@@ -1095,6 +1106,7 @@ function renderAdminCloudflare() {
             <span>${meta?.exists ? `GitHub: ${escapeHtml(meta.sha || "")} - ${escapeHtml(meta.updated || "uppladdad")}` : "Ingen fil hittad via Workern"}</span>
           </div>
           <div class="admin-file-actions">
+            ${canAutoUpdate ? `<button type="button" data-update="${escapeHtml(file)}">Uppdatera</button>` : `<button type="button" disabled>Manuell fil</button>`}
             <button type="button" data-download="${escapeHtml(file)}" ${meta?.exists ? "" : "disabled"}>Visa fil</button>
             <button type="button" data-clear="${escapeHtml(file)}" ${meta?.exists ? "" : "disabled"}>Ta bort</button>
           </div>
@@ -1109,13 +1121,24 @@ function renderAdminCloudflare() {
     renderList();
   });
 
+  document.getElementById("updateAllJson").addEventListener("click", async () => {
+    const status = document.getElementById("jsonUpdateStatus");
+    try {
+      status.textContent = "Startar uppdatering av alla JSON via Cloudflare...";
+      await adminWorkerRequest("update", { file: "all" });
+      status.textContent = "GitHub Actions startad for alla JSON.";
+    } catch (error) {
+      status.textContent = "Kunde inte starta uppdatering: " + error.message;
+    }
+  });
+
   document.getElementById("logoutAdmin").addEventListener("click", () => {
     sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
     renderAdminCloudflare();
   });
 
   document.getElementById("reloadSite").addEventListener("click", () => {
-    location.href = location.pathname + "?v=home-admin-entry-20260701#/" + routeFromHash();
+    location.href = location.pathname + "?v=json-workflow-update-20260701#/" + routeFromHash();
     location.reload();
   });
 
@@ -1148,6 +1171,18 @@ function renderAdminCloudflare() {
   grid.addEventListener("click", async (event) => {
     const clearFile = event.target.closest("[data-clear]")?.dataset.clear;
     const downloadFile = event.target.closest("[data-download]")?.dataset.download;
+    const updateFile = event.target.closest("[data-update]")?.dataset.update;
+    if (updateFile) {
+      const status = document.getElementById("jsonUpdateStatus");
+      try {
+        status.textContent = "Startar uppdatering av " + updateFile + " via Cloudflare...";
+        await adminWorkerRequest("update", { file: updateFile });
+        status.textContent = "GitHub Actions startad for " + updateFile + ".";
+      } catch (error) {
+        status.textContent = "Kunde inte starta uppdatering: " + error.message;
+      }
+      return;
+    }
     if (clearFile) {
       try {
         await adminWorkerRequest("delete", { file: clearFile });
