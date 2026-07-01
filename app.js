@@ -728,6 +728,7 @@ function cleanNavParam() {
 const ADMIN_WORKER_STORAGE_KEY = "svensk-ehockey-admin-worker-url";
 const ADMIN_TOKEN_STORAGE_KEY = "svensk-ehockey-admin-token";
 const ADMIN_PENDING_PASSWORD_KEY = "svensk-ehockey-admin-pending-password";
+const ADMIN_LAST_RUN_STORAGE_KEY = "svensk-ehockey-admin-last-runs";
 const ADMIN_DEFAULT_WORKER_URL = "https://svensk-json-admin.sweehockey.workers.dev";
 const ADMIN_SETUP_PASSWORD = "kungkenu";
 const ADMIN_JSON_FILES = [
@@ -749,6 +750,40 @@ const ADMIN_AUTO_UPDATE_FILES = new Set([
   "svenska-lag-historia-player-completions.json",
   "svenska-lag-historia-podiums.json"
 ]);
+
+function readAdminLastRuns() {
+  try {
+    return JSON.parse(localStorage.getItem(ADMIN_LAST_RUN_STORAGE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function writeAdminLastRuns(lastRuns) {
+  localStorage.setItem(ADMIN_LAST_RUN_STORAGE_KEY, JSON.stringify(lastRuns));
+}
+
+function markAdminLastRun(file, action = "kord") {
+  const lastRuns = readAdminLastRuns();
+  lastRuns[file] = {
+    at: Date.now(),
+    action
+  };
+  writeAdminLastRuns(lastRuns);
+}
+
+function formatAdminLastRun(entry) {
+  const time = Number(entry?.at || 0);
+  if (!time) return "Senast kord: aldrig";
+  const formatted = new Date(time).toLocaleString("sv-SE", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+  return `Senast kord: ${formatted}${entry?.action ? ` (${entry.action})` : ""}`;
+}
 
 function hasAdminSession() {
   return Boolean(sessionStorage.getItem(ADMIN_TOKEN_STORAGE_KEY));
@@ -1097,6 +1132,7 @@ function renderAdminCloudflare() {
       return;
     }
 
+    const lastRuns = readAdminLastRuns();
     grid.innerHTML = ADMIN_JSON_FILES.map((file) => {
       const meta = files[file] || null;
       const canAutoUpdate = ADMIN_AUTO_UPDATE_FILES.has(file);
@@ -1105,6 +1141,7 @@ function renderAdminCloudflare() {
           <div>
             <strong>${escapeHtml(file)}</strong>
             <span>${meta?.exists ? `GitHub: ${escapeHtml(meta.sha || "")} - ${escapeHtml(meta.updated || "uppladdad")}` : "Ingen fil hittad via Workern"}</span>
+            <span class="admin-last-run">${escapeHtml(formatAdminLastRun(lastRuns[file]))}</span>
           </div>
           <div class="admin-file-actions">
             ${canAutoUpdate ? `<button type="button" data-update="${escapeHtml(file)}">Uppdatera</button>` : `<button type="button" disabled>Manuell fil</button>`}
@@ -1127,7 +1164,9 @@ function renderAdminCloudflare() {
     try {
       status.textContent = "Startar uppdatering av alla JSON via Cloudflare...";
       await adminWorkerRequest("update", { file: "all" });
+      ADMIN_AUTO_UPDATE_FILES.forEach((file) => markAdminLastRun(file, "startad"));
       status.textContent = "GitHub Actions startad for alla JSON.";
+      renderList();
     } catch (error) {
       status.textContent = "Kunde inte starta uppdatering: " + error.message;
     }
@@ -1162,6 +1201,7 @@ function renderAdminCloudflare() {
         content: pretty,
         sourceName: file.name
       });
+      markAdminLastRun(target, "uppladdad");
       status.textContent = target + " uppladdad till GitHub.";
       renderList();
     } catch (error) {
@@ -1178,7 +1218,9 @@ function renderAdminCloudflare() {
       try {
         status.textContent = "Startar uppdatering av " + updateFile + " via Cloudflare...";
         await adminWorkerRequest("update", { file: updateFile });
+        markAdminLastRun(updateFile, "startad");
         status.textContent = "GitHub Actions startad for " + updateFile + ".";
+        renderList();
       } catch (error) {
         status.textContent = "Kunde inte starta uppdatering: " + error.message;
       }

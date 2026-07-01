@@ -102,6 +102,12 @@ body {
 .admin-status,
 .admin-file-card span { color: #a8b8c9; }
 
+.admin-last-run {
+  color: #e9c56e !important;
+  font-size: 13px;
+  font-weight: 850;
+}
+
 .admin-panel { padding: 24px; }
 
 .admin-login,
