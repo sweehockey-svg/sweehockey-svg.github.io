@@ -1,6 +1,7 @@
 const DEFAULT_OWNER = "sweehockey-svg";
 const DEFAULT_REPO = "sweehockey-svg.github.io";
 const DEFAULT_REF = "main";
+const DEFAULT_WORKFLOW = "update-svensk-json.yml";
 
 const ALLOWED_FILES = new Set([
   "svenskstatistikecl26spring.json",
@@ -12,6 +13,15 @@ const ALLOWED_FILES = new Set([
   "svenska-lag-historia-podiums.json",
   "teamlogos.json",
   "players.json"
+]);
+
+const AUTO_UPDATE_FILES = new Set([
+  "svenskstatistikecl26spring.json",
+  "svenska-lag-historia.json",
+  "svenska-lag-historia-teams.json",
+  "svenska-lag-historia-player-history.json",
+  "svenska-lag-historia-player-completions.json",
+  "svenska-lag-historia-podiums.json"
 ]);
 
 export default {
@@ -71,6 +81,20 @@ export default {
           : { exists: false };
       }
       return json({ ok: true, files: result }, 200, cors);
+    }
+
+    if (action === "update") {
+      const file = payload.file === "all" ? "all" : validateFile(payload.file);
+      if (!file) return json({ ok: false, error: "Ogiltig fil." }, 400, cors);
+      if (file !== "all" && !AUTO_UPDATE_FILES.has(file)) {
+        return json({ ok: false, error: "Den filen har ingen SQL-automatisk uppdatering. Ladda upp den manuellt." }, 400, cors);
+      }
+
+      const response = await triggerGithubWorkflow(env, file);
+      if (response.status === 204) return json({ ok: true, file }, 200, cors);
+
+      const message = await response.text();
+      return json({ ok: false, error: message || `GitHub HTTP ${response.status}` }, response.status, cors);
     }
 
     if (action === "upload") {
@@ -163,6 +187,29 @@ async function githubRequest(env, path, init = {}) {
     return { ok: false, status: response.status, error: data?.message || text || `GitHub HTTP ${response.status}` };
   }
   return { ok: true, status: response.status, data };
+}
+
+async function triggerGithubWorkflow(env, file) {
+  const cfg = githubConfig(env);
+  if (!cfg.token) return new Response("Saknar SVENSK_GITHUB_TOKEN i Cloudflare.", { status: 500 });
+
+  const workflow = env.SVENSK_GITHUB_WORKFLOW || DEFAULT_WORKFLOW;
+  const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/actions/workflows/${encodeURIComponent(workflow)}/dispatches`;
+
+  return fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${cfg.token}`,
+      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json",
+      "User-Agent": "svensk-ehockey-json-admin",
+      "X-GitHub-Api-Version": "2022-11-28"
+    },
+    body: JSON.stringify({
+      ref: cfg.ref,
+      inputs: { file }
+    })
+  });
 }
 
 async function githubGetFile(env, file, metaOnly = false) {
