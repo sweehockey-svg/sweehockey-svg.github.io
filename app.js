@@ -728,6 +728,7 @@ function cleanNavParam() {
 const ADMIN_WORKER_STORAGE_KEY = "svensk-ehockey-admin-worker-url";
 const ADMIN_TOKEN_STORAGE_KEY = "svensk-ehockey-admin-token";
 const ADMIN_PENDING_PASSWORD_KEY = "svensk-ehockey-admin-pending-password";
+const ADMIN_DEFAULT_WORKER_URL = "https://svensk-json-admin.sweehockey.workers.dev";
 const ADMIN_SETUP_PASSWORD = "kungkenu";
 const ADMIN_JSON_FILES = [
   "svenskstatistikecl26spring.json",
@@ -754,7 +755,7 @@ function hasAdminSession() {
 }
 
 function getAdminWorkerUrl() {
-  return localStorage.getItem(ADMIN_WORKER_STORAGE_KEY) || "";
+  return localStorage.getItem(ADMIN_WORKER_STORAGE_KEY) || ADMIN_DEFAULT_WORKER_URL;
 }
 
 function normalizeAdminWorkerUrl(value) {
