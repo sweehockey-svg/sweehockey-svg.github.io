@@ -153,7 +153,7 @@ function injectBridge(html) {
   const bridge = `
 <script>
 (function () {
-  const ASSET_VERSION = "admin-prompt-20260701b";
+  const ASSET_VERSION = "admin-prompt-20260701c";
   const nativeFetch = window.fetch.bind(window);
   window.fetch = function (input, init) {
     try {
@@ -682,6 +682,7 @@ function cleanNavParam() {
 const ADMIN_WORKER_STORAGE_KEY = "svensk-ehockey-admin-worker-url";
 const ADMIN_TOKEN_STORAGE_KEY = "svensk-ehockey-admin-token";
 const ADMIN_PENDING_PASSWORD_KEY = "svensk-ehockey-admin-pending-password";
+const ADMIN_SETUP_PASSWORD = "admin";
 const ADMIN_JSON_FILES = [
   "svenskstatistikecl26spring.json",
   "svenska-lag-historia.json",
@@ -723,6 +724,10 @@ function renderAdminCancelled(panel) {
 function captureAdminPassword() {
   const password = window.prompt("Admin-losenord:");
   if (password === null) return false;
+  if (!getAdminWorkerUrl() && password !== ADMIN_SETUP_PASSWORD) {
+    window.alert("Fel losenord.");
+    return false;
+  }
   sessionStorage.setItem(ADMIN_PENDING_PASSWORD_KEY, password);
   return true;
 }
@@ -928,7 +933,7 @@ function renderAdmin() {
   });
 
   document.getElementById("reloadSite").addEventListener("click", () => {
-    location.href = location.pathname + "?v=admin-prompt-20260701b#/" + routeFromHash();
+    location.href = location.pathname + "?v=admin-prompt-20260701c#/" + routeFromHash();
     location.reload();
   });
 
@@ -1064,7 +1069,7 @@ function renderAdminCloudflare() {
   });
 
   document.getElementById("reloadSite").addEventListener("click", () => {
-    location.href = location.pathname + "?v=admin-prompt-20260701b#/" + routeFromHash();
+    location.href = location.pathname + "?v=admin-prompt-20260701c#/" + routeFromHash();
     location.reload();
   });
 
