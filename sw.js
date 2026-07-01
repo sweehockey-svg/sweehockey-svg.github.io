@@ -1,4 +1,4 @@
-const ASSET_VERSION = "admin-prompt-20260701c";
+const ASSET_VERSION = "home-admin-entry-20260701";
 const MANIFESTS = {
   players: { file: "players.json", folder: "players", items: null, promise: null },
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }

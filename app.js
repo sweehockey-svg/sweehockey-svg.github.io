@@ -153,7 +153,7 @@ function injectBridge(html) {
   const bridge = `
 <script>
 (function () {
-  const ASSET_VERSION = "admin-prompt-20260701c";
+  const ASSET_VERSION = "home-admin-entry-20260701";
   const nativeFetch = window.fetch.bind(window);
   window.fetch = function (input, init) {
     try {
@@ -225,6 +225,33 @@ function injectBridge(html) {
         margin:8px 4px;
         background:rgba(255,255,255,.10);
       }
+      .home-admin-entry{
+        position:absolute;
+        top:24px;
+        right:24px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:32px;
+        padding:0 12px;
+        border-radius:8px;
+        border:1px solid rgba(233,197,110,.32);
+        background:rgba(3,6,10,.36);
+        color:#c8d6dd;
+        font-size:12px;
+        font-weight:950;
+        text-transform:uppercase;
+      }
+      .home-admin-entry:hover{
+        background:rgba(233,197,110,.10);
+        color:#fff;
+      }
+      @media (max-width: 720px){
+        .home-admin-entry{
+          position:static;
+          margin:0 0 14px;
+        }
+      }
     \`;
     document.head.appendChild(style);
 
@@ -250,26 +277,45 @@ function injectBridge(html) {
       menu.innerHTML = menuHtml;
 
       nav.querySelectorAll("[data-laghistoria-main]").forEach((link) => link.remove());
-
-      if (!nav.querySelector("[data-admin-main]")) {
-        const adminLink = document.createElement("a");
-        adminLink.className = "nav__link" + (isActiveRoute("admin") ? " is-active" : "");
-        adminLink.href = "/admin.html";
-        adminLink.dataset.adminMain = "true";
-        adminLink.textContent = "Admin";
-        const searchButton = nav.querySelector(".iconbtn");
-        if (searchButton) searchButton.insertAdjacentElement("beforebegin", adminLink);
-        else nav.appendChild(adminLink);
-      }
+      nav.querySelectorAll("[data-admin-main]").forEach((link) => link.remove());
 
       if (isActiveRoute("laghistoria")) button.classList.remove("is-active", "active");
     });
   }
 
+  function enhanceHomeAdminEntry() {
+    try {
+      const route = parent.location.hash.replace(/^#\\/?/, "") || "hem";
+      if (route !== "hem") return;
+    } catch (error) {
+      return;
+    }
+    if (document.querySelector("[data-home-admin-entry]")) return;
+
+    const cards = Array.from(document.querySelectorAll(".card"));
+    const target = cards.find(function (card) {
+      const heading = card.querySelector("h1, h2");
+      return heading && /v[aä]lkommen/i.test(heading.textContent || "");
+    }) || cards[0];
+    if (!target) return;
+
+    target.style.position = target.style.position || "relative";
+    const adminLink = document.createElement("a");
+    adminLink.href = "/admin.html";
+    adminLink.className = "home-admin-entry";
+    adminLink.dataset.homeAdminEntry = "true";
+    adminLink.textContent = "Admin";
+    target.insertAdjacentElement("afterbegin", adminLink);
+  }
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", enhanceMainMenu, { once: true });
+    document.addEventListener("DOMContentLoaded", function () {
+      enhanceMainMenu();
+      enhanceHomeAdminEntry();
+    }, { once: true });
   } else {
     enhanceMainMenu();
+    enhanceHomeAdminEntry();
   }
 
   document.addEventListener("click", function (event) {
@@ -667,7 +713,7 @@ function injectBridge(html) {
 }
 
 function navMarkup(active) {
-  return PAGES.map((page) => `
+  return PAGES.filter((page) => page.id !== "admin").map((page) => `
     <a href="#/${page.id}" class="${page.id === active ? "active" : ""}">${escapeHtml(page.title)}</a>
   `).join("");
 }
@@ -682,7 +728,7 @@ function cleanNavParam() {
 const ADMIN_WORKER_STORAGE_KEY = "svensk-ehockey-admin-worker-url";
 const ADMIN_TOKEN_STORAGE_KEY = "svensk-ehockey-admin-token";
 const ADMIN_PENDING_PASSWORD_KEY = "svensk-ehockey-admin-pending-password";
-const ADMIN_SETUP_PASSWORD = "admin";
+const ADMIN_SETUP_PASSWORD = "kungkenu";
 const ADMIN_JSON_FILES = [
   "svenskstatistikecl26spring.json",
   "svenska-lag-historia.json",
@@ -933,7 +979,7 @@ function renderAdmin() {
   });
 
   document.getElementById("reloadSite").addEventListener("click", () => {
-    location.href = location.pathname + "?v=admin-prompt-20260701c#/" + routeFromHash();
+    location.href = location.pathname + "?v=home-admin-entry-20260701#/" + routeFromHash();
     location.reload();
   });
 
@@ -1069,7 +1115,7 @@ function renderAdminCloudflare() {
   });
 
   document.getElementById("reloadSite").addEventListener("click", () => {
-    location.href = location.pathname + "?v=admin-prompt-20260701c#/" + routeFromHash();
+    location.href = location.pathname + "?v=home-admin-entry-20260701#/" + routeFromHash();
     location.reload();
   });
 
