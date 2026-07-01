@@ -22,7 +22,8 @@ body,
 }
 
 body {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background:
     linear-gradient(90deg, rgba(120, 223, 241, 0.08) 1px, transparent 1px),
     linear-gradient(180deg, rgba(120, 223, 241, 0.06) 1px, transparent 1px),
