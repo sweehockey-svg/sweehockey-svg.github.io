@@ -153,15 +153,23 @@ function injectBridge(html) {
   const bridge = `
 <script>
 (function () {
-  const ASSET_VERSION = "json-workflow-update-20260701";
+  const ASSET_VERSION = "json-nostore-20260702";
   const nativeFetch = window.fetch.bind(window);
   window.fetch = function (input, init) {
     try {
       const raw = typeof input === "string" ? input : (input && input.url) || "";
-      if (raw && !/^[a-z]+:/i.test(raw) && !raw.startsWith("//")) {
-        const absolute = new URL(raw, parent.location.origin + "/").href;
-        if (typeof input === "string") return nativeFetch(absolute, init);
-        return nativeFetch(new Request(absolute, input), init);
+      if (raw) {
+        const isRelative = !/^[a-z]+:/i.test(raw) && !raw.startsWith("//");
+        const url = new URL(raw, isRelative ? parent.location.origin + "/" : (document.baseURI || parent.location.href));
+        const isLocalJson = /\.json$/i.test(url.pathname) && url.origin === parent.location.origin;
+        const shouldRewrite = isRelative || isLocalJson;
+        const nextInit = isLocalJson ? { ...(init || {}), cache: "no-store" } : init;
+        if (isLocalJson) url.searchParams.set("ts", String(Date.now()));
+        if (shouldRewrite) {
+          const absolute = url.href;
+          if (typeof input === "string") return nativeFetch(absolute, nextInit);
+          return nativeFetch(new Request(absolute, input), nextInit);
+        }
       }
     } catch (error) {}
     return nativeFetch(input, init);
@@ -1023,7 +1031,7 @@ function renderAdmin() {
   });
 
   document.getElementById("reloadSite").addEventListener("click", () => {
-    location.href = location.pathname + "?v=json-workflow-update-20260701#/" + routeFromHash();
+    location.href = location.pathname + "?v=json-nostore-20260702#/" + routeFromHash();
     location.reload();
   });
 
@@ -1146,7 +1154,6 @@ function renderAdminCloudflare() {
           <div class="admin-file-actions">
             ${canAutoUpdate ? `<button type="button" data-update="${escapeHtml(file)}">Uppdatera</button>` : `<button type="button" disabled>Manuell fil</button>`}
             <button type="button" data-download="${escapeHtml(file)}" ${meta?.exists ? "" : "disabled"}>Visa fil</button>
-            <button type="button" data-clear="${escapeHtml(file)}" ${meta?.exists ? "" : "disabled"}>Ta bort</button>
           </div>
         </article>
       `;
@@ -1178,7 +1185,7 @@ function renderAdminCloudflare() {
   });
 
   document.getElementById("reloadSite").addEventListener("click", () => {
-    location.href = location.pathname + "?v=json-workflow-update-20260701#/" + routeFromHash();
+    location.href = location.pathname + "?v=json-nostore-20260702#/" + routeFromHash();
     location.reload();
   });
 
@@ -1227,12 +1234,7 @@ function renderAdminCloudflare() {
       return;
     }
     if (clearFile) {
-      try {
-        await adminWorkerRequest("delete", { file: clearFile });
-        renderList();
-      } catch (error) {
-        alert("Kunde inte ta bort: " + error.message);
-      }
+      alert("Radering från GitHub är spärrad här. Ta bort filen manuellt i GitHub om det verkligen behövs.");
       return;
     }
     if (downloadFile) {

@@ -1,4 +1,4 @@
-const ASSET_VERSION = "json-workflow-update-20260701";
+const ASSET_VERSION = "json-nostore-20260702";
 const MANIFESTS = {
   players: { file: "players.json", folder: "players", items: null, promise: null },
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }
@@ -159,13 +159,25 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil((async () => {
+    if (self.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+    }
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+
+  if (/\.json$/i.test(url.pathname)) {
+    url.searchParams.set("ts", String(Date.now()));
+    event.respondWith(fetch(url.href, { cache: "no-store" }));
+    return;
+  }
 
   const isImageRequest = event.request.destination === "image"
     || /\.(?:png|jpe?g|webp)$/i.test(url.pathname);
