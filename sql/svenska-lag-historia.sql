@@ -428,6 +428,7 @@ manual_swedish_teams AS (
     UNION ALL SELECT 6989
     UNION ALL SELECT 7026
     UNION ALL SELECT 7028
+    UNION ALL SELECT 643
   ) manual_ids
 ),
 
