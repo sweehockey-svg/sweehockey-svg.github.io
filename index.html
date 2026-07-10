@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#05070b">
   <link rel="icon" type="image/png" href="./assets/SECLOGGA.png">
   <link rel="apple-touch-icon" href="./assets/SECLOGGA.png">
-  <link rel="stylesheet" href="./styles.css?v=player-latest-sec20-20260710">
+  <link rel="stylesheet" href="./styles.css?v=mobile-layout-fix-20260710">
 </head>
 <body>
   <div id="app">
@@ -16,14 +16,14 @@
   </div>
   <script>
     if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=player-latest-sec20-20260710").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?v=mobile-layout-fix-20260710").catch(function () {});
       navigator.serviceWorker.addEventListener("controllerchange", function () {
-      if (sessionStorage.getItem("svensk-ehockey-sw-reloaded-player-latest-sec20-20260710") === "1") return;
-      sessionStorage.setItem("svensk-ehockey-sw-reloaded-player-latest-sec20-20260710", "1");
+      if (sessionStorage.getItem("svensk-ehockey-sw-reloaded-mobile-layout-fix-20260710") === "1") return;
+      sessionStorage.setItem("svensk-ehockey-sw-reloaded-mobile-layout-fix-20260710", "1");
         location.reload();
       });
     }
   </script>
-  <script src="./app.js?v=player-latest-sec20-20260710"></script>
+  <script src="./app.js?v=mobile-layout-fix-20260710"></script>
 </body>
 </html>

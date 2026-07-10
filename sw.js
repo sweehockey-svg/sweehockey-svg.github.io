@@ -1,5 +1,5 @@
-const ASSET_VERSION = "player-latest-sec20-20260710";
-const JSON_CACHE = "svensk-ehockey-json-player-latest-sec20-20260710";
+const ASSET_VERSION = "mobile-layout-fix-20260710";
+const JSON_CACHE = "svensk-ehockey-json-mobile-layout-fix-20260710";
 const MANIFESTS = {
   players: { file: "players.json", folder: "players", items: null, promise: null },
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }
