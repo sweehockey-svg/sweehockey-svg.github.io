@@ -1,4 +1,5 @@
-const ASSET_VERSION = "json-nostore-20260702";
+const ASSET_VERSION = "player-latest-sec20-20260710";
+const JSON_CACHE = "svensk-ehockey-json-player-latest-sec20-20260710";
 const MANIFESTS = {
   players: { file: "players.json", folder: "players", items: null, promise: null },
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }
@@ -174,8 +175,28 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   if (/\.json$/i.test(url.pathname)) {
-    url.searchParams.set("ts", String(Date.now()));
-    event.respondWith(fetch(url.href, { cache: "no-store" }));
+    url.searchParams.delete("ts");
+    const cacheKey = url.href;
+    event.respondWith((async () => {
+      if (!self.caches) return fetch(cacheKey, { cache: "force-cache" });
+
+      const cache = await caches.open(JSON_CACHE);
+      const cached = await cache.match(cacheKey);
+      const refresh = fetch(cacheKey, { cache: "force-cache" })
+        .then((response) => {
+          if (response.ok) cache.put(cacheKey, response.clone());
+          return response;
+        })
+        .catch(() => cached);
+
+      if (cached) {
+        event.waitUntil(refresh);
+        return cached;
+      }
+
+      const response = await refresh;
+      return response || fetch(cacheKey, { cache: "reload" });
+    })());
     return;
   }
 
