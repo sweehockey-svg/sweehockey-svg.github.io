@@ -120,6 +120,7 @@ jobs:
                 ;;
               svenska-lag-historia-teams.json)
                 export_one "$1" "sql/svenska-lag-historia-teams.sql"
+                node tools/build-svenska-spelare-index.cjs
                 ;;
               svenska-lag-historia-player-history.json)
                 export_one "$1" "sql/svenska-lag-historia-player-history.sql"
@@ -129,6 +130,9 @@ jobs:
                 ;;
               svenska-lag-historia-podiums.json)
                 export_one "$1" "sql/svenska-lag-historia-podiums.sql"
+                ;;
+              svenska-spelare-index.json)
+                node tools/build-svenska-spelare-index.cjs
                 ;;
               *)
                 echo "No automatic SQL export configured for $1" >&2
