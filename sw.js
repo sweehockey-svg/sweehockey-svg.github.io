@@ -1,5 +1,5 @@
-const ASSET_VERSION = "mobile-layout-fix-20260710";
-const JSON_CACHE = "svensk-ehockey-json-mobile-layout-fix-20260710";
+const ASSET_VERSION = "laghistoria-sec-legacy-nationality-20260711";
+const JSON_CACHE = "svensk-ehockey-json-laghistoria-sec-legacy-nationality-20260711";
 const MANIFESTS = {
   players: { file: "players.json", folder: "players", items: null, promise: null },
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }
