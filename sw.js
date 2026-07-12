@@ -1,5 +1,5 @@
-const ASSET_VERSION = "laghistoria-sec-legacy-nationality-20260711";
-const JSON_CACHE = "svensk-ehockey-json-laghistoria-sec-legacy-nationality-20260711";
+const ASSET_VERSION = "laghistoria-player-id-images-20260712k";
+const JSON_CACHE = "svensk-ehockey-json-laghistoria-player-id-images-20260712k";
 const MANIFESTS = {
   players: { file: "players.json", folder: "players", items: null, promise: null },
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }
@@ -86,7 +86,7 @@ async function readManifest(type) {
           ? files
               .filter((file) => /\.(?:png|jpe?g|webp)$/i.test(file))
               .map((file) => ({ file, key: slug(file), url: assetUrl(config.folder, file) }))
-              .filter((item) => item.url && item.key.length >= 3)
+              .filter((item) => item.url && (item.key.length >= 3 || /^\d+$/.test(item.key)))
           : [];
         return config.items;
       })
@@ -143,16 +143,15 @@ async function resolveAsset(url, type) {
   return best && best.score < 12.5 ? best.url : "";
 }
 
-async function playerFallback(url) {
-  const manifest = await readManifest("players");
-  const defaultImage = manifest.find((item) => item.file.toLowerCase() === "1defaultbildid.jpg");
-  if (defaultImage) {
-    try {
-      const response = await fetch(defaultImage.url, { cache: "reload" });
-      if (response.ok) return response;
-    } catch (error) {}
-  }
-  return svgPlaceholder(url, "player");
+function playerFallback(url) {
+  return new Response("", {
+    status: 404,
+    statusText: "Player image not found",
+    headers: {
+      "Cache-Control": "no-store",
+      "X-Svensk-Ehockey-Fallback": ASSET_VERSION
+    }
+  });
 }
 
 self.addEventListener("install", (event) => {
@@ -173,6 +172,13 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+
+  const cleanPath = url.pathname.replace(/\/+$/, "") || "/";
+  const isSpaRoute = cleanPath === "/spelare" || cleanPath === "/laghistoria" || /^\/spelare\//i.test(cleanPath) || /^\/laghistoria\//i.test(cleanPath);
+  if (event.request.mode === "navigate" && isSpaRoute) {
+    event.respondWith(fetch("/index.html?v=" + ASSET_VERSION, { cache: "reload" }));
+    return;
+  }
 
   if (/\.json$/i.test(url.pathname)) {
     url.searchParams.delete("ts");
@@ -210,6 +216,11 @@ self.addEventListener("fetch", (event) => {
   if (isKnownStatic) return;
 
   event.respondWith((async () => {
+    try {
+      const direct = await fetch(event.request, { cache: "reload" });
+      if (direct.ok) return direct;
+    } catch (error) {}
+
     const type = isPlayer ? "players" : "teamlogos";
     const resolved = await resolveAsset(url, type);
     if (resolved) {
