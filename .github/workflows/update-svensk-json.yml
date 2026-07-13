@@ -148,6 +148,7 @@ jobs:
             update_file "svenska-lag-historia-player-history.json"
             update_file "svenska-lag-historia-player-completions.json"
             update_file "svenska-lag-historia-podiums.json"
+            update_file "svenska-spelare-index.json"
           else
             update_file "$REQUESTED_FILE"
           fi
