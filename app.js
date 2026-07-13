@@ -1575,7 +1575,7 @@ function renderAdminCloudflare() {
         <article class="admin-file-card">
           <div>
             <strong>${escapeHtml(file)}</strong>
-            <span>${meta?.exists ? `GitHub: ${escapeHtml(meta.sha || "")} - ${escapeHtml(meta.updated || "uppladdad")}` : "Ingen fil hittad via Workern"}</span>
+            <span>${meta?.exists ? `GitHub: ${escapeHtml(meta.sha || "")} - ${escapeHtml(meta.updated || "uppladdad")}` : (file === "svenska-spelare-index.json" ? "Direktstatus saknas i Workern - Uppdatera bygger via teams vid behov" : "Ingen fil hittad via Workern")}</span>
             <span class="admin-last-run">${escapeHtml(formatAdminLastRun(lastRuns[file]))}</span>
           </div>
           <div class="admin-file-actions">
@@ -1651,9 +1651,21 @@ function renderAdminCloudflare() {
       const status = document.getElementById("jsonUpdateStatus");
       try {
         status.textContent = "Startar uppdatering av " + updateFile + " via Cloudflare...";
-        await adminWorkerRequest("update", { file: updateFile });
+        try {
+          await adminWorkerRequest("update", { file: updateFile });
+        } catch (error) {
+          const isPlayerIndex = updateFile === "svenska-spelare-index.json";
+          const isOldWorkerFileList = /Ogiltig fil/i.test(String(error.message || ""));
+          if (!isPlayerIndex || !isOldWorkerFileList) throw error;
+
+          status.textContent = "Workern saknar direktstod for spelarindex. Startar svenska-lag-historia-teams.json som bygger spelarindexet automatiskt...";
+          await adminWorkerRequest("update", { file: "svenska-lag-historia-teams.json" });
+          markAdminLastRun("svenska-lag-historia-teams.json", "startad");
+        }
         markAdminLastRun(updateFile, "startad");
-        status.textContent = "GitHub Actions startad for " + updateFile + ".";
+        status.textContent = updateFile === "svenska-spelare-index.json"
+          ? "GitHub Actions startad for spelarindex. Om Workern var gammal byggs den via svenska-lag-historia-teams.json."
+          : "GitHub Actions startad for " + updateFile + ".";
         renderList();
       } catch (error) {
         status.textContent = "Kunde inte starta uppdatering: " + error.message;
