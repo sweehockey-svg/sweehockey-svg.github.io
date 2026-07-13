@@ -1,7 +1,6 @@
-const ASSET_VERSION = "laghistoria-player-id-images-20260712k";
-const JSON_CACHE = "svensk-ehockey-json-laghistoria-player-id-images-20260712k";
+const ASSET_VERSION = "laghistoria-player-id-images-20260712s";
+const JSON_CACHE = "svensk-ehockey-json";
 const MANIFESTS = {
-  players: { file: "players.json", folder: "players", items: null, promise: null },
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }
 };
 
@@ -159,13 +158,7 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil((async () => {
-    if (self.caches) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((key) => caches.delete(key)));
-    }
-    await self.clients.claim();
-  })());
+  event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener("fetch", (event) => {
@@ -187,11 +180,30 @@ self.addEventListener("fetch", (event) => {
       if (!self.caches) return fetch(cacheKey, { cache: "force-cache" });
 
       const cache = await caches.open(JSON_CACHE);
-      const cached = await cache.match(cacheKey);
+
+      async function findCachedJson() {
+        const current = await cache.match(cacheKey);
+        if (current) return current;
+
+        const keys = await caches.keys();
+        for (const key of keys) {
+          if (key === JSON_CACHE) continue;
+          const oldCache = await caches.open(key);
+          const oldMatch = await oldCache.match(cacheKey);
+          if (oldMatch) return oldMatch;
+        }
+
+        return null;
+      }
+
+      const cached = await findCachedJson();
       const refresh = fetch(cacheKey, { cache: "force-cache" })
         .then((response) => {
-          if (response.ok) cache.put(cacheKey, response.clone());
-          return response;
+          if (response.ok) {
+            cache.put(cacheKey, response.clone());
+            return response;
+          }
+          return cached || response;
         })
         .catch(() => cached);
 
@@ -221,8 +233,9 @@ self.addEventListener("fetch", (event) => {
       if (direct.ok) return direct;
     } catch (error) {}
 
-    const type = isPlayer ? "players" : "teamlogos";
-    const resolved = await resolveAsset(url, type);
+    if (isPlayer) return playerFallback(url);
+
+    const resolved = await resolveAsset(url, "teamlogos");
     if (resolved) {
       try {
         const response = await fetch(resolved, { cache: "reload" });
@@ -230,6 +243,6 @@ self.addEventListener("fetch", (event) => {
       } catch (error) {}
     }
 
-    return isPlayer ? playerFallback(url) : svgPlaceholder(url, "team");
+    return svgPlaceholder(url, "team");
   })());
 });
