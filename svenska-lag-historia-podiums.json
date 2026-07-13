@@ -882,6 +882,14 @@
       "leagueName": "ECL '26: Spring - Neo 🇪🇺"
     },
     {
+      "teamID": 7048,
+      "teamUrl": "https://sportsgamer.gg/leagues/520/teams/7048",
+      "leagueID": 520,
+      "teamName": "Slapshot Kings",
+      "placement": 1,
+      "leagueName": "SEC 21 🇸🇪"
+    },
+    {
       "teamID": 50,
       "teamUrl": "https://sportsgamer.gg/leagues/4/teams/50",
       "leagueID": 4,
@@ -1762,6 +1770,14 @@
       "leagueName": "ECL '26: Spring - Neo 🇪🇺"
     },
     {
+      "teamID": 7047,
+      "teamUrl": "https://sportsgamer.gg/leagues/520/teams/7047",
+      "leagueID": 520,
+      "teamName": "Zero Ping",
+      "placement": 2,
+      "leagueName": "SEC 21 🇸🇪"
+    },
+    {
       "teamID": 262,
       "teamUrl": "https://sportsgamer.gg/leagues/47/teams/262",
       "leagueID": 47,
@@ -2002,5 +2018,5 @@
       "leagueName": "ECL '26: Spring - Lite 🇪🇺"
     }
   ],
-  "updated": "2026-07-06 14:16:35"
+  "updated": "2026-07-13 07:25:55"
 }
