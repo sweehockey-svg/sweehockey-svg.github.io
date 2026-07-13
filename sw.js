@@ -1,4 +1,4 @@
-const ASSET_VERSION = "laghistoria-player-id-images-20260712v";
+const ASSET_VERSION = "player-id-jpg-direct-20260713a";
 const JSON_CACHE = "svensk-ehockey-json";
 const MANIFESTS = {
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }
