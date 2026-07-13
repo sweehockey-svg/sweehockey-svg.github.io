@@ -2,6 +2,7 @@ const fs = require("fs");
 
 const INPUT_FILE = "svenska-lag-historia-teams.json";
 const SEC_LEGACY_FILE = "svenska-lag-historia-sec-legacy.json";
+const SWEDISH_PLAYER_OVERRIDES_FILE = "svenska-spelare-nationalitet-overrides.json";
 const OUTPUT_FILE = "svenska-spelare-index.json";
 
 function safeNumber(value) {
@@ -18,6 +19,29 @@ function normalizeText(value) {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+function loadSwedishPlayerOverrides() {
+  const overrides = { ids: new Set(), names: new Set() };
+  if (!fs.existsSync(SWEDISH_PLAYER_OVERRIDES_FILE)) {
+    throw new Error(`Saknar ${SWEDISH_PLAYER_OVERRIDES_FILE}. Spelarindex byggs inte utan nationalitets-overrides.`);
+  }
+
+  const data = JSON.parse(fs.readFileSync(SWEDISH_PLAYER_OVERRIDES_FILE, "utf8"));
+  (data.playerIds || []).forEach(id => {
+    const key = String(id || "").trim();
+    if (key) overrides.ids.add(key);
+  });
+  (data.names || []).forEach(name => {
+    const key = normalizeText(name);
+    if (key) overrides.names.add(key);
+  });
+  if (!overrides.ids.size && !overrides.names.size) {
+    throw new Error(`${SWEDISH_PLAYER_OVERRIDES_FILE} saknar svenska spelare. Spelarindex byggs inte.`);
+  }
+  return overrides;
+}
+
+const SWEDISH_PLAYER_OVERRIDES = loadSwedishPlayerOverrides();
 
 function normalizeDivisionName(value) {
   const raw = String(value || "").trim();
@@ -59,6 +83,22 @@ function splitHistoryPlayerName(value) {
 
 function isSwedishPlayer(player) {
   const parsed = splitHistoryPlayerName(player.name || player.playerName || player.psn || "");
+  const playerId = String(player.playerID || player.idPlayer || player.IDPlayer || player.playerId || "").trim();
+  if (playerId && SWEDISH_PLAYER_OVERRIDES.ids.has(playerId)) return true;
+
+  const nameCandidates = [
+    parsed.name,
+    player.name,
+    player.playerName,
+    player.psn,
+    player.GT,
+    player.alias,
+    player.gamertag
+  ];
+  if (nameCandidates.some(name => SWEDISH_PLAYER_OVERRIDES.names.has(normalizeText(splitHistoryPlayerName(name).name)))) {
+    return true;
+  }
+
   return normalizeCountryCode(player.nationality || player.country || player.playerCountry || player.countryCode || parsed.country) === "SE";
 }
 
