@@ -1433,7 +1433,8 @@ function renderAdmin() {
 
   const grid = document.getElementById("adminFileGrid");
   const renderList = () => {
-    grid.innerHTML = ADMIN_JSON_FILES.map((file) => {
+    const visibleFiles = ADMIN_JSON_FILES.filter((file) => ADMIN_AUTO_UPDATE_FILES.has(file));
+    grid.innerHTML = visibleFiles.map((file) => {
       const meta = JSON.parse(localStorage.getItem(jsonOverrideMetaKey(file)) || "null");
       return `
         <article class="admin-file-card">
@@ -1568,7 +1569,8 @@ function renderAdminCloudflare() {
     }
 
     const lastRuns = readAdminLastRuns();
-    grid.innerHTML = ADMIN_JSON_FILES.map((file) => {
+    const visibleFiles = ADMIN_JSON_FILES.filter((file) => ADMIN_AUTO_UPDATE_FILES.has(file));
+    grid.innerHTML = visibleFiles.map((file) => {
       const meta = files[file] || null;
       const canAutoUpdate = ADMIN_AUTO_UPDATE_FILES.has(file);
       return `
