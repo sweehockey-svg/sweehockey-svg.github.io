@@ -1136,6 +1136,97 @@ function injectBridge(html) {
     font-size: clamp(20px, 8vw, 28px) !important;
   }
 }
+
+.player-directory-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  grid-template-areas:
+    "name name"
+    "role clubs"
+    "mid mid"
+    "bottom bottom" !important;
+  align-items: start !important;
+  gap: 0 14px !important;
+}
+
+.player-directory-card .player-directory-top {
+  display: contents !important;
+}
+
+.player-directory-card .player-directory-country {
+  display: none !important;
+}
+
+.player-directory-card .player-directory-club-count {
+  grid-area: clubs !important;
+  justify-self: end !important;
+  align-self: start !important;
+}
+
+.player-directory-card .player-directory-name {
+  grid-area: name !important;
+  margin: 0 0 7px !important;
+  color: #fff !important;
+  font-size: clamp(28px, 2.1vw, 36px) !important;
+  line-height: .94 !important;
+  letter-spacing: 0 !important;
+  white-space: nowrap !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  text-shadow: 0 10px 28px rgba(0,0,0,.35) !important;
+}
+
+.player-directory-card .player-directory-role {
+  grid-area: role !important;
+  margin: 0 0 14px !important;
+  color: rgba(214,229,233,.78) !important;
+  font-size: 12px !important;
+  letter-spacing: .04em !important;
+}
+
+.player-directory-card .player-directory-mid {
+  grid-area: mid !important;
+  display: grid !important;
+  grid-template-columns: 96px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 14px 0 !important;
+  border-top: 1px solid rgba(151,173,181,.16) !important;
+  border-bottom: 1px solid rgba(151,173,181,.16) !important;
+}
+
+.player-directory-card .player-directory-feature strong {
+  display: block !important;
+  color: #eef6f7 !important;
+  font-size: 15px !important;
+  line-height: 1.18 !important;
+}
+
+.player-directory-card .player-directory-bottom {
+  grid-area: bottom !important;
+  margin-top: 12px !important;
+}
+
+.swedish-players-grid.is-compact .player-directory-card .player-directory-name {
+  font-size: clamp(20px, 1.35vw, 25px) !important;
+  line-height: 1 !important;
+}
+
+.swedish-players-grid.is-compact .player-directory-card .player-directory-club-count {
+  font-size: 10px !important;
+  padding: 4px 8px !important;
+}
+
+@media (max-width: 560px) {
+  .player-directory-card .player-directory-name {
+    font-size: clamp(27px, 8vw, 34px) !important;
+  }
+
+  .player-directory-card .player-directory-mid {
+    grid-template-columns: 82px minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+}
 </style>
 `;
 
