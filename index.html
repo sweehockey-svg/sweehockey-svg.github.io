@@ -4,11 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Svensk eHockey</title>
-  <meta name="description" content="Moderniserad Svensk eHockey-app med alla tidigare sidor och funktioner bevarade i en HTML/CSS/JS-struktur.">
-  <meta name="theme-color" content="#05070b">
-  <link rel="icon" type="image/png" href="./assets/SECLOGGA.png">
-  <link rel="apple-touch-icon" href="./assets/SECLOGGA.png">
+  <meta name="description" content="Svensk eHockey – matcher, statistik, spelare, lag och svensk eHockey-historia.">
+  <meta name="theme-color" content="#090909">
+  <link rel="icon" type="image/png" href="./assets/SeHlogga.png">
+  <link rel="apple-touch-icon" href="./assets/SeHlogga.png">
   <link rel="stylesheet" href="./styles.css?v=player-id-jpg-direct-20260713a">
+  <link rel="stylesheet" href="./v5-blank.css?v=20260718v5af">
 </head>
 <body>
   <div id="app">
@@ -16,14 +17,14 @@
   </div>
   <script>
     if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=player-id-jpg-direct-20260713a").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?v=v5-blank-20260718af").catch(function () {});
       navigator.serviceWorker.addEventListener("controllerchange", function () {
-      if (sessionStorage.getItem("svensk-ehockey-sw-reloaded-player-id-jpg-direct-20260713a") === "1") return;
-      sessionStorage.setItem("svensk-ehockey-sw-reloaded-player-id-jpg-direct-20260713a", "1");
+      if (sessionStorage.getItem("svensk-ehockey-sw-reloaded-v5-blank-20260718af") === "1") return;
+      sessionStorage.setItem("svensk-ehockey-sw-reloaded-v5-blank-20260718af", "1");
         location.reload();
       });
     }
   </script>
-  <script src="./app.js?v=player-id-jpg-direct-20260713a"></script>
+  <script src="./app.js?v=v5-blank-20260718af"></script>
 </body>
 </html>
