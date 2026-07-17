@@ -267,14 +267,10 @@ body.v5-load-failed>#v5-load-failure{min-height:100vh;display:grid !important;pl
 <script>
 (function () {
   const v5RevealFallback = setTimeout(function () {
-    if (!document.body) return;
-    const notice = document.createElement("div");
-    notice.id = "v5-load-failure";
-    notice.textContent = "Spelarregistret kunde inte laddas. Försök uppdatera sidan.";
-    document.body.appendChild(notice);
-    document.body.classList.add("v5-load-failed");
+    // Never leave the visitor on a permanently hidden page. If slow data or an
+    // extension delays the redesign, reveal the best content currently built.
     document.documentElement.classList.add("v5-ready");
-  }, 15000);
+  }, 20000);
 
   function isV5ContentReady() {
     let routePath = "";
@@ -296,8 +292,7 @@ body.v5-load-failed>#v5-load-failure{min-height:100vh;display:grid !important;pl
         return Boolean(playerPage && profile && profileName && profileName.textContent.trim() && legacyHidden);
       }
       const directory = playerPage && playerPage.querySelector(".player-directory-panel");
-      const playerCard = playerPage && playerPage.querySelector(".swedish-players-grid .player-directory-card");
-      return Boolean(playerPage && directory && playerCard && legacyHidden);
+      return Boolean(playerPage && directory && legacyHidden);
     }
 
     if (route === "laghistoria" && isDetailRoute) {
@@ -310,8 +305,9 @@ body.v5-load-failed>#v5-load-failure{min-height:100vh;display:grid !important;pl
   }
 
   function revealV5Page() {
+    if (document.documentElement.classList.contains("v5-ready")) return;
     if (!isV5ContentReady()) {
-      if (!document.body.classList.contains("v5-load-failed")) requestAnimationFrame(revealV5Page);
+      requestAnimationFrame(revealV5Page);
       return;
     }
     requestAnimationFrame(function () {
@@ -2510,16 +2506,12 @@ function render() {
   `;
 
   const frame = document.getElementById("legacy-frame");
-  const renderSeq = ++legacyRenderSeq;
+  ++legacyRenderSeq;
   const frameHtml = injectBridge(html);
-  resetLegacyJsonCache();
-  frame.removeAttribute("srcdoc");
-  frame.src = "about:blank";
-  requestAnimationFrame(() => {
-    if (renderSeq !== legacyRenderSeq) return;
-    frame.removeAttribute("src");
-    frame.srcdoc = frameHtml;
-  });
+  // The iframe is new for every route, so srcdoc can be assigned immediately.
+  // Waiting for requestAnimationFrame could leave about:blank visible forever
+  // when Chrome throttles a newly opened or background tab.
+  frame.srcdoc = frameHtml;
 }
 
 window.addEventListener("message", (event) => {

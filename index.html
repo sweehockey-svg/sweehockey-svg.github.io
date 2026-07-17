@@ -17,14 +17,9 @@
   </div>
   <script>
     if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=v5-blank-20260718af").catch(function () {});
-      navigator.serviceWorker.addEventListener("controllerchange", function () {
-      if (sessionStorage.getItem("svensk-ehockey-sw-reloaded-v5-blank-20260718af") === "1") return;
-      sessionStorage.setItem("svensk-ehockey-sw-reloaded-v5-blank-20260718af", "1");
-        location.reload();
-      });
+    navigator.serviceWorker.register("./sw.js?v=v5-blank-20260718ag", { updateViaCache: "none" }).catch(function () {});
     }
   </script>
-  <script src="./app.js?v=v5-blank-20260718af"></script>
+  <script src="./app.js?v=v5-blank-20260718ag"></script>
 </body>
 </html>
