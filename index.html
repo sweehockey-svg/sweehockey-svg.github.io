@@ -17,7 +17,20 @@
   </div>
   <script>
     if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=v5-blank-20260718aj", { updateViaCache: "none" }).catch(function () {});
+      // The site does not need an offline worker. Removing old registrations
+      // prevents a stale worker from keeping navigation or assets pending.
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        return Promise.all(registrations.map(function (registration) {
+          return registration.unregister();
+        }));
+      }).then(function () {
+        // A worker that controlled this already-open tab is released only on
+        // navigation. Do that once automatically during this deployment.
+        if (navigator.serviceWorker.controller && !sessionStorage.getItem("seh-worker-cleaned")) {
+          sessionStorage.setItem("seh-worker-cleaned", "1");
+          location.reload();
+        }
+      }).catch(function () {});
     }
   </script>
   <script>
@@ -37,28 +50,17 @@
         if (window.__SVENSK_EHOCKEY_APP_READY__) return;
         var currentAttempt = attempt++;
         var script = document.createElement("script");
-        var finished = false;
-        var timer;
 
         function retry() {
-          if (finished || window.__SVENSK_EHOCKEY_APP_READY__) return;
-          finished = true;
-          clearTimeout(timer);
-          script.onload = null;
-          script.onerror = null;
+          if (window.__SVENSK_EHOCKEY_APP_READY__) return;
           script.remove();
           if (attempt < maxAttempts) setTimeout(loadApp, 350 * attempt);
           else showFailure();
         }
 
-        script.src = "./app.js?v=v5-blank-20260718aj&attempt=" + currentAttempt;
-        script.async = true;
-        script.onload = function () {
-          clearTimeout(timer);
-          if (!window.__SVENSK_EHOCKEY_APP_READY__) retry();
-        };
+        script.src = "./app.js?v=v5-blank-20260718am&attempt=" + currentAttempt;
+        script.async = false;
         script.onerror = retry;
-        timer = setTimeout(retry, 12000);
         document.body.appendChild(script);
       }
 

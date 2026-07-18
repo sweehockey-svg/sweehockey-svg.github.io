@@ -1,4 +1,4 @@
-const ASSET_VERSION = "v5-blank-20260718aj";
+const ASSET_VERSION = "v5-blank-20260718am";
 const JSON_CACHE = "svensk-ehockey-json";
 const MANIFESTS = {
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }
