@@ -17,7 +17,7 @@
   </div>
   <script>
     if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=v5-blank-20260718ai", { updateViaCache: "none" }).catch(function () {});
+    navigator.serviceWorker.register("./sw.js?v=v5-blank-20260718aj", { updateViaCache: "none" }).catch(function () {});
     }
   </script>
   <script>
@@ -51,7 +51,7 @@
           else showFailure();
         }
 
-        script.src = "./app.js?v=v5-blank-20260718ai&attempt=" + currentAttempt;
+        script.src = "./app.js?v=v5-blank-20260718aj&attempt=" + currentAttempt;
         script.async = true;
         script.onload = function () {
           clearTimeout(timer);
