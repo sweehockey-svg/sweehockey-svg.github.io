@@ -17,9 +17,53 @@
   </div>
   <script>
     if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=v5-blank-20260718ag", { updateViaCache: "none" }).catch(function () {});
+    navigator.serviceWorker.register("./sw.js?v=v5-blank-20260718ai", { updateViaCache: "none" }).catch(function () {});
     }
   </script>
-  <script src="./app.js?v=v5-blank-20260718ag"></script>
+  <script>
+    (function () {
+      var attempt = 0;
+      var maxAttempts = 3;
+
+      function showFailure() {
+        var app = document.getElementById("app");
+        if (!app) return;
+        app.innerHTML = '<div class="boot">Sidan kunde inte starta. <button type="button" id="retry-app">Försök igen</button></div>';
+        var button = document.getElementById("retry-app");
+        if (button) button.onclick = function () { attempt = 0; loadApp(); };
+      }
+
+      function loadApp() {
+        if (window.__SVENSK_EHOCKEY_APP_READY__) return;
+        var currentAttempt = attempt++;
+        var script = document.createElement("script");
+        var finished = false;
+        var timer;
+
+        function retry() {
+          if (finished || window.__SVENSK_EHOCKEY_APP_READY__) return;
+          finished = true;
+          clearTimeout(timer);
+          script.onload = null;
+          script.onerror = null;
+          script.remove();
+          if (attempt < maxAttempts) setTimeout(loadApp, 350 * attempt);
+          else showFailure();
+        }
+
+        script.src = "./app.js?v=v5-blank-20260718ai&attempt=" + currentAttempt;
+        script.async = true;
+        script.onload = function () {
+          clearTimeout(timer);
+          if (!window.__SVENSK_EHOCKEY_APP_READY__) retry();
+        };
+        script.onerror = retry;
+        timer = setTimeout(retry, 12000);
+        document.body.appendChild(script);
+      }
+
+      loadApp();
+    })();
+  </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const ASSET_VERSION = "v5-blank-20260718ag";
+const ASSET_VERSION = "v5-blank-20260718ai";
 const JSON_CACHE = "svensk-ehockey-json";
 const MANIFESTS = {
   teamlogos: { file: "teamlogos.json", folder: "teamlogos", items: null, promise: null }
@@ -173,50 +173,9 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (/\.json$/i.test(url.pathname)) {
-    url.searchParams.delete("ts");
-    const cacheKey = url.href;
-    event.respondWith((async () => {
-      if (!self.caches) return fetch(cacheKey, { cache: "force-cache" });
-
-      const cache = await caches.open(JSON_CACHE);
-
-      async function findCachedJson() {
-        const current = await cache.match(cacheKey);
-        if (current) return current;
-
-        const keys = await caches.keys();
-        for (const key of keys) {
-          if (key === JSON_CACHE) continue;
-          const oldCache = await caches.open(key);
-          const oldMatch = await oldCache.match(cacheKey);
-          if (oldMatch) return oldMatch;
-        }
-
-        return null;
-      }
-
-      const cached = await findCachedJson();
-      const refresh = fetch(cacheKey, { cache: "force-cache" })
-        .then((response) => {
-          if (response.ok) {
-            cache.put(cacheKey, response.clone());
-            return response;
-          }
-          return cached || response;
-        })
-        .catch(() => cached);
-
-      if (cached) {
-        event.waitUntil(refresh);
-        return cached;
-      }
-
-      const response = await refresh;
-      return response || fetch(cacheKey, { cache: "reload" });
-    })());
-    return;
-  }
+  // JSON is fetched directly by the page. The app supplies timeout and retry;
+  // keeping data requests inside the service worker could leave them pending.
+  if (/\.json$/i.test(url.pathname)) return;
 
   const isImageRequest = event.request.destination === "image"
     || /\.(?:png|jpe?g|webp)$/i.test(url.pathname);

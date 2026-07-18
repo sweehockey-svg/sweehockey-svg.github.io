@@ -1,3 +1,6 @@
+(function () {
+if (window.__SVENSK_EHOCKEY_APP_READY__) return;
+
 const PAGES = [
   {
     "id": "hem",
@@ -318,8 +321,56 @@ body.v5-load-failed>#v5-load-failure{min-height:100vh;display:grid !important;pl
     });
   }
 
-  const ASSET_VERSION = "json-mobile-refresh-20260714";
-  const nativeFetch = window.fetch.bind(window);
+  const ASSET_VERSION = "json-resilient-20260718ai";
+  const nativeFetch = (window.__svenskNativeFetch || window.fetch).bind(window);
+
+  function resilientFetch(input, init) {
+    const options = init || {};
+    const method = String(options.method || (input && input.method) || "GET").toUpperCase();
+    if (method !== "GET") return nativeFetch(input, init);
+
+    const callerSignal = options.signal;
+    const maxAttempts = 3;
+
+    function run(attempt) {
+      if (callerSignal && callerSignal.aborted) {
+        return Promise.reject(callerSignal.reason || new DOMException("Aborted", "AbortError"));
+      }
+
+      const controller = new AbortController();
+      const forwardAbort = function () { controller.abort(callerSignal.reason); };
+      if (callerSignal) callerSignal.addEventListener("abort", forwardAbort, { once: true });
+      const timer = setTimeout(function () { controller.abort(); }, 12000);
+      const requestInit = { ...options, signal: controller.signal };
+
+      function cleanup() {
+        clearTimeout(timer);
+        if (callerSignal) callerSignal.removeEventListener("abort", forwardAbort);
+      }
+
+      return nativeFetch(input, requestInit).then(function (response) {
+        cleanup();
+        const retryableStatus = response.status === 408 || response.status === 425
+          || response.status === 429 || response.status >= 500;
+        if (retryableStatus && attempt + 1 < maxAttempts) {
+          return new Promise(function (resolve) {
+            setTimeout(resolve, 350 * (attempt + 1));
+          }).then(function () { return run(attempt + 1); });
+        }
+        return response;
+      }).catch(function (error) {
+        cleanup();
+        if (callerSignal && callerSignal.aborted) throw error;
+        if (attempt + 1 >= maxAttempts) throw error;
+        return new Promise(function (resolve) {
+          setTimeout(resolve, 350 * (attempt + 1));
+        }).then(function () { return run(attempt + 1); });
+      });
+    }
+
+    return run(0);
+  }
+
   window.fetch = function (input, init) {
     try {
       const raw = typeof input === "string" ? input : (input && input.url) || "";
@@ -341,7 +392,7 @@ body.v5-load-failed>#v5-load-failure{min-height:100vh;display:grid !important;pl
               headers: { "Content-Type": "application/json; charset=utf-8" }
             }));
           }
-          return nativeFetch(url.href, nextInit).then(response => {
+          return resilientFetch(url.href, nextInit).then(response => {
             if (!response.ok) return response;
             return response.clone().text().then(body => {
               if (body && body.trim()) parentCache.set(cacheKey, body);
@@ -355,12 +406,12 @@ body.v5-load-failed>#v5-load-failure{min-height:100vh;display:grid !important;pl
         }
         if (shouldRewrite) {
           const absolute = url.href;
-          if (typeof input === "string") return nativeFetch(absolute, nextInit);
-          return nativeFetch(new Request(absolute, input), nextInit);
+          if (typeof input === "string") return resilientFetch(absolute, nextInit);
+          return resilientFetch(new Request(absolute, input), nextInit);
         }
       }
     } catch (error) {}
-    return nativeFetch(input, init);
+    return resilientFetch(input, init);
   };
   const map = {
     "": "hem",
@@ -1388,23 +1439,67 @@ body.v5-load-failed>#v5-load-failure{min-height:100vh;display:grid !important;pl
       }
     }
     const nativeFetch = window.fetch.bind(window);
+    window.__svenskNativeFetch = nativeFetch;
+
+    function earlyResilientFetch(input, init) {
+      const options = init || {};
+      const method = String(options.method || (input && input.method) || "GET").toUpperCase();
+      if (method !== "GET") return nativeFetch(input, init);
+      const callerSignal = options.signal;
+
+      function run(attempt) {
+        if (callerSignal && callerSignal.aborted) {
+          return Promise.reject(callerSignal.reason || new DOMException("Aborted", "AbortError"));
+        }
+        const controller = new AbortController();
+        const forwardAbort = function () { controller.abort(callerSignal.reason); };
+        if (callerSignal) callerSignal.addEventListener("abort", forwardAbort, { once: true });
+        const timer = setTimeout(function () { controller.abort(); }, 12000);
+        const requestInit = { ...options, signal: controller.signal };
+
+        function cleanup() {
+          clearTimeout(timer);
+          if (callerSignal) callerSignal.removeEventListener("abort", forwardAbort);
+        }
+
+        return nativeFetch(input, requestInit).then(function (response) {
+          cleanup();
+          const retryable = response.status === 408 || response.status === 425
+            || response.status === 429 || response.status >= 500;
+          if (retryable && attempt < 2) {
+            return new Promise(function (resolve) { setTimeout(resolve, 350 * (attempt + 1)); })
+              .then(function () { return run(attempt + 1); });
+          }
+          return response;
+        }).catch(function (error) {
+          cleanup();
+          if (callerSignal && callerSignal.aborted) throw error;
+          if (attempt >= 2) throw error;
+          return new Promise(function (resolve) { setTimeout(resolve, 350 * (attempt + 1)); })
+            .then(function () { return run(attempt + 1); });
+        });
+      }
+
+      return run(0);
+    }
+
     window.fetch = function (input, init) {
       try {
         const raw = typeof input === "string" ? input : (input && input.url) || "";
-        if (isEmptyManagedImage(raw)) return nativeFetch(earlyPlaceholder(earlyImageKind(raw)), init);
+        if (isEmptyManagedImage(raw)) return earlyResilientFetch(earlyPlaceholder(earlyImageKind(raw)), init);
         if (raw && !/^[a-z]+:/i.test(raw) && !raw.startsWith("//")) {
           const url = new URL(raw, parent.location.origin + "/");
           const isLocalJson = /\.json$/i.test(url.pathname) && url.origin === parent.location.origin;
           if (isLocalJson) {
-            url.searchParams.set("v", "json-mobile-refresh-20260714");
+            url.searchParams.set("v", "json-resilient-20260718ai");
           }
           const nextInit = isLocalJson ? { ...(init || {}), cache: "no-store" } : init;
           const absolute = url.href;
-          if (typeof input === "string") return nativeFetch(absolute, nextInit);
-          return nativeFetch(new Request(absolute, input), nextInit);
+          if (typeof input === "string") return earlyResilientFetch(absolute, nextInit);
+          return earlyResilientFetch(new Request(absolute, input), nextInit);
         }
       } catch (error) {}
-      return nativeFetch(input, init);
+      return earlyResilientFetch(input, init);
     };
   }
 
@@ -2555,3 +2650,5 @@ window.addEventListener("message", (event) => {
 
 window.addEventListener("hashchange", render);
 render();
+window.__SVENSK_EHOCKEY_APP_READY__ = true;
+})();
