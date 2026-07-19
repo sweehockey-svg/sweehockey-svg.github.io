@@ -141,12 +141,317 @@ PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"]
 
 PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"].replace(
   "Alla spelare som spelat eller varit registrerade i ${escapeHtml(team.name)}",
-  "Spelare i ${escapeHtml(team.name)}"
+  "Spelare i ${escapeHtml(team.name)} - All-time"
 );
 
 PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"].replace(
   '          <span class="meta-pill">Visning: ${getCurrentViewMode() === "name" ? "lagnamn" : "lag-ID"}</span>\n',
   ""
+);
+
+const ITHL_TEAM_CSS = String.raw`
+    .ithl-panel{ margin-top:28px; }
+    .ithl-panel__head{ display:flex; align-items:end; justify-content:space-between; gap:24px; margin-bottom:22px; }
+    .ithl-panel__head h3{ margin:4px 0 0; }
+    .ithl-panel__note{ max-width:680px; margin:0; color:var(--muted); line-height:1.55; }
+    .ithl-seasons{ display:grid; gap:18px; }
+    .ithl-season{ padding-top:18px; border-top:1px solid rgba(255,255,255,.14); }
+    .ithl-season:first-child{ padding-top:0; border-top:0; }
+    .ithl-season__title{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+    .ithl-season__title strong{ font-size:22px; }
+    .ithl-division{ padding:5px 9px; border:1px solid rgba(255,207,43,.38); color:#ffcf2b; font-size:12px; font-weight:950; text-transform:uppercase; }
+    .ithl-roster{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-top:1px solid rgba(255,255,255,.10); border-left:1px solid rgba(255,255,255,.10); }
+    .ithl-player{ min-width:0; padding:14px; border-right:1px solid rgba(255,255,255,.10); border-bottom:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.018); }
+    .ithl-player strong{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#f7f4ec; }
+    .ithl-player span{ display:block; margin-top:5px; color:#aeb3b2; font-size:12px; line-height:1.45; }
+    @media (max-width:900px){ .ithl-panel__head{ display:block; } .ithl-panel__note{ margin-top:10px; } .ithl-roster{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:560px){ .ithl-roster{ grid-template-columns:1fr; } }
+`;
+
+const ITHL_TEAM_HELPER_SOURCE = String.raw`
+      function ithlRowsForTeam(team) {
+        const ids = new Set([team.teamID, ...Array.from(team.teamIDs || [])]
+          .filter(value => value !== undefined && value !== null && value !== "")
+          .map(value => String(value)));
+        return (ithlData.teamHistory || [])
+          .filter(row => row && row.teamID !== undefined && row.teamID !== null && ids.has(String(row.teamID)))
+          .sort((left, right) => Number(right.season || 0) - Number(left.season || 0));
+      }
+
+      function formatIthlNumber(value, decimals) {
+        const number = Number(value);
+        if (!Number.isFinite(number)) return "–";
+        return number.toLocaleString("sv-SE", { minimumFractionDigits: decimals || 0, maximumFractionDigits: decimals || 0 });
+      }
+
+      function renderIthlPlayer(player) {
+        const isGoalie = String(player.primaryRole || "").toUpperCase() === "G";
+        const name = player.canonicalPlayerName || player.playerName || "Okänd spelare";
+        const stats = isGoalie
+          ? [formatIthlNumber(player.gamesPlayed) + " GP", formatIthlNumber(player.savePct, 1) + " SV%", formatIthlNumber(player.gaa, 2) + " GAA", formatIthlNumber(player.shutouts) + " SO"]
+          : [formatIthlNumber(player.gamesPlayed) + " GP", formatIthlNumber(player.goals) + " G", formatIthlNumber(player.assists) + " A", formatIthlNumber(player.points) + " PTS"];
+        return '<div class="ithl-player"><strong>' + escapeHtml(name) + '</strong><span>' + escapeHtml(stats.join(" · ")) + '</span></div>';
+      }
+
+      function renderIthlTeamSection(team) {
+        const rows = ithlRowsForTeam(team);
+        if (!rows.length) return "";
+        const seasons = rows.map(row => {
+          const players = (row.players || []).slice().sort((left, right) => {
+            const leftGoalie = String(left.primaryRole || "").toUpperCase() === "G";
+            const rightGoalie = String(right.primaryRole || "").toUpperCase() === "G";
+            if (leftGoalie !== rightGoalie) return leftGoalie ? 1 : -1;
+            return Number(right.points || right.savePct || 0) - Number(left.points || left.savePct || 0);
+          });
+          return '<div class="ithl-season">' +
+            '<div class="ithl-season__title"><strong>' + escapeHtml(row.seasonLabel || ("ITHL S" + row.season)) + '</strong><span class="ithl-division">' + escapeHtml(row.division || "") + '</span><span class="meta-pill">' + players.length + ' spelare</span></div>' +
+            '<div class="ithl-roster">' + players.map(renderIthlPlayer).join("") + '</div>' +
+          '</div>';
+        }).join("");
+        return '<section class="panel ithl-panel">' +
+          '<div class="ithl-panel__head"><div><div class="panel-kicker">ITHL</div><h3>ITHL-historik</h3></div>' +
+          '<p class="ithl-panel__note">Svenska spelarinsatser för klubben i ITHL. Källan innehåller individuell spelarstatistik; lagresultat och tabellplaceringar ingår inte.</p></div>' +
+          '<div class="ithl-seasons">' + seasons + '</div>' +
+        '</section>';
+      }
+`;
+
+const ITHL_TEAM_MERGE_HELPER_SOURCE = String.raw`
+      function mergeIthlTeamSeasonsIntoData(payload) {
+        const records = (payload?.teamHistory || [])
+          .filter(row => row && row.teamID !== undefined && row.teamID !== null)
+          .map(row => {
+            const players = (row.players || []).map(player => ({
+              playerID: player.playerID,
+              name: player.canonicalPlayerName || player.playerName || "Ok\u00e4nd spelare",
+              primaryRole: player.primaryRole || "",
+              gamesPlayed: safeNumber(player.gamesPlayed),
+              games: safeNumber(player.gamesPlayed),
+              regularGames: safeNumber(player.gamesPlayed),
+              playoffGames: 0,
+              played: safeNumber(player.gamesPlayed) > 0,
+              skaterGames: String(player.primaryRole || "").toUpperCase() === "G" ? 0 : safeNumber(player.gamesPlayed),
+              goalieGames: String(player.primaryRole || "").toUpperCase() === "G" ? safeNumber(player.gamesPlayed) : 0,
+              goals: safeNumber(player.goals),
+              assists: safeNumber(player.assists),
+              points: safeNumber(player.points),
+              saves: safeNumber(player.saves),
+              goalsAllowed: safeNumber(player.goalsAllowed),
+              shotsAgainst: safeNumber(player.shotsAgainst),
+              savePct: player.savePct || "",
+              gaa: player.gaa || "",
+              shutouts: safeNumber(player.shutouts)
+            }));
+            const organization = String(row.organization || row.leagueName || "ITHL").toUpperCase();
+            const name = row.teamName || row.canonicalTeamName || (organization + "-lag");
+            return {
+              organization,
+              isIthl: organization === "ITHL",
+              isExternalLeague: true,
+              statsUnavailable: true,
+              leagueID: row.leagueID || -((organization === "SM" ? 3000 : (organization === "LGEL" ? 2000 : 1000)) + safeNumber(row.season)),
+              leagueName: organization,
+              seasonLabel: row.seasonLabel || (organization === "SM" ? "SM " + row.season : organization + " S" + row.season),
+              seasonName: organization === "SM" ? String(row.season) : "S" + row.season,
+              seasonYear: row.seasonYear,
+              startDate: row.startDate || row.seasonDate || "",
+              seasonDate: row.seasonDate || row.startDate || "",
+              teamID: row.teamID,
+              name,
+              teamName: name,
+              seasonTeamName: name,
+              currentName: name,
+              teamUrl: row.teamUrl || (organization === "LGEL" ? "https://www.leaguegaming.com/forums/index.php?forums/lgel.649/" : (organization === "ITHL" ? "https://ithl.hockey/home" : "")),
+              division: String(row.division || organization).toUpperCase(),
+              playerCount: players.length,
+              playedPlayerCount: players.filter(player => player.gamesPlayed > 0).length,
+              players,
+              stats: { gamesPlayed: 0, wins: 0, losses: 0, regularPoints: 0, goalsFor: 0, goalsAgainst: 0, playoffGames: 0, playoffWins: 0, playoffLosses: 0 }
+            };
+          });
+        if (!records.length) return;
+        cardData = { ...cardData, teams: [...(cardData.teams || []), ...records] };
+        teamsData = { ...teamsData, teams: [...(teamsData.teams || []), ...records] };
+      }
+`;
+
+PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"]
+  .replace("</style>", ITHL_TEAM_CSS + "\n</style>")
+  .replace(
+    '        secLegacy: "./svenska-lag-historia-sec-legacy.json"\n      };',
+    '        secLegacy: "./svenska-lag-historia-sec-legacy.json",\n        ithl: "./ithl.json"\n      };'
+  )
+  .replace(
+    "      let podiumData = { podiums: [] };",
+    "      let podiumData = { podiums: [] };\n      let ithlData = { teamHistory: [], podiums: [] };"
+  )
+  .replace(
+    "      function renderTeamPage(team) {",
+    ITHL_TEAM_MERGE_HELPER_SOURCE + "\n\n      function renderTeamPage(team) {"
+  )
+  .replace(
+    '    ${renderTeamPodiums(team)}\n\n',
+    '    ${renderTeamPodiums(team)}\n\n'
+  )
+  .replace(
+    "const [cards, teams, teamHistory, playerHistory, playerIndex, playerCompletions, podiums, secLegacy, nationalityOverrides] = await Promise.all([",
+    "const [cards, teams, teamHistory, playerHistory, playerIndex, playerCompletions, podiums, secLegacy, nationalityOverrides, ithl] = await Promise.all(["
+  )
+  .replace(
+    '          loadJson(FILES.nationalityOverrides, { playerIds: [], names: [] })\n        ]);',
+    '          loadJson(FILES.nationalityOverrides, { playerIds: [], names: [] }),\n          (initialIsPlayersIndexRoute || initialIsPlayerRoute) ? Promise.resolve({ teamHistory: [], podiums: [] }) : loadJson(FILES.ithl, { teamHistory: [], podiums: [] })\n        ]);'
+  )
+  .replace(
+    "        podiumData = mergedPodiums;",
+    "        ithlData = ithl || { teamHistory: [], podiums: [] };\n        podiumData = { ...mergedPodiums, podiums: [...(mergedPodiums.podiums || []), ...(ithlData.podiums || [])] };\n        mergeIthlTeamSeasonsIntoData(ithlData);"
+  );
+
+PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"]
+  .replace(
+    '        if (/\\bCORE\\b/.test(label)) return "CORE";\n        if (/\\bNEO\\b|NEWCOMERS/.test(label)) return "NEO";',
+    '        if (/\\bCORE\\b/.test(label)) return "CORE";\n        if (/\\bSWEAT\\b/.test(label)) return "SWEAT";\n        if (/\\bRAMMER\\b/.test(label)) return "RAMMER";\n        if (/\\bLGEL\\b/.test(label)) return "LGEL";\n        if (/\\bITHL\\b/.test(label)) return "ITHL";\n        if (/\\bSM\\b/.test(label)) return "SM";\n        if (/\\bNEO\\b|NEWCOMERS/.test(label)) return "NEO";'
+  )
+  .replace(
+    '        if (key === "ESHL") return "eSHL";\n        return key ? (divisionLabelsByRank[key] || key) : "ECL";',
+    '        if (key === "ESHL") return "eSHL";\n        if (key === "SWEAT") return "Sweat";\n        if (key === "RAMMER") return "Rammer";\n        if (key === "LGEL") return "LGEL";\n        if (key === "ITHL") return "ITHL";\n        if (key === "SM") return "SM";\n        return key ? (divisionLabelsByRank[key] || key) : "ECL";'
+  );
+
+PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"]
+  .replace(
+    '      function divisionRankValue(value) {\n        return divisionRank[normalizeDivisionName(value)] || 99;\n      }',
+    '      function divisionBaseKey(value) {\n        const raw = String(value || "").trim().toUpperCase().replace(/^(ITHL|LGEL|SM)\\s+/, "");\n        return normalizeDivisionName(raw);\n      }\n\n      function divisionRankValue(value) {\n        return divisionRank[divisionBaseKey(value)] || 99;\n      }'
+  )
+  .replace(
+    '      function divisionDisplayName(value) {\n        const key = normalizeDivisionName(value);\n        return divisionLabelsByRank[key] || String(value || "").trim() || "-";\n      }',
+    '      function divisionDisplayName(value) {\n        const raw = String(value || "").trim();\n        const organization = (raw.toUpperCase().match(/^(ITHL|LGEL|SM)(?:\\s+|$)/) || [])[1] || "";\n        const key = divisionBaseKey(raw);\n        const tierLabels = { ELITE: "Elite", PRO: "Pro", LITE: "Lite", CORE: "Core", NEO: "Neo", SWEAT: "Sweat", RAMMER: "Rammer" };\n        if (organization === "ITHL") return "ITHL" + (key && key !== "ITHL" ? " - " + (tierLabels[key] || key) : "");\n        if (organization === "LGEL") return "LGEL";\n        if (organization === "SM") return "SM" + (key && key !== "SM" ? " - " + (tierLabels[key] || key) : "");\n        return divisionLabelsByRank[key] || raw || "-";\n      }'
+  )
+  .replace(
+    '      function divisionClassName(value) {\n        const key = normalizeDivisionName(value).toLowerCase();',
+    '      function divisionClassName(value) {\n        const key = divisionBaseKey(value).toLowerCase();'
+  )
+  .replace(
+    '      function isQualifierDivisionName(value) {',
+    '      function contextualDivisionName(item) {\n        const organization = String(item?.organization || item?.leagueName || "").trim().toUpperCase();\n        const division = normalizeDivisionName(item?.division || item?.divisionKey || "");\n        if (organization === "ITHL") return "ITHL" + (division ? " " + division : "");\n        if (organization === "LGEL") return "LGEL";\n        if (organization === "SM") return "SM" + (division ? " " + division : "");\n        return division;\n      }\n\n      function isQualifierDivisionName(value) {'
+  )
+  .replace(
+    '          if (team.division && countsAsSeason) agg.divisions.add(normalizeDivisionName(team.division));',
+    '          if (team.division && countsAsSeason) agg.divisions.add(contextualDivisionName(team));'
+  )
+  .replace(
+    '      if (countsForSeason && (season.division || seasonCard.division)) row.divisions.add(normalizeDivisionName(season.division || seasonCard.division));',
+    '      if (countsForSeason && (season.division || seasonCard.division)) row.divisions.add(contextualDivisionName(season.division ? season : seasonCard));'
+  )
+  .replace(
+    '          if (countsForSeason && row.division) player.divisions.add(normalizeDivisionName(row.division));',
+    '          if (countsForSeason && row.division) player.divisions.add(contextualDivisionName(row));'
+  );
+
+// Keep ECL divisions and similarly named external divisions separate in the
+// directory filters. For example, ITHL Core must not match ECL Core.
+PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"]
+  .replaceAll(
+    '<option value="SCL">SCL</option>',
+    '<option value="SCL">SCL</option><option value="ITHL ELITE">ITHL - Elite</option><option value="ITHL SWEAT">ITHL - Sweat</option><option value="ITHL RAMMER">ITHL - Rammer</option><option value="ITHL CORE">ITHL - Core</option><option value="LGEL">LGEL</option><option value="SM">SM</option>'
+  )
+  .replace(
+    '${divisionColorOrder.map(div => `<option value="${escapeHtml(div)}">${escapeHtml(divisionDisplayName(div))}</option>`).join("")}',
+    '${[...divisionColorOrder, "ITHL ELITE", "ITHL SWEAT", "ITHL RAMMER", "ITHL CORE", "LGEL", "SM"].map(div => `<option value="${escapeHtml(div)}">${escapeHtml(divisionDisplayName(div))}</option>`).join("")}'
+  )
+  .replace(
+    '      function divisionRankValue(value) {\n        return divisionRank[divisionBaseKey(value)] || 99;\n      }',
+    '      function divisionFilterKey(value) {\n        const raw = String(value || "").trim().toUpperCase();\n        const organization = (raw.match(/^(ITHL|LGEL|SM)(?:\\s+|$)/) || [])[1] || "";\n        const key = divisionBaseKey(raw);\n        if (organization === "ITHL") return "ITHL" + (key && key !== "ITHL" ? " " + key : "");\n        if (organization === "LGEL") return "LGEL";\n        if (organization === "SM") return "SM" + (key && key !== "SM" ? " " + key : "");\n        return key;\n      }\n\n      function divisionRankValue(value) {\n        return divisionRank[divisionBaseKey(value)] || 99;\n      }'
+  )
+  .replace(
+    '          const selectedDivision = normalizeDivisionName(division);\n          const matchesDivision = division === "all" || [...team.divisions].some(item => normalizeDivisionName(item) === selectedDivision);',
+    '          const selectedDivision = divisionFilterKey(division);\n          const matchesDivision = division === "all" || [...team.divisions].some(item => divisionFilterKey(item) === selectedDivision);'
+  )
+  .replace(
+    '          const divisions = Array.from(player.divisions || []).map(normalizeDivisionName).filter(Boolean);',
+    '          const divisions = Array.from(player.divisions || []).map(divisionFilterKey).filter(Boolean);'
+  )
+  .replace(
+    '          const divisionValue = rawDivisionValue === "all" ? "all" : normalizeDivisionName(rawDivisionValue);',
+    '          const divisionValue = rawDivisionValue === "all" ? "all" : divisionFilterKey(rawDivisionValue);'
+  );
+
+// Direct player profiles are initially rebuilt from the large legacy history
+// archive. Keep its biography and row data, but let the compact player index
+// provide the authoritative totals because it also contains imported ITHL.
+PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"].replace(
+  '              fromHistory.divisions = Array.isArray(fromIndex.divisions) ? fromIndex.divisions.slice() : fromHistory.divisions;\n              fromHistory.clubCount =',
+  '              fromHistory.divisions = Array.isArray(fromIndex.divisions) ? fromIndex.divisions.slice() : fromHistory.divisions;\n              ["gamesPlayed", "regularGames", "playoffGames", "skaterGames", "goalieGames", "goals", "assists", "points", "pim", "saves", "shotsAgainst", "goalsAllowed", "shutouts", "goalieWins"].forEach(key => {\n                if (fromIndex[key] !== undefined && fromIndex[key] !== null) fromHistory[key] = fromIndex[key];\n              });\n              if (fromIndex.savePct !== undefined && fromIndex.savePct !== null) fromHistory.savePct = fromIndex.savePct;\n              if (fromIndex.gaa !== undefined && fromIndex.gaa !== null) fromHistory.gaa = fromIndex.gaa;\n              fromHistory.ithlTotals = fromIndex.ithlTotals || fromHistory.ithlTotals;\n              fromHistory.clubCount ='
+);
+
+PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"]
+  .replace(
+    '                  const linkInfo = seasonExternalLinkInfo(detail) || seasonExternalLinkInfo(seasonCard);',
+    '                  const linkInfo = seasonExternalLinkInfo(detail) || seasonExternalLinkInfo(seasonCard);\n                  const statsUnavailable = Boolean(detail.statsUnavailable || seasonCard.statsUnavailable);'
+  )
+  .replace(
+    '                      <td>${safeNumber(s.gamesPlayed)}</td>\n                      <td>${safeNumber(s.wins)}-${safeNumber(s.losses)}</td>\n                      <td>${safeNumber(s.regularPoints)}</td>\n                      <td>${safeNumber(s.goalsFor)}-${safeNumber(s.goalsAgainst)}</td>',
+    '                      <td>${statsUnavailable ? "-" : safeNumber(s.gamesPlayed)}</td>\n                      <td>${statsUnavailable ? "-" : safeNumber(s.wins) + "-" + safeNumber(s.losses)}</td>\n                      <td>${statsUnavailable ? "-" : safeNumber(s.regularPoints)}</td>\n                      <td>${statsUnavailable ? "-" : safeNumber(s.goalsFor) + "-" + safeNumber(s.goalsAgainst)}</td>'
+  )
+  .replace('${player.seasons.size} ECL \u2022 ${divisions}', '${player.seasons.size} s\u00e4songer \u2022 ${divisions}');
+
+PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"].replace(
+  '          const label = /sportsgamer\\.gg/i.test(teamUrlValue) ? "SportsGamer" : "L\u00e4nk";',
+  '          const label = /ithl\\.hockey/i.test(teamUrlValue) ? "ITHL" : (/leaguegaming\\.com/i.test(teamUrlValue) ? "LGEL" : (/sportsgamer\\.gg/i.test(teamUrlValue) ? "SportsGamer" : "L\u00e4nk"));'
+);
+
+// The compact player index and the full history archive can contain the same
+// SEC appearance with slightly different division labels. De-duplicate on
+// season and team so one appearance is rendered only once.
+PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"].replace(
+  '            const key = [item.leagueID || "", item.teamID || "", item.seasonLabel || item.season || item.leagueName || "", item.teamName || item.team || item.name || "", item.division || ""].join("|");',
+  '            const seasonKey = String(item.seasonLabel || item.season || item.leagueName || "").toUpperCase().replace(/\\bDIV(?:ISION)?\\s*\\d+\\b/g, "").replace(/\\s+/g, " ").trim();\n            const teamKey = String(item.teamName || item.team || item.name || "").toUpperCase().replace(/[^A-Z0-9]/g, "");\n            const key = [seasonKey, teamKey].join("|");'
+);
+
+PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"].replace(
+  "Vinster, po\u00e4ng och m\u00e5lskillnad per s\u00e4song.",
+  "S\u00e4songer, divisioner och tillg\u00e4nglig lagstatistik."
+);
+
+// Exact imported dates sort ITHL seasons between the established ECL/SCL
+// seasons. Older history rows do not have dates, so give modern rows a stable
+// calendar position based on their season year and split.
+const PLAYER_HISTORY_DATE_SOURCE = String.raw`
+      function playerHistoryDateValue(row) {
+        const dateValue = row?.date || row?.startDate || row?.seasonDate || row?.endDate || row?.createdAt || row?.updatedAt;
+        if (!dateValue) return 0;
+        const parsed = Date.parse(dateValue);
+        if (!Number.isFinite(parsed)) return 0;
+
+        // Existing ECL/SCL/SEC rows are ordered by their historical league ID.
+        // Convert exact imported dates to the same scale so ITHL/LGEL land
+        // between the correct established seasons instead of always first.
+        const anchors = [
+          [Date.UTC(2024, 9, 1), 413],
+          [Date.UTC(2025, 0, 1), 447],
+          [Date.UTC(2025, 3, 1), 463],
+          [Date.UTC(2025, 9, 1), 489],
+          [Date.UTC(2026, 0, 15), 498],
+          [Date.UTC(2026, 3, 1), 509],
+          [Date.UTC(2026, 5, 15), 520]
+        ];
+        let left = anchors[0];
+        let right = anchors[anchors.length - 1];
+        if (parsed <= left[0]) return left[1] + (parsed - left[0]) / 86400000 * 0.05;
+        if (parsed >= right[0]) return right[1] + (parsed - right[0]) / 86400000 * 0.05;
+        for (let i = 1; i < anchors.length; i += 1) {
+          if (parsed <= anchors[i][0]) {
+            left = anchors[i - 1];
+            right = anchors[i];
+            break;
+          }
+        }
+        const ratio = (parsed - left[0]) / (right[0] - left[0]);
+        return left[1] + (right[1] - left[1]) * ratio;
+      }
+`;
+
+PAGE_HTML["laghistoria"] = PAGE_HTML["laghistoria"].replace(
+  /      function playerHistoryDateValue\(row\) \{[\s\S]*?\n      \}\n\n      function legacySecSortValue/,
+  PLAYER_HISTORY_DATE_SOURCE + "\n      function legacySecSortValue"
 );
 
 PAGE_HTML["ecl26spring"] = PAGE_HTML["spring-byten"]
@@ -336,7 +641,7 @@ body.v5-load-failed>#v5-load-failure{min-height:100vh;display:grid !important;pl
     document.documentElement.classList.add("v5-ready");
   }
 
-  const ASSET_VERSION = "json-resilient-20260718ak";
+  const ASSET_VERSION = "json-sheet-20260719aw";
   const nativeFetch = (window.__svenskNativeFetch || window.fetch).bind(window);
 
   function resilientFetch(input, init) {
@@ -1514,7 +1819,7 @@ body.v5-load-failed>#v5-load-failure{min-height:100vh;display:grid !important;pl
           const url = new URL(raw, parent.location.origin + "/");
           const isLocalJson = /\.json$/i.test(url.pathname) && url.origin === parent.location.origin;
           if (isLocalJson) {
-            url.searchParams.set("v", "json-resilient-20260718ak");
+            url.searchParams.set("v", "json-sheet-20260719aw");
           }
           const nextInit = isLocalJson ? { ...(init || {}), cache: "no-store" } : init;
           const absolute = url.href;
@@ -2007,6 +2312,7 @@ const ADMIN_PENDING_PASSWORD_KEY = "svensk-ehockey-admin-pending-password";
 const ADMIN_LAST_RUN_STORAGE_KEY = "svensk-ehockey-admin-last-runs";
 const ADMIN_DEFAULT_WORKER_URL = "https://svensk-json-admin.sweehockey.workers.dev";
 const ADMIN_SETUP_PASSWORD = "kungkenu";
+const ADMIN_SHEET_TRIGGER_FILE = "svenska-spelare-index.json";
 const ADMIN_JSON_FILES = [
   "svenskstatistikecl26spring.json",
   "svenska-lag-historia.json",
@@ -2016,6 +2322,7 @@ const ADMIN_JSON_FILES = [
   "svenska-lag-historia-player-completions.json",
   "svenska-lag-historia-podiums.json",
   "svenska-spelare-index.json",
+  "ithl.json",
   "svenska-lag-historia-sec-legacy.json",
   "teamlogos.json"
 ];
@@ -2382,6 +2689,16 @@ function renderAdminCloudflare() {
       <button type="button" id="logoutAdmin">Logga ut</button>
     </div>
     <p class="admin-status" id="jsonUpdateStatus"></p>
+    <article class="admin-file-card admin-sheet-update">
+      <div>
+        <strong>ITHL, LGEL och SM fr&aring;n Google Sheets</strong>
+        <span>H&auml;mtar de senaste utespelarna, m&aring;lvakterna, datumen och vinnarna. D&auml;refter byggs ithl.json och svenska-spelare-index.json om automatiskt.</span>
+        <span class="admin-last-run" id="sheetUpdateLastRun">${escapeHtml(formatAdminLastRun(readAdminLastRuns()["ithl.json"]))}</span>
+      </div>
+      <div class="admin-file-actions">
+        <button type="button" id="updateExternalSheet">H&auml;mta senaste fr&aring;n Google Sheets</button>
+      </div>
+    </article>
     <form class="admin-uploader" id="jsonUploader">
       <label>
         JSON-fil pa sidan
@@ -2444,10 +2761,38 @@ function renderAdminCloudflare() {
       status.textContent = "Startar uppdatering av alla JSON via Cloudflare...";
       await adminWorkerRequest("update", { file: "all" });
       ADMIN_AUTO_UPDATE_FILES.forEach((file) => markAdminLastRun(file, "startad"));
-      status.textContent = "GitHub Actions startad for alla JSON.";
+      markAdminLastRun("ithl.json", "startad");
+      document.getElementById("sheetUpdateLastRun").textContent = formatAdminLastRun(readAdminLastRuns()["ithl.json"]);
+      status.textContent = "GitHub Actions startad for alla JSON, inklusive Google Sheets-importen.";
       renderList();
     } catch (error) {
       status.textContent = "Kunde inte starta uppdatering: " + error.message;
+    }
+  });
+
+  document.getElementById("updateExternalSheet").addEventListener("click", async (event) => {
+    const status = document.getElementById("jsonUpdateStatus");
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      status.textContent = "Startar import fr\u00e5n Google Sheets...";
+      try {
+        await adminWorkerRequest("update", { file: ADMIN_SHEET_TRIGGER_FILE });
+      } catch (error) {
+        if (!/Ogiltig fil/i.test(String(error.message || ""))) throw error;
+        status.textContent = "Workern \u00e4r en \u00e4ldre version. Startar importen via lagregistret...";
+        await adminWorkerRequest("update", { file: "svenska-lag-historia-teams.json" });
+        markAdminLastRun("svenska-lag-historia-teams.json", "startad");
+      }
+      markAdminLastRun("ithl.json", "startad");
+      markAdminLastRun("svenska-spelare-index.json", "startad");
+      document.getElementById("sheetUpdateLastRun").textContent = formatAdminLastRun(readAdminLastRuns()["ithl.json"]);
+      status.textContent = "Google Sheets-importen \u00e4r startad. GitHub bygger och publicerar filerna automatiskt; det brukar ta n\u00e5gra minuter.";
+      renderList();
+    } catch (error) {
+      status.textContent = "Kunde inte starta Google Sheets-importen: " + error.message;
+    } finally {
+      button.disabled = false;
     }
   });
 
@@ -2508,8 +2853,9 @@ function renderAdminCloudflare() {
           markAdminLastRun("svenska-lag-historia-teams.json", "startad");
         }
         markAdminLastRun(updateFile, "startad");
+        if (updateFile === "svenska-spelare-index.json") markAdminLastRun("ithl.json", "startad");
         status.textContent = updateFile === "svenska-spelare-index.json"
-          ? "GitHub Actions startad for spelarindex. Om Workern var gammal byggs den via svenska-lag-historia-teams.json."
+          ? "GitHub Actions startad for spelarindex och Google Sheets-importen. Om Workern var gammal byggs den via svenska-lag-historia-teams.json."
           : "GitHub Actions startad for " + updateFile + ".";
         renderList();
       } catch (error) {
