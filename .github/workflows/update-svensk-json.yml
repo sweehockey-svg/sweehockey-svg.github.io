@@ -76,16 +76,18 @@ jobs:
         run: |
           set -euo pipefail
 
-          : "${DB_NAME:?Missing SVENSK_DB_NAME secret}"
-          : "${DB_USER:?Missing SVENSK_DB_USER secret}"
-          : "${DB_PASSWORD:?Missing SVENSK_DB_PASSWORD secret}"
+          if [ "$REQUESTED_FILE" != "svenska-spelare-index.json" ]; then
+            : "${DB_NAME:?Missing SVENSK_DB_NAME secret}"
+            : "${DB_USER:?Missing SVENSK_DB_USER secret}"
+            : "${DB_PASSWORD:?Missing SVENSK_DB_PASSWORD secret}"
 
-          if [ -n "${SSH_HOST:-}" ]; then
-            DB_HOST="${DB_HOST:-127.0.0.1}"
-            DB_PORT="${DB_PORT:-${SSH_LOCAL_DB_PORT:-3307}}"
-          else
-            : "${DB_HOST:?Missing SVENSK_DB_HOST secret}"
-            DB_PORT="${DB_PORT:-3306}"
+            if [ -n "${SSH_HOST:-}" ]; then
+              DB_HOST="${DB_HOST:-127.0.0.1}"
+              DB_PORT="${DB_PORT:-${SSH_LOCAL_DB_PORT:-3307}}"
+            else
+              : "${DB_HOST:?Missing SVENSK_DB_HOST secret}"
+              DB_PORT="${DB_PORT:-3306}"
+            fi
           fi
 
           export_one() {
@@ -121,6 +123,9 @@ jobs:
               svenska-lag-historia-teams.json)
                 export_one "$1" "sql/svenska-lag-historia-teams.sql"
                 node tools/build-svenska-spelare-index.cjs
+                if [ "$REQUESTED_FILE" != "all" ]; then
+                  node tools/import-ithl.cjs
+                fi
                 ;;
               svenska-lag-historia-player-history.json)
                 export_one "$1" "sql/svenska-lag-historia-player-history.sql"
@@ -133,6 +138,7 @@ jobs:
                 ;;
               svenska-spelare-index.json)
                 node tools/build-svenska-spelare-index.cjs
+                node tools/import-ithl.cjs
                 ;;
               *)
                 echo "No automatic SQL export configured for $1" >&2
