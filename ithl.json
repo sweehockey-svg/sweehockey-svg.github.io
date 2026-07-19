@@ -17,7 +17,7 @@
       "url": ""
     }
   ],
-  "updated": "2026-07-19T13:30:43.404Z",
+  "updated": "2026-07-19T18:14:03.093Z",
   "source": {
     "spreadsheet": "https://docs.google.com/spreadsheets/d/14Gf1A5WpepEjmSDHyNAQkeBEO-q_WrGgRYWNB3qgk4Q/edit",
     "sheets": {
@@ -99,7 +99,7 @@
     "uniquePlayers": 926,
     "uniqueSwedishPlayers": 203,
     "matchedPlayers": 201,
-    "uniqueTeams": 94,
+    "uniqueTeams": 96,
     "matchedTeams": 25,
     "podiums": 24,
     "winners": 12,
@@ -2949,7 +2949,7 @@
       "rank": 100,
       "playerName": "AntonLxnd",
       "nationality": "Svensk",
-      "teamName": "wNexs",
+      "teamName": "vNexs I",
       "position": "LW",
       "primaryRole": "Skater",
       "gamesPlayed": 12,
@@ -2965,7 +2965,9 @@
       "playerID": 13290,
       "canonicalPlayerName": "AntonLxnd",
       "playerMatch": "exact",
-      "teamMatch": "unmatched"
+      "teamID": 262,
+      "canonicalTeamName": "Bucketeers",
+      "teamMatch": "exact"
     },
     {
       "organization": "LGEL",
@@ -3001,7 +3003,7 @@
       "rank": 93,
       "playerName": "Dippen04",
       "nationality": "Svensk",
-      "teamName": "wNexs",
+      "teamName": "vNexs I",
       "position": "C",
       "primaryRole": "Skater",
       "gamesPlayed": 10,
@@ -3017,7 +3019,9 @@
       "playerID": 16274,
       "canonicalPlayerName": "Dippen04",
       "playerMatch": "exact",
-      "teamMatch": "unmatched"
+      "teamID": 262,
+      "canonicalTeamName": "Bucketeers",
+      "teamMatch": "exact"
     },
     {
       "organization": "LGEL",
@@ -3027,7 +3031,7 @@
       "rank": 73,
       "playerName": "borjee__",
       "nationality": "Svensk",
-      "teamName": "wNexs",
+      "teamName": "vNexs I",
       "position": "RW",
       "primaryRole": "Skater",
       "gamesPlayed": 12,
@@ -3043,7 +3047,9 @@
       "playerID": 13838,
       "canonicalPlayerName": "borjee__",
       "playerMatch": "exact",
-      "teamMatch": "unmatched"
+      "teamID": 262,
+      "canonicalTeamName": "Bucketeers",
+      "teamMatch": "exact"
     },
     {
       "organization": "LGEL",
@@ -3053,7 +3059,7 @@
       "rank": 62,
       "playerName": "Putteekiing",
       "nationality": "Svensk",
-      "teamName": "vNexs",
+      "teamName": "vNexs II",
       "position": "C",
       "primaryRole": "Skater",
       "gamesPlayed": 14,
@@ -3069,8 +3075,8 @@
       "playerID": 5671,
       "canonicalPlayerName": "Putteekiing",
       "playerMatch": "exact",
-      "teamID": 262,
-      "canonicalTeamName": "Bucketeers",
+      "teamID": 4919,
+      "canonicalTeamName": "Bjorkloven Esport",
       "teamMatch": "exact"
     },
     {
@@ -3081,7 +3087,7 @@
       "rank": 78,
       "playerName": "antoniomannen_",
       "nationality": "Svensk",
-      "teamName": "wNexs",
+      "teamName": "vNexs I",
       "position": "RD",
       "primaryRole": "Skater",
       "gamesPlayed": 12,
@@ -3097,7 +3103,9 @@
       "playerID": 2522,
       "canonicalPlayerName": "antoniomannen_",
       "playerMatch": "exact",
-      "teamMatch": "unmatched"
+      "teamID": 262,
+      "canonicalTeamName": "Bucketeers",
+      "teamMatch": "exact"
     },
     {
       "organization": "LGEL",
@@ -3135,7 +3143,7 @@
       "rank": 61,
       "playerName": "Maxboeeee_",
       "nationality": "Svensk",
-      "teamName": "vNexs",
+      "teamName": "vNexs II",
       "position": "RW",
       "primaryRole": "Skater",
       "gamesPlayed": 14,
@@ -3151,8 +3159,8 @@
       "playerID": 15036,
       "canonicalPlayerName": "Maxboeeee_",
       "playerMatch": "exact",
-      "teamID": 262,
-      "canonicalTeamName": "Bucketeers",
+      "teamID": 4919,
+      "canonicalTeamName": "Bjorkloven Esport",
       "teamMatch": "exact"
     },
     {
@@ -3163,7 +3171,7 @@
       "rank": 77,
       "playerName": "pappeen-",
       "nationality": "Svensk",
-      "teamName": "wNexs",
+      "teamName": "vNexs I",
       "position": "LD",
       "primaryRole": "Skater",
       "gamesPlayed": 12,
@@ -3179,7 +3187,9 @@
       "playerID": 8330,
       "canonicalPlayerName": "pappeen-",
       "playerMatch": "exact",
-      "teamMatch": "unmatched"
+      "teamID": 262,
+      "canonicalTeamName": "Bucketeers",
+      "teamMatch": "exact"
     },
     {
       "organization": "LGEL",
@@ -3245,7 +3255,7 @@
       "rank": 64,
       "playerName": "Gudinge",
       "nationality": "Svensk",
-      "teamName": "vNexs",
+      "teamName": "vNexs II",
       "position": "LD",
       "primaryRole": "Skater",
       "gamesPlayed": 12,
@@ -3261,8 +3271,8 @@
       "playerID": 8394,
       "canonicalPlayerName": "Gudinge",
       "playerMatch": "exact",
-      "teamID": 262,
-      "canonicalTeamName": "Bucketeers",
+      "teamID": 4919,
+      "canonicalTeamName": "Bjorkloven Esport",
       "teamMatch": "exact"
     },
     {
@@ -3355,7 +3365,7 @@
       "rank": 55,
       "playerName": "Svampify",
       "nationality": "Svensk",
-      "teamName": "vNexs",
+      "teamName": "vNexs II",
       "position": "RD",
       "primaryRole": "Skater",
       "gamesPlayed": 14,
@@ -3371,8 +3381,8 @@
       "playerID": 909,
       "canonicalPlayerName": "Svampify",
       "playerMatch": "exact",
-      "teamID": 262,
-      "canonicalTeamName": "Bucketeers",
+      "teamID": 4919,
+      "canonicalTeamName": "Bjorkloven Esport",
       "teamMatch": "exact"
     },
     {
@@ -3577,7 +3587,7 @@
       "rank": 68,
       "playerName": "Edvvinio",
       "nationality": "Svensk",
-      "teamName": "wNexs",
+      "teamName": "vNexs I",
       "position": "G",
       "primaryRole": "Skater",
       "gamesPlayed": 8,
@@ -3593,7 +3603,9 @@
       "playerID": 3739,
       "canonicalPlayerName": "Edvvinio",
       "playerMatch": "exact",
-      "teamMatch": "unmatched"
+      "teamID": 262,
+      "canonicalTeamName": "Bucketeers",
+      "teamMatch": "exact"
     },
     {
       "organization": "LGEL",
@@ -3603,7 +3615,7 @@
       "rank": 74,
       "playerName": "KUNGENANTON02",
       "nationality": "Svensk",
-      "teamName": "vNexs",
+      "teamName": "vNexs II",
       "position": "LD",
       "primaryRole": "Skater",
       "gamesPlayed": 3,
@@ -3619,8 +3631,8 @@
       "playerID": 17394,
       "canonicalPlayerName": "Kungenanton02",
       "playerMatch": "exact",
-      "teamID": 262,
-      "canonicalTeamName": "Bucketeers",
+      "teamID": 4919,
+      "canonicalTeamName": "Bjorkloven Esport",
       "teamMatch": "exact"
     },
     {
@@ -3657,7 +3669,7 @@
       "rank": 27,
       "playerName": "SeboLHD",
       "nationality": "Svensk",
-      "teamName": "vNexs",
+      "teamName": "vNexs II",
       "position": "G",
       "primaryRole": "Skater",
       "gamesPlayed": 4,
@@ -3673,8 +3685,8 @@
       "playerID": 5595,
       "canonicalPlayerName": "SeboLHD",
       "playerMatch": "exact",
-      "teamID": 262,
-      "canonicalTeamName": "Bucketeers",
+      "teamID": 4919,
+      "canonicalTeamName": "Bjorkloven Esport",
       "teamMatch": "exact"
     },
     {
@@ -3795,7 +3807,7 @@
       "rank": 0,
       "playerName": "Zonkji v",
       "nationality": "Svensk",
-      "teamName": "vNexs",
+      "teamName": "vNexs II",
       "position": "LW",
       "primaryRole": "Skater",
       "gamesPlayed": 2,
@@ -3811,8 +3823,8 @@
       "playerID": 16615,
       "canonicalPlayerName": "Zonkji v",
       "playerMatch": "exact",
-      "teamID": 262,
-      "canonicalTeamName": "Bucketeers",
+      "teamID": 4919,
+      "canonicalTeamName": "Bjorkloven Esport",
       "teamMatch": "exact"
     },
     {
@@ -3823,7 +3835,7 @@
       "rank": 64,
       "playerName": "benjamint737",
       "nationality": "Svensk",
-      "teamName": "vNexs",
+      "teamName": "vNexs II",
       "position": "G",
       "primaryRole": "Skater",
       "gamesPlayed": 14,
@@ -3839,8 +3851,8 @@
       "playerID": 3015,
       "canonicalPlayerName": "benjamint737",
       "playerMatch": "exact",
-      "teamID": 262,
-      "canonicalTeamName": "Bucketeers",
+      "teamID": 4919,
+      "canonicalTeamName": "Bjorkloven Esport",
       "teamMatch": "exact"
     },
     {
@@ -35145,10 +35157,10 @@
       "seasonDate": "2025-01-01",
       "seasonYear": 2025,
       "division": "",
-      "teamName": "wNexs",
-      "teamID": null,
-      "canonicalTeamName": "",
-      "teamMatch": "unmatched",
+      "teamName": "vNexs I",
+      "teamID": 262,
+      "canonicalTeamName": "Bucketeers",
+      "teamMatch": "exact",
       "teamUrl": "https://www.leaguegaming.com/forums/index.php?forums/lgel.649/",
       "players": [
         {
@@ -35275,60 +35287,6 @@
           "shotsAgainst": 0,
           "savePct": 0,
           "gaa": 0,
-          "shutouts": 0
-        },
-        {
-          "playerID": null,
-          "playerName": "FINSeRe",
-          "canonicalPlayerName": "",
-          "playerMatch": "non-swedish",
-          "nationality": "",
-          "primaryRole": "G",
-          "gamesPlayed": 4,
-          "goals": 0,
-          "assists": 0,
-          "points": 0,
-          "saves": 45,
-          "goalsAllowed": 6,
-          "shotsAgainst": 51,
-          "savePct": 88.2,
-          "gaa": 1.5,
-          "shutouts": 1
-        },
-        {
-          "playerID": 3739,
-          "playerName": "Edvvinio",
-          "canonicalPlayerName": "Edvvinio",
-          "playerMatch": "exact",
-          "nationality": "Svensk",
-          "primaryRole": "G",
-          "gamesPlayed": 7,
-          "goals": 0,
-          "assists": 0,
-          "points": 0,
-          "saves": 65,
-          "goalsAllowed": 19,
-          "shotsAgainst": 84,
-          "savePct": 77.4,
-          "gaa": 2.34,
-          "shutouts": 0
-        },
-        {
-          "playerID": 13838,
-          "playerName": "borjee__",
-          "canonicalPlayerName": "borjee__",
-          "playerMatch": "exact",
-          "nationality": "Svensk",
-          "primaryRole": "G",
-          "gamesPlayed": 1,
-          "goals": 0,
-          "assists": 0,
-          "points": 0,
-          "saves": 10,
-          "goalsAllowed": 6,
-          "shotsAgainst": 16,
-          "savePct": 62.5,
-          "gaa": 0.75,
           "shutouts": 0
         }
       ]
@@ -36009,9 +35967,9 @@
       "seasonDate": "2025-01-01",
       "seasonYear": 2025,
       "division": "",
-      "teamName": "vNexs",
-      "teamID": 262,
-      "canonicalTeamName": "Bucketeers",
+      "teamName": "vNexs II",
+      "teamID": 4919,
+      "canonicalTeamName": "Bjorkloven Esport",
       "teamMatch": "exact",
       "teamUrl": "https://www.leaguegaming.com/forums/index.php?forums/lgel.649/",
       "players": [
@@ -36176,24 +36134,6 @@
           "savePct": 0,
           "gaa": 0,
           "shutouts": 0
-        },
-        {
-          "playerID": 3015,
-          "playerName": "benjamint737",
-          "canonicalPlayerName": "benjamint737",
-          "playerMatch": "exact",
-          "nationality": "Svensk",
-          "primaryRole": "G",
-          "gamesPlayed": 14,
-          "goals": 0,
-          "assists": 0,
-          "points": 0,
-          "saves": 175,
-          "goalsAllowed": 45,
-          "shotsAgainst": 220,
-          "savePct": 79.5,
-          "gaa": 3.19,
-          "shutouts": 2
         }
       ]
     },
@@ -40910,6 +40850,114 @@
           "savePct": 76.8,
           "gaa": 4.33,
           "shutouts": 0
+        }
+      ]
+    },
+    {
+      "organization": "LGEL",
+      "leagueID": -2001,
+      "leagueName": "LGEL",
+      "season": 1,
+      "seasonLabel": "LGEL S1",
+      "startDate": "2025-01-01",
+      "seasonDate": "2025-01-01",
+      "seasonYear": 2025,
+      "division": "",
+      "teamName": "wNexs",
+      "teamID": null,
+      "canonicalTeamName": "",
+      "teamMatch": "unmatched",
+      "teamUrl": "https://www.leaguegaming.com/forums/index.php?forums/lgel.649/",
+      "players": [
+        {
+          "playerID": null,
+          "playerName": "FINSeRe",
+          "canonicalPlayerName": "",
+          "playerMatch": "non-swedish",
+          "nationality": "",
+          "primaryRole": "G",
+          "gamesPlayed": 4,
+          "goals": 0,
+          "assists": 0,
+          "points": 0,
+          "saves": 45,
+          "goalsAllowed": 6,
+          "shotsAgainst": 51,
+          "savePct": 88.2,
+          "gaa": 1.5,
+          "shutouts": 1
+        },
+        {
+          "playerID": 3739,
+          "playerName": "Edvvinio",
+          "canonicalPlayerName": "Edvvinio",
+          "playerMatch": "exact",
+          "nationality": "Svensk",
+          "primaryRole": "G",
+          "gamesPlayed": 7,
+          "goals": 0,
+          "assists": 0,
+          "points": 0,
+          "saves": 65,
+          "goalsAllowed": 19,
+          "shotsAgainst": 84,
+          "savePct": 77.4,
+          "gaa": 2.34,
+          "shutouts": 0
+        },
+        {
+          "playerID": 13838,
+          "playerName": "borjee__",
+          "canonicalPlayerName": "borjee__",
+          "playerMatch": "exact",
+          "nationality": "Svensk",
+          "primaryRole": "G",
+          "gamesPlayed": 1,
+          "goals": 0,
+          "assists": 0,
+          "points": 0,
+          "saves": 10,
+          "goalsAllowed": 6,
+          "shotsAgainst": 16,
+          "savePct": 62.5,
+          "gaa": 0.75,
+          "shutouts": 0
+        }
+      ]
+    },
+    {
+      "organization": "LGEL",
+      "leagueID": -2001,
+      "leagueName": "LGEL",
+      "season": 1,
+      "seasonLabel": "LGEL S1",
+      "startDate": "2025-01-01",
+      "seasonDate": "2025-01-01",
+      "seasonYear": 2025,
+      "division": "",
+      "teamName": "vNexs",
+      "teamID": 262,
+      "canonicalTeamName": "Bucketeers",
+      "teamMatch": "exact",
+      "teamUrl": "https://www.leaguegaming.com/forums/index.php?forums/lgel.649/",
+      "players": [
+        {
+          "playerID": 3015,
+          "playerName": "benjamint737",
+          "canonicalPlayerName": "benjamint737",
+          "playerMatch": "exact",
+          "nationality": "Svensk",
+          "primaryRole": "G",
+          "gamesPlayed": 14,
+          "goals": 0,
+          "assists": 0,
+          "points": 0,
+          "saves": 175,
+          "goalsAllowed": 45,
+          "shotsAgainst": 220,
+          "savePct": 79.5,
+          "gaa": 3.19,
+          "shutouts": 2
         }
       ]
     }

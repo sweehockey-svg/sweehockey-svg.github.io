@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-19T13:30:43.404Z",
+  "updated": "2026-07-19T18:14:03.093Z",
   "summary": {
     "rows": 1668,
     "swedishRows": 285,
@@ -8,7 +8,7 @@
     "uniquePlayers": 926,
     "uniqueSwedishPlayers": 203,
     "matchedPlayers": 201,
-    "uniqueTeams": 94,
+    "uniqueTeams": 96,
     "matchedTeams": 25,
     "podiums": 24,
     "winners": 12,
@@ -1484,26 +1484,6 @@
       ]
     },
     {
-      "name": "wNexs",
-      "suggestions": [
-        {
-          "name": "Manos",
-          "id": 3142,
-          "distance": 4
-        },
-        {
-          "name": "N E O N X",
-          "id": 7028,
-          "distance": 4
-        },
-        {
-          "name": "Bockens",
-          "id": 552,
-          "distance": 5
-        }
-      ]
-    },
-    {
       "name": "OJs Pump",
       "suggestions": [
         {
@@ -1659,6 +1639,26 @@
         {
           "name": "Showtime",
           "id": 166,
+          "distance": 5
+        }
+      ]
+    },
+    {
+      "name": "wNexs",
+      "suggestions": [
+        {
+          "name": "Manos",
+          "id": 3142,
+          "distance": 4
+        },
+        {
+          "name": "N E O N X",
+          "id": 7028,
+          "distance": 4
+        },
+        {
+          "name": "Bockens",
+          "id": 552,
           "distance": 5
         }
       ]
