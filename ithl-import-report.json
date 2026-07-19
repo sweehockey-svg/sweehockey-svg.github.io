@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-19T18:14:03.093Z",
+  "updated": "2026-07-19T23:21:56.675Z",
   "summary": {
     "rows": 1668,
     "swedishRows": 285,
@@ -184,6 +184,206 @@
   "ambiguousPlayers": [],
   "unmatchedTeams": [
     {
+      "name": "Brothers In Gaming Delta",
+      "suggestions": [
+        {
+          "name": "Jarnkaminerna",
+          "id": 801,
+          "distance": 13
+        },
+        {
+          "name": "Dubnation Gaming",
+          "id": 440,
+          "distance": 14
+        },
+        {
+          "name": "Korpens Finest",
+          "id": 309,
+          "distance": 14
+        }
+      ]
+    },
+    {
+      "name": "Dreadnoughts HC",
+      "suggestions": [
+        {
+          "name": "Fire Knights",
+          "id": 696,
+          "distance": 8
+        },
+        {
+          "name": "Nordic Knights HC",
+          "id": 5870,
+          "distance": 8
+        },
+        {
+          "name": "DEAD END KINGS",
+          "id": 184,
+          "distance": 9
+        }
+      ]
+    },
+    {
+      "name": "HC Team Project",
+      "suggestions": [
+        {
+          "name": "Team Rocket",
+          "id": 1591,
+          "distance": 6
+        },
+        {
+          "name": "Team Modo",
+          "id": 2203,
+          "distance": 8
+        },
+        {
+          "name": "TEAM MODO",
+          "id": 992,
+          "distance": 8
+        }
+      ]
+    },
+    {
+      "name": "HC Ukraine",
+      "suggestions": [
+        {
+          "name": "Hockey iNC",
+          "id": 560,
+          "distance": 5
+        },
+        {
+          "name": "HC Macho",
+          "id": 4798,
+          "distance": 6
+        },
+        {
+          "name": "HC Marilyn",
+          "id": 131,
+          "distance": 6
+        }
+      ]
+    },
+    {
+      "name": "Kitty Muscles",
+      "suggestions": [
+        {
+          "name": "Etuna Eagles",
+          "id": 1649,
+          "distance": 8
+        },
+        {
+          "name": "Kartellen",
+          "id": 554,
+          "distance": 8
+        },
+        {
+          "name": "Style",
+          "id": 332,
+          "distance": 8
+        }
+      ]
+    },
+    {
+      "name": "Marshals",
+      "suggestions": [
+        {
+          "name": "Manos",
+          "id": 3142,
+          "distance": 5
+        },
+        {
+          "name": "SPARTANS",
+          "id": 425,
+          "distance": 5
+        },
+        {
+          "name": "TROJANS",
+          "id": 1902,
+          "distance": 5
+        }
+      ]
+    },
+    {
+      "name": "Musta Korvatunturi",
+      "suggestions": [
+        {
+          "name": "Ik Pantern",
+          "id": 4674,
+          "distance": 12
+        },
+        {
+          "name": "Juggernauts",
+          "id": 1625,
+          "distance": 12
+        },
+        {
+          "name": "Masterverket Esport",
+          "id": 3228,
+          "distance": 12
+        }
+      ]
+    },
+    {
+      "name": "Nordic Redhawks",
+      "suggestions": [
+        {
+          "name": "Nordic Eagles",
+          "id": 249,
+          "distance": 6
+        },
+        {
+          "name": "Nordic Falcons",
+          "id": 4888,
+          "distance": 7
+        },
+        {
+          "name": "Nordic Knights",
+          "id": 5261,
+          "distance": 7
+        }
+      ]
+    },
+    {
+      "name": "Teutonic Knights",
+      "suggestions": [
+        {
+          "name": "Nordic Knights",
+          "id": 5261,
+          "distance": 6
+        },
+        {
+          "name": "Enkoping HKS",
+          "id": 798,
+          "distance": 8
+        },
+        {
+          "name": "Fire Knights",
+          "id": 696,
+          "distance": 8
+        }
+      ]
+    },
+    {
+      "name": "Titan HC",
+      "suggestions": [
+        {
+          "name": "Tibro HC",
+          "id": 6187,
+          "distance": 3
+        },
+        {
+          "name": "Rava HC",
+          "id": 1589,
+          "distance": 4
+        },
+        {
+          "name": "Viper HC",
+          "id": 964,
+          "distance": 4
+        }
+      ]
+    },
+    {
       "name": "HC Punishers",
       "suggestions": [
         {
@@ -204,42 +404,22 @@
       ]
     },
     {
-      "name": "Phoenix HC",
+      "name": "Hiljainen Pikkukaupunki",
       "suggestions": [
         {
-          "name": "Chiefzz HC",
-          "id": 2507,
-          "distance": 5
+          "name": "Linkoping",
+          "id": 3793,
+          "distance": 16
         },
         {
-          "name": "Rorvik HC",
-          "id": 4717,
-          "distance": 5
+          "name": "Birka Vikings",
+          "id": 1612,
+          "distance": 17
         },
         {
-          "name": "Boost HC",
-          "id": 3788,
-          "distance": 6
-        }
-      ]
-    },
-    {
-      "name": "Team Infernus",
-      "suggestions": [
-        {
-          "name": "Team Onkel (DNF)",
-          "id": 2204,
-          "distance": 6
-        },
-        {
-          "name": "Beniserna",
-          "id": 65,
-          "distance": 7
-        },
-        {
-          "name": "DEAD END KINGS",
-          "id": 184,
-          "distance": 7
+          "name": "BK Skinnarna",
+          "id": 4216,
+          "distance": 17
         }
       ]
     },
@@ -259,86 +439,6 @@
         {
           "name": "HC Marilyn",
           "id": 131,
-          "distance": 7
-        }
-      ]
-    },
-    {
-      "name": "Silver Sword Griffins",
-      "suggestions": [
-        {
-          "name": "Charleswood Chiefs",
-          "id": 665,
-          "distance": 12
-        },
-        {
-          "name": "Blessed Suedis",
-          "id": 1772,
-          "distance": 13
-        },
-        {
-          "name": "Blessed Suedis",
-          "id": 3250,
-          "distance": 13
-        }
-      ]
-    },
-    {
-      "name": "Northern Freeze HC",
-      "suggestions": [
-        {
-          "name": "Motherfreakerz",
-          "id": 673,
-          "distance": 7
-        },
-        {
-          "name": "Northern Lighters",
-          "id": 4697,
-          "distance": 7
-        },
-        {
-          "name": "Northern Lighters",
-          "id": 4877,
-          "distance": 7
-        }
-      ]
-    },
-    {
-      "name": "Teno",
-      "suggestions": [
-        {
-          "name": "Manos",
-          "id": 3142,
-          "distance": 3
-        },
-        {
-          "name": "N E O N X",
-          "id": 7028,
-          "distance": 3
-        },
-        {
-          "name": "Style",
-          "id": 332,
-          "distance": 4
-        }
-      ]
-    },
-    {
-      "name": "Pullasorsat",
-      "suggestions": [
-        {
-          "name": "Bull sharks",
-          "id": 4795,
-          "distance": 7
-        },
-        {
-          "name": "Lulea Hockey",
-          "id": 1571,
-          "distance": 7
-        },
-        {
-          "name": "Luleå Hockey",
-          "id": 335,
           "distance": 7
         }
       ]
@@ -364,22 +464,122 @@
       ]
     },
     {
-      "name": "Hiljainen Pikkukaupunki",
+      "name": "Northern Freeze HC",
       "suggestions": [
         {
-          "name": "Linkoping",
-          "id": 3793,
-          "distance": 16
+          "name": "Motherfreakerz",
+          "id": 673,
+          "distance": 7
         },
         {
-          "name": "Birka Vikings",
-          "id": 1612,
-          "distance": 17
+          "name": "Northern Lighters",
+          "id": 4697,
+          "distance": 7
         },
         {
-          "name": "BK Skinnarna",
-          "id": 4216,
-          "distance": 17
+          "name": "Northern Lighters",
+          "id": 4877,
+          "distance": 7
+        }
+      ]
+    },
+    {
+      "name": "Phoenix HC",
+      "suggestions": [
+        {
+          "name": "Chiefzz HC",
+          "id": 2507,
+          "distance": 5
+        },
+        {
+          "name": "Rorvik HC",
+          "id": 4717,
+          "distance": 5
+        },
+        {
+          "name": "Boost HC",
+          "id": 3788,
+          "distance": 6
+        }
+      ]
+    },
+    {
+      "name": "Pullasorsat",
+      "suggestions": [
+        {
+          "name": "Bull sharks",
+          "id": 4795,
+          "distance": 7
+        },
+        {
+          "name": "Lulea Hockey",
+          "id": 1571,
+          "distance": 7
+        },
+        {
+          "name": "Luleå Hockey",
+          "id": 335,
+          "distance": 7
+        }
+      ]
+    },
+    {
+      "name": "Silver Sword Griffins",
+      "suggestions": [
+        {
+          "name": "Charleswood Chiefs",
+          "id": 665,
+          "distance": 12
+        },
+        {
+          "name": "Blessed Suedis",
+          "id": 1772,
+          "distance": 13
+        },
+        {
+          "name": "Blessed Suedis",
+          "id": 3250,
+          "distance": 13
+        }
+      ]
+    },
+    {
+      "name": "Team Infernus",
+      "suggestions": [
+        {
+          "name": "Team Onkel (DNF)",
+          "id": 2204,
+          "distance": 6
+        },
+        {
+          "name": "Beniserna",
+          "id": 65,
+          "distance": 7
+        },
+        {
+          "name": "DEAD END KINGS",
+          "id": 184,
+          "distance": 7
+        }
+      ]
+    },
+    {
+      "name": "Teno",
+      "suggestions": [
+        {
+          "name": "Manos",
+          "id": 3142,
+          "distance": 3
+        },
+        {
+          "name": "N E O N X",
+          "id": 7028,
+          "distance": 3
+        },
+        {
+          "name": "Style",
+          "id": 332,
+          "distance": 4
         }
       ]
     },
@@ -404,86 +604,6 @@
       ]
     },
     {
-      "name": "Petosen PuistoKemistit",
-      "suggestions": [
-        {
-          "name": "MotherPuckers",
-          "id": 334,
-          "distance": 14
-        },
-        {
-          "name": "Blessed Suedis",
-          "id": 1772,
-          "distance": 15
-        },
-        {
-          "name": "Blessed Suedis",
-          "id": 3250,
-          "distance": 15
-        }
-      ]
-    },
-    {
-      "name": "Coventry Vikings",
-      "suggestions": [
-        {
-          "name": "Birka Vikings",
-          "id": 1612,
-          "distance": 8
-        },
-        {
-          "name": "Sweden Wikings",
-          "id": 557,
-          "distance": 8
-        },
-        {
-          "name": "DEAD END KINGS",
-          "id": 184,
-          "distance": 9
-        }
-      ]
-    },
-    {
-      "name": "The Boyz are back",
-      "suggestions": [
-        {
-          "name": "The Beagle Boyz",
-          "id": 52,
-          "distance": 8
-        },
-        {
-          "name": "Borgarbracka HC",
-          "id": 556,
-          "distance": 10
-        },
-        {
-          "name": "Harryda HC",
-          "id": 1896,
-          "distance": 10
-        }
-      ]
-    },
-    {
-      "name": "Nordic Macabre",
-      "suggestions": [
-        {
-          "name": "Nordic Eagles",
-          "id": 249,
-          "distance": 6
-        },
-        {
-          "name": "Nordic Falcons",
-          "id": 4888,
-          "distance": 6
-        },
-        {
-          "name": "Nordic Vipers",
-          "id": 446,
-          "distance": 6
-        }
-      ]
-    },
-    {
       "name": "Brothers In Gaming Y",
       "suggestions": [
         {
@@ -504,36 +624,16 @@
       ]
     },
     {
-      "name": "HoneyWasp",
-      "suggestions": [
-        {
-          "name": "Harryda HC",
-          "id": 1896,
-          "distance": 6
-        },
-        {
-          "name": "Hockey iNC",
-          "id": 560,
-          "distance": 6
-        },
-        {
-          "name": "Bockens",
-          "id": 552,
-          "distance": 7
-        }
-      ]
-    },
-    {
-      "name": "Valhalla Vikings",
+      "name": "Coventry Vikings",
       "suggestions": [
         {
           "name": "Birka Vikings",
           "id": 1612,
-          "distance": 7
+          "distance": 8
         },
         {
-          "name": "Slapshot Kings",
-          "id": 7048,
+          "name": "Sweden Wikings",
+          "id": 557,
           "distance": 8
         },
         {
@@ -584,6 +684,106 @@
       ]
     },
     {
+      "name": "HoneyWasp",
+      "suggestions": [
+        {
+          "name": "Harryda HC",
+          "id": 1896,
+          "distance": 6
+        },
+        {
+          "name": "Hockey iNC",
+          "id": 560,
+          "distance": 6
+        },
+        {
+          "name": "Bockens",
+          "id": 552,
+          "distance": 7
+        }
+      ]
+    },
+    {
+      "name": "Nordic Macabre",
+      "suggestions": [
+        {
+          "name": "Nordic Eagles",
+          "id": 249,
+          "distance": 6
+        },
+        {
+          "name": "Nordic Falcons",
+          "id": 4888,
+          "distance": 6
+        },
+        {
+          "name": "Nordic Vipers",
+          "id": 446,
+          "distance": 6
+        }
+      ]
+    },
+    {
+      "name": "Petosen PuistoKemistit",
+      "suggestions": [
+        {
+          "name": "MotherPuckers",
+          "id": 334,
+          "distance": 14
+        },
+        {
+          "name": "Blessed Suedis",
+          "id": 1772,
+          "distance": 15
+        },
+        {
+          "name": "Blessed Suedis",
+          "id": 3250,
+          "distance": 15
+        }
+      ]
+    },
+    {
+      "name": "The Boyz are back",
+      "suggestions": [
+        {
+          "name": "The Beagle Boyz",
+          "id": 52,
+          "distance": 8
+        },
+        {
+          "name": "Borgarbracka HC",
+          "id": 556,
+          "distance": 10
+        },
+        {
+          "name": "Harryda HC",
+          "id": 1896,
+          "distance": 10
+        }
+      ]
+    },
+    {
+      "name": "Valhalla Vikings",
+      "suggestions": [
+        {
+          "name": "Birka Vikings",
+          "id": 1612,
+          "distance": 7
+        },
+        {
+          "name": "Slapshot Kings",
+          "id": 7048,
+          "distance": 8
+        },
+        {
+          "name": "DEAD END KINGS",
+          "id": 184,
+          "distance": 9
+        }
+      ]
+    },
+    {
       "name": "Wildcats Esport 2",
       "suggestions": [
         {
@@ -604,502 +804,42 @@
       ]
     },
     {
-      "name": "Kitty Muscles",
+      "name": "EV Duisburg",
       "suggestions": [
-        {
-          "name": "Etuna Eagles",
-          "id": 1649,
-          "distance": 8
-        },
-        {
-          "name": "Kartellen",
-          "id": 554,
-          "distance": 8
-        },
-        {
-          "name": "Style",
-          "id": 332,
-          "distance": 8
-        }
-      ]
-    },
-    {
-      "name": "Musta Korvatunturi",
-      "suggestions": [
-        {
-          "name": "Ik Pantern",
-          "id": 4674,
-          "distance": 12
-        },
-        {
-          "name": "Juggernauts",
-          "id": 1625,
-          "distance": 12
-        },
-        {
-          "name": "Masterverket Esport",
-          "id": 3228,
-          "distance": 12
-        }
-      ]
-    },
-    {
-      "name": "HC Team Project",
-      "suggestions": [
-        {
-          "name": "Team Rocket",
-          "id": 1591,
-          "distance": 6
-        },
-        {
-          "name": "Team Modo",
-          "id": 2203,
-          "distance": 8
-        },
-        {
-          "name": "TEAM MODO",
-          "id": 992,
-          "distance": 8
-        }
-      ]
-    },
-    {
-      "name": "Nordic Redhawks",
-      "suggestions": [
-        {
-          "name": "Nordic Eagles",
-          "id": 249,
-          "distance": 6
-        },
-        {
-          "name": "Nordic Falcons",
-          "id": 4888,
-          "distance": 7
-        },
-        {
-          "name": "Nordic Knights",
-          "id": 5261,
-          "distance": 7
-        }
-      ]
-    },
-    {
-      "name": "Marshals",
-      "suggestions": [
-        {
-          "name": "Manos",
-          "id": 3142,
-          "distance": 5
-        },
-        {
-          "name": "SPARTANS",
-          "id": 425,
-          "distance": 5
-        },
-        {
-          "name": "TROJANS",
-          "id": 1902,
-          "distance": 5
-        }
-      ]
-    },
-    {
-      "name": "Teutonic Knights",
-      "suggestions": [
-        {
-          "name": "Nordic Knights",
-          "id": 5261,
-          "distance": 6
-        },
-        {
-          "name": "Enkoping HKS",
-          "id": 798,
-          "distance": 8
-        },
-        {
-          "name": "Fire Knights",
-          "id": 696,
-          "distance": 8
-        }
-      ]
-    },
-    {
-      "name": "HC Ukraine",
-      "suggestions": [
-        {
-          "name": "Hockey iNC",
-          "id": 560,
-          "distance": 5
-        },
-        {
-          "name": "HC Macho",
-          "id": 4798,
-          "distance": 6
-        },
-        {
-          "name": "HC Marilyn",
-          "id": 131,
-          "distance": 6
-        }
-      ]
-    },
-    {
-      "name": "Titan HC",
-      "suggestions": [
-        {
-          "name": "Tibro HC",
-          "id": 6187,
-          "distance": 3
-        },
-        {
-          "name": "Rava HC",
-          "id": 1589,
-          "distance": 4
-        },
-        {
-          "name": "Viper HC",
-          "id": 964,
-          "distance": 4
-        }
-      ]
-    },
-    {
-      "name": "Dreadnoughts HC",
-      "suggestions": [
-        {
-          "name": "Fire Knights",
-          "id": 696,
-          "distance": 8
-        },
-        {
-          "name": "Nordic Knights HC",
-          "id": 5870,
-          "distance": 8
-        },
-        {
-          "name": "DEAD END KINGS",
-          "id": 184,
-          "distance": 9
-        }
-      ]
-    },
-    {
-      "name": "Brothers In Gaming Delta",
-      "suggestions": [
-        {
-          "name": "Jarnkaminerna",
-          "id": 801,
-          "distance": 13
-        },
-        {
-          "name": "Dubnation Gaming",
-          "id": 440,
-          "distance": 14
-        },
-        {
-          "name": "Korpens Finest",
-          "id": 309,
-          "distance": 14
-        }
-      ]
-    },
-    {
-      "name": "Veropetos",
-      "suggestions": [
-        {
-          "name": "Verket",
-          "id": 559,
-          "distance": 4
-        },
-        {
-          "name": "Zero Ping",
-          "id": 7047,
-          "distance": 5
-        },
-        {
-          "name": "Prowlers",
-          "id": 453,
-          "distance": 6
-        }
-      ]
-    },
-    {
-      "name": "Golden Buffalos",
-      "suggestions": [
-        {
-          "name": "Los Diablos",
-          "id": 2568,
-          "distance": 8
-        },
-        {
-          "name": "Nordic Falcons",
-          "id": 4888,
-          "distance": 9
-        },
-        {
-          "name": "Bockens",
-          "id": 552,
-          "distance": 10
-        }
-      ]
-    },
-    {
-      "name": "Wida",
-      "suggestions": [
-        {
-          "name": "PRIMA",
-          "id": 6989,
-          "distance": 3
-        },
-        {
-          "name": "PRIMA",
-          "id": 6968,
-          "distance": 3
-        },
-        {
-          "name": "TUNDRA",
-          "id": 1903,
-          "distance": 4
-        }
-      ]
-    },
-    {
-      "name": "Dynamo IHC",
-      "suggestions": [
-        {
-          "name": "Dynamic",
-          "id": 460,
-          "distance": 2
-        },
-        {
-          "name": "LEGION HC",
-          "id": 4439,
-          "distance": 6
-        },
-        {
-          "name": "N0 Name",
-          "id": 494,
-          "distance": 6
-        }
-      ]
-    },
-    {
-      "name": "Hungry Bears",
-      "suggestions": [
-        {
-          "name": "Bucketeers",
-          "id": 262,
-          "distance": 7
-        },
         {
           "name": "DUNDER",
           "id": 2570,
           "distance": 7
         },
         {
-          "name": "Harryda HC",
-          "id": 1896,
-          "distance": 7
-        }
-      ]
-    },
-    {
-      "name": "HT Hupiketju",
-      "suggestions": [
-        {
-          "name": "HALFLIFE (DNF)",
-          "id": 6249,
-          "distance": 8
-        },
-        {
-          "name": "Verket",
-          "id": 559,
-          "distance": 8
-        },
-        {
-          "name": "A Laget",
-          "id": 4181,
-          "distance": 9
-        }
-      ]
-    },
-    {
-      "name": "LATVIAN ESPORTS",
-      "suggestions": [
-        {
-          "name": "3TUNA le Sport",
-          "id": 958,
-          "distance": 6
-        },
-        {
-          "name": "Almtuna ESPORT",
-          "id": 957,
-          "distance": 6
-        },
-        {
-          "name": "Avenyn Esport",
-          "id": 2178,
-          "distance": 6
-        }
-      ]
-    },
-    {
-      "name": "Jurricanes",
-      "suggestions": [
-        {
-          "name": "Nordic Eagles",
-          "id": 249,
-          "distance": 6
-        },
-        {
-          "name": "Norrland",
-          "id": 1538,
-          "distance": 6
-        },
-        {
-          "name": "SPARTANS",
-          "id": 425,
-          "distance": 6
-        }
-      ]
-    },
-    {
-      "name": "Alko Allstars",
-      "suggestions": [
-        {
           "name": "VBO B Stars",
           "id": 6359,
-          "distance": 6
+          "distance": 7
         },
         {
           "name": "VBO Stars",
           "id": 4764,
-          "distance": 6
-        },
-        {
-          "name": "VBO STARS",
-          "id": 4794,
-          "distance": 6
-        }
-      ]
-    },
-    {
-      "name": "Corsaires HC",
-      "suggestions": [
-        {
-          "name": "Rorvik HC",
-          "id": 4717,
-          "distance": 6
-        },
-        {
-          "name": "Boost HC",
-          "id": 3788,
-          "distance": 7
-        },
-        {
-          "name": "Boost HC",
-          "id": 5886,
           "distance": 7
         }
       ]
     },
     {
-      "name": "Ronin",
+      "name": "Freezers HC",
       "suggestions": [
-        {
-          "name": "Manos",
-          "id": 3142,
-          "distance": 4
-        },
-        {
-          "name": "N E O N X",
-          "id": 7028,
-          "distance": 4
-        },
-        {
-          "name": "TROJANS",
-          "id": 1902,
-          "distance": 4
-        }
-      ]
-    },
-    {
-      "name": "Kivaa Kolinaa Club",
-      "suggestions": [
-        {
-          "name": "Linkoping HC",
-          "id": 336,
-          "distance": 10
-        },
         {
           "name": "FILA DE LA HC",
           "id": 1624,
-          "distance": 11
+          "distance": 6
         },
         {
-          "name": "Invasion Hockey",
-          "id": 6832,
-          "distance": 11
-        }
-      ]
-    },
-    {
-      "name": "Oljefondet",
-      "suggestions": [
-        {
-          "name": "A Laget",
-          "id": 4181,
-          "distance": 7
+          "name": "Prowlers",
+          "id": 453,
+          "distance": 6
         },
         {
-          "name": "Ace Hockey",
-          "id": 1792,
-          "distance": 7
-        },
-        {
-          "name": "DICE Hockey",
-          "id": 744,
-          "distance": 7
-        }
-      ]
-    },
-    {
-      "name": "Baaah",
-      "suggestions": [
-        {
-          "name": "Rava HC",
-          "id": 1589,
-          "distance": 3
-        },
-        {
-          "name": "Capish",
-          "id": 2874,
-          "distance": 4
-        },
-        {
-          "name": "Manos",
-          "id": 3142,
-          "distance": 4
-        }
-      ]
-    },
-    {
-      "name": "LES RATAPIGNATAS",
-      "suggestions": [
-        {
-          "name": "Enkoping HKS",
-          "id": 798,
-          "distance": 10
-        },
-        {
-          "name": "Fire Knights",
-          "id": 696,
-          "distance": 10
-        },
-        {
-          "name": "Northern Stars",
-          "id": 13,
-          "distance": 10
+          "name": "Viper HC",
+          "id": 964,
+          "distance": 6
         }
       ]
     },
@@ -1144,22 +884,22 @@
       ]
     },
     {
-      "name": "EV Duisburg",
+      "name": "Qazaqstan",
       "suggestions": [
         {
-          "name": "DUNDER",
-          "id": 2570,
-          "distance": 7
+          "name": "A Laget",
+          "id": 4181,
+          "distance": 6
         },
         {
-          "name": "VBO B Stars",
-          "id": 6359,
-          "distance": 7
+          "name": "Invasion",
+          "id": 4223,
+          "distance": 6
         },
         {
-          "name": "VBO Stars",
-          "id": 4764,
-          "distance": 7
+          "name": "Lavetten",
+          "id": 188,
+          "distance": 6
         }
       ]
     },
@@ -1184,262 +924,302 @@
       ]
     },
     {
-      "name": "Freezers HC",
+      "name": "Dynamo IHC",
       "suggestions": [
         {
-          "name": "FILA DE LA HC",
-          "id": 1624,
+          "name": "Dynamic",
+          "id": 460,
+          "distance": 2
+        },
+        {
+          "name": "LEGION HC",
+          "id": 4439,
           "distance": 6
+        },
+        {
+          "name": "N0 Name",
+          "id": 494,
+          "distance": 6
+        }
+      ]
+    },
+    {
+      "name": "Golden Buffalos",
+      "suggestions": [
+        {
+          "name": "Los Diablos",
+          "id": 2568,
+          "distance": 8
+        },
+        {
+          "name": "Nordic Falcons",
+          "id": 4888,
+          "distance": 9
+        },
+        {
+          "name": "Bockens",
+          "id": 552,
+          "distance": 10
+        }
+      ]
+    },
+    {
+      "name": "Hungry Bears",
+      "suggestions": [
+        {
+          "name": "Bucketeers",
+          "id": 262,
+          "distance": 7
+        },
+        {
+          "name": "DUNDER",
+          "id": 2570,
+          "distance": 7
+        },
+        {
+          "name": "Harryda HC",
+          "id": 1896,
+          "distance": 7
+        }
+      ]
+    },
+    {
+      "name": "Veropetos",
+      "suggestions": [
+        {
+          "name": "Verket",
+          "id": 559,
+          "distance": 4
+        },
+        {
+          "name": "Zero Ping",
+          "id": 7047,
+          "distance": 5
         },
         {
           "name": "Prowlers",
           "id": 453,
           "distance": 6
-        },
-        {
-          "name": "Viper HC",
-          "id": 964,
-          "distance": 6
         }
       ]
     },
     {
-      "name": "Qazaqstan",
-      "suggestions": [
-        {
-          "name": "A Laget",
-          "id": 4181,
-          "distance": 6
-        },
-        {
-          "name": "Invasion",
-          "id": 4223,
-          "distance": 6
-        },
-        {
-          "name": "Lavetten",
-          "id": 188,
-          "distance": 6
-        }
-      ]
-    },
-    {
-      "name": "Elite Killers",
-      "suggestions": [
-        {
-          "name": "Black Tigers",
-          "id": 682,
-          "distance": 7
-        },
-        {
-          "name": "Kartellen",
-          "id": 554,
-          "distance": 7
-        },
-        {
-          "name": "WHITE WINGS",
-          "id": 4438,
-          "distance": 7
-        }
-      ]
-    },
-    {
-      "name": "La Primero",
+      "name": "Wida",
       "suggestions": [
         {
           "name": "PRIMA",
           "id": 6989,
-          "distance": 5
+          "distance": 3
         },
         {
           "name": "PRIMA",
           "id": 6968,
-          "distance": 5
+          "distance": 3
         },
         {
-          "name": "Black Tigers",
-          "id": 682,
-          "distance": 6
+          "name": "TUNDRA",
+          "id": 1903,
+          "distance": 4
         }
       ]
     },
     {
-      "name": "HC Palosaari",
+      "name": "Baaah",
       "suggestions": [
         {
-          "name": "VBO Stars",
-          "id": 4764,
-          "distance": 7
+          "name": "Rava HC",
+          "id": 1589,
+          "distance": 3
         },
         {
-          "name": "VBO STARS",
-          "id": 4794,
-          "distance": 7
+          "name": "Capish",
+          "id": 2874,
+          "distance": 4
         },
         {
-          "name": "3TUNA le Sport",
-          "id": 958,
-          "distance": 8
+          "name": "Manos",
+          "id": 3142,
+          "distance": 4
         }
       ]
     },
     {
-      "name": "Clowns on Ice",
+      "name": "Kivaa Kolinaa Club",
       "suggestions": [
         {
-          "name": "Clowns",
-          "id": 3862,
-          "distance": 5
+          "name": "Linkoping HC",
+          "id": 336,
+          "distance": 10
         },
         {
-          "name": "Machines On Ice",
-          "id": 767,
-          "distance": 6
+          "name": "FILA DE LA HC",
+          "id": 1624,
+          "distance": 11
         },
         {
-          "name": "LEGION HC",
-          "id": 4439,
-          "distance": 7
-        }
-      ]
-    },
-    {
-      "name": "Atwell Avenue Boys",
-      "suggestions": [
-        {
-          "name": "The Beagle Boyz",
-          "id": 52,
-          "distance": 9
-        },
-        {
-          "name": "Weedemboys",
-          "id": 785,
-          "distance": 9
-        },
-        {
-          "name": "BACKCHECK BOYS",
-          "id": 4293,
+          "name": "Invasion Hockey",
+          "id": 6832,
           "distance": 11
         }
       ]
     },
     {
-      "name": "Lettland",
+      "name": "LES RATAPIGNATAS",
       "suggestions": [
         {
-          "name": "Norrland",
-          "id": 1538,
-          "distance": 4
+          "name": "Enkoping HKS",
+          "id": 798,
+          "distance": 10
         },
         {
-          "name": "BUTTON X",
-          "id": 4196,
-          "distance": 5
+          "name": "Fire Knights",
+          "id": 696,
+          "distance": 10
         },
         {
-          "name": "Lavetten",
-          "id": 188,
-          "distance": 5
+          "name": "Northern Stars",
+          "id": 13,
+          "distance": 10
         }
       ]
     },
     {
-      "name": "Outlaws Hockey",
+      "name": "Oljefondet",
       "suggestions": [
         {
-          "name": "Lulea Hockey",
-          "id": 1571,
-          "distance": 5
-        },
-        {
-          "name": "Luleå Hockey",
-          "id": 335,
-          "distance": 5
+          "name": "A Laget",
+          "id": 4181,
+          "distance": 7
         },
         {
           "name": "Ace Hockey",
           "id": 1792,
+          "distance": 7
+        },
+        {
+          "name": "DICE Hockey",
+          "id": 744,
+          "distance": 7
+        }
+      ]
+    },
+    {
+      "name": "Ronin",
+      "suggestions": [
+        {
+          "name": "Manos",
+          "id": 3142,
+          "distance": 4
+        },
+        {
+          "name": "N E O N X",
+          "id": 7028,
+          "distance": 4
+        },
+        {
+          "name": "TROJANS",
+          "id": 1902,
+          "distance": 4
+        }
+      ]
+    },
+    {
+      "name": "Alko Allstars",
+      "suggestions": [
+        {
+          "name": "VBO B Stars",
+          "id": 6359,
+          "distance": 6
+        },
+        {
+          "name": "VBO Stars",
+          "id": 4764,
+          "distance": 6
+        },
+        {
+          "name": "VBO STARS",
+          "id": 4794,
           "distance": 6
         }
       ]
     },
     {
-      "name": "Hockey Znojmo",
+      "name": "Corsaires HC",
       "suggestions": [
         {
-          "name": "Hockey iNC",
-          "id": 560,
-          "distance": 5
+          "name": "Rorvik HC",
+          "id": 4717,
+          "distance": 6
         },
         {
-          "name": "Bockens",
-          "id": 552,
+          "name": "Boost HC",
+          "id": 3788,
           "distance": 7
         },
         {
-          "name": "Hockey of the north",
-          "id": 4801,
+          "name": "Boost HC",
+          "id": 5886,
+          "distance": 7
+        }
+      ]
+    },
+    {
+      "name": "HT Hupiketju",
+      "suggestions": [
+        {
+          "name": "HALFLIFE (DNF)",
+          "id": 6249,
           "distance": 8
-        }
-      ]
-    },
-    {
-      "name": "Bosnia and Hercegovina",
-      "suggestions": [
-        {
-          "name": "Beniserna",
-          "id": 65,
-          "distance": 13
         },
         {
-          "name": "BK Skinnarna",
-          "id": 4216,
-          "distance": 13
+          "name": "Verket",
+          "id": 559,
+          "distance": 8
         },
         {
-          "name": "BK Skinnarna",
-          "id": 3134,
-          "distance": 13
-        }
-      ]
-    },
-    {
-      "name": "Kuraosasto",
-      "suggestions": [
-        {
-          "name": "Kontoret",
-          "id": 97,
-          "distance": 7
-        },
-        {
-          "name": "Ratade",
-          "id": 7049,
-          "distance": 7
-        },
-        {
-          "name": "Rava HC",
-          "id": 1589,
-          "distance": 7
-        }
-      ]
-    },
-    {
-      "name": "Persian Pensselit",
-      "suggestions": [
-        {
-          "name": "Glasbanken se",
-          "id": 3334,
+          "name": "A Laget",
+          "id": 4181,
           "distance": 9
+        }
+      ]
+    },
+    {
+      "name": "Jurricanes",
+      "suggestions": [
+        {
+          "name": "Nordic Eagles",
+          "id": 249,
+          "distance": 6
         },
         {
-          "name": "Leksands IF",
-          "id": 3132,
-          "distance": 10
+          "name": "Norrland",
+          "id": 1538,
+          "distance": 6
         },
         {
-          "name": "Prima eSport",
-          "id": 2486,
-          "distance": 10
+          "name": "SPARTANS",
+          "id": 425,
+          "distance": 6
+        }
+      ]
+    },
+    {
+      "name": "LATVIAN ESPORTS",
+      "suggestions": [
+        {
+          "name": "3TUNA le Sport",
+          "id": 958,
+          "distance": 6
+        },
+        {
+          "name": "Almtuna ESPORT",
+          "id": 957,
+          "distance": 6
+        },
+        {
+          "name": "Avenyn Esport",
+          "id": 2178,
+          "distance": 6
         }
       ]
     },
@@ -1484,21 +1264,221 @@
       ]
     },
     {
-      "name": "OJs Pump",
+      "name": "Persian Pensselit",
       "suggestions": [
         {
-          "name": "Boost HC",
-          "id": 3788,
+          "name": "Glasbanken se",
+          "id": 3334,
+          "distance": 9
+        },
+        {
+          "name": "Leksands IF",
+          "id": 3132,
+          "distance": 10
+        },
+        {
+          "name": "Prima eSport",
+          "id": 2486,
+          "distance": 10
+        }
+      ]
+    },
+    {
+      "name": "Elite Killers",
+      "suggestions": [
+        {
+          "name": "Black Tigers",
+          "id": 682,
+          "distance": 7
+        },
+        {
+          "name": "Kartellen",
+          "id": 554,
+          "distance": 7
+        },
+        {
+          "name": "WHITE WINGS",
+          "id": 4438,
+          "distance": 7
+        }
+      ]
+    },
+    {
+      "name": "Bosnia and Hercegovina",
+      "suggestions": [
+        {
+          "name": "Beniserna",
+          "id": 65,
+          "distance": 13
+        },
+        {
+          "name": "BK Skinnarna",
+          "id": 4216,
+          "distance": 13
+        },
+        {
+          "name": "BK Skinnarna",
+          "id": 3134,
+          "distance": 13
+        }
+      ]
+    },
+    {
+      "name": "Hockey Znojmo",
+      "suggestions": [
+        {
+          "name": "Hockey iNC",
+          "id": 560,
+          "distance": 5
+        },
+        {
+          "name": "Bockens",
+          "id": 552,
+          "distance": 7
+        },
+        {
+          "name": "Hockey of the north",
+          "id": 4801,
+          "distance": 8
+        }
+      ]
+    },
+    {
+      "name": "Kuraosasto",
+      "suggestions": [
+        {
+          "name": "Kontoret",
+          "id": 97,
+          "distance": 7
+        },
+        {
+          "name": "Ratade",
+          "id": 7049,
+          "distance": 7
+        },
+        {
+          "name": "Rava HC",
+          "id": 1589,
+          "distance": 7
+        }
+      ]
+    },
+    {
+      "name": "Lettland",
+      "suggestions": [
+        {
+          "name": "Norrland",
+          "id": 1538,
+          "distance": 4
+        },
+        {
+          "name": "BUTTON X",
+          "id": 4196,
+          "distance": 5
+        },
+        {
+          "name": "Lavetten",
+          "id": 188,
+          "distance": 5
+        }
+      ]
+    },
+    {
+      "name": "Outlaws Hockey",
+      "suggestions": [
+        {
+          "name": "Lulea Hockey",
+          "id": 1571,
+          "distance": 5
+        },
+        {
+          "name": "Luleå Hockey",
+          "id": 335,
+          "distance": 5
+        },
+        {
+          "name": "Ace Hockey",
+          "id": 1792,
+          "distance": 6
+        }
+      ]
+    },
+    {
+      "name": "Atwell Avenue Boys",
+      "suggestions": [
+        {
+          "name": "The Beagle Boyz",
+          "id": 52,
+          "distance": 9
+        },
+        {
+          "name": "Weedemboys",
+          "id": 785,
+          "distance": 9
+        },
+        {
+          "name": "BACKCHECK BOYS",
+          "id": 4293,
+          "distance": 11
+        }
+      ]
+    },
+    {
+      "name": "Clowns on Ice",
+      "suggestions": [
+        {
+          "name": "Clowns",
+          "id": 3862,
+          "distance": 5
+        },
+        {
+          "name": "Machines On Ice",
+          "id": 767,
           "distance": 6
         },
         {
-          "name": "Boost HC",
-          "id": 5886,
-          "distance": 6
+          "name": "LEGION HC",
+          "id": 4439,
+          "distance": 7
+        }
+      ]
+    },
+    {
+      "name": "HC Palosaari",
+      "suggestions": [
+        {
+          "name": "VBO Stars",
+          "id": 4764,
+          "distance": 7
         },
         {
-          "name": "Bushmen",
-          "id": 3790,
+          "name": "VBO STARS",
+          "id": 4794,
+          "distance": 7
+        },
+        {
+          "name": "3TUNA le Sport",
+          "id": 958,
+          "distance": 8
+        }
+      ]
+    },
+    {
+      "name": "La Primero",
+      "suggestions": [
+        {
+          "name": "PRIMA",
+          "id": 6989,
+          "distance": 5
+        },
+        {
+          "name": "PRIMA",
+          "id": 6968,
+          "distance": 5
+        },
+        {
+          "name": "Black Tigers",
+          "id": 682,
           "distance": 6
         }
       ]
@@ -1524,6 +1504,26 @@
       ]
     },
     {
+      "name": "Nurnberg Nidhoggr",
+      "suggestions": [
+        {
+          "name": "Northern Dust",
+          "id": 959,
+          "distance": 10
+        },
+        {
+          "name": "Northern Lighters",
+          "id": 4697,
+          "distance": 10
+        },
+        {
+          "name": "Northern Lighters",
+          "id": 4877,
+          "distance": 10
+        }
+      ]
+    },
+    {
       "name": "Nürnberg Ice Tigers eSports",
       "suggestions": [
         {
@@ -1544,22 +1544,22 @@
       ]
     },
     {
-      "name": "Nurnberg Nidhoggr",
+      "name": "OJs Pump",
       "suggestions": [
         {
-          "name": "Northern Dust",
-          "id": 959,
-          "distance": 10
+          "name": "Boost HC",
+          "id": 3788,
+          "distance": 6
         },
         {
-          "name": "Northern Lighters",
-          "id": 4697,
-          "distance": 10
+          "name": "Boost HC",
+          "id": 5886,
+          "distance": 6
         },
         {
-          "name": "Northern Lighters",
-          "id": 4877,
-          "distance": 10
+          "name": "Bushmen",
+          "id": 3790,
+          "distance": 6
         }
       ]
     },
@@ -1679,19 +1679,6 @@
       ]
     },
     {
-      "name": "Vesa Pompa",
-      "matches": [
-        {
-          "teamID": 443,
-          "name": "Lehmannen Badboyz"
-        },
-        {
-          "teamID": 262,
-          "name": "Bucketeers"
-        }
-      ]
-    },
-    {
       "name": "MoDo Hockey",
       "matches": [
         {
@@ -1701,6 +1688,19 @@
         {
           "teamID": 6953,
           "name": "MoDo Hockey"
+        }
+      ]
+    },
+    {
+      "name": "Vesa Pompa",
+      "matches": [
+        {
+          "teamID": 443,
+          "name": "Lehmannen Badboyz"
+        },
+        {
+          "teamID": 262,
+          "name": "Bucketeers"
         }
       ]
     }
