@@ -1,13 +1,13 @@
 {
-  "updated": "2026-07-19T23:21:56.675Z",
+  "updated": "2026-07-20T00:21:16.845Z",
   "summary": {
     "rows": 1668,
-    "swedishRows": 285,
+    "swedishRows": 282,
     "skaterRows": 1319,
     "goalieRows": 349,
-    "uniquePlayers": 926,
-    "uniqueSwedishPlayers": 203,
-    "matchedPlayers": 201,
+    "uniquePlayers": 927,
+    "uniqueSwedishPlayers": 201,
+    "matchedPlayers": 199,
     "uniqueTeams": 96,
     "matchedTeams": 25,
     "podiums": 24,
@@ -20,26 +20,6 @@
     }
   },
   "unmatchedPlayers": [
-    {
-      "name": "I-MeIIe-lrudspils",
-      "suggestions": [
-        {
-          "name": "Mellerudspils",
-          "id": 7107,
-          "distance": 4
-        },
-        {
-          "name": "I-MeIIe-l",
-          "id": 15745,
-          "distance": 8
-        },
-        {
-          "name": "FennelAndBalls",
-          "id": "12023",
-          "distance": 9
-        }
-      ]
-    },
     {
       "name": "Harten7",
       "suggestions": [
@@ -57,6 +37,26 @@
           "name": "hajjeh37",
           "id": 5185,
           "distance": 4
+        }
+      ]
+    },
+    {
+      "name": "MeIIerudspils",
+      "suggestions": [
+        {
+          "name": "Mellerudspils",
+          "id": 7107,
+          "distance": 2
+        },
+        {
+          "name": "dehIenius",
+          "id": 14573,
+          "distance": 8
+        },
+        {
+          "name": "I-MeIIe-l",
+          "id": 15745,
+          "distance": 8
         }
       ]
     },
@@ -81,6 +81,26 @@
       ]
     },
     {
+      "name": "Alphaborje",
+      "suggestions": [
+        {
+          "name": "borjee__",
+          "id": 13838,
+          "distance": 6
+        },
+        {
+          "name": "I-Ashborn-I",
+          "id": 11118,
+          "distance": 6
+        },
+        {
+          "name": "A-TPSWE",
+          "id": 12741,
+          "distance": 7
+        }
+      ]
+    },
+    {
       "name": "bystrom___",
       "suggestions": [
         {
@@ -97,66 +117,6 @@
           "name": "Bossbror",
           "id": 5775,
           "distance": 4
-        }
-      ]
-    },
-    {
-      "name": "martinssilins",
-      "suggestions": [
-        {
-          "name": "MartinWargas",
-          "id": 4406,
-          "distance": 6
-        },
-        {
-          "name": "Ma-X-imilian",
-          "id": 2951,
-          "distance": 7
-        },
-        {
-          "name": "AntonLxnd",
-          "id": 13290,
-          "distance": 8
-        }
-      ]
-    },
-    {
-      "name": "einari-nari83",
-      "suggestions": [
-        {
-          "name": "I9IRoarI0I",
-          "id": 8142,
-          "distance": 7
-        },
-        {
-          "name": "IIFaranII",
-          "id": 511,
-          "distance": 7
-        },
-        {
-          "name": "Panarinz",
-          "id": 2469,
-          "distance": 7
-        }
-      ]
-    },
-    {
-      "name": "Parmakitti",
-      "suggestions": [
-        {
-          "name": "Daanks__TTV",
-          "id": 15593,
-          "distance": 6
-        },
-        {
-          "name": "darkic01",
-          "id": 1751,
-          "distance": 6
-        },
-        {
-          "name": "hammarjet",
-          "id": 4374,
-          "distance": 6
         }
       ]
     },
