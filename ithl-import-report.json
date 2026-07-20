@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-20T00:21:16.845Z",
+  "updated": "2026-07-20T10:55:52.656Z",
   "summary": {
     "rows": 1668,
     "swedishRows": 282,
@@ -10,9 +10,9 @@
     "matchedPlayers": 199,
     "uniqueTeams": 96,
     "matchedTeams": 25,
-    "podiums": 24,
-    "winners": 12,
-    "runnersUp": 12,
+    "podiums": 26,
+    "winners": 13,
+    "runnersUp": 13,
     "rowsByOrganization": {
       "ITHL": 1377,
       "LGEL": 168,

@@ -17,7 +17,7 @@
       "url": ""
     }
   ],
-  "updated": "2026-07-20T00:21:16.845Z",
+  "updated": "2026-07-20T10:55:52.656Z",
   "source": {
     "spreadsheet": "https://docs.google.com/spreadsheets/d/14Gf1A5WpepEjmSDHyNAQkeBEO-q_WrGgRYWNB3qgk4Q/edit",
     "sheets": {
@@ -101,9 +101,9 @@
     "matchedPlayers": 199,
     "uniqueTeams": 96,
     "matchedTeams": 25,
-    "podiums": 24,
-    "winners": 12,
-    "runnersUp": 12,
+    "podiums": 26,
+    "winners": 13,
+    "runnersUp": 13,
     "rowsByOrganization": {
       "ITHL": 1377,
       "LGEL": 168,
@@ -41263,6 +41263,38 @@
       "teamName": "Black Wings",
       "sourceTeamName": "Black Wings",
       "teamUrl": "https://www.leaguegaming.com/forums/index.php?forums/lgel.649/",
+      "source": "https://docs.google.com/spreadsheets/d/14Gf1A5WpepEjmSDHyNAQkeBEO-q_WrGgRYWNB3qgk4Q/edit"
+    },
+    {
+      "organization": "SM",
+      "leagueID": 11225,
+      "leagueName": "SM 2025",
+      "seasonLabel": "SM 2025",
+      "season": 2025,
+      "seasonYear": 2025,
+      "startDate": "2025-03-01",
+      "division": "",
+      "placement": 1,
+      "teamID": 7635575,
+      "teamName": "Vesa Pompa",
+      "sourceTeamName": "Vesa Pompa",
+      "teamUrl": "",
+      "source": "https://docs.google.com/spreadsheets/d/14Gf1A5WpepEjmSDHyNAQkeBEO-q_WrGgRYWNB3qgk4Q/edit"
+    },
+    {
+      "organization": "SM",
+      "leagueID": 11225,
+      "leagueName": "SM 2025",
+      "seasonLabel": "SM 2025",
+      "season": 2025,
+      "seasonYear": 2025,
+      "startDate": "2025-03-01",
+      "division": "",
+      "placement": 2,
+      "teamID": 262,
+      "teamName": "Bucketeers",
+      "sourceTeamName": "vNexs",
+      "teamUrl": "",
       "source": "https://docs.google.com/spreadsheets/d/14Gf1A5WpepEjmSDHyNAQkeBEO-q_WrGgRYWNB3qgk4Q/edit"
     }
   ]
