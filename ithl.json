@@ -17,7 +17,7 @@
       "url": ""
     }
   ],
-  "updated": "2026-07-20T11:13:02.220Z",
+  "updated": "2026-07-20T12:02:44.074Z",
   "source": {
     "spreadsheet": "https://docs.google.com/spreadsheets/d/14Gf1A5WpepEjmSDHyNAQkeBEO-q_WrGgRYWNB3qgk4Q/edit",
     "sheets": {
@@ -99,7 +99,7 @@
     "uniquePlayers": 927,
     "uniqueSwedishPlayers": 201,
     "matchedPlayers": 199,
-    "uniqueTeams": 96,
+    "uniqueTeams": 93,
     "matchedTeams": 25,
     "podiums": 26,
     "winners": 13,
@@ -4789,7 +4789,7 @@
       "rank": 34,
       "playerName": "RookieLIAMOVIC",
       "nationality": "Svensk",
-      "teamName": "Lallare",
+      "teamName": "Lallare HC",
       "position": "F",
       "primaryRole": "Skater",
       "gamesPlayed": 13,
@@ -4806,8 +4806,8 @@
       "canonicalPlayerName": "RookieLIAMOVIC",
       "playerMatch": "exact",
       "teamMatch": "external-swedish",
-      "teamID": 7496776,
-      "canonicalTeamName": "Lallare"
+      "teamID": 7312537,
+      "canonicalTeamName": "Lallare HC"
     },
     {
       "organization": "SM",
@@ -4817,7 +4817,7 @@
       "rank": 50,
       "playerName": "GD_Hampezz",
       "nationality": "Svensk",
-      "teamName": "Lallare",
+      "teamName": "Lallare HC",
       "position": "F",
       "primaryRole": "Skater",
       "gamesPlayed": 13,
@@ -4834,8 +4834,8 @@
       "canonicalPlayerName": "GD_Hampezzz",
       "playerMatch": "exact",
       "teamMatch": "external-swedish",
-      "teamID": 7496776,
-      "canonicalTeamName": "Lallare"
+      "teamID": 7312537,
+      "canonicalTeamName": "Lallare HC"
     },
     {
       "organization": "SM",
@@ -4845,7 +4845,7 @@
       "rank": 56,
       "playerName": "Azzez_88",
       "nationality": "Svensk",
-      "teamName": "Lallare",
+      "teamName": "Lallare HC",
       "position": "D",
       "primaryRole": "Skater",
       "gamesPlayed": 13,
@@ -4862,8 +4862,8 @@
       "canonicalPlayerName": "Azzez_88",
       "playerMatch": "exact",
       "teamMatch": "external-swedish",
-      "teamID": 7496776,
-      "canonicalTeamName": "Lallare"
+      "teamID": 7312537,
+      "canonicalTeamName": "Lallare HC"
     },
     {
       "organization": "SM",
@@ -4873,7 +4873,7 @@
       "rank": 70,
       "playerName": "Bullbaz",
       "nationality": "Svensk",
-      "teamName": "Lallare",
+      "teamName": "Lallare HC",
       "position": "D",
       "primaryRole": "Skater",
       "gamesPlayed": 15,
@@ -4890,8 +4890,8 @@
       "canonicalPlayerName": "Bullbaz",
       "playerMatch": "exact",
       "teamMatch": "external-swedish",
-      "teamID": 7496776,
-      "canonicalTeamName": "Lallare"
+      "teamID": 7312537,
+      "canonicalTeamName": "Lallare HC"
     },
     {
       "organization": "SM",
@@ -4901,7 +4901,7 @@
       "rank": 79,
       "playerName": "I-Sjogren-I",
       "nationality": "Svensk",
-      "teamName": "Lallare",
+      "teamName": "Lallare HC",
       "position": "D",
       "primaryRole": "Skater",
       "gamesPlayed": 7,
@@ -4918,8 +4918,8 @@
       "canonicalPlayerName": "I-Sjogren-I",
       "playerMatch": "exact",
       "teamMatch": "external-swedish",
-      "teamID": 7496776,
-      "canonicalTeamName": "Lallare"
+      "teamID": 7312537,
+      "canonicalTeamName": "Lallare HC"
     },
     {
       "organization": "SM",
@@ -4929,7 +4929,7 @@
       "rank": 83,
       "playerName": "andersson222",
       "nationality": "Svensk",
-      "teamName": "Lallare",
+      "teamName": "Lallare HC",
       "position": "D",
       "primaryRole": "Skater",
       "gamesPlayed": 4,
@@ -4946,8 +4946,8 @@
       "canonicalPlayerName": "Andersson222",
       "playerMatch": "exact",
       "teamMatch": "external-swedish",
-      "teamID": 7496776,
-      "canonicalTeamName": "Lallare"
+      "teamID": 7312537,
+      "canonicalTeamName": "Lallare HC"
     },
     {
       "organization": "SM",
@@ -4957,7 +4957,7 @@
       "rank": 90,
       "playerName": "wilhelmsson90",
       "nationality": "Svensk",
-      "teamName": "Lallare",
+      "teamName": "Lallare HC",
       "position": "D",
       "primaryRole": "Skater",
       "gamesPlayed": 2,
@@ -4974,8 +4974,8 @@
       "canonicalPlayerName": "Wilhelmsson90",
       "playerMatch": "exact",
       "teamMatch": "external-swedish",
-      "teamID": 7496776,
-      "canonicalTeamName": "Lallare"
+      "teamID": 7312537,
+      "canonicalTeamName": "Lallare HC"
     },
     {
       "organization": "SM",
@@ -4985,7 +4985,7 @@
       "rank": 93,
       "playerName": "MrClaper09",
       "nationality": "Svensk",
-      "teamName": "Lallare",
+      "teamName": "Lallare HC",
       "position": "F",
       "primaryRole": "Skater",
       "gamesPlayed": 2,
@@ -5002,8 +5002,8 @@
       "canonicalPlayerName": "Mrclaper09",
       "playerMatch": "exact",
       "teamMatch": "external-swedish",
-      "teamID": 7496776,
-      "canonicalTeamName": "Lallare"
+      "teamID": 7312537,
+      "canonicalTeamName": "Lallare HC"
     },
     {
       "organization": "SM",
@@ -6049,7 +6049,7 @@
       "rank": 69,
       "playerName": "I-MeIIe-l",
       "nationality": "Svensk",
-      "teamName": "vNexs Academy",
+      "teamName": "vNexs II",
       "position": "D",
       "primaryRole": "Skater",
       "gamesPlayed": 12,
@@ -6066,7 +6066,7 @@
       "canonicalPlayerName": "I-MeIIe-l",
       "playerMatch": "exact",
       "teamID": 4919,
-      "canonicalTeamName": "vNexs Academy",
+      "canonicalTeamName": "Bjorkloven Esport",
       "teamMatch": "exact"
     },
     {
@@ -7334,40 +7334,10 @@
       "season": 1,
       "seasonLabel": "LGEL S1",
       "division": "",
-      "rank": 64,
-      "playerName": "benjamint737",
-      "nationality": "Svensk",
-      "teamName": "vNexs",
-      "position": "G",
-      "primaryRole": "G",
-      "gamesPlayed": 14,
-      "skaterGames": 0,
-      "goalieGames": 14,
-      "saves": 175,
-      "shotsAgainst": 220,
-      "goalsAllowed": 45,
-      "savePct": 79.5,
-      "gaa": 3.19,
-      "shutouts": 2,
-      "startDate": "2025-01-01",
-      "seasonDate": "2025-01-01",
-      "seasonYear": 2025,
-      "playerID": 3015,
-      "canonicalPlayerName": "benjamint737",
-      "playerMatch": "exact",
-      "teamID": 262,
-      "canonicalTeamName": "Bucketeers",
-      "teamMatch": "exact"
-    },
-    {
-      "organization": "LGEL",
-      "season": 1,
-      "seasonLabel": "LGEL S1",
-      "division": "",
       "rank": 68,
       "playerName": "Edvvinio",
       "nationality": "Svensk",
-      "teamName": "wNexs",
+      "teamName": "vNexs I",
       "position": "G",
       "primaryRole": "G",
       "gamesPlayed": 7,
@@ -7385,7 +7355,9 @@
       "playerID": 3739,
       "canonicalPlayerName": "Edvvinio",
       "playerMatch": "exact",
-      "teamMatch": "unmatched"
+      "teamID": 262,
+      "canonicalTeamName": "Bucketeers",
+      "teamMatch": "exact"
     },
     {
       "organization": "LGEL",
@@ -7395,7 +7367,7 @@
       "rank": 73,
       "playerName": "borjee__",
       "nationality": "Svensk",
-      "teamName": "wNexs",
+      "teamName": "vNexs I",
       "position": "G",
       "primaryRole": "G",
       "gamesPlayed": 1,
@@ -7413,7 +7385,39 @@
       "playerID": 13838,
       "canonicalPlayerName": "borjee__",
       "playerMatch": "exact",
-      "teamMatch": "unmatched"
+      "teamID": 262,
+      "canonicalTeamName": "Bucketeers",
+      "teamMatch": "exact"
+    },
+    {
+      "organization": "LGEL",
+      "season": 1,
+      "seasonLabel": "LGEL S1",
+      "division": "",
+      "rank": 64,
+      "playerName": "benjamint737",
+      "nationality": "Svensk",
+      "teamName": "vNexs II",
+      "position": "G",
+      "primaryRole": "G",
+      "gamesPlayed": 14,
+      "skaterGames": 0,
+      "goalieGames": 14,
+      "saves": 175,
+      "shotsAgainst": 220,
+      "goalsAllowed": 45,
+      "savePct": 79.5,
+      "gaa": 3.19,
+      "shutouts": 2,
+      "startDate": "2025-01-01",
+      "seasonDate": "2025-01-01",
+      "seasonYear": 2025,
+      "playerID": 3015,
+      "canonicalPlayerName": "benjamint737",
+      "playerMatch": "exact",
+      "teamID": 4919,
+      "canonicalTeamName": "Bjorkloven Esport",
+      "teamMatch": "exact"
     },
     {
       "organization": "SM",
@@ -7633,7 +7637,7 @@
       "rank": 1,
       "playerName": "Aker36",
       "nationality": "Svensk",
-      "teamName": "Lallare",
+      "teamName": "Lallare HC",
       "position": "G",
       "primaryRole": "G",
       "gamesPlayed": 4,
@@ -7652,8 +7656,8 @@
       "canonicalPlayerName": "Aker36",
       "playerMatch": "exact",
       "teamMatch": "external-swedish",
-      "teamID": 7496776,
-      "canonicalTeamName": "Lallare"
+      "teamID": 7312537,
+      "canonicalTeamName": "Lallare HC"
     },
     {
       "organization": "SM",
@@ -7663,7 +7667,7 @@
       "rank": 21,
       "playerName": "MrClaper09",
       "nationality": "Svensk",
-      "teamName": "Lallare",
+      "teamName": "Lallare HC",
       "position": "G",
       "primaryRole": "G",
       "gamesPlayed": 9,
@@ -7682,8 +7686,8 @@
       "canonicalPlayerName": "Mrclaper09",
       "playerMatch": "exact",
       "teamMatch": "external-swedish",
-      "teamID": 7496776,
-      "canonicalTeamName": "Lallare"
+      "teamID": 7312537,
+      "canonicalTeamName": "Lallare HC"
     },
     {
       "organization": "SM",
@@ -7993,7 +7997,7 @@
       "rank": 11,
       "playerName": "Jonte05_",
       "nationality": "Svensk",
-      "teamName": "vNexs",
+      "teamName": "vNexs I",
       "position": "G",
       "primaryRole": "G",
       "gamesPlayed": 11,
@@ -8023,7 +8027,7 @@
       "rank": 12,
       "playerName": "SeboLHD",
       "nationality": "Svensk",
-      "teamName": "vNexs Academy",
+      "teamName": "vNexs II",
       "position": "G",
       "primaryRole": "G",
       "gamesPlayed": 17,
@@ -8042,7 +8046,7 @@
       "canonicalPlayerName": "SeboLHD",
       "playerMatch": "exact",
       "teamID": 4919,
-      "canonicalTeamName": "vNexs Academy",
+      "canonicalTeamName": "Bjorkloven Esport",
       "teamMatch": "exact"
     }
   ],
@@ -37924,6 +37928,60 @@
           "savePct": 0,
           "gaa": 0,
           "shutouts": 0
+        },
+        {
+          "playerID": null,
+          "playerName": "FINSeRe",
+          "canonicalPlayerName": "",
+          "playerMatch": "non-swedish",
+          "nationality": "",
+          "primaryRole": "G",
+          "gamesPlayed": 4,
+          "goals": 0,
+          "assists": 0,
+          "points": 0,
+          "saves": 45,
+          "goalsAllowed": 6,
+          "shotsAgainst": 51,
+          "savePct": 88.2,
+          "gaa": 1.5,
+          "shutouts": 1
+        },
+        {
+          "playerID": 3739,
+          "playerName": "Edvvinio",
+          "canonicalPlayerName": "Edvvinio",
+          "playerMatch": "exact",
+          "nationality": "Svensk",
+          "primaryRole": "G",
+          "gamesPlayed": 7,
+          "goals": 0,
+          "assists": 0,
+          "points": 0,
+          "saves": 65,
+          "goalsAllowed": 19,
+          "shotsAgainst": 84,
+          "savePct": 77.4,
+          "gaa": 2.34,
+          "shutouts": 0
+        },
+        {
+          "playerID": 13838,
+          "playerName": "borjee__",
+          "canonicalPlayerName": "borjee__",
+          "playerMatch": "exact",
+          "nationality": "Svensk",
+          "primaryRole": "G",
+          "gamesPlayed": 1,
+          "goals": 0,
+          "assists": 0,
+          "points": 0,
+          "saves": 10,
+          "goalsAllowed": 6,
+          "shotsAgainst": 16,
+          "savePct": 62.5,
+          "gaa": 0.75,
+          "shutouts": 0
         }
       ]
     },
@@ -38104,6 +38162,24 @@
           "savePct": 0,
           "gaa": 0,
           "shutouts": 0
+        },
+        {
+          "playerID": 3015,
+          "playerName": "benjamint737",
+          "canonicalPlayerName": "benjamint737",
+          "playerMatch": "exact",
+          "nationality": "Svensk",
+          "primaryRole": "G",
+          "gamesPlayed": 14,
+          "goals": 0,
+          "assists": 0,
+          "points": 0,
+          "saves": 175,
+          "goalsAllowed": 45,
+          "shotsAgainst": 220,
+          "savePct": 79.5,
+          "gaa": 3.19,
+          "shutouts": 2
         }
       ]
     },
@@ -39215,9 +39291,9 @@
       "seasonDate": "2025-03-01",
       "seasonYear": 2025,
       "division": "",
-      "teamName": "Lallare",
-      "teamID": 7496776,
-      "canonicalTeamName": "Lallare",
+      "teamName": "Lallare HC",
+      "teamID": 7312537,
+      "canonicalTeamName": "Lallare HC",
       "teamMatch": "external-swedish",
       "teamUrl": "",
       "players": [
@@ -40426,6 +40502,42 @@
           "savePct": 0,
           "gaa": 0,
           "shutouts": 0
+        },
+        {
+          "playerID": null,
+          "playerName": "Skumboo",
+          "canonicalPlayerName": "",
+          "playerMatch": "non-swedish",
+          "nationality": "Norsk",
+          "primaryRole": "G",
+          "gamesPlayed": 10,
+          "goals": 0,
+          "assists": 0,
+          "points": 0,
+          "saves": 118,
+          "goalsAllowed": 19,
+          "shotsAgainst": 137,
+          "savePct": 86.1,
+          "gaa": 1.9,
+          "shutouts": 0
+        },
+        {
+          "playerID": 12640,
+          "playerName": "Jonte05_",
+          "canonicalPlayerName": "Jonte05_",
+          "playerMatch": "exact",
+          "nationality": "Svensk",
+          "primaryRole": "G",
+          "gamesPlayed": 11,
+          "goals": 0,
+          "assists": 0,
+          "points": 0,
+          "saves": 117,
+          "goalsAllowed": 29,
+          "shotsAgainst": 146,
+          "savePct": 80.1,
+          "gaa": 2.64,
+          "shutouts": 1
         }
       ]
     },
@@ -40534,25 +40646,7 @@
           "savePct": 0,
           "gaa": 0,
           "shutouts": 0
-        }
-      ]
-    },
-    {
-      "organization": "SM",
-      "leagueID": -5025,
-      "leagueName": "SM",
-      "season": 2025,
-      "seasonLabel": "SM 2025",
-      "startDate": "2025-03-01",
-      "seasonDate": "2025-03-01",
-      "seasonYear": 2025,
-      "division": "",
-      "teamName": "vNexs Academy",
-      "teamID": 4919,
-      "canonicalTeamName": "vNexs Academy",
-      "teamMatch": "exact",
-      "teamUrl": "",
-      "players": [
+        },
         {
           "playerID": 15745,
           "playerName": "I-MeIIe-l",
@@ -40750,168 +40844,6 @@
           "savePct": 80.3,
           "gaa": 3.8,
           "shutouts": 0
-        }
-      ]
-    },
-    {
-      "organization": "LGEL",
-      "leagueID": -2001,
-      "leagueName": "LGEL",
-      "season": 1,
-      "seasonLabel": "LGEL S1",
-      "startDate": "2025-01-01",
-      "seasonDate": "2025-01-01",
-      "seasonYear": 2025,
-      "division": "",
-      "teamName": "vNexs",
-      "teamID": 262,
-      "canonicalTeamName": "Bucketeers",
-      "teamMatch": "exact",
-      "teamUrl": "https://www.leaguegaming.com/forums/index.php?forums/lgel.649/",
-      "players": [
-        {
-          "playerID": 3015,
-          "playerName": "benjamint737",
-          "canonicalPlayerName": "benjamint737",
-          "playerMatch": "exact",
-          "nationality": "Svensk",
-          "primaryRole": "G",
-          "gamesPlayed": 14,
-          "goals": 0,
-          "assists": 0,
-          "points": 0,
-          "saves": 175,
-          "goalsAllowed": 45,
-          "shotsAgainst": 220,
-          "savePct": 79.5,
-          "gaa": 3.19,
-          "shutouts": 2
-        }
-      ]
-    },
-    {
-      "organization": "LGEL",
-      "leagueID": -2001,
-      "leagueName": "LGEL",
-      "season": 1,
-      "seasonLabel": "LGEL S1",
-      "startDate": "2025-01-01",
-      "seasonDate": "2025-01-01",
-      "seasonYear": 2025,
-      "division": "",
-      "teamName": "wNexs",
-      "teamID": null,
-      "canonicalTeamName": "",
-      "teamMatch": "unmatched",
-      "teamUrl": "https://www.leaguegaming.com/forums/index.php?forums/lgel.649/",
-      "players": [
-        {
-          "playerID": null,
-          "playerName": "FINSeRe",
-          "canonicalPlayerName": "",
-          "playerMatch": "non-swedish",
-          "nationality": "",
-          "primaryRole": "G",
-          "gamesPlayed": 4,
-          "goals": 0,
-          "assists": 0,
-          "points": 0,
-          "saves": 45,
-          "goalsAllowed": 6,
-          "shotsAgainst": 51,
-          "savePct": 88.2,
-          "gaa": 1.5,
-          "shutouts": 1
-        },
-        {
-          "playerID": 3739,
-          "playerName": "Edvvinio",
-          "canonicalPlayerName": "Edvvinio",
-          "playerMatch": "exact",
-          "nationality": "Svensk",
-          "primaryRole": "G",
-          "gamesPlayed": 7,
-          "goals": 0,
-          "assists": 0,
-          "points": 0,
-          "saves": 65,
-          "goalsAllowed": 19,
-          "shotsAgainst": 84,
-          "savePct": 77.4,
-          "gaa": 2.34,
-          "shutouts": 0
-        },
-        {
-          "playerID": 13838,
-          "playerName": "borjee__",
-          "canonicalPlayerName": "borjee__",
-          "playerMatch": "exact",
-          "nationality": "Svensk",
-          "primaryRole": "G",
-          "gamesPlayed": 1,
-          "goals": 0,
-          "assists": 0,
-          "points": 0,
-          "saves": 10,
-          "goalsAllowed": 6,
-          "shotsAgainst": 16,
-          "savePct": 62.5,
-          "gaa": 0.75,
-          "shutouts": 0
-        }
-      ]
-    },
-    {
-      "organization": "SM",
-      "leagueID": -5025,
-      "leagueName": "SM",
-      "season": 2025,
-      "seasonLabel": "SM 2025",
-      "startDate": "2025-03-01",
-      "seasonDate": "2025-03-01",
-      "seasonYear": 2025,
-      "division": "",
-      "teamName": "vNexs",
-      "teamID": 262,
-      "canonicalTeamName": "Bucketeers",
-      "teamMatch": "exact",
-      "teamUrl": "",
-      "players": [
-        {
-          "playerID": null,
-          "playerName": "Skumboo",
-          "canonicalPlayerName": "",
-          "playerMatch": "non-swedish",
-          "nationality": "Norsk",
-          "primaryRole": "G",
-          "gamesPlayed": 10,
-          "goals": 0,
-          "assists": 0,
-          "points": 0,
-          "saves": 118,
-          "goalsAllowed": 19,
-          "shotsAgainst": 137,
-          "savePct": 86.1,
-          "gaa": 1.9,
-          "shutouts": 0
-        },
-        {
-          "playerID": 12640,
-          "playerName": "Jonte05_",
-          "canonicalPlayerName": "Jonte05_",
-          "playerMatch": "exact",
-          "nationality": "Svensk",
-          "primaryRole": "G",
-          "gamesPlayed": 11,
-          "goals": 0,
-          "assists": 0,
-          "points": 0,
-          "saves": 117,
-          "goalsAllowed": 29,
-          "shotsAgainst": 146,
-          "savePct": 80.1,
-          "gaa": 2.64,
-          "shutouts": 1
         }
       ]
     }

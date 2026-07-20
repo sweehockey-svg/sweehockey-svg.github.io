@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-20T11:13:02.220Z",
+  "updated": "2026-07-20T12:02:44.074Z",
   "summary": {
     "rows": 1668,
     "swedishRows": 282,
@@ -8,7 +8,7 @@
     "uniquePlayers": 927,
     "uniqueSwedishPlayers": 201,
     "matchedPlayers": 199,
-    "uniqueTeams": 96,
+    "uniqueTeams": 93,
     "matchedTeams": 25,
     "podiums": 26,
     "winners": 13,
@@ -1564,22 +1564,22 @@
       ]
     },
     {
-      "name": "Lallare",
+      "name": "Lallare HC",
       "suggestions": [
+        {
+          "name": "Bulle HC",
+          "id": 3448,
+          "distance": 4
+        },
+        {
+          "name": "Calzone HC",
+          "id": 1537,
+          "distance": 4
+        },
         {
           "name": "A Laget",
           "id": 4181,
-          "distance": 4
-        },
-        {
-          "name": "La Suède",
-          "id": 137,
-          "distance": 4
-        },
-        {
-          "name": "Ratade",
-          "id": 7049,
-          "distance": 4
+          "distance": 5
         }
       ]
     },
@@ -1599,26 +1599,6 @@
         {
           "name": "Showtime",
           "id": 166,
-          "distance": 5
-        }
-      ]
-    },
-    {
-      "name": "wNexs",
-      "suggestions": [
-        {
-          "name": "Manos",
-          "id": 3142,
-          "distance": 4
-        },
-        {
-          "name": "N E O N X",
-          "id": 7028,
-          "distance": 4
-        },
-        {
-          "name": "Bockens",
-          "id": 552,
           "distance": 5
         }
       ]
