@@ -17,6 +17,22 @@
 
 "use strict";
 
+
+function SEH_tableSeasonLabel(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return raw;
+  const replacements = [
+    [/^European Championship League\b/i, "ECL"],
+    [/^Finnish Championship League\b/i, "FCL"],
+    [/^Swedish Championship League\b/i, "SCL"],
+    [/^German Championship League\b/i, "GCL"]
+  ];
+  for (const [pattern, abbreviation] of replacements) {
+    if (pattern.test(raw)) return raw.replace(pattern, abbreviation);
+  }
+  return raw;
+}
+
 function SEH_initHistory() {
   /* ======================================================
      ROUTE CONTROLLER: history
@@ -25,7 +41,7 @@ function SEH_initHistory() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-11-player-merits-v16-personal-merits-cache";
+    const APP_BUILD = "2026-08-12-v55-table-league-abbreviations-scope-fix";
     const PAGE_SIZE = 1000;
   
     const state = {
@@ -163,6 +179,24 @@ function SEH_initHistory() {
       return map[division] || cleanText(value);
     }
   
+    function tableSeasonLabel(value) {
+      const raw = cleanText(value);
+      if (!raw) return raw;
+
+      const replacements = [
+        [/^European Championship League\b/i, "ECL"],
+        [/^Finnish Championship League\b/i, "FCL"],
+        [/^Swedish Championship League\b/i, "SCL"],
+        [/^German Championship League\b/i, "GCL"]
+      ];
+
+      for (const [pattern, abbreviation] of replacements) {
+        if (pattern.test(raw)) return raw.replace(pattern, abbreviation);
+      }
+
+      return raw;
+    }
+
     function meaningfulDivision(tournament) {
       const division = normalizeDivision(tournament.division);
       if (!division || division === "MAIN") return "";
@@ -2143,6 +2177,51 @@ function SEH_initPlayer() {
         }
       );
     }
+
+    let leagueDisplayNameMapPromise = null;
+
+    async function fetchLeagueDisplayNameMap() {
+      if (!leagueDisplayNameMapPromise) {
+        const params = new URLSearchParams({
+          select: "league_id,display_name",
+          limit: "1000"
+        });
+
+        leagueDisplayNameMapPromise = fetchJson(
+          "v_ehockey_league_catalog_v1",
+          params
+        )
+          .then((rows) => new Map(
+            rows.map((row) => [
+              Number(row.league_id),
+              String(row.display_name || "").trim()
+            ])
+          ))
+          .catch((error) => {
+            leagueDisplayNameMapPromise = null;
+            throw error;
+          });
+      }
+
+      return leagueDisplayNameMapPromise;
+    }
+
+    async function addLeagueDisplayNames(rows) {
+      try {
+        const displayNames = await fetchLeagueDisplayNameMap();
+        return rows.map((row) => ({
+          ...row,
+          catalog_display_name:
+            displayNames.get(Number(row.league_id)) || ""
+        }));
+      } catch (error) {
+        console.warn(
+          `${APP_BUILD}: kunde inte hämta standardiserade liganamn; tidigare namn används som reserv.`,
+          error
+        );
+        return rows;
+      }
+    }
   
     function tournamentUrl(row) {
       const teamId = String(row.teamId ?? row.team_id ?? "");
@@ -2314,6 +2393,7 @@ function SEH_initPlayer() {
         seasonYear: nullableNumber(row.season_year),
         seasonPeriod: row.season_period || "",
         leagueName: row.league_name || row.season_label || "",
+        catalogDisplayName: row.catalog_display_name || "",
         division: row.division || "",
         leagueId: Number(row.league_id),
         startDate:
@@ -3617,12 +3697,14 @@ function SEH_initPlayer() {
           const seasonLink = document.createElement("a");
           seasonLink.className = "history-table-link history-table-link--gold";
           seasonLink.href = tournamentUrl(row);
-          seasonLink.textContent = row.seasonLabel;
+          seasonLink.textContent =
+            row.catalogDisplayName || SEH_tableSeasonLabel(row.seasonLabel);
           seasonCell.append(seasonLink);
         } else {
           const seasonText = document.createElement("span");
           seasonText.className = "history-table-link--gold";
-          seasonText.textContent = row.seasonLabel;
+          seasonText.textContent =
+            row.catalogDisplayName || SEH_tableSeasonLabel(row.seasonLabel);
           seasonCell.append(seasonText);
         }
   
@@ -3906,7 +3988,8 @@ function SEH_initPlayer() {
               `Svensk eHockey ${APP_BUILD}: katalogen anger historik men det globala historik-RPC:t gav inga rader.`
             );
           } else {
-            const rows = dedupeHistoryRows(historyRows.map(normalize));
+            const namedHistoryRows = await addLeagueDisplayNames(historyRows);
+            const rows = dedupeHistoryRows(namedHistoryRows.map(normalize));
             console.info(
               `Svensk eHockey ${APP_BUILD}: ${uniqueTournamentCount(rows)} turneringar och ${rows.length} historikrader laddades.`
             );
