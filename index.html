@@ -3,69 +3,75 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Svensk eHockey</title>
-  <meta name="description" content="Svensk eHockey – matcher, statistik, spelare, lag och svensk eHockey-historia.">
-  <meta name="theme-color" content="#090909">
-  <link rel="icon" type="image/png" href="./assets/SeHlogga.png">
-  <link rel="apple-touch-icon" href="./assets/SeHlogga.png">
-  <link rel="stylesheet" href="./styles.css?v=player-id-jpg-direct-20260713a">
-  <link rel="stylesheet" href="./v5-blank.css?v=20260718v5af">
-</head>
-<body>
-  <div id="app">
-    <div class="boot">Laddar Svensk eHockey...</div>
-  </div>
-  <script>
-    if ("serviceWorker" in navigator) {
-      // The site does not need an offline worker. Removing old registrations
-      // prevents a stale worker from keeping navigation or assets pending.
-      navigator.serviceWorker.getRegistrations().then(function (registrations) {
-        return Promise.all(registrations.map(function (registration) {
-          return registration.unregister();
-        }));
-      }).then(function () {
-        // A worker that controlled this already-open tab is released only on
-        // navigation. Do that once automatically during this deployment.
-        if (navigator.serviceWorker.controller && !sessionStorage.getItem("seh-worker-cleaned")) {
-          sessionStorage.setItem("seh-worker-cleaned", "1");
-          location.reload();
-        }
-      }).catch(function () {});
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Svensk eHockey – svensk eHockey samlad på ett ställe.">
+  <title>Svensk eHockey – Hem</title>
+  <link rel="icon" type="image/png" href="assets/SeHlogga.png">
+  <link rel="stylesheet" href="styles.css?v=20260812-v54-mobile-logo-fix">
+<style>
+    .portal-button--primary,
+    .portal-button--primary:hover,
+    .portal-button--primary:focus-visible {
+      color: #050505 !important;
     }
-  </script>
-  <script>
-    (function () {
-      var attempt = 0;
-      var maxAttempts = 3;
 
-      function showFailure() {
-        var app = document.getElementById("app");
-        if (!app) return;
-        app.innerHTML = '<div class="boot">Sidan kunde inte starta. <button type="button" id="retry-app">Försök igen</button></div>';
-        var button = document.getElementById("retry-app");
-        if (button) button.onclick = function () { attempt = 0; loadApp(); };
+    /* Gör vattenloggan större och renare */
+    .portal-mark {
+      flex: 0 0 min(48vw, 680px);
+      width: min(48vw, 680px);
+      max-width: 100%;
+      position: relative;
+    }
+
+    .portal-mark img {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      opacity: 0.95;
+    }
+
+    /* Ta bort texten över/vid loggan */
+    .portal-mark span {
+      display: none !important;
+    }
+
+    /* Ta bort cirkeln/dekor runt loggan */
+    .portal-mark::before,
+    .portal-mark::after {
+      display: none !important;
+      content: none !important;
+    }
+
+    @media (max-width: 1100px) {
+      .portal-mark {
+        flex-basis: min(50vw, 560px);
+        width: min(50vw, 560px);
       }
+    }
 
-      function loadApp() {
-        if (window.__SVENSK_EHOCKEY_APP_READY__) return;
-        var currentAttempt = attempt++;
-        var script = document.createElement("script");
-
-        function retry() {
-          if (window.__SVENSK_EHOCKEY_APP_READY__) return;
-          script.remove();
-          if (attempt < maxAttempts) setTimeout(loadApp, 350 * attempt);
-          else showFailure();
-        }
-
-        script.src = "./app.js?v=v5-admin-sheet-20260719r&attempt=" + currentAttempt;
-        script.async = false;
-        script.onerror = retry;
-        document.body.appendChild(script);
+    @media (max-width: 900px) {
+      .portal-mark {
+        flex-basis: min(72vw, 480px);
+        width: min(72vw, 480px);
+        margin: 0 auto;
       }
+    }
+  </style>
+</head>
+<body class="directory-page portal-page">
+  <noscript>
+    <main class="directory-shell">
+      <section class="notice notice-warning">
+        <h1>JavaScript krävs</h1>
+        <p>Svensk eHockey behöver JavaScript för att visa datavyerna.</p>
+      </section>
+    </main>
+  </noscript>
 
-      loadApp();
-    })();
-  </script>
+  <!-- Behåll din befintliga config.js. Den innehåller Supabase URL + publishable key. -->
+  <script src="config.js?v=20260812-v52-readable-teamnames"></script>
+  <script src="teamlogos-manifest.js?v=20260812-v54"></script>
+  <script src="app.js?v=20260812-v55-central-player-directory"></script>
 </body>
 </html>
