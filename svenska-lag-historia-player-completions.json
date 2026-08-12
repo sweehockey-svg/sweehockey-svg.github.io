@@ -1,9 +1,0 @@
-{
-  "notes": [
-    "Kompletterar saknade spelar-GP där komplett all-time-underlag visar fler matcher än nhlgamer_playerStats-exporten.",
-    "Kval kan ingå i spelarstatistik, men kval räknas inte som ECL-säsong på lagkorten."
-  ],
-  "source": "svenska-lag-historia-player-completions.sql",
-  "updated": "2026-07-13 22:13:19",
-  "completions": []
-}
