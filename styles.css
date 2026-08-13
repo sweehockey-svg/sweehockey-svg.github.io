@@ -7297,3 +7297,163 @@ body.directory-page[data-card-view="compact"] .directory-team-card__name {
   height: 18px;
   vertical-align: -3px;
 }
+
+
+/* V73 – visa alla / topp 10 under all-time-tabellerna */
+.history-alltime-table-actions {
+  display: flex;
+  justify-content: center;
+  padding: 16px 14px 18px;
+  border-top: 1px solid rgba(244, 241, 234, 0.08);
+}
+
+.history-alltime-table-actions .history-outline-button {
+  min-width: 170px;
+}
+
+
+/* ============================================================
+   V74 – mobil: ingen sidscroll + stora rubriker/statistik får plats
+   ============================================================ */
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+#spaRouteView,
+.player-profile-shell,
+.news-page-shell,
+.player-editorial-profile,
+.player-editorial-main,
+.player-editorial-bio,
+.player-merits-layout,
+.player-merits-column {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Lång text ska hellre brytas än skapa horisontell scroll. */
+.news-page-hero h1,
+.player-editorial-main h1,
+.player-merits-heading h2,
+.player-teams-heading-v5 h2,
+.profile-detail-copy h1,
+.profile-detail-copy h2,
+.history-section-heading h2 {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+/* ------------------------------------------------------------
+   Mobiltelefoner
+   ------------------------------------------------------------ */
+@media (max-width: 760px) {
+
+  /* Nyhetssidans "NYHETER" var bredare än viewporten. */
+  .news-page-hero h1 {
+    font-size: clamp(48px, 16vw, 72px) !important;
+    line-height: .92 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .news-page-hero {
+    overflow: hidden;
+  }
+
+  /* Långa sektionsrubriker, t.ex. PERSONLIGA MERITER, får radbrytas. */
+  .player-merits-heading h2,
+  .player-teams-heading-v5 h2 {
+    font-size: clamp(38px, 11.5vw, 58px) !important;
+    line-height: .98 !important;
+    letter-spacing: -0.035em !important;
+    overflow-wrap: normal;
+    word-break: normal;
+    white-space: normal !important;
+  }
+
+  .player-merits-heading,
+  .player-teams-heading-v5 {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* Spelarens namn: stort men aldrig bredare än skärmen. */
+  .player-editorial-main h1 {
+    font-size: clamp(46px, 13.5vw, 68px) !important;
+    line-height: .94 !important;
+  }
+
+  /*
+   * Poäng / mål / assist.
+   * Behåll tre kolumner men minska padding och typsnitt så även
+   * fyrsiffriga värden som 1 581 och 1 261 ryms.
+   */
+  .player-editorial-stats {
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .player-editorial-stats article {
+    min-width: 0;
+    padding: 14px 7px 13px !important;
+    overflow: hidden;
+  }
+
+  .player-editorial-stats strong {
+    width: 100%;
+    font-size: clamp(28px, 8.8vw, 40px) !important;
+    line-height: 1 !important;
+    letter-spacing: -0.055em !important;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .player-editorial-stats span {
+    margin-top: 9px;
+    font-size: 9px;
+    letter-spacing: .035em;
+  }
+
+  .player-editorial-main,
+  .player-editorial-bio {
+    overflow: hidden;
+  }
+
+  .player-editorial-competitions,
+  .player-editorial-bio #playerBio,
+  .news-page-hero > div > p:last-child,
+  .news-card__intro,
+  .news-article-section {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Extra smala telefoner. */
+@media (max-width: 390px) {
+  .news-page-hero h1 {
+    font-size: clamp(44px, 15vw, 60px) !important;
+  }
+
+  .player-editorial-main {
+    padding-inline: 18px !important;
+  }
+
+  .player-editorial-stats article {
+    padding-inline: 5px !important;
+  }
+
+  .player-editorial-stats strong {
+    font-size: clamp(26px, 8.4vw, 34px) !important;
+    letter-spacing: -0.06em !important;
+  }
+
+  .player-merits-heading h2,
+  .player-teams-heading-v5 h2 {
+    font-size: clamp(34px, 10.8vw, 48px) !important;
+  }
+}
