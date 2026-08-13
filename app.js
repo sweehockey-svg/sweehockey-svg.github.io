@@ -18,6 +18,81 @@
 "use strict";
 
 
+
+/* ============================================================
+   GLOBAL COUNTRY FLAGS
+   Lokala SVG-flaggor används i hela SPA:n. Windows/Chrome visar annars
+   regional-indicator-emojis som text (t.ex. "SE" och "FI") i stället för
+   riktiga flaggor.
+   ============================================================ */
+function SEH_normalizeCountryCode(code) {
+  const raw = String(code || "").trim().toUpperCase();
+  const aliases = {
+    SWE: "SE", FIN: "FI", NOR: "NO", DEN: "DK", GER: "DE",
+    BEL: "BE", LET: "LV", LAT: "LV", CZE: "CZ", POL: "PL",
+    RUS: "RU", GBR: "GB", WAL: "GB", AUT: "AT", SWI: "CH",
+    NET: "NL", NED: "NL", USA: "US", CAN: "CA", FRA: "FR",
+    EST: "EE", SVK: "SK", ISL: "IS"
+  };
+  return aliases[raw] || raw;
+}
+
+function SEH_flagSvgMarkup(code) {
+  const c = SEH_normalizeCountryCode(code);
+  const svg = {
+    SE: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 10"><rect width="16" height="10" fill="#006aa7"/><rect x="5" width="2" height="10" fill="#fecc00"/><rect y="4" width="16" height="2" fill="#fecc00"/></svg>`,
+    FI: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 10"><rect width="16" height="10" fill="#fff"/><rect x="5" width="2" height="10" fill="#003580"/><rect y="4" width="16" height="2" fill="#003580"/></svg>`,
+    NO: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 16"><rect width="22" height="16" fill="#ba0c2f"/><rect x="6" width="4" height="16" fill="#fff"/><rect y="6" width="22" height="4" fill="#fff"/><rect x="7" width="2" height="16" fill="#00205b"/><rect y="7" width="22" height="2" fill="#00205b"/></svg>`,
+    DK: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 14"><rect width="18" height="14" fill="#c60c30"/><rect x="5" width="2" height="14" fill="#fff"/><rect y="6" width="18" height="2" fill="#fff"/></svg>`,
+    DE: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 9"><rect width="15" height="3" y="0" fill="#000"/><rect width="15" height="3" y="3" fill="#dd0000"/><rect width="15" height="3" y="6" fill="#ffce00"/></svg>`,
+    BE: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 13"><rect width="5" height="13" fill="#000"/><rect x="5" width="5" height="13" fill="#ffd90c"/><rect x="10" width="5" height="13" fill="#ef3340"/></svg>`,
+    LV: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 10"><rect width="18" height="10" fill="#9e3039"/><rect y="4" width="18" height="2" fill="#fff"/></svg>`,
+    CZ: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 12"><rect width="18" height="6" fill="#fff"/><rect y="6" width="18" height="6" fill="#d7141a"/><path d="M0 0L9 6 0 12z" fill="#11457e"/></svg>`,
+    PL: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 10"><rect width="16" height="5" fill="#fff"/><rect y="5" width="16" height="5" fill="#dc143c"/></svg>`,
+    RU: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 9"><rect width="15" height="3" fill="#fff"/><rect y="3" width="15" height="3" fill="#0039a6"/><rect y="6" width="15" height="3" fill="#d52b1e"/></svg>`,
+    NL: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 9"><rect width="15" height="3" fill="#ae1c28"/><rect y="3" width="15" height="3" fill="#fff"/><rect y="6" width="15" height="3" fill="#21468b"/></svg>`,
+    AT: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 9"><rect width="15" height="3" fill="#ed2939"/><rect y="3" width="15" height="3" fill="#fff"/><rect y="6" width="15" height="3" fill="#ed2939"/></svg>`,
+    CH: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12"><rect width="12" height="12" fill="#d52b1e"/><path fill="#fff" d="M5 2h2v3h3v2H7v3H5V7H2V5h3z"/></svg>`,
+    FR: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 10"><rect width="5" height="10" fill="#0055a4"/><rect x="5" width="5" height="10" fill="#fff"/><rect x="10" width="5" height="10" fill="#ef4135"/></svg>`,
+    EE: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 9"><rect width="15" height="3" fill="#4891d9"/><rect y="3" width="15" height="3" fill="#000"/><rect y="6" width="15" height="3" fill="#fff"/></svg>`,
+    SK: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 9"><rect width="15" height="3" fill="#fff"/><rect y="3" width="15" height="3" fill="#0b4ea2"/><rect y="6" width="15" height="3" fill="#ee1c25"/></svg>`,
+    GB: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 12"><rect width="20" height="12" fill="#012169"/><path d="M0 0l20 12M20 0L0 12" stroke="#fff" stroke-width="2.4"/><path d="M0 0l20 12M20 0L0 12" stroke="#c8102e" stroke-width="1"/><path d="M10 0v12M0 6h20" stroke="#fff" stroke-width="4"/><path d="M10 0v12M0 6h20" stroke="#c8102e" stroke-width="2.2"/></svg>`,
+    US: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19 10"><rect width="19" height="10" fill="#fff"/><path stroke="#b22234" stroke-width="1" d="M0 .5h19M0 2.5h19M0 4.5h19M0 6.5h19M0 8.5h19"/><rect width="8" height="5.4" fill="#3c3b6e"/></svg>`,
+    CA: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"><rect width="20" height="10" fill="#fff"/><rect width="5" height="10" fill="#d80621"/><rect x="15" width="5" height="10" fill="#d80621"/><path d="M10 2l.7 1.8 1.8-.5-1 1.5 1.2.7-2 .5.2 2H9.1l.2-2-2-.5 1.2-.7-1-1.5 1.8.5z" fill="#d80621"/></svg>`
+  }[c];
+  return svg || "";
+}
+
+function SEH_countryFlagDataUri(code) {
+  const svg = SEH_flagSvgMarkup(code);
+  return svg ? `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}` : "";
+}
+
+function SEH_createCountryFlag(code, extraClass = "") {
+  const normalized = SEH_normalizeCountryCode(code);
+  const flag = document.createElement("span");
+  flag.className = `seh-country-flag${extraClass ? ` ${extraClass}` : ""}`;
+  flag.setAttribute("aria-label", normalized || "Okänt land");
+  flag.setAttribute("role", "img");
+
+  const dataUri = SEH_countryFlagDataUri(normalized);
+  if (dataUri) {
+    flag.style.backgroundImage = `url("${dataUri}")`;
+  } else {
+    flag.classList.add("seh-country-flag--fallback");
+    flag.textContent = normalized.slice(0, 2) || "?";
+  }
+  return flag;
+}
+
+function SEH_appendFlaggedText(container, code, text) {
+  container.append(
+    SEH_createCountryFlag(code),
+    document.createTextNode(` ${String(text || "")}`)
+  );
+  return container;
+}
+
 function SEH_tableSeasonLabel(value) {
   const raw = String(value ?? "").trim();
   if (!raw) return raw;
@@ -1909,25 +1984,9 @@ function SEH_initPlayer() {
     }
 
     function setPlayerFlag(code) {
-      const normalized = String(code || "").trim().toUpperCase();
-
-      elements.playerFlag.classList.remove(
-        "player-country-flag",
-        "player-country-flag--se"
-      );
-
-      if (normalized === "SE") {
-        elements.playerFlag.textContent = "";
-        elements.playerFlag.classList.add(
-          "player-country-flag",
-          "player-country-flag--se"
-        );
-        elements.playerFlag.setAttribute("aria-label", "Sverige");
-        return;
-      }
-
-      elements.playerFlag.textContent = countryFlag(normalized);
-      elements.playerFlag.removeAttribute("aria-label");
+      elements.playerFlag.className = "";
+      elements.playerFlag.removeAttribute("style");
+      elements.playerFlag.replaceChildren(SEH_createCountryFlag(code, "player-country-flag-global"));
     }
   
     function apiUrl(view, params) {
@@ -4168,7 +4227,7 @@ function SEH_initTeam() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-13-v71-timeout-safe-unlinked-players";
+    const APP_BUILD = "2026-08-13-v72-flags-everywhere";
     const config = window.EHOCKEY_CONFIG || {};
   
     console.info("eHockey Master team build:", APP_BUILD);
@@ -6538,7 +6597,7 @@ function SEH_initTeam() {
       content.className = "history-player-card-copy";
   
       const name = document.createElement("strong");
-      name.textContent = `${countryFlag(player.playerCountry)} ${player.displayGamertag}`;
+      SEH_appendFlaggedText(name, player.playerCountry, player.displayGamertag);
   
       const role = document.createElement("small");
       role.textContent = player.totalGoalieGames > player.totalSkaterGames
@@ -6583,10 +6642,12 @@ function SEH_initTeam() {
     function createPlayerNameCell(player) {
       const cell = document.createElement("td");
       const link = createInternalLink(
-        `${countryFlag(player.playerCountry)} ${player.displayGamertag}`,
+        player.displayGamertag,
         playerPageUrl(player.playerKey),
         "history-table-link"
       );
+      link.textContent = "";
+      SEH_appendFlaggedText(link, player.playerCountry, player.displayGamertag);
       cell.append(link);
       return cell;
     }
@@ -7876,11 +7937,11 @@ function SEH_initTeamTournament() {
         const link = document.createElement("a");
         link.className = "history-table-link";
         link.href = playerUrl(player.player_key, teamId);
-        link.textContent = `${countryFlag(player.player_country)} ${name}`;
+        SEH_appendFlaggedText(link, player.player_country, name);
         wrapper.append(link);
       } else {
         const text = document.createElement("span");
-        text.textContent = `${countryFlag(player.player_country)} ${name}`;
+        SEH_appendFlaggedText(text, player.player_country, name);
         wrapper.append(text);
       }
   
@@ -9286,9 +9347,17 @@ function SEH_initTournament() {
       const cell = document.createElement("td");
       const wrapper = document.createElement("span");
       wrapper.className = "tournament-player-cell";
-      const label = `${countryFlag(player.player_country)} ${canonicalPlayerName(player)}`;
-      if (clean(player.player_key)) wrapper.append(createLink(label, playerPageUrl(player)));
-      else wrapper.append(document.createTextNode(label));
+      const playerName = canonicalPlayerName(player);
+      if (clean(player.player_key)) {
+        const link = createLink(playerName, playerPageUrl(player));
+        link.textContent = "";
+        SEH_appendFlaggedText(link, player.player_country, playerName);
+        wrapper.append(link);
+      } else {
+        const label = document.createElement("span");
+        SEH_appendFlaggedText(label, player.player_country, playerName);
+        wrapper.append(label);
+      }
       const externalUrl = clean(player.sports_gamer_player_url);
       if (externalUrl) {
         const external = createLink("SportsGamer ↗", externalUrl, "tournament-player-external");
