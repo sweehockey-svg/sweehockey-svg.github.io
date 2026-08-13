@@ -6981,3 +6981,276 @@ body.directory-page[data-card-view="compact"] .directory-team-card__name {
   word-break: normal !important;
   transform: none !important;
 }
+
+
+/* Spelarprofil / Alla turneringar — tävlingsfilter */
+.player-history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+
+.player-history-filter {
+  appearance: none;
+  min-height: 34px;
+  padding: 7px 14px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 999px;
+  background: #0b0d0d;
+  color: rgba(244,241,233,.78);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.player-history-filter:hover,
+.player-history-filter:focus-visible {
+  border-color: rgba(255,208,0,.72);
+  color: #fff;
+}
+
+.player-history-filter.is-active {
+  border-color: #ffd000;
+  background: #ffd000;
+  color: #050707;
+}
+
+.player-history-empty {
+  padding: 28px !important;
+  text-align: center;
+  color: rgba(244,241,233,.6);
+}
+
+@media (max-width: 700px) {
+  .player-history-filters {
+    gap: 6px;
+  }
+
+  .player-history-filter {
+    padding-inline: 11px;
+    font-size: 11px;
+  }
+}
+
+/* ============================================================
+   V65 – bredare, mindre kompakta huvudrubriker globalt
+   ============================================================ */
+
+/*
+ * Impact/Arial Narrow gav flera stora rubriker ett väldigt hoptryckt uttryck.
+ * Den här globala överstyrningen använder en bredare display-stack och
+ * mildare negativ teckenmellanrum på sidans stora redaktionella rubriker.
+ */
+:root {
+  --v2-display: "Arial Black", Arial, Helvetica, sans-serif;
+}
+
+.directory-hero h1,
+.directory-section__heading h2,
+.history-hero h1,
+.history-division-panel h2,
+.history-section-heading h2,
+.profile-detail-hero h1,
+.profile-detail-copy h1,
+.profile-detail-copy h2,
+.tournament-page-title,
+.portal-hero h1,
+.portal-page-hero h1,
+.portal-section h2,
+.player-directory h2,
+.season-overview h2,
+.news-page-hero h1,
+.news-feed h2,
+.news-card h2,
+.players-hero h1,
+.tournament-overview-hero h1,
+.player-editorial-main h1,
+.player-merits-heading h2,
+.player-teams-heading-v5 h2,
+.shop-page-hero h1,
+.shop-title-block h1,
+.shop-info-card h2,
+.shop-card-copy h2,
+.team-history-card h2,
+.club-history-card h2,
+.laghistoria-card h2 {
+  font-family: "Arial Black", Arial, Helvetica, sans-serif !important;
+  font-stretch: normal;
+  letter-spacing: -0.035em !important;
+}
+
+/* De allra största rubrikerna behöver lite luftigare vertikalt också. */
+.directory-hero h1,
+.history-hero h1,
+.history-section-heading h2,
+.portal-hero h1,
+.portal-page-hero h1,
+.players-hero h1,
+.news-page-hero h1,
+.tournament-overview-hero h1,
+.player-editorial-main h1 {
+  line-height: 0.88 !important;
+}
+
+/* Lagprofilens stora sektionsrubriker – t.ex. Divisionskurva,
+   Lagets säsonger och Spelare i ... */
+.history-division-panel h2,
+.history-section-heading h2 {
+  letter-spacing: -0.03em !important;
+}
+
+/* Mobil: behåll läsbar bredd utan att rubrikerna pressas ihop. */
+@media (max-width: 760px) {
+  .directory-hero h1,
+  .history-hero h1,
+  .history-section-heading h2,
+  .portal-hero h1,
+  .portal-page-hero h1,
+  .players-hero h1,
+  .news-page-hero h1,
+  .tournament-overview-hero h1,
+  .player-editorial-main h1 {
+    letter-spacing: -0.025em !important;
+    line-height: 0.92 !important;
+  }
+}
+
+/* ============================================================
+   V66 – bredare displaytext även i lagprofilens statistikband
+   ============================================================ */
+
+/* De stora värdena i Matchvinster / Bästa ECL / Högsta nivå / Slutspel
+   samt Matcher / Vinster / Förluster / Vinst% / GF-GA / +/- använde
+   fortfarande Impact och blev därför mycket smalare än övriga rubriker. */
+.history-feature-metric strong,
+.history-compact-metrics strong,
+.profile-summary-grid strong,
+.tournament-overview-metrics strong,
+.players-overview strong,
+.directory-stats strong,
+.player-secondary-metrics strong,
+.history-honour-summary strong {
+  font-family: "Arial Black", Arial, Helvetica, sans-serif !important;
+  font-stretch: normal !important;
+  letter-spacing: -0.035em !important;
+}
+
+/* Lite mer horisontellt utrymme för textvärden som ECL '25 / Winter / Elite. */
+.history-feature-metric strong {
+  line-height: 0.92 !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+
+/* Siffrorna i den kompakta högerspalten ska vara breda men fortfarande
+   få plats i respektive cell. */
+.history-compact-metrics strong {
+  line-height: 0.95 !important;
+  letter-spacing: -0.045em !important;
+}
+
+/* Behåll samma känsla även i mindre viewport. */
+@media (max-width: 1100px) {
+  .history-feature-metric strong,
+  .history-compact-metrics strong {
+    letter-spacing: -0.03em !important;
+  }
+}
+
+/* ============================================================
+   V67 – lagprofilens högra statistikblock i två rader
+   Rad 1: Matcher / Vinster / Förluster / Vinst%
+   Rad 2: GF–GA / +/-
+   ============================================================ */
+
+.history-compact-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  align-self: stretch !important;
+}
+
+.history-compact-metrics > div {
+  display: flex;
+  min-width: 0;
+  min-height: 112px;
+  padding: 20px 12px 18px !important;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Första raden: fyra lika breda statistikceller. */
+.history-compact-metrics > div:nth-child(-n + 4) {
+  grid-column: span 1;
+  border-bottom: 1px solid rgba(244, 241, 234, 0.2);
+}
+
+/* Andra raden: två bredare celler. */
+.history-compact-metrics > div:nth-child(5),
+.history-compact-metrics > div:nth-child(6) {
+  grid-column: span 2;
+}
+
+.history-compact-metrics > div:nth-child(4),
+.history-compact-metrics > div:nth-child(6) {
+  border-right: 0;
+}
+
+.history-compact-metrics > div:nth-child(5) {
+  border-right: 1px solid rgba(244, 241, 234, 0.2);
+}
+
+.history-compact-metrics span {
+  white-space: nowrap;
+}
+
+.history-compact-metrics strong {
+  width: 100%;
+  margin-top: 10px !important;
+  font-size: clamp(2rem, 2.55vw, 3.25rem) !important;
+  line-height: 0.95 !important;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* GF–GA får extra bredd via två kolumner och kan därför visas på en rad. */
+.history-compact-metrics > div:nth-child(5) strong {
+  font-size: clamp(1.85rem, 2.35vw, 3rem) !important;
+}
+
+/* +403 får behålla den tydliga gröna accentstorleken. */
+.history-compact-metrics > div:nth-child(6) strong {
+  font-size: clamp(2.1rem, 2.7vw, 3.4rem) !important;
+}
+
+@media (max-width: 820px) {
+  .history-compact-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .history-compact-metrics > div:nth-child(-n + 4),
+  .history-compact-metrics > div:nth-child(5),
+  .history-compact-metrics > div:nth-child(6) {
+    grid-column: span 1;
+  }
+
+  .history-compact-metrics > div:nth-child(odd) {
+    border-right: 1px solid rgba(244, 241, 234, 0.2);
+  }
+
+  .history-compact-metrics > div:nth-child(even) {
+    border-right: 0;
+  }
+
+  .history-compact-metrics > div {
+    border-bottom: 1px solid rgba(244, 241, 234, 0.2);
+  }
+
+  .history-compact-metrics > div:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+}

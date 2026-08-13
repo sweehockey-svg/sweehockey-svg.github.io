@@ -41,7 +41,7 @@ function SEH_initHistory() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-12-v55-table-league-abbreviations-scope-fix";
+    const APP_BUILD = "2026-08-13-v59-team-history-web-v14-merit-fix";
     const PAGE_SIZE = 1000;
   
     const state = {
@@ -491,7 +491,7 @@ function SEH_initHistory() {
   
     async function fetchTournaments() {
       return fetchAllPages(
-        "v_ehockey_team_tournaments_chronological",
+        "v_ehockey_team_tournaments_web_v14",
         {
           select: [
             "team_id",
@@ -1787,7 +1787,7 @@ function SEH_initPlayer() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-11-player-v24-linked-team-names";
+    const APP_BUILD = "2026-08-12-player-v58-ehsm-catalog-is-fcl";
     const config = window.EHOCKEY_CONFIG || {};
     const elements = {
       backLink: document.querySelector("#backLink"),
@@ -1825,9 +1825,13 @@ function SEH_initPlayer() {
       goalieCareerStats: document.querySelector("#goalieCareerStats"),
       playerTeamsSection: document.querySelector("#playerTeamsSection"),
       playerTeamsGrid: document.querySelector("#playerTeamsGrid"),
+      historyCompetitionFilters: document.querySelector("#historyCompetitionFilters"),
       historyCount: document.querySelector("#historyCount"),
       historyTableBody: document.querySelector("#historyTableBody")
     };
+
+    let historyCompetitionFilter = "ALL";
+    let currentHistoryRows = [];
   
     function hasValidConfig() {
       return typeof config.supabaseUrl === "string" &&
@@ -2301,16 +2305,57 @@ function SEH_initPlayer() {
   
     function normalizedCompetitionCode(row) {
       const explicit = String(row.competitionCode || "").trim().toUpperCase();
-      if (explicit && explicit !== "SPORTSGAMER") return explicit;
-      const label = `${row.seasonLabel || ""} ${row.leagueName || ""}`;
-      if (/european championship league|(^|\W)ecl(\W|$)/i.test(label)) return "ECL";
-      if (/swedish championship league|(^|\W)scl(\W|$)/i.test(label)) return "SCL";
-      if (/(^|\W)sec(\W|$)/i.test(label)) return "SEC";
-      if (/(^|\W)lgel(\W|$)/i.test(label)) return "LGEL";
-      if (/sm\s*ehockey|(^|\W)sm(\W|$)/i.test(label)) return "SM";
-      return explicit || "SPORTSGAMER";
+
+      /*
+       * eHSM visas via catalogDisplayName i tabellen.
+       * Äldre data kan samtidigt ha seasonLabel/competitionCode = SM.
+       * Därför måste catalogDisplayName ingå i själva filterklassificeringen.
+       */
+      const label = [
+        row.catalogDisplayName,
+        row.seasonLabel,
+        row.leagueName,
+        row.competitionName
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      const normalizedLabel = label
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase();
+
+      /* eHSM hör till FCL och ska aldrig hamna under SM. */
+      if (/(^|[^A-Z0-9])EHSM([^A-Z0-9]|$)/.test(normalizedLabel)) {
+        return "FCL";
+      }
+
+      if (/EUROPEAN CHAMPIONSHIP LEAGUE|(^|[^A-Z0-9])ECL([^A-Z0-9]|$)/.test(normalizedLabel)) return "ECL";
+      if (/SWEDISH CHAMPIONSHIP LEAGUE|(^|[^A-Z0-9])SCL([^A-Z0-9]|$)/.test(normalizedLabel)) return "SCL";
+      if (/FINNISH CHAMPIONSHIP LEAGUE|(^|[^A-Z0-9])FCL([^A-Z0-9]|$)/.test(normalizedLabel)) return "FCL";
+      if (/GERMAN CHAMPIONSHIP LEAGUE|(^|[^A-Z0-9])GCL([^A-Z0-9]|$)/.test(normalizedLabel)) return "GCL";
+      if (/RUSSIAN CHAMPIONSHIP LEAGUE|(^|[^A-Z0-9])RCL([^A-Z0-9]|$)/.test(normalizedLabel)) return "RCL";
+      if (/CZECH SLOVAK CHAMPIONSHIP LEAGUE|(^|[^A-Z0-9])CSCL([^A-Z0-9]|$)/.test(normalizedLabel)) return "CSCL";
+      if (/NORTH AMERICAN CHAMPIONSHIP LEAGUE|(^|[^A-Z0-9])NACL([^A-Z0-9]|$)/.test(normalizedLabel)) return "NACL";
+      if (/(^|[^A-Z0-9])SEC([^A-Z0-9]|$)/.test(normalizedLabel)) return "SEC";
+      if (/(^|[^A-Z0-9])ITHL([^A-Z0-9]|$)/.test(normalizedLabel)) return "ITHL";
+      if (/(^|[^A-Z0-9])LGEL([^A-Z0-9]|$)/.test(normalizedLabel)) return "LGEL";
+      if (/(^|[^A-Z0-9])6HL([^A-Z0-9]|$)/.test(normalizedLabel)) return "6HL";
+      if (/(^|[^A-Z0-9])E-?SHL([^A-Z0-9]|$)/.test(normalizedLabel)) return "ESHL";
+
+      if (
+        /SM\s*EHOCKEY|EHOCKEY\s*SM|(^|[^A-Z0-9])SM([^A-Z0-9]|$)/.test(normalizedLabel)
+      ) {
+        return "SM";
+      }
+
+      if (explicit && explicit !== "SPORTSGAMER" && explicit !== "ÖVRIGT") {
+        return explicit;
+      }
+
+      return "ÖVRIGT";
     }
-  
+
     function tournamentSequenceValue(row) {
       const code = normalizedCompetitionCode(row);
       const label = `${row.seasonLabel || ""} ${row.leagueName || ""}`;
@@ -3573,6 +3618,177 @@ function SEH_initPlayer() {
       }
     }
 
+
+    function playerHistoryFilterCode(row) {
+      return normalizedCompetitionCode(row);
+    }
+
+    function playerHistoryFilterOptions(rows) {
+      const preferredOrder = [
+        "ECL", "SEC", "SCL", "FCL", "GCL", "ITHL",
+        "ESHL", "LGEL", "SM", "6HL", "RCL", "CSCL", "NACL"
+      ];
+      const available = new Set(rows.map(playerHistoryFilterCode).filter(Boolean));
+      const options = preferredOrder.filter((code) => available.has(code));
+      if ([...available].some((code) => !preferredOrder.includes(code))) {
+        options.push("ÖVRIGA");
+      }
+      return options;
+    }
+
+    function playerHistoryMatchesFilter(row) {
+      if (historyCompetitionFilter === "ALL") return true;
+      const code = playerHistoryFilterCode(row);
+
+      if (historyCompetitionFilter === "ÖVRIGA") {
+        return !new Set([
+          "ECL", "SEC", "SCL", "FCL", "GCL", "ITHL",
+          "ESHL", "LGEL", "SM", "6HL", "RCL", "CSCL", "NACL"
+        ]).has(code);
+      }
+
+      return code === historyCompetitionFilter;
+    }
+
+    function renderPlayerHistoryFilters(rows) {
+      if (!elements.historyCompetitionFilters) return;
+
+      const options = playerHistoryFilterOptions(rows);
+
+      if (
+        historyCompetitionFilter !== "ALL" &&
+        !options.includes(historyCompetitionFilter)
+      ) {
+        historyCompetitionFilter = "ALL";
+      }
+
+      elements.historyCompetitionFilters.replaceChildren();
+
+      [
+        { value: "ALL", label: "Alla" },
+        ...options.map((code) => ({
+          value: code,
+          label: code === "ÖVRIGA" ? "Övriga" : code
+        }))
+      ].forEach(({ value, label }) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "player-history-filter";
+        button.textContent = label;
+        button.setAttribute("aria-pressed", historyCompetitionFilter === value ? "true" : "false");
+
+        if (historyCompetitionFilter === value) {
+          button.classList.add("is-active");
+        }
+
+        button.addEventListener("click", () => {
+          historyCompetitionFilter = value;
+          renderPlayerHistoryFilters(currentHistoryRows);
+          renderPlayerHistoryTable(currentHistoryRows);
+        });
+
+        elements.historyCompetitionFilters.append(button);
+      });
+    }
+
+    function renderPlayerHistoryTable(rows) {
+      const visibleRows = [...rows]
+        .sort(compareHistoryRows)
+        .filter(playerHistoryMatchesFilter);
+
+      elements.historyTableBody.replaceChildren();
+
+      visibleRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        const seasonCell = document.createElement("td");
+
+        if (row.teamId) {
+          const seasonLink = document.createElement("a");
+          seasonLink.className = "history-table-link history-table-link--gold";
+          seasonLink.href = tournamentUrl(row);
+          seasonLink.textContent =
+            row.catalogDisplayName || SEH_tableSeasonLabel(row.seasonLabel);
+          seasonCell.append(seasonLink);
+        } else {
+          const seasonText = document.createElement("span");
+          seasonText.className = "history-table-link--gold";
+          seasonText.textContent =
+            row.catalogDisplayName || SEH_tableSeasonLabel(row.seasonLabel);
+          seasonCell.append(seasonText);
+        }
+
+        const teamCell = document.createElement("td");
+        const teamWrap = document.createElement("span");
+        teamWrap.className = "player-history-team";
+
+        const teamLogo = document.createElement("span");
+        teamLogo.className = "player-history-team__logo";
+        teamLogo.dataset.teamLogoFor = row.teamId ? String(row.teamId) : "";
+        teamLogo.dataset.teamNameForLogo = row.teamCurrentName || row.teamName || "";
+
+        SEH_renderTeamLogo(
+          teamLogo,
+          [row.resolvedLogoUrl || ""],
+          teamLogo.dataset.teamNameForLogo,
+          `${teamLogo.dataset.teamNameForLogo} logotyp`
+        );
+
+        if (row.teamId) {
+          const teamLink = document.createElement("a");
+          teamLink.className = "history-table-link";
+          teamLink.href = tournamentUrl(row);
+          teamLink.textContent = row.teamName;
+          teamWrap.append(teamLogo, teamLink);
+        } else {
+          const teamText = document.createElement("span");
+          teamText.textContent = row.teamName;
+          teamWrap.append(teamLogo, teamText);
+        }
+
+        teamCell.append(teamWrap);
+
+        const role = row.goalieGames > row.skaterGames ? "G" : row.position || "Utespelare";
+        const values = [
+          row.division || "–",
+          role,
+          formatInteger(row.appearanceGames, "0"),
+          formatInteger(row.goals, "0"),
+          formatInteger(row.assists, "0"),
+          formatInteger(row.points, "0"),
+          row.goalieGames ? formatSavePercentage(row.savePercentage) : "–",
+          row.goalieGames ? formatDecimal(row.gaa, 2) : "–"
+        ];
+
+        tr.append(seasonCell, teamCell);
+
+        values.forEach((value) => {
+          const td = document.createElement("td");
+          td.textContent = value;
+          tr.append(td);
+        });
+
+        elements.historyTableBody.append(tr);
+      });
+
+      const total = uniqueTournamentCount(rows);
+      const visible = uniqueTournamentCount(visibleRows);
+
+      elements.historyCount.textContent =
+        historyCompetitionFilter === "ALL"
+          ? `${total} turneringar`
+          : `${visible} ${historyCompetitionFilter === "ÖVRIGA" ? "övriga" : historyCompetitionFilter}-turneringar`;
+
+      if (!visibleRows.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 10;
+        td.className = "player-history-empty";
+        td.textContent = "Inga turneringar matchar filtret.";
+        tr.append(td);
+        elements.historyTableBody.append(tr);
+      }
+    }
+
     function render(rows) {
       const latest = [...rows].sort(compareHistoryRows)[0];
       const tournamentCount = uniqueTournamentCount(rows);
@@ -3682,87 +3898,9 @@ function SEH_initPlayer() {
       addStat(elements.goalieCareerStats, "GAA", goalieGames ? formatDecimal(goalsAllowed / goalieGames, 2) : "–");
       addStat(elements.goalieCareerStats, "Nollor", formatInteger(shutouts, "0"));
   
-      elements.historyTableBody.replaceChildren();
-      rows.sort(compareHistoryRows);
-
-      /*
-       * Om raden har ett lokalt team_id finns laget redan i Svensk eHockey-
-       * databasen och både säsong + lagnamn ska länka till lagets turneringsvy.
-       * Vi använder därför inte team_is_linkable som extra spärr här.
-       */
-      rows.forEach((row) => {
-        const tr = document.createElement("tr");
-        const seasonCell = document.createElement("td");
-        if (row.teamId) {
-          const seasonLink = document.createElement("a");
-          seasonLink.className = "history-table-link history-table-link--gold";
-          seasonLink.href = tournamentUrl(row);
-          seasonLink.textContent =
-            row.catalogDisplayName || SEH_tableSeasonLabel(row.seasonLabel);
-          seasonCell.append(seasonLink);
-        } else {
-          const seasonText = document.createElement("span");
-          seasonText.className = "history-table-link--gold";
-          seasonText.textContent =
-            row.catalogDisplayName || SEH_tableSeasonLabel(row.seasonLabel);
-          seasonCell.append(seasonText);
-        }
-  
-        const teamCell = document.createElement("td");
-        const teamWrap = document.createElement("span");
-        teamWrap.className = "player-history-team";
-
-        const teamLogo = document.createElement("span");
-        teamLogo.className = "player-history-team__logo";
-        teamLogo.dataset.teamLogoFor = row.teamId ? String(row.teamId) : "";
-        teamLogo.dataset.teamNameForLogo =
-          row.teamCurrentName ||
-          row.teamName ||
-          "";
-
-        /*
-         * Rita loggan direkt från samma globala resolver som lagkorten.
-         * Detta är viktigt även när raden saknar lokalt team_id.
-         */
-        SEH_renderTeamLogo(
-          teamLogo,
-          [row.resolvedLogoUrl || ""],
-          teamLogo.dataset.teamNameForLogo,
-          `${teamLogo.dataset.teamNameForLogo} logotyp`
-        );
-
-        if (row.teamId) {
-          const teamLink = document.createElement("a");
-          teamLink.className = "history-table-link";
-          teamLink.href = tournamentUrl(row);
-          teamLink.textContent = row.teamName;
-          teamWrap.append(teamLogo, teamLink);
-        } else {
-          const teamText = document.createElement("span");
-          teamText.textContent = row.teamName;
-          teamWrap.append(teamLogo, teamText);
-        }
-
-        teamCell.append(teamWrap);
-  
-        const role = row.goalieGames > row.skaterGames ? "G" : row.position || "Utespelare";
-        const values = [
-          row.division || "–", role,
-          formatInteger(row.appearanceGames, "0"),
-          formatInteger(row.goals, "0"), formatInteger(row.assists, "0"),
-          formatInteger(row.points, "0"),
-          row.goalieGames ? formatSavePercentage(row.savePercentage) : "–",
-          row.goalieGames ? formatDecimal(row.gaa, 2) : "–"
-        ];
-        tr.append(seasonCell, teamCell);
-        values.forEach((value) => {
-          const td = document.createElement("td");
-          td.textContent = value;
-          tr.append(td);
-        });
-        elements.historyTableBody.append(tr);
-      });
-      elements.historyCount.textContent = `${tournamentCount} turneringar`;
+      currentHistoryRows = [...rows];
+      renderPlayerHistoryFilters(currentHistoryRows);
+      renderPlayerHistoryTable(currentHistoryRows);
     }
   
     function renderStandalone(directoryRow, cacheMissing = false) {
@@ -4030,7 +4168,7 @@ function SEH_initTeam() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-11-hash-spa-v1-history-cache-v18-1-no-v16";
+    const APP_BUILD = "2026-08-13-v71-timeout-safe-unlinked-players";
     const config = window.EHOCKEY_CONFIG || {};
   
     console.info("eHockey Master team build:", APP_BUILD);
@@ -4092,12 +4230,15 @@ function SEH_initTeam() {
       leagueNames: document.querySelector("#leagueNames"),
   
       competitionFilter: document.querySelector("#competitionFilter"),
+      seasonCompetitionFilters: document.querySelector("#seasonCompetitionFilters"),
       tournamentSort: document.querySelector("#tournamentSort"),
       tournamentResultText: document.querySelector("#tournamentResultText"),
       lastUpdated: document.querySelector("#lastUpdated"),
       tournamentList: document.querySelector("#tournamentList")
     };
   
+    let seasonCompetitionFilter = "ALL";
+
     const state = {
       team: null,
       tournaments: [],
@@ -4366,11 +4507,18 @@ function SEH_initTeam() {
         leagueId: Number(row.league_id),
         externalLeagueId: row.external_league_id || "",
         leagueName: row.league_name || "",
+        catalogDisplayName: row.catalog_display_name || "",
         division: row.division || "",
         divisionKey: row.division_key || "",
         divisionRank: row.division_rank,
   
-        nameUsed: row.name_used_in_tournament || row.current_name || "",
+        nameUsed:
+          row.tournament_team_name ||
+          row.name_used_in_tournament ||
+          row.current_name ||
+          "",
+        canonicalTeamKey: row.canonical_team_key || "",
+        canonicalDisplayName: row.canonical_display_name || "",
         groupId:
           row.group_id === null ||
           row.group_id === undefined ||
@@ -4862,12 +5010,114 @@ function SEH_initTeam() {
     }
   
     function compactSeasonLabel(tournament) {
-      return normalizedSeasonLabel(
+      /*
+       * Samma namnkälla som spelarprofilens "Alla turneringar":
+       * catalogDisplayName är förstahandsval när ligakatalogen har ett namn.
+       */
+      const catalogLabel = String(tournament.catalogDisplayName || "").trim();
+      if (catalogLabel) {
+        return catalogLabel;
+      }
+
+      const raw = normalizedSeasonLabel(
         tournament.seasonLabel,
         tournament.competitionCode,
         tournament.leagueName,
         tournament.seasonNumber
       );
+
+      let label = SEH_tableSeasonLabel(raw);
+
+      // Reserv för äldre rader som ännu saknar katalogens display_name.
+      label = label
+        .replace(/^ECL\s*[-–—:]?\s*Season\s*([0-9]+(?:\.[0-9]+)?)/i, "ECL $1")
+        .replace(/^FCL\s*[-–—:]?\s*Season\s*([0-9]+(?:\.[0-9]+)?)/i, "FCL $1")
+        .replace(/^SCL\s*[-–—:]?\s*Season\s*([0-9]+(?:\.[0-9]+)?)/i, "SCL $1")
+        .replace(/^GCL\s*[-–—:]?\s*Season\s*([0-9]+(?:\.[0-9]+)?)/i, "GCL $1");
+
+      return label;
+    }
+
+    function teamTournamentCompetitionCode(tournament) {
+      const explicit = String(tournament.competitionCode || "").trim().toUpperCase();
+      const text = [
+        tournament.catalogDisplayName,
+        tournament.seasonLabel,
+        tournament.leagueName,
+        tournament.competitionName
+      ].filter(Boolean).join(" ")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase();
+
+      // eHSM hör till FCL, aldrig SM.
+      if (/(^|[^A-Z0-9])EHSM([^A-Z0-9]|$)/.test(text)) return "FCL";
+      if (/EUROPEAN CHAMPIONSHIP LEAGUE|(^|[^A-Z0-9])ECL([^A-Z0-9]|$)/.test(text)) return "ECL";
+      if (/SWEDISH CHAMPIONSHIP LEAGUE|(^|[^A-Z0-9])SCL([^A-Z0-9]|$)/.test(text)) return "SCL";
+      if (/FINNISH CHAMPIONSHIP LEAGUE|(^|[^A-Z0-9])FCL([^A-Z0-9]|$)/.test(text)) return "FCL";
+      if (/GERMAN CHAMPIONSHIP LEAGUE|(^|[^A-Z0-9])GCL([^A-Z0-9]|$)/.test(text)) return "GCL";
+      if (/(^|[^A-Z0-9])SEC([^A-Z0-9]|$)/.test(text)) return "SEC";
+      if (/(^|[^A-Z0-9])ITHL([^A-Z0-9]|$)/.test(text)) return "ITHL";
+      if (/(^|[^A-Z0-9])LGEL([^A-Z0-9]|$)/.test(text)) return "LGEL";
+      if (/(^|[^A-Z0-9])E-?SHL([^A-Z0-9]|$)/.test(text)) return "ESHL";
+      if (/SM\s*EHOCKEY|EHOCKEY\s*SM|(^|[^A-Z0-9])SM([^A-Z0-9]|$)/.test(text)) return "SM";
+
+      if (explicit && explicit !== "SPORTSGAMER" && explicit !== "ÖVRIGT") return explicit;
+      return "ÖVRIGT";
+    }
+
+    function seasonCompetitionFilterOptions() {
+      const preferredOrder = [
+        "ECL", "SEC", "SCL", "FCL", "GCL", "ITHL",
+        "ESHL", "LGEL", "SM", "6HL", "RCL", "CSCL", "NACL"
+      ];
+      const available = new Set(state.tournaments.map(teamTournamentCompetitionCode).filter(Boolean));
+      const options = preferredOrder.filter((code) => available.has(code));
+      if ([...available].some((code) => !preferredOrder.includes(code))) options.push("ÖVRIGA");
+      return options;
+    }
+
+    function seasonTournamentMatchesFilter(tournament) {
+      if (seasonCompetitionFilter === "ALL") return true;
+      const code = teamTournamentCompetitionCode(tournament);
+      if (seasonCompetitionFilter === "ÖVRIGA") {
+        return !new Set([
+          "ECL", "SEC", "SCL", "FCL", "GCL", "ITHL",
+          "ESHL", "LGEL", "SM", "6HL", "RCL", "CSCL", "NACL"
+        ]).has(code);
+      }
+      return code === seasonCompetitionFilter;
+    }
+
+    function renderSeasonCompetitionFilters() {
+      if (!elements.seasonCompetitionFilters) return;
+      const options = seasonCompetitionFilterOptions();
+
+      if (seasonCompetitionFilter !== "ALL" && !options.includes(seasonCompetitionFilter)) {
+        seasonCompetitionFilter = "ALL";
+      }
+
+      elements.seasonCompetitionFilters.replaceChildren();
+      [
+        { value: "ALL", label: "Alla" },
+        ...options.map((code) => ({
+          value: code,
+          label: code === "ÖVRIGA" ? "Övriga" : code === "ESHL" ? "eSHL" : code
+        }))
+      ].forEach(({ value, label }) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "player-history-filter";
+        button.textContent = label;
+        button.setAttribute("aria-pressed", seasonCompetitionFilter === value ? "true" : "false");
+        if (seasonCompetitionFilter === value) button.classList.add("is-active");
+        button.addEventListener("click", () => {
+          seasonCompetitionFilter = value;
+          renderSeasonCompetitionFilters();
+          renderSeasonsTable();
+        });
+        elements.seasonCompetitionFilters.append(button);
+      });
     }
   
     function createApiUrl(view, params) {
@@ -5055,16 +5305,152 @@ function SEH_initTeam() {
       return rows[0] ? normalizeTeam(rows[0]) : null;
     }
   
-    async function fetchTournaments(teamId) {
-      const rows = await fetchRpcJson(
-        "get_ehockey_team_tournaments_linked_v17",
-        { p_team_id: teamId }
-      );
-  
-      return dedupeTeamTournaments(rows.map(normalizeTournament));
+    let teamLeagueDisplayNameMapPromise = null;
+
+    async function fetchTeamLeagueDisplayNameMap() {
+      if (!teamLeagueDisplayNameMapPromise) {
+        const params = new URLSearchParams({
+          select: "league_id,display_name",
+          limit: "5000"
+        });
+
+        teamLeagueDisplayNameMapPromise = fetchJson(
+          "v_ehockey_league_catalog_v1",
+          params
+        )
+          .then((rows) => new Map(
+            rows.map((row) => [
+              Number(row.league_id),
+              String(row.display_name || "").trim()
+            ])
+          ))
+          .catch((error) => {
+            teamLeagueDisplayNameMapPromise = null;
+            throw error;
+          });
+      }
+
+      return teamLeagueDisplayNameMapPromise;
     }
-  
-  
+
+    async function addTeamLeagueDisplayNames(rows) {
+      try {
+        const displayNames = await fetchTeamLeagueDisplayNameMap();
+        return rows.map((row) => ({
+          ...row,
+          catalog_display_name:
+            displayNames.get(Number(row.league_id)) || row.catalog_display_name || ""
+        }));
+      } catch (error) {
+        console.warn(
+          `${APP_BUILD}: kunde inte hämta standardiserade turneringsnamn för lagsidan; använder befintliga namn som reserv.`,
+          error
+        );
+        return rows;
+      }
+    }
+
+
+    function fallbackCanonicalTeamKey(teamName) {
+      const normalized = String(teamName || "")
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase("sv-SE")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+      return normalized ? `name:${normalized}` : "";
+    }
+
+    async function resolveCanonicalTeamIdentity(team) {
+      const currentName = String(team?.currentName || "").trim();
+      const fallbackKey = fallbackCanonicalTeamKey(currentName);
+
+      if (!currentName) {
+        return {
+          canonicalTeamKey: fallbackKey,
+          canonicalDisplayName: currentName
+        };
+      }
+
+      const params = new URLSearchParams({
+        select: "canonical_team_key,canonical_display_name,alias_name",
+        alias_name: `eq.${currentName}`,
+        limit: "1"
+      });
+
+      try {
+        const rows = await fetchJson("ehockey_team_name_aliases", params);
+        const match = rows[0];
+
+        if (match?.canonical_team_key) {
+          return {
+            canonicalTeamKey: String(match.canonical_team_key),
+            canonicalDisplayName:
+              String(match.canonical_display_name || currentName)
+          };
+        }
+      } catch (error) {
+        console.warn(
+          `${APP_BUILD}: kunde inte läsa ehockey_team_name_aliases; använder namnnyckel som reserv.`,
+          error
+        );
+      }
+
+      return {
+        canonicalTeamKey: fallbackKey,
+        canonicalDisplayName: currentName
+      };
+    }
+
+
+    async function fetchTournaments(team) {
+      /*
+       * V69:
+       * Laghistoriken styrs nu av NAMNET SOM ANVÄNDES I TURNERINGEN.
+       *
+       * Supabase source of truth:
+       *   ehockey_team_name_aliases
+       *   v_ehockey_team_tournaments_by_name_dedup
+       *
+       * team_id och SportsGamer-ID får alltså återanvändas efter namnbyte
+       * utan att den gamla klubbhistoriken automatiskt följer med.
+       */
+      const identity = await resolveCanonicalTeamIdentity(team);
+
+      if (!identity.canonicalTeamKey) {
+        return [];
+      }
+
+      const params = new URLSearchParams({
+        select: "*",
+        canonical_team_key: `eq.${identity.canonicalTeamKey}`,
+        limit: "5000"
+      });
+
+      const rows = await fetchJson(
+        "v_ehockey_team_tournaments_by_name_dedup",
+        params
+      );
+
+      const namedRows = await addTeamLeagueDisplayNames(rows);
+
+      return dedupeTeamTournaments(
+        namedRows.map((row) =>
+          normalizeTournament({
+            ...row,
+            // Vyns explicita turneringsnamn ska alltid vinna.
+            name_used_in_tournament:
+              row.tournament_team_name ||
+              row.name_used_in_tournament ||
+              row.current_name
+          })
+        )
+      );
+    }
+
+
     async function fetchAllTimePlayers(teamId) {
       const params = new URLSearchParams({
         select: "*",
@@ -5090,37 +5476,112 @@ function SEH_initTeam() {
     }
   
     async function fetchUnlinkedTeamPlayers(team) {
+      /*
+       * Kompletterande historiska spelarposter.
+       *
+       * v_ehockey_player_tournaments_chronological är en tung historikvy
+       * och kan ibland nå Supabase statement_timeout (57014).
+       * Dessa rader är ENDAST ett komplement till den vanliga all-time-
+       * spelarlistan och får därför aldrig göra att hela lagprofilen kraschar.
+       */
       const names = [
         team.currentName,
         ...team.historicalNames,
         ...team.leagueNames
       ].filter(Boolean);
+
       const uniqueNames = [...new Map(
         names.map((name) => [teamNameKey(name), name])
       ).values()];
-  
-      const pages = await Promise.all(uniqueNames.map((name) => {
+
+      const rows = new Map();
+
+      for (const name of uniqueNames) {
         const params = new URLSearchParams({
-          select: "*",
+          select: [
+            "player_key",
+            "display_gamertag",
+            "player_country",
+            "player_image",
+            "sports_gamer_player_url",
+            "primary_position",
+            "league_id",
+            "competition_code",
+            "competition_name",
+            "season_label",
+            "division",
+            "team_id",
+            "team_external_id",
+            "team_name_in_tournament",
+            "team_current_name",
+            "chronology_date",
+            "end_date",
+            "start_date",
+            "is_goalie_only",
+            "total_skater_games",
+            "total_goals",
+            "total_assists",
+            "total_points",
+            "total_plus_minus",
+            "total_penalty_minutes",
+            "total_goalie_games",
+            "total_goalie_wins",
+            "total_goalie_losses",
+            "total_goalie_overtime_losses",
+            "total_goalie_saves",
+            "total_goalie_shots_against",
+            "total_goalie_goals_allowed",
+            "total_goalie_shutouts"
+          ].join(","),
           team_id: "is.null",
           team_name_in_tournament: `eq.${name}`,
           limit: "1000"
         });
-        return fetchJson("v_ehockey_player_tournaments_chronological", params);
-      }));
-  
-      const rows = new Map();
-      pages.flat().forEach((row) => {
-        const key = [
-          row.player_key,
-          row.league_id,
-          teamNameKey(row.team_name_in_tournament)
-        ].join(":");
-        rows.set(key, row);
-      });
+
+        try {
+          const page = await fetchJson(
+            "v_ehockey_player_tournaments_chronological",
+            params
+          );
+
+          page.forEach((row) => {
+            const key = [
+              row.player_key,
+              row.league_id,
+              teamNameKey(row.team_name_in_tournament)
+            ].join(":");
+            rows.set(key, row);
+          });
+        } catch (error) {
+          const message = String(error?.message || error || "").toLowerCase();
+
+          if (
+            message.includes("57014") ||
+            message.includes("statement timeout") ||
+            message.includes("canceling statement due to statement timeout")
+          ) {
+            console.warn(
+              `${APP_BUILD}: kompletterande spelhistorik för "${name}" timeoutade och hoppas över.`,
+              error
+            );
+            continue;
+          }
+
+          /*
+           * Även andra fel i just den kompletterande historikvyn ska inte
+           * blockera hela lagprofilen. Den primära spelarlistan kommer från
+           * v_ehockey_team_all_time_players_chronological.
+           */
+          console.warn(
+            `${APP_BUILD}: kompletterande spelhistorik för "${name}" kunde inte hämtas och hoppas över.`,
+            error
+          );
+        }
+      }
+
       return [...rows.values()];
     }
-  
+
     function aggregateUnlinkedTeamPlayers(rows) {
       const groups = new Map();
       rows.forEach((row) => {
@@ -5228,122 +5689,60 @@ function SEH_initTeam() {
     }
   
   
-    async function fetchPlayerCounts(teamId) {
+    async function fetchPlayerCounts(team) {
+      /*
+       * V70:
+       * Spelarantal följer samma namn-/aliasmodell som laghistoriken.
+       *
+       * Det här är viktigt när ett SportsGamer-ID eller tekniskt team_id
+       * har återanvänts efter namnbyte. Supabase-vyn avgör då vilken
+       * teknisk team_id som ska användas som källa för spelarantalet i
+       * just den turneringen.
+       */
+      const identity = await resolveCanonicalTeamIdentity(team);
+
+      if (!identity.canonicalTeamKey) {
+        return new Map();
+      }
+
       const params = new URLSearchParams({
         select: "league_id,player_count",
-        team_id: `eq.${teamId}`,
-        limit: "1000"
+        canonical_team_key: `eq.${identity.canonicalTeamKey}`,
+        limit: "5000"
       });
-  
-      const rows = await fetchJson(
-        "v_ehockey_team_tournament_player_counts_all",
-        params
-      );
-  
-      return new Map(
-        rows.map((row) => [
-          Number(row.league_id),
-          number(row.player_count)
-        ])
-      );
-    }
-  
-  
-    function playerHistoryRowBelongsToTeam(
-      row,
-      tournament,
-      team
-    ) {
-      if (!team) return false;
-  
-      if (
-        number(row.team_id) > 0 &&
-        number(row.team_id) === team.teamId
-      ) {
-        return true;
-      }
-  
-      const sportsGamerTeamId =
-        String(row.team_external_id || "").trim();
-  
-      if (
-        sportsGamerTeamId &&
-        team.sportsGamerIds.some(
-          (value) =>
-            String(value || "").trim() ===
-            sportsGamerTeamId
-        )
-      ) {
-        return true;
-      }
-  
-      const validNames = new Set(
-        [
-          team.currentName,
-          ...team.historicalNames,
-          ...team.leagueNames,
-          tournament.nameUsed,
-          tournament.currentName
-        ]
-          .map(teamNameKey)
-          .filter(Boolean)
-      );
-  
-      return [
-        row.team_name_in_tournament,
-        row.team_current_name
-      ]
-        .map(teamNameKey)
-        .some(
-          (name) =>
-            Boolean(name) &&
-            validNames.has(name)
+
+      try {
+        const rows = await fetchJson(
+          "v_ehockey_team_tournament_player_counts_by_name",
+          params
         );
-    }
-  
-  
-    async function fetchTournamentPlayers(
-      tournament
-    ) {
-      const cacheKey =
-        `${tournament.teamId}:${tournament.leagueId}`;
-  
-      if (state.playerCache.has(cacheKey)) {
-        return state.playerCache.get(cacheKey);
+
+        return new Map(
+          rows.map((row) => [
+            Number(row.league_id),
+            number(row.player_count)
+          ])
+        );
+      } catch (error) {
+        const message = String(error?.message || error || "").toLowerCase();
+
+        if (
+          message.includes("57014") ||
+          message.includes("statement timeout") ||
+          message.includes("canceling statement")
+        ) {
+          console.warn(
+            `${APP_BUILD}: spelarantal per säsong timeoutade; lagsidan fortsätter utan spelarantal.`,
+            error
+          );
+          return new Map();
+        }
+
+        throw error;
       }
-  
-      const params = new URLSearchParams({
-        select: "*",
-        league_id: `eq.${tournament.leagueId}`,
-        limit: "1000"
-      });
-  
-      const promise = fetchJson(
-        "v_ehockey_player_tournaments_chronological",
-        params
-      )
-        .then((rows) =>
-          rows
-            .filter((row) =>
-              playerHistoryRowBelongsToTeam(
-                row,
-                tournament,
-                state.team
-              )
-            )
-            .map(normalizePlayer)
-            .sort(comparePlayers)
-        )
-        .catch((error) => {
-          state.playerCache.delete(cacheKey);
-          throw error;
-        });
-  
-      state.playerCache.set(cacheKey, promise);
-      return promise;
     }
-  
-  
+
+
     function uniqueValues(values) {
       return [...new Set(values.filter(Boolean))];
     }
@@ -5800,6 +6199,31 @@ function SEH_initTeam() {
     }
   
   
+    function isHonourEligibleTournament(tournament) {
+      const text = [
+        tournament?.leagueName,
+        tournament?.seasonLabel,
+        tournament?.division,
+        tournament?.competitionName
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLocaleLowerCase("sv-SE");
+
+      const excludedWords = [
+        "qualifier",
+        "qualification",
+        "kval",
+        "wildcard",
+        "crossover",
+        "registration",
+        "free agent"
+      ];
+
+      return !excludedWords.some((word) => text.includes(word));
+    }
+
+
     function honourTournaments() {
       const accepted = new Set([
         "CHAMPION",
@@ -5811,6 +6235,7 @@ function SEH_initTeam() {
   
       return state.tournaments
         .filter((tournament) =>
+          isHonourEligibleTournament(tournament) &&
           accepted.has(
             String(
               tournament.playoffStatusCode || ""
@@ -5886,11 +6311,14 @@ function SEH_initTeam() {
   
     function renderHonours() {
       const honours = honourTournaments();
-      const champions = state.tournaments.filter(
+      const honourEligibleTournaments = state.tournaments.filter(
+        isHonourEligibleTournament
+      );
+      const champions = honourEligibleTournaments.filter(
         (row) => row.playoffStatusCode === "CHAMPION"
       ).length;
-      const finals = state.tournaments.filter(isFinalAppearance).length;
-      const bronze = state.tournaments.filter(
+      const finals = honourEligibleTournaments.filter(isFinalAppearance).length;
+      const bronze = honourEligibleTournaments.filter(
         (row) => row.playoffStatusCode === "THIRD_PLACE"
       ).length;
   
@@ -5997,8 +6425,9 @@ function SEH_initTeam() {
     function renderSeasonsTable() {
       elements.seasonsTableBody.replaceChildren();
       const fragment = document.createDocumentFragment();
+      const visibleTournaments = state.tournaments.filter(seasonTournamentMatchesFilter);
   
-      for (const tournament of state.tournaments) {
+      for (const tournament of visibleTournaments) {
         const row = document.createElement("tr");
         const pageUrl = tournamentPageUrl(tournament);
   
@@ -6057,7 +6486,22 @@ function SEH_initTeam() {
         fragment.append(row);
       }
   
+      if (!visibleTournaments.length) {
+        const emptyRow = document.createElement("tr");
+        const emptyCell = document.createElement("td");
+        emptyCell.colSpan = 10;
+        emptyCell.textContent = "Inga turneringar för valt filter.";
+        emptyCell.className = "history-empty-cell";
+        emptyRow.append(emptyCell);
+        fragment.append(emptyRow);
+      }
+
       elements.seasonsTableBody.append(fragment);
+      if (elements.tournamentCount) {
+        elements.tournamentCount.textContent = seasonCompetitionFilter === "ALL"
+          ? `${state.tournaments.length.toLocaleString("sv-SE")} säsonger`
+          : `${visibleTournaments.length.toLocaleString("sv-SE")} av ${state.tournaments.length.toLocaleString("sv-SE")} säsonger`;
+      }
     }
   
   
@@ -7103,13 +7547,31 @@ function SEH_initTeam() {
           playerCounts,
           unlinkedTeamPlayers
         ] = await Promise.all([
-          fetchTournaments(teamId),
+          fetchTournaments(team),
           fetchAllTimePlayers(teamId),
-          fetchPlayerCounts(teamId),
+          fetchPlayerCounts(team),
           fetchUnlinkedTeamPlayers(team)
         ]);
   
-        state.team = team;
+        const canonicalTournamentNames = uniqueValues(
+          tournaments.map((row) => row.nameUsed)
+        );
+        const canonicalSportsGamerIds = uniqueValues(
+          tournaments
+            .map((row) => row.sportsGamerTeamId)
+            .filter(Boolean)
+        );
+
+        state.team = {
+          ...team,
+          historicalNames: canonicalTournamentNames.filter(
+            (name) => teamNameKey(name) !== teamNameKey(team.currentName)
+          ),
+          leagueNames: canonicalTournamentNames,
+          sportsGamerIds: canonicalSportsGamerIds.length
+            ? canonicalSportsGamerIds
+            : team.sportsGamerIds
+        };
         state.tournaments = tournaments;
         state.allTimePlayers = mergeAllTimePlayers(
           allTimePlayers,
@@ -7125,6 +7587,7 @@ function SEH_initTeam() {
         renderTeamHeader();
         renderSummary();
         renderHonours();
+        renderSeasonCompetitionFilters();
         renderSeasonsTable();
         renderAllTimePlayers();
         populateCompetitionFilter();
@@ -9334,7 +9797,7 @@ function SEH_initShop() {
 
   const APP_BUILD = "2026-08-12-hash-spa-v53-laghistoria-teamname-fix";
 
-  const templates = {"home": "<main class=\"directory-shell portal-shell\">\n<section class=\"portal-hero\">\n<div class=\"portal-hero__copy\">\n<p class=\"directory-kicker\">SVENSK eHOCKEY / LIVE DATA</p>\n<h1>All svensk<br/>eHockey.<br/><em>En plats.</em></h1>\n<p>\n          Svensk eHockey är en samlingsplats för statistik och information om svenska spelare och lag inom eHockey. Syftet med sidan är att göra det enklare att följa den svenska eHockeyscenen och samla information som annars finns utspridd på flera olika platser.\n        </p>\n<p>\n          Här kan du följa svenska spelares och lags utveckling i ECL, se matchresultat, spelarstatistik, lagbyten och historik från tidigare säsonger. Sidan samlar även information om svenska lag genom åren och ger en tydlig överblick över vilka spelare som representerat lagen.\n        </p>\n<p>\n          Svensk eHockey arrangerar även den egna turneringen Svenska eHockey Cupen (SEC). Turneringen har en egen avdelning på sidan där samtliga upplagor av SEC finns samlade. Där går det att se deltagande lag, tabeller, matchresultat och statistik för både lag och spelare från varje turnering.\n        </p>\n<p>\n          Målet är att samla, bevara och göra den svenska eHockeyhistoriken mer tillgänglig – från enskilda spelare och lag till ECL och Svenska eHockey Cupen.\n        </p>\n<div class=\"portal-actions\">\n<a class=\"portal-button portal-button--primary\" href=\"#/laghistoria\">Utforska laghistoriken</a>\n<a class=\"portal-button\" href=\"#/spelare\">Hitta spelare</a>\n</div>\n</div>\n<div aria-hidden=\"true\" class=\"portal-mark\">\n<img alt=\"\" src=\"assets/SeHlogga.png\"/>\n<span>SVENSK<br/>eHOCKEY</span>\n</div>\n</section>\n<section aria-labelledby=\"exploreTitle\" class=\"portal-section\">\n<div class=\"portal-section__heading\">\n<div>\n<p class=\"directory-kicker\">UTFORSKA</p>\n<h2 id=\"exploreTitle\">Allt samlat på ett ställe</h2>\n</div>\n<p>Välj område och gå direkt till aktuell datavy.</p>\n</div>\n<div class=\"portal-grid\">\n<a href=\"#/nyheter\"><span>01</span><h3>Nyheter</h3><p>Uppdateringar om sidan, databasen och svensk eHockey.</p></a>\n<a href=\"#/spelare\"><span>02</span><h3>Spelare</h3><p>Sök bland spelarna i databasen och öppna kompletta profiler.</p></a>\n<a href=\"#/laghistoria\"><span>03</span><h3>Laghistoria</h3><p>Organisationer, historiska namn, säsonger och lagstatistik.</p></a>\n<a href=\"#/sasong/ecl26spring\"><span>04</span><h3>Säsonger</h3><p>Översikt, matcher, byten, lag och statistik per ECL-säsong.</p></a>\n<a href=\"https://www.svenskehockey.se/SEC/\"><span>05</span><h3>SEC</h3><p>Svenska eHockey Cupens egna turneringssidor.</p></a>\n</div>\n</section>\n</main>\n<footer class=\"directory-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>", "news": "\u003cmain class=\"directory-shell news-page-shell\"\u003e\n\u003csection class=\"news-page-hero\"\u003e\n\u003cdiv\u003e\n\u003cp class=\"directory-kicker\"\u003eSVENSK eHOCKEY / REDAKTIONEN\u003c/p\u003e\n\u003ch1\u003eNyheter\u003c/h1\u003e\n\u003cp\u003eArtiklar, uppdateringar och notiser från den svenska eHockeyscenen.\u003c/p\u003e\n\u003c/div\u003e\n\u003caside class=\"news-page-tools\" aria-label=\"Filtrera nyheter\"\u003e\n\u003clabel for=\"newsSearch\"\u003eSÖK I NYHETER\u003c/label\u003e\n\u003cinput id=\"newsSearch\" type=\"search\" autocomplete=\"off\" placeholder=\"Sök titel, text eller tagg…\"\u003e\n\u003cdiv class=\"news-tag-row\" id=\"newsTagFilters\"\u003e\u003c/div\u003e\n\u003csmall id=\"newsResultText\"\u003e\u003c/small\u003e\n\u003c/aside\u003e\n\u003c/section\u003e\n\u003csection class=\"news-featured\" id=\"featuredNews\" aria-label=\"Senaste huvudnyhet\"\u003e\u003c/section\u003e\n\u003csection class=\"news-card-grid\" id=\"newsGrid\" aria-label=\"Fler nyheter\"\u003e\u003c/section\u003e\n\u003c/main\u003e\n\u003cfooter class=\"directory-footer\"\u003e\u003cdiv\u003e\u003cstrong\u003eSVENSK eHOCKEY\u003c/strong\u003e\u003cspan\u003e© 2026 Svensk eHockey\u003c/span\u003e\u003c/div\u003e\u003c/footer\u003e", "players": "<main class=\"directory-shell players-shell\">\n<section aria-labelledby=\"playersTitle\" class=\"players-hero\">\n<div class=\"players-hero__copy\">\n<p class=\"directory-kicker\">SPELARE</p>\n<h1 id=\"playersTitle\">Svenska<br/>Spelare</h1>\n<p>\n          Här hittar du svenska spelare som förekommer i databasen från ECL, SCL,\n          eSHL, SEC, ITHL, LGEL och SM. Sök efter spelare, lag eller division,\n          filtrera efter roll och öppna profilen för klubbhistorik, statistik och\n          tidigare säsonger.\n        </p>\n<div aria-label=\"Registeregenskaper\" class=\"players-hero__tags\">\n<span>SVENSKT SPELARREGISTER</span>\n<span>PROFILER MED HISTORIK</span>\n<span>SORTERBART PÅ KLUBBAR</span>\n</div>\n</div>\n<aside aria-label=\"Översikt\" class=\"players-overview\">\n<p class=\"directory-kicker\">ÖVERSIKT</p>\n<p>Snabbkoll på alla svenska spelare och roller som hittats i databasen.</p>\n<div>\n<article><span>SPELARE</span><strong id=\"overviewPlayers\">–</strong></article>\n<article><span>MÅLVAKTER</span><strong id=\"overviewGoalies\">–</strong></article>\n<article><span>UTESPELARE</span><strong id=\"overviewSkaters\">–</strong></article>\n</div>\n</aside>\n</section>\n<section aria-labelledby=\"playerDirectoryTitle\" class=\"player-directory\">\n<h2 class=\"sr-only\" id=\"playerDirectoryTitle\">Spelarregister</h2>\n<div class=\"players-toolbar\">\n<label class=\"players-field players-field--search\">\n<span>SÖK</span>\n<input autocomplete=\"off\" id=\"playerSearch\" placeholder=\"Sök spelare, lag, division…\" type=\"search\"/>\n</label>\n<label class=\"players-field\">\n<span>ROLL</span>\n<select id=\"roleFilter\">\n<option value=\"all\">Alla roller</option>\n<option value=\"skater\">Utespelare</option>\n<option value=\"goalie\">Målvakter</option>\n</select>\n</label>\n<label class=\"players-field\">\n<span>DIVISION</span>\n<select id=\"divisionFilter\"><option value=\"all\">Alla divisioner</option></select>\n</label>\n<label class=\"players-field\">\n<span>SORTERA</span>\n<select id=\"playerSort\">\n<option value=\"games\">Flest matcher</option>\n<option value=\"points\">Flest poäng</option>\n<option value=\"clubs\">Flest klubbar</option>\n<option value=\"name\">Namn A–Ö</option>\n</select>\n</label>\n<label class=\"players-compact\">\n<span>VY</span>\n<span class=\"players-compact__control\">\n<input id=\"compactToggle\" type=\"checkbox\"/>\n<b>Visa mindre</b>\n</span>\n</label>\n</div>\n<p class=\"player-directory__result\" id=\"playerResultText\">Laddar svenska spelare…</p>\n<div aria-live=\"polite\" class=\"player-directory__grid\" id=\"playerGrid\"></div>\n<nav aria-label=\"Sidnumrering\" class=\"player-pagination\" id=\"playerPagination\"></nav>\n</section>\n</main>\n<footer class=\"directory-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>", "history": "<main class=\"directory-shell\">\n<section aria-labelledby=\"pageTitle\" class=\"directory-hero\">\n<div class=\"directory-hero__copy\">\n<p class=\"directory-kicker\">LAGHISTORIK</p>\n<h1 id=\"pageTitle\">Svensk<br/>laghistoria</h1>\n<p>\n          Här samlas svenska lag från ECL, SCL, eSHL, SEC, ITHL, LGEL och SM.\n          Sök efter lag, spelare, turnering eller division och följ samma\n          organisation genom namnbyten och olika säsonger.\n        </p>\n</div>\n<aside aria-label=\"Historikens omfattning\" class=\"directory-year-card\">\n<strong id=\"historyYearCount\">–</strong>\n<span>ÅR AV SVENSK eHOCKEY</span>\n</aside>\n</section>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>\n        Öppna <code>config.js</code> och fyll i projektets URL och\n        publishable key.\n      </p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta laghistoriken</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<section aria-labelledby=\"directoryTitle\" class=\"directory-section\" id=\"teamDirectory\">\n<div class=\"directory-section__heading\">\n<div>\n<p class=\"directory-kicker\">HISTORIK</p>\n<h2 id=\"directoryTitle\">Svenska lag</h2>\n</div>\n<button class=\"directory-reload\" id=\"reloadButton\" type=\"button\">\n          Uppdatera data\n        </button>\n</div>\n<div aria-label=\"Filtrering och sortering\" class=\"directory-toolbar\">\n<label>\n<span class=\"sr-only\">Namnvisning</span>\n<select id=\"nameModeSelect\">\n<option value=\"current\">Visa via lagnamn</option>\n<option value=\"latest\">Visa senaste turneringsnamn</option>\n</select>\n</label>\n<label>\n<span class=\"sr-only\">Turnering</span>\n<select id=\"tournamentFilter\">\n<option value=\"all\">Alla turneringar</option>\n</select>\n</label>\n<label>\n<span class=\"sr-only\">Sortering</span>\n<select id=\"sortSelect\">\n<option value=\"name-asc\">Namn A–Ö</option>\n<option value=\"name-desc\">Namn Ö–A</option>\n<option value=\"latest\">Senast aktiv</option>\n<option value=\"games\">Flest matcher</option>\n<option value=\"wins\">Flest vinster</option>\n<option value=\"winpct\">Högst vinst%</option>\n<option value=\"tournaments\">Flest turneringar</option>\n<option value=\"players\">Flest spelare</option>\n</select>\n</label>\n<label>\n<span class=\"sr-only\">Kortstorlek</span>\n<select id=\"viewModeSelect\">\n<option value=\"full\">Hela kort</option>\n<option value=\"compact\">Kompakta kort</option>\n</select>\n</label>\n<label class=\"directory-search\">\n<span aria-hidden=\"true\" class=\"directory-search__icon\">⌕</span>\n<input autocomplete=\"off\" id=\"searchInput\" placeholder=\"Sök lag, spelare, ECL eller division\" type=\"search\"/>\n</label>\n</div>\n<section aria-label=\"Samlad lagstatistik\" class=\"directory-stats\" id=\"directoryStats\">\n<article>\n<span>VISAR LAG</span>\n<strong id=\"visibleTeamCount\">–</strong>\n</article>\n<article>\n<span>ALLA LAGNAMN</span>\n<strong id=\"allNameCount\">–</strong>\n</article>\n<article>\n<span>SÄSONGER</span>\n<strong id=\"appearanceCount\">–</strong>\n</article>\n<article>\n<span>DIVISIONER</span>\n<strong id=\"divisionCount\">–</strong>\n</article>\n<article>\n<span>MATCHER / VINSTER</span>\n<strong><span id=\"matchCount\">–</span> / <span id=\"winCount\">–</span></strong>\n</article>\n<article>\n<span>SPELARE</span>\n<strong id=\"playerCount\">–</strong>\n</article>\n</section>\n<div class=\"directory-resultbar\">\n<span id=\"resultText\">Laddar…</span>\n<span id=\"lastUpdated\"></span>\n</div>\n<div class=\"directory-loading\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar lag, turneringar och spelare…</p>\n</div>\n<div aria-live=\"polite\" class=\"directory-grid\" id=\"teamGrid\"></div>\n</section>\n</main>\n<footer class=\"directory-footer\">\n<div>\n<strong>SVENSK eHOCKEY</strong>\n<span>© 2026 Svensk eHockey</span>\n</div>\n<a href=\"#teamDirectory\">Till toppen ↑</a>\n</footer>\n<template id=\"teamCardTemplate\">\n<article class=\"directory-team-card\">\n<a aria-label=\"\" class=\"directory-team-card__main-link\" href=\"#\"></a>\n<span class=\"directory-team-card__number\"></span>\n<div class=\"directory-team-card__header\">\n<div aria-hidden=\"true\" class=\"directory-team-card__logo\"></div>\n<div class=\"directory-team-card__identity\">\n<h3 class=\"directory-team-card__name\"></h3>\n<p class=\"directory-team-card__identity-name\" hidden=\"\"></p>\n<div class=\"directory-team-card__badges\"></div>\n</div>\n</div>\n<dl class=\"directory-team-card__metrics\">\n<div><dt>SPELARE</dt><dd class=\"metric-players\">–</dd></div>\n<div><dt>TURNERINGAR</dt><dd class=\"metric-tournaments\">–</dd></div>\n<div><dt>DIVISIONER</dt><dd class=\"metric-divisions\">–</dd></div>\n<div><dt>MATCHER</dt><dd class=\"metric-games\">–</dd></div>\n<div><dt>RECORD</dt><dd class=\"metric-record\">–</dd></div>\n<div><dt>VINST%</dt><dd class=\"metric-winpct\">–</dd></div>\n<div><dt>GF–GA</dt><dd class=\"metric-goals\">–</dd></div>\n<div><dt>+/−</dt><dd class=\"metric-diff\">–</dd></div>\n<div><dt>SLUTSPEL</dt><dd class=\"metric-playoffs\">–</dd></div>\n</dl>\n<div class=\"directory-team-card__summary\">\n<p><strong>Topp spelare:</strong> <a class=\"summary-top-player\" href=\"#\">–</a></p>\n<p><strong>Senast:</strong> <span class=\"summary-latest\">–</span></p>\n<p class=\"summary-alias-row\"><strong>Namnvariationer:</strong> <span class=\"summary-aliases\">–</span></p>\n</div>\n<div class=\"directory-team-card__action\">\n        Öppna laghistoriken <span aria-hidden=\"true\">→</span>\n</div>\n</article>\n</template>", "player": "<div class=\"page-shell history-page-shell player-profile-shell\">\n  <nav aria-label=\"Navigering\" class=\"page-nav history-nav player-profile-legacy-nav\">\n    <a class=\"back-button\" href=\"#/spelare\" id=\"backLink\">← Tillbaka till spelare</a>\n    <button class=\"reload-button\" id=\"reloadButton\" type=\"button\">Uppdatera</button>\n  </nav>\n\n  <section class=\"notice notice-warning\" hidden id=\"setupNotice\">\n    <h2>Anslut sidan till Supabase</h2>\n    <p>Öppna <code>config.js</code> och fyll i projektets URL och publishable key.</p>\n  </section>\n\n  <section class=\"notice notice-error\" hidden id=\"errorNotice\">\n    <h2>Kunde inte hämta spelaren</h2>\n    <p id=\"errorMessage\"></p>\n  </section>\n\n  <main hidden id=\"playerPage\" class=\"player-profile-page-v5\">\n    <section class=\"player-editorial-profile\" aria-label=\"Spelarprofil\">\n      <div class=\"player-editorial-photo-column\">\n        <div aria-hidden=\"true\" class=\"profile-detail-avatar player-editorial-photo\" id=\"playerAvatar\"></div>\n      </div>\n\n      <div class=\"player-editorial-main\">\n        <p class=\"player-editorial-kicker\">\n          <span id=\"playerFlag\" aria-hidden=\"true\">🇸🇪</span>\n          <span>SPELARPROFIL</span>\n        </p>\n\n        <h1 id=\"playerName\">Laddar spelare…</h1>\n\n        <div class=\"player-editorial-identity\">\n          <span class=\"player-editorial-team\" id=\"playerCurrentTeam\">–</span>\n          <p id=\"playerMeta\">–</p>\n        </div>\n\n        <section class=\"player-editorial-stats\" aria-label=\"Offensiv karriärstatistik\">\n          <article>\n            <strong id=\"careerPoints\">–</strong>\n            <span>POÄNG</span>\n          </article>\n          <article>\n            <strong id=\"careerGoals\">–</strong>\n            <span>MÅL</span>\n          </article>\n          <article>\n            <strong id=\"careerAssists\">–</strong>\n            <span>ASSIST</span>\n          </article>\n        </section>\n\n        <p class=\"player-editorial-competitions\" id=\"playerCompetitions\"></p>\n      </div>\n\n      <aside class=\"player-editorial-bio\" aria-label=\"Spelarpresentation\">\n        <div id=\"playerBio\"></div>\n        <div class=\"team-profile-links player-editorial-links\" id=\"playerLinks\"></div>\n      </aside>\n    </section>\n\n    <section class=\"player-merits-layout\" id=\"playerMeritsSection\" hidden>\n      <article class=\"player-merits-column player-merits-column--team\">\n        <div class=\"player-merits-heading player-merits-heading--team\">\n          <span aria-hidden=\"true\"></span>\n          <h2>MERITER</h2>\n          <span aria-hidden=\"true\"></span>\n        </div>\n        <div class=\"player-merits-list\" id=\"teamMeritsList\"></div>\n      </article>\n\n      <article class=\"player-merits-column player-merits-column--personal\">\n        <div class=\"player-merits-heading player-merits-heading--personal\">\n          <h2>PERSONLIGA MERITER</h2>\n        </div>\n        <div class=\"player-merits-list\" id=\"personalMeritsList\"></div>\n      </article>\n    </section>\n\n    <section class=\"player-secondary-metrics\" aria-label=\"Spelaröversikt\">\n      <article><span>TURNERINGAR</span><strong id=\"tournamentCount\">–</strong></article>\n      <article><span>LAG</span><strong id=\"teamCount\">–</strong></article>\n      <article><span>MATCHER</span><strong id=\"careerGames\">–</strong></article>\n    </section>\n\n    <section class=\"history-alltime-grid player-career-grid player-career-grid-v5\">\n      <article class=\"history-alltime-card\">\n        <p class=\"history-kicker history-kicker--gold\">Utespelare</p>\n        <h2>Karriärstatistik</h2>\n        <div class=\"profile-stat-list\" id=\"skaterCareerStats\"></div>\n      </article>\n\n      <article class=\"history-alltime-card\">\n        <p class=\"history-kicker history-kicker--gold\">Målvakt</p>\n        <h2>Målvaktsstatistik</h2>\n        <div class=\"profile-stat-list\" id=\"goalieCareerStats\"></div>\n      </article>\n    </section>\n\n    <section class=\"player-teams-section-v5\" id=\"playerTeamsSection\" hidden>\n      <div class=\"player-teams-heading-v5\">\n        <h2>Lag</h2>\n        <p>Lag spelaren har representerat i historiken.</p>\n      </div>\n      <div class=\"player-teams-grid-v5\" id=\"playerTeamsGrid\"></div>\n    </section>\n\n    <section class=\"history-section player-history-section-v5\">\n      <div class=\"history-section-heading\">\n        <div>\n          <p class=\"history-kicker history-kicker--gold\">Historik</p>\n          <h2>Alla turneringar</h2>\n          <p>Varje rad länkar till lagets sida för just den turneringen.</p>\n        </div>\n        <span class=\"history-section-count\" id=\"historyCount\"></span>\n      </div>\n\n      <div class=\"history-table-wrap\">\n        <table class=\"history-table player-history-table\">\n          <thead>\n            <tr>\n              <th>Säsong</th>\n              <th>Lag</th>\n              <th>Division</th>\n              <th>Roll</th>\n              <th>GP</th>\n              <th>G</th>\n              <th>A</th>\n              <th>PTS</th>\n              <th>SV%</th>\n              <th>GAA</th>\n            </tr>\n          </thead>\n          <tbody id=\"historyTableBody\"></tbody>\n        </table>\n      </div>\n    </section>\n  </main>\n\n  <div class=\"loading-state\" id=\"loadingState\">\n    <div aria-hidden=\"true\" class=\"spinner\"></div>\n    <p>Hämtar spelarens historik…</p>\n  </div>\n</div>", "team": "<div class=\"page-shell history-page-shell\">\n<nav aria-label=\"Navigering\" class=\"page-nav history-nav\">\n<a class=\"back-button\" href=\"#/laghistoria\">\n<span aria-hidden=\"true\">←</span>\n        Alla svenska lag\n      </a>\n<button class=\"reload-button\" id=\"reloadButton\" type=\"button\">\n        Uppdatera\n      </button>\n</nav>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>\n        Öppna <code>config.js</code> och fyll i projektets URL och\n        publishable key.\n      </p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta laget</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<main hidden=\"\" id=\"teamPage\">\n<section class=\"history-hero\">\n<div class=\"history-hero-main\">\n<div aria-label=\"Lagets meriter\" class=\"history-badges\" id=\"historyBadges\"></div>\n<p class=\"history-kicker\">Lagets historik</p>\n<h1 id=\"teamName\">Laddar lag…</h1>\n<div class=\"history-hero-content\">\n<div aria-hidden=\"true\" class=\"history-team-logo\" id=\"teamProfileAvatar\"></div>\n<div class=\"history-profile-copy\">\n<div class=\"history-chip-row\" id=\"heroChips\"></div>\n<div class=\"history-profile-block\">\n<span>Klubbprofil</span>\n<p id=\"clubProfileText\"></p>\n</div>\n<div class=\"history-leaders\">\n<div>\n<span>Flest matcher</span>\n<strong id=\"leaderMatches\">–</strong>\n</div>\n<div>\n<span>Flest poäng</span>\n<strong id=\"leaderPoints\">–</strong>\n</div>\n<div>\n<span>Främsta målvakt</span>\n<strong id=\"leaderGoalie\">–</strong>\n</div>\n</div>\n<div class=\"team-profile-links\" id=\"teamLinks\"></div>\n</div>\n</div>\n</div>\n<aside aria-labelledby=\"divisionCurveHeading\" class=\"history-division-panel\">\n<p class=\"history-kicker history-kicker--gold\">Divisioner</p>\n<h2 id=\"divisionCurveHeading\">Divisionskurva</h2>\n<p>Från NEO längst ner till ELITE högst upp.</p>\n<div class=\"division-curve\" id=\"divisionCurve\"></div>\n<div class=\"division-curve-footer\">\n<span id=\"divisionCurveFirst\">–</span>\n<span id=\"divisionCurveLatest\">–</span>\n</div>\n</aside>\n</section>\n<section aria-label=\"Lagöversikt\" class=\"history-metric-band\">\n<article class=\"history-feature-metric\">\n<span>Matchvinster</span>\n<strong id=\"winsCount\">–</strong>\n<small id=\"winsMetricNote\"></small>\n</article>\n<article class=\"history-feature-metric\">\n<span>Bästa ECL</span>\n<strong id=\"bestEclSeason\">–</strong>\n<small id=\"bestEclNote\"></small>\n</article>\n<article class=\"history-feature-metric\">\n<span>Högsta nivå</span>\n<strong id=\"bestDivision\">–</strong>\n<small id=\"divisionMetricNote\"></small>\n</article>\n<article class=\"history-feature-metric\">\n<span>Slutspel</span>\n<strong id=\"playoffRecord\">–</strong>\n<small id=\"playoffMetricNote\"></small>\n</article>\n<div class=\"history-compact-metrics\">\n<div><span>Matcher</span><strong id=\"gamesCount\">–</strong></div>\n<div><span>Vinster</span><strong id=\"winsCompact\">–</strong></div>\n<div><span>Förluster</span><strong id=\"lossesCount\">–</strong></div>\n<div><span>Vinst%</span><strong id=\"winPercentage\">–</strong></div>\n<div><span>GF–GA</span><strong id=\"goalsRecord\">–</strong></div>\n<div><span>+/−</span><strong id=\"goalDifference\">–</strong></div>\n</div>\n</section>\n<section class=\"history-section history-honours\" hidden=\"\" id=\"teamHonoursSection\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Meriter</p>\n<h2>Pallplatser</h2>\n</div>\n<span class=\"history-section-count\" id=\"teamHonoursCount\"></span>\n</div>\n<div class=\"history-honour-summary\">\n<div><span>Mästare</span><strong id=\"championshipsCount\">0</strong></div>\n<div><span>Finaler</span><strong id=\"finalsCount\">0</strong></div>\n<div><span>Brons</span><strong id=\"bronzeCount\">0</strong></div>\n</div>\n<div class=\"history-honour-list\" id=\"teamHonoursList\"></div>\n</section>\n<section class=\"history-section\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Säsonger</p>\n<h2>Lagets säsonger</h2>\n<p>Säsonger, divisioner och tillgänglig lagstatistik.</p>\n</div>\n<span class=\"history-section-count\" id=\"tournamentCount\">–</span>\n</div>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-seasons-table\">\n<thead>\n<tr>\n<th>Säsong</th>\n<th>Datum</th>\n<th>Lagnamn då</th>\n<th>Division</th>\n<th>Spelare</th>\n<th>Matcher</th>\n<th>Record</th>\n<th>Poäng</th>\n<th>GF–GA</th>\n<th>Länk</th>\n</tr>\n</thead>\n<tbody id=\"seasonsTableBody\"></tbody>\n</table>\n</div>\n</section>\n<section class=\"history-section history-player-section\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Spelare</p>\n<h2 id=\"playersHeading\">Spelare – all-time</h2>\n<p>Alla spelare som har representerat laget i importerade turneringar.</p>\n</div>\n<span class=\"history-section-count\" id=\"allTimePlayerCount\">–</span>\n</div>\n<div class=\"history-player-grid\" id=\"playerCards\"></div>\n<div class=\"history-player-grid-actions\">\n<button class=\"history-outline-button\" hidden=\"\" id=\"togglePlayerCards\" type=\"button\">\n            Visa alla spelare\n          </button>\n</div>\n<div class=\"history-alltime-grid\">\n<article class=\"history-alltime-card\">\n<h3>All-time utespelare</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr>\n<th>#</th>\n<th>Spelare</th>\n<th>GP</th>\n<th>G</th>\n<th>A</th>\n<th>PTS</th>\n<th>PIM</th>\n</tr>\n</thead>\n<tbody id=\"allTimeSkaterBody\"></tbody>\n</table>\n</div>\n</article>\n<article class=\"history-alltime-card\">\n<h3>All-time målvakter</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr>\n<th>#</th>\n<th>Målvakt</th>\n<th>GP</th>\n<th>SA</th>\n<th>GA</th>\n<th>SV</th>\n<th>SV%</th>\n<th>GAA</th>\n<th>SO</th>\n</tr>\n</thead>\n<tbody id=\"allTimeGoalieBody\"></tbody>\n</table>\n</div>\n</article>\n</div>\n</section>\n<section class=\"history-section history-details-section\">\n<details>\n<summary>\n<span>\n<span class=\"history-kicker history-kicker--gold\">Fördjupning</span>\n<strong>Detaljerad turneringshistorik</strong>\n</span>\n<small>Behåller all information från den tidigare lagsidan</small>\n</summary>\n<div class=\"history-details-body\">\n<div class=\"section-heading\">\n<div>\n<h2>Alla turneringar</h2>\n</div>\n<div class=\"tournament-controls\">\n<label>\n<span>Turnering</span>\n<select id=\"competitionFilter\">\n<option value=\"\">Alla turneringar</option>\n</select>\n</label>\n<label>\n<span>Sortering</span>\n<select id=\"tournamentSort\">\n<option value=\"newest\">Nyaste först</option>\n<option value=\"oldest\">Äldsta först</option>\n<option value=\"competition\">Turnering A–Ö</option>\n</select>\n</label>\n</div>\n</div>\n<div class=\"result-bar tournament-result-bar\">\n<span id=\"tournamentResultText\"></span>\n<span id=\"lastUpdated\"></span>\n</div>\n<div class=\"tournament-list\" id=\"tournamentList\"></div>\n</div>\n</details>\n</section>\n<section class=\"team-information-panel history-source-panel\">\n<div>\n<span class=\"information-label\">SportsGamer-ID</span>\n<div class=\"information-value\" id=\"sportsGamerIds\"></div>\n</div>\n<div>\n<span class=\"information-label\">Historiska namn</span>\n<div class=\"information-value\" id=\"historicalNames\"></div>\n</div>\n<div>\n<span class=\"information-label\">Namn i turneringar</span>\n<div class=\"information-value\" id=\"leagueNames\"></div>\n</div>\n</section>\n</main>\n<div class=\"loading-state\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar lagets historik, turneringar och spelare…</p>\n</div>\n</div>", "teamTournament": "<div class=\"page-shell history-page-shell\">\n<nav aria-label=\"Navigering\" class=\"page-nav history-nav\">\n<a class=\"back-button\" href=\"#/laghistoria\" id=\"backLink\">← Tillbaka till laget</a>\n<button class=\"reload-button\" id=\"reloadButton\" type=\"button\">Uppdatera</button>\n</nav>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>Kontrollera att befintliga <code>config.js</code> innehåller projektets URL och publishable key.</p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta turneringen</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<main hidden=\"\" id=\"tournamentPage\">\n<section class=\"profile-detail-hero tournament-detail-hero\">\n<div aria-hidden=\"true\" class=\"profile-detail-avatar profile-detail-avatar--team\" id=\"teamAvatar\"></div>\n<div class=\"profile-detail-copy\">\n<p class=\"history-kicker history-kicker--gold\" id=\"competitionName\"></p>\n<h1 id=\"teamName\">Laddar lag…</h1>\n<h2 class=\"tournament-page-title\" id=\"tournamentName\"></h2>\n<p class=\"profile-detail-meta\" id=\"tournamentMeta\"></p>\n<div class=\"team-profile-links\" id=\"tournamentLinks\"></div>\n</div>\n</section>\n<section aria-label=\"Turneringsöversikt\" class=\"profile-summary-grid tournament-summary-grid\">\n<article><span>Matcher</span><strong id=\"gamesCount\">–</strong></article>\n<article><span>Vinster</span><strong id=\"winsCount\">–</strong></article>\n<article><span>Förluster</span><strong id=\"lossesCount\">–</strong></article>\n<article><span>Vinst%</span><strong id=\"winPercentage\">–</strong></article>\n<article><span>GF–GA</span><strong id=\"goalsRecord\">–</strong></article>\n<article><span>+/−</span><strong id=\"goalDifference\">–</strong></article>\n</section>\n<section class=\"tournament-single-grid\">\n<article class=\"history-alltime-card\">\n<p class=\"history-kicker history-kicker--gold\">Grundserie</p>\n<h2 id=\"regularRecord\">–</h2>\n<div class=\"profile-stat-list\" id=\"regularDetails\"></div>\n</article>\n<article class=\"history-alltime-card\">\n<p class=\"history-kicker history-kicker--gold\">Slutspel</p>\n<h2 id=\"playoffRecord\">–</h2>\n<div class=\"profile-stat-list\" id=\"playoffDetails\"></div>\n</article>\n</section>\n<section class=\"history-section\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Trupp</p>\n<h2>Spelare i turneringen</h2>\n<p>Spelarnamnen länkar till Svensk eHockey-profiler. Kopplade spelare har även en direktlänk till SportsGamer.</p>\n</div>\n<span class=\"history-section-count\" id=\"playerCount\"></span>\n</div>\n<div class=\"history-alltime-grid tournament-roster-grid\">\n<article class=\"history-alltime-card\">\n<h3>Utespelare</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr><th>Spelare</th><th>Pos</th><th>GP</th><th>G</th><th>A</th><th>PTS</th><th>+/−</th><th>PIM</th></tr>\n</thead>\n<tbody id=\"skaterBody\"></tbody>\n</table>\n</div>\n</article>\n<article class=\"history-alltime-card\">\n<h3>Målvakter</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr><th>Målvakt</th><th>GP</th><th>V</th><th>F</th><th>ÖF</th><th>SV%</th><th>GAA</th><th>SO</th></tr>\n</thead>\n<tbody id=\"goalieBody\"></tbody>\n</table>\n</div>\n</article>\n</div>\n</section>\n<section class=\"history-section\" hidden=\"\" id=\"matchesSection\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Matcher</p>\n<h2>Matcher i turneringen</h2>\n<p>Spelade, ospelade, walkover- och rekonstruerade matcher visas med separat status.</p>\n</div>\n<span class=\"history-section-count\" id=\"matchCount\"></span>\n</div>\n<div class=\"tournament-match-list\" id=\"matchList\"></div>\n</section>\n</main>\n<div class=\"loading-state\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar turneringssidan…</p>\n</div>\n</div>", "tournament": "<div class=\"page-shell history-page-shell tournament-overview-shell\">\n<nav aria-label=\"Navigering\" class=\"page-nav history-nav\">\n<a class=\"back-button\" href=\"#/laghistoria\">← Till laghistoriken</a>\n<button class=\"reload-button\" id=\"reloadButton\" type=\"button\">Uppdatera</button>\n</nav>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>Kontrollera att befintliga <code>config.js</code> innehåller projektets URL och publishable key.</p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta turneringen</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<main hidden=\"\" id=\"tournamentOverview\">\n<section class=\"tournament-overview-hero\">\n<div>\n<p class=\"history-kicker history-kicker--gold\" id=\"competitionName\">TURNERING</p>\n<h1 id=\"tournamentTitle\">Laddar turnering…</h1>\n<p class=\"tournament-overview-intro\" id=\"tournamentDescription\"></p>\n<div class=\"team-profile-links\" id=\"tournamentExternalLinks\"></div>\n</div>\n<aside aria-label=\"Turneringsidentitet\" class=\"tournament-overview-identity\">\n<span>LIGA-ID</span>\n<strong id=\"leagueIdValue\">–</strong>\n<small id=\"tournamentPeriod\">–</small>\n</aside>\n</section>\n<nav aria-label=\"Turneringsinnehåll\" class=\"tournament-overview-nav\">\n<a href=\"#overview\">Översikt</a>\n<a href=\"#standings\">Tabeller</a>\n<a href=\"#teams\">Lag</a>\n<a href=\"#matches\">Matcher</a>\n<a href=\"#statistics\">Statistik</a>\n<a href=\"#playoffs\">Slutspel</a>\n</nav>\n<section aria-label=\"Turneringsöversikt\" class=\"tournament-overview-metrics\" id=\"overview\">\n<article><span>Lag</span><strong id=\"metricTeams\">–</strong></article>\n<article><span>Spelare</span><strong id=\"metricPlayers\">–</strong><small id=\"metricLinkedPlayers\"></small></article>\n<article><span>Matcher</span><strong id=\"metricMatches\">–</strong><small id=\"metricPlayedMatches\"></small></article>\n<article><span>Walkovers</span><strong id=\"metricWalkovers\">–</strong></article>\n<article><span>Slutspelsserier</span><strong id=\"metricSeries\">–</strong></article>\n<article><span>Slutspelsmatcher</span><strong id=\"metricPlayoffMatches\">–</strong><small id=\"metricReconstructed\"></small></article>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"standings\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">TABELLER</p><h2>Grundserie och grupper</h2><p>Tabellplaceringar och lagresultat hämtas direkt från Supabase.</p></div>\n<span class=\"history-section-count\" id=\"standingsCount\"></span>\n</div>\n<div class=\"tournament-standings-container\" id=\"standingsContainer\"></div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"teams\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">LAG</p><h2>Deltagande lag</h2><p>Öppna lagets turneringssida för trupp, statistik och samtliga matcher.</p></div>\n<span class=\"history-section-count\" id=\"teamsCount\"></span>\n</div>\n<div class=\"tournament-teams-grid\" id=\"teamsGrid\"></div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"matches\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">MATCHER</p><h2>Alla matcher</h2><p>Ospelade matcher, walkovers och rekonstruerade matcher har egen status.</p></div>\n<span class=\"history-section-count\" id=\"matchesCount\"></span>\n</div>\n<div class=\"tournament-filter-bar\">\n<label><span>FAS</span><select id=\"stageFilter\"><option value=\"all\">Alla faser</option></select></label>\n<label><span>STATUS</span><select id=\"statusFilter\"><option value=\"all\">Alla statusar</option><option value=\"played\">Spelade</option><option value=\"pending\">Ospelade</option><option value=\"walkover\">Walkover</option><option value=\"reconstructed\">Rekonstruerade</option></select></label>\n<label><span>LAG</span><select id=\"teamFilter\"><option value=\"all\">Alla lag</option></select></label>\n</div>\n<div class=\"tournament-global-match-list\" id=\"matchesList\"></div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"statistics\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">STATISTIK</p><h2>Spelarstatistik</h2><p>SportsGamer-kopplade spelare använder permanent playerID och SportsGamer-namn när uppgifterna finns i databasen.</p></div>\n<span class=\"history-section-count\" id=\"statisticsCount\"></span>\n</div>\n<div class=\"history-alltime-grid tournament-statistics-grid\">\n<article class=\"history-alltime-card\">\n<h3>Utespelare</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead><tr><th>#</th><th>Spelare</th><th>Lag</th><th>GP</th><th>G</th><th>A</th><th>PTS</th><th>+/−</th></tr></thead>\n<tbody id=\"skaterStatsBody\"></tbody>\n</table>\n</div>\n</article>\n<article class=\"history-alltime-card\">\n<h3>Målvakter</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead><tr><th>#</th><th>Målvakt</th><th>Lag</th><th>GP</th><th>SV</th><th>SA</th><th>SV%</th><th>GAA</th><th>SO</th></tr></thead>\n<tbody id=\"goalieStatsBody\"></tbody>\n</table>\n</div>\n</article>\n</div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"playoffs\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">SLUTSPEL</p><h2>Slutspelsserier</h2><p>Serierna skapas från turneringens slutspelsmatcher och grupperas per runda.</p></div>\n<span class=\"history-section-count\" id=\"playoffsCount\"></span>\n</div>\n<div class=\"tournament-playoff-bracket\" id=\"playoffBracket\"></div>\n</section>\n</main>\n<div class=\"loading-state\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar turneringsdata…</p>\n</div>\n</div>", "season": "<main class=\"directory-shell portal-shell\">\n<section class=\"portal-page-hero season-hero\">\n<p class=\"directory-kicker\">ECL-SÄSONG</p>\n<h1 id=\"seasonTitle\">ECL ’26:<br/>Spring</h1>\n<p id=\"seasonText\">Samlad ingång till svenska lag, spelare och historik för säsongen.</p>\n</section>\n<nav aria-label=\"Säsongsmeny\" class=\"season-subnav\">\n<a class=\"is-active\" href=\"#overview\">Översikt</a>\n<a href=\"#matches\">Matcher</a>\n<a href=\"#transfers\">Byten</a>\n<a href=\"#teams\">Lag</a>\n<a href=\"#statistics\">Statistik</a>\n</nav>\n<section class=\"season-overview\" id=\"overview\">\n<p class=\"directory-kicker\">ÖVERSIKT</p>\n<h2 id=\"seasonOverviewTitle\">ECL ’26: Spring</h2>\n<p>\n        Den här säsongssidan är navet för säsongens innehåll. Databasens\n        laghistorik kan öppnas direkt med säsongen vald.\n      </p>\n<div class=\"portal-actions\">\n<a class=\"portal-button portal-button--primary\" href=\"#/laghistoria\" id=\"seasonTeamsLink\">Visa lag i databasen</a>\n<a class=\"portal-button\" href=\"#/spelare\">Öppna spelarregistret</a>\n</div>\n</section>\n<section class=\"season-panels\">\n<article id=\"matches\"><span>MATCHER</span><h3>Matcher</h3><p>Säsongens matchvy kopplas in här när matchdata finns i databasen.</p></article>\n<article id=\"transfers\"><span>BYTEN</span><h3>Byten</h3><p>En tydlig plats för svenska spelarbyten under säsongen.</p></article>\n<article id=\"teams\"><span>LAG</span><h3>Svenska lag</h3><p>Öppna laghistoriken och filtrera fram säsongens deltagande lag.</p></article>\n<article id=\"statistics\"><span>STATISTIK</span><h3>Statistik</h3><p>Tabeller och topplistor kan byggas från databasens säsongsdata.</p></article>\n</section>\n</main>\n<footer class=\"directory-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>"};
+  const templates = {"home": "<main class=\"directory-shell portal-shell\">\n<section class=\"portal-hero\">\n<div class=\"portal-hero__copy\">\n<p class=\"directory-kicker\">SVENSK eHOCKEY / LIVE DATA</p>\n<h1>All svensk<br/>eHockey.<br/><em>En plats.</em></h1>\n<p>\n          Svensk eHockey är en samlingsplats för statistik och information om svenska spelare och lag inom eHockey. Syftet med sidan är att göra det enklare att följa den svenska eHockeyscenen och samla information som annars finns utspridd på flera olika platser.\n        </p>\n<p>\n          Här kan du följa svenska spelares och lags utveckling i ECL, se matchresultat, spelarstatistik, lagbyten och historik från tidigare säsonger. Sidan samlar även information om svenska lag genom åren och ger en tydlig överblick över vilka spelare som representerat lagen.\n        </p>\n<p>\n          Svensk eHockey arrangerar även den egna turneringen Svenska eHockey Cupen (SEC). Turneringen har en egen avdelning på sidan där samtliga upplagor av SEC finns samlade. Där går det att se deltagande lag, tabeller, matchresultat och statistik för både lag och spelare från varje turnering.\n        </p>\n<p>\n          Målet är att samla, bevara och göra den svenska eHockeyhistoriken mer tillgänglig – från enskilda spelare och lag till ECL och Svenska eHockey Cupen.\n        </p>\n<div class=\"portal-actions\">\n<a class=\"portal-button portal-button--primary\" href=\"#/laghistoria\">Utforska laghistoriken</a>\n<a class=\"portal-button\" href=\"#/spelare\">Hitta spelare</a>\n</div>\n</div>\n<div aria-hidden=\"true\" class=\"portal-mark\">\n<img alt=\"\" src=\"assets/SeHlogga.png\"/>\n<span>SVENSK<br/>eHOCKEY</span>\n</div>\n</section>\n<section aria-labelledby=\"exploreTitle\" class=\"portal-section\">\n<div class=\"portal-section__heading\">\n<div>\n<p class=\"directory-kicker\">UTFORSKA</p>\n<h2 id=\"exploreTitle\">Allt samlat på ett ställe</h2>\n</div>\n<p>Välj område och gå direkt till aktuell datavy.</p>\n</div>\n<div class=\"portal-grid\">\n<a href=\"#/nyheter\"><span>01</span><h3>Nyheter</h3><p>Uppdateringar om sidan, databasen och svensk eHockey.</p></a>\n<a href=\"#/spelare\"><span>02</span><h3>Spelare</h3><p>Sök bland spelarna i databasen och öppna kompletta profiler.</p></a>\n<a href=\"#/laghistoria\"><span>03</span><h3>Laghistoria</h3><p>Organisationer, historiska namn, säsonger och lagstatistik.</p></a>\n<a href=\"#/sasong/ecl26spring\"><span>04</span><h3>Säsonger</h3><p>Översikt, matcher, byten, lag och statistik per ECL-säsong.</p></a>\n<a href=\"https://www.svenskehockey.se/SEC/\"><span>05</span><h3>SEC</h3><p>Svenska eHockey Cupens egna turneringssidor.</p></a>\n</div>\n</section>\n</main>\n<footer class=\"directory-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>", "news": "\u003cmain class=\"directory-shell news-page-shell\"\u003e\n\u003csection class=\"news-page-hero\"\u003e\n\u003cdiv\u003e\n\u003cp class=\"directory-kicker\"\u003eSVENSK eHOCKEY / REDAKTIONEN\u003c/p\u003e\n\u003ch1\u003eNyheter\u003c/h1\u003e\n\u003cp\u003eArtiklar, uppdateringar och notiser från den svenska eHockeyscenen.\u003c/p\u003e\n\u003c/div\u003e\n\u003caside class=\"news-page-tools\" aria-label=\"Filtrera nyheter\"\u003e\n\u003clabel for=\"newsSearch\"\u003eSÖK I NYHETER\u003c/label\u003e\n\u003cinput id=\"newsSearch\" type=\"search\" autocomplete=\"off\" placeholder=\"Sök titel, text eller tagg…\"\u003e\n\u003cdiv class=\"news-tag-row\" id=\"newsTagFilters\"\u003e\u003c/div\u003e\n\u003csmall id=\"newsResultText\"\u003e\u003c/small\u003e\n\u003c/aside\u003e\n\u003c/section\u003e\n\u003csection class=\"news-featured\" id=\"featuredNews\" aria-label=\"Senaste huvudnyhet\"\u003e\u003c/section\u003e\n\u003csection class=\"news-card-grid\" id=\"newsGrid\" aria-label=\"Fler nyheter\"\u003e\u003c/section\u003e\n\u003c/main\u003e\n\u003cfooter class=\"directory-footer\"\u003e\u003cdiv\u003e\u003cstrong\u003eSVENSK eHOCKEY\u003c/strong\u003e\u003cspan\u003e© 2026 Svensk eHockey\u003c/span\u003e\u003c/div\u003e\u003c/footer\u003e", "players": "<main class=\"directory-shell players-shell\">\n<section aria-labelledby=\"playersTitle\" class=\"players-hero\">\n<div class=\"players-hero__copy\">\n<p class=\"directory-kicker\">SPELARE</p>\n<h1 id=\"playersTitle\">Svenska<br/>Spelare</h1>\n<p>\n          Här hittar du svenska spelare som förekommer i databasen från ECL, SCL,\n          eSHL, SEC, ITHL, LGEL och SM. Sök efter spelare, lag eller division,\n          filtrera efter roll och öppna profilen för klubbhistorik, statistik och\n          tidigare säsonger.\n        </p>\n<div aria-label=\"Registeregenskaper\" class=\"players-hero__tags\">\n<span>SVENSKT SPELARREGISTER</span>\n<span>PROFILER MED HISTORIK</span>\n<span>SORTERBART PÅ KLUBBAR</span>\n</div>\n</div>\n<aside aria-label=\"Översikt\" class=\"players-overview\">\n<p class=\"directory-kicker\">ÖVERSIKT</p>\n<p>Snabbkoll på alla svenska spelare och roller som hittats i databasen.</p>\n<div>\n<article><span>SPELARE</span><strong id=\"overviewPlayers\">–</strong></article>\n<article><span>MÅLVAKTER</span><strong id=\"overviewGoalies\">–</strong></article>\n<article><span>UTESPELARE</span><strong id=\"overviewSkaters\">–</strong></article>\n</div>\n</aside>\n</section>\n<section aria-labelledby=\"playerDirectoryTitle\" class=\"player-directory\">\n<h2 class=\"sr-only\" id=\"playerDirectoryTitle\">Spelarregister</h2>\n<div class=\"players-toolbar\">\n<label class=\"players-field players-field--search\">\n<span>SÖK</span>\n<input autocomplete=\"off\" id=\"playerSearch\" placeholder=\"Sök spelare, lag, division…\" type=\"search\"/>\n</label>\n<label class=\"players-field\">\n<span>ROLL</span>\n<select id=\"roleFilter\">\n<option value=\"all\">Alla roller</option>\n<option value=\"skater\">Utespelare</option>\n<option value=\"goalie\">Målvakter</option>\n</select>\n</label>\n<label class=\"players-field\">\n<span>DIVISION</span>\n<select id=\"divisionFilter\"><option value=\"all\">Alla divisioner</option></select>\n</label>\n<label class=\"players-field\">\n<span>SORTERA</span>\n<select id=\"playerSort\">\n<option value=\"games\">Flest matcher</option>\n<option value=\"points\">Flest poäng</option>\n<option value=\"clubs\">Flest klubbar</option>\n<option value=\"name\">Namn A–Ö</option>\n</select>\n</label>\n<label class=\"players-compact\">\n<span>VY</span>\n<span class=\"players-compact__control\">\n<input id=\"compactToggle\" type=\"checkbox\"/>\n<b>Visa mindre</b>\n</span>\n</label>\n</div>\n<p class=\"player-directory__result\" id=\"playerResultText\">Laddar svenska spelare…</p>\n<div aria-live=\"polite\" class=\"player-directory__grid\" id=\"playerGrid\"></div>\n<nav aria-label=\"Sidnumrering\" class=\"player-pagination\" id=\"playerPagination\"></nav>\n</section>\n</main>\n<footer class=\"directory-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>", "history": "<main class=\"directory-shell\">\n<section aria-labelledby=\"pageTitle\" class=\"directory-hero\">\n<div class=\"directory-hero__copy\">\n<p class=\"directory-kicker\">LAGHISTORIK</p>\n<h1 id=\"pageTitle\">Svensk<br/>laghistoria</h1>\n<p>\n          Här samlas svenska lag från ECL, SCL, eSHL, SEC, ITHL, LGEL och SM.\n          Sök efter lag, spelare, turnering eller division och följ samma\n          organisation genom namnbyten och olika säsonger.\n        </p>\n</div>\n<aside aria-label=\"Historikens omfattning\" class=\"directory-year-card\">\n<strong id=\"historyYearCount\">–</strong>\n<span>ÅR AV SVENSK eHOCKEY</span>\n</aside>\n</section>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>\n        Öppna <code>config.js</code> och fyll i projektets URL och\n        publishable key.\n      </p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta laghistoriken</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<section aria-labelledby=\"directoryTitle\" class=\"directory-section\" id=\"teamDirectory\">\n<div class=\"directory-section__heading\">\n<div>\n<p class=\"directory-kicker\">HISTORIK</p>\n<h2 id=\"directoryTitle\">Svenska lag</h2>\n</div>\n<button class=\"directory-reload\" id=\"reloadButton\" type=\"button\">\n          Uppdatera data\n        </button>\n</div>\n<div aria-label=\"Filtrering och sortering\" class=\"directory-toolbar\">\n<label>\n<span class=\"sr-only\">Namnvisning</span>\n<select id=\"nameModeSelect\">\n<option value=\"current\">Visa via lagnamn</option>\n<option value=\"latest\">Visa senaste turneringsnamn</option>\n</select>\n</label>\n<label>\n<span class=\"sr-only\">Turnering</span>\n<select id=\"tournamentFilter\">\n<option value=\"all\">Alla turneringar</option>\n</select>\n</label>\n<label>\n<span class=\"sr-only\">Sortering</span>\n<select id=\"sortSelect\">\n<option value=\"name-asc\">Namn A–Ö</option>\n<option value=\"name-desc\">Namn Ö–A</option>\n<option value=\"latest\">Senast aktiv</option>\n<option value=\"games\">Flest matcher</option>\n<option value=\"wins\">Flest vinster</option>\n<option value=\"winpct\">Högst vinst%</option>\n<option value=\"tournaments\">Flest turneringar</option>\n<option value=\"players\">Flest spelare</option>\n</select>\n</label>\n<label>\n<span class=\"sr-only\">Kortstorlek</span>\n<select id=\"viewModeSelect\">\n<option value=\"full\">Hela kort</option>\n<option value=\"compact\">Kompakta kort</option>\n</select>\n</label>\n<label class=\"directory-search\">\n<span aria-hidden=\"true\" class=\"directory-search__icon\">⌕</span>\n<input autocomplete=\"off\" id=\"searchInput\" placeholder=\"Sök lag, spelare, ECL eller division\" type=\"search\"/>\n</label>\n</div>\n<section aria-label=\"Samlad lagstatistik\" class=\"directory-stats\" id=\"directoryStats\">\n<article>\n<span>VISAR LAG</span>\n<strong id=\"visibleTeamCount\">–</strong>\n</article>\n<article>\n<span>ALLA LAGNAMN</span>\n<strong id=\"allNameCount\">–</strong>\n</article>\n<article>\n<span>SÄSONGER</span>\n<strong id=\"appearanceCount\">–</strong>\n</article>\n<article>\n<span>DIVISIONER</span>\n<strong id=\"divisionCount\">–</strong>\n</article>\n<article>\n<span>MATCHER / VINSTER</span>\n<strong><span id=\"matchCount\">–</span> / <span id=\"winCount\">–</span></strong>\n</article>\n<article>\n<span>SPELARE</span>\n<strong id=\"playerCount\">–</strong>\n</article>\n</section>\n<div class=\"directory-resultbar\">\n<span id=\"resultText\">Laddar…</span>\n<span id=\"lastUpdated\"></span>\n</div>\n<div class=\"directory-loading\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar lag, turneringar och spelare…</p>\n</div>\n<div aria-live=\"polite\" class=\"directory-grid\" id=\"teamGrid\"></div>\n</section>\n</main>\n<footer class=\"directory-footer\">\n<div>\n<strong>SVENSK eHOCKEY</strong>\n<span>© 2026 Svensk eHockey</span>\n</div>\n<a href=\"#teamDirectory\">Till toppen ↑</a>\n</footer>\n<template id=\"teamCardTemplate\">\n<article class=\"directory-team-card\">\n<a aria-label=\"\" class=\"directory-team-card__main-link\" href=\"#\"></a>\n<span class=\"directory-team-card__number\"></span>\n<div class=\"directory-team-card__header\">\n<div aria-hidden=\"true\" class=\"directory-team-card__logo\"></div>\n<div class=\"directory-team-card__identity\">\n<h3 class=\"directory-team-card__name\"></h3>\n<p class=\"directory-team-card__identity-name\" hidden=\"\"></p>\n<div class=\"directory-team-card__badges\"></div>\n</div>\n</div>\n<dl class=\"directory-team-card__metrics\">\n<div><dt>SPELARE</dt><dd class=\"metric-players\">–</dd></div>\n<div><dt>TURNERINGAR</dt><dd class=\"metric-tournaments\">–</dd></div>\n<div><dt>DIVISIONER</dt><dd class=\"metric-divisions\">–</dd></div>\n<div><dt>MATCHER</dt><dd class=\"metric-games\">–</dd></div>\n<div><dt>RECORD</dt><dd class=\"metric-record\">–</dd></div>\n<div><dt>VINST%</dt><dd class=\"metric-winpct\">–</dd></div>\n<div><dt>GF–GA</dt><dd class=\"metric-goals\">–</dd></div>\n<div><dt>+/−</dt><dd class=\"metric-diff\">–</dd></div>\n<div><dt>SLUTSPEL</dt><dd class=\"metric-playoffs\">–</dd></div>\n</dl>\n<div class=\"directory-team-card__summary\">\n<p><strong>Topp spelare:</strong> <a class=\"summary-top-player\" href=\"#\">–</a></p>\n<p><strong>Senast:</strong> <span class=\"summary-latest\">–</span></p>\n<p class=\"summary-alias-row\"><strong>Namnvariationer:</strong> <span class=\"summary-aliases\">–</span></p>\n</div>\n<div class=\"directory-team-card__action\">\n        Öppna laghistoriken <span aria-hidden=\"true\">→</span>\n</div>\n</article>\n</template>", "player": "<div class=\"page-shell history-page-shell player-profile-shell\">\n  <nav aria-label=\"Navigering\" class=\"page-nav history-nav player-profile-legacy-nav\">\n    <a class=\"back-button\" href=\"#/spelare\" id=\"backLink\">← Tillbaka till spelare</a>\n    <button class=\"reload-button\" id=\"reloadButton\" type=\"button\">Uppdatera</button>\n  </nav>\n\n  <section class=\"notice notice-warning\" hidden id=\"setupNotice\">\n    <h2>Anslut sidan till Supabase</h2>\n    <p>Öppna <code>config.js</code> och fyll i projektets URL och publishable key.</p>\n  </section>\n\n  <section class=\"notice notice-error\" hidden id=\"errorNotice\">\n    <h2>Kunde inte hämta spelaren</h2>\n    <p id=\"errorMessage\"></p>\n  </section>\n\n  <main hidden id=\"playerPage\" class=\"player-profile-page-v5\">\n    <section class=\"player-editorial-profile\" aria-label=\"Spelarprofil\">\n      <div class=\"player-editorial-photo-column\">\n        <div aria-hidden=\"true\" class=\"profile-detail-avatar player-editorial-photo\" id=\"playerAvatar\"></div>\n      </div>\n\n      <div class=\"player-editorial-main\">\n        <p class=\"player-editorial-kicker\">\n          <span id=\"playerFlag\" aria-hidden=\"true\">🇸🇪</span>\n          <span>SPELARPROFIL</span>\n        </p>\n\n        <h1 id=\"playerName\">Laddar spelare…</h1>\n\n        <div class=\"player-editorial-identity\">\n          <span class=\"player-editorial-team\" id=\"playerCurrentTeam\">–</span>\n          <p id=\"playerMeta\">–</p>\n        </div>\n\n        <section class=\"player-editorial-stats\" aria-label=\"Offensiv karriärstatistik\">\n          <article>\n            <strong id=\"careerPoints\">–</strong>\n            <span>POÄNG</span>\n          </article>\n          <article>\n            <strong id=\"careerGoals\">–</strong>\n            <span>MÅL</span>\n          </article>\n          <article>\n            <strong id=\"careerAssists\">–</strong>\n            <span>ASSIST</span>\n          </article>\n        </section>\n\n        <p class=\"player-editorial-competitions\" id=\"playerCompetitions\"></p>\n      </div>\n\n      <aside class=\"player-editorial-bio\" aria-label=\"Spelarpresentation\">\n        <div id=\"playerBio\"></div>\n        <div class=\"team-profile-links player-editorial-links\" id=\"playerLinks\"></div>\n      </aside>\n    </section>\n\n    <section class=\"player-merits-layout\" id=\"playerMeritsSection\" hidden>\n      <article class=\"player-merits-column player-merits-column--team\">\n        <div class=\"player-merits-heading player-merits-heading--team\">\n          <span aria-hidden=\"true\"></span>\n          <h2>MERITER</h2>\n          <span aria-hidden=\"true\"></span>\n        </div>\n        <div class=\"player-merits-list\" id=\"teamMeritsList\"></div>\n      </article>\n\n      <article class=\"player-merits-column player-merits-column--personal\">\n        <div class=\"player-merits-heading player-merits-heading--personal\">\n          <h2>PERSONLIGA MERITER</h2>\n        </div>\n        <div class=\"player-merits-list\" id=\"personalMeritsList\"></div>\n      </article>\n    </section>\n\n    <section class=\"player-secondary-metrics\" aria-label=\"Spelaröversikt\">\n      <article><span>TURNERINGAR</span><strong id=\"tournamentCount\">–</strong></article>\n      <article><span>LAG</span><strong id=\"teamCount\">–</strong></article>\n      <article><span>MATCHER</span><strong id=\"careerGames\">–</strong></article>\n    </section>\n\n    <section class=\"history-alltime-grid player-career-grid player-career-grid-v5\">\n      <article class=\"history-alltime-card\">\n        <p class=\"history-kicker history-kicker--gold\">Utespelare</p>\n        <h2>Karriärstatistik</h2>\n        <div class=\"profile-stat-list\" id=\"skaterCareerStats\"></div>\n      </article>\n\n      <article class=\"history-alltime-card\">\n        <p class=\"history-kicker history-kicker--gold\">Målvakt</p>\n        <h2>Målvaktsstatistik</h2>\n        <div class=\"profile-stat-list\" id=\"goalieCareerStats\"></div>\n      </article>\n    </section>\n\n    <section class=\"player-teams-section-v5\" id=\"playerTeamsSection\" hidden>\n      <div class=\"player-teams-heading-v5\">\n        <h2>Lag</h2>\n        <p>Lag spelaren har representerat i historiken.</p>\n      </div>\n      <div class=\"player-teams-grid-v5\" id=\"playerTeamsGrid\"></div>\n    </section>\n\n    <section class=\"history-section player-history-section-v5\">\n      <div class=\"history-section-heading\">\n        <div>\n          <p class=\"history-kicker history-kicker--gold\">Historik</p>\n          <h2>Alla turneringar</h2>\n          <p>Varje rad länkar till lagets sida för just den turneringen.</p>\n        </div>\n        <span class=\"history-section-count\" id=\"historyCount\"></span>\n      </div>\n\n      <div class=\"player-history-filters\" id=\"historyCompetitionFilters\" aria-label=\"Filtrera turneringshistorik\"></div>\n\n      <div class=\"history-table-wrap\">\n        <table class=\"history-table player-history-table\">\n          <thead>\n            <tr>\n              <th>Säsong</th>\n              <th>Lag</th>\n              <th>Division</th>\n              <th>Roll</th>\n              <th>GP</th>\n              <th>G</th>\n              <th>A</th>\n              <th>PTS</th>\n              <th>SV%</th>\n              <th>GAA</th>\n            </tr>\n          </thead>\n          <tbody id=\"historyTableBody\"></tbody>\n        </table>\n      </div>\n    </section>\n  </main>\n\n  <div class=\"loading-state\" id=\"loadingState\">\n    <div aria-hidden=\"true\" class=\"spinner\"></div>\n    <p>Hämtar spelarens historik…</p>\n  </div>\n</div>", "team": "<div class=\"page-shell history-page-shell\">\n<nav aria-label=\"Navigering\" class=\"page-nav history-nav\">\n<a class=\"back-button\" href=\"#/laghistoria\">\n<span aria-hidden=\"true\">←</span>\n        Alla svenska lag\n      </a>\n<button class=\"reload-button\" id=\"reloadButton\" type=\"button\">\n        Uppdatera\n      </button>\n</nav>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>\n        Öppna <code>config.js</code> och fyll i projektets URL och\n        publishable key.\n      </p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta laget</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<main hidden=\"\" id=\"teamPage\">\n<section class=\"history-hero\">\n<div class=\"history-hero-main\">\n<div aria-label=\"Lagets meriter\" class=\"history-badges\" id=\"historyBadges\"></div>\n<p class=\"history-kicker\">Lagets historik</p>\n<h1 id=\"teamName\">Laddar lag…</h1>\n<div class=\"history-hero-content\">\n<div aria-hidden=\"true\" class=\"history-team-logo\" id=\"teamProfileAvatar\"></div>\n<div class=\"history-profile-copy\">\n<div class=\"history-chip-row\" id=\"heroChips\"></div>\n<div class=\"history-profile-block\">\n<span>Klubbprofil</span>\n<p id=\"clubProfileText\"></p>\n</div>\n<div class=\"history-leaders\">\n<div>\n<span>Flest matcher</span>\n<strong id=\"leaderMatches\">–</strong>\n</div>\n<div>\n<span>Flest poäng</span>\n<strong id=\"leaderPoints\">–</strong>\n</div>\n<div>\n<span>Främsta målvakt</span>\n<strong id=\"leaderGoalie\">–</strong>\n</div>\n</div>\n<div class=\"team-profile-links\" id=\"teamLinks\"></div>\n</div>\n</div>\n</div>\n<aside aria-labelledby=\"divisionCurveHeading\" class=\"history-division-panel\">\n<p class=\"history-kicker history-kicker--gold\">Divisioner</p>\n<h2 id=\"divisionCurveHeading\">Divisionskurva</h2>\n<p>Från NEO längst ner till ELITE högst upp.</p>\n<div class=\"division-curve\" id=\"divisionCurve\"></div>\n<div class=\"division-curve-footer\">\n<span id=\"divisionCurveFirst\">–</span>\n<span id=\"divisionCurveLatest\">–</span>\n</div>\n</aside>\n</section>\n<section aria-label=\"Lagöversikt\" class=\"history-metric-band\">\n<article class=\"history-feature-metric\">\n<span>Matchvinster</span>\n<strong id=\"winsCount\">–</strong>\n<small id=\"winsMetricNote\"></small>\n</article>\n<article class=\"history-feature-metric\">\n<span>Bästa ECL</span>\n<strong id=\"bestEclSeason\">–</strong>\n<small id=\"bestEclNote\"></small>\n</article>\n<article class=\"history-feature-metric\">\n<span>Högsta nivå</span>\n<strong id=\"bestDivision\">–</strong>\n<small id=\"divisionMetricNote\"></small>\n</article>\n<article class=\"history-feature-metric\">\n<span>Slutspel</span>\n<strong id=\"playoffRecord\">–</strong>\n<small id=\"playoffMetricNote\"></small>\n</article>\n<div class=\"history-compact-metrics\">\n<div><span>Matcher</span><strong id=\"gamesCount\">–</strong></div>\n<div><span>Vinster</span><strong id=\"winsCompact\">–</strong></div>\n<div><span>Förluster</span><strong id=\"lossesCount\">–</strong></div>\n<div><span>Vinst%</span><strong id=\"winPercentage\">–</strong></div>\n<div><span>GF–GA</span><strong id=\"goalsRecord\">–</strong></div>\n<div><span>+/−</span><strong id=\"goalDifference\">–</strong></div>\n</div>\n</section>\n<section class=\"history-section history-honours\" hidden=\"\" id=\"teamHonoursSection\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Meriter</p>\n<h2>Pallplatser</h2>\n</div>\n<span class=\"history-section-count\" id=\"teamHonoursCount\"></span>\n</div>\n<div class=\"history-honour-summary\">\n<div><span>Mästare</span><strong id=\"championshipsCount\">0</strong></div>\n<div><span>Finaler</span><strong id=\"finalsCount\">0</strong></div>\n<div><span>Brons</span><strong id=\"bronzeCount\">0</strong></div>\n</div>\n<div class=\"history-honour-list\" id=\"teamHonoursList\"></div>\n</section>\n<section class=\"history-section\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Säsonger</p>\n<h2>Lagets säsonger</h2>\n<p>Säsonger, divisioner och tillgänglig lagstatistik.</p>\n</div>\n<span class=\"history-section-count\" id=\"tournamentCount\">–</span>\n</div>\n<div class=\"player-history-filters team-season-filters\" id=\"seasonCompetitionFilters\" aria-label=\"Filtrera lagets säsonger efter turnering\"></div>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-seasons-table\">\n<thead>\n<tr>\n<th>Säsong</th>\n<th>Datum</th>\n<th>Lagnamn då</th>\n<th>Division</th>\n<th>Spelare</th>\n<th>Matcher</th>\n<th>Record</th>\n<th>Poäng</th>\n<th>GF–GA</th>\n<th>Länk</th>\n</tr>\n</thead>\n<tbody id=\"seasonsTableBody\"></tbody>\n</table>\n</div>\n</section>\n<section class=\"history-section history-player-section\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Spelare</p>\n<h2 id=\"playersHeading\">Spelare – all-time</h2>\n<p>Alla spelare som har representerat laget i importerade turneringar.</p>\n</div>\n<span class=\"history-section-count\" id=\"allTimePlayerCount\">–</span>\n</div>\n<div class=\"history-player-grid\" id=\"playerCards\"></div>\n<div class=\"history-player-grid-actions\">\n<button class=\"history-outline-button\" hidden=\"\" id=\"togglePlayerCards\" type=\"button\">\n            Visa alla spelare\n          </button>\n</div>\n<div class=\"history-alltime-grid\">\n<article class=\"history-alltime-card\">\n<h3>All-time utespelare</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr>\n<th>#</th>\n<th>Spelare</th>\n<th>GP</th>\n<th>G</th>\n<th>A</th>\n<th>PTS</th>\n<th>PIM</th>\n</tr>\n</thead>\n<tbody id=\"allTimeSkaterBody\"></tbody>\n</table>\n</div>\n</article>\n<article class=\"history-alltime-card\">\n<h3>All-time målvakter</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr>\n<th>#</th>\n<th>Målvakt</th>\n<th>GP</th>\n<th>SA</th>\n<th>GA</th>\n<th>SV</th>\n<th>SV%</th>\n<th>GAA</th>\n<th>SO</th>\n</tr>\n</thead>\n<tbody id=\"allTimeGoalieBody\"></tbody>\n</table>\n</div>\n</article>\n</div>\n</section>\n<section class=\"history-section history-details-section\">\n<details>\n<summary>\n<span>\n<span class=\"history-kicker history-kicker--gold\">Fördjupning</span>\n<strong>Detaljerad turneringshistorik</strong>\n</span>\n<small>Behåller all information från den tidigare lagsidan</small>\n</summary>\n<div class=\"history-details-body\">\n<div class=\"section-heading\">\n<div>\n<h2>Alla turneringar</h2>\n</div>\n<div class=\"tournament-controls\">\n<label>\n<span>Turnering</span>\n<select id=\"competitionFilter\">\n<option value=\"\">Alla turneringar</option>\n</select>\n</label>\n<label>\n<span>Sortering</span>\n<select id=\"tournamentSort\">\n<option value=\"newest\">Nyaste först</option>\n<option value=\"oldest\">Äldsta först</option>\n<option value=\"competition\">Turnering A–Ö</option>\n</select>\n</label>\n</div>\n</div>\n<div class=\"result-bar tournament-result-bar\">\n<span id=\"tournamentResultText\"></span>\n<span id=\"lastUpdated\"></span>\n</div>\n<div class=\"tournament-list\" id=\"tournamentList\"></div>\n</div>\n</details>\n</section>\n<section class=\"team-information-panel history-source-panel\">\n<div>\n<span class=\"information-label\">SportsGamer-ID</span>\n<div class=\"information-value\" id=\"sportsGamerIds\"></div>\n</div>\n<div>\n<span class=\"information-label\">Historiska namn</span>\n<div class=\"information-value\" id=\"historicalNames\"></div>\n</div>\n<div>\n<span class=\"information-label\">Namn i turneringar</span>\n<div class=\"information-value\" id=\"leagueNames\"></div>\n</div>\n</section>\n</main>\n<div class=\"loading-state\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar lagets historik, turneringar och spelare…</p>\n</div>\n</div>", "teamTournament": "<div class=\"page-shell history-page-shell\">\n<nav aria-label=\"Navigering\" class=\"page-nav history-nav\">\n<a class=\"back-button\" href=\"#/laghistoria\" id=\"backLink\">← Tillbaka till laget</a>\n<button class=\"reload-button\" id=\"reloadButton\" type=\"button\">Uppdatera</button>\n</nav>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>Kontrollera att befintliga <code>config.js</code> innehåller projektets URL och publishable key.</p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta turneringen</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<main hidden=\"\" id=\"tournamentPage\">\n<section class=\"profile-detail-hero tournament-detail-hero\">\n<div aria-hidden=\"true\" class=\"profile-detail-avatar profile-detail-avatar--team\" id=\"teamAvatar\"></div>\n<div class=\"profile-detail-copy\">\n<p class=\"history-kicker history-kicker--gold\" id=\"competitionName\"></p>\n<h1 id=\"teamName\">Laddar lag…</h1>\n<h2 class=\"tournament-page-title\" id=\"tournamentName\"></h2>\n<p class=\"profile-detail-meta\" id=\"tournamentMeta\"></p>\n<div class=\"team-profile-links\" id=\"tournamentLinks\"></div>\n</div>\n</section>\n<section aria-label=\"Turneringsöversikt\" class=\"profile-summary-grid tournament-summary-grid\">\n<article><span>Matcher</span><strong id=\"gamesCount\">–</strong></article>\n<article><span>Vinster</span><strong id=\"winsCount\">–</strong></article>\n<article><span>Förluster</span><strong id=\"lossesCount\">–</strong></article>\n<article><span>Vinst%</span><strong id=\"winPercentage\">–</strong></article>\n<article><span>GF–GA</span><strong id=\"goalsRecord\">–</strong></article>\n<article><span>+/−</span><strong id=\"goalDifference\">–</strong></article>\n</section>\n<section class=\"tournament-single-grid\">\n<article class=\"history-alltime-card\">\n<p class=\"history-kicker history-kicker--gold\">Grundserie</p>\n<h2 id=\"regularRecord\">–</h2>\n<div class=\"profile-stat-list\" id=\"regularDetails\"></div>\n</article>\n<article class=\"history-alltime-card\">\n<p class=\"history-kicker history-kicker--gold\">Slutspel</p>\n<h2 id=\"playoffRecord\">–</h2>\n<div class=\"profile-stat-list\" id=\"playoffDetails\"></div>\n</article>\n</section>\n<section class=\"history-section\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Trupp</p>\n<h2>Spelare i turneringen</h2>\n<p>Spelarnamnen länkar till Svensk eHockey-profiler. Kopplade spelare har även en direktlänk till SportsGamer.</p>\n</div>\n<span class=\"history-section-count\" id=\"playerCount\"></span>\n</div>\n<div class=\"history-alltime-grid tournament-roster-grid\">\n<article class=\"history-alltime-card\">\n<h3>Utespelare</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr><th>Spelare</th><th>Pos</th><th>GP</th><th>G</th><th>A</th><th>PTS</th><th>+/−</th><th>PIM</th></tr>\n</thead>\n<tbody id=\"skaterBody\"></tbody>\n</table>\n</div>\n</article>\n<article class=\"history-alltime-card\">\n<h3>Målvakter</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr><th>Målvakt</th><th>GP</th><th>V</th><th>F</th><th>ÖF</th><th>SV%</th><th>GAA</th><th>SO</th></tr>\n</thead>\n<tbody id=\"goalieBody\"></tbody>\n</table>\n</div>\n</article>\n</div>\n</section>\n<section class=\"history-section\" hidden=\"\" id=\"matchesSection\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Matcher</p>\n<h2>Matcher i turneringen</h2>\n<p>Spelade, ospelade, walkover- och rekonstruerade matcher visas med separat status.</p>\n</div>\n<span class=\"history-section-count\" id=\"matchCount\"></span>\n</div>\n<div class=\"tournament-match-list\" id=\"matchList\"></div>\n</section>\n</main>\n<div class=\"loading-state\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar turneringssidan…</p>\n</div>\n</div>", "tournament": "<div class=\"page-shell history-page-shell tournament-overview-shell\">\n<nav aria-label=\"Navigering\" class=\"page-nav history-nav\">\n<a class=\"back-button\" href=\"#/laghistoria\">← Till laghistoriken</a>\n<button class=\"reload-button\" id=\"reloadButton\" type=\"button\">Uppdatera</button>\n</nav>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>Kontrollera att befintliga <code>config.js</code> innehåller projektets URL och publishable key.</p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta turneringen</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<main hidden=\"\" id=\"tournamentOverview\">\n<section class=\"tournament-overview-hero\">\n<div>\n<p class=\"history-kicker history-kicker--gold\" id=\"competitionName\">TURNERING</p>\n<h1 id=\"tournamentTitle\">Laddar turnering…</h1>\n<p class=\"tournament-overview-intro\" id=\"tournamentDescription\"></p>\n<div class=\"team-profile-links\" id=\"tournamentExternalLinks\"></div>\n</div>\n<aside aria-label=\"Turneringsidentitet\" class=\"tournament-overview-identity\">\n<span>LIGA-ID</span>\n<strong id=\"leagueIdValue\">–</strong>\n<small id=\"tournamentPeriod\">–</small>\n</aside>\n</section>\n<nav aria-label=\"Turneringsinnehåll\" class=\"tournament-overview-nav\">\n<a href=\"#overview\">Översikt</a>\n<a href=\"#standings\">Tabeller</a>\n<a href=\"#teams\">Lag</a>\n<a href=\"#matches\">Matcher</a>\n<a href=\"#statistics\">Statistik</a>\n<a href=\"#playoffs\">Slutspel</a>\n</nav>\n<section aria-label=\"Turneringsöversikt\" class=\"tournament-overview-metrics\" id=\"overview\">\n<article><span>Lag</span><strong id=\"metricTeams\">–</strong></article>\n<article><span>Spelare</span><strong id=\"metricPlayers\">–</strong><small id=\"metricLinkedPlayers\"></small></article>\n<article><span>Matcher</span><strong id=\"metricMatches\">–</strong><small id=\"metricPlayedMatches\"></small></article>\n<article><span>Walkovers</span><strong id=\"metricWalkovers\">–</strong></article>\n<article><span>Slutspelsserier</span><strong id=\"metricSeries\">–</strong></article>\n<article><span>Slutspelsmatcher</span><strong id=\"metricPlayoffMatches\">–</strong><small id=\"metricReconstructed\"></small></article>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"standings\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">TABELLER</p><h2>Grundserie och grupper</h2><p>Tabellplaceringar och lagresultat hämtas direkt från Supabase.</p></div>\n<span class=\"history-section-count\" id=\"standingsCount\"></span>\n</div>\n<div class=\"tournament-standings-container\" id=\"standingsContainer\"></div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"teams\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">LAG</p><h2>Deltagande lag</h2><p>Öppna lagets turneringssida för trupp, statistik och samtliga matcher.</p></div>\n<span class=\"history-section-count\" id=\"teamsCount\"></span>\n</div>\n<div class=\"tournament-teams-grid\" id=\"teamsGrid\"></div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"matches\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">MATCHER</p><h2>Alla matcher</h2><p>Ospelade matcher, walkovers och rekonstruerade matcher har egen status.</p></div>\n<span class=\"history-section-count\" id=\"matchesCount\"></span>\n</div>\n<div class=\"tournament-filter-bar\">\n<label><span>FAS</span><select id=\"stageFilter\"><option value=\"all\">Alla faser</option></select></label>\n<label><span>STATUS</span><select id=\"statusFilter\"><option value=\"all\">Alla statusar</option><option value=\"played\">Spelade</option><option value=\"pending\">Ospelade</option><option value=\"walkover\">Walkover</option><option value=\"reconstructed\">Rekonstruerade</option></select></label>\n<label><span>LAG</span><select id=\"teamFilter\"><option value=\"all\">Alla lag</option></select></label>\n</div>\n<div class=\"tournament-global-match-list\" id=\"matchesList\"></div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"statistics\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">STATISTIK</p><h2>Spelarstatistik</h2><p>SportsGamer-kopplade spelare använder permanent playerID och SportsGamer-namn när uppgifterna finns i databasen.</p></div>\n<span class=\"history-section-count\" id=\"statisticsCount\"></span>\n</div>\n<div class=\"history-alltime-grid tournament-statistics-grid\">\n<article class=\"history-alltime-card\">\n<h3>Utespelare</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead><tr><th>#</th><th>Spelare</th><th>Lag</th><th>GP</th><th>G</th><th>A</th><th>PTS</th><th>+/−</th></tr></thead>\n<tbody id=\"skaterStatsBody\"></tbody>\n</table>\n</div>\n</article>\n<article class=\"history-alltime-card\">\n<h3>Målvakter</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead><tr><th>#</th><th>Målvakt</th><th>Lag</th><th>GP</th><th>SV</th><th>SA</th><th>SV%</th><th>GAA</th><th>SO</th></tr></thead>\n<tbody id=\"goalieStatsBody\"></tbody>\n</table>\n</div>\n</article>\n</div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"playoffs\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">SLUTSPEL</p><h2>Slutspelsserier</h2><p>Serierna skapas från turneringens slutspelsmatcher och grupperas per runda.</p></div>\n<span class=\"history-section-count\" id=\"playoffsCount\"></span>\n</div>\n<div class=\"tournament-playoff-bracket\" id=\"playoffBracket\"></div>\n</section>\n</main>\n<div class=\"loading-state\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar turneringsdata…</p>\n</div>\n</div>", "season": "<main class=\"directory-shell portal-shell\">\n<section class=\"portal-page-hero season-hero\">\n<p class=\"directory-kicker\">ECL-SÄSONG</p>\n<h1 id=\"seasonTitle\">ECL ’26:<br/>Spring</h1>\n<p id=\"seasonText\">Samlad ingång till svenska lag, spelare och historik för säsongen.</p>\n</section>\n<nav aria-label=\"Säsongsmeny\" class=\"season-subnav\">\n<a class=\"is-active\" href=\"#overview\">Översikt</a>\n<a href=\"#matches\">Matcher</a>\n<a href=\"#transfers\">Byten</a>\n<a href=\"#teams\">Lag</a>\n<a href=\"#statistics\">Statistik</a>\n</nav>\n<section class=\"season-overview\" id=\"overview\">\n<p class=\"directory-kicker\">ÖVERSIKT</p>\n<h2 id=\"seasonOverviewTitle\">ECL ’26: Spring</h2>\n<p>\n        Den här säsongssidan är navet för säsongens innehåll. Databasens\n        laghistorik kan öppnas direkt med säsongen vald.\n      </p>\n<div class=\"portal-actions\">\n<a class=\"portal-button portal-button--primary\" href=\"#/laghistoria\" id=\"seasonTeamsLink\">Visa lag i databasen</a>\n<a class=\"portal-button\" href=\"#/spelare\">Öppna spelarregistret</a>\n</div>\n</section>\n<section class=\"season-panels\">\n<article id=\"matches\"><span>MATCHER</span><h3>Matcher</h3><p>Säsongens matchvy kopplas in här när matchdata finns i databasen.</p></article>\n<article id=\"transfers\"><span>BYTEN</span><h3>Byten</h3><p>En tydlig plats för svenska spelarbyten under säsongen.</p></article>\n<article id=\"teams\"><span>LAG</span><h3>Svenska lag</h3><p>Öppna laghistoriken och filtrera fram säsongens deltagande lag.</p></article>\n<article id=\"statistics\"><span>STATISTIK</span><h3>Statistik</h3><p>Tabeller och topplistor kan byggas från databasens säsongsdata.</p></article>\n</section>\n</main>\n<footer class=\"directory-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>"};
   templates.shop = `
     <main class="shop-page-shell">
       <section class="shop-page-hero shop-page-hero--reference">
