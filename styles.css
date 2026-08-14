@@ -140,7 +140,7 @@ h1 {
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 0;
   margin: 0 0 18px;
 }
 
@@ -227,7 +227,7 @@ select:focus {
 .team-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(335px, 1fr));
-  gap: 14px;
+  gap: 0;
 }
 
 .team-card {
@@ -252,7 +252,7 @@ select:focus {
 .team-card-header {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 0;
   padding: 18px 18px 15px;
   border-bottom: 1px solid rgba(214, 177, 95, 0.12);
 }
@@ -1977,7 +1977,7 @@ dd {
 .history-alltime-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 0;
   margin-top: 8px;
 }
 
@@ -2176,7 +2176,7 @@ dd {
 .tournament-single-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 0;
 }
 
 .tournament-roster-grid {
@@ -2196,7 +2196,7 @@ dd {
 .tournament-match-heading {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr) auto;
-  gap: 14px;
+  gap: 0;
   align-items: center;
   padding: 16px;
 }
@@ -2467,7 +2467,7 @@ body.directory-page {
   display: inline-flex;
   align-items: center;
   align-self: stretch;
-  gap: 14px;
+  gap: 0;
   min-width: 0;
   padding-right: 30px;
   text-decoration: none;
@@ -2476,8 +2476,9 @@ body.directory-page {
 .directory-brand__logo {
   display: block;
   flex: 0 0 auto;
-  width: 38px;
+  width: auto;
   height: 46px;
+  max-width: 150px;
   object-fit: contain;
 }
 
@@ -2857,7 +2858,7 @@ body.directory-page {
   min-height: 320px;
   place-items: center;
   align-content: center;
-  gap: 14px;
+  gap: 0;
   color: #969997;
 }
 
@@ -3292,7 +3293,7 @@ body.directory-page[data-card-view="compact"] .directory-team-card__summary {
 
   .directory-topbar__tools {
     min-height: 68px;
-    gap: 14px;
+    gap: 0;
     padding-left: 13px;
   }
 
@@ -3410,7 +3411,7 @@ body.directory-page[data-card-view="compact"] .directory-team-card__summary {
 
   .directory-topbar__tools {
     min-height: 68px;
-    gap: 14px;
+    gap: 0;
     padding-left: 13px;
   }
 
@@ -3697,7 +3698,7 @@ select {
 
 .seh-header__inner {
   display: grid;
-  grid-template-columns: 220px 160px minmax(420px, 1fr) auto;
+  grid-template-columns: 132px 160px minmax(420px, 1fr) auto;
   align-items: center;
   width: min(var(--seh-wide), calc(100% - 40px));
   min-height: 88px;
@@ -3708,14 +3709,20 @@ select {
   display: flex;
   align-items: center;
   align-self: stretch;
-  gap: 14px;
+  gap: 0;
   color: var(--seh-text);
   text-decoration: none;
 }
 
+.seh-brand--logo-only {
+  justify-self: start;
+  padding-right: 12px;
+}
+
 .seh-brand img {
-  width: 38px;
+  width: auto;
   height: 46px;
+  max-width: 150px;
   object-fit: contain;
 }
 
@@ -4035,7 +4042,7 @@ select {
 
 @media (max-width: 1240px) {
   .seh-header__inner {
-    grid-template-columns: 200px minmax(420px, 1fr) auto;
+    grid-template-columns: 112px minmax(420px, 1fr) auto;
   }
 
   .seh-current {
@@ -4059,8 +4066,9 @@ select {
   }
 
   .seh-brand img {
-    width: 31px;
-    height: 38px;
+    width: auto;
+    height: 34px;
+    max-width: 124px;
   }
 
   .seh-menu-button {
@@ -4145,7 +4153,7 @@ select {
   }
 
   .seh-brand {
-    gap: 10px;
+    gap: 0;
   }
 
   .seh-brand strong {
@@ -5746,7 +5754,7 @@ select {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 0;
   margin-top: 36px;
 }
 
@@ -6046,7 +6054,7 @@ select {
 }
 
 .player-merits-heading--team {
-  gap: 14px;
+  gap: 0;
 }
 
 .player-merits-heading--team h2 {
@@ -6727,7 +6735,7 @@ a.player-team-card:hover,a.player-team-card:focus-visible{background:rgba(255,20
 
 .shop-info-stack {
   display: grid;
-  gap: 14px;
+  gap: 0;
 }
 
 .shop-info-card--reference {
@@ -6884,7 +6892,7 @@ a.player-team-card:hover,a.player-team-card:focus-visible{background:rgba(255,20
 @media (max-width: 820px) {
   .shop-info-card--reference {
     grid-template-columns: 46px 1fr;
-    gap: 14px;
+    gap: 0;
   }
 
   .shop-card-icon,
@@ -7455,5 +7463,630 @@ body {
   .player-merits-heading h2,
   .player-teams-heading-v5 h2 {
     font-size: clamp(34px, 10.8vw, 48px) !important;
+  }
+}
+
+
+/* V78b – PERSONLIGA MERITER mindre på desktop */
+@media (min-width: 901px) {
+  .player-merits-heading h2 {
+    font-size: clamp(2.35rem, 3vw, 3.6rem) !important;
+    line-height: 0.98 !important;
+    letter-spacing: -0.025em !important;
+    white-space: nowrap !important;
+  }
+}
+
+
+/* ============================================================
+   V79 – spelarprofil: samma sidbredd på alla huvudsektioner
+   ============================================================ */
+
+#spaRouteView[data-route="player"] .player-profile-shell {
+  width: min(var(--seh-wide), calc(100% - 40px)) !important;
+  margin-inline: auto;
+}
+
+/* Alla större block använder exakt hela spelarprofilens bredd. */
+#spaRouteView[data-route="player"] .player-editorial-profile,
+#spaRouteView[data-route="player"] .player-secondary-metrics,
+#spaRouteView[data-route="player"] .player-merits-layout,
+#spaRouteView[data-route="player"] .player-career-grid-v5,
+#spaRouteView[data-route="player"] .player-teams-section-v5,
+#spaRouteView[data-route="player"] .player-history-section-v5 {
+  width: 100%;
+  max-width: none;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box;
+}
+
+/* Den gamla karriär-grid-regeln hade 22px yttermarginal och gjorde
+   just den delen smalare än resten av sidan. */
+#spaRouteView[data-route="player"] .player-career-grid,
+#spaRouteView[data-route="player"] .player-career-grid-v5 {
+  margin-inline: 0 !important;
+}
+
+/* Samma ytterkanter även på mobil. */
+@media (max-width: 760px) {
+  #spaRouteView[data-route="player"] .player-profile-shell {
+    width: min(100% - 22px, var(--seh-wide)) !important;
+  }
+}
+
+
+/* ============================================================
+   V80 – spelarprofil: LAG använder samma fulla sidbredd
+   ============================================================ */
+
+/* Själva sektionen var fullbredd i V79, men dess inre container
+   hade fortfarande en smalare max-width. Ta bort den begränsningen. */
+#spaRouteView[data-route="player"] .player-teams-section-v5,
+#spaRouteView[data-route="player"] .player-teams-section-v5 > div,
+#spaRouteView[data-route="player"] .player-teams-grid-v5,
+#spaRouteView[data-route="player"] .player-teams-list-v5 {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box;
+}
+
+/* Rubrik + ingress ska linjera med samma vänster/högerkant som grid/listan. */
+#spaRouteView[data-route="player"] .player-teams-heading-v5 {
+  width: 100% !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+}
+
+
+/* ============================================================
+   V81 – LAG exakt samma ytterbredd som karriärstatistiken
+   ============================================================ */
+
+/* Den kvarvarande skillnaden kom från sektionens egna sidpadding
+   (clamp(28px, 4vw, 60px)). Ta bort bara vänster/höger padding. */
+#spaRouteView[data-route="player"] .player-teams-section-v5 {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Behåll lite vertikalt luft men inga extra inre sidmarginaler. */
+#spaRouteView[data-route="player"] .player-teams-heading-v5,
+#spaRouteView[data-route="player"] .player-teams-grid-v5 {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Mobil: samma princip, men med profilens gemensamma ytterkant. */
+@media (max-width: 760px) {
+  #spaRouteView[data-route="player"] .player-teams-section-v5 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
+
+/* ============================================================
+   V82 – PERSONLIGA MERITER ska få plats på en rad
+   ============================================================ */
+
+@media (min-width: 901px) {
+  #spaRouteView[data-route="player"] .player-merits-heading h2 {
+    font-size: clamp(2.15rem, 2.85vw, 3.35rem) !important;
+    line-height: 0.96 !important;
+    letter-spacing: -0.025em !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+}
+
+
+/* ============================================================
+   V84 – spelarprofil: kortare etikett + inga grå utfyllnadsytor
+   i karriärstatistiken
+   ============================================================ */
+
+#spaRouteView[data-route="player"] #skaterCareerStats,
+#spaRouteView[data-route="player"] #goalieCareerStats {
+  gap: 0;
+  background: transparent;
+}
+
+#spaRouteView[data-route="player"] #skaterCareerStats {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+#spaRouteView[data-route="player"] #goalieCareerStats {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+#spaRouteView[data-route="player"] #skaterCareerStats > div,
+#spaRouteView[data-route="player"] #goalieCareerStats > div {
+  background: #0b0d0e;
+  border-right: 1px solid rgba(244, 241, 234, 0.13);
+  border-bottom: 1px solid rgba(244, 241, 234, 0.13);
+}
+
+#spaRouteView[data-route="player"] #skaterCareerStats > div:nth-child(-n + 5),
+#spaRouteView[data-route="player"] #goalieCareerStats > div:nth-child(-n + 5) {
+  border-top: 1px solid rgba(244, 241, 234, 0.13);
+}
+
+#spaRouteView[data-route="player"] #skaterCareerStats > div:nth-child(1),
+#spaRouteView[data-route="player"] #skaterCareerStats > div:nth-child(6),
+#spaRouteView[data-route="player"] #goalieCareerStats > div:nth-child(1),
+#spaRouteView[data-route="player"] #goalieCareerStats > div:nth-child(6) {
+  border-left: 1px solid rgba(244, 241, 234, 0.13);
+}
+
+/* Utespelare: sista rutan får egen hel rad istället för grå utfyllnad. */
+#spaRouteView[data-route="player"] #skaterCareerStats > div:nth-child(6) {
+  grid-column: 1 / -1;
+}
+
+/* Målvakt: två sista rutorna fyller hela andra raden. */
+#spaRouteView[data-route="player"] #goalieCareerStats > div:nth-child(6) {
+  grid-column: 1 / span 2;
+}
+
+#spaRouteView[data-route="player"] #goalieCareerStats > div:nth-child(7) {
+  grid-column: 3 / span 3;
+}
+
+@media (max-width: 760px) {
+  #spaRouteView[data-route="player"] #skaterCareerStats,
+  #spaRouteView[data-route="player"] #goalieCareerStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: rgba(244, 241, 234, 0.13);
+  }
+
+  #spaRouteView[data-route="player"] #skaterCareerStats > div,
+  #spaRouteView[data-route="player"] #goalieCareerStats > div {
+    border: 0;
+  }
+
+  #spaRouteView[data-route="player"] #skaterCareerStats > div:nth-child(6),
+  #spaRouteView[data-route="player"] #goalieCareerStats > div:nth-child(6),
+  #spaRouteView[data-route="player"] #goalieCareerStats > div:nth-child(7) {
+    grid-column: auto;
+  }
+}
+
+
+/* ============================================================
+   V88 – lagprofil: mindre lagnamn och Divisionskurva
+   ============================================================ */
+
+/* Bara själva lagprofilens huvudrubrik, inte andra sidor. */
+#spaRouteView[data-route="team"] .history-hero h1 {
+  font-size: clamp(3.25rem, 5.35vw, 6.1rem) !important;
+  line-height: 0.9 !important;
+  letter-spacing: -0.03em !important;
+}
+
+/* Divisionskurva ska vara tydlig men inte dominera högerspalten. */
+#spaRouteView[data-route="team"] .history-division-panel h2 {
+  font-size: clamp(2.55rem, 3.8vw, 4.35rem) !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.025em !important;
+}
+
+@media (max-width: 760px) {
+  #spaRouteView[data-route="team"] .history-hero h1 {
+    font-size: clamp(2.8rem, 13vw, 4.7rem) !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-division-panel h2 {
+    font-size: clamp(2.25rem, 10.5vw, 3.65rem) !important;
+  }
+}
+
+
+/* ============================================================
+   V89 – lagprofil: lagnamnet full bredd, Divisionskurva under
+   ============================================================ */
+
+@media (min-width: 921px) {
+  #spaRouteView[data-route="team"] .history-hero {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-hero-main,
+  #spaRouteView[data-route="team"] .history-division-panel {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+
+  /* Full bredd gör att även BIK Karlskoga Academy ska rymmas på en rad. */
+  #spaRouteView[data-route="team"] .history-hero h1 {
+    max-width: 100% !important;
+    font-size: clamp(3.4rem, 5vw, 5.85rem) !important;
+    line-height: 0.92 !important;
+    letter-spacing: -0.035em !important;
+    white-space: nowrap !important;
+  }
+
+  /* Divisionskurvan blir en egen fullbreddssektion direkt efter lagprofilen. */
+  #spaRouteView[data-route="team"] .history-division-panel {
+    border-left: 0 !important;
+    border-top: 1px solid rgba(244, 241, 233, 0.16) !important;
+    padding: 36px 42px 38px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-division-panel h2 {
+    font-size: clamp(2.55rem, 3.2vw, 3.8rem) !important;
+  }
+
+  #spaRouteView[data-route="team"] .division-curve {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 300px;
+  }
+
+  #spaRouteView[data-route="team"] .division-curve svg {
+    width: 100% !important;
+    height: 300px !important;
+  }
+}
+
+@media (max-width: 920px) {
+  #spaRouteView[data-route="team"] .history-hero {
+    grid-template-columns: 1fr !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-division-panel {
+    border-left: 0 !important;
+    border-top: 1px solid rgba(244, 241, 233, 0.16) !important;
+  }
+}
+
+/* ============================================================
+   V90 – lagprofil: fullbreddsnamn men divisionskurvan tillbaka
+   i högerspalten bredvid lagprofilens innehåll
+   ============================================================ */
+
+@media (min-width: 921px) {
+  #spaRouteView[data-route="team"] .history-hero {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.38fr) minmax(360px, 0.9fr) !important;
+    grid-template-areas:
+      "badges badges"
+      "kicker kicker"
+      "title title"
+      "content division" !important;
+    align-items: start !important;
+    min-height: 0 !important;
+  }
+
+  /* Låt barnen i hero-main bli grid-items så titeln kan ligga över hela bredden. */
+  #spaRouteView[data-route="team"] .history-hero-main {
+    display: contents !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-hero-main > .history-badges {
+    grid-area: badges;
+    padding: 56px 46px 0 24px !important;
+    margin-bottom: 20px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-hero-main > .history-kicker {
+    grid-area: kicker;
+    padding: 0 46px 0 24px !important;
+    margin: 0 0 16px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-hero-main > h1 {
+    grid-area: title;
+    padding: 0 46px 0 24px !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    font-size: clamp(3.25rem, 4.9vw, 5.55rem) !important;
+    line-height: 0.92 !important;
+    letter-spacing: -0.035em !important;
+    white-space: nowrap !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-hero-main > .history-hero-content {
+    grid-area: content;
+    margin-top: 18px !important;
+    padding: 0 34px 46px 24px !important;
+    border-right: 1px solid rgba(244, 241, 234, 0.22) !important;
+    align-self: stretch;
+  }
+
+  #spaRouteView[data-route="team"] .history-division-panel {
+    grid-area: division;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-top: 18px !important;
+    padding: 42px 20px 34px !important;
+    border-top: 0 !important;
+    border-left: 0 !important;
+    background: transparent !important;
+    align-self: stretch;
+  }
+
+  #spaRouteView[data-route="team"] .history-division-panel h2 {
+    font-size: clamp(2.25rem, 3vw, 3.55rem) !important;
+    line-height: 0.95 !important;
+  }
+
+  #spaRouteView[data-route="team"] .division-curve {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 290px !important;
+  }
+
+  #spaRouteView[data-route="team"] .division-curve svg {
+    width: 100% !important;
+    height: 290px !important;
+  }
+}
+
+/* ============================================================
+   V91 – lagprofil: enklare divisionskurva-rubrik i själva kortet
+   ============================================================ */
+
+#spaRouteView[data-route="team"] .history-division-panel > .history-kicker,
+#spaRouteView[data-route="team"] .history-division-panel > h2,
+#spaRouteView[data-route="team"] .history-division-panel > p {
+  display: none !important;
+}
+
+#spaRouteView[data-route="team"] .division-curve {
+  position: relative;
+  padding-top: 54px !important;
+}
+
+#spaRouteView[data-route="team"] .division-curve::before {
+  content: "Divisionskurva";
+  position: absolute;
+  top: 16px;
+  left: 22px;
+  right: 22px;
+  color: #f4f1ea;
+  font-family: var(--font-heading, inherit);
+  font-weight: 900;
+  font-size: clamp(1.8rem, 2.2vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: none;
+  pointer-events: none;
+}
+
+@media (max-width: 920px) {
+  #spaRouteView[data-route="team"] .division-curve {
+    padding-top: 50px !important;
+  }
+
+  #spaRouteView[data-route="team"] .division-curve::before {
+    top: 14px;
+    left: 18px;
+    right: 18px;
+    font-size: clamp(1.45rem, 6vw, 2rem);
+  }
+}
+
+/* ============================================================
+   V92 – lagprofil: linjera Divisionskurvans kort med lagloggans överkant
+   ============================================================ */
+@media (min-width: 921px) {
+  #spaRouteView[data-route="team"] .history-division-panel {
+    padding-top: 0 !important;
+  }
+}
+
+/* ============================================================
+   V93 – lagprofil: första/senaste divisionen inuti grafkortet
+   ============================================================ */
+#spaRouteView[data-route="team"] .division-curve-footer {
+  position: relative;
+  z-index: 2;
+  transform: translateY(-42px);
+  margin-bottom: -42px;
+  padding: 0 16px;
+}
+
+@media (max-width: 920px) {
+  #spaRouteView[data-route="team"] .division-curve-footer {
+    transform: translateY(-38px);
+    margin-bottom: -38px;
+    padding: 0 14px;
+  }
+}
+
+/* ============================================================
+   V90 – lagprofilens statistikband: Bästa ECL på rad 2
+   Desktop: Matchvinster / Högsta nivå / Slutspel på rad 1,
+   Bästa ECL under dem. Det kompakta statistikblocket får mer bredd.
+   ============================================================ */
+@media (min-width: 1181px) {
+  .history-metric-band {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(560px, 2.15fr);
+    grid-template-rows: auto auto;
+  }
+
+  .history-feature-metric:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .history-feature-metric:nth-child(2) {
+    grid-column: 1 / 4;
+    grid-row: 2;
+    border-top: 1px solid rgba(244, 241, 234, 0.2);
+  }
+
+  .history-feature-metric:nth-child(3) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .history-feature-metric:nth-child(4) {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .history-compact-metrics {
+    grid-column: 4;
+    grid-row: 1 / 3;
+  }
+}
+
+
+/* ============================================================
+   V95 – lagprofil: endast pallplatspokaler under lagloggan
+   ============================================================ */
+#spaRouteView[data-route="team"] .history-team-identity {
+  width: 220px;
+  min-width: 0;
+}
+
+#spaRouteView[data-route="team"] .history-team-identity > .history-badges {
+  min-height: 0;
+  margin: 12px 0 0;
+  padding: 0;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#spaRouteView[data-route="team"] .history-team-identity > .history-badges[hidden] {
+  display: none !important;
+}
+
+#spaRouteView[data-route="team"] .history-team-identity .history-badge {
+  width: 62px;
+  min-width: 62px;
+  height: 58px;
+  border-radius: 8px;
+}
+
+#spaRouteView[data-route="team"] .history-team-identity .history-badge strong {
+  font-size: 1.05rem;
+}
+
+#spaRouteView[data-route="team"] .history-team-identity .history-badge small {
+  max-width: 56px;
+  font-size: 0.5rem;
+}
+
+#spaRouteView[data-route="team"] .history-team-identity .history-badge--silver {
+  border-color: rgba(220, 224, 229, 0.55);
+  background: linear-gradient(145deg, #949aa2, #30343a 62%, #080808);
+}
+
+#spaRouteView[data-route="team"] .history-team-identity .history-badge--bronze {
+  border-color: rgba(205, 127, 50, 0.62);
+  background: linear-gradient(145deg, #a65f28, #3c2416 62%, #080808);
+}
+
+@media (min-width: 921px) {
+  #spaRouteView[data-route="team"] .history-hero {
+    grid-template-areas:
+      "kicker kicker"
+      "title title"
+      "content division" !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-hero-main > .history-kicker {
+    padding-top: 56px !important;
+  }
+}
+
+@media (max-width: 920px) {
+  #spaRouteView[data-route="team"] .history-team-identity {
+    width: 100%;
+    max-width: 220px;
+  }
+}
+
+/* ============================================================
+   V96 – lagprofil: lyft hela hero-området något på desktop
+   ============================================================ */
+@media (min-width: 921px) {
+  #spaRouteView[data-route="team"] .page-shell.history-page-shell {
+    padding-top: 18px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-hero-main > .history-kicker {
+    padding-top: 44px !important;
+  }
+}
+
+/* ============================================================
+   V97 – lagprofil: statistikband samma innehållsbredd som övriga block
+   ============================================================ */
+@media (min-width: 921px) {
+  #spaRouteView[data-route="team"] .history-metric-band {
+    margin-left: 22px !important;
+    margin-right: 22px !important;
+  }
+}
+
+
+/* ============================================================
+   V98 – lagprofil: mer luft före Lagets säsonger + kortare spelarrubrik
+   ============================================================ */
+#spaRouteView[data-route="team"] .history-honours + .history-section {
+  margin-top: 64px !important;
+}
+
+@media (max-width: 920px) {
+  #spaRouteView[data-route="team"] .history-honours + .history-section {
+    margin-top: 44px !important;
+  }
+}
+
+/* ============================================================
+   V99 – lagprofil: luftigare avstånd i sektionsrubriker
+   ============================================================ */
+#spaRouteView[data-route="team"] .history-section-heading .history-kicker {
+  margin-bottom: 24px !important;
+}
+
+#spaRouteView[data-route="team"] .history-section-heading p:not(.history-kicker) {
+  margin-top: 24px !important;
+}
+
+@media (max-width: 920px) {
+  #spaRouteView[data-route="team"] .history-section-heading .history-kicker {
+    margin-bottom: 20px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-section-heading p:not(.history-kicker) {
+    margin-top: 20px !important;
+  }
+}
+
+/* ============================================================
+   V100 – lagprofil: linjera divisionskolumnens vänsterkant med
+   statistikblockets högerspalt på desktop
+   ============================================================ */
+@media (min-width: 921px) {
+  #spaRouteView[data-route="team"] .history-hero {
+    grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.9fr) !important;
+  }
+}
+
+/* ============================================================
+   V101 – lagprofil: ta bort överhängande linjebitar vid statistikbandet
+   Linjen mellan hero och statistik följer exakt statistikbandets bredd.
+   ============================================================ */
+@media (min-width: 921px) {
+  #spaRouteView[data-route="team"] .history-hero {
+    border-bottom: 0 !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-metric-band {
+    border-top: 1px solid var(--seh-line) !important;
   }
 }
