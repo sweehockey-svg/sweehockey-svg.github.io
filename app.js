@@ -10533,6 +10533,34 @@ function SEH_initShop() {
     });
 
     renderNews();
+
+    // Direktlänk från externa delningssidor (t.ex. Discord-preview).
+    // Exempel: #/nyheter?article=ztarsailor-i-topp-sec-sommar-26
+    const hashQuery = String(location.hash || "").split("?")[1] || "";
+    const requestedArticle = new URLSearchParams(hashQuery).get("article");
+    if (requestedArticle) {
+      const article = articles.find((item) =>
+        String(item.url || "").replace(/^#/, "") === requestedArticle
+      );
+
+      if (article) {
+        const card = document.getElementById(articleId(article));
+        const full = document.getElementById(`${articleId(article)}-full`);
+        const button = card?.querySelector(`[data-news-toggle="${articleId(article)}-full"]`);
+
+        if (full) {
+          full.classList.add("is-open");
+          if (button) {
+            button.setAttribute("aria-expanded", "true");
+            button.innerHTML = `Stäng artikeln <span aria-hidden="true">↑</span>`;
+          }
+        }
+
+        window.setTimeout(() => {
+          card?.scrollIntoView({ behavior: "auto", block: "start" });
+        }, 0);
+      }
+    }
   }
 
   const seasons = {
