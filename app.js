@@ -10439,22 +10439,48 @@ function SEH_initShop() {
         ? `<div class="news-card__actions">${links.map((link) =>
             `<a href="${escapeHtml(link.url)}">${escapeHtml(link.label)}</a>`).join("")}</div>`
         : "";
+      const renderSection = (section) => {
+        const sectionText = Array.isArray(section.text) ? section.text : [section.text];
+        const sectionImage = String(section.image || "").trim();
+        const sectionImageMobile = String(section.imageMobile || "").trim();
+        const image = sectionImage
+          ? `<figure><picture>
+               ${sectionImageMobile ? `<source media="(max-width: 700px)" srcset="${escapeHtml(sectionImageMobile.replace(/^\//, ""))}">` : ""}
+               <img src="${escapeHtml(sectionImage.replace(/^\//, ""))}" alt="${escapeHtml(section.imageAlt || section.title)}" loading="lazy">
+             </picture></figure>`
+          : "";
+        const items = Array.isArray(section.items) && section.items.length
+          ? `<ol class="news-ranking">${section.items.map((item, index) => {
+              const rank = item.rank ?? index + 1;
+              const title = item.title || item.name || "";
+              const meta = item.meta ? `<span>${formatText(item.meta)}</span>` : "";
+              const value = item.value ? `<b class="news-ranking__value">${formatText(item.value)}</b>` : "";
+              return `<li class="news-ranking__item"><span class="news-ranking__pos">${escapeHtml(String(rank))}</span><div class="news-ranking__main"><strong>${formatText(title)}</strong>${meta}</div>${value}</li>`;
+            }).join("")}</ol>`
+          : "";
+        return `<section class="news-article-section">${image}<h3>${escapeHtml(section.title)}</h3>${items}${sectionText.filter(Boolean).map((text) => `<p>${formatText(text)}</p>`).join("")}</section>`;
+      };
+
+      const heroImage = String(article.heroImage || "").trim();
+      const heroImageMobile = String(article.heroImageMobile || "").trim();
+      const heroMarkup = heroImage
+        ? `<picture class="news-card__hero">
+             ${heroImageMobile ? `<source media="(max-width: 700px)" srcset="${escapeHtml(heroImageMobile.replace(/^\//, ""))}">` : ""}
+             <img src="${escapeHtml(heroImage.replace(/^\//, ""))}" alt="${escapeHtml(article.heroImageAlt || article.title)}" loading="${featured ? "eager" : "lazy"}">
+           </picture>`
+        : "";
+
       const fullArticle = sections.length
         ? `<button class="news-read-more" type="button" data-news-toggle="${escapeHtml(fullId)}" aria-expanded="false">Läs hela artikeln <span aria-hidden="true">↓</span></button>
            <div class="news-article-full" id="${escapeHtml(fullId)}">
-             ${sections.map((section) => {
-               const sectionText = Array.isArray(section.text) ? section.text : [section.text];
-               const image = section.image
-                 ? `<figure><img src="${escapeHtml(String(section.image).replace(/^\//, ""))}" alt="${escapeHtml(section.imageAlt || section.title)}" loading="lazy"></figure>`
-                 : "";
-               return `<section class="news-article-section">${image}<h3>${escapeHtml(section.title)}</h3>${sectionText.filter(Boolean).map((text) => `<p>${formatText(text)}</p>`).join("")}</section>`;
-             }).join("")}
+             ${sections.map(renderSection).join("")}
            </div>`
         : "";
 
       return `<article class="news-card${featured ? " news-card--featured" : ""}" id="${escapeHtml(articleId(article))}">
         <div class="news-card__meta"><span>${escapeHtml(article.tag || "Nyhet")}</span><time datetime="${escapeHtml(article.date)}">${escapeHtml(formatDate(article.date))}</time><b>${escapeHtml(article.author || "Svensk eHockey")}</b></div>
         <h2>${escapeHtml(article.title)}</h2>
+        ${heroMarkup}
         <div class="news-card__intro">${paragraphs.filter(Boolean).map((part) => `<p>${formatText(part)}</p>`).join("")}</div>
         ${fullArticle}${externalActions}
       </article>`;
