@@ -95,7 +95,7 @@ function SEH_renderAnalyticsConsent() {
   banner.innerHTML = `
     <div class="seh-consent__copy">
       <strong>Besöksstatistik</strong>
-      <p>Vi använder Google Analytics för anonym besöksstatistik. Du väljer själv om statistik får sparas.</p>
+      <p>Vi använder anonym besöksstatistik för att se vad som är mest populärt på Svensk eHockey. Vi följer inte vem du är eller exakt vad just du gör, utan använder statistiken för att få en helhetsbild och kunna lägga mer fokus på det innehåll som faktiskt används.</p>
     </div>
     <div class="seh-consent__actions">
       <button type="button" class="seh-consent__button seh-consent__button--secondary" data-seh-consent="denied">Endast nödvändiga</button>
