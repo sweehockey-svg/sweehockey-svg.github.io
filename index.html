@@ -23,9 +23,42 @@
   <meta name="twitter:image" content="https://www.svenskehockey.se/nyhetsbilder/svensk-ehockey-preview.png">
 
   <link rel="canonical" href="https://www.svenskehockey.se/">
+
+  <!-- Google Analytics 4 + Consent Mode -->
+  <script>
+    window.SEH_GA_ID = "G-QJ6VHZ2339";
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+
+    (function initSehConsentMode() {
+      let savedConsent = null;
+      try {
+        savedConsent = localStorage.getItem("seh_analytics_consent");
+      } catch (error) {
+        savedConsent = null;
+      }
+
+      const analyticsGranted = savedConsent === "granted";
+      window.SEH_ANALYTICS_ALLOWED = analyticsGranted;
+      window.SEH_ANALYTICS_CHOICE = savedConsent;
+
+      gtag("consent", "default", {
+        analytics_storage: analyticsGranted ? "granted" : "denied",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied"
+      });
+
+      gtag("js", new Date());
+      gtag("config", window.SEH_GA_ID, {
+        send_page_view: false
+      });
+    })();
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QJ6VHZ2339"></script>
   <title>Svensk eHockey – All svensk eHockey. En plats.</title>
   <link rel="icon" type="image/png" href="assets/SeHlogga.png">
-  <link rel="stylesheet" href="styles.css?v=20260816-v103-home-preview">
+  <link rel="stylesheet" href="styles.css?v=20260816-v104-ga4">
 <style>
     .portal-button--primary,
     .portal-button--primary:hover,
@@ -91,6 +124,6 @@
   <script src="config.js?v=20260812-filter-source-styles1"></script>
   <script src="teamlogos-manifest.js?v=20260812-v54"></script>
   <script src="news-articles.js?v=20260816-v5"></script>
-  <script src="app.js?v=20260816-v103-home-preview"></script>
+  <script src="app.js?v=20260816-v104-ga4"></script>
 </body>
 </html>

@@ -18,6 +18,100 @@
 "use strict";
 
 
+/* ============================================================
+   GOOGLE ANALYTICS 4 / CONSENT
+   Measurement ID: G-QJ6VHZ2339
+   ============================================================ */
+function SEH_getAnalyticsConsent() {
+  try {
+    return localStorage.getItem("seh_analytics_consent");
+  } catch (error) {
+    return null;
+  }
+}
+
+function SEH_setAnalyticsConsent(choice) {
+  const granted = choice === "granted";
+
+  try {
+    localStorage.setItem(
+      "seh_analytics_consent",
+      granted ? "granted" : "denied"
+    );
+  } catch (error) {
+    /* Sidan fungerar även om localStorage är avstängt. */
+  }
+
+  window.SEH_ANALYTICS_CHOICE = granted ? "granted" : "denied";
+  window.SEH_ANALYTICS_ALLOWED = granted;
+
+  if (typeof window.gtag === "function") {
+    window.gtag("consent", "update", {
+      analytics_storage: granted ? "granted" : "denied",
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied"
+    });
+  }
+
+  document.querySelector("#sehAnalyticsConsent")?.remove();
+
+  if (granted) {
+    SEH_trackPageView();
+  }
+}
+
+function SEH_trackPageView() {
+  if (
+    !window.SEH_ANALYTICS_ALLOWED ||
+    typeof window.gtag !== "function" ||
+    !window.SEH_GA_ID
+  ) {
+    return;
+  }
+
+  const pageLocation = `${location.origin}${location.pathname}${location.search}${location.hash || "#/"}`;
+
+  window.gtag("event", "page_view", {
+    page_title: document.title,
+    page_location: pageLocation,
+    page_path: `${location.pathname}${location.search}${location.hash || "#/"}`
+  });
+}
+
+function SEH_renderAnalyticsConsent() {
+  if (SEH_getAnalyticsConsent() !== null) {
+    return;
+  }
+
+  document.querySelector("#sehAnalyticsConsent")?.remove();
+
+  const banner = document.createElement("aside");
+  banner.id = "sehAnalyticsConsent";
+  banner.className = "seh-consent";
+  banner.setAttribute("role", "dialog");
+  banner.setAttribute("aria-label", "Val för besöksstatistik");
+  banner.innerHTML = `
+    <div class="seh-consent__copy">
+      <strong>Besöksstatistik</strong>
+      <p>Vi använder Google Analytics för att förstå hur Svensk eHockey används. Du kan tillåta anonymiserad besöksstatistik eller fortsätta utan statistikcookies.</p>
+    </div>
+    <div class="seh-consent__actions">
+      <button type="button" class="seh-consent__button seh-consent__button--secondary" data-seh-consent="denied">Endast nödvändiga</button>
+      <button type="button" class="seh-consent__button seh-consent__button--primary" data-seh-consent="granted">Tillåt statistik</button>
+    </div>
+  `;
+
+  banner.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-seh-consent]");
+    if (!button) return;
+    SEH_setAnalyticsConsent(button.dataset.sehConsent);
+  });
+
+  document.body.appendChild(banner);
+}
+
+
 
 /* ============================================================
    GLOBAL COUNTRY FLAGS
@@ -11945,6 +12039,9 @@ function SEH_initShop() {
         `
       );
     }
+
+    SEH_renderAnalyticsConsent();
+    SEH_trackPageView();
   }
 
 
