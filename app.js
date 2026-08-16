@@ -30,6 +30,8 @@ function SEH_getAnalyticsConsent() {
   }
 }
 
+let SEH_lastTrackedPageLocation = "";
+
 function SEH_setAnalyticsConsent(choice) {
   const granted = choice === "granted";
 
@@ -55,15 +57,10 @@ function SEH_setAnalyticsConsent(choice) {
   }
 
   document.querySelector("#sehAnalyticsConsent")?.remove();
-
-  if (granted) {
-    SEH_trackPageView();
-  }
 }
 
-function SEH_trackPageView() {
+function SEH_trackPageView(force = false) {
   if (
-    !window.SEH_ANALYTICS_ALLOWED ||
     typeof window.gtag !== "function" ||
     !window.SEH_GA_ID
   ) {
@@ -71,6 +68,10 @@ function SEH_trackPageView() {
   }
 
   const pageLocation = `${location.origin}${location.pathname}${location.search}${location.hash || "#/"}`;
+  if (!force && pageLocation === SEH_lastTrackedPageLocation) {
+    return;
+  }
+  SEH_lastTrackedPageLocation = pageLocation;
 
   window.gtag("event", "page_view", {
     page_title: document.title,
