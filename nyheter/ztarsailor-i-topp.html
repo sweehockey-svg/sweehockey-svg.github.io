@@ -28,16 +28,24 @@
   <meta name="twitter:image" content="https://www.svenskehockey.se/nyhetsbilder/secsommar20260816-header-desktop.png">
 
 
-  <!-- Google Analytics 4: respekterar samma samtycke som huvudsidan -->
+  <!-- Google Analytics 4: Advanced Consent Mode för delningssidan -->
   <script>
     (function() {
       var GA_ID = "G-QJ6VHZ2339";
       var consent = null;
       try { consent = localStorage.getItem("seh_analytics_consent"); } catch (e) {}
-      if (consent !== "granted") return;
 
+      var granted = consent === "granted";
       window.dataLayer = window.dataLayer || [];
       window.gtag = window.gtag || function(){ dataLayer.push(arguments); };
+
+      gtag("consent", "default", {
+        analytics_storage: granted ? "granted" : "denied",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied"
+      });
+
       gtag("js", new Date());
       gtag("config", GA_ID, {
         send_page_view: true,
