@@ -76,7 +76,8 @@ function SEH_trackPageView(force = false) {
   window.gtag("event", "page_view", {
     page_title: document.title,
     page_location: pageLocation,
-    page_path: `${location.pathname}${location.search}${location.hash || "#/"}`
+    page_path: `${location.pathname}${location.search}${location.hash || "#/"}`,
+    seh_route: location.hash || "#/"
   });
 }
 
