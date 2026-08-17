@@ -10490,10 +10490,16 @@ function SEH_initShop() {
 
     let submittedArticles = [];
     try {
-      const config = window.SEH_CONFIG || window.config || {};
-      if (config.supabaseUrl && config.supabasePublishableKey) {
-        const endpoint = `${String(config.supabaseUrl).replace(/\/+$/, "")}/rest/v1/seh_news_articles?status=eq.published&select=*&order=published_at.desc.nullslast,created_at.desc`;
-        const response = await fetch(endpoint, { headers: { apikey: config.supabasePublishableKey, Authorization: `Bearer ${config.supabasePublishableKey}` } });
+      const config = window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
+      const supabaseUrl = config.supabaseUrl || config.SUPABASE_URL || "";
+      const supabaseKey = config.supabasePublishableKey || config.supabaseAnonKey || config.SUPABASE_ANON_KEY || config.SUPABASE_PUBLISHABLE_KEY || "";
+      if (supabaseUrl && supabaseKey) {
+        const endpoint = `${String(supabaseUrl).replace(/\/+$/, "")}/rest/v1/seh_news_articles?status=eq.published&select=*&order=published_at.desc.nullslast,created_at.desc`;
+        const headers = { apikey: supabaseKey };
+        // Äldre anon-nycklar är JWT:er och kan användas som Bearer-token.
+        // Nya sb_publishable_-nycklar ska däremot bara skickas som apikey.
+        if (String(supabaseKey).startsWith("eyJ")) headers.Authorization = `Bearer ${supabaseKey}`;
+        const response = await fetch(endpoint, { headers });
         if (response.ok) {
           const rows = await response.json();
           submittedArticles = rows.map((row) => ({
@@ -10509,6 +10515,8 @@ function SEH_initShop() {
             body: Array.isArray(row.body) ? row.body : String(row.body || "").split(/\n\s*\n/).filter(Boolean),
             sections: Array.isArray(row.sections) ? row.sections : []
           }));
+        } else {
+          console.warn("Kunde inte hämta publicerade skribentnyheter", response.status, await response.text());
         }
       }
     } catch (error) {
