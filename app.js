@@ -10483,18 +10483,40 @@ function SEH_initShop() {
     shop: SEH_initShop
   };
 
-  function SEH_initNews() {
-    const articles = Array.isArray(window.SEH_NEWS_ARTICLES)
+  async function SEH_initNews() {
+    const staticArticles = Array.isArray(window.SEH_NEWS_ARTICLES)
       ? window.SEH_NEWS_ARTICLES
       : [];
-    const searchInput = document.querySelector("#newsSearch");
-    const tagFilters = document.querySelector("#newsTagFilters");
-    const featuredHost = document.querySelector("#featuredNews");
-    const gridHost = document.querySelector("#newsGrid");
-    const resultText = document.querySelector("#newsResultText");
-    if (!searchInput || !tagFilters || !featuredHost || !gridHost) return;
 
-    let activeTag = "Alla";
+    let submittedArticles = [];
+    try {
+      const config = window.SEH_CONFIG || window.config || {};
+      if (config.supabaseUrl && config.supabasePublishableKey) {
+        const endpoint = `${String(config.supabaseUrl).replace(/\/+$/, "")}/rest/v1/seh_news_articles?status=eq.published&select=*&order=published_at.desc.nullslast,created_at.desc`;
+        const response = await fetch(endpoint, { headers: { apikey: config.supabasePublishableKey, Authorization: `Bearer ${config.supabasePublishableKey}` } });
+        if (response.ok) {
+          const rows = await response.json();
+          submittedArticles = rows.map((row) => ({
+            url: row.slug,
+            title: row.title,
+            excerpt: row.excerpt,
+            tag: row.tag || "Nyhet",
+            author: row.author_name || "Svensk eHockey",
+            date: String(row.published_at || row.created_at || "").slice(0, 10),
+            heroImage: row.desktop_image_url || "",
+            heroImageMobile: row.mobile_image_url || "",
+            heroImageAlt: row.image_alt || row.title,
+            body: Array.isArray(row.body) ? row.body : String(row.body || "").split(/\n\s*\n/).filter(Boolean),
+            sections: Array.isArray(row.sections) ? row.sections : []
+          }));
+        }
+      }
+    } catch (error) {
+      console.warn("Kunde inte hämta publicerade skribentnyheter", error);
+    }
+
+    const articles = [...submittedArticles, ...staticArticles]
+      .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
 
     const formatDate = (value) => {
       const date = new Date(`${value}T12:00:00`);
@@ -10517,68 +10539,239 @@ function SEH_initShop() {
       return { label, url: legacyRoutes[url] || url || "#/nyheter" };
     };
 
-    const articleId = (article) => `news-${String(article.title || "artikel")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")}`;
+    const articleSlug = (article) => {
+      const explicit = String(article?.url || "").trim().replace(/^#\/?/, "");
+      if (explicit) return explicit.replace(/^nyheter\//, "");
+      return String(article?.title || "artikel")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    };
 
-    const articleMarkup = (article, featured = false) => {
-      const fullId = `${articleId(article)}-full`;
-      const paragraphs = Array.isArray(article.body) && article.body.length
+    const articleHref = (article) => `#/nyheter/${encodeURIComponent(articleSlug(article))}`;
+
+    const renderPicture = (src, mobile, alt, className = "") => {
+      const image = String(src || "").trim();
+      if (!image) return "";
+      const mobileImage = String(mobile || "").trim();
+      return `<picture${className ? ` class="${escapeHtml(className)}"` : ""}>
+        ${mobileImage ? `<source media="(max-width: 700px)" srcset="${escapeHtml(mobileImage.replace(/^\//, ""))}">` : ""}
+        <img src="${escapeHtml(image.replace(/^\//, ""))}" alt="${escapeHtml(alt || "")}" loading="lazy">
+      </picture>`;
+    };
+
+    const renderSection = (section) => {
+      const sectionText = Array.isArray(section.text) ? section.text : [section.text];
+      const image = renderPicture(
+        section.image,
+        section.imageMobile,
+        section.imageAlt || section.title,
+        "news-article-section__image"
+      );
+      const items = Array.isArray(section.items) && section.items.length
+        ? `<ol class="news-ranking">${section.items.map((item, index) => {
+            const rank = item.rank ?? index + 1;
+            const title = item.title || item.name || "";
+            const meta = item.meta ? `<span>${formatText(item.meta)}</span>` : "";
+            const value = item.value ? `<b class="news-ranking__value">${formatText(item.value)}</b>` : "";
+            return `<li class="news-ranking__item"><span class="news-ranking__pos">${escapeHtml(String(rank))}</span><div class="news-ranking__main"><strong>${formatText(title)}</strong>${meta}</div>${value}</li>`;
+          }).join("")}</ol>`
+        : "";
+      return `<section class="news-article-section">${image}<h2>${escapeHtml(section.title || "")}</h2>${items}${sectionText.filter(Boolean).map((text) => `<p>${formatText(text)}</p>`).join("")}</section>`;
+    };
+
+
+    const parseRichBlocks = (paragraphs) => {
+      const raw = Array.isArray(paragraphs) ? paragraphs.join('\n\n') : String(paragraphs || '');
+      const chunks = raw.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
+      const blocks = [];
+      chunks.forEach((chunk) => {
+        const lines = chunk.split(/\n/).map((line) => line.trim()).filter(Boolean);
+        if (!lines.length) return;
+        const first = lines[0];
+        if (lines.length === 1 && /^\[\[BILD([12])\]\]$/i.test(first)) {
+          blocks.push({ type: 'imageMarker', slot: Number(first.match(/^\[\[BILD([12])\]\]$/i)[1]) });
+          return;
+        }
+        if (/^###\s+/.test(first)) {
+          blocks.push({ type: 'heading3', text: first.replace(/^###\s+/, '') });
+          if (lines.length > 1) blocks.push({ type: 'paragraph', text: lines.slice(1).join(' ') });
+          return;
+        }
+        if (/^##\s+/.test(first)) {
+          blocks.push({ type: 'heading2', text: first.replace(/^##\s+/, '') });
+          if (lines.length > 1) blocks.push({ type: 'paragraph', text: lines.slice(1).join(' ') });
+          return;
+        }
+        if (lines.every((line) => /^[-*]\s+/.test(line))) {
+          blocks.push({ type: 'ul', items: lines.map((line) => line.replace(/^[-*]\s+/, '')) });
+          return;
+        }
+        if (lines.every((line) => /^\d+\.\s+/.test(line))) {
+          blocks.push({ type: 'ol', items: lines.map((line) => line.replace(/^\d+\.\s+/, '')) });
+          return;
+        }
+        blocks.push({ type: 'paragraph', text: lines.join(' ') });
+      });
+      return blocks;
+    };
+
+    const renderInlineFigure = (item) => {
+      const imageUrl = String(item?.image_url || item?.image || '').trim();
+      if (!imageUrl) return '';
+      const mobileImageUrl = String(item?.image_mobile_url || '').trim();
+      const alt = item?.image_alt || item?.alt || '';
+      const caption = String(item?.caption || '').trim();
+      return `<figure class="news-article-inline-image"><picture class="news-article-inline-image__picture">${mobileImageUrl ? `<source media="(max-width: 700px)" srcset="${escapeHtml(mobileImageUrl.replace(/^\//, ''))}">` : ''}<img src="${escapeHtml(imageUrl.replace(/^\//, ''))}" alt="${escapeHtml(alt)}" loading="lazy"></picture>${caption ? `<figcaption>${formatText(caption)}</figcaption>` : ''}</figure>`;
+    };
+
+    const renderBodyContent = (paragraphs, inlineImages = []) => {
+      const items = parseRichBlocks(paragraphs);
+      const images = Array.isArray(inlineImages) ? inlineImages : [];
+      const imageBySlot = new Map(images.map((item, index) => [Number(item?.slot || index + 1), item]));
+      const usedSlots = new Set();
+      const explicitSlots = new Set(items.filter((block) => block?.type === 'imageMarker').map((block) => Number(block.slot)).filter(Boolean));
+      const figuresByPos = new Map();
+
+      images.forEach((item, index) => {
+        const slot = Number(item?.slot || index + 1);
+        if (explicitSlots.has(slot)) return;
+        const pos = Number(item?.after_paragraph || (slot === 1 ? 4 : 10));
+        if (!figuresByPos.has(pos)) figuresByPos.set(pos, []);
+        figuresByPos.get(pos).push(item);
+      });
+
+      let html = '<div class="news-article-flow">';
+      let contentIndex = 0;
+      items.forEach((block) => {
+        if (block.type === 'imageMarker') {
+          const slot = Number(block.slot);
+          const image = imageBySlot.get(slot);
+          if (image) {
+            html += renderInlineFigure(image);
+            usedSlots.add(slot);
+          }
+          return;
+        }
+
+        contentIndex += 1;
+        if (block.type === 'heading2') {
+          html += `<h2 class="news-article-flow__h2">${formatText(block.text)}</h2>`;
+        } else if (block.type === 'heading3') {
+          html += `<h3 class="news-article-flow__h3">${formatText(block.text)}</h3>`;
+        } else if (block.type === 'ul' || block.type === 'ol') {
+          const tag = block.type;
+          html += `<${tag} class="news-article-flow__list">${(block.items || []).map((item) => `<li>${formatText(item)}</li>`).join('')}</${tag}>`;
+        } else {
+          html += `<p${contentIndex === 1 ? ' class="news-article-flow__lead"' : ''}>${formatText(block.text)}</p>`;
+        }
+
+        if (figuresByPos.has(contentIndex)) {
+          html += figuresByPos.get(contentIndex).map((item, index) => {
+            const slot = Number(item?.slot || index + 1);
+            if (usedSlots.has(slot)) return '';
+            usedSlots.add(slot);
+            return renderInlineFigure(item);
+          }).join('');
+        }
+      });
+
+      images.forEach((item, index) => {
+        const slot = Number(item?.slot || index + 1);
+        if (!usedSlots.has(slot)) {
+          html += renderInlineFigure(item);
+          usedSlots.add(slot);
+        }
+      });
+
+      if (!items.length) html += '<p class="news-article-flow__lead"></p>';
+      html += '</div>';
+      return html;
+    };
+
+    const routeSlug = String(window.SEH_ROUTE?.params?.newsSlug || "").trim();
+    if (routeSlug) {
+      const decodedSlug = decode(routeSlug);
+      const article = articles.find((item) => articleSlug(item) === decodedSlug);
+      const view = document.querySelector("#spaRouteView");
+      if (!view) return;
+
+      if (!article) {
+        view.innerHTML = `<main class="directory-shell news-article-page"><nav class="news-article-back"><a href="#/nyheter">← Till nyheter</a></nav><section class="news-article-not-found"><p class="directory-kicker">NYHETER</p><h1>Artikeln hittades inte</h1><p>Den här nyhetsartikeln finns inte eller har flyttats.</p><a href="#/nyheter">Visa alla nyheter</a></section></main>`;
+        return;
+      }
+
+      document.title = `${article.title} – Svensk eHockey`;
+      const body = Array.isArray(article.body) && article.body.length
         ? article.body
         : [article.excerpt];
       const sections = Array.isArray(article.sections) ? article.sections : [];
+      const inlineImages = Array.isArray(article.inlineImages) ? article.inlineImages : [];
       const links = Array.isArray(article.links) ? article.links.map(normalizedLink) : [];
+      const hero = renderPicture(
+        article.heroImage,
+        article.heroImageMobile,
+        article.heroImageAlt || article.title,
+        "news-article-hero__image"
+      );
+      const actions = links.length
+        ? `<div class="news-article-actions">${links.map((link) => `<a href="${escapeHtml(link.url)}">${escapeHtml(link.label)}</a>`).join("")}</div>`
+        : "";
+
+      view.innerHTML = `<main class="directory-shell news-article-page">
+        <nav class="news-article-back" aria-label="Tillbaka"><a href="#/nyheter">← Till nyheter</a></nav>
+        <article class="news-article-view">
+          <header class="news-article-header">
+            <div class="news-card__meta"><span>${escapeHtml(article.tag || "Nyhet")}</span><time datetime="${escapeHtml(article.date)}">${escapeHtml(formatDate(article.date))}</time><b>${escapeHtml(article.author || "Svensk eHockey")}</b></div>
+            <h1>${escapeHtml(article.title)}</h1>
+          </header>
+          ${hero}
+          <div class="news-article-body">
+            ${renderBodyContent(body, inlineImages)}
+            ${sections.map(renderSection).join("")}
+            ${actions}
+          </div>
+        </article>
+      </main>
+      <footer class="directory-footer"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>`;
+      return;
+    }
+
+    const searchInput = document.querySelector("#newsSearch");
+    const tagFilters = document.querySelector("#newsTagFilters");
+    const featuredHost = document.querySelector("#featuredNews");
+    const gridHost = document.querySelector("#newsGrid");
+    const resultText = document.querySelector("#newsResultText");
+    if (!searchInput || !tagFilters || !featuredHost || !gridHost) return;
+
+    let activeTag = "Alla";
+
+    const articleMarkup = (article, featured = false) => {
+      const links = Array.isArray(article.links) ? article.links.map(normalizedLink) : [];
+      const href = articleHref(article);
       const externalActions = links.length
-        ? `<div class="news-card__actions">${links.map((link) =>
+        ? `<div class="news-card__actions news-card__actions--secondary">${links.map((link) =>
             `<a href="${escapeHtml(link.url)}">${escapeHtml(link.label)}</a>`).join("")}</div>`
         : "";
-      const renderSection = (section) => {
-        const sectionText = Array.isArray(section.text) ? section.text : [section.text];
-        const sectionImage = String(section.image || "").trim();
-        const sectionImageMobile = String(section.imageMobile || "").trim();
-        const image = sectionImage
-          ? `<figure><picture>
-               ${sectionImageMobile ? `<source media="(max-width: 700px)" srcset="${escapeHtml(sectionImageMobile.replace(/^\//, ""))}">` : ""}
-               <img src="${escapeHtml(sectionImage.replace(/^\//, ""))}" alt="${escapeHtml(section.imageAlt || section.title)}" loading="lazy">
-             </picture></figure>`
-          : "";
-        const items = Array.isArray(section.items) && section.items.length
-          ? `<ol class="news-ranking">${section.items.map((item, index) => {
-              const rank = item.rank ?? index + 1;
-              const title = item.title || item.name || "";
-              const meta = item.meta ? `<span>${formatText(item.meta)}</span>` : "";
-              const value = item.value ? `<b class="news-ranking__value">${formatText(item.value)}</b>` : "";
-              return `<li class="news-ranking__item"><span class="news-ranking__pos">${escapeHtml(String(rank))}</span><div class="news-ranking__main"><strong>${formatText(title)}</strong>${meta}</div>${value}</li>`;
-            }).join("")}</ol>`
-          : "";
-        return `<section class="news-article-section">${image}<h3>${escapeHtml(section.title)}</h3>${items}${sectionText.filter(Boolean).map((text) => `<p>${formatText(text)}</p>`).join("")}</section>`;
-      };
-
       const heroImage = String(article.heroImage || "").trim();
       const heroImageMobile = String(article.heroImageMobile || "").trim();
       const heroMarkup = heroImage
-        ? `<picture class="news-card__hero">
-             ${heroImageMobile ? `<source media="(max-width: 700px)" srcset="${escapeHtml(heroImageMobile.replace(/^\//, ""))}">` : ""}
-             <img src="${escapeHtml(heroImage.replace(/^\//, ""))}" alt="${escapeHtml(article.heroImageAlt || article.title)}" loading="${featured ? "eager" : "lazy"}">
-           </picture>`
+        ? `<a class="news-card__hero-link" href="${escapeHtml(href)}" aria-label="Läs ${escapeHtml(article.title)}">
+            <picture class="news-card__hero">
+              ${heroImageMobile ? `<source media="(max-width: 700px)" srcset="${escapeHtml(heroImageMobile.replace(/^\//, ""))}">` : ""}
+              <img src="${escapeHtml(heroImage.replace(/^\//, ""))}" alt="${escapeHtml(article.heroImageAlt || article.title)}" loading="${featured ? "eager" : "lazy"}">
+            </picture>
+          </a>`
         : "";
 
-      const fullArticle = sections.length
-        ? `<button class="news-read-more" type="button" data-news-toggle="${escapeHtml(fullId)}" aria-expanded="false">Läs hela artikeln <span aria-hidden="true">↓</span></button>
-           <div class="news-article-full" id="${escapeHtml(fullId)}">
-             ${sections.map(renderSection).join("")}
-           </div>`
-        : "";
-
-      return `<article class="news-card${featured ? " news-card--featured" : ""}" id="${escapeHtml(articleId(article))}">
+      return `<article class="news-card${featured ? " news-card--featured" : ""}">
         <div class="news-card__meta"><span>${escapeHtml(article.tag || "Nyhet")}</span><time datetime="${escapeHtml(article.date)}">${escapeHtml(formatDate(article.date))}</time><b>${escapeHtml(article.author || "Svensk eHockey")}</b></div>
-        <h2>${escapeHtml(article.title)}</h2>
+        <h2><a href="${escapeHtml(href)}">${escapeHtml(article.title)}</a></h2>
         ${heroMarkup}
-        <div class="news-card__intro">${paragraphs.filter(Boolean).map((part) => `<p>${formatText(part)}</p>`).join("")}</div>
-        ${fullArticle}${externalActions}
+        <div class="news-card__intro"><p>${formatText(article.excerpt || (article.body || [""])[0] || "")}</p></div>
+        <div class="news-card__footer"><a class="news-read-more" href="${escapeHtml(href)}">Läs artikeln <span aria-hidden="true">→</span></a>${externalActions}</div>
       </article>`;
     };
 
@@ -10616,47 +10809,8 @@ function SEH_initShop() {
       activeTag = button.dataset.newsTag;
       renderNews();
     });
-    document.querySelector("#spaRouteView")?.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-news-toggle]");
-      if (!button) return;
-      const target = document.getElementById(button.dataset.newsToggle);
-      if (!target) return;
-      const open = target.classList.toggle("is-open");
-      button.setAttribute("aria-expanded", String(open));
-      button.innerHTML = open
-        ? `Stäng artikeln <span aria-hidden="true">↑</span>`
-        : `Läs hela artikeln <span aria-hidden="true">↓</span>`;
-    });
 
     renderNews();
-
-    // Direktlänk från externa delningssidor (t.ex. Discord-preview).
-    // Exempel: #/nyheter?article=ztarsailor-i-topp-sec-sommar-26
-    const hashQuery = String(location.hash || "").split("?")[1] || "";
-    const requestedArticle = new URLSearchParams(hashQuery).get("article");
-    if (requestedArticle) {
-      const article = articles.find((item) =>
-        String(item.url || "").replace(/^#/, "") === requestedArticle
-      );
-
-      if (article) {
-        const card = document.getElementById(articleId(article));
-        const full = document.getElementById(`${articleId(article)}-full`);
-        const button = card?.querySelector(`[data-news-toggle="${articleId(article)}-full"]`);
-
-        if (full) {
-          full.classList.add("is-open");
-          if (button) {
-            button.setAttribute("aria-expanded", "true");
-            button.innerHTML = `Stäng artikeln <span aria-hidden="true">↑</span>`;
-          }
-        }
-
-        window.setTimeout(() => {
-          card?.scrollIntoView({ behavior: "auto", block: "start" });
-        }, 0);
-      }
-    }
   }
 
   const seasons = {
@@ -10752,11 +10906,25 @@ function SEH_initShop() {
     }
 
     if (parts[0] === "nyheter" && parts.length === 1) {
+      const legacyArticle = query.get("article");
       return {
         ...route,
         key: "news",
         label: "Nyheter",
-        active: "news"
+        active: "news",
+        params: legacyArticle ? { newsSlug: legacyArticle } : {}
+      };
+    }
+
+    if (parts[0] === "nyheter" && parts[1]) {
+      return {
+        ...route,
+        key: "news",
+        label: "Nyheter",
+        active: "news",
+        params: {
+          newsSlug: parts.slice(1).join("/")
+        }
       };
     }
 
