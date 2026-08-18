@@ -65,7 +65,127 @@
     #seh-pull-indicator{position:fixed;z-index:2147483100;top:66px;left:50%;transform:translate(-50%,-70px);opacity:0;background:#101520;border:1px solid #ffffff16;border-radius:999px;padding:9px 13px;color:#d8dbe0;font-size:11px;font-weight:800;transition:.12s;pointer-events:none}#seh-pull-indicator.show{opacity:1}
     #seh-offline-banner{position:fixed;z-index:2147483200;left:12px;right:12px;top:70px;background:#33240d;color:#f6d78a;border:1px solid #f4b74055;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:800;text-align:center;display:none}#seh-offline-banner.show{display:block}
     .seh-empty{text-align:center;color:#8f949a;padding:34px 16px;border:1px dashed #ffffff1a;border-radius:16px}
-    @media(max-width:390px){#seh-native-bottom button,#seh-native-bottom a{font-size:9px}.seh-card-grid{gap:9px}.seh-card{padding:14px;min-height:125px}.seh-app-page{padding-left:14px;padding-right:14px}#seh-native-top .logo img{width:58px}}
+    /* V4.3 APP CONTENT MODE - påverkar bara WebView i Android-appen */
+    body.seh-content-mode main,
+    body.seh-content-mode #app,
+    body.seh-content-mode .app,
+    body.seh-content-mode .page,
+    body.seh-content-mode .page-content{max-width:100%!important}
+
+    body.seh-content-mode h1{
+      font-size:clamp(34px,10vw,54px)!important;
+      line-height:.98!important;
+      letter-spacing:-.035em!important;
+      margin-bottom:18px!important;
+    }
+    body.seh-content-mode h2{
+      line-height:1.06!important;
+      letter-spacing:-.02em!important;
+    }
+    body.seh-content-mode p{
+      line-height:1.48!important;
+    }
+
+    /* Top-level appvyer ska börja snabbare och inte kännas som långa webblandningssidor */
+    body.seh-top-level main,
+    body.seh-top-level .page,
+    body.seh-top-level .page-content{
+      padding-top:14px!important;
+    }
+    body.seh-top-level .hero,
+    body.seh-top-level [class*="hero"]{
+      min-height:0!important;
+      padding-top:24px!important;
+      padding-bottom:24px!important;
+    }
+    body.seh-top-level .hero p,
+    body.seh-top-level [class*="hero"] p{
+      max-width:680px!important;
+      font-size:15px!important;
+      line-height:1.45!important;
+    }
+
+    /* Nyheter: kompaktare feed och rubriker */
+    body.seh-route-news article,
+    body.seh-route-news [class*="news-card"],
+    body.seh-route-news [class*="article-card"]{
+      border-radius:16px!important;
+      overflow:hidden!important;
+    }
+    body.seh-route-news article h2,
+    body.seh-route-news [class*="news-card"] h2,
+    body.seh-route-news [class*="article-card"] h2{
+      font-size:clamp(22px,6vw,32px)!important;
+      line-height:1.02!important;
+    }
+    body.seh-route-news input,
+    body.seh-route-news select,
+    body.seh-route-players input,
+    body.seh-route-players select,
+    body.seh-route-teams input,
+    body.seh-route-teams select{
+      border-radius:14px!important;
+      min-height:52px!important;
+    }
+
+    /* Spelare/Lag: mindre webhero, direkt fokus på data + sök */
+    body.seh-route-players h1,
+    body.seh-route-teams h1{
+      font-size:clamp(38px,11vw,58px)!important;
+    }
+    body.seh-route-players [class*="stats"],
+    body.seh-route-teams [class*="stats"],
+    body.seh-route-players [class*="summary"],
+    body.seh-route-teams [class*="summary"]{
+      border-radius:16px!important;
+    }
+
+    /* Shop: mer produktfokus */
+    body.seh-route-shop h1{
+      font-size:clamp(44px,14vw,70px)!important;
+      margin-bottom:12px!important;
+    }
+    body.seh-route-shop .hero,
+    body.seh-route-shop [class*="hero"]{
+      padding-top:20px!important;
+      padding-bottom:18px!important;
+      min-height:0!important;
+    }
+    body.seh-route-shop iframe{
+      border-radius:16px!important;
+      overflow:hidden!important;
+    }
+
+    /* SEC: kompakt appöversikt */
+    body.seh-route-sec h1{
+      font-size:clamp(34px,9vw,50px)!important;
+      line-height:1!important;
+    }
+    body.seh-route-sec [class*="card"],
+    body.seh-route-sec article{
+      border-radius:18px!important;
+    }
+
+    /* Undersidor: mer appkänsla, men behåll innehållet */
+    body.seh-detail-page h1{
+      font-size:clamp(34px,9vw,52px)!important;
+    }
+    body.seh-detail-page img{
+      max-width:100%!important;
+    }
+
+    /* Enkel "app-chip" för sticky filter/search om sajten redan har sticky-element */
+    body.seh-content-mode [class*="sticky"]{
+      border-radius:14px!important;
+    }
+
+    @media(max-width:390px){
+      #seh-native-bottom button,#seh-native-bottom a{font-size:9px}
+      .seh-card-grid{gap:9px}
+      .seh-card{padding:14px;min-height:125px}
+      .seh-app-page{padding-left:14px;padding-right:14px}
+      #seh-native-top .logo img{width:58px}
+    }
   `;
 
   function htmlEscape(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
@@ -134,8 +254,39 @@
   function openDirectory(){ensureDirectory();document.getElementById('seh-app-directory')?.classList.remove('show');document.getElementById('seh-app-more')?.classList.remove('show');document.getElementById('seh-app-favorites')?.classList.remove('show');document.getElementById('seh-app-directory').classList.add('show');refreshTop();refreshBottom();}
   function ensureMore(){
     let more=document.getElementById('seh-app-more');if(more)return;
-    more=document.createElement('section');more.id='seh-app-more';more.innerHTML=`<div class="seh-app-page"><div class="seh-kicker">APP</div><h1>Mer</h1><p class="lead">Fler delar av Svensk eHockey och dina appinställningar.</p><div class="seh-list"><a class="seh-list-item" href="${ROOT}#/" data-load><span class="bullet">${icons.home}</span><span><strong>Hem</strong><span>Appens startsida och snabbvägar.</span></span></a><a class="seh-list-item" href="${ROOT}#/laghistoria" data-load><span class="bullet">${icons.teams}</span><span><strong>Svenska lag</strong><span>Laghistoria och klubbprofiler.</span></span></a><a class="seh-list-item" href="${ROOT}SEC/" data-load><span class="bullet">${icons.sec}</span><span><strong>SEC</strong><span>Svenska eHockey Cupen.</span></span></a><button class="seh-list-item" id="seh-more-favs"><span class="bullet">${icons.heart}</span><span><strong>Favoriter</strong><span>Visa dina sparade profiler, lag och artiklar.</span></span></button><div class="seh-list-item" style="opacity:.65"><span class="bullet">${icons.ecl}</span><span><strong>ECL-statistik · snart</strong><span>Kopplas på när den gömda funktionen är klar.</span></span></div></div><div class="seh-section-title"><h2>Inställningar</h2></div><div class="seh-toggle-row"><div><strong style="font-size:14px">Pushnotiser</strong><div class="seh-note">Förberett för nyheter och SEC. Själva pushleveransen kräver Firebase innan den kan aktiveras.</div></div><button class="seh-switch" id="seh-notify-toggle" aria-label="Pushnotiser"></button></div><p class="seh-note">Favoriter sparas lokalt på den här mobilen. Ingen inloggning krävs.</p></div>`;
-    document.body.appendChild(more);more.querySelectorAll('[data-load]').forEach(a=>a.onclick=()=>{closeOverlays();showLoading();});more.querySelector('#seh-more-favs').onclick=openFavorites;more.querySelector('#seh-notify-toggle').onclick=()=>{const on=localStorage.getItem(NOTIFY_KEY)==='1';localStorage.setItem(NOTIFY_KEY,on?'0':'1');renderNotifyToggle();};
+    more=document.createElement('section');more.id='seh-app-more';
+    more.innerHTML=`<div class="seh-app-page">
+      <div class="seh-kicker">APP</div>
+      <h1>Mer</h1>
+      <p class="lead">Alla delar av Svensk eHockey på ett ställe.</p>
+
+      <div class="seh-section-title"><h2>Utforska</h2></div>
+      <div class="seh-list">
+        <a class="seh-list-item" href="${ROOT}#/" data-load><span class="bullet">${icons.home}</span><span><strong>Hem</strong><span>Appens startsida och snabbvägar.</span></span></a>
+        <a class="seh-list-item" href="${ROOT}#/nyheter" data-load><span class="bullet">${icons.news}</span><span><strong>Nyheter</strong><span>Artiklar och uppdateringar.</span></span></a>
+        <a class="seh-list-item" href="${ROOT}#/spelare" data-load><span class="bullet">${icons.players}</span><span><strong>Spelare</strong><span>Profiler, historik och statistik.</span></span></a>
+        <a class="seh-list-item" href="${ROOT}#/laghistoria" data-load><span class="bullet">${icons.teams}</span><span><strong>Lag</strong><span>Svenska lag, klubbprofiler och historik.</span></span></a>
+        <a class="seh-list-item" href="${ROOT}#/shop" data-load><span class="bullet">${icons.shop}</span><span><strong>Shop</strong><span>Svensk eHockey-merch och lagprodukter.</span></span></a>
+        <a class="seh-list-item" href="${ROOT}SEC/" data-load><span class="bullet">${icons.sec}</span><span><strong>SEC</strong><span>Svenska eHockey Cupen.</span></span></a>
+        <button class="seh-list-item" id="seh-more-favs"><span class="bullet">${icons.heart}</span><span><strong>Favoriter</strong><span>Dina sparade spelare, lag och artiklar.</span></span></button>
+        <div class="seh-list-item" style="opacity:.65"><span class="bullet">${icons.ecl}</span><span><strong>ECL-statistik · snart</strong><span>Kopplas på när den gömda funktionen är klar.</span></span></div>
+      </div>
+
+      <div class="seh-section-title"><h2>App</h2></div>
+      <div class="seh-toggle-row">
+        <div><strong style="font-size:14px">Pushnotiser</strong><div class="seh-note">Förberett för nyheter och SEC. Själva pushleveransen aktiveras när Firebase är kopplat.</div></div>
+        <button class="seh-switch" id="seh-notify-toggle" aria-label="Pushnotiser"></button>
+      </div>
+
+      <div class="seh-list" style="margin-top:10px">
+        <div class="seh-list-item"><span class="bullet">i</span><span><strong>Om Svensk eHockey</strong><span>Statistik och information om svenska spelare, lag och eHockey.</span></span></div>
+      </div>
+      <p class="seh-note">Favoriter sparas lokalt på den här mobilen. Ingen inloggning krävs.</p>
+    </div>`;
+    document.body.appendChild(more);
+    more.querySelectorAll('[data-load]').forEach(a=>a.onclick=()=>{closeOverlays();showLoading();});
+    more.querySelector('#seh-more-favs').onclick=openFavorites;
+    more.querySelector('#seh-notify-toggle').onclick=()=>{const on=localStorage.getItem(NOTIFY_KEY)==='1';localStorage.setItem(NOTIFY_KEY,on?'0':'1');renderNotifyToggle();};
   }
   function ensureFavorites(){let f=document.getElementById('seh-app-favorites');if(f)return;f=document.createElement('section');f.id='seh-app-favorites';f.innerHTML=`<div class="seh-app-page"><div class="seh-kicker">DIN APP</div><h1>Favoriter</h1><p class="lead">Sparade spelare, lag och artiklar på den här mobilen.</p><div id="seh-favorites-list"></div></div>`;document.body.appendChild(f);}
   function ensureLoader(){if(document.getElementById('seh-native-loader'))return;const x=document.createElement('div');x.id='seh-native-loader';x.innerHTML='<div class="sk short"></div><div class="sk hero"></div><div class="sk row"></div><div class="sk row"></div><div class="sk row short"></div>';document.body.appendChild(x);}
@@ -153,9 +304,26 @@
   }
   function updateFavCount(){const c=getFavs().length;const e=document.getElementById('seh-fav-count');if(e)e.textContent=c?`${c} sparade`:'';}
   function renderNotifyToggle(){const b=document.getElementById('seh-notify-toggle');if(b)b.classList.toggle('on',localStorage.getItem(NOTIFY_KEY)==='1');}
+  function isTopLevelRoute(){
+    const r=route();
+    return ['home','news','players','teams','shop','sec'].includes(r.kind);
+  }
+
+  function setContentModeClasses(){
+    if(!document.body)return;
+    const r=route();
+    const known=['home','news','players','teams','shop','sec','article','player','team'];
+    document.body.classList.add('seh-content-mode');
+    known.forEach(k=>document.body.classList.remove('seh-route-'+k));
+    document.body.classList.remove('seh-top-level','seh-detail-page');
+    document.body.classList.add('seh-route-'+r.kind);
+    document.body.classList.toggle('seh-top-level',isTopLevelRoute());
+    document.body.classList.toggle('seh-detail-page',['article','player','team'].includes(r.kind));
+  }
+
   function refreshTop(){
     const r=route();const title=document.getElementById('seh-native-title');if(title)title.textContent=document.getElementById('seh-app-directory')?.classList.contains('show')?'Spelare & Lag':document.getElementById('seh-app-more')?.classList.contains('show')?'Mer':document.getElementById('seh-app-favorites')?.classList.contains('show')?'Favoriter':r.title;
-    const back=document.getElementById('seh-back');if(back)back.style.visibility=(r.kind==='home'&&!document.getElementById('seh-app-directory')?.classList.contains('show')&&!document.getElementById('seh-app-more')?.classList.contains('show')&&!document.getElementById('seh-app-favorites')?.classList.contains('show'))?'hidden':'visible';
+    const back=document.getElementById('seh-back');if(back){const overlayOpen=document.getElementById('seh-app-directory')?.classList.contains('show')||document.getElementById('seh-app-more')?.classList.contains('show')||document.getElementById('seh-app-favorites')?.classList.contains('show');back.style.visibility=(!overlayOpen&&isTopLevelRoute())?'hidden':'visible';}
     const fav=document.getElementById('seh-fav'),share=document.getElementById('seh-share');if(fav){fav.style.display=eligibleFavorite()?'grid':'none';fav.classList.toggle('is-on',isFav());}if(share)share.style.display=eligibleFavorite()?'grid':'none';
   }
   function refreshBottom(){
@@ -187,7 +355,7 @@
     if(window.__SEH_LINK_INTERCEPT__)return;window.__SEH_LINK_INTERCEPT__=true;document.addEventListener('click',e=>{const a=e.target.closest('a[href]');if(!a)return;let u;try{u=new URL(a.href,location.href);}catch(_){return;}if(u.protocol!=='http:'&&u.protocol!=='https:')return;const internal=u.hostname==='www.svenskehockey.se'||u.hostname==='svenskehockey.se';if(!internal){e.preventDefault();openExternal(u.href);return;}if(a.dataset.load!==undefined||u.hash||u.pathname==='/SEC/'||u.pathname.startsWith('/SEC/'))showLoading();},true);
   }
   function ensureAll(){unlockScrolling();ensureStyle();ensureTop();ensureBottom();ensureHome();ensureDirectory();ensureMore();ensureFavorites();ensureLoader();ensurePull();ensureOffline();installPullToRefresh();interceptLinks();}
-  function refresh(){if(!document.body)return;ensureAll();closeOverlaysIfRouteChanged();refreshTop();refreshBottom();refreshHome();handleConsent();updateOnline();setTimeout(()=>document.body.classList.remove('seh-loading'),500);}
+  function refresh(){if(!document.body)return;ensureAll();setContentModeClasses();closeOverlaysIfRouteChanged();refreshTop();refreshBottom();refreshHome();handleConsent();updateOnline();setTimeout(()=>document.body.classList.remove('seh-loading'),500);}
   let lastRoute='';function closeOverlaysIfRouteChanged(){const now=location.pathname+location.hash;if(lastRoute&&lastRoute!==now){document.getElementById('seh-app-directory')?.classList.remove('show');document.getElementById('seh-app-more')?.classList.remove('show');document.getElementById('seh-app-favorites')?.classList.remove('show');}lastRoute=now;}
 
   if(!window.__SEH_NATIVE_APP_SHELL__){

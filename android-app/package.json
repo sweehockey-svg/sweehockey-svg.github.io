@@ -1,6 +1,6 @@
 {
   "name": "svensk-ehockey-android",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "description": "Android testapp för Svensk eHockey",
   "scripts": {
