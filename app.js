@@ -10513,6 +10513,7 @@ function SEH_initShop() {
             heroImageMobile: row.mobile_image_url || "",
             heroImageAlt: row.image_alt || row.title,
             body: Array.isArray(row.body) ? row.body : String(row.body || "").split(/\n\s*\n/).filter(Boolean),
+            inlineImages: Array.isArray(row.inline_images) ? row.inline_images : [],
             sections: Array.isArray(row.sections) ? row.sections : []
           }));
         } else {
