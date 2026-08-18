@@ -56,12 +56,12 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Rename APK
-        run: cp android-app/android/app/build/outputs/apk/debug/app-debug.apk Svensk-eHockey-v4.1-nav.apk
+        run: cp android-app/android/app/build/outputs/apk/debug/app-debug.apk Svensk-eHockey-v4.2-nav.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Svensk-eHockey-Android-v4.1-nav
-          path: Svensk-eHockey-v4.1-nav.apk
+          name: Svensk-eHockey-Android-v4.2-nav
+          path: Svensk-eHockey-v4.2-nav.apk
           if-no-files-found: error
           retention-days: 14
