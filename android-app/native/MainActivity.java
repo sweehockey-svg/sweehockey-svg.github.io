@@ -18,13 +18,15 @@ import java.io.InputStreamReader;
 
 public class MainActivity extends BridgeActivity {
     private String appShellScript = "";
-    private final Handler appShellHandler = new Handler(Looper.getMainLooper());
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private boolean reloadAttempted = false;
+    private boolean fallbackShown = false;
 
-    private final Runnable appShellInjector = new Runnable() {
+    private final Runnable shellInjector = new Runnable() {
         @Override
         public void run() {
-            injectAppShell();
-            appShellHandler.postDelayed(this, 1000);
+            injectShellWhenReady();
+            handler.postDelayed(this, 1800);
         }
     };
 
@@ -38,7 +40,6 @@ public class MainActivity extends BridgeActivity {
 
         WindowInsetsControllerCompat insets =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-
         insets.setAppearanceLightStatusBars(false);
         insets.setAppearanceLightNavigationBars(false);
 
@@ -48,14 +49,17 @@ public class MainActivity extends BridgeActivity {
             webView.setOverScrollMode(android.view.View.OVER_SCROLL_NEVER);
         }
 
-        appShellHandler.postDelayed(appShellInjector, 500);
+        // Vänta tills fjärrsidan faktiskt är laddad innan appskalet läggs in.
+        handler.postDelayed(shellInjector, 1800);
+
+        // Watchdog: svart/tom WebView ska inte kunna bli permanent.
+        handler.postDelayed(() -> checkPageHealth(false), 7000);
+        handler.postDelayed(() -> checkPageHealth(true), 14000);
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (bridge != null
-                        && bridge.getWebView() != null
-                        && bridge.getWebView().canGoBack()) {
+                if (bridge != null && bridge.getWebView() != null && bridge.getWebView().canGoBack()) {
                     bridge.getWebView().goBack();
                 } else {
                     setEnabled(false);
@@ -68,62 +72,76 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
-        appShellHandler.removeCallbacks(appShellInjector);
-        appShellHandler.postDelayed(appShellInjector, 250);
+        handler.removeCallbacks(shellInjector);
+        handler.postDelayed(shellInjector, 900);
     }
 
     @Override
     public void onPause() {
-        appShellHandler.removeCallbacks(appShellInjector);
+        handler.removeCallbacks(shellInjector);
         super.onPause();
     }
 
     @Override
     public void onDestroy() {
-        appShellHandler.removeCallbacks(appShellInjector);
+        handler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
 
-    private void injectAppShell() {
-        if (bridge == null || bridge.getWebView() == null) {
-            return;
-        }
+    private boolean isSehUrl(String url) {
+        return url != null && (url.startsWith("https://www.svenskehockey.se/") ||
+                url.startsWith("https://svenskehockey.se/"));
+    }
+
+    private void injectShellWhenReady() {
+        if (bridge == null || bridge.getWebView() == null || fallbackShown) return;
 
         WebView view = bridge.getWebView();
-        String url = view.getUrl();
+        if (!isSehUrl(view.getUrl())) return;
 
-        if (url == null
-                || (!url.startsWith("https://www.svenskehockey.se/")
-                && !url.startsWith("https://svenskehockey.se/"))) {
-            return;
-        }
+        if (appShellScript.isEmpty()) appShellScript = readAsset("app-shell.js");
+        if (appShellScript.isEmpty()) return;
 
-        if (appShellScript.isEmpty()) {
-            appShellScript = readAsset("app-shell.js");
-        }
+        String guarded = "(function(){" +
+                "if(document.readyState!=='complete'||!document.body||document.body.children.length===0)return;" +
+                appShellScript +
+                "})();";
+        view.evaluateJavascript(guarded, null);
+    }
 
-        if (appShellScript.isEmpty()) {
-            return;
-        }
+    private void checkPageHealth(boolean finalCheck) {
+        if (bridge == null || bridge.getWebView() == null || fallbackShown) return;
 
-        view.evaluateJavascript(appShellScript, null);
+        WebView view = bridge.getWebView();
+        String js = "(function(){try{return !!document.body && (document.body.innerText||'').trim().length>40;}catch(e){return false;}})();";
+        view.evaluateJavascript(js, result -> {
+            boolean healthy = "true".equalsIgnoreCase(result);
+            if (healthy) return;
+
+            if (!reloadAttempted && !finalCheck) {
+                reloadAttempted = true;
+                view.loadUrl("https://www.svenskehockey.se/#/");
+                return;
+            }
+
+            if (finalCheck) showFallback();
+        });
+    }
+
+    private void showFallback() {
+        if (bridge == null || bridge.getWebView() == null || fallbackShown) return;
+        fallbackShown = true;
+        handler.removeCallbacks(shellInjector);
+        bridge.getWebView().loadUrl("file:///android_asset/public/index.html");
     }
 
     private String readAsset(String name) {
         StringBuilder sb = new StringBuilder();
-
         try (InputStream input = getAssets().open(name);
              BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
-
             String line;
-
-            while ((line = reader.readLine()) != null) {
-                sb.append(line).append('\n');
-            }
-
-        } catch (Exception ignored) {
-        }
-
+            while ((line = reader.readLine()) != null) sb.append(line).append('\n');
+        } catch (Exception ignored) {}
         return sb.toString();
     }
 }
