@@ -1,0 +1,14 @@
+{
+  "appId": "se.svenskehockey.app",
+  "appName": "Svensk eHockey",
+  "webDir": "www",
+  "server": {
+    "url": "https://www.svenskehockey.se/",
+    "cleartext": false
+  },
+  "android": {
+    "backgroundColor": "#02030a",
+    "allowMixedContent": false,
+    "captureInput": true
+  }
+}
