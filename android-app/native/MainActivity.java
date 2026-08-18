@@ -1,9 +1,12 @@
 package se.svenskehockey.app;
 
+import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 
 import androidx.activity.OnBackPressedCallback;
@@ -25,8 +28,8 @@ public class MainActivity extends BridgeActivity {
     private final Runnable shellInjector = new Runnable() {
         @Override
         public void run() {
-            injectShellWhenReady();
-            handler.postDelayed(this, 1800);
+            injectAppShell();
+            handler.postDelayed(this, 1200);
         }
     };
 
@@ -47,14 +50,15 @@ public class MainActivity extends BridgeActivity {
             WebView webView = bridge.getWebView();
             webView.setBackgroundColor(appBlack);
             webView.setOverScrollMode(android.view.View.OVER_SCROLL_NEVER);
+            webView.addJavascriptInterface(new SehNativeBridge(), "SehNative");
         }
 
-        // Vänta tills fjärrsidan faktiskt är laddad innan appskalet läggs in.
-        handler.postDelayed(shellInjector, 1800);
+        // Re-inject after SPA route changes or full navigation to /SEC/.
+        handler.postDelayed(shellInjector, 1100);
 
-        // Watchdog: svart/tom WebView ska inte kunna bli permanent.
-        handler.postDelayed(() -> checkPageHealth(false), 7000);
-        handler.postDelayed(() -> checkPageHealth(true), 14000);
+        // Avoid a permanent black screen if the remote page fails.
+        handler.postDelayed(() -> checkPageHealth(false), 7500);
+        handler.postDelayed(() -> checkPageHealth(true), 15000);
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -73,7 +77,7 @@ public class MainActivity extends BridgeActivity {
     public void onResume() {
         super.onResume();
         handler.removeCallbacks(shellInjector);
-        handler.postDelayed(shellInjector, 900);
+        handler.postDelayed(shellInjector, 500);
     }
 
     @Override
@@ -89,13 +93,14 @@ public class MainActivity extends BridgeActivity {
     }
 
     private boolean isSehUrl(String url) {
-        return url != null && (url.startsWith("https://www.svenskehockey.se/") ||
-                url.startsWith("https://svenskehockey.se/"));
+        return url != null && (
+                url.startsWith("https://www.svenskehockey.se/") ||
+                url.startsWith("https://svenskehockey.se/")
+        );
     }
 
-    private void injectShellWhenReady() {
+    private void injectAppShell() {
         if (bridge == null || bridge.getWebView() == null || fallbackShown) return;
-
         WebView view = bridge.getWebView();
         if (!isSehUrl(view.getUrl())) return;
 
@@ -103,7 +108,7 @@ public class MainActivity extends BridgeActivity {
         if (appShellScript.isEmpty()) return;
 
         String guarded = "(function(){" +
-                "if(document.readyState!=='complete'||!document.body||document.body.children.length===0)return;" +
+                "if(!document.body||document.readyState==='loading')return;" +
                 appShellScript +
                 "})();";
         view.evaluateJavascript(guarded, null);
@@ -111,28 +116,19 @@ public class MainActivity extends BridgeActivity {
 
     private void checkPageHealth(boolean finalCheck) {
         if (bridge == null || bridge.getWebView() == null || fallbackShown) return;
-
         WebView view = bridge.getWebView();
         String js = "(function(){try{return !!document.body && (document.body.innerText||'').trim().length>40;}catch(e){return false;}})();";
         view.evaluateJavascript(js, result -> {
-            boolean healthy = "true".equalsIgnoreCase(result);
-            if (healthy) return;
-
+            if ("true".equalsIgnoreCase(result)) return;
             if (!reloadAttempted && !finalCheck) {
                 reloadAttempted = true;
                 view.loadUrl("https://www.svenskehockey.se/#/");
-                return;
+            } else if (finalCheck) {
+                fallbackShown = true;
+                handler.removeCallbacks(shellInjector);
+                view.loadUrl("file:///android_asset/public/index.html");
             }
-
-            if (finalCheck) showFallback();
         });
-    }
-
-    private void showFallback() {
-        if (bridge == null || bridge.getWebView() == null || fallbackShown) return;
-        fallbackShown = true;
-        handler.removeCallbacks(shellInjector);
-        bridge.getWebView().loadUrl("file:///android_asset/public/index.html");
     }
 
     private String readAsset(String name) {
@@ -143,5 +139,31 @@ public class MainActivity extends BridgeActivity {
             while ((line = reader.readLine()) != null) sb.append(line).append('\n');
         } catch (Exception ignored) {}
         return sb.toString();
+    }
+
+    public class SehNativeBridge {
+        @JavascriptInterface
+        public void openExternal(String url) {
+            if (url == null || url.trim().isEmpty()) return;
+            runOnUiThread(() -> {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(intent);
+                } catch (Exception ignored) {}
+            });
+        }
+
+        @JavascriptInterface
+        public void share(String title, String url) {
+            runOnUiThread(() -> {
+                try {
+                    Intent sendIntent = new Intent(Intent.ACTION_SEND);
+                    sendIntent.setType("text/plain");
+                    String text = ((title == null || title.isEmpty()) ? "Svensk eHockey" : title) + "\n" + url;
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, text);
+                    startActivity(Intent.createChooser(sendIntent, "Dela via"));
+                } catch (Exception ignored) {}
+            });
+        }
     }
 }
