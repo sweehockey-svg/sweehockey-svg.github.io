@@ -38,6 +38,7 @@ public class MainActivity extends BridgeActivity {
 
         WindowInsetsControllerCompat insets =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+
         insets.setAppearanceLightStatusBars(false);
         insets.setAppearanceLightNavigationBars(false);
 
@@ -52,7 +53,9 @@ public class MainActivity extends BridgeActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (bridge != null && bridge.getWebView() != null && bridge.getWebView().canGoBack()) {
+                if (bridge != null
+                        && bridge.getWebView() != null
+                        && bridge.getWebView().canGoBack()) {
                     bridge.getWebView().goBack();
                 } else {
                     setEnabled(false);
@@ -63,33 +66,35 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         appShellHandler.removeCallbacks(appShellInjector);
         appShellHandler.postDelayed(appShellInjector, 250);
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         appShellHandler.removeCallbacks(appShellInjector);
         super.onPause();
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         appShellHandler.removeCallbacks(appShellInjector);
         super.onDestroy();
     }
 
     private void injectAppShell() {
-        if (bridge == null || bridge.getWebView() == null) return;
+        if (bridge == null || bridge.getWebView() == null) {
+            return;
+        }
 
         WebView view = bridge.getWebView();
         String url = view.getUrl();
 
-        if (url == null ||
-                (!url.startsWith("https://www.svenskehockey.se/") &&
-                 !url.startsWith("https://svenskehockey.se/"))) {
+        if (url == null
+                || (!url.startsWith("https://www.svenskehockey.se/")
+                && !url.startsWith("https://svenskehockey.se/"))) {
             return;
         }
 
@@ -97,7 +102,9 @@ public class MainActivity extends BridgeActivity {
             appShellScript = readAsset("app-shell.js");
         }
 
-        if (appShellScript.isEmpty()) return;
+        if (appShellScript.isEmpty()) {
+            return;
+        }
 
         view.evaluateJavascript(appShellScript, null);
     }
@@ -107,11 +114,15 @@ public class MainActivity extends BridgeActivity {
 
         try (InputStream input = getAssets().open(name);
              BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
+
             String line;
+
             while ((line = reader.readLine()) != null) {
                 sb.append(line).append('\n');
             }
-        } catch (Exception ignored) {}
+
+        } catch (Exception ignored) {
+        }
 
         return sb.toString();
     }
