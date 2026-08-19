@@ -2019,7 +2019,7 @@ function SEH_initPlayer() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-14-v87-no-ovrigt-profile-summary";
+    const APP_BUILD = "2026-08-19-v88-player-merits-cache";
     const config = window.EHOCKEY_CONFIG || {};
     const elements = {
       backLink: document.querySelector("#backLink"),
@@ -3440,10 +3440,10 @@ function SEH_initPlayer() {
         }
 
         meritsPromise = fetchAllJson(
-          "v_ehockey_player_merits_v5",
+          "ehockey_player_merits_cache_v1",
           meritParams
         ).catch((error) => {
-          console.warn(`${APP_BUILD}: kunde inte läsa färdiga spelarmeriter från V4.`, error);
+          console.warn(`${APP_BUILD}: kunde inte läsa färdiga spelarmeriter från Supabase-cache.`, error);
           return [];
         });
       }
