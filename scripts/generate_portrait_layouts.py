@@ -135,3 +135,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Metadata is regenerated automatically when this script or a player PNG changes.
