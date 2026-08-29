@@ -22,7 +22,7 @@ jobs:
               -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/151 Safari/537.36' \
               "$url" -o "teamlogos/$out"
             test -s "teamlogos/$out"
-            file "teamlogos/$out"
+            file "teamlogos/$out" | grep -q 'PNG image data'
           }
 
           fetch 'https://sportsgamer.gg/storage/team-logos/441/5883/IMG_2137_20250111-131202_20250111-200053.png' 'Oljefondet.png'
@@ -47,15 +47,6 @@ jobs:
           fetch 'https://fhr.fra1.cdn.digitaloceanspaces.com/SportsGamer/tournaments/SG_World_Cup/2025/flags/dk.png' 'SG Denmark.png'
           fetch 'https://sportsgamer.gg/storage/team-logos/461/336/ChatGPT%20Image%20May%206%2C%202025%2C%2002_20_45%20PM_20250506-112122.png' 'Last Dance.png'
 
-          python3 - <<'PY'
-          from PIL import Image
-          from pathlib import Path
-          for p in sorted(Path('teamlogos').glob('*.png')):
-              with Image.open(p) as im:
-                  im.verify()
-              print('OK', p.name)
-          PY
-
       - name: Upload logos artifact
         uses: actions/upload-artifact@v4
         with:
@@ -64,4 +55,4 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-# trigger after workflow exists on default branch
+# final trigger
