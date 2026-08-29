@@ -1,0 +1,23 @@
+name: Probe old Team ICappeI logo
+on:
+  push:
+    paths:
+      - '.github/workflows/probe-icappei-temp.yml'
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe page
+        shell: bash
+        run: |
+          set -e
+          for u in \
+            'https://sportsgamer.gg/leagues/31/teams/349' \
+            'https://sportsgamer.gg/index.php/leagues/31/teams/349' \
+            'https://nhlgamer.com/leagues/31/teams/349' \
+            'https://nhlgamer.com/index.php/leagues/31/teams/349'; do
+            echo "=== $u ==="
+            curl -L -A 'Mozilla/5.0' -sS "$u" -o page.html || true
+            grep -Eoi 'https?[^"'"'"' <>]+\.(png|jpg|jpeg)' page.html | head -30 || true
+            grep -Eoi '[^"'"'"' <>]*(team-logos|logos|logo)[^"'"'"' <>]*\.(png|jpg|jpeg)' page.html | head -30 || true
+          done
