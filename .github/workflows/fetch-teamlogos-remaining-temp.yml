@@ -31,13 +31,14 @@ jobs:
           fetch 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/images/sc_logos/50_shades_of_blades.jpg' 'NG 50 Shades of Blades.jpg'
           fetch 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/Summer_Cup/8balls.jpg' 'Mighty 8 Balls.jpg'
           fetch 'https://fhr.fra1.cdn.digitaloceanspaces.com/SportsGamer/tournaments/SG_World_Cup/2025/flags/se.png' 'eHockey Sweden.png'
+          fetch 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/ECL6/Logos/All-Star/team-ICappeI.png' 'Team ICappeI.png'
 
       - name: Upload logos artifact
         uses: actions/upload-artifact@v4
         with:
-          name: teamlogos-remaining
+          name: teamlogos-remaining-with-icappei
           path: teamlogos/
           if-no-files-found: error
           retention-days: 1
 
-# trigger
+# trigger 2
