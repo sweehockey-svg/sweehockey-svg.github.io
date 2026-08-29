@@ -39,3 +39,5 @@ jobs:
           path: teamlogos/
           if-no-files-found: error
           retention-days: 1
+
+# trigger
