@@ -1,0 +1,41 @@
+name: Temporary Remaining Team Logo Fetch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fetch-teamlogos-remaining-temp.yml'
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download remaining team logos
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p teamlogos
+          fetch() {
+            local url="$1"
+            local out="$2"
+            echo "Fetching $out"
+            curl --fail --location --retry 3 --retry-delay 2 \
+              -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/151 Safari/537.36' \
+              "$url" -o "teamlogos/$out"
+            test -s "teamlogos/$out"
+            file "teamlogos/$out"
+          }
+
+          fetch 'https://sportsgamer.gg/storage/team-logos/481/6808/Bad%20Habits%20copy_20251107-160007.png' 'Bad Habits.png'
+          fetch 'https://sportsgamer.gg/storage/team-logos/230/2146/Setelit_On_Ice_logo_20220908-103823.png' 'Setelit On Ice.png'
+          fetch 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/SC4/logos/HOOPEEKOO.png' 'NG HooPeeKoo.png'
+          fetch 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/images/sc_logos/50_shades_of_blades.jpg' 'NG 50 Shades of Blades.jpg'
+          fetch 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/Summer_Cup/8balls.jpg' 'Mighty 8 Balls.jpg'
+          fetch 'https://fhr.fra1.cdn.digitaloceanspaces.com/SportsGamer/tournaments/SG_World_Cup/2025/flags/se.png' 'eHockey Sweden.png'
+
+      - name: Upload logos artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: teamlogos-remaining
+          path: teamlogos/
+          if-no-files-found: error
+          retention-days: 1
