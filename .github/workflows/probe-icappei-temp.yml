@@ -21,3 +21,4 @@ jobs:
             grep -Eoi 'https?[^"'"'"' <>]+\.(png|jpg|jpeg)' page.html | head -30 || true
             grep -Eoi '[^"'"'"' <>]*(team-logos|logos|logo)[^"'"'"' <>]*\.(png|jpg|jpeg)' page.html | head -30 || true
           done
+# trigger
