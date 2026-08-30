@@ -1,0 +1,25 @@
+name: Temporary Fetch FILADELPHIA Logo
+on:
+  push:
+    paths:
+      - '.github/workflows/fetch-filadelphia-logo-temp.yml'
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch latest FILADELPHIA logo
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/teamlogos
+          curl --fail --location --retry 3 \
+            -A 'Mozilla/5.0' \
+            'https://sportsgamer.gg/storage/team-logos/230/3130/fila_20220804-112545.png' \
+            -o 'out/teamlogos/FILADELPHIA.png'
+          file 'out/teamlogos/FILADELPHIA.png' | grep -q 'PNG image data'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: filadelphia-logo
+          path: out/
+          if-no-files-found: error
+          retention-days: 1
