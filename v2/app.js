@@ -2273,7 +2273,7 @@ function SEH_initPlayer() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-30-v1256-historical-team-identities";
+    const APP_BUILD = "2026-08-30-v1257-canonical-club-aliases";
     const config = window.EHOCKEY_CONFIG || {};
     const elements = {
       backLink: document.querySelector("#backLink"),
@@ -4776,27 +4776,51 @@ function SEH_initPlayer() {
       const metadataById = new Map(
         teamRows.map((row) => [Number(row.team_id), row])
       );
+      const canonicalByName = buildLocalTeamNameIndex(teamRows);
       const grouped = new Map();
 
       for (const row of profileRows) {
-        const displayName = playerTeamDisplayName(row, metadataById);
-        const normalizedName = normalizedPlayerTeamName(displayName);
+        const historicalDisplayName = playerTeamDisplayName(row, metadataById);
+        const normalizedHistoricalName = normalizedPlayerTeamName(historicalDisplayName);
 
-        if (!normalizedName) continue;
+        if (!normalizedHistoricalName) continue;
 
-        const key = `name:${normalizedName}`;
+        /*
+         * Lag-fliken visar KLUBBAR, inte varje historisk stavning/namnvariant.
+         *
+         * En sammanslagning får endast göras när v_local_team_list uttryckligen
+         * känner namnet som current_name, historical_names eller
+         * names_used_in_leagues för samma lokala klubb. Vi använder alltså
+         * ALDRIG SportsGamer team_external_id som klubbidentitet här.
+         *
+         * Exempel:
+         *   IFK Norrland + IF Norrland + Norrland -> IF Norrland
+         * medan Frölunda HC / FILADELPHIA / Last Dance hålls separata även om
+         * SportsGamer historiskt har återanvänt samma externa team-id.
+         */
+        const canonicalMeta = canonicalByName.get(normalizedHistoricalName) || null;
+        const canonicalTeamId = Number(canonicalMeta?.team_id) || null;
+        const canonicalName = String(
+          canonicalMeta?.current_name || historicalDisplayName || "Okänt lag"
+        ).trim();
+        const canonicalNameKey = normalizedPlayerTeamName(canonicalName);
+
+        const key = canonicalTeamId
+          ? `club:${canonicalTeamId}`
+          : `name:${canonicalNameKey || normalizedHistoricalName}`;
         const sortValue = tournamentChronologyValue(row);
         const rowTeamId = historyRowSafeTeamId(row);
 
         if (!grouped.has(key)) {
           grouped.set(key, {
-            teamId: null,
+            teamId: canonicalTeamId || null,
             teamIds: new Set(),
-            teamName: displayName || "Okänt lag",
+            teamName: canonicalName || "Okänt lag",
             tournaments: new Set(),
             competitions: new Set(),
             latestSort: sortValue,
-            latestTeamId: rowTeamId
+            latestTeamId: rowTeamId,
+            canonicalMeta
           });
         }
 
@@ -4804,11 +4828,6 @@ function SEH_initPlayer() {
 
         if (rowTeamId) {
           team.teamIds.add(rowTeamId);
-
-          if (metadataById.has(rowTeamId) && !team.teamId) {
-            // Prefer a real local Svensk eHockey team id for the card link.
-            team.teamId = rowTeamId;
-          }
         }
 
         team.tournaments.add(
@@ -4827,24 +4846,39 @@ function SEH_initPlayer() {
         if (sortValue > team.latestSort) {
           team.latestSort = sortValue;
           team.latestTeamId = rowTeamId;
-          team.teamName = displayName || team.teamName;
+          // Kanoniska klubbar behåller current_name. Omatchade historiska lag
+          // fortsätter däremot visa namnet från den senaste turneringen.
+          if (!team.canonicalMeta) {
+            team.teamName = historicalDisplayName || team.teamName;
+          }
         }
       }
 
       return [...grouped.values()]
         .map((team) => {
-          // If no ID was confirmed through v_local_team_list, use the
-          // newest historical ID as fallback so the card remains clickable.
+          if (team.canonicalMeta) {
+            return {
+              ...team,
+              teamId: Number(team.canonicalMeta.team_id) || null,
+              teamName: String(team.canonicalMeta.current_name || team.teamName).trim(),
+              logoUrl:
+                team.canonicalMeta.logo_url ||
+                team.canonicalMeta.logo_path ||
+                "",
+              tournamentCount: team.tournaments.size,
+              competitionList: [...team.competitions]
+            };
+          }
+
+          // Omatchade historiska lag får aldrig slås ihop bara för att de råkar
+          // dela ett gammalt SportsGamer-id med en senare klubbidentitet.
           const linkTeamId =
-            team.teamId ||
             team.latestTeamId ||
             [...team.teamIds][0] ||
             null;
-
           const metadata = linkTeamId
             ? metadataById.get(Number(linkTeamId))
             : null;
-
           const metadataName = String(metadata?.current_name || "").trim();
           const metadataMatchesHistorical = Boolean(
             metadata &&
@@ -4854,10 +4888,7 @@ function SEH_initPlayer() {
 
           return {
             ...team,
-            // Behåll bara en lokal klubb-länk när ID:ts nuvarande namn verkligen
-            // motsvarar det historiska turneringsnamnet.
-            teamId: metadata && !metadataMatchesHistorical ? null : linkTeamId,
-            teamName: team.teamName,
+            teamId: metadataMatchesHistorical ? linkTeamId : null,
             logoUrl: metadataMatchesHistorical
               ? (metadata?.logo_url || metadata?.logo_path || "")
               : "",
@@ -5040,24 +5071,17 @@ function SEH_initPlayer() {
     }
 
     async function enrichPlayerTeams(profileRows) {
-      const teamIds = [...new Set(
-        profileRows
-          .map((row) => historyRowSafeTeamId(row))
-          .filter((id) => Number.isInteger(id) && id > 0)
-      )];
-
       renderPlayerTeams(profileRows);
 
       /*
-       * Historikraderna har redan försökt teamlogos/<lagnamn>.
-       * Om inga team_id finns behöver vi inte Supabase-metadata,
-       * men lokala loggor ska alltså ändå ha renderats.
+       * Lag-fliken behöver hela den lokala aliasbilden, inte bara team-id:n som
+       * råkar vara säkra på en enskild historikrad. Annars blir exempelvis
+       * IFK Norrland / IF Norrland / Norrland tre kort trots att lagsidan redan
+       * känner dem som samma klubb.
        */
-      if (!teamIds.length) return;
-
       const params = new URLSearchParams({
-        select: "team_id,current_name,logo_path,logo_url",
-        team_id: `in.(${teamIds.join(",")})`
+        select: "team_id,current_name,historical_names,names_used_in_leagues,logo_path,logo_url",
+        limit: "5000"
       });
 
       try {
