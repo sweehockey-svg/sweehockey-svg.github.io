@@ -38,3 +38,5 @@ jobs:
           path: teamlogo-recovery-v3/
           if-no-files-found: error
           retention-days: 1
+
+# trigger
