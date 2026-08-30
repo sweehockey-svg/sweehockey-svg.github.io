@@ -1,0 +1,20 @@
+name: Temporary Export Current App
+
+on:
+  push:
+    paths:
+      - '.github/workflows/export-current-app-temp.yml'
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: current-seh-source
+          path: |
+            app.js
+            index.html
+            config.js
+          retention-days: 1
