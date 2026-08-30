@@ -2273,7 +2273,7 @@ function SEH_initPlayer() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-30-v1257-canonical-club-aliases";
+    const APP_BUILD = "2026-08-30-v1258-canonical-club-aliases-fix";
     const config = window.EHOCKEY_CONFIG || {};
     const elements = {
       backLink: document.querySelector("#backLink"),
@@ -4648,12 +4648,52 @@ function SEH_initPlayer() {
     function buildLocalTeamNameIndex(teamRows = []) {
       const index = new Map();
 
-      // På spelarhistoriken får ett historiskt alias aldrig ärva dagens
+      // HISTORIKTABELLEN: ett historiskt alias får aldrig ärva dagens
       // klubbidentitet. Matcha därför endast mot lagets faktiska current_name.
       for (const teamRow of teamRows) {
         const key = normalizedPlayerTeamName(teamRow.current_name);
         if (!key || index.has(key)) continue;
         index.set(key, teamRow);
+      }
+
+      return index;
+    }
+
+    function buildLocalClubAliasIndex(teamRows = []) {
+      const index = new Map();
+
+      const add = (name, teamRow) => {
+        const key = normalizedPlayerTeamName(name);
+        if (!key) return;
+
+        /*
+         * LAG-FLIKEN: alias används bara när v_local_team_list uttryckligen
+         * säger att namnet tillhör klubben. Om samma alias mot förmodan ligger
+         * på flera klubbar markerar vi det som tvetydigt och slår inte ihop.
+         */
+        if (!index.has(key)) {
+          index.set(key, teamRow);
+          return;
+        }
+
+        const existing = index.get(key);
+        if (Number(existing?.team_id) !== Number(teamRow?.team_id)) {
+          index.set(key, null);
+        }
+      };
+
+      for (const teamRow of teamRows) {
+        add(teamRow.current_name, teamRow);
+
+        const historicalNames = Array.isArray(teamRow.historical_names)
+          ? teamRow.historical_names
+          : [];
+        const leagueNames = Array.isArray(teamRow.names_used_in_leagues)
+          ? teamRow.names_used_in_leagues
+          : [];
+
+        historicalNames.forEach((name) => add(name, teamRow));
+        leagueNames.forEach((name) => add(name, teamRow));
       }
 
       return index;
@@ -4776,7 +4816,7 @@ function SEH_initPlayer() {
       const metadataById = new Map(
         teamRows.map((row) => [Number(row.team_id), row])
       );
-      const canonicalByName = buildLocalTeamNameIndex(teamRows);
+      const canonicalByName = buildLocalClubAliasIndex(teamRows);
       const grouped = new Map();
 
       for (const row of profileRows) {
@@ -11379,6 +11419,22 @@ const SEH_TEAM_LOGO_FILES = (
 const SEH_HAS_TEAM_LOGO_MANIFEST =
   Object.keys(SEH_TEAM_LOGO_FILES).length > 0;
 
+// Historical SportsGamer team logos that are no longer represented by the
+// club's current team name/logo in our local logo archive. These are used as
+// verified fallbacks before initials are shown.
+const SEH_TEAM_LOGO_REMOTE_OVERRIDES = Object.freeze({
+  "nemesis": "https://sportsgamer.gg/storage/team-logos/171/147/IMG-20220314-WA0000_20220314-142104.png",
+  "hc bisons": "https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2019_10/CE821323-0CCE-4C8A-A28D-A39247FDFE0E.thumb.jpeg.af47fb2589046feb52a0a61ec56a3d37.jpeg"
+});
+
+function SEH_normalizeTeamLogoLookupName(value) {
+  return String(value || "")
+    .normalize("NFC")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("sv-SE");
+}
+
 function SEH_resolveLocalTeamLogo(value) {
   const url = String(value || "").trim();
   if (!url) return "";
@@ -11437,6 +11493,10 @@ function SEH_teamLogoCandidates(primaryUrls, teamName) {
   };
 
   (Array.isArray(primaryUrls) ? primaryUrls : [primaryUrls]).forEach(add);
+
+  const remoteOverride =
+    SEH_TEAM_LOGO_REMOTE_OVERRIDES[SEH_normalizeTeamLogoLookupName(teamName)];
+  if (remoteOverride) add(remoteOverride);
 
   for (const name of SEH_teamLogoNameVariants(teamName)) {
     add(`teamlogos/${encodeURIComponent(name)}.png`);
