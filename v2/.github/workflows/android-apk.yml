@@ -1,0 +1,67 @@
+name: Build Svensk eHockey Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "android-app/**"
+      - ".github/workflows/android-apk.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install dependencies
+        working-directory: android-app
+        run: npm install
+
+      - name: Create Android project
+        working-directory: android-app
+        run: npx cap add android
+
+      - name: Generate SeH icons and splash
+        working-directory: android-app
+        run: npx @capacitor/assets generate --android --iconBackgroundColor '#02030a' --iconBackgroundColorDark '#02030a' --splashBackgroundColor '#02030a' --splashBackgroundColorDark '#02030a'
+
+      - name: Sync Capacitor
+        working-directory: android-app
+        run: npx cap sync android
+
+      - name: Apply native full-app shell
+        run: |
+          cp android-app/native/MainActivity.java android-app/android/app/src/main/java/se/svenskehockey/app/MainActivity.java
+          cp android-app/native/app-shell.js android-app/android/app/src/main/assets/app-shell.js
+
+      - name: Build debug APK
+        working-directory: android-app/android
+        run: ./gradlew assembleDebug
+
+      - name: Rename APK
+        run: cp android-app/android/app/build/outputs/apk/debug/app-debug.apk Svensk-eHockey-v4.3-app-content.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Svensk-eHockey-Android-v4.3-app-content
+          path: Svensk-eHockey-v4.3-app-content.apk
+          if-no-files-found: error
+          retention-days: 14

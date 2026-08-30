@@ -1,0 +1,35 @@
+{
+  "appId": "se.svenskehockey.app",
+  "appName": "Svensk eHockey",
+  "webDir": "www",
+  "server": {
+    "url": "https://www.svenskehockey.se/",
+    "cleartext": false,
+    "allowNavigation": [
+      "www.svenskehockey.se",
+      "svenskehockey.se"
+    ]
+  },
+  "android": {
+    "backgroundColor": "#02030a",
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 900,
+      "launchAutoHide": true,
+      "backgroundColor": "#02030aff",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_INSIDE",
+      "splashFullScreen": true,
+      "splashImmersive": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#02030a",
+      "overlaysWebView": false
+    }
+  }
+}

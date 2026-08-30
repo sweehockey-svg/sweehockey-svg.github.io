@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Svensk eHockey samlar statistik, information och historia om svenska spelare och lag inom eHockey. Följ ECL, SEC, lag, spelare, matcher och historik – samlat på ett ställe.">
+
+  <!-- Förhandsvisning för Discord, sociala medier och meddelandeappar -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Svensk eHockey">
+  <meta property="og:locale" content="sv_SE">
+  <meta property="og:title" content="All svensk eHockey. En plats.">
+  <meta property="og:description" content="Svensk eHockey samlar statistik, information och historia om svenska spelare och lag inom eHockey.">
+  <meta property="og:url" content="https://www.svenskehockey.se/">
+  <meta property="og:image" content="https://www.svenskehockey.se/nyhetsbilder/svensk-ehockey-preview.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:alt" content="All svensk eHockey. En plats. – Svensk eHockey">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="All svensk eHockey. En plats.">
+  <meta name="twitter:description" content="Svensk eHockey samlar statistik, information och historia om svenska spelare och lag inom eHockey.">
+  <meta name="twitter:image" content="https://www.svenskehockey.se/nyhetsbilder/svensk-ehockey-preview.png">
+
+  <link rel="canonical" href="https://www.svenskehockey.se/">
+
+  <!-- Google Analytics 4 + Advanced Consent Mode -->
+  <script>
+    window.SEH_GA_ID = "G-QJ6VHZ2339";
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+
+    (function initSehConsentMode() {
+      let savedConsent = null;
+      try {
+        savedConsent = localStorage.getItem("seh_analytics_consent");
+      } catch (error) {
+        savedConsent = null;
+      }
+
+      const analyticsGranted = savedConsent === "granted";
+      window.SEH_ANALYTICS_ALLOWED = analyticsGranted;
+      window.SEH_ANALYTICS_CHOICE = savedConsent;
+
+      gtag("consent", "default", {
+        analytics_storage: analyticsGranted ? "granted" : "denied",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied"
+      });
+
+      gtag("js", new Date());
+      gtag("config", window.SEH_GA_ID, {
+        send_page_view: false
+      });
+    })();
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QJ6VHZ2339"></script>
+  <title>Svensk eHockey – All svensk eHockey. En plats.</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/seh-icon-192.png?v=20260817-pwa1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/seh-apple-touch-icon.png?v=20260817-pwa1">
+  <link rel="manifest" href="/manifest.webmanifest?v=20260817-pwa1">
+  <meta name="theme-color" content="#02030a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Svensk eHockey">
+  <link rel="stylesheet" href="styles.css?v=20260824-v121-home-visible-gap">
+<style>
+    .portal-button--primary,
+    .portal-button--primary:hover,
+    .portal-button--primary:focus-visible {
+      color: #050505 !important;
+    }
+
+    /* Gör vattenloggan större och renare */
+    .portal-mark {
+      flex: 0 0 min(48vw, 680px);
+      width: min(48vw, 680px);
+      max-width: 100%;
+      position: relative;
+    }
+
+    .portal-mark img {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      opacity: 0.95;
+    }
+
+    /* Ta bort texten över/vid loggan */
+    .portal-mark span {
+      display: none !important;
+    }
+
+    /* Ta bort cirkeln/dekor runt loggan */
+    .portal-mark::before,
+    .portal-mark::after {
+      display: none !important;
+      content: none !important;
+    }
+
+    @media (max-width: 1100px) {
+      .portal-mark {
+        flex-basis: min(50vw, 560px);
+        width: min(50vw, 560px);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .portal-mark {
+        flex-basis: min(72vw, 480px);
+        width: min(72vw, 480px);
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body class="directory-page portal-page">
+  <noscript>
+    <main class="directory-shell">
+      <section class="notice notice-warning">
+        <h1>JavaScript krävs</h1>
+        <p>Svensk eHockey behöver JavaScript för att visa datavyerna.</p>
+      </section>
+    </main>
+  </noscript>
+
+  <!-- Behåll din befintliga config.js. Den innehåller Supabase URL + publishable key. -->
+  <script src="config.js?v=20260812-filter-source-styles1"></script>
+  <script src="teamlogos-manifest.js?v=20260830-v57"></script>
+  <script src="news-articles.js?v=20260816-v5"></script>
+  <script src="app.js?v=20260830-v1256-historical-teams"></script>
+
+  <script>
+    // Rensa den tidigare PWA-service workern/cache om den hann installeras.
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", async function () {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+
+          await Promise.all(registrations.map(function (registration) {
+            try {
+              const scope = new URL(registration.scope);
+              if (scope.origin === window.location.origin && scope.pathname === "/") {
+                return registration.unregister();
+              }
+            } catch (_) {}
+
+            return Promise.resolve(false);
+          }));
+
+          if ("caches" in window) {
+            const keys = await caches.keys();
+            await Promise.all(
+              keys
+                .filter(function (key) { return key.startsWith("seh-pwa-"); })
+                .map(function (key) { return caches.delete(key); })
+            );
+          }
+        } catch (_) {}
+      });
+    }
+  </script>
+</body>
+</html>
