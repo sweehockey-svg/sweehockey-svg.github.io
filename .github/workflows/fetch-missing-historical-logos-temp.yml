@@ -9,80 +9,90 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
-      - name: Discover and download historical logos
+      - name: Download verified historical logos
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p out/teamlogos
           python3 - <<'PY'
-          import os,re,html,urllib.request,urllib.parse,json
+          import urllib.request, urllib.parse, json
           from pathlib import Path
 
-          teams = [
-            ('NHL 19 Allstars',287,336),
-            ('Delusion',56,640),
-            ('Symphony',55,138),
-            ('SJK eSports',27,138),
-            ('Aapon Taikasauva',23,59),
-            ('NG Friday Night Lights',33,364),
-            ('hREDS',351,640),
-            ('HAVU Gaming',487,640),
-            ('Herforder Ice Dragons',252,1521),
-            ('Sweden Wikings',49,557),
-            ('Puck Panthers',49,246),
-            ('NG Spring',33,381),
-            ('Taidottomat Lupaukset',29,326),
-            ('Refuse To Lose',18,10),
-            ('Everyday Im Byfuglien',16,110),
-          ]
-          opener=urllib.request.build_opener()
+          opener = urllib.request.build_opener()
           opener.addheaders=[('User-Agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/151 Safari/537.36')]
-          report=[]
-          def get(url):
-            with opener.open(url,timeout=30) as r: return r.read(), r.headers.get('Content-Type','')
-          for name,league,tid in teams:
-            page=f'https://sportsgamer.gg/leagues/{league}/teams/{tid}'
-            row={'name':name,'league':league,'team_id':tid,'page':page,'candidates':[],'selected':None}
+
+          exact = {
+            'NHL 19 Allstars.png': 'https://sportsgamer.gg/storage/team-logos/287/3760/NHL 19 Allstars_20230419-121953.png',
+            'Delusion.png': 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/IS_Cup_4/Logos/Delusion.png',
+            'Symphony.png': 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/ECL7/logos/Elite/Symphony.png',
+            'SJK eSports.png': 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/ECL6/Logos/Elite/SJK eSports.png',
+            'Aapon Taikasauva.png': 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/ECL-5-Logos_500px/Elite/Aapon Taikasauva.png',
+            'hREDS.png': 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/ECL10/Logos/Elite/hREDS_logo_png.png',
+            'Herforder Ice Dragons.png': 'https://sportsgamer.gg/storage/team-logos/241/3249/HEV Logo Sportsgamer_20221115-143043.png',
+            'Puck Panthers.png': 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/SL/Logos/S1/Puck Panthers 500x500.png',
+            'Refuse To Lose.jpg': 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/refuse.jpg',
+            'Everyday Im Byfuglien.jpg': 'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/Summer_Cup/byfuglien.jpg',
+          }
+
+          probes = {
+            'Taidottomat Lupaukset': [
+              'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/ECL6/Logos/Lite/Taidottomat Lupaukset.png',
+              'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/ECL6/logos/Lite/Taidottomat Lupaukset.png',
+              'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/ECL6/Logos/Lite/Taidottomat_Lupaukset.png',
+            ],
+            'Sweden Wikings': [
+              'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/SL/Logos/S1/Sweden Wikings 500x500.png',
+              'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/SL/Logos/S1/Sweden Wikings.png',
+              'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/SL/Logos/S1/SwedenWikings.png',
+            ],
+            'NG Friday Night Lights': [
+              'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/Summer_Cup_3/NG Friday Night Lights.png',
+              'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/Summer_Cup3/NG Friday Night Lights.png',
+              'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Summer_Cup_3/NG Friday Night Lights.png',
+            ],
+            'NG Spring': [
+              'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/Summer_Cup_3/NG Spring.png',
+              'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/ECL/Summer_Cup3/NG Spring.png',
+              'https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Summer_Cup_3/NG Spring.png',
+            ],
+          }
+
+          def encoded(url):
+            p=urllib.parse.urlsplit(url)
+            path=urllib.parse.quote(urllib.parse.unquote(p.path), safe='/:%')
+            return urllib.parse.urlunsplit((p.scheme,p.netloc,path,p.query,p.fragment))
+
+          def fetch(url):
+            with opener.open(encoded(url), timeout=30) as r:
+              data=r.read(); ct=r.headers.get('Content-Type','')
+            sig=data[:16]
+            ok=sig.startswith(b'\x89PNG') or sig[:3]==b'\xff\xd8\xff' or sig.startswith(b'GIF8') or b'<svg' in data[:300].lower()
+            if not ok or len(data)<1000:
+              raise RuntimeError(f'not useful image: {len(data)} bytes {ct}')
+            return data,ct
+
+          report={'exact':{},'probes':{}}
+          for fn,url in exact.items():
             try:
-              raw,_=get(page); text=raw.decode('utf-8','ignore')
+              data,ct=fetch(url)
+              Path('out/teamlogos',fn).write_bytes(data)
+              report['exact'][fn]={'ok':True,'url':url,'bytes':len(data),'content_type':ct}
             except Exception as e:
-              row['error']=repr(e); report.append(row); continue
-            urls=[]
-            pats=[r'<img[^>]+src=["\']([^"\']+)',r'<meta[^>]+(?:property|name)=["\'](?:og:image|twitter:image)["\'][^>]+content=["\']([^"\']+)']
-            for pat in pats:
-              for u in re.findall(pat,text,re.I):
-                u=html.unescape(u).replace('\\/','/')
-                if u.startswith('//'): u='https:'+u
-                elif u.startswith('/'): u='https://sportsgamer.gg'+u
-                if u.startswith('http') and u not in urls: urls.append(u)
-            # rank team-logo-looking images first
-            scored=[]
-            for u in urls:
-              lu=u.lower()
-              score=0
-              if 'team-logo' in lu or 'team_logos' in lu or '/logos/' in lu: score+=100
-              if 'no-logo' in lu or 'no_logo' in lu or 'avatar' in lu or 'flags/' in lu: score-=100
-              if any(x in lu for x in ['sportsgamer','nhlgamer','digitaloceanspaces']): score+=10
-              scored.append((score,u))
-            scored.sort(reverse=True)
-            for score,u in scored[:20]:
-              info={'url':u,'score':score}
+              report['exact'][fn]={'ok':False,'url':url,'error':repr(e)}
+
+          for name,urls in probes.items():
+            report['probes'][name]=[]
+            for url in urls:
               try:
-                data,ct=get(u)
-                info['bytes']=len(data); info['content_type']=ct
-                sig=data[:16]
-                isimg=(sig.startswith(b'\x89PNG') or sig[:3]==b'\xff\xd8\xff' or sig.startswith(b'GIF8') or b'<svg' in data[:300].lower())
-                info['is_image']=isimg
-                if isimg and len(data)>1000 and score>=10 and not row['selected']:
-                  ext='.png'
-                  if sig[:3]==b'\xff\xd8\xff': ext='.jpg'
-                  elif sig.startswith(b'GIF8'): ext='.gif'
-                  safe=name.replace('/','-')+ext
-                  Path('out/teamlogos',safe).write_bytes(data)
-                  row['selected']={'url':u,'file':safe,'bytes':len(data)}
-              except Exception as e: info['error']=repr(e)
-              row['candidates'].append(info)
-            report.append(row)
+                data,ct=fetch(url)
+                ext='.jpg' if data[:3]==b'\xff\xd8\xff' else '.png'
+                fn=name+ext
+                Path('out/teamlogos',fn).write_bytes(data)
+                report['probes'][name].append({'ok':True,'url':url,'file':fn,'bytes':len(data),'content_type':ct})
+                break
+              except Exception as e:
+                report['probes'][name].append({'ok':False,'url':url,'error':repr(e)})
+
           Path('out/report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
           print(Path('out/report.json').read_text())
           PY
@@ -90,7 +100,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: missing-historical-logos
+          name: missing-historical-logos-exact
           path: out/
           if-no-files-found: error
           retention-days: 1
