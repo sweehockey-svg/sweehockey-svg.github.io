@@ -1,0 +1,220 @@
+name: Temporary Full Team Logo Audit V2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/full-teamlogo-audit-v2-temp.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build complete Swedish-player history and fetch missing logos
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import concurrent.futures as cf
+          import csv, html, json, re, shutil, threading, unicodedata
+          import urllib.parse, urllib.request
+          from collections import defaultdict
+          from pathlib import Path
+
+          BASE='https://oujqnvrczdavqbqaavuh.supabase.co/rest/v1'
+          KEY='sb_publishable_-4cV-I1xCAAZrgdcGCljrQ_T7T0YC5z'
+          OUT=Path('full-teamlogo-audit-v2'); LOGOS=OUT/'teamlogos'; LOGOS.mkdir(parents=True,exist_ok=True)
+          IMG_EXT={'.png','.jpg','.jpeg','.webp','.gif'}
+          KNOWN_PATCH=[
+            'Oljefondet.png','Electric Ice SL.png','NOSTREETSPORTS.png','Herlev Eagles.png','Gotham Knights.png',
+            'Kolikot Esports.png','Red Bull Munich eSports.png','noRex Gaming.png','Silver Sword Griffins.png',
+            'Storhamar IL Esport.png','Otukset.png','Blitz Loimaa.png','Taisto.png','Coventry Vikings.png',
+            'SC Rackelhahn eV.png','Rusty Blades.png','HC Lugano eSports.png','Supreme Hockey.png','Flying Hornets.png',
+            'SG Denmark.png','Last Dance.png','Bad Habits.png','Setelit On Ice.png','NG HooPeeKoo.png',
+            'NG 50 Shades of Blades.jpg','Mighty 8 Balls.jpg','eHockey Sweden.png','Team ICappeI.png'
+          ]
+          EXPLICIT={
+            'VBO B Stars':'VBO STARS','Vasteras IK':'Västerås IK','Växjö Lakers':'Vaxjo Lakers HC',
+            'Nordic Knights HC':'Nordic Knights','HC Macho':'Macho HC','Orebro Hockey':'Örebro Hockey',
+            'Placeholder 3':'Black Panthers','Skellefteå AIK':'Skelleftea AIK','Djurgården Hockey':'Djurgarden Hockey',
+            'Örebro Hockey Academy':'Orebro Hockey Academy','Favoritfemman':'Favorit Femman',
+            'Svea Kronor (DSQ)':'Svea Kronor','Eskilstuna Snake (DNF)':'Eskilstuna Snake',
+            'Northern Lights HC (DNF)':'Northern Lights HC','Company of Geeks (DNF)':'Company of Geeks',
+            'United Warriors of Sweden (DNF)':'United Warriors of Sweden','UD Almeria (DSQ)':'UD Almeria'
+          }
+          STATUS=re.compile(r'\s*\((?:DNF|DSQ|DQ|DISQUALIFIED)\)\s*$',re.I)
+          def clean(s): return re.sub(r'\s+',' ',html.unescape(str(s or '')).strip())
+          def fold(s): return ''.join(c for c in unicodedata.normalize('NFKD',s) if not unicodedata.combining(c))
+          def norm(s):
+            s=fold(STATUS.sub('',clean(s))).casefold().replace('&','and')
+            return ''.join(c for c in s if c.isalnum())
+          def norm_generic(s):
+            s=fold(STATUS.sub('',clean(s))).casefold(); toks=re.findall(r'[a-z0-9]+',s)
+            return ''.join(t for t in toks if t not in {'hc','esport','esports'})
+          def safe(s): return clean(s).replace('/','-').replace('\\','-').rstrip('. ') or 'Unknown Team'
+
+          def json_req(url,method='GET',body=None,timeout=30):
+            h={'apikey':KEY,'Accept':'application/json'}; data=None
+            if body is not None: h['Content-Type']='application/json'; data=json.dumps(body).encode()
+            req=urllib.request.Request(url,headers=h,method=method,data=data)
+            with urllib.request.urlopen(req,timeout=timeout) as r: return json.loads(r.read())
+
+          def fetch_players():
+            allp=[]; off=0
+            while True:
+              q=urllib.parse.urlencode({'select':'player_key,display_gamertag,sports_gamer_player_url','limit':'1000','offset':str(off)})
+              b=json_req(BASE+'/v_ehockey_swedish_player_directory_central_v1?'+q)
+              allp+=b; print('directory',len(allp),flush=True)
+              if len(b)<1000: return allp
+              off+=1000
+
+          players=fetch_players()
+          def one_history(p):
+            m=re.search(r'/players/(\d+)',str(p.get('sports_gamer_player_url') or ''))
+            payload={'p_player_key':p.get('player_key'),'p_sports_gamer_player_id':int(m.group(1)) if m else None,'p_display_gamertag':p.get('display_gamertag')}
+            try:
+              rows=json_req(BASE+'/rpc/get_ehockey_player_history_cache_v26','POST',payload,35)
+              return p,rows,''
+            except Exception as e: return p,[],type(e).__name__+': '+str(e)[:180]
+
+          history=[]; rpc_errors=[]
+          with cf.ThreadPoolExecutor(max_workers=24) as pool:
+            for i,(p,rows,err) in enumerate(pool.map(one_history,players),1):
+              if err: rpc_errors.append({'player_key':p.get('player_key'),'gamertag':p.get('display_gamertag'),'error':err})
+              for r in rows:
+                if not r.get('player_key'): r['player_key']=p.get('player_key')
+                history.append(r)
+              if i%100==0: print('rpc',i,'/',len(players),'history rows',len(history),'errors',len(rpc_errors),flush=True)
+          print('history total',len(history),'rpc errors',len(rpc_errors),flush=True)
+          (OUT/'rpc-errors.json').write_text(json.dumps(rpc_errors,ensure_ascii=False,indent=2),encoding='utf-8')
+
+          by=defaultdict(list); psets=defaultdict(set); aliases=defaultdict(set)
+          for r in history:
+            team=clean(r.get('team_current_name') or r.get('team_name_in_tournament'))
+            if not team: continue
+            by[team].append(r); psets[team].add(str(r.get('player_key') or ''))
+            a=clean(r.get('team_name_in_tournament'))
+            if a: aliases[team].add(a)
+          for t in by:
+            by[t].sort(key=lambda r:(str(r.get('chronology_date') or ''),int(r.get('league_id') or 0) if str(r.get('league_id') or '').isdigit() else 0),reverse=True)
+          print('unique teams',len(by),flush=True)
+
+          repo=[p for p in Path('teamlogos').iterdir() if p.is_file() and p.suffix.lower() in IMG_EXT] if Path('teamlogos').exists() else []
+          rn=defaultdict(list); rg=defaultdict(list)
+          for p in repo: rn[norm(p.stem)].append(p); rg[norm_generic(p.stem)].append(p)
+          kn=defaultdict(list); kg=defaultdict(list)
+          for f in KNOWN_PATCH: kn[norm(Path(f).stem)].append(f); kg[norm_generic(Path(f).stem)].append(f)
+
+          def existing(team):
+            names=[team,*sorted(aliases[team])]
+            if team in EXPLICIT: names.append(EXPLICIT[team])
+            for n in names:
+              k=norm(n)
+              if rn.get(k): return 'REPO_ALIAS',rn[k][0]
+              if kn.get(k): return 'PATCH_ALIAS',kn[k][0]
+            for n in names:
+              k=norm_generic(n)
+              if k and len(rg.get(k,[]))==1: return 'REPO_ALIAS',rg[k][0]
+              if k and len(kg.get(k,[]))==1: return 'PATCH_ALIAS',kg[k][0]
+            return None
+
+          def numeric(v): return str(v or '').strip().isdigit()
+          def rows_for(team):
+            out=[]; seen=set()
+            for r in by[team]:
+              if not numeric(r.get('league_id')) or not numeric(r.get('team_external_id')): continue
+              k=(str(r['league_id']),str(r['team_external_id']))
+              if k in seen: continue
+              seen.add(k); out.append(r)
+              if len(out)>=10: break
+            return out
+
+          lock=threading.Lock(); page_cache={}
+          def get_bytes(url,accept='*/*',timeout=18):
+            req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 AppleWebKit/537.36 Chrome/151 Safari/537.36','Accept':accept})
+            with urllib.request.urlopen(req,timeout=timeout) as r: return r.read(),r.headers.get('Content-Type',''),r.geturl()
+          def page(url):
+            with lock:
+              if url in page_cache: return page_cache[url]
+            try: v=(*get_bytes(url,'text/html,application/xhtml+xml',16),'')
+            except Exception as e: v=(b'','',url,type(e).__name__+': '+str(e)[:120])
+            with lock: page_cache[url]=v
+            return v
+          def urls_from(data,final,lid,tid,names):
+            txt=data.decode('utf-8','ignore'); found=[]; seen=set()
+            for u in re.findall(r'''(?:src|href|content)\s*=\s*["']([^"']+)["']''',txt,re.I):
+              u=html.unescape(u); full=urllib.parse.urljoin(final,u); low=urllib.parse.unquote(full).casefold()
+              if full in seen or not re.search(r'\.(?:png|jpe?g|webp|gif)(?:\?|$)',low): continue
+              seen.add(full); score=0
+              if f'/storage/team-logos/{lid}/{tid}/'.casefold() in low: score+=1500
+              elif '/storage/team-logos/' in low: score+=1000
+              if any(x in low for x in ('team-logo','team_logo','teamlogos','team_logos')): score+=700
+              if '/logos/' in low or '/logo/' in low: score+=450
+              for n in names:
+                nk=norm(n)
+                if len(nk)>=6 and nk[:8] in norm(urllib.parse.unquote(full)): score+=100
+              if any(x in low for x in ('no-logo','nologo','default','placeholder','avatar','profile-picture','favicon','social-preview','banner','sponsor')): score-=2500
+              if score>=400: found.append((score,full))
+            return [u for _,u in sorted(found,reverse=True)]
+          def ext_of(d,ct,u):
+            if d.startswith(b'\x89PNG\r\n\x1a\n'): return '.png'
+            if d.startswith(b'\xff\xd8\xff'): return '.jpg'
+            if d.startswith(b'RIFF') and d[8:12]==b'WEBP': return '.webp'
+            if d.startswith((b'GIF87a',b'GIF89a')): return '.gif'
+            return ''
+
+          def audit(team):
+            ex=existing(team); nplayers=len([x for x in psets[team] if x])
+            if ex:
+              kind,src=ex; copied=''; srcname=src.name if isinstance(src,Path) else str(src)
+              if kind=='REPO_ALIAS':
+                target=LOGOS/(safe(team)+src.suffix.lower())
+                if target.name.casefold()!=src.name.casefold(): shutil.copy2(src,target); copied=target.name
+              return dict(team=team,status=kind,swedish_players=nplayers,source=srcname,league_id='',team_external_id='',source_url='',output_file=copied,aliases=' | '.join(sorted(aliases[team])),note='existing logo/alias')
+            cr=rows_for(team)
+            if not cr: return dict(team=team,status='NO_SPORTSGAMER_ROW',swedish_players=nplayers,source='',league_id='',team_external_id='',source_url='',output_file='',aliases=' | '.join(sorted(aliases[team])),note='no numeric SG row')
+            saw=False; nologo=False; errs=[]; names=[team,*aliases[team]]
+            for r in cr:
+              lid=str(r['league_id']); tid=str(r['team_external_id'])
+              for pu in (f'https://sportsgamer.gg/leagues/{lid}/teams/{tid}',f'https://nhlgamer.com/leagues/{lid}/teams/{tid}',f'https://sportsgamer.gg/index.php/leagues/{lid}/teams/{tid}',f'https://nhlgamer.com/index.php/leagues/{lid}/teams/{tid}'):
+                d,ct,fin,err=page(pu)
+                if err: errs.append(err); continue
+                saw=True; low=d.decode('utf-8','ignore').casefold()
+                if 'no-logo' in low or 'no logo' in low: nologo=True
+                for iu in urls_from(d,fin,lid,tid,names)[:6]:
+                  try: img,ict,ifu=get_bytes(iu,'image/*,*/*;q=0.8',18)
+                  except Exception as e: errs.append(type(e).__name__); continue
+                  ext=ext_of(img,ict,ifu)
+                  if len(img)<700 or not ext or any(x in urllib.parse.unquote(ifu).casefold() for x in ('no-logo','nologo','placeholder')): continue
+                  target=LOGOS/(safe(team)+ext); target.write_bytes(img)
+                  return dict(team=team,status='FOUND',swedish_players=nplayers,source=clean(r.get('team_name_in_tournament')),league_id=lid,team_external_id=tid,source_url=ifu,output_file=target.name,aliases=' | '.join(sorted(aliases[team])),note='latest historical SG tournament with usable logo')
+            st='NO_LOGO' if saw and nologo else ('PAGE_NO_IMAGE' if saw else 'PAGE_FAILED')
+            return dict(team=team,status=st,swedish_players=nplayers,source='',league_id='',team_external_id='',source_url='',output_file='',aliases=' | '.join(sorted(aliases[team])),note='; '.join(errs[-3:])[:500])
+
+          teams=sorted(by,key=lambda t:(-len(psets[t]),t.casefold())); results=[]
+          with cf.ThreadPoolExecutor(max_workers=8) as pool:
+            futs={pool.submit(audit,t):t for t in teams}
+            for i,f in enumerate(cf.as_completed(futs),1):
+              try:r=f.result()
+              except Exception as e:r=dict(team=futs[f],status='ERROR',swedish_players=len(psets[futs[f]]),source='',league_id='',team_external_id='',source_url='',output_file='',aliases='',note=repr(e))
+              results.append(r)
+              if i%25==0 or r['status'] in {'FOUND','ERROR'}: print(i,'/',len(teams),r['status'],r['team'],flush=True)
+          results.sort(key=lambda r:(-int(r['swedish_players']),r['team'].casefold()))
+          fields=['team','status','swedish_players','aliases','source','league_id','team_external_id','source_url','output_file','note']
+          with (OUT/'audit.csv').open('w',newline='',encoding='utf-8-sig') as f: w=csv.DictWriter(f,fieldnames=fields);w.writeheader();w.writerows(results)
+          (OUT/'audit.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')
+          counts=defaultdict(int)
+          for r in results: counts[r['status']]+=1
+          (OUT/'summary.json').write_text(json.dumps(dict(sorted(counts.items())),indent=2),encoding='utf-8')
+          print('SUMMARY',dict(counts),'files',len(list(LOGOS.iterdir())),flush=True)
+          PY
+          cat full-teamlogo-audit-v2/summary.json
+          find full-teamlogo-audit-v2/teamlogos -maxdepth 1 -type f | wc -l
+      - name: Upload audit and downloaded logos
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-teamlogo-audit-v2
+          path: full-teamlogo-audit-v2/
+          if-no-files-found: error
+          retention-days: 1
