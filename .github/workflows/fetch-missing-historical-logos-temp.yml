@@ -1,0 +1,96 @@
+name: Temporary Missing Historical Logos
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fetch-missing-historical-logos-temp.yml'
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discover and download historical logos
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/teamlogos
+          python3 - <<'PY'
+          import os,re,html,urllib.request,urllib.parse,json
+          from pathlib import Path
+
+          teams = [
+            ('NHL 19 Allstars',287,336),
+            ('Delusion',56,640),
+            ('Symphony',55,138),
+            ('SJK eSports',27,138),
+            ('Aapon Taikasauva',23,59),
+            ('NG Friday Night Lights',33,364),
+            ('hREDS',351,640),
+            ('HAVU Gaming',487,640),
+            ('Herforder Ice Dragons',252,1521),
+            ('Sweden Wikings',49,557),
+            ('Puck Panthers',49,246),
+            ('NG Spring',33,381),
+            ('Taidottomat Lupaukset',29,326),
+            ('Refuse To Lose',18,10),
+            ('Everyday Im Byfuglien',16,110),
+          ]
+          opener=urllib.request.build_opener()
+          opener.addheaders=[('User-Agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/151 Safari/537.36')]
+          report=[]
+          def get(url):
+            with opener.open(url,timeout=30) as r: return r.read(), r.headers.get('Content-Type','')
+          for name,league,tid in teams:
+            page=f'https://sportsgamer.gg/leagues/{league}/teams/{tid}'
+            row={'name':name,'league':league,'team_id':tid,'page':page,'candidates':[],'selected':None}
+            try:
+              raw,_=get(page); text=raw.decode('utf-8','ignore')
+            except Exception as e:
+              row['error']=repr(e); report.append(row); continue
+            urls=[]
+            pats=[r'<img[^>]+src=["\']([^"\']+)',r'<meta[^>]+(?:property|name)=["\'](?:og:image|twitter:image)["\'][^>]+content=["\']([^"\']+)']
+            for pat in pats:
+              for u in re.findall(pat,text,re.I):
+                u=html.unescape(u).replace('\\/','/')
+                if u.startswith('//'): u='https:'+u
+                elif u.startswith('/'): u='https://sportsgamer.gg'+u
+                if u.startswith('http') and u not in urls: urls.append(u)
+            # rank team-logo-looking images first
+            scored=[]
+            for u in urls:
+              lu=u.lower()
+              score=0
+              if 'team-logo' in lu or 'team_logos' in lu or '/logos/' in lu: score+=100
+              if 'no-logo' in lu or 'no_logo' in lu or 'avatar' in lu or 'flags/' in lu: score-=100
+              if any(x in lu for x in ['sportsgamer','nhlgamer','digitaloceanspaces']): score+=10
+              scored.append((score,u))
+            scored.sort(reverse=True)
+            for score,u in scored[:20]:
+              info={'url':u,'score':score}
+              try:
+                data,ct=get(u)
+                info['bytes']=len(data); info['content_type']=ct
+                sig=data[:16]
+                isimg=(sig.startswith(b'\x89PNG') or sig[:3]==b'\xff\xd8\xff' or sig.startswith(b'GIF8') or b'<svg' in data[:300].lower())
+                info['is_image']=isimg
+                if isimg and len(data)>1000 and score>=10 and not row['selected']:
+                  ext='.png'
+                  if sig[:3]==b'\xff\xd8\xff': ext='.jpg'
+                  elif sig.startswith(b'GIF8'): ext='.gif'
+                  safe=name.replace('/','-')+ext
+                  Path('out/teamlogos',safe).write_bytes(data)
+                  row['selected']={'url':u,'file':safe,'bytes':len(data)}
+              except Exception as e: info['error']=repr(e)
+              row['candidates'].append(info)
+            report.append(row)
+          Path('out/report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(Path('out/report.json').read_text())
+          PY
+          find out -maxdepth 2 -type f -printf '%p %s bytes\n'
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: missing-historical-logos
+          path: out/
+          if-no-files-found: error
+          retention-days: 1
