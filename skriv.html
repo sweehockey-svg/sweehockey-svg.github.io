@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Skriv nyhet – Svensk eHockey</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260903-v109-news-autolinks">
   <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -101,6 +101,7 @@
           <li><code>- Din text</code><span>Punktlista</span></li>
           <li><code>1. Din text</code><span>Numrerad lista</span></li>
           <li><code>**text**</code><span>Fetstil</span></li>
+          <li><code>https://…</code><span>Webbadresser blir automatiskt klickbara länkar</span></li>
           <li><code>[[BILD1]]</code><span>Placera inline-bild 1 här</span></li>
           <li><code>[[BILD2]]</code><span>Placera inline-bild 2 här</span></li>
           <li><code>Tom rad</code><span>Nytt stycke</span></li>
@@ -329,8 +330,31 @@
   }
 
   function formatRichText(value) {
-    return escapeHtml(value)
+    const links = [];
+    const tokenized = String(value ?? '').replace(
+      /(^|[\s([{>])((?:https?:\/\/|www\.)[^\s<>"']+|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,24}(?:\/[^\s<>"']*)?)/gi,
+      (match, prefix, rawUrl) => {
+        let url = rawUrl;
+        let trailing = '';
+        while (/[.,!?;:)\]}>]$/.test(url)) {
+          trailing = url.slice(-1) + trailing;
+          url = url.slice(0, -1);
+        }
+        if (!url) return match;
+        const href = /^(?:https?:\/\/)/i.test(url) ? url : `https://${url}`;
+        const token = `\u0000SEH_LINK_${links.length}\u0000`;
+        links.push({ href, label: url });
+        return `${prefix}${token}${trailing}`;
+      }
+    );
+
+    return escapeHtml(tokenized)
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\u0000SEH_LINK_(\d+)\u0000/g, (match, index) => {
+        const link = links[Number(index)];
+        if (!link) return match;
+        return `<a class="news-inline-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>`;
+      })
       .replace(/\n/g, '<br>');
   }
 
