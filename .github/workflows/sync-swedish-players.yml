@@ -70,7 +70,7 @@ jobs:
           SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
           SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
           MIN_PLAYER_COUNT: '100'
-        run: python automation/export_swedish_players.py
+        run: python .github/sync/export_swedish_players.py
 
       - name: Import staging data into Supabase
         env:
@@ -78,12 +78,12 @@ jobs:
         run: |
           set -euo pipefail
           : "${PGURL:?Missing SUPABASE_DB_URL secret}"
-          psql "$PGURL" -v ON_ERROR_STOP=1 -f sql/automation/import-swedish-players.psql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-swedish-players.psql
 
       - name: Update the central player registry
         env:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
-        run: psql "$PGURL" -v ON_ERROR_STOP=1 -f sql/automation/sync-swedish-player-registry.sql
+        run: psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/sync-swedish-player-registry.sql
 
       - name: Write summary
         if: always()

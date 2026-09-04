@@ -65,9 +65,9 @@ def main() -> int:
     via_ssh = bool(os.environ.get("SSH_HOST", "").strip())
     host = "127.0.0.1" if via_ssh else required("DB_HOST")
     port = int(
-        os.environ.get("SSH_LOCAL_DB_PORT", "3307")
+        (os.environ.get("SSH_LOCAL_DB_PORT") or "3307").strip()
         if via_ssh
-        else os.environ.get("DB_PORT", "3306")
+        else (os.environ.get("DB_PORT") or "3306").strip()
     )
     output = Path(os.environ.get("EXPORT_FILE", "/tmp/swedish_players.csv"))
     minimum = int(os.environ.get("MIN_PLAYER_COUNT", "100"))

@@ -14181,8 +14181,33 @@ function SEH_initShop() {
         : date.toLocaleDateString("sv-SE", { day: "numeric", month: "long", year: "numeric" });
     };
 
-    const formatText = (value) =>
-      escapeHtml(value).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    const formatText = (value) => {
+      const links = [];
+      const tokenized = String(value ?? "").replace(
+        /(^|[\s([{>])((?:https?:\/\/|www\.)[^\s<>"']+|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,24}(?:\/[^\s<>"']*)?)/gi,
+        (match, prefix, rawUrl) => {
+          let url = rawUrl;
+          let trailing = "";
+          while (/[.,!?;:)\]}>]$/.test(url)) {
+            trailing = url.slice(-1) + trailing;
+            url = url.slice(0, -1);
+          }
+          if (!url) return match;
+          const href = /^(?:https?:\/\/)/i.test(url) ? url : `https://${url}`;
+          const token = `\u0000SEH_LINK_${links.length}\u0000`;
+          links.push({ href, label: url });
+          return `${prefix}${token}${trailing}`;
+        }
+      );
+
+      return escapeHtml(tokenized)
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/\u0000SEH_LINK_(\d+)\u0000/g, (match, index) => {
+          const link = links[Number(index)];
+          if (!link) return match;
+          return `<a class="news-inline-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>`;
+        });
+    };
 
     const normalizedLink = (link) => {
       const url = String(link?.url || "").trim();
