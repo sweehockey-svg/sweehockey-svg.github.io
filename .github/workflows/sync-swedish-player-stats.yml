@@ -82,6 +82,12 @@ jobs:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
         run: psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-swedish-player-stats.psql
 
+      - name: Refresh player statistics used by the website
+        if: ${{ !inputs.dry_run }}
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/refresh-swedish-player-web-cache.sql
+
       - name: Write summary
         if: always()
         env:
