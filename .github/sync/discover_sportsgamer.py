@@ -51,7 +51,7 @@ def main() -> int:
             database_name = cursor.fetchone()["database_name"]
             cursor.execute(
                 """
-                select table_name
+                select table_name as detected_table_name
                 from information_schema.tables
                 where table_schema = %s
                   and (
@@ -63,7 +63,7 @@ def main() -> int:
                 """,
                 (database_name,),
             )
-            table_names = [row["table_name"] for row in cursor.fetchall()]
+            table_names = [row["detected_table_name"] for row in cursor.fetchall()]
             important = {
                 "nhlgamer_players",
                 "nhlgamer_leagueRosters",
@@ -75,7 +75,9 @@ def main() -> int:
             for table_name in sorted(set(table_names) | important):
                 cursor.execute(
                     """
-                    select column_name, data_type
+                    select
+                      column_name as detected_column_name,
+                      data_type as detected_data_type
                     from information_schema.columns
                     where table_schema = %s and table_name = %s
                     order by ordinal_position
@@ -84,7 +86,13 @@ def main() -> int:
                 )
                 columns = cursor.fetchall()
                 if columns:
-                    inventory["tables"][table_name] = columns
+                    inventory["tables"][table_name] = [
+                        {
+                            "column_name": row["detected_column_name"],
+                            "data_type": row["detected_data_type"],
+                        }
+                        for row in columns
+                    ]
 
             for table_name, columns in inventory["tables"].items():
                 names = {row["column_name"].lower(): row["column_name"] for row in columns}
