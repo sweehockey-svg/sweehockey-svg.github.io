@@ -1,0 +1,15 @@
+\set ON_ERROR_STOP on
+
+begin;
+
+truncate table private.sportsgamer_player_master_import;
+
+\copy private.sportsgamer_player_master_import (player_id, user_id, display_gamertag, gamertag, psn_tag, ea_id, nationality, country, player_image, preferred_position_id) from '/tmp/swedish_players.csv' with (format csv, header true, encoding 'UTF8', null '')
+
+select 1 / case
+  when count(*) >= 100 then 1
+  else 0
+end as safety_check_must_equal_1
+from private.sportsgamer_player_master_import;
+
+commit;
