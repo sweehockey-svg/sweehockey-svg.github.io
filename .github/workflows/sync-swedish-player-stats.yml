@@ -1,0 +1,100 @@
+name: Sync Swedish player tournament statistics
+run-name: Svensk spelarstatistik · ${{ inputs.request_id || 'manual' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: Request id from the Svensk eHockey admin page
+        required: false
+        default: manual
+        type: string
+      dry_run:
+        description: Read and validate SportsGamer without changing Supabase
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-swedish-player-tournament-statistics
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install database clients
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client openssh-client
+          python -m pip install --disable-pip-version-check --no-cache-dir pymysql==1.1.2
+
+      - name: Export canonical Swedish IDs from Supabase
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          : "${PGURL:?Missing SUPABASE_DB_URL secret}"
+          psql "$PGURL" -v ON_ERROR_STOP=1 -c "\\copy (select distinct sports_gamer_player_id from public.v_ehockey_player_registry where country_code = 'SE' and sports_gamer_player_id is not null order by sports_gamer_player_id) to '/tmp/swedish_player_ids.csv' with (format csv, header true)"
+
+      - name: Open read-only SSH tunnel to SportsGamer
+        env:
+          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+          SSH_PORT: ${{ secrets.SVENSK_SSH_PORT }}
+          SSH_USER: ${{ secrets.SVENSK_SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SVENSK_SSH_PRIVATE_KEY }}
+          SSH_REMOTE_DB_HOST: ${{ secrets.SVENSK_SSH_REMOTE_DB_HOST }}
+          SSH_REMOTE_DB_PORT: ${{ secrets.SVENSK_SSH_REMOTE_DB_PORT }}
+          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SSH_HOST:-}" ]; then exit 0; fi
+          : "${SSH_USER:?Missing SVENSK_SSH_USER secret}"
+          : "${SSH_PRIVATE_KEY:?Missing SVENSK_SSH_PRIVATE_KEY secret}"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/svensk_db_tunnel_key
+          chmod 600 ~/.ssh/svensk_db_tunnel_key
+          ssh-keyscan -p "${SSH_PORT:-22}" "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh -fN -i ~/.ssh/svensk_db_tunnel_key -p "${SSH_PORT:-22}" -L "${SSH_LOCAL_DB_PORT:-3307}:${SSH_REMOTE_DB_HOST:-127.0.0.1}:${SSH_REMOTE_DB_PORT:-3306}" "$SSH_USER@$SSH_HOST"
+
+      - name: Read all tournament statistics for Swedish players
+        id: export
+        env:
+          DB_HOST: ${{ secrets.SVENSK_DB_HOST }}
+          DB_PORT: ${{ secrets.SVENSK_DB_PORT }}
+          DB_NAME: ${{ secrets.SVENSK_DB_NAME }}
+          DB_USER: ${{ secrets.SVENSK_DB_USER }}
+          DB_PASSWORD: ${{ secrets.SVENSK_DB_PASSWORD }}
+          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+        run: python .github/sync/export_swedish_player_stats.py
+
+      - name: Upsert Swedish player statistics into Supabase
+        if: ${{ !inputs.dry_run }}
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-swedish-player-stats.psql
+
+      - name: Write summary
+        if: always()
+        env:
+          PLAYER_COUNT: ${{ steps.export.outputs.player_count }}
+          ROW_COUNT: ${{ steps.export.outputs.row_count }}
+          MISSING_COUNT: ${{ steps.export.outputs.missing_profile_count }}
+        run: |
+          {
+            echo "## Swedish player tournament statistics"
+            echo "Canonical Swedish IDs: ${PLAYER_COUNT:-0}"
+            echo "Tournament/team/player rows: ${ROW_COUNT:-0}"
+            echo "Profiles absent from current source: ${MISSING_COUNT:-0}"
+            echo "SportsGamer access: read-only SELECT"
+            echo "Dry run: ${{ inputs.dry_run }}"
+            echo "Result: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"

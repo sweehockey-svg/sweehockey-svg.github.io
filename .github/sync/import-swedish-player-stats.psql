@@ -1,0 +1,50 @@
+\set ON_ERROR_STOP on
+
+begin;
+set local statement_timeout = '15min';
+set local lock_timeout = '30s';
+
+create temporary table swedish_player_stats_stage
+(like public.sportsgamer_team_player_stats including defaults)
+on commit drop;
+
+\copy swedish_player_stats_stage (sports_gamer_league_id,official_league_name,league_phase,league_stage,league_platform_id,video_game_id,game_mode_id,active_league,registration_end,regular_season_end,sports_gamer_team_id,team_name_in_league,current_global_team_name,sports_gamer_player_id,sports_gamer_user_id,display_gamertag,psn_tag,xbox_gamertag,first_name,last_name,player_number,player_country,player_city,player_image,captain_role,global_preferred_position_id,global_preferred_position_name,global_preferred_position_abbreviation,roster_preferred_position_id,roster_preferred_position_name,roster_preferred_position_abbreviation,regular_skater_position_id,regular_skater_position_name,regular_skater_position_abbreviation,playoff_skater_position_id,playoff_skater_position_name,playoff_skater_position_abbreviation,roster_position_lw,roster_position_c,roster_position_rw,roster_position_ld,roster_position_rd,roster_position_g,has_full_license,has_backup_license,roster_platform_id,listed_in_roster,has_any_statistics,regular_skater_games,regular_goals,regular_assists,regular_points,regular_plus_minus,regular_penalty_minutes,regular_powerplay_goals,regular_powerplay_assists,regular_shorthanded_goals,regular_game_winning_goals,regular_overtime_goals,regular_penalty_shot_goals,regular_shots,regular_hits,regular_blocked_shots,regular_faceoff_wins,regular_faceoff_losses,regular_takeaways,regular_giveaways,regular_deflections,regular_interceptions,regular_penalties_drawn,regular_pass_attempts,regular_completed_passes,regular_saucer_passes,regular_shot_attempts,regular_possession,regular_pk_clear_zone,playoff_skater_games,playoff_goals,playoff_assists,playoff_points,playoff_plus_minus,playoff_penalty_minutes,playoff_powerplay_goals,playoff_powerplay_assists,playoff_shorthanded_goals,playoff_game_winning_goals,playoff_overtime_goals,playoff_penalty_shot_goals,playoff_shots,playoff_hits,playoff_blocked_shots,playoff_faceoff_wins,playoff_faceoff_losses,playoff_takeaways,playoff_giveaways,playoff_deflections,playoff_interceptions,playoff_penalties_drawn,playoff_pass_attempts,playoff_completed_passes,playoff_saucer_passes,playoff_shot_attempts,playoff_possession,playoff_pk_clear_zone,regular_goalie_games,regular_goalie_played_minutes,regular_goalie_goals,regular_goalie_assists,regular_goalie_wins,regular_goalie_losses,regular_goalie_overtime_wins,regular_goalie_overtime_losses,regular_goalie_ties,regular_goalie_saves,regular_goalie_goals_allowed,regular_goalie_shots_against,regular_goalie_save_percentage,regular_goalie_goals_against_average,regular_goalie_shutouts,regular_goalie_breakaway_shots,regular_goalie_breakaway_saves,regular_goalie_desperation_saves,regular_goalie_pk_clear_zone,regular_goalie_pokechecks,regular_goalie_shutout_periods,playoff_goalie_games,playoff_goalie_played_minutes,playoff_goalie_goals,playoff_goalie_assists,playoff_goalie_wins,playoff_goalie_losses,playoff_goalie_overtime_wins,playoff_goalie_overtime_losses,playoff_goalie_ties,playoff_goalie_saves,playoff_goalie_goals_allowed,playoff_goalie_shots_against,playoff_goalie_save_percentage,playoff_goalie_goals_against_average,playoff_goalie_shutouts,playoff_goalie_breakaway_shots,playoff_goalie_breakaway_saves,playoff_goalie_desperation_saves,playoff_goalie_pk_clear_zone,playoff_goalie_pokechecks,playoff_goalie_shutout_periods,participant_regular_games,participant_regular_ice_time_seconds,participant_playoff_games,participant_playoff_ice_time_seconds,regular_statistics_source,playoff_statistics_source,sports_gamer_player_url,sports_gamer_team_tournament_url) from '/tmp/swedish_player_stats.csv' with (format csv, header true, null '');
+
+select 1 / case when count(*) >= 1000 and count(*) = count(distinct (sports_gamer_league_id,sports_gamer_team_id,sports_gamer_player_id)) then 1 else 0 end
+  as safety_check_must_equal_1
+from swedish_player_stats_stage;
+
+create temporary table swedish_player_stats_before on commit preserve rows as
+select stage.sports_gamer_league_id, stage.sports_gamer_team_id, stage.sports_gamer_player_id,
+       (existing.sports_gamer_player_id is not null) as existed
+from swedish_player_stats_stage stage
+left join public.sportsgamer_team_player_stats existing using
+  (sports_gamer_league_id,sports_gamer_team_id,sports_gamer_player_id);
+
+do $block$
+declare
+  insert_columns text;
+  update_columns text;
+begin
+  select string_agg(format('%I', column_name), ', ' order by ordinal_position),
+         string_agg(format('%1$I = excluded.%1$I', column_name), ', ' order by ordinal_position)
+           filter (where column_name not in ('sports_gamer_league_id','sports_gamer_team_id','sports_gamer_player_id','imported_at'))
+  into insert_columns, update_columns
+  from information_schema.columns
+  where table_schema = 'public'
+    and table_name = 'sportsgamer_team_player_stats';
+
+  execute format(
+    'insert into public.sportsgamer_team_player_stats (%1$s) select %1$s from swedish_player_stats_stage on conflict (sports_gamer_league_id,sports_gamer_team_id,sports_gamer_player_id) do update set %2$s, imported_at = now()',
+    insert_columns, update_columns
+  );
+end
+$block$;
+
+analyze public.sportsgamer_team_player_stats;
+commit;
+
+select count(*) filter (where not existed) as new_rows,
+       count(*) filter (where existed) as updated_rows,
+       count(distinct sports_gamer_player_id) as swedish_players_with_rows
+from swedish_player_stats_before;
