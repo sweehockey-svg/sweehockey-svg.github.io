@@ -212,7 +212,7 @@ function SEH_initHistory() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-14-v89-team-fullwidth-hero";
+    const APP_BUILD = "2026-09-02-v12857-season-teams-history-style";
     const PAGE_SIZE = 1000;
   
     const state = {
@@ -240,11 +240,7 @@ function SEH_initHistory() {
       reloadButton: document.querySelector("#reloadButton"),
       historyYearCount: document.querySelector("#historyYearCount"),
       visibleTeamCount: document.querySelector("#visibleTeamCount"),
-      allNameCount: document.querySelector("#allNameCount"),
       appearanceCount: document.querySelector("#appearanceCount"),
-      divisionCount: document.querySelector("#divisionCount"),
-      matchCount: document.querySelector("#matchCount"),
-      winCount: document.querySelector("#winCount"),
       playerCount: document.querySelector("#playerCount"),
       resultText: document.querySelector("#resultText"),
       lastUpdated: document.querySelector("#lastUpdated")
@@ -1196,12 +1192,29 @@ function SEH_initHistory() {
       mainLink.setAttribute("aria-label", `Öppna laghistoriken för ${team.currentName}`);
       fragment.querySelector(".directory-team-card__number").textContent =
         String(index + 1).padStart(2, "0");
-  
+ 
       renderLogo(fragment.querySelector(".directory-team-card__logo"), team);
-  
+
+      const watermark = document.createElement("div");
+      watermark.className = "directory-team-card__watermark";
+      watermark.setAttribute("aria-hidden", "true");
+      card.prepend(watermark);
+      renderLogo(watermark, team);
+      SEH_hydratePlayerCardTeamPalette(card, watermark, team.currentName);
+ 
       const name = fragment.querySelector(".directory-team-card__name");
       name.textContent = displayName;
       name.title = displayName;
+
+      const normalizedNameLength = displayName.replace(/\s+/g, " ").trim().length;
+      card.dataset.nameLength = String(normalizedNameLength);
+      if (normalizedNameLength >= 27) {
+        name.classList.add("is-name-xxlong");
+      } else if (normalizedNameLength >= 20) {
+        name.classList.add("is-name-xlong");
+      } else if (normalizedNameLength >= 14) {
+        name.classList.add("is-name-long");
+      }
   
       if (displayName.toLocaleLowerCase("sv-SE") !== team.currentName.toLocaleLowerCase("sv-SE")) {
         identityName.hidden = false;
@@ -1473,11 +1486,7 @@ function SEH_initHistory() {
       }
   
       elements.visibleTeamCount.textContent = formatNumber(teams.length);
-      elements.allNameCount.textContent = formatNumber(allNames.size);
       elements.appearanceCount.textContent = formatNumber(tournaments.length);
-      elements.divisionCount.textContent = formatNumber(divisions.size);
-      elements.matchCount.textContent = formatNumber(sum(tournaments, "gamesPlayed"));
-      elements.winCount.textContent = formatNumber(sum(tournaments, "wins"));
       elements.playerCount.textContent = state.playerDataAvailable ? formatNumber(players.size) : "–";
     }
   
@@ -1611,12 +1620,109 @@ function SEH_initHistory() {
     elements.headerSeasonSelect?.addEventListener("change", applyFilters);
     elements.sortSelect.addEventListener("change", applyFilters);
     elements.viewModeSelect.addEventListener("change", applyFilters);
-    elements.reloadButton.addEventListener("click", load);
+    elements.reloadButton?.addEventListener("click", load);
   
     load();
   })();
 }
 
+
+
+/* ============================================================
+   V122 – delad RP-cache för spelarregister + spelarprofil
+   Samma publika cache/retry-princip som Android-appen använder.
+   ============================================================ */
+const SEH_PLAYER_RANKING_ENDPOINT = "https://oujqnvrczdavqbqaavuh.supabase.co/functions/v1/app-player-ranking?key=seh-player-ranking-2026-v1&v=11";
+let SEH_playerRankingPromise = null;
+
+function SEH_rankingNameAliases(value) {
+  const raw = String(value || "")
+    .normalize("NFKC")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("sv-SE");
+  if (!raw) return [];
+  const aliases = new Set([raw]);
+  const compact = raw.replace(/[^a-z0-9åäö]/gi, "");
+  if (compact) aliases.add(compact);
+  const core = raw
+    .replace(/^[|il]+[-_. ]*/i, "")
+    .replace(/[-_. ]*[|il]+$/i, "")
+    .replace(/[^a-z0-9åäö]/gi, "");
+  if (core.length >= 3) aliases.add(core);
+  return [...aliases];
+}
+
+function SEH_buildRankingLookup(rows) {
+  const byName = new Map();
+  const byKey = new Map();
+  (Array.isArray(rows) ? rows : []).forEach((row) => {
+    SEH_rankingNameAliases(row.display_gamertag).forEach((key) => {
+      if (key && !byName.has(key)) byName.set(key, row);
+    });
+    if (row.player_key !== null && row.player_key !== undefined) {
+      const key = String(row.player_key).trim().toLocaleLowerCase("sv-SE");
+      if (key) byKey.set(key, row);
+    }
+  });
+  return { rows: Array.isArray(rows) ? rows : [], byName, byKey };
+}
+
+function SEH_findPlayerRanking(lookup, playerKey, displayName) {
+  const key = String(playerKey || "").trim().toLocaleLowerCase("sv-SE");
+  if (key && lookup?.byKey?.has(key)) return lookup.byKey.get(key);
+  for (const alias of SEH_rankingNameAliases(displayName)) {
+    if (lookup?.byName?.has(alias)) return lookup.byName.get(alias);
+  }
+  return null;
+}
+
+function SEH_formatRpNumber(value, decimals = 0) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "–";
+  return new Intl.NumberFormat("sv-SE", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  }).format(numeric);
+}
+
+async function SEH_loadPlayerRanking() {
+  if (window.__SEH_WEB_PLAYER_RANKING_LOOKUP__?.rows?.length) {
+    return window.__SEH_WEB_PLAYER_RANKING_LOOKUP__;
+  }
+  if (SEH_playerRankingPromise) return SEH_playerRankingPromise;
+
+  SEH_playerRankingPromise = (async () => {
+    let lastError = null;
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        const endpoint = attempt === 1
+          ? SEH_PLAYER_RANKING_ENDPOINT
+          : `${SEH_PLAYER_RANKING_ENDPOINT}&retry=${Date.now()}-${attempt}`;
+        const response = await fetch(endpoint, attempt === 1 ? {} : { cache: "no-store" });
+        if (!response.ok) throw new Error(`Ranking svarade ${response.status}.`);
+        const rows = await response.json();
+        if (!Array.isArray(rows) || rows.length < 100) {
+          throw new Error("Rankingcachen gav ett ofullständigt svar.");
+        }
+        const lookup = SEH_buildRankingLookup(rows);
+        window.__SEH_WEB_PLAYER_RANKING_LOOKUP__ = lookup;
+        return lookup;
+      } catch (error) {
+        lastError = error;
+        if (attempt < 3) {
+          await new Promise((resolve) => window.setTimeout(resolve, 350 * attempt));
+        }
+      }
+    }
+    throw lastError || new Error("Rankingen kunde inte laddas.");
+  })().catch((error) => {
+    SEH_playerRankingPromise = null;
+    throw error;
+  });
+
+  return SEH_playerRankingPromise;
+}
 
 function SEH_initPlayers() {
   /* ======================================================
@@ -1638,17 +1744,19 @@ function SEH_initPlayers() {
       pagination: document.querySelector("#playerPagination"),
       overviewPlayers: document.querySelector("#overviewPlayers"),
       overviewGoalies: document.querySelector("#overviewGoalies"),
-      overviewSkaters: document.querySelector("#overviewSkaters")
+      overviewSkaters: document.querySelector("#overviewSkaters"),
+      overviewRanked: document.querySelector("#overviewRanked")
     };
   
     const state = {
       players: [],
       filtered: [],
       page: 1,
-      showAll: false
+      showAll: false,
+      ranking: SEH_buildRankingLookup([])
     };
   
-    const APP_BUILD = "2026-07-30-player-directory-v24.1";
+    const APP_BUILD = "2026-08-30-v1266-five-column-player-grid";
     const PAGE_SIZE = 1000;
     const MAX_RETRIES = 2;
     const REQUEST_TIMEOUT_MS = 20000;
@@ -1738,8 +1846,114 @@ function SEH_initPlayers() {
       return rows;
     }
   
+    let nationalTeamDirectoryPromise = null;
+
+    async function fetchNationalTeamDirectory() {
+      if (!nationalTeamDirectoryPromise) {
+        nationalTeamDirectoryPromise = fetchPages("ehockey_national_teams", {
+          select: "team_external_id,canonical_display_name",
+          order: "country_code.asc"
+        }).catch((error) => {
+          nationalTeamDirectoryPromise = null;
+          throw error;
+        });
+      }
+      return nationalTeamDirectoryPromise;
+    }
+
+    function normalizedTeamKey(value) {
+      return clean(value)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase("sv-SE");
+    }
+
+    function isWorldCupSeason(value) {
+      return /world\s*cup/i.test(clean(value));
+    }
+
+    async function replaceNationalTeamLatest(rows) {
+      let nationalTeams = [];
+      try {
+        nationalTeams = await fetchNationalTeamDirectory();
+      } catch (error) {
+        console.warn(`${APP_BUILD}: kunde inte hämta landslagsregistret.`, error);
+      }
+
+      const nationalExternalIds = new Set(
+        nationalTeams.map((row) => clean(row.team_external_id)).filter(Boolean)
+      );
+      const nationalNames = new Set(
+        nationalTeams.map((row) => normalizedTeamKey(row.canonical_display_name)).filter(Boolean)
+      );
+
+      const isNationalTeamName = (value) => {
+        const key = normalizedTeamKey(value);
+        return nationalNames.has(key) || /^ehockey\s+/.test(key) || /^sg\s+(?:sweden|denmark|finland|norway|germany|austria|canada|czechia|france|great britain|latvia|poland|slovakia|switzerland|ukraine|usa)$/i.test(clean(value));
+      };
+
+      const affected = rows.filter((row) =>
+        isNationalTeamName(row.latest_team) || isWorldCupSeason(row.latest_season)
+      );
+
+      if (!affected.length) return rows;
+
+      const affectedKeys = [...new Set(affected.map((row) => clean(row.player_key)).filter(Boolean))];
+      if (!affectedKeys.length) return rows;
+
+      const quotedKeys = affectedKeys
+        .map((key) => `"${key.replace(/"/g, "")}"`)
+        .join(",");
+
+      let historyRows = [];
+      try {
+        historyRows = await fetchPages("ehockey_player_history_cache_v25", {
+          select: [
+            "player_key", "team_external_id", "team_name_in_tournament",
+            "team_current_name", "season_label", "league_name",
+            "chronology_date", "sort_date", "league_id"
+          ].join(","),
+          player_key: `in.(${quotedKeys})`,
+          order: "chronology_date.desc.nullslast,sort_date.desc.nullslast,league_id.desc"
+        });
+      } catch (error) {
+        console.warn(`${APP_BUILD}: kunde inte ersätta senaste landslag med senaste klubblag.`, error);
+        return rows;
+      }
+
+      const latestClubByPlayer = new Map();
+
+      for (const historyRow of historyRows) {
+        const playerKey = clean(historyRow.player_key);
+        if (!playerKey || latestClubByPlayer.has(playerKey)) continue;
+
+        const teamExternalId = clean(historyRow.team_external_id);
+        const teamName = clean(historyRow.team_name_in_tournament || historyRow.team_current_name);
+        const seasonName = clean(historyRow.season_label || historyRow.league_name);
+        const isNational =
+          nationalExternalIds.has(teamExternalId) ||
+          isNationalTeamName(teamName) ||
+          isWorldCupSeason(seasonName) ||
+          isWorldCupSeason(historyRow.league_name);
+
+        if (isNational) continue;
+
+        latestClubByPlayer.set(playerKey, {
+          latest_team: teamName || clean(historyRow.team_name_in_tournament),
+          latest_season: seasonName
+        });
+      }
+
+      return rows.map((row) => {
+        const replacement = latestClubByPlayer.get(clean(row.player_key));
+        return replacement ? { ...row, ...replacement } : row;
+      });
+    }
+
     async function fetchDirectory() {
-      return fetchPages("v_ehockey_swedish_player_directory_central_v1", {
+      // Läs den färdiga katalogcachen. Den innehåller samma centrala spelarlista
+      // men slipper bygga identitets- och historikkedjan vid varje sidladdning.
+      const rows = await fetchPages("app_player_directory_cache", {
         select: [
           "player_key", "display_gamertag", "player_country", "player_image",
           "sports_gamer_player_url", "primary_position", "latest_season",
@@ -1752,6 +1966,8 @@ function SEH_initPlayers() {
         ].join(","),
         order: "display_gamertag.asc"
       });
+
+      return replaceNationalTeamLatest(rows);
     }
   
     function normalizePlayer(row) {
@@ -1766,9 +1982,7 @@ function SEH_initPlayers() {
         key: clean(row.player_key),
         sportsGamerId,
         name: clean(row.display_gamertag) || "Okänd spelare",
-        image: sportsGamerId
-          ? `players/${sportsGamerId}.jpg`
-          : clean(row.player_image) || "players/1DEFAULTBILDID.jpg",
+        image: SEH_playerImageUrl(sportsGamerId, clean(row.player_image)),
         role,
         games: number(row.career_games),
         skaterGames,
@@ -1815,11 +2029,20 @@ function SEH_initPlayers() {
       });
     }
   
+    function rankingForPlayer(player) {
+      return SEH_findPlayerRanking(state.ranking, player.key, player.name);
+    }
+
     function updateOverview() {
       const goalies = state.players.filter((player) => player.role === "goalie").length;
+      const ranked = state.players.filter((player) => {
+        const ranking = rankingForPlayer(player);
+        return Number(ranking?.overall_rank) > 0;
+      }).length;
       elements.overviewPlayers.textContent = state.players.length.toLocaleString("sv-SE");
       elements.overviewGoalies.textContent = goalies.toLocaleString("sv-SE");
       elements.overviewSkaters.textContent = (state.players.length - goalies).toLocaleString("sv-SE");
+      if (elements.overviewRanked) elements.overviewRanked.textContent = ranked.toLocaleString("sv-SE");
     }
   
     function statLine(player) {
@@ -1833,33 +2056,66 @@ function SEH_initPlayers() {
     }
   
     function avatarMarkup(player) {
-      return `<img src="${escapeHtml(player.image)}" alt="${escapeHtml(player.name)}" loading="lazy" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='players/1DEFAULTBILDID.jpg'}">`;
+      return `<img src="${escapeHtml(player.image)}" alt="${escapeHtml(player.name)}" loading="lazy" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='players/1DEFAULTBILDID.png'}">`;
     }
   
     function playerCard(player) {
+      const ranking = rankingForPlayer(player);
+      const overallRank = Number(ranking?.overall_rank) > 0
+        ? `#${SEH_formatRpNumber(ranking.overall_rank)}`
+        : "–";
+      const totalRp = Number.isFinite(Number(ranking?.ranking_points))
+        ? `${SEH_formatRpNumber(ranking.ranking_points)} RP`
+        : "RP –";
+      const secondaryValue = player.role === "goalie"
+        ? (player.shotsAgainst > 0
+            ? `${(player.savePercentage * 100).toLocaleString("sv-SE", { maximumFractionDigits: 1 })}%`
+            : "–")
+        : player.points.toLocaleString("sv-SE");
+      const secondaryLabel = player.role === "goalie" ? "SV%" : "POÄNG";
+
       const link = document.createElement("a");
-      link.className = "players-card";
+      link.className = "players-card players-card-v122";
       link.href = SEH_playerProfileUrl(player.key, player.name);
       link.innerHTML = `
-        <div class="players-card__head">
-          <div><h3>${escapeHtml(player.name)}</h3><span>${player.role === "goalie" ? "MÅLVAKT" : "UTESPELARE"}</span></div>
-          <b>${player.clubCount} ${player.clubCount === 1 ? "klubb" : "klubbar"}</b>
-        </div>
-        <div class="players-card__body">
-          <div class="players-card__avatar">${avatarMarkup(player)}</div>
-          <div>
-            <strong>${statLine(player)}</strong>
-            <p><span>${player.games.toLocaleString("sv-SE")} matcher</span><span>${player.seasons.toLocaleString("sv-SE")} säsonger</span></p>
+        <div class="players-card__top-v1266">
+          <div class="players-card__media-v122">
+            <div class="players-card__avatar">
+              <span class="players-card__team-watermark-v1265" aria-hidden="true"></span>
+              ${avatarMarkup(player)}
+            </div>
+            <span class="players-card__role-v122">${player.role === "goalie" ? "MÅLVAKT" : "UTESPELARE"}</span>
+          </div>
+          <div class="players-card__identity-v1266">
+            <div class="players-card__title-v122">
+              <div><h3>${escapeHtml(player.name)}</h3><span class="players-card__ranking-v122"><b>${overallRank}</b><em>${totalRp}</em></span></div>
+            </div>
+            <div class="players-card__team-v122">
+              <span class="players-card__team-logo-v122" aria-hidden="true"></span>
+              <strong>${escapeHtml(player.latestTeam || "Okänt lag")}</strong>
+            </div>
           </div>
         </div>
-        <div class="players-card__foot">
-          <p><b>Senast:</b> ${escapeHtml([player.latestSeason, player.latestTeam].filter(Boolean).join(" · ") || "–")}</p>
-          <p>${escapeHtml(divisionLabels(player).join(", ") || "–")}</p>
+        <div class="players-card__metrics-v122">
+          <div><span>MATCHER</span><strong>${player.games.toLocaleString("sv-SE")}</strong></div>
+          <div><span>${secondaryLabel}</span><strong>${secondaryValue}</strong></div>
+          <div><span>SÄSONGER</span><strong>${player.seasons.toLocaleString("sv-SE")}</strong></div>
         </div>
+        <div class="players-card__latest-v122"><span>SENAST</span><strong>${escapeHtml(player.latestSeason || "–")}</strong></div>
+        <p class="players-card__leagues-v122">${escapeHtml(divisionLabels(player).slice(0, 6).join(" · ") || "–")}</p>
       `;
+      const logoNode = link.querySelector(".players-card__team-logo-v122");
+      if (logoNode) SEH_renderTeamLogo(logoNode, [], player.latestTeam, `${player.latestTeam || "Lag"} logotyp`);
+
+      const watermarkNode = link.querySelector(".players-card__team-watermark-v1265");
+      if (watermarkNode) {
+        SEH_renderTeamLogo(watermarkNode, [], player.latestTeam, "");
+        SEH_hydratePlayerCardTeamPalette(link, watermarkNode, player.latestTeam);
+      }
+
       return link;
     }
-  
+
     function renderPagination(totalPages) {
       elements.pagination.replaceChildren();
       if (totalPages <= 1) return;
@@ -1921,6 +2177,22 @@ function SEH_initPlayers() {
         if (sort === "name") return a.name.localeCompare(b.name, "sv");
         if (sort === "points") return b.points - a.points || b.games - a.games;
         if (sort === "clubs") return b.clubCount - a.clubCount || b.games - a.games;
+        if (sort === "ranking") {
+          const ar = Number(rankingForPlayer(a)?.overall_rank);
+          const br = Number(rankingForPlayer(b)?.overall_rank);
+          const aRanked = Number.isFinite(ar) && ar > 0;
+          const bRanked = Number.isFinite(br) && br > 0;
+          if (aRanked && bRanked && ar !== br) return ar - br;
+          if (aRanked !== bRanked) return aRanked ? -1 : 1;
+        }
+        if (sort === "average-ranking") {
+          const ar = Number(rankingForPlayer(a)?.average_rank);
+          const br = Number(rankingForPlayer(b)?.average_rank);
+          const aRanked = Number.isFinite(ar) && ar > 0;
+          const bRanked = Number.isFinite(br) && br > 0;
+          if (aRanked && bRanked && ar !== br) return ar - br;
+          if (aRanked !== bRanked) return aRanked ? -1 : 1;
+        }
         return b.games - a.games || b.points - a.points;
       });
     }
@@ -1928,7 +2200,18 @@ function SEH_initPlayers() {
     function render() {
       applyFilters();
       const compact = elements.compact.checked;
-      const pageSize = compact ? 50 : 21;
+      const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+      const pageSize = compact
+        ? 48
+        : viewportWidth >= 1500
+          ? 25
+          : viewportWidth >= 1181
+            ? 20
+            : viewportWidth >= 901
+              ? 15
+              : viewportWidth >= 621
+                ? 10
+                : 5;
       const totalPages = Math.max(1, Math.ceil(state.filtered.length / pageSize));
       state.page = Math.min(state.page, totalPages);
       const start = state.showAll ? 0 : (state.page - 1) * pageSize;
@@ -1961,6 +2244,17 @@ function SEH_initPlayers() {
         buildDivisionFilter();
         updateOverview();
         render();
+
+        void SEH_loadPlayerRanking()
+          .then((lookup) => {
+            state.ranking = lookup;
+            updateOverview();
+            render();
+          })
+          .catch((error) => {
+            console.warn(`${APP_BUILD}: RP/ranking kunde inte laddas just nu.`, error);
+          });
+
         console.info(
           `Svensk eHockey ${APP_BUILD}: ${state.players.length} spelare laddades på ${Math.round(performance.now() - startedAt)} ms.`
         );
@@ -1980,6 +2274,16 @@ function SEH_initPlayers() {
         }
       ));
   
+    let resizeTimer = 0;
+    window.addEventListener("resize", () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        if (!state.players.length || state.showAll) return;
+        state.page = 1;
+        render();
+      }, 140);
+    });
+
     load();
   })();
 }
@@ -2002,13 +2306,22 @@ function SEH_isHashedPlayerKey(value) {
 
 function SEH_playerProfileUrl(playerKey, gamertag, fromTeam = null) {
   const slug = SEH_playerSlug(gamertag);
-  const routeValue = slug || String(playerKey || "").trim();
-  const query =
-    Number.isInteger(Number(fromTeam)) && Number(fromTeam) > 0
-      ? `?fromTeam=${encodeURIComponent(Number(fromTeam))}`
-      : "";
+  const cleanPlayerKey = String(playerKey || "").trim();
+  const routeValue = slug || cleanPlayerKey;
+  const query = new URLSearchParams();
 
-  return `#/spelare/${encodeURIComponent(routeValue)}${query}`;
+  // Snygg gamertag-URL utåt, riktig player_key internt. Detta gör att ett
+  // profilklick kan gå direkt till spelaren utan att först läsa hela registret.
+  if (SEH_isHashedPlayerKey(cleanPlayerKey)) {
+    query.set("pk", cleanPlayerKey);
+  }
+
+  if (Number.isInteger(Number(fromTeam)) && Number(fromTeam) > 0) {
+    query.set("fromTeam", String(Number(fromTeam)));
+  }
+
+  const queryString = query.toString();
+  return `#/spelare/${encodeURIComponent(routeValue)}${queryString ? `?${queryString}` : ""}`;
 }
 
 function SEH_initPlayer() {
@@ -2019,7 +2332,7 @@ function SEH_initPlayer() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-19-v88-player-merits-cache";
+    const APP_BUILD = "2026-08-30-v1261-player-performance";
     const config = window.EHOCKEY_CONFIG || {};
     const elements = {
       backLink: document.querySelector("#backLink"),
@@ -2029,6 +2342,7 @@ function SEH_initPlayer() {
       errorMessage: document.querySelector("#errorMessage"),
       loadingState: document.querySelector("#loadingState"),
       playerPage: document.querySelector("#playerPage"),
+      playerHero: document.querySelector(".player-profile-hero-v123"),
       playerAvatar: document.querySelector("#playerAvatar"),
 
       playerFlag: document.querySelector("#playerFlag"),
@@ -2036,6 +2350,14 @@ function SEH_initPlayer() {
       playerName: document.querySelector("#playerName"),
 
       playerCurrentTeam: document.querySelector("#playerCurrentTeam"),
+      playerCurrentTeamLogo: document.querySelector("#playerCurrentTeamLogo"),
+      playerHeroWatermark: document.querySelector("#playerHeroWatermark"),
+      playerPortraitWatermark: document.querySelector("#playerPortraitWatermark"),
+      heroTotalRp: document.querySelector("#heroTotalRp"),
+      heroSwedenRank: document.querySelector("#heroSwedenRank"),
+      heroAverageRp: document.querySelector("#heroAverageRp"),
+      heroPositionRank: document.querySelector("#heroPositionRank"),
+      profileStripRp: document.querySelector("#profileStripRp"),
 
       playerMeta: document.querySelector("#playerMeta"),
 
@@ -2044,9 +2366,17 @@ function SEH_initPlayer() {
       playerBio: document.querySelector("#playerBio"),
 
       playerLinks: document.querySelector("#playerLinks"),
+      playerProfileTabs: document.querySelector("#playerProfileTabs"),
+      overviewMeritBadges: document.querySelector("#overviewMeritBadges"),
       playerMeritsSection: document.querySelector("#playerMeritsSection"),
       teamMeritsList: document.querySelector("#teamMeritsList"),
       personalMeritsList: document.querySelector("#personalMeritsList"),
+      meritsTitleCount: document.querySelector("#meritsTitleCount"),
+      meritsFinalCount: document.querySelector("#meritsFinalCount"),
+      meritsBronzeCount: document.querySelector("#meritsBronzeCount"),
+      meritsPersonalCount: document.querySelector("#meritsPersonalCount"),
+      teamMeritsHeadingCount: document.querySelector("#teamMeritsHeadingCount"),
+      personalMeritsHeadingCount: document.querySelector("#personalMeritsHeadingCount"),
       tournamentCount: document.querySelector("#tournamentCount"),
       teamCount: document.querySelector("#teamCount"),
       careerGames: document.querySelector("#careerGames"),
@@ -2056,8 +2386,16 @@ function SEH_initPlayer() {
       careerAssists: document.querySelector("#careerAssists"),
       skaterCareerStats: document.querySelector("#skaterCareerStats"),
       goalieCareerStats: document.querySelector("#goalieCareerStats"),
+      skaterCareerCard: document.querySelector("#skaterCareerCard"),
+      goalieCareerCard: document.querySelector("#goalieCareerCard"),
+      careerSummaryGrid: document.querySelector("#careerSummaryGrid"),
+      careerSummaryLead: document.querySelector("#careerSummaryLead"),
       playerTeamsSection: document.querySelector("#playerTeamsSection"),
       playerTeamsGrid: document.querySelector("#playerTeamsGrid"),
+      playerTeamsClubCount: document.querySelector("#playerTeamsClubCount"),
+      playerTeamsSeasonCount: document.querySelector("#playerTeamsSeasonCount"),
+      playerTeamsLatestTeam: document.querySelector("#playerTeamsLatestTeam"),
+      playerTeamsMostTeam: document.querySelector("#playerTeamsMostTeam"),
       historyCompetitionFilters: document.querySelector("#historyCompetitionFilters"),
       historyCount: document.querySelector("#historyCount"),
       historyTableBody: document.querySelector("#historyTableBody")
@@ -2065,6 +2403,47 @@ function SEH_initPlayer() {
 
     let historyCompetitionFilter = "ALL";
     let currentHistoryRows = [];
+    let currentBioContext = null;
+    let activeProfileTab = "overview";
+
+    function setProfileTab(tabName, { focus = false } = {}) {
+      const requested = String(tabName || "overview").trim().toLowerCase();
+      const allowed = new Set(["overview", "statistics", "teams", "merits"]);
+      const nextTab = allowed.has(requested) ? requested : "overview";
+      activeProfileTab = nextTab;
+
+      document.querySelectorAll("[data-player-tab]").forEach((button) => {
+        const active = button.dataset.playerTab === nextTab;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-selected", active ? "true" : "false");
+        button.tabIndex = active ? 0 : -1;
+        if (active && focus) button.focus({ preventScroll: true });
+      });
+
+      document.querySelectorAll("[data-player-panel]").forEach((panel) => {
+        panel.hidden = panel.dataset.playerPanel !== nextTab;
+      });
+    }
+
+    function initProfileTabs() {
+      if (!elements.playerProfileTabs) return;
+      const buttons = [...elements.playerProfileTabs.querySelectorAll("[data-player-tab]")];
+      buttons.forEach((button, index) => {
+        button.addEventListener("click", () => setProfileTab(button.dataset.playerTab || "overview"));
+        button.addEventListener("keydown", (event) => {
+          if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+          event.preventDefault();
+          let nextIndex = index;
+          if (event.key === "ArrowRight") nextIndex = (index + 1) % buttons.length;
+          if (event.key === "ArrowLeft") nextIndex = (index - 1 + buttons.length) % buttons.length;
+          if (event.key === "Home") nextIndex = 0;
+          if (event.key === "End") nextIndex = buttons.length - 1;
+          const next = buttons[nextIndex];
+          setProfileTab(next?.dataset.playerTab || "overview", { focus: true });
+        });
+      });
+      setProfileTab("overview");
+    }
   
     function hasValidConfig() {
       return typeof config.supabaseUrl === "string" &&
@@ -2128,11 +2507,24 @@ function SEH_initPlayer() {
         .map((part) => part[0] || "").join("").toUpperCase() || "EH";
     }
   
+    function normalizeLocalPortraitPath(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return "";
+
+      const localMatch = raw.match(/(?:^|\/)(?:players\/)?(\d+)(?:\.(?:png|jpe?g|webp))?(?:[?#].*)?$/i);
+      if (localMatch) return `players/${localMatch[1]}.png`;
+
+      const remoteMatch = raw.match(/\/players\/(\d+)(?:[/?#]|$)/i);
+      if (remoteMatch) return `players/${remoteMatch[1]}.png`;
+
+      return /^players\/.+\.png(?:[?#].*)?$/i.test(raw) ? raw : "";
+    }
+
     function localPlayerImageUrl(row) {
       const sportsGamerId = String(row.externalUrl || "")
         .match(/\/players\/(\d+)/i)?.[1];
-      if (sportsGamerId) return `players/${sportsGamerId}.jpg`;
-      return row.image || "players/1DEFAULTBILDID.jpg";
+      const localImage = normalizeLocalPortraitPath(row.image);
+      return SEH_playerImageUrl(sportsGamerId, localImage);
     }
   
     function countryFlag(code) {
@@ -2336,6 +2728,16 @@ function SEH_initPlayer() {
         new URLSearchParams(location.search).get("id") ||
         "";
     }
+
+    function getPlayerKeyHint() {
+      const value = String(
+        window.SEH_ROUTE?.query?.get("pk") ||
+        new URLSearchParams(location.search).get("pk") ||
+        ""
+      ).trim();
+
+      return SEH_isHashedPlayerKey(value) ? value : "";
+    }
   
     function getFromTeam() {
       const value = Number(
@@ -2373,7 +2775,7 @@ function SEH_initPlayer() {
     async function fetchPlayerSlugDirectory() {
       if (!playerSlugDirectoryPromise) {
         playerSlugDirectoryPromise = fetchAllJson(
-          "v_ehockey_swedish_player_directory_central_v1",
+          "app_player_directory_cache",
           new URLSearchParams({
             select: "player_key,display_gamertag"
           }),
@@ -2424,7 +2826,8 @@ function SEH_initPlayer() {
         player_key: `eq.${playerKey}`,
         limit: "25"
       });
-      return fetchJson("v_ehockey_swedish_player_directory_central_v1", params);
+
+      return fetchJson("app_player_directory_cache", params);
     }
   
     async function fetchPlayerHistory(playerKey, directoryRow) {
@@ -2776,9 +3179,14 @@ function SEH_initPlayer() {
         goalieLosses: number(row.total_goalie_losses),
         goalieOvertimeLosses: number(row.total_goalie_overtime_losses),
         saves: number(row.total_goalie_saves),
-        shotsAgainst: number(row.total_goalie_shots_against),
+        shotsAgainst: number(row.total_goalie_saves) + number(row.total_goalie_goals_allowed) > 0
+          ? number(row.total_goalie_saves) + number(row.total_goalie_goals_allowed)
+          : number(row.total_goalie_shots_against),
         goalsAllowed: number(row.total_goalie_goals_allowed),
-        savePercentage: nullableNumber(row.total_goalie_save_percentage),
+        savePercentage: number(row.total_goalie_saves) + number(row.total_goalie_goals_allowed) > 0
+          ? number(row.total_goalie_saves) /
+            (number(row.total_goalie_saves) + number(row.total_goalie_goals_allowed))
+          : nullableNumber(row.total_goalie_save_percentage),
         gaa: nullableNumber(row.total_goalie_goals_against_average),
         shutouts: number(row.total_goalie_shutouts),
         appearanceGames: number(row.appearance_games) || Math.max(rawSkaterGames, rawGoalieGames),
@@ -2807,7 +3215,7 @@ function SEH_initPlayer() {
       image.addEventListener("error", () => {
         if (!image.dataset.fallback) {
           image.dataset.fallback = "1";
-          image.src = "players/1DEFAULTBILDID.jpg";
+          image.src = "players/1DEFAULTBILDID.png";
           return;
         }
         elements.playerAvatar.replaceChildren();
@@ -2816,6 +3224,220 @@ function SEH_initPlayer() {
       elements.playerAvatar.append(image);
     }
   
+    const DEFAULT_HERO_PALETTE = {
+      primary: "#0b2647",
+      secondary: "#d6b15f"
+    };
+
+    const PLAYER_HERO_TEAM_COLOR_PRESETS = {
+      /* Samma referens-preset som Android-appen. */
+      "ssk esports": { primary: "#0750a0", secondary: "#f0c51b" }
+    };
+
+    function profileTeamPaletteKey(teamName) {
+      return String(teamName || "").trim().toLocaleLowerCase("sv-SE");
+    }
+
+    function profileRgbToHex(r, g, b) {
+      const part = (value) => Math.max(0, Math.min(255, Math.round(value)))
+        .toString(16)
+        .padStart(2, "0");
+      return `#${part(r)}${part(g)}${part(b)}`;
+    }
+
+    function profileColorDistance(a, b) {
+      return Math.sqrt(
+        (a[0] - b[0]) ** 2 +
+        (a[1] - b[1]) ** 2 +
+        (a[2] - b[2]) ** 2
+      );
+    }
+
+    /*
+     * Samma palettprincip som Android-appen:
+     * - skala loggan till 48x48
+     * - ignorera transparent, nästan svart/vitt och grått
+     * - kvantisera RGB i steg om 32
+     * - vanligaste tydliga färgen = primary
+     * - första färgen >90 RGB-enheter bort = secondary
+     */
+    function profilePaletteFromLogo(image) {
+      try {
+        if (!(image instanceof HTMLImageElement)) return null;
+        if (!image.naturalWidth || !image.naturalHeight) return null;
+        const canvas = document.createElement("canvas");
+        canvas.width = 48;
+        canvas.height = 48;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (!context) return null;
+        context.clearRect(0, 0, 48, 48);
+        context.drawImage(image, 0, 0, 48, 48);
+        const pixels = context.getImageData(0, 0, 48, 48).data;
+        const buckets = new Map();
+        for (let index = 0; index < pixels.length; index += 4) {
+          const alpha = pixels[index + 3];
+          if (alpha < 100) continue;
+          let r = pixels[index];
+          let g = pixels[index + 1];
+          let b = pixels[index + 2];
+          const max = Math.max(r, g, b);
+          const min = Math.min(r, g, b);
+          const light = (max + min) / 2;
+          const saturation = max - min;
+          if (light < 24 || light > 235 || saturation < 24) continue;
+          r = Math.round(r / 32) * 32;
+          g = Math.round(g / 32) * 32;
+          b = Math.round(b / 32) * 32;
+          const key = `${r},${g},${b}`;
+          buckets.set(key, (buckets.get(key) || 0) + 1);
+        }
+        const colors = [...buckets.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .map(([key, count]) => ({
+            rgb: key.split(",").map(Number),
+            count
+          }));
+        if (!colors.length) return null;
+        const primary = colors[0].rgb;
+        const secondary = (
+          colors.find((item) => profileColorDistance(item.rgb, primary) > 90) ||
+          colors[1] ||
+          colors[0]
+        ).rgb;
+        return {
+          primary: profileRgbToHex(...primary),
+          secondary: profileRgbToHex(...secondary)
+        };
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function setPlayerHeroPalette(palette) {
+      if (!elements.playerHero) return;
+      const chosen = palette || DEFAULT_HERO_PALETTE;
+      const primary = chosen.primary || chosen.primaryColor || DEFAULT_HERO_PALETTE.primary;
+      const secondary = chosen.secondary || chosen.secondaryColor || primary;
+      elements.playerHero.style.setProperty("--player-team-primary", primary);
+      elements.playerHero.style.setProperty("--player-team-secondary", secondary);
+    }
+
+    function hydratePlayerHeroPalette(teamName) {
+      const key = profileTeamPaletteKey(teamName);
+      const configured =
+        window.SEH_TEAM_COLORS?.[teamName] ||
+        window.SEH_TEAM_COLORS?.[key] ||
+        PLAYER_HERO_TEAM_COLOR_PRESETS[key];
+      const cache = window.__SEH_TEAM_PALETTE_CACHE_V1236__ instanceof Map
+        ? window.__SEH_TEAM_PALETTE_CACHE_V1236__
+        : (window.__SEH_TEAM_PALETTE_CACHE_V1236__ = new Map());
+
+      setPlayerHeroPalette(DEFAULT_HERO_PALETTE);
+      if (configured) {
+        setPlayerHeroPalette(configured);
+        return;
+      }
+      if (cache.has(key)) {
+        setPlayerHeroPalette(cache.get(key));
+        return;
+      }
+
+      /*
+       * Läs färgen från en egen lokal teamlogos-bild, inte från den
+       * lazy-loadade watermarken. Det gör samma Android-palett stabil även
+       * på webben och undviker att vi faller tillbaka till standardfärgen.
+       */
+      const paletteImage = new Image();
+      paletteImage.loading = "eager";
+      paletteImage.decoding = "async";
+      paletteImage.alt = "";
+
+      const read = () => {
+        const palette = profilePaletteFromLogo(paletteImage);
+        if (!palette) return;
+        cache.set(key, palette);
+        setPlayerHeroPalette(palette);
+      };
+
+      paletteImage.addEventListener("load", read, { once: true });
+      SEH_applyTeamLogo(paletteImage, [], teamName, null);
+    }
+
+    function renderProfileTeamBrand(teamName) {
+      const displayName = String(teamName || "").trim() || "Okänt lag";
+      if (elements.playerCurrentTeamLogo) {
+        SEH_renderTeamLogo(
+          elements.playerCurrentTeamLogo,
+          [],
+          displayName,
+          `${displayName} logotyp`
+        );
+      }
+      if (elements.playerHeroWatermark) {
+        SEH_renderTeamLogo(
+          elements.playerHeroWatermark,
+          [],
+          displayName,
+          ""
+        );
+      }
+      if (elements.playerPortraitWatermark) {
+        SEH_renderTeamLogo(
+          elements.playerPortraitWatermark,
+          [],
+          displayName,
+          ""
+        );
+      }
+      hydratePlayerHeroPalette(displayName);
+    }
+
+    function resetProfileRanking() {
+      if (elements.heroTotalRp) elements.heroTotalRp.textContent = "–";
+      if (elements.heroSwedenRank) elements.heroSwedenRank.textContent = "–";
+      if (elements.heroAverageRp) elements.heroAverageRp.textContent = "–";
+      if (elements.heroPositionRank) elements.heroPositionRank.textContent = "–";
+      if (elements.profileStripRp) elements.profileStripRp.textContent = "–";
+    }
+
+    function applyProfileRanking(rank) {
+      if (!rank) return;
+      const totalRp = Number.isFinite(Number(rank.ranking_points))
+        ? SEH_formatRpNumber(rank.ranking_points)
+        : "–";
+      const overallRank = Number(rank.overall_rank) > 0
+        ? `#${SEH_formatRpNumber(rank.overall_rank)}`
+        : "–";
+      const averageRp = Number(rank.average_rank) > 0 && Number.isFinite(Number(rank.average_rating))
+        ? SEH_formatRpNumber(rank.average_rating, 3)
+        : "–";
+      const positionGroup = String(rank.position_group || "").toUpperCase() ||
+        (String(rank.primary_position || "").toUpperCase() === "G" ? "G" : "F");
+      const roleRank = positionGroup === "G"
+        ? rank.goalie_rank
+        : (rank.position_rank || rank.skater_rank);
+      const roleRankText = Number(roleRank) > 0
+        ? `#${SEH_formatRpNumber(roleRank)}`
+        : "–";
+
+      if (elements.heroTotalRp) elements.heroTotalRp.textContent = totalRp;
+      if (elements.heroSwedenRank) elements.heroSwedenRank.textContent = overallRank;
+      if (elements.heroAverageRp) elements.heroAverageRp.textContent = averageRp;
+      if (elements.heroPositionRank) elements.heroPositionRank.textContent = roleRankText;
+      if (elements.profileStripRp) elements.profileStripRp.textContent = totalRp;
+    }
+
+    async function hydrateProfileRanking(playerKey, displayName) {
+      resetProfileRanking();
+      try {
+        const lookup = await SEH_loadPlayerRanking();
+        const rank = SEH_findPlayerRanking(lookup, playerKey, displayName);
+        if (rank) applyProfileRanking(rank);
+      } catch (error) {
+        console.warn(`${APP_BUILD}: RP/ranking kunde inte laddas just nu.`, error);
+      }
+    }
+
     function addStat(container, label, value) {
       const item = document.createElement("div");
       const span = document.createElement("span");
@@ -2826,8 +3448,17 @@ function SEH_initPlayer() {
       container.append(item);
     }
   
+    function historicalPlayerTeamName(row) {
+      return String(
+        row?.resolvedHistoricalTeamName ||
+        row?.teamName ||
+        row?.teamCurrentName ||
+        ""
+      ).trim();
+    }
+
     function normalizedClubKey(row) {
-      const name = String(row.teamCurrentName || row.teamName || "").trim();
+      const name = historicalPlayerTeamName(row);
       if (!name || /free\s*agent/i.test(name)) return "";
       return name
         .toLocaleLowerCase("sv-SE")
@@ -2847,10 +3478,15 @@ function SEH_initPlayer() {
     }
   
     function historyTeamIdentity(row) {
-      if (row.teamId) return `team:${row.teamId}`;
+      const historicalName = historicalPlayerTeamName(row);
+      const normalizedHistoricalName = normalizedPlayerTeamName(historicalName);
+
+      // SportsGamer-ID är inte en stabil klubbidentitet över tid. Samma ID kan
+      // ha använts av flera helt olika lag, så turneringens lagnamn är primärt.
+      if (normalizedHistoricalName) return `name:${normalizedHistoricalName}`;
       if (row.teamExternalId) return `external:${String(row.teamExternalId).trim().toLowerCase()}`;
-      return `name:${String(row.teamName || row.teamCurrentName || "okänt lag")
-        .trim().toLocaleLowerCase("sv-SE")}`;
+      if (row.teamId) return `team:${row.teamId}`;
+      return "name:okantlag";
     }
   
     function historyIdentity(row) {
@@ -2936,14 +3572,17 @@ function SEH_initPlayer() {
         maximum(group, "saves"),
         merged.regularSaves + merged.playoffSaves
       );
-      merged.shotsAgainst = Math.max(
-        maximum(group, "shotsAgainst"),
-        merged.regularShotsAgainst + merged.playoffShotsAgainst
-      );
       merged.goalsAllowed = Math.max(
         maximum(group, "goalsAllowed"),
         merged.regularGoalsAllowed + merged.playoffGoalsAllowed
       );
+      const derivedMergedShotsAgainst = merged.saves + merged.goalsAllowed;
+      merged.shotsAgainst = derivedMergedShotsAgainst > 0
+        ? derivedMergedShotsAgainst
+        : Math.max(
+            maximum(group, "shotsAgainst"),
+            merged.regularShotsAgainst + merged.playoffShotsAgainst
+          );
       merged.shutouts = Math.max(
         maximum(group, "shutouts"),
         merged.regularShutouts + merged.playoffShutouts
@@ -3077,15 +3716,16 @@ function SEH_initPlayer() {
       ).trim();
 
       if (code === "ECL") {
-        const seasonMatch = source.match(/(?:season|ecl)[^0-9]*([0-9]+(?:\.[0-9]+)?)/i);
+        const seasonMatch = source.match(/(?:european\s+championship\s+league|season|\becl\b)[^0-9]*([0-9]+(?:\.[0-9]+)?)/i);
         const modernMatch = source.match(/(?:ecl\s*)?'?([0-9]{2})'?\s*[:\-]?\s*(spring|winter)/i);
+        const division = String(row?.division || "").trim();
 
         if (modernMatch) {
-          return `ECL ${modernMatch[1]} ${modernMatch[2][0].toUpperCase()}${modernMatch[2].slice(1).toLowerCase()}`;
+          return `ECL ${modernMatch[1]} ${modernMatch[2][0].toUpperCase()}${modernMatch[2].slice(1).toLowerCase()}${division ? ` ${division}` : ""}`;
         }
 
         if (seasonMatch) {
-          return `ECL ${seasonMatch[1]}`;
+          return `ECL ${seasonMatch[1]}${division ? ` ${division}` : ""}`;
         }
 
         return "ECL";
@@ -3126,53 +3766,346 @@ function SEH_initPlayer() {
       }
     }
 
-    function renderHistoryProfileBio({
+    function isNationalTeamHistoryRow(row) {
+      const leagueId = Number(row?.leagueId ?? row?.league_id);
+      if ([453, 517, 518].includes(leagueId)) return true;
+
+      const text = [
+        row?.seasonLabel,
+        row?.leagueName,
+        row?.competitionName,
+        row?.catalogDisplayName
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLocaleLowerCase("sv-SE");
+
+      return text.includes("world cup");
+    }
+
+    function clubHistoryRows(rows) {
+      return rows.filter((row) => !isNationalTeamHistoryRow(row));
+    }
+
+    function renderNationalTeamBio(nationalTeamRows = []) {
+      const oldRows = elements.playerBio.querySelectorAll("[data-national-team-bio]");
+      oldRows.forEach((row) => row.remove());
+
+      nationalTeamRows
+        .filter((row) => number(row?.matches) > 0)
+        .sort((a, b) => number(b?.matches) - number(a?.matches))
+        .forEach((row) => {
+          const phrase = String(row?.national_team_phrase_sv || "").trim();
+          if (!phrase) return;
+
+          const paragraph = document.createElement("p");
+          paragraph.dataset.nationalTeamBio = "true";
+          paragraph.textContent =
+            `Spelaren har representerat ${phrase} i ${formatInteger(row.matches, "0")} ${matchWord(number(row.matches))}.`;
+
+          const roleParagraph = [...elements.playerBio.querySelectorAll("p")]
+            .find((item) => item.textContent.startsWith("Profilen är främst noterad"));
+
+          if (roleParagraph) {
+            roleParagraph.before(paragraph);
+          } else {
+            elements.playerBio.append(paragraph);
+          }
+        });
+    }
+
+    function naturalSwedishList(values) {
+      const items = values.filter(Boolean);
+      if (!items.length) return "";
+      if (items.length === 1) return items[0];
+      if (items.length === 2) return `${items[0]} och ${items[1]}`;
+      return `${items.slice(0, -1).join(", ")} och ${items[items.length - 1]}`;
+    }
+
+    function skaterPositionLabel(value) {
+      const raw = String(value || "").trim();
+      const normalized = raw.toUpperCase().replace(/[._-]+/g, " ").replace(/\s+/g, " ");
+      const labels = {
+        C: "center",
+        CENTER: "center",
+        CENTRE: "center",
+        LW: "vänsterforward",
+        "LEFT WING": "vänsterforward",
+        "LEFT WINGER": "vänsterforward",
+        RW: "högerforward",
+        "RIGHT WING": "högerforward",
+        "RIGHT WINGER": "högerforward",
+        LD: "vänsterback",
+        "LEFT DEFENSE": "vänsterback",
+        "LEFT DEFENCE": "vänsterback",
+        "LEFT DEFENSEMAN": "vänsterback",
+        RD: "högerback",
+        "RIGHT DEFENSE": "högerback",
+        "RIGHT DEFENCE": "högerback",
+        "RIGHT DEFENSEMAN": "högerback",
+        D: "back",
+        DEFENSE: "back",
+        DEFENCE: "back",
+        DEFENSEMAN: "back",
+        F: "forward",
+        FORWARD: "forward",
+        SKATER: "utespelare",
+        U: "utespelare",
+        UTESPELARE: "utespelare"
+      };
+      if (!raw || normalized === "G" || normalized === "GK" || normalized === "GOALIE" || normalized === "MÅLVAKT") {
+        return "";
+      }
+      return labels[normalized] || raw.toLocaleLowerCase("sv-SE");
+    }
+
+    function skaterPositionSummary(profileRows = []) {
+      const totals = new Map();
+      const sorted = [...profileRows].sort(compareHistoryRows);
+      let latestPosition = "";
+
+      sorted.forEach((row) => {
+        if (number(row?.skaterGames) <= 0) return;
+        const label = skaterPositionLabel(row?.position);
+        if (!label) return;
+        if (!latestPosition) latestPosition = label;
+        totals.set(label, (totals.get(label) || 0) + Math.max(1, number(row?.skaterGames)));
+      });
+
+      const primaryPosition = [...totals.entries()]
+        .sort((a, b) => b[1] - a[1])[0]?.[0] || latestPosition || "";
+
+      return { primaryPosition, latestPosition };
+    }
+
+    function latestRegisteredRole(profileRows = []) {
+      const row = [...profileRows].sort(compareHistoryRows)[0] || null;
+      if (!row) return { type: "", position: "" };
+      const goalie = number(row.goalieGames);
+      const skater = number(row.skaterGames);
+      if (goalie > skater && goalie > 0) return { type: "goalie", position: "målvakt" };
+      if (skater > 0) return { type: "skater", position: skaterPositionLabel(row.position) };
+      if (goalie > 0) return { type: "goalie", position: "målvakt" };
+      return { type: "", position: "" };
+    }
+
+    function meritCountPhrase(count, singular, plural) {
+      return `${formatInteger(count, "0")} ${count === 1 ? singular : plural}`;
+    }
+
+    function trimSentence(value) {
+      return String(value || "").trim().replace(/[.!?]+$/, "");
+    }
+
+    function appendBioMeritParagraph({
       currentName,
-      earliest,
-      latest,
-      bestOffense,
-      tournamentCount,
-      clubCount,
-      primaryRole,
-      careerGames
+      profileRows = [],
+      meritRows = [],
+      personalMeritRows = [],
+      nationalTeamRows = []
     }) {
+      const teamMerits = buildTeamMerits(meritRows);
+      const personalMerits = buildPersonalMerits(
+        profileRows,
+        personalMeritRows,
+        nationalTeamRows
+      );
+
+      const championships = teamMerits.filter((item) => item.type === "place-1");
+      const finalists = teamMerits.filter((item) => item.type === "place-2");
+      const bronze = teamMerits.filter((item) => item.type === "place-3");
+      const statisticalMerits = personalMerits.filter((item) =>
+        item.type !== "level" && item.type !== "national-team"
+      );
+      const nationalMerits = personalMerits.filter((item) => item.type === "national-team");
+
+      if (!teamMerits.length && !statisticalMerits.length && !nationalMerits.length) return;
+
+      const paragraph = document.createElement("p");
+      const placementParts = [];
+      if (championships.length) placementParts.push(meritCountPhrase(championships.length, "mästartitel", "mästartitlar"));
+      if (finalists.length) placementParts.push(meritCountPhrase(finalists.length, "silver", "silver"));
+      if (bronze.length) placementParts.push(meritCountPhrase(bronze.length, "bronsplacering", "bronsplaceringar"));
+
+      if (placementParts.length) {
+        paragraph.append(
+          document.createTextNode(
+            `På meritlistan finns ${naturalSwedishList(placementParts)}. `
+          )
+        );
+
+        const headlineMerits = [
+          ...championships.slice(0, 2),
+          ...(championships.length ? [] : finalists.slice(0, 1))
+        ].slice(0, 2);
+        if (headlineMerits.length) {
+          paragraph.append(
+            document.createTextNode(
+              `Bland lagmeriterna märks ${naturalSwedishList(headlineMerits.map((item) => trimSentence(item.text).replace(/^Mästare i /, "segern i ").replace(/^Silver i /, "silvret i ")))}. `
+            )
+          );
+        }
+      }
+
+      if (statisticalMerits.length) {
+        const highlights = statisticalMerits.slice(0, 2).map((item) => trimSentence(item.text));
+        paragraph.append(
+          document.createTextNode(
+            `${placementParts.length ? "Individuellt" : `${currentName} har också personliga meriter`} ${placementParts.length ? "finns" : "som"} ${naturalSwedishList(highlights)}. `
+          )
+        );
+      }
+
+      if (nationalMerits.length) {
+        const nationalText = naturalSwedishList(
+          nationalMerits.slice(0, 2).map((item) => trimSentence(item.text).replace(/^Representerat /, "representation för "))
+        );
+        paragraph.append(
+          document.createTextNode(
+            `${nationalText ? `Därtill finns ${nationalText}.` : ""}`
+          )
+        );
+      }
+
+      if (paragraph.textContent.trim()) elements.playerBio.append(paragraph);
+    }
+
+    function renderHistoryProfileBio(context) {
+      const {
+        currentName,
+        earliest,
+        latest,
+        bestOffense,
+        bestGoalie,
+        tournamentCount,
+        clubCount,
+        careerGames,
+        skaterGames,
+        goalieGames,
+        careerSavePercentage,
+        shutouts,
+        competitions,
+        profileRows = [],
+        meritRows = [],
+        personalMeritRows = [],
+        nationalTeamRows = []
+      } = context;
+
+      currentBioContext = { ...context };
       elements.playerBio.replaceChildren();
 
       const first = document.createElement("p");
       first.append(
         document.createTextNode(
-          `${currentName} är en svensk eHockey-spelare som gjorde sitt första registrerade framträdande i ${bioSeasonLabel(earliest)} för `
+          `${currentName} har varit en del av svensk eHockey sedan ${bioSeasonLabel(earliest)}, då det första registrerade framträdandet kom med `
         )
       );
       appendBioTeamLink(first, earliest);
-      first.append(document.createTextNode("."));
-
-      const second = document.createElement("p");
-      second.append(
+      first.append(
         document.createTextNode(
-          `Totalt finns ${tournamentCount} säsongsrader i historiken och ${clubCount} olika lag. Senast syns spelaren i ${bioSeasonLabel(latest)} för `
+          `. Sedan dess har det blivit ${formatInteger(tournamentCount, "0")} registrerade säsonger, ${formatInteger(clubCount, "0")} olika lag och totalt ${formatInteger(careerGames, "0")} ${matchWord(careerGames)}. Senast representerade ${currentName} `
         )
       );
-      appendBioTeamLink(second, latest, "sitt senaste lag");
-      second.append(document.createTextNode("."));
+      appendBioTeamLink(first, latest, "sitt senaste lag");
+      first.append(document.createTextNode(` i ${bioSeasonLabel(latest)}.`));
 
-      const third = document.createElement("p");
-      third.textContent =
-        `Profilen är främst noterad som ${primaryRole.toLocaleLowerCase("sv-SE")} med ${careerGames} ${matchWord(careerGames)} totalt.`;
+      const second = document.createElement("p");
+      const positionSummary = skaterPositionSummary(profileRows);
+      const latestRole = latestRegisteredRole(profileRows);
 
-      elements.playerBio.append(first, second, third);
-
-      if (bestOffense && number(bestOffense.points) > 0) {
-        const fourth = document.createElement("p");
-        fourth.append(
+      if (number(goalieGames) > 0 && number(skaterGames) <= 0) {
+        second.append(
           document.createTextNode(
-            `Bästa offensiva raden är ${formatInteger(bestOffense.points, "0")} poäng i ${bioSeasonLabel(bestOffense)} för `
+            `I den registrerade historiken har ${currentName} spelat uteslutande som målvakt. Det har blivit ${formatInteger(goalieGames, "0")} matcher i mål`
           )
         );
-        appendBioTeamLink(fourth, bestOffense);
-        fourth.append(document.createTextNode("."));
-        elements.playerBio.append(fourth);
+        if (Number.isFinite(Number(careerSavePercentage)) && Number(careerSavePercentage) > 0) {
+          second.append(document.createTextNode(`, med ${formatSavePercentage(careerSavePercentage)} i räddningsprocent`));
+        }
+        if (number(shutouts) > 0) {
+          second.append(document.createTextNode(` och ${formatInteger(shutouts, "0")} nollor`));
+        }
+        second.append(document.createTextNode("."));
+      } else if (number(skaterGames) > 0 && number(goalieGames) <= 0) {
+        second.append(
+          document.createTextNode(
+            `I den registrerade historiken har ${currentName} enbart spelat som utespelare, totalt ${formatInteger(skaterGames, "0")} matcher.`
+          )
+        );
+        if (positionSummary.primaryPosition) {
+          second.append(
+            document.createTextNode(
+              ` Den vanligaste positionen är ${positionSummary.primaryPosition}`
+            )
+          );
+          if (positionSummary.latestPosition && positionSummary.latestPosition !== positionSummary.primaryPosition) {
+            second.append(document.createTextNode(`, medan den senaste registrerade positionen är ${positionSummary.latestPosition}.`));
+          } else {
+            second.append(document.createTextNode(", vilket också är den senaste registrerade positionen."));
+          }
+        }
+      } else if (number(skaterGames) > 0 && number(goalieGames) > 0) {
+        second.append(
+          document.createTextNode(
+            `Karriären har innehållit både utespel och målvaktsspel: ${formatInteger(skaterGames, "0")} matcher som utespelare och ${formatInteger(goalieGames, "0")} i mål.`
+          )
+        );
+        if (positionSummary.primaryPosition) {
+          second.append(document.createTextNode(` Som utespelare har ${currentName} framför allt spelat ${positionSummary.primaryPosition}.`));
+        }
+        if (latestRole.type === "goalie") {
+          second.append(document.createTextNode(` Den senaste registrerade rollen är målvakt.`));
+        } else if (latestRole.position) {
+          second.append(document.createTextNode(` Den senaste registrerade positionen är ${latestRole.position}.`));
+        }
+        if (Number.isFinite(Number(careerSavePercentage)) && Number(careerSavePercentage) > 0 && number(goalieGames) >= 3) {
+          second.append(document.createTextNode(` I mål ligger karriärens räddningsprocent på ${formatSavePercentage(careerSavePercentage)}.`));
+        }
       }
+
+      const competitionItems = String(competitions || "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+      if (competitionItems.length) {
+        second.append(
+          document.createTextNode(
+            ` Karriären sträcker sig över bland annat ${naturalSwedishList(competitionItems)}.`
+          )
+        );
+      }
+
+      elements.playerBio.append(first, second);
+
+      if (bestOffense && number(skaterGames) > 0 && number(bestOffense.points) > 0) {
+        const third = document.createElement("p");
+        third.append(
+          document.createTextNode(
+            `Offensivt sticker ${bioSeasonLabel(bestOffense)} ut som karriärens bästa säsong hittills. Då noterades ${currentName} för ${formatInteger(bestOffense.points, "0")} poäng med `
+          )
+        );
+        appendBioTeamLink(third, bestOffense);
+        third.append(document.createTextNode("."));
+        elements.playerBio.append(third);
+      } else if (bestGoalie && number(goalieGames) > 0 && number(bestGoalie.goalieGames) >= 3 && number(bestGoalie.savePercentage) > 0) {
+        const third = document.createElement("p");
+        third.append(
+          document.createTextNode(
+            `I målet sticker ${bioSeasonLabel(bestGoalie)} ut i statistiken, med ${formatSavePercentage(bestGoalie.savePercentage)} i räddningsprocent över ${formatInteger(bestGoalie.goalieGames, "0")} matcher för `
+          )
+        );
+        appendBioTeamLink(third, bestGoalie);
+        third.append(document.createTextNode("."));
+        elements.playerBio.append(third);
+      }
+
+      appendBioMeritParagraph({
+        currentName,
+        profileRows,
+        meritRows,
+        personalMeritRows,
+        nationalTeamRows
+      });
     }
 
     function bestOffensiveRow(rows) {
@@ -3209,6 +4142,74 @@ function SEH_initPlayer() {
       return division;
     }
 
+    function compactMeritTournamentName(value) {
+      let label = String(value || "").trim();
+      if (!label) return "";
+
+      const replacements = [
+        [/European Championship League/gi, "ECL"],
+        [/German Championship League/gi, "GCL"],
+        [/Swedish Championship League/gi, "SCL"],
+        [/Finnish Championship League/gi, "FCL"],
+        [/Russian Championship League/gi, "RCL"],
+        [/Czech Slovak Championship League/gi, "CSCL"],
+        [/North American Championship League/gi, "NACL"],
+        [/Western European Championship League/gi, "WECL"],
+        [/Xbox European Championship League/gi, "XECL"]
+      ];
+
+      replacements.forEach(([pattern, shortName]) => {
+        label = label.replace(pattern, shortName);
+      });
+
+      label = label
+        .replace(/\b(ECL|GCL|SCL|FCL|RCL|CSCL|NACL|WECL|XECL)\s+['’]?20(\d{2})\b/gi, "$1 ’$2")
+        .replace(/\b(ECL|GCL|SCL|FCL|RCL|CSCL|NACL|WECL|XECL)\s+['’](\d{4})\b/gi, (_, code, year) => `${code} ’${String(year).slice(-2)}`)
+        .replace(/\bSM\s+(20\d{2})\s*[–—-]\s*6v6\b/gi, "SM $1")
+        .replace(/\bSCL\s+6v6\s*[–—-]\s*(20\d{2})\b/gi, "SCL $1")
+        .replace(/\bSCL\s*[–—-]\s*6v6\s*[–—-]\s*(20\d{2})\b/gi, "SCL $1")
+        .replace(/\b(ECL|GCL|FCL|RCL|CSCL|NACL|WECL|XECL)\s+([’']\d{2})\s*:\s*/gi, "$1 $2 ")
+        .replace(/\b(ECL|GCL|FCL|RCL|CSCL|NACL|WECL|XECL)\s+([’']\d{2})\s+Spring\s*[–—-]\s*/gi, "$1 $2 Spring ")
+        .replace(/\s+[–—-]\s+/g, " – ")
+        .replace(/\b(ECL\s+[’']\d{2}\s+Spring)\s+–\s+/gi, "$1 ")
+        .replace(/\b(SCL\s+20\d{2})\s+–\s+6v6\b/gi, "$1")
+        .replace(/\bSummer Cup\s*[–—-]\s*Season\s*(\d+)\b/gi, "Summer Cup $1")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+
+      return label;
+    }
+
+    function polishPersonalMeritText(value) {
+      let label = String(value || "").trim();
+      if (!label) return "";
+
+      const replacements = [
+        [/European Championship League/gi, "ECL"],
+        [/German Championship League/gi, "GCL"],
+        [/Swedish Championship League/gi, "SCL"],
+        [/Finnish Championship League/gi, "FCL"],
+        [/Russian Championship League/gi, "RCL"],
+        [/Czech Slovak Championship League/gi, "CSCL"],
+        [/North American Championship League/gi, "NACL"],
+        [/Western European Championship League/gi, "WECL"],
+        [/Xbox European Championship League/gi, "XECL"]
+      ];
+
+      replacements.forEach(([pattern, shortName]) => {
+        label = label.replace(pattern, shortName);
+      });
+
+      return label
+        .replace(/(\d+)\.(\d+)\s*SV%/gi, "$1,$2 % SV")
+        .replace(/(\d+)\.(\d+)\s*%/g, "$1,$2 %")
+        .replace(/\bSCL\s+6v6\s*[–—-]\s*(20\d{2})\b/gi, "SCL $1")
+        .replace(/\bSM\s+(20\d{2})\s*[–—-]\s*6v6\b/gi, "SM $1")
+        .replace(/\s+-\s+/g, " – ")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+    }
+
     function meritTournamentLabel(profileRow, databaseRow = null) {
       const base = String(
         profileRow?.seasonLabel ||
@@ -3228,33 +4229,69 @@ function SEH_initPlayer() {
         !base.toLocaleLowerCase("sv-SE")
           .includes(division.toLocaleLowerCase("sv-SE"))
       ) {
-        return `${base} - ${division}`;
+        return compactMeritTournamentName(`${base} – ${division}`);
       }
 
-      return base;
+      return compactMeritTournamentName(base);
     }
 
     function teamMeritText(placement, tournament, teamName) {
       if (placement === 1) return `Mästare i ${tournament} med ${teamName}.`;
-      if (placement === 2) return `Finalist i ${tournament} med ${teamName}.`;
+      if (placement === 2) return `Silver i ${tournament} med ${teamName}.`;
       return `Brons i ${tournament} med ${teamName}.`;
     }
 
-    function createMeritRow(icon, text, type = "") {
+    function createMeritRow(item) {
       const row = document.createElement("div");
-      row.className = "player-merit-row";
+      row.className = [
+        "player-merit-row",
+        item?.type ? `player-merit-row--${item.type}` : "",
+        item?.teamName ? "player-merit-row--with-team" : ""
+      ].filter(Boolean).join(" ");
 
       const badge = document.createElement("span");
       badge.className = [
         "player-merit-icon",
-        type ? `player-merit-icon--${type}` : ""
+        item?.type ? `player-merit-icon--${item.type}` : ""
       ].filter(Boolean).join(" ");
-      badge.textContent = icon;
+      badge.textContent = item?.icon || "★";
 
       const copy = document.createElement("p");
-      copy.textContent = text;
+
+      if (item?.teamName && item?.tournament && [1, 2, 3].includes(Number(item?.placement))) {
+        const lead = Number(item.placement) === 1
+          ? `Mästare i ${item.tournament} med `
+          : Number(item.placement) === 2
+            ? `Silver i ${item.tournament} med `
+            : `Brons i ${item.tournament} med `;
+        copy.append(document.createTextNode(lead));
+
+        const teamId = Number(item.teamId);
+        if (Number.isFinite(teamId) && teamId > 0) {
+          const teamLink = document.createElement("a");
+          teamLink.href = teamUrl(teamId);
+          teamLink.textContent = item.teamName;
+          copy.append(teamLink);
+        } else {
+          const teamName = document.createElement("strong");
+          teamName.textContent = item.teamName;
+          copy.append(teamName);
+        }
+        copy.append(document.createTextNode("."));
+      } else {
+        copy.textContent = item?.text || "";
+      }
 
       row.append(badge, copy);
+
+      if (item?.teamName) {
+        const logo = document.createElement("span");
+        logo.className = "player-merit-team-logo";
+        logo.setAttribute("aria-hidden", "true");
+        row.append(logo);
+        SEH_renderTeamLogo(logo, [], item.teamName, "");
+      }
+
       return row;
     }
 
@@ -3270,9 +4307,93 @@ function SEH_initPlayer() {
       }
 
       items.forEach((item) => {
-        container.append(
-          createMeritRow(item.icon, item.text, item.type || "")
-        );
+        container.append(createMeritRow(item));
+      });
+    }
+
+    function renderGroupedTeamMerits(container, items, emptyText) {
+      container.replaceChildren();
+
+      if (!items.length) {
+        const empty = document.createElement("p");
+        empty.className = "player-merits-empty";
+        empty.textContent = emptyText;
+        container.append(empty);
+        return;
+      }
+
+      const groups = [
+        { placement: 1, icon: "🏆", label: "Guld", tone: "gold" },
+        { placement: 2, icon: "🥈", label: "Silver", tone: "silver" },
+        { placement: 3, icon: "🥉", label: "Brons", tone: "bronze" }
+      ];
+
+      groups.forEach((group) => {
+        const groupItems = items.filter((item) => Number(item?.placement) === group.placement);
+        if (!groupItems.length) return;
+
+        const section = document.createElement("section");
+        section.className = `player-merit-placement-group player-merit-placement-group--${group.tone}`;
+
+        const heading = document.createElement("div");
+        heading.className = "player-merit-placement-heading";
+
+        const title = document.createElement("div");
+        title.className = "player-merit-placement-title";
+
+        const icon = document.createElement("span");
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = group.icon;
+
+        const label = document.createElement("strong");
+        label.textContent = group.label;
+
+        const count = document.createElement("small");
+        count.textContent = formatInteger(groupItems.length, "0");
+
+        title.append(icon, label);
+        heading.append(title, count);
+
+        const grid = document.createElement("div");
+        grid.className = "player-merit-placement-grid";
+        groupItems.forEach((item) => grid.append(createMeritRow(item)));
+
+        section.append(heading, grid);
+        container.append(section);
+      });
+    }
+
+    function renderOverviewMeritBadges(teamMerits = [], personalMerits = []) {
+      if (!elements.overviewMeritBadges) return;
+
+      const championshipCount = teamMerits.filter((item) => item.type === "place-1").length;
+      const finalCount = teamMerits.filter((item) => item.type === "place-2").length;
+      const bronzeCount = teamMerits.filter((item) => item.type === "place-3").length;
+      const personalCount = personalMerits.length;
+
+      const badges = [
+        { icon: "🏆", value: championshipCount, label: "MÄSTARTITLAR", tone: "gold" },
+        { icon: "🥈", value: finalCount, label: "SILVER", tone: "silver" },
+        { icon: "🥉", value: bronzeCount, label: "BRONS", tone: "bronze" },
+        { icon: "★", value: personalCount, label: "PERSONLIGA", tone: "personal" }
+      ];
+
+      elements.overviewMeritBadges.replaceChildren();
+      badges.forEach((item) => {
+        const card = document.createElement("article");
+        card.className = `player-overview-honour player-overview-honour--${item.tone}`;
+        const icon = document.createElement("span");
+        icon.className = "player-overview-honour__icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = item.icon;
+        const copy = document.createElement("div");
+        const value = document.createElement("strong");
+        value.textContent = formatInteger(item.value, "0");
+        const label = document.createElement("small");
+        label.textContent = item.label;
+        copy.append(value, label);
+        card.append(icon, copy);
+        elements.overviewMeritBadges.append(card);
       });
     }
 
@@ -3334,12 +4455,19 @@ function SEH_initPlayer() {
           return {
             icon: String(placement),
             type: `place-${placement}`,
+            placement,
+            tournament,
+            teamName,
+            teamId: nullableNumber(row?.team_id ?? row?.teamId),
             text: teamMeritText(placement, tournament, teamName),
             sortValue: meritSortValue(row)
           };
         })
         .filter(Boolean)
-        .sort((a, b) => b.sortValue - a.sortValue);
+        .sort((a, b) =>
+          number(a.placement) - number(b.placement) ||
+          number(b.sortValue) - number(a.sortValue)
+        );
     }
 
     function personalMeritIcon(row) {
@@ -3358,7 +4486,7 @@ function SEH_initPlayer() {
       return "";
     }
 
-    function buildPersonalMerits(profileRows, personalMeritRows) {
+    function buildPersonalMerits(profileRows, personalMeritRows, nationalTeamRows = []) {
       /*
        * Statistikmeriter kommer färdigberäknade från Supabase:
        * public.v_ehockey_player_personal_merits_v2
@@ -3386,28 +4514,74 @@ function SEH_initPlayer() {
           return {
             icon: personalMeritIcon(row),
             type: personalMeritType(row),
-            text: meritText,
+            text: polishPersonalMeritText(meritText),
             sortValue: Number(row?.league_id ?? row?.sports_gamer_league_id) || 0
           };
         })
         .filter(Boolean);
 
-      const highestLevel = highestEclLevel(profileRows);
+      nationalTeamRows
+        .filter((row) => number(row?.matches) > 0)
+        .forEach((row) => {
+          const phrase = String(row?.national_team_phrase_sv || "").trim();
+          const countryCode = String(row?.country_code || "").trim().toUpperCase();
+          if (!phrase) return;
 
-      if (highestLevel) {
-        items.push({
-          icon: "N",
-          type: "level",
-          text: `Högsta ECL-nivå i historiken: ${highestLevel}.`,
-          sortValue: -1
+          const matches = number(row.matches);
+          const tournaments = number(row.tournaments);
+          const matchLabel = matches === 1 ? "landskamp" : "landskamper";
+          const countryLabel = countryCode === "SE" ? "Sverige" : phrase;
+          const tournamentDetail = tournaments > 0
+            ? ` under ${tournaments === 1 ? "en" : formatInteger(tournaments, "0")} World Cup-${tournaments === 1 ? "turnering" : "turneringar"}`
+            : "";
+
+          items.push({
+            icon: countryFlag(countryCode) || "L",
+            type: "national-team",
+            text: `Representerat ${countryLabel} i ${formatInteger(matches, "0")} ${matchLabel}${tournamentDetail}.`,
+            sortValue: -0.5
+          });
         });
-      }
 
       return items.sort((a, b) => {
-        if (a.type === "level") return 1;
-        if (b.type === "level") return -1;
+        if (a.type === "national-team" && b.type !== "national-team") return 1;
+        if (b.type === "national-team" && a.type !== "national-team") return -1;
         return number(b.sortValue) - number(a.sortValue);
       });
+    }
+
+    async function fetchPlayerNationalTeams(profileRows, directoryRow = null) {
+      const playerKey = String(
+        profileRows.find((row) => String(row?.playerKey || "").trim())?.playerKey || ""
+      ).trim();
+
+      const sportsGamerUrl = String(
+        directoryRow?.sports_gamer_player_url ||
+        profileRows.find((row) => String(row?.externalUrl || "").trim())?.externalUrl ||
+        ""
+      ).trim();
+
+      const fetchBy = async (field, value) => {
+        if (!value) return [];
+        const params = new URLSearchParams({ select: "*" });
+        params.set(field, `eq.${value}`);
+        return fetchAllJson("v_ehockey_player_national_team_summary_v1", params);
+      };
+
+      try {
+        if (playerKey) {
+          const rows = await fetchBy("player_key", playerKey);
+          if (rows.length) return rows;
+        }
+
+        if (sportsGamerUrl) {
+          return await fetchBy("sports_gamer_player_url", sportsGamerUrl);
+        }
+      } catch (error) {
+        console.warn(`${APP_BUILD}: kunde inte läsa landslagsrepresentation från Supabase.`, error);
+      }
+
+      return [];
     }
 
     async function fetchPlayerMeritData(profileRows, directoryRow = null) {
@@ -3468,9 +4642,10 @@ function SEH_initPlayer() {
         });
       }
 
-      const [meritRows, personalMeritRows] = await Promise.all([
+      const [meritRows, personalMeritRows, nationalTeamRows] = await Promise.all([
         meritsPromise,
-        personalMeritsPromise
+        personalMeritsPromise,
+        fetchPlayerNationalTeams(profileRows, directoryRow)
       ]);
 
       console.info(
@@ -3479,22 +4654,42 @@ function SEH_initPlayer() {
           playerKey,
           sportsGamerPlayerId,
           teamMerits: meritRows.length,
-          personalMerits: personalMeritRows.length
+          personalMerits: personalMeritRows.length,
+          nationalTeams: nationalTeamRows.length
         }
       );
 
-      return { meritRows, personalMeritRows };
+      return { meritRows, personalMeritRows, nationalTeamRows };
     }
 
     function renderPlayerMerits(
       profileRows,
       meritRows = [],
-      personalMeritRows = []
+      personalMeritRows = [],
+      nationalTeamRows = []
     ) {
       const teamMerits = buildTeamMerits(meritRows);
-      const personalMerits = buildPersonalMerits(profileRows, personalMeritRows);
+      const personalMerits = buildPersonalMerits(
+        profileRows,
+        personalMeritRows,
+        nationalTeamRows
+      );
 
-      renderMeritList(
+      renderOverviewMeritBadges(teamMerits, personalMerits);
+
+      const titleCount = teamMerits.filter((item) => item.type === "place-1").length;
+      const finalCount = teamMerits.filter((item) => item.type === "place-2").length;
+      const bronzeCount = teamMerits.filter((item) => item.type === "place-3").length;
+      const personalCount = personalMerits.length;
+
+      if (elements.meritsTitleCount) elements.meritsTitleCount.textContent = formatInteger(titleCount, "0");
+      if (elements.meritsFinalCount) elements.meritsFinalCount.textContent = formatInteger(finalCount, "0");
+      if (elements.meritsBronzeCount) elements.meritsBronzeCount.textContent = formatInteger(bronzeCount, "0");
+      if (elements.meritsPersonalCount) elements.meritsPersonalCount.textContent = formatInteger(personalCount, "0");
+      if (elements.teamMeritsHeadingCount) elements.teamMeritsHeadingCount.textContent = formatInteger(teamMerits.length, "0");
+      if (elements.personalMeritsHeadingCount) elements.personalMeritsHeadingCount.textContent = formatInteger(personalCount, "0");
+
+      renderGroupedTeamMerits(
         elements.teamMeritsList,
         teamMerits,
         "Inga registrerade pallplaceringar i databasen."
@@ -3515,8 +4710,19 @@ function SEH_initPlayer() {
       renderPlayerMerits(
         profileRows,
         data.meritRows,
-        data.personalMeritRows
+        data.personalMeritRows,
+        data.nationalTeamRows
       );
+
+      if (currentBioContext) {
+        renderHistoryProfileBio({
+          ...currentBioContext,
+          profileRows,
+          meritRows: data.meritRows,
+          personalMeritRows: data.personalMeritRows,
+          nationalTeamRows: data.nationalTeamRows
+        });
+      }
     }
 
 
@@ -3530,22 +4736,41 @@ function SEH_initPlayer() {
     }
 
 
-    function teamNameAliases(row) {
-      return [
-        row?.teamName,
-        row?.teamCurrentName
-      ]
-        .map((value) => String(value || "").trim())
-        .filter(Boolean);
+    function buildLocalTeamNameIndex(teamRows = []) {
+      const index = new Map();
+
+      // HISTORIKTABELLEN: ett historiskt alias får aldrig ärva dagens
+      // klubbidentitet. Matcha därför endast mot lagets faktiska current_name.
+      for (const teamRow of teamRows) {
+        const key = normalizedPlayerTeamName(teamRow.current_name);
+        if (!key || index.has(key)) continue;
+        index.set(key, teamRow);
+      }
+
+      return index;
     }
 
-    function buildLocalTeamNameIndex(teamRows = []) {
+    function buildLocalClubAliasIndex(teamRows = []) {
       const index = new Map();
 
       const add = (name, teamRow) => {
         const key = normalizedPlayerTeamName(name);
-        if (!key || index.has(key)) return;
-        index.set(key, teamRow);
+        if (!key) return;
+
+        /*
+         * LAG-FLIKEN: alias används bara när v_local_team_list uttryckligen
+         * säger att namnet tillhör klubben. Om samma alias mot förmodan ligger
+         * på flera klubbar markerar vi det som tvetydigt och slår inte ihop.
+         */
+        if (!index.has(key)) {
+          index.set(key, teamRow);
+          return;
+        }
+
+        const existing = index.get(key);
+        if (Number(existing?.team_id) !== Number(teamRow?.team_id)) {
+          index.set(key, null);
+        }
       };
 
       for (const teamRow of teamRows) {
@@ -3554,7 +4779,6 @@ function SEH_initPlayer() {
         const historicalNames = Array.isArray(teamRow.historical_names)
           ? teamRow.historical_names
           : [];
-
         const leagueNames = Array.isArray(teamRow.names_used_in_leagues)
           ? teamRow.names_used_in_leagues
           : [];
@@ -3574,26 +4798,26 @@ function SEH_initPlayer() {
           return row;
         }
 
-        let match = null;
-
-        for (const name of teamNameAliases(row)) {
-          const key = normalizedPlayerTeamName(name);
-          if (key && byName.has(key)) {
-            match = byName.get(key);
-            break;
-          }
-        }
+        // Endast namnet som faktiskt användes i den här turneringen får
+        // avgöra om historikraden kan kopplas till ett lokalt lag.
+        const historicalName = historicalPlayerTeamName(row);
+        const key = normalizedPlayerTeamName(historicalName);
+        const match = key ? byName.get(key) : null;
 
         if (!match?.team_id) {
           return row;
         }
 
+        const resolvedHistoricalTeamName = String(
+          match.current_name || historicalName
+        ).trim();
+
         return {
           ...row,
           teamId: Number(match.team_id) || null,
           teamIsLinkable: true,
-          teamCurrentName:
-            String(match.current_name || row.teamCurrentName || row.teamName || "").trim(),
+          teamCurrentName: resolvedHistoricalTeamName,
+          resolvedHistoricalTeamName,
           resolvedLogoUrl:
             String(match.logo_url || match.logo_path || "").trim()
         };
@@ -3614,41 +4838,120 @@ function SEH_initPlayer() {
         : null;
 
       return String(
-        metadata?.current_name ||
-        row.teamCurrentName ||
+        row.resolvedHistoricalTeamName ||
         row.teamName ||
+        row.teamCurrentName ||
+        metadata?.current_name ||
         ""
       ).trim();
+    }
+
+    function historyRowSafeTeamId(row) {
+      const teamId = Number(row?.teamId);
+      if (!Number.isInteger(teamId) || teamId <= 0) return null;
+
+      const historicalName = normalizedPlayerTeamName(
+        historicalPlayerTeamName(row)
+      );
+      const currentName = normalizedPlayerTeamName(row?.teamCurrentName);
+
+      return historicalName && currentName && historicalName === currentName
+        ? teamId
+        : null;
+    }
+
+    function playerTeamCompetitionLabel(row) {
+      const explicit = String(row?.competitionCode || "").trim();
+      const explicitUpper = explicit.toUpperCase();
+      const sourceText = [
+        row?.catalogDisplayName,
+        row?.competitionName,
+        row?.leagueName,
+        row?.seasonLabel
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      const upper = sourceText.toUpperCase();
+
+      // Mer specifika turneringsnamn måste testas före de bredare ligakoderna.
+      if (/(^|[^A-Z0-9])EHSM([^A-Z0-9]|$)/.test(upper)) return "eHSM";
+      if (/IS\s*CUP/.test(upper)) return "IS Cup";
+      if (/XBOX\s+EUROPEAN\s+CHAMPIONSHIP\s+LEAGUE|(^|[^A-Z0-9])XECL([^A-Z0-9]|$)/.test(upper)) return "XECL";
+      if (/WESTERN\s+EUROPEAN\s+CHAMPIONSHIP\s+LEAGUE|(^|[^A-Z0-9])WECL([^A-Z0-9]|$)/.test(upper)) return "WECL";
+      if (/NORTH\s+AMERICAN\s+CHAMPIONSHIP\s+LEAGUE|(^|[^A-Z0-9])NACL([^A-Z0-9]|$)/.test(upper)) return "NACL";
+      if (/CZECH\s+SLOVAK\s+CHAMPIONSHIP\s+LEAGUE|(^|[^A-Z0-9])CSCL([^A-Z0-9]|$)/.test(upper)) return "CSCL";
+      if (/RUSSIAN\s+CHAMPIONSHIP\s+LEAGUE|(^|[^A-Z0-9])RCL([^A-Z0-9]|$)/.test(upper)) return "RCL";
+      if (/GERMAN\s+CHAMPIONSHIP\s+LEAGUE|(^|[^A-Z0-9])GCL([^A-Z0-9]|$)/.test(upper)) return "GCL";
+      if (/FINNISH\s+CHAMPIONSHIP\s+LEAGUE|(^|[^A-Z0-9])FCL([^A-Z0-9]|$)/.test(upper)) return "FCL";
+      if (/SWEDISH\s+CHAMPIONSHIP\s+LEAGUE|(^|[^A-Z0-9])SCL([^A-Z0-9]|$)/.test(upper)) return "SCL";
+      if (/EUROPEAN\s+CHAMPIONSHIP\s+LEAGUE|(^|[^A-Z0-9])ECL([^A-Z0-9]|$)/.test(upper)) return "ECL";
+      if (/(^|[^A-Z0-9])SEC([^A-Z0-9]|$)/.test(upper)) return "SEC";
+      if (/(^|[^A-Z0-9])E-?SHL([^A-Z0-9]|$)/.test(upper)) return "eSHL";
+      if (/(^|[^A-Z0-9])ITHL([^A-Z0-9]|$)/.test(upper)) return "ITHL";
+      if (/(^|[^A-Z0-9])LGEL([^A-Z0-9]|$)/.test(upper)) return "LGEL";
+      if (/(^|[^A-Z0-9])6HL([^A-Z0-9]|$)/.test(upper)) return "6HL";
+      if (/SM\s*EHOCKEY|EHOCKEY\s*SM|(^|[^A-Z0-9])SM([^A-Z0-9]|$)/.test(upper)) return "SM";
+
+      // Om competition_code redan är en riktig liga använder vi den.
+      if (explicitUpper && explicitUpper !== "SPORTSGAMER" && explicitUpper !== "ÖVRIGT") {
+        return competitionDisplayLabel(explicitUpper);
+      }
+
+      // SportsGamer är plattform/källa, inte tävlingen. Visa hellre inget än fel badge.
+      return "";
     }
 
     function buildPlayerTeams(profileRows, teamRows = []) {
       const metadataById = new Map(
         teamRows.map((row) => [Number(row.team_id), row])
       );
+      const canonicalByName = buildLocalClubAliasIndex(teamRows);
       const grouped = new Map();
 
       for (const row of profileRows) {
-        const displayName = playerTeamDisplayName(row, metadataById);
-        const normalizedName = normalizedPlayerTeamName(displayName);
+        const historicalDisplayName = playerTeamDisplayName(row, metadataById);
+        const normalizedHistoricalName = normalizedPlayerTeamName(historicalDisplayName);
 
-        if (!normalizedName) continue;
+        if (!normalizedHistoricalName) continue;
 
-        const key = `name:${normalizedName}`;
+        /*
+         * Lag-fliken visar KLUBBAR, inte varje historisk stavning/namnvariant.
+         *
+         * En sammanslagning får endast göras när v_local_team_list uttryckligen
+         * känner namnet som current_name, historical_names eller
+         * names_used_in_leagues för samma lokala klubb. Vi använder alltså
+         * ALDRIG SportsGamer team_external_id som klubbidentitet här.
+         *
+         * Exempel:
+         *   IFK Norrland + IF Norrland + Norrland -> IF Norrland
+         * medan Frölunda HC / FILADELPHIA / Last Dance hålls separata även om
+         * SportsGamer historiskt har återanvänt samma externa team-id.
+         */
+        const canonicalMeta = canonicalByName.get(normalizedHistoricalName) || null;
+        const canonicalTeamId = Number(canonicalMeta?.team_id) || null;
+        const canonicalName = String(
+          canonicalMeta?.current_name || historicalDisplayName || "Okänt lag"
+        ).trim();
+        const canonicalNameKey = normalizedPlayerTeamName(canonicalName);
+
+        const key = canonicalTeamId
+          ? `club:${canonicalTeamId}`
+          : `name:${canonicalNameKey || normalizedHistoricalName}`;
         const sortValue = tournamentChronologyValue(row);
-        const rowTeamId =
-          Number.isInteger(Number(row.teamId)) && Number(row.teamId) > 0
-            ? Number(row.teamId)
-            : null;
+        const rowTeamId = historyRowSafeTeamId(row);
 
         if (!grouped.has(key)) {
           grouped.set(key, {
-            teamId: null,
+            teamId: canonicalTeamId || null,
             teamIds: new Set(),
-            teamName: displayName || "Okänt lag",
+            teamName: canonicalName || "Okänt lag",
             tournaments: new Set(),
             competitions: new Set(),
             latestSort: sortValue,
-            latestTeamId: rowTeamId
+            latestTeamId: rowTeamId,
+            canonicalMeta
           });
         }
 
@@ -3656,11 +4959,6 @@ function SEH_initPlayer() {
 
         if (rowTeamId) {
           team.teamIds.add(rowTeamId);
-
-          if (metadataById.has(rowTeamId) && !team.teamId) {
-            // Prefer a real local Svensk eHockey team id for the card link.
-            team.teamId = rowTeamId;
-          }
         }
 
         team.tournaments.add(
@@ -3671,46 +4969,67 @@ function SEH_initPlayer() {
           ].join("|")
         );
 
-        if (row.competitionCode) {
-          team.competitions.add(String(row.competitionCode));
+        const competitionLabel = playerTeamCompetitionLabel(row);
+        if (competitionLabel) {
+          team.competitions.add(competitionLabel);
         }
 
         if (sortValue > team.latestSort) {
           team.latestSort = sortValue;
           team.latestTeamId = rowTeamId;
-          team.teamName = displayName || team.teamName;
+          // Kanoniska klubbar behåller current_name. Omatchade historiska lag
+          // fortsätter däremot visa namnet från den senaste turneringen.
+          if (!team.canonicalMeta) {
+            team.teamName = historicalDisplayName || team.teamName;
+          }
         }
       }
 
       return [...grouped.values()]
         .map((team) => {
-          // If no ID was confirmed through v_local_team_list, use the
-          // newest historical ID as fallback so the card remains clickable.
+          if (team.canonicalMeta) {
+            return {
+              ...team,
+              teamId: Number(team.canonicalMeta.team_id) || null,
+              teamName: String(team.canonicalMeta.current_name || team.teamName).trim(),
+              logoUrl:
+                team.canonicalMeta.logo_url ||
+                team.canonicalMeta.logo_path ||
+                "",
+              tournamentCount: team.tournaments.size,
+              competitionList: [...team.competitions]
+            };
+          }
+
+          // Omatchade historiska lag får aldrig slås ihop bara för att de råkar
+          // dela ett gammalt SportsGamer-id med en senare klubbidentitet.
           const linkTeamId =
-            team.teamId ||
             team.latestTeamId ||
             [...team.teamIds][0] ||
             null;
-
           const metadata = linkTeamId
             ? metadataById.get(Number(linkTeamId))
             : null;
+          const metadataName = String(metadata?.current_name || "").trim();
+          const metadataMatchesHistorical = Boolean(
+            metadata &&
+            normalizedPlayerTeamName(metadataName) ===
+              normalizedPlayerTeamName(team.teamName)
+          );
 
           return {
             ...team,
-            teamId: linkTeamId,
-            teamName: metadata?.current_name || team.teamName,
-            logoUrl:
-              metadata?.logo_url ||
-              metadata?.logo_path ||
-              "",
+            teamId: metadataMatchesHistorical ? linkTeamId : null,
+            logoUrl: metadataMatchesHistorical
+              ? (metadata?.logo_url || metadata?.logo_path || "")
+              : "",
             tournamentCount: team.tournaments.size,
             competitionList: [...team.competitions]
           };
         })
         .sort((a, b) =>
-          b.tournamentCount - a.tournamentCount ||
           b.latestSort - a.latestSort ||
+          b.tournamentCount - a.tournamentCount ||
           a.teamName.localeCompare(b.teamName, "sv-SE")
         );
     }
@@ -3726,11 +5045,43 @@ function SEH_initPlayer() {
         return;
       }
 
+      const seasonKeys = new Set(
+        profileRows.map((row) => [row.competitionCode, row.leagueId, row.seasonLabel].join("|"))
+      );
+      if (elements.playerTeamsClubCount) {
+        elements.playerTeamsClubCount.textContent = formatInteger(teams.length, "0");
+      }
+      if (elements.playerTeamsSeasonCount) {
+        elements.playerTeamsSeasonCount.textContent = formatInteger(seasonKeys.size, "0");
+      }
+
+      const latestSort = Math.max(...teams.map((team) => number(team.latestSort)));
+      const latestTeam = teams.find((team) => number(team.latestSort) === latestSort) || teams[0];
+      const mostSeasonsTeam = [...teams].sort((a, b) =>
+        b.tournamentCount - a.tournamentCount ||
+        b.latestSort - a.latestSort ||
+        a.teamName.localeCompare(b.teamName, "sv-SE")
+      )[0];
+
+      if (elements.playerTeamsLatestTeam) {
+        elements.playerTeamsLatestTeam.textContent = latestTeam?.teamName || "–";
+        elements.playerTeamsLatestTeam.title = latestTeam?.teamName || "";
+      }
+      if (elements.playerTeamsMostTeam) {
+        elements.playerTeamsMostTeam.textContent = mostSeasonsTeam
+          ? `${mostSeasonsTeam.teamName} · ${mostSeasonsTeam.tournamentCount}`
+          : "–";
+        elements.playerTeamsMostTeam.title = mostSeasonsTeam
+          ? `${mostSeasonsTeam.teamName} · ${mostSeasonsTeam.tournamentCount} ${mostSeasonsTeam.tournamentCount === 1 ? "säsong" : "säsonger"}`
+          : "";
+      }
       const fragment = document.createDocumentFragment();
 
       for (const team of teams) {
+        const isLatest = number(team.latestSort) === latestSort;
+        const isMostSeasons = team === mostSeasonsTeam;
         const card = document.createElement(team.teamId ? "a" : "article");
-        card.className = "player-team-card";
+        card.className = `player-team-card${isLatest ? " is-latest" : ""}${isMostSeasons ? " is-most-seasons" : ""}`;
         if (team.teamId) card.href = teamUrl(team.teamId);
 
         const logo = document.createElement("span");
@@ -3741,27 +5092,50 @@ function SEH_initPlayer() {
           image.alt = "";
           image.loading = "lazy";
           logo.append(image);
-          applyTeamLogoWithFallback(
-            image,
-            team.logoUrl,
-            team.teamName,
-            logo
-          );
+          applyTeamLogoWithFallback(image, team.logoUrl, team.teamName, logo);
         }
 
         const copy = document.createElement("span");
         copy.className = "player-team-card__copy";
 
+        const identity = document.createElement("span");
+        identity.className = "player-team-card__identity";
+
         const name = document.createElement("strong");
         name.textContent = team.teamName;
+        identity.append(name);
+
+        if (isLatest) {
+          const badge = document.createElement("em");
+          badge.className = "player-team-card__latest";
+          badge.textContent = "SENASTE";
+          identity.append(badge);
+        }
+
+        if (isMostSeasons && !isLatest) {
+          const badge = document.createElement("em");
+          badge.className = "player-team-card__most";
+          badge.textContent = "FLEST SÄSONGER";
+          identity.append(badge);
+        }
 
         const meta = document.createElement("small");
-        const seasons = `${team.tournamentCount} ${team.tournamentCount === 1 ? "säsong" : "säsonger"}`;
-        meta.textContent = team.competitionList.length
-          ? `${seasons} · ${team.competitionList.join(" · ")}`
-          : seasons;
+        const seasonCount = document.createElement("b");
+        seasonCount.textContent = `${team.tournamentCount} ${team.tournamentCount === 1 ? "säsong" : "säsonger"}`;
+        meta.append(seasonCount);
 
-        copy.append(name, meta);
+        if (team.competitionList.length) {
+          const competitions = document.createElement("span");
+          competitions.className = "player-team-card__competitions";
+          for (const competition of team.competitionList) {
+            const badge = document.createElement("i");
+            badge.textContent = competition;
+            competitions.append(badge);
+          }
+          meta.append(competitions);
+        }
+
+        copy.append(identity, meta);
         card.append(logo, copy);
 
         if (team.teamId) {
@@ -3828,22 +5202,17 @@ function SEH_initPlayer() {
     }
 
     async function enrichPlayerTeams(profileRows) {
-      const teamIds = [...new Set(
-        profileRows.map((row) => Number(row.teamId)).filter((id) => Number.isInteger(id) && id > 0)
-      )];
-
       renderPlayerTeams(profileRows);
 
       /*
-       * Historikraderna har redan försökt teamlogos/<lagnamn>.
-       * Om inga team_id finns behöver vi inte Supabase-metadata,
-       * men lokala loggor ska alltså ändå ha renderats.
+       * Lag-fliken behöver hela den lokala aliasbilden, inte bara team-id:n som
+       * råkar vara säkra på en enskild historikrad. Annars blir exempelvis
+       * IFK Norrland / IF Norrland / Norrland tre kort trots att lagsidan redan
+       * känner dem som samma klubb.
        */
-      if (!teamIds.length) return;
-
       const params = new URLSearchParams({
-        select: "team_id,current_name,logo_path,logo_url",
-        team_id: `in.(${teamIds.join(",")})`
+        select: "team_id,current_name,historical_names,names_used_in_leagues,logo_path,logo_url",
+        limit: "5000"
       });
 
       try {
@@ -3856,13 +5225,21 @@ function SEH_initPlayer() {
 
         document.querySelectorAll("[data-team-logo-for]").forEach((node) => {
           const meta = teamMeta.get(String(node.dataset.teamLogoFor || ""));
-          const logoUrl = meta?.logo_url || meta?.logo_path || "";
           const historicalTeamName =
             node.dataset.teamNameForLogo || "";
+          const metaName = String(meta?.current_name || "").trim();
+          const metadataMatchesHistorical = Boolean(
+            meta &&
+            normalizedPlayerTeamName(metaName) ===
+              normalizedPlayerTeamName(historicalTeamName)
+          );
+          const logoUrl = metadataMatchesHistorical
+            ? (meta?.logo_url || meta?.logo_path || "")
+            : "";
 
           const teamName =
             historicalTeamName ||
-            meta?.current_name ||
+            metaName ||
             node.closest("td")?.querySelector("strong, a, .team-name")?.textContent?.trim() ||
             node.closest("td")?.textContent?.trim() ||
             "";
@@ -3990,14 +5367,16 @@ function SEH_initPlayer() {
 
         const teamLogo = document.createElement("span");
         teamLogo.className = "player-history-team__logo";
-        teamLogo.dataset.teamLogoFor = row.teamId ? String(row.teamId) : "";
-        teamLogo.dataset.teamNameForLogo = row.teamCurrentName || row.teamName || "";
+        const safeTeamId = historyRowSafeTeamId(row);
+        const historicalTeamName = historicalPlayerTeamName(row);
+        teamLogo.dataset.teamLogoFor = safeTeamId ? String(safeTeamId) : "";
+        teamLogo.dataset.teamNameForLogo = historicalTeamName;
 
         SEH_renderTeamLogo(
           teamLogo,
           [row.resolvedLogoUrl || ""],
-          teamLogo.dataset.teamNameForLogo,
-          `${teamLogo.dataset.teamNameForLogo} logotyp`
+          historicalTeamName,
+          `${historicalTeamName} logotyp`
         );
 
         if (row.teamId) {
@@ -4014,16 +5393,19 @@ function SEH_initPlayer() {
 
         teamCell.append(teamWrap);
 
-        const role = row.goalieGames > row.skaterGames ? "G" : row.position || "Utespelare";
+        const skaterGames = number(row.skaterGames);
+        const goalieGames = number(row.goalieGames);
+        const role = goalieGames > skaterGames ? "G" : row.position || "Utespelare";
         const values = [
           row.division || "–",
           role,
-          formatInteger(row.appearanceGames, "0"),
-          formatInteger(row.goals, "0"),
-          formatInteger(row.assists, "0"),
-          formatInteger(row.points, "0"),
-          row.goalieGames ? formatSavePercentage(row.savePercentage) : "–",
-          row.goalieGames ? formatDecimal(row.gaa, 2) : "–"
+          skaterGames > 0 ? formatInteger(skaterGames, "0") : "–",
+          goalieGames > 0 ? formatInteger(goalieGames, "0") : "–",
+          skaterGames > 0 ? formatInteger(row.goals, "0") : "–",
+          skaterGames > 0 ? formatInteger(row.assists, "0") : "–",
+          skaterGames > 0 ? formatInteger(row.points, "0") : "–",
+          goalieGames > 0 ? formatSavePercentage(row.savePercentage) : "–",
+          goalieGames > 0 ? formatDecimal(row.gaa, 2) : "–"
         ];
 
         tr.append(seasonCell, teamCell);
@@ -4048,7 +5430,7 @@ function SEH_initPlayer() {
       if (!visibleRows.length) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 10;
+        td.colSpan = 11;
         td.className = "player-history-empty";
         td.textContent = "Inga turneringar matchar filtret.";
         tr.append(td);
@@ -4058,6 +5440,8 @@ function SEH_initPlayer() {
 
     function render(rows) {
       const latest = [...rows].sort(compareHistoryRows)[0];
+      const clubRows = clubHistoryRows(rows);
+      const latestClub = [...clubRows].sort(compareHistoryRows)[0] || latest;
       const tournamentCount = uniqueTournamentCount(rows);
       const clubCount = uniqueClubCount(rows);
       const names = new Map();
@@ -4098,31 +5482,35 @@ function SEH_initPlayer() {
 
       const primaryRole = roleLabel(skaterGames, goalieGames);
 
-      const chronologicalRows = [...rows].sort((a, b) =>
+      const chronologicalRows = [...clubRows].sort((a, b) =>
         tournamentChronologyValue(a) - tournamentChronologyValue(b) ||
         number(a.leagueId) - number(b.leagueId)
       );
 
-      const earliest = chronologicalRows[0] || latest;
-      const bestOffense = bestOffensiveRow(rows);
+      const earliest = chronologicalRows[0] || latestClub;
+      const bestOffense = bestOffensiveRow(clubRows.length ? clubRows : rows);
       const bestGoalie = bestGoalieRow(rows);
 
       elements.playerCurrentTeam.replaceChildren();
-      if (latest.teamId) {
+      if (latestClub.teamId) {
         const currentTeamLink = document.createElement("a");
-        currentTeamLink.href = teamUrl(latest.teamId);
-        currentTeamLink.textContent = latest.teamName || "Okänt lag";
+        currentTeamLink.href = teamUrl(latestClub.teamId);
+        currentTeamLink.textContent = latestClub.teamName || "Okänt lag";
         elements.playerCurrentTeam.append(currentTeamLink);
       } else {
         elements.playerCurrentTeam.textContent =
-          latest.teamName || "Okänt lag";
+          latestClub.teamName || "Okänt lag";
       }
+
+      const currentTeamName = latestClub.teamName || "Okänt lag";
+      renderProfileTeamBrand(currentTeamName);
+      void hydrateProfileRanking(latest.playerKey, currentName);
 
       elements.playerMeta.textContent = [
         primaryRole,
-        `${tournamentCount} ${seasonWord(tournamentCount)}`,
-        `${careerGames} ${matchWord(careerGames)}`
-      ].join(" • ");
+        latest.country ? countryFlag(latest.country) : "",
+        `${tournamentCount} ${seasonWord(tournamentCount)}`
+      ].filter(Boolean).join(" • ");
 
       elements.playerCompetitions.textContent =
         competitionLine(rows) || "Turneringshistorik";
@@ -4133,12 +5521,19 @@ function SEH_initPlayer() {
       renderHistoryProfileBio({
         currentName,
         earliest,
-        latest,
+        latest: latestClub,
         bestOffense,
+        bestGoalie,
         tournamentCount,
         clubCount,
         primaryRole,
-        careerGames
+        careerGames,
+        skaterGames,
+        goalieGames,
+        careerSavePercentage: shotsAgainst > 0 ? saves / shotsAgainst : null,
+        shutouts,
+        competitions: competitionLine(rows),
+        profileRows: rows
       });
 
       elements.tournamentCount.textContent = formatInteger(tournamentCount, "0");
@@ -4174,12 +5569,37 @@ function SEH_initPlayer() {
       addStat(elements.goalieCareerStats, "GAA", goalieGames ? formatDecimal(goalsAllowed / goalieGames, 2) : "–");
       addStat(elements.goalieCareerStats, "SV%", shotsAgainst ? formatSavePercentage(saves / shotsAgainst) : "–");
       addStat(elements.goalieCareerStats, "Nollor", formatInteger(shutouts, "0"));
+      updateCareerSummaryRoleVisibility({ skaterGames, goalieGames });
   
       currentHistoryRows = [...rows];
       renderPlayerHistoryFilters(currentHistoryRows);
       renderPlayerHistoryTable(currentHistoryRows);
     }
   
+    function updateCareerSummaryRoleVisibility({ skaterGames = 0, goalieGames = 0 }) {
+      const hasSkaterGames = Number(skaterGames) > 0;
+      const hasGoalieGames = Number(goalieGames) > 0;
+
+      if (elements.skaterCareerCard) elements.skaterCareerCard.hidden = !hasSkaterGames;
+      if (elements.goalieCareerCard) elements.goalieCareerCard.hidden = !hasGoalieGames;
+
+      if (elements.careerSummaryGrid) {
+        elements.careerSummaryGrid.classList.toggle("is-single-role", hasSkaterGames !== hasGoalieGames);
+        elements.careerSummaryGrid.classList.toggle("is-hybrid-role", hasSkaterGames && hasGoalieGames);
+      }
+
+      if (!elements.careerSummaryLead) return;
+      if (hasSkaterGames && hasGoalieGames) {
+        elements.careerSummaryLead.textContent = `${formatInteger(Number(skaterGames) + Number(goalieGames), "0")} registrerade rollmatcher: ${formatInteger(skaterGames, "0")} som utespelare och ${formatInteger(goalieGames, "0")} i mål.`;
+      } else if (hasGoalieGames) {
+        elements.careerSummaryLead.textContent = `${formatInteger(goalieGames, "0")} registrerade matcher som målvakt.`;
+      } else if (hasSkaterGames) {
+        elements.careerSummaryLead.textContent = `${formatInteger(skaterGames, "0")} registrerade matcher som utespelare.`;
+      } else {
+        elements.careerSummaryLead.textContent = "Ingen registrerad matchstatistik för vald spelare.";
+      }
+    }
+
     function setHeadlineCareerStats({
       isGoalie,
       skaterPoints = 0,
@@ -4273,14 +5693,16 @@ function SEH_initPlayer() {
 
       const standaloneRole = roleLabel(totalSkaterGames, totalGoalieGames);
 
-      elements.playerCurrentTeam.textContent =
-        directoryRow.latest_team || "Okänt lag";
+      const standaloneTeamName = directoryRow.latest_team || "Okänt lag";
+      elements.playerCurrentTeam.textContent = standaloneTeamName;
+      renderProfileTeamBrand(standaloneTeamName);
+      void hydrateProfileRanking(directoryRow.player_key, profile.name);
 
       elements.playerMeta.textContent = [
         standaloneRole,
-        `${tournamentCount} ${seasonWord(tournamentCount)}`,
-        `${careerGames} ${matchWord(careerGames)}`
-      ].join(" • ");
+        profile.country ? countryFlag(profile.country) : "",
+        `${tournamentCount} ${seasonWord(tournamentCount)}`
+      ].filter(Boolean).join(" • ");
 
       const standaloneCompetitionValues = Array.isArray(directoryRow.competitions)
         ? directoryRow.competitions
@@ -4389,11 +5811,15 @@ function SEH_initPlayer() {
         "Nollor",
         formatInteger(totalGoalieShutouts, "0")
       );
+      updateCareerSummaryRoleVisibility({
+        skaterGames: totalSkaterGames,
+        goalieGames: totalGoalieGames
+      });
   
       elements.historyTableBody.replaceChildren();
       const emptyRow = document.createElement("tr");
       const emptyCell = document.createElement("td");
-      emptyCell.colSpan = 10;
+      emptyCell.colSpan = 11;
       emptyCell.textContent = cacheMissing && tournamentCount > 0
         ? "Sammanfattningen finns, men detaljerad historik saknas i spelarhistorikcachen."
         : "Ingen importerad turneringshistorik.";
@@ -4412,7 +5838,8 @@ function SEH_initPlayer() {
   
     async function load() {
       const playerRouteValue = getPlayerKey();
-      let playerKey = playerRouteValue;
+      const playerKeyHint = getPlayerKeyHint();
+      let playerKey = playerKeyHint || playerRouteValue;
 
       elements.errorNotice.hidden = true;
       elements.setupNotice.hidden = true;
@@ -4438,7 +5865,11 @@ function SEH_initPlayer() {
       }
   
       try {
-        playerKey = await resolvePlayerRouteValue(playerRouteValue);
+        if (!playerKeyHint) {
+          // Äldre/delade profil-URL:er utan pk fungerar fortfarande. Även
+          // slug-reserven läser nu den snabba katalogcachen.
+          playerKey = await resolvePlayerRouteValue(playerRouteValue);
+        }
 
         // Läs alltid den lilla spelarkatalograden först. Spelare med 0
         // turneringar ska inte starta någon historikfråga alls.
@@ -4457,6 +5888,7 @@ function SEH_initPlayer() {
         if (
           friendlySlug &&
           (
+            !playerKeyHint ||
             SEH_isHashedPlayerKey(playerRouteValue) ||
             SEH_playerSlug(playerRouteValue) !== friendlySlug
           )
@@ -4528,6 +5960,7 @@ function SEH_initPlayer() {
       }
     }
   
+    initProfileTabs();
     elements.reloadButton.addEventListener("click", load);
     load();
   })();
@@ -4542,7 +5975,7 @@ function SEH_initTeam() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-13-v73-alltime-show-all";
+    const APP_BUILD = "2026-08-31-v1284-team-hero-recommended";
     const config = window.EHOCKEY_CONFIG || {};
   
     console.info("eHockey Master team build:", APP_BUILD);
@@ -4614,6 +6047,9 @@ function SEH_initTeam() {
     };
   
     let seasonCompetitionFilter = "ALL";
+    let activeTeamProfileTab = "overview";
+    let teamProfileTabButtons = [];
+    let teamProfileTabPanels = [];
 
     const state = {
       team: null,
@@ -4627,6 +6063,132 @@ function SEH_initTeam() {
       showAllTimeGoalies: false,
       loadedAt: null
     };
+
+    function setTeamProfileTab(tabName, { focus = false } = {}) {
+      const requested = String(tabName || "overview").trim().toLowerCase();
+      const available = teamProfileTabButtons.filter((button) => !button.hidden);
+      const allowed = new Set(available.map((button) => button.dataset.teamTab));
+      const nextTab = allowed.has(requested) ? requested : "overview";
+      activeTeamProfileTab = nextTab;
+
+      teamProfileTabButtons.forEach((button) => {
+        const active = button.dataset.teamTab === nextTab;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-selected", active ? "true" : "false");
+        button.tabIndex = active ? 0 : -1;
+        if (active && focus) button.focus({ preventScroll: true });
+      });
+
+      teamProfileTabPanels.forEach((panel) => {
+        panel.hidden = panel.dataset.teamPanel !== nextTab;
+      });
+    }
+
+    function updateTeamMeritsTabVisibility() {
+      const meritsButton = teamProfileTabButtons.find(
+        (button) => button.dataset.teamTab === "merits"
+      );
+      if (!meritsButton) return;
+
+      // Meriter ska alltid finnas som en del av lagprofilens fasta navigering.
+      // Lag utan registrerade meriter får i stället ett tydligt tomläge i fliken.
+      meritsButton.hidden = false;
+      meritsButton.closest(".team-profile-tabs-v1280")?.classList.remove(
+        "has-no-merits"
+      );
+    }
+
+    function initTeamProfileTabs() {
+      if (!elements.teamPage || elements.teamPage.querySelector("#teamProfileTabs")) return;
+
+      const hero = elements.teamPage.querySelector(".history-hero");
+      const metrics = elements.teamPage.querySelector(".history-metric-band");
+      const seasons = elements.seasonsTableBody?.closest(".history-section");
+      const players = elements.playerCards?.closest(".history-player-section");
+      const details = elements.tournamentList?.closest(".history-details-section");
+      const source = elements.sportsGamerIds?.closest(".history-source-panel");
+
+      if (!hero || !metrics || !seasons || !players || !details || !source) return;
+
+      const tabDefinitions = [
+        { key: "overview", label: "Översikt" },
+        { key: "seasons", label: "Säsonger" },
+        { key: "players", label: "Spelare" },
+        { key: "merits", label: "Meriter" }
+      ];
+
+      const tabs = document.createElement("nav");
+      tabs.id = "teamProfileTabs";
+      tabs.className = "team-profile-tabs-v1280";
+      tabs.setAttribute("role", "tablist");
+      tabs.setAttribute("aria-label", "Lagprofilens innehåll");
+
+      const stage = document.createElement("div");
+      stage.className = "team-profile-tab-stage-v1280";
+
+      const panels = new Map();
+      tabDefinitions.forEach(({ key, label }, index) => {
+        const button = document.createElement("button");
+        button.id = `team-profile-tab-${key}`;
+        button.type = "button";
+        button.setAttribute("role", "tab");
+        button.setAttribute("aria-selected", index === 0 ? "true" : "false");
+        button.setAttribute("aria-controls", `team-profile-panel-${key}`);
+        button.dataset.teamTab = key;
+        button.classList.toggle("is-active", index === 0);
+        button.tabIndex = index === 0 ? 0 : -1;
+        button.textContent = label;
+        tabs.append(button);
+
+        const panel = document.createElement("section");
+        panel.id = `team-profile-panel-${key}`;
+        panel.className = `team-profile-tab-panel-v1280 team-profile-tab-panel-v1280--${key}`;
+        panel.setAttribute("role", "tabpanel");
+        panel.setAttribute("aria-labelledby", button.id);
+        panel.dataset.teamPanel = key;
+        panel.hidden = index !== 0;
+        stage.append(panel);
+        panels.set(key, panel);
+      });
+
+      panels.get("overview").append(metrics, source);
+      panels.get("seasons").append(seasons, details);
+      panels.get("players").append(players);
+      panels.get("merits").append(elements.teamHonoursSection);
+
+      // Samma struktur som spelarprofilen: lagets hero ligger alltid kvar
+      // och undermenyn byter endast innehållet under hero-sektionen.
+      elements.teamPage.prepend(hero, tabs, stage);
+      teamProfileTabButtons = [...tabs.querySelectorAll("[data-team-tab]")];
+      teamProfileTabPanels = [...stage.querySelectorAll("[data-team-panel]")];
+
+      teamProfileTabButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          setTeamProfileTab(button.dataset.teamTab || "overview");
+        });
+
+        button.addEventListener("keydown", (event) => {
+          if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+          event.preventDefault();
+
+          const available = teamProfileTabButtons.filter((item) => !item.hidden);
+          const index = available.indexOf(button);
+          if (index < 0 || !available.length) return;
+
+          let nextIndex = index;
+          if (event.key === "ArrowRight") nextIndex = (index + 1) % available.length;
+          if (event.key === "ArrowLeft") nextIndex = (index - 1 + available.length) % available.length;
+          if (event.key === "Home") nextIndex = 0;
+          if (event.key === "End") nextIndex = available.length - 1;
+
+          setTeamProfileTab(available[nextIndex]?.dataset.teamTab || "overview", {
+            focus: true
+          });
+        });
+      });
+
+      setTeamProfileTab("overview");
+    }
   
     function hasValidConfig() {
       return (
@@ -4804,6 +6366,17 @@ function SEH_initTeam() {
   
   
     function normalizeAllTimePlayer(row) {
+      const totalGoalieSaves = number(row.total_goalie_saves);
+      const totalGoalieGoalsAllowed = number(row.total_goalie_goals_allowed);
+      const derivedGoalieShotsAgainst = totalGoalieSaves + totalGoalieGoalsAllowed;
+      const reportedGoalieShotsAgainst = number(row.total_goalie_shots_against);
+      const totalGoalieShotsAgainst = derivedGoalieShotsAgainst > 0
+        ? derivedGoalieShotsAgainst
+        : reportedGoalieShotsAgainst;
+      const totalGoalieSavePercentage = totalGoalieShotsAgainst > 0
+        ? totalGoalieSaves / totalGoalieShotsAgainst
+        : nullableNumber(row.total_goalie_save_percentage);
+
       return {
         playerKey: row.player_key || "",
         displayGamertag: row.display_gamertag || "Okänd spelare",
@@ -4827,10 +6400,10 @@ function SEH_initTeam() {
         totalGoalieWins: number(row.total_goalie_wins),
         totalGoalieLosses: number(row.total_goalie_losses),
         totalGoalieOvertimeLosses: number(row.total_goalie_overtime_losses),
-        totalGoalieSaves: number(row.total_goalie_saves),
-        totalGoalieShotsAgainst: number(row.total_goalie_shots_against),
-        totalGoalieGoalsAllowed: number(row.total_goalie_goals_allowed),
-        totalGoalieSavePercentage: nullableNumber(row.total_goalie_save_percentage),
+        totalGoalieSaves,
+        totalGoalieShotsAgainst,
+        totalGoalieGoalsAllowed,
+        totalGoalieSavePercentage,
         totalGoalieGoalsAgainstAverage: nullableNumber(row.total_goalie_goals_against_average),
         totalGoalieShutouts: number(row.total_goalie_shutouts),
         careerGames: number(row.career_games),
@@ -5248,11 +6821,24 @@ function SEH_initTeam() {
         .toUpperCase();
     }
   
+    function normalizeLocalPortraitPath(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return "";
+
+      const localMatch = raw.match(/(?:^|\/)(?:players\/)?(\d+)(?:\.(?:png|jpe?g|webp))?(?:[?#].*)?$/i);
+      if (localMatch) return `players/${localMatch[1]}.png`;
+
+      const remoteMatch = raw.match(/\/players\/(\d+)(?:[/?#]|$)/i);
+      if (remoteMatch) return `players/${remoteMatch[1]}.png`;
+
+      return /^players\/.+\.png(?:[?#].*)?$/i.test(raw) ? raw : "";
+    }
+
     function localPlayerImageUrl(player) {
       const sportsGamerId = String(player.sportsGamerPlayerUrl || "")
         .match(/\/players\/(\d+)/i)?.[1];
-      if (sportsGamerId) return `players/${sportsGamerId}.jpg`;
-      return player.playerImage || "players/1DEFAULTBILDID.jpg";
+      const localImage = normalizeLocalPortraitPath(player.playerImage);
+      return SEH_playerImageUrl(sportsGamerId, localImage);
     }
   
     function playerPageUrl(playerKey, gamertag = "") {
@@ -5984,8 +7570,12 @@ function SEH_initTeam() {
         }, 0);
         const goalieGames = sum("total_goalie_games");
         const goalieSaves = sum("total_goalie_saves");
-        const goalieShots = sum("total_goalie_shots_against");
         const goalieGoalsAllowed = sum("total_goalie_goals_allowed");
+        const reportedGoalieShots = sum("total_goalie_shots_against");
+        const derivedGoalieShots = goalieSaves + goalieGoalsAllowed;
+        const goalieShots = derivedGoalieShots > 0
+          ? derivedGoalieShots
+          : reportedGoalieShots;
         const competitions = uniqueValues(playerRows.map((row) =>
           row.competition_code || row.competition_name ||
           String(row.season_label || "").split(/\s+/)[0]
@@ -6159,6 +7749,25 @@ function SEH_initTeam() {
         team.currentName,
         `${team.currentName} logotyp`
       );
+
+      const hero = elements.teamPage?.querySelector(".history-hero");
+      if (!hero) return;
+
+      let watermark = hero.querySelector(".history-hero-watermark-v1279");
+      if (!watermark) {
+        watermark = document.createElement("div");
+        watermark.className = "history-hero-watermark-v1279";
+        watermark.setAttribute("aria-hidden", "true");
+        hero.prepend(watermark);
+      }
+
+      SEH_renderTeamLogo(
+        watermark,
+        [team.logoUrl, team.logoPath],
+        team.currentName,
+        ""
+      );
+      SEH_hydratePlayerCardTeamPalette(elements.teamPage, watermark, team.currentName);
     }
 
     function renderTeamLinks(team) {
@@ -6179,33 +7788,65 @@ function SEH_initTeam() {
       elements.historyBadges.replaceChildren();
 
       const eligible = state.tournaments.filter(isHonourEligibleTournament);
-      const gold = eligible.filter(
-        (row) => String(row.playoffStatusCode || "").toUpperCase() === "CHAMPION"
-      ).length;
-      const silver = eligible.filter((row) =>
-        ["RUNNER_UP", "FINALIST_UNDECIDED"].includes(
-          String(row.playoffStatusCode || "").toUpperCase()
-        )
-      ).length;
-      const bronze = eligible.filter(
-        (row) => String(row.playoffStatusCode || "").toUpperCase() === "THIRD_PLACE"
-      ).length;
+      const placeWeight = { gold: 0, silver: 1, bronze: 2 };
+      const honours = eligible
+        .map((row) => {
+          const code = String(row.playoffStatusCode || "").toUpperCase();
+          if (code === "CHAMPION") {
+            return { row, place: "gold", label: "Mästare" };
+          }
+          if (["RUNNER_UP", "FINALIST_UNDECIDED"].includes(code)) {
+            return { row, place: "silver", label: "Silver" };
+          }
+          if (code === "THIRD_PLACE") {
+            return { row, place: "bronze", label: "Brons" };
+          }
+          return null;
+        })
+        .filter(Boolean)
+        .sort((a, b) =>
+          placeWeight[a.place] - placeWeight[b.place] ||
+          tournamentChronologyValue(a.row) - tournamentChronologyValue(b.row) ||
+          Number(a.row.leagueId || 0) - Number(b.row.leagueId || 0)
+        );
 
-      const badges = [
-        gold ? { icon: "🏆", label: `${gold} guld`, place: "gold" } : null,
-        silver ? { icon: "🏆", label: `${silver} silver`, place: "silver" } : null,
-        bronze ? { icon: "🏆", label: `${bronze} brons`, place: "bronze" } : null
-      ].filter(Boolean);
+      elements.historyBadges.hidden = honours.length === 0;
+      if (!honours.length) return;
 
-      elements.historyBadges.hidden = badges.length === 0;
+      const heading = document.createElement("span");
+      heading.className = "history-badges-label-v1284";
+      heading.textContent = "Meriter";
+      elements.historyBadges.append(heading);
 
-      for (const badgeData of badges) {
+      const visible = honours.slice(0, 3);
+      visible.forEach(({ row, place, label }) => {
         const badge = document.createElement("span");
-        badge.className = `history-badge history-badge--${badgeData.place}`;
-        badge.innerHTML = `<strong>${badgeData.icon}</strong><small>${badgeData.label}</small>`;
+        badge.className = `history-badge history-badge--${place}`;
+
+        const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        icon.setAttribute("viewBox", "0 0 24 24");
+        icon.setAttribute("aria-hidden", "true");
+        icon.classList.add("history-badge-icon-v1284");
+        icon.innerHTML = [
+          '<path d="M8 4h8v4c0 3-1.8 5-4 5s-4-2-4-5V4Z"/>',
+          '<path d="M8 6H5v1c0 2 1.2 3 3.1 3M16 6h3v1c0 2-1.2 3-3.1 3"/>',
+          '<path d="M12 13v4M9 20h6M10 17h4v3h-4Z"/>'
+        ].join("");
+
+        const text = document.createElement("small");
+        text.textContent = `${cleanHonourDisplayText(compactSeasonLabel(row))} ${label}`;
+        badge.append(icon, text);
         elements.historyBadges.append(badge);
+      });
+
+      if (honours.length > visible.length) {
+        const more = document.createElement("span");
+        more.className = "history-badges-more-v1284";
+        more.textContent = `+${honours.length - visible.length}`;
+        elements.historyBadges.append(more);
       }
     }
+
   
   
     function renderHeroChips() {
@@ -6239,8 +7880,6 @@ function SEH_initTeam() {
       const games = sumKnown(state.tournaments, effectiveGames) || 0;
       const wins = sumKnown(state.tournaments, (row) => row.wins) || 0;
       const losses = sumKnown(state.tournaments, (row) => row.losses) || 0;
-      const goalDiff = sumKnown(state.tournaments, effectiveGoalDiff) || 0;
-      const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
       const latest = state.tournaments[0];
       const best = bestEclTournament();
       const first = [...state.tournaments].sort(
@@ -6249,22 +7888,138 @@ function SEH_initTeam() {
           tournamentChronologyValue(b) ||
           Number(a.leagueId || 0) - Number(b.leagueId || 0)
       )[0];
-  
-      const sentences = [
-        first
-          ? `${state.team.currentName} syns första gången i den importerade historiken i ${compactSeasonLabel(first)}.`
-          : `${state.team.currentName} finns i den importerade eHockeyhistoriken.`,
-        `Laget har deltagit i ${state.tournaments.length} registrerade turneringar och spelat ${games} matcher med ${wins} vinster och ${losses} förluster (${winRate} %).`,
-        `Den sammanlagda målskillnaden är ${formatSignedInteger(goalDiff, "0")}.`,
-        best
-          ? `Högsta ECL-nivån är ${best.division}, nådd i ${compactSeasonLabel(best)}.`
-          : "",
-        latest && latest.nameUsed !== state.team.currentName
-          ? `Senast spelade laget under namnet ${latest.nameUsed}.`
-          : ""
-      ].filter(Boolean);
-  
-      elements.clubProfileText.textContent = sentences.join(" ");
+      const winRate = games > 0
+        ? ((wins / games) * 100).toLocaleString("sv-SE", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          })
+        : "0,0";
+
+      const latestGames = latest ? effectiveGames(latest) : null;
+      const latestStatusCode = String(latest?.playoffStatusCode || "")
+        .trim()
+        .toUpperCase();
+
+      let latestResultText = "";
+      if (latestStatusCode === "MISSED_PLAYOFFS") {
+        latestResultText = " och missade slutspel";
+      } else if (latestStatusCode === "CHAMPION") {
+        latestResultText = " och blev mästare";
+      } else if (latestStatusCode === "RUNNER_UP") {
+        latestResultText = " och slutade tvåa";
+      } else if (latestStatusCode === "THIRD_PLACE") {
+        latestResultText = " och slutade trea";
+      } else if (latestStatusCode === "FOURTH_PLACE") {
+        latestResultText = " och slutade fyra";
+      } else if (latest && isPlayoffAppearance(latest)) {
+        latestResultText = " och nådde slutspel";
+      }
+
+      const latestNameText = latest && latest.nameUsed && latest.nameUsed !== state.team.currentName
+        ? ` under namnet ${latest.nameUsed}`
+        : "";
+
+      const champions = state.tournaments
+        .filter((row) =>
+          isHonourEligibleTournament(row) &&
+          String(row.playoffStatusCode || "").toUpperCase() === "CHAMPION"
+        )
+        .sort((a, b) =>
+          tournamentChronologyValue(a) - tournamentChronologyValue(b) ||
+          Number(a.leagueId || 0) - Number(b.leagueId || 0)
+        );
+
+      const runnerUps = state.tournaments
+        .filter((row) =>
+          isHonourEligibleTournament(row) &&
+          ["RUNNER_UP", "FINALIST_UNDECIDED"].includes(
+            String(row.playoffStatusCode || "").toUpperCase()
+          )
+        )
+        .sort((a, b) =>
+          tournamentChronologyValue(a) - tournamentChronologyValue(b) ||
+          Number(a.leagueId || 0) - Number(b.leagueId || 0)
+        );
+
+      const bronze = state.tournaments
+        .filter((row) =>
+          isHonourEligibleTournament(row) &&
+          String(row.playoffStatusCode || "").toUpperCase() === "THIRD_PLACE"
+        )
+        .sort((a, b) =>
+          tournamentChronologyValue(a) - tournamentChronologyValue(b) ||
+          Number(a.leagueId || 0) - Number(b.leagueId || 0)
+        );
+
+      function swedishList(values) {
+        if (!values.length) return "";
+        if (values.length === 1) return values[0];
+        if (values.length === 2) return `${values[0]} och ${values[1]}`;
+        return `${values.slice(0, -1).join(", ")} och ${values[values.length - 1]}`;
+      }
+
+      function possessiveTeamName(name) {
+        const trimmed = String(name || "").trim();
+        if (!trimmed) return "Lagets";
+        return /[sxz]$/i.test(trimmed) ? trimmed : `${trimmed}s`;
+      }
+
+      const paragraphs = [];
+
+      paragraphs.push(
+        `${state.team.currentName} har deltagit i ${state.tournaments.length.toLocaleString("sv-SE")} registrerade turneringar och spelat totalt ${formatInteger(games, "0")} matcher. ` +
+        `Av dessa matcher har laget vunnit ${formatInteger(wins, "0")} och förlorat ${formatInteger(losses, "0")}, vilket motsvarar en segerprocent på ${winRate} %.` +
+        (first ? ` Den första registrerade turneringen var ${compactSeasonLabel(first)}.` : "")
+      );
+
+      if (latest || best) {
+        const latestSentence = latest
+          ? `Senast spelade ${state.team.currentName}${latestNameText} i ${compactSeasonLabel(latest)}` +
+            (latestGames !== null
+              ? `, där laget spelade ${formatInteger(latestGames, "0")} matcher${latestResultText}.`
+              : `${latestResultText}.`)
+          : "";
+        const bestSentence = best
+          ? `Den högsta registrerade ECL-nivån är ${best.division}.`
+          : "";
+        paragraphs.push([latestSentence, bestSentence].filter(Boolean).join(" "));
+      }
+
+      let meritSentence = "";
+      if (champions.length) {
+        const titles = swedishList(
+          champions.map((row) => cleanHonourDisplayText(compactSeasonLabel(row)))
+        );
+        meritSentence = champions.length === 1
+          ? `${possessiveTeamName(state.team.currentName)} främsta merit är mästartiteln i ${titles}.`
+          : `${possessiveTeamName(state.team.currentName)} främsta meriter är mästartitlarna i ${titles}.`;
+      } else if (runnerUps.length) {
+        const titles = swedishList(
+          runnerUps.map((row) => cleanHonourDisplayText(compactSeasonLabel(row)))
+        );
+        meritSentence = runnerUps.length === 1
+          ? `${possessiveTeamName(state.team.currentName)} främsta merit är silverplatsen i ${titles}.`
+          : `${possessiveTeamName(state.team.currentName)} främsta meriter är silverplatserna i ${titles}.`;
+      } else if (bronze.length) {
+        const titles = swedishList(
+          bronze.map((row) => cleanHonourDisplayText(compactSeasonLabel(row)))
+        );
+        meritSentence = bronze.length === 1
+          ? `${possessiveTeamName(state.team.currentName)} främsta merit är bronsplatsen i ${titles}.`
+          : `${possessiveTeamName(state.team.currentName)} främsta meriter är bronsplatserna i ${titles}.`;
+      }
+
+      if (meritSentence) {
+        paragraphs.push(meritSentence);
+      }
+
+      elements.clubProfileText.replaceChildren();
+      for (const text of paragraphs.filter(Boolean)) {
+        const paragraph = document.createElement("span");
+        paragraph.className = "history-profile-paragraph-v1282";
+        paragraph.textContent = text;
+        elements.clubProfileText.append(paragraph);
+      }
     }
   
   
@@ -6315,9 +8070,16 @@ function SEH_initTeam() {
     function renderDivisionCurve() {
       const divisions = { Elite: 5, Pro: 4, Lite: 3, Core: 2, Neo: 1 };
       const rows = eclDivisionTournaments();
+      const hero = elements.divisionCurve.closest(".history-hero");
+
       elements.divisionCurve.replaceChildren();
+      elements.divisionCurve.classList.toggle("is-single-point", rows.length === 1);
+      elements.divisionCurve.classList.toggle("is-short-history", rows.length > 0 && rows.length <= 2);
+      hero?.classList.toggle("has-short-division-history", rows.length > 0 && rows.length <= 2);
   
       if (!rows.length) {
+        elements.divisionCurve.classList.remove("is-single-point", "is-short-history");
+        hero?.classList.remove("has-short-division-history");
         elements.divisionCurve.textContent = "Ingen ECL-divisionshistorik hittades.";
         elements.divisionCurveFirst.textContent = "–";
         elements.divisionCurveLatest.textContent = "–";
@@ -6569,9 +8331,8 @@ function SEH_initTeam() {
       const priorities = {
         CHAMPION: 1,
         RUNNER_UP: 2,
-        THIRD_PLACE: 3,
-        FOURTH_PLACE: 4,
-        SEMIFINAL: 5
+        FINALIST_UNDECIDED: 2,
+        THIRD_PLACE: 3
       };
   
       return (
@@ -6613,9 +8374,8 @@ function SEH_initTeam() {
       const accepted = new Set([
         "CHAMPION",
         "RUNNER_UP",
-        "THIRD_PLACE",
-        "FOURTH_PLACE",
-        "SEMIFINAL"
+        "FINALIST_UNDECIDED",
+        "THIRD_PLACE"
       ]);
   
       return state.tournaments
@@ -6640,60 +8400,119 @@ function SEH_initTeam() {
     }
   
   
+    function cleanHonourDisplayText(value) {
+      return String(value || "")
+        .replace(/\s*[–—-]\s*6v6\b/gi, "")
+        .replace(/\b6v6\s*[–—-]\s*/gi, "")
+        .replace(/\b6v6\b/gi, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+    }
+
+    function honourPlacementLabel(tournament) {
+      const code = String(tournament?.playoffStatusCode || "")
+        .trim()
+        .toUpperCase();
+
+      if (code === "CHAMPION") return "MÄSTARE";
+      if (["RUNNER_UP", "FINALIST_UNDECIDED"].includes(code)) return "SILVER";
+      if (code === "THIRD_PLACE") return "BRONS";
+      return "";
+    }
+
+
+    function honourPlacementNumber(tournament) {
+      const code = String(tournament?.playoffStatusCode || "")
+        .trim()
+        .toUpperCase();
+      if (code === "CHAMPION") return "1";
+      if (["RUNNER_UP", "FINALIST_UNDECIDED"].includes(code)) return "2";
+      if (code === "THIRD_PLACE") return "3";
+      return "";
+    }
+
+
     function createHonourCard(tournament) {
-      const article =
-        document.createElement("article");
-  
+      const article = document.createElement("article");
       article.className =
         `team-honour-card ` +
         `team-honour-card--${playoffBadgeClass(
           tournament.playoffStatusCode
         )}`;
-  
-      const status =
-        document.createElement("span");
-  
-      status.className =
-        "team-honour-status";
-  
-      status.textContent =
-        tournament.playoffStatus;
-  
+
+      const status = document.createElement("span");
+      status.className = "team-honour-status";
+      status.textContent = honourPlacementNumber(tournament);
+      status.setAttribute(
+        "aria-label",
+        honourPlacementLabel(tournament)
+      );
+
       const title = document.createElement("a");
       title.className = "history-honour-link";
       title.href = tournamentPageUrl(tournament);
-      title.textContent = seasonTitle(tournament);
-  
-      const meta =
-        document.createElement("small");
-  
-      const finalRecord =
-        finalSeriesRecord(tournament);
-  
+
+      const placementLabel = honourPlacementLabel(tournament);
+      const cleanTitle = cleanHonourDisplayText(seasonTitle(tournament));
+      title.textContent = placementLabel === "MÄSTARE"
+        ? `Mästare i ${cleanTitle}`
+        : placementLabel === "SILVER"
+          ? `Silver i ${cleanTitle}`
+          : placementLabel === "BRONS"
+            ? `Brons i ${cleanTitle}`
+            : cleanTitle;
+
+      const meta = document.createElement("small");
+      const finalRecord = finalSeriesRecord(tournament);
+
       meta.textContent = [
-        competitionLabel(tournament),
-        tournament.division,
-        finalRecord
-          ? `Final ${finalRecord}`
-          : "",
-        formatPeriod(
-          tournament.startDate,
-          tournament.endDate
-        )
+        cleanHonourDisplayText(competitionLabel(tournament)),
+        /^6v6$/i.test(String(tournament.division || "").trim())
+          ? ""
+          : cleanHonourDisplayText(tournament.division),
+        finalRecord ? `Final ${finalRecord}` : "",
+        formatPeriod(tournament.startDate, tournament.endDate)
       ]
         .filter(Boolean)
         .join(" · ");
-  
-      article.append(
-        status,
-        title,
-        meta
-      );
-  
+
+      article.append(status, title, meta);
       return article;
     }
-  
-  
+
+
+    function createHonourGroup({ key, label, icon, rows }) {
+      const section = document.createElement("section");
+      section.className = `team-honour-group team-honour-group--${key}`;
+
+      const heading = document.createElement("div");
+      heading.className = "team-honour-group-heading";
+
+      const titleWrap = document.createElement("div");
+      const iconNode = document.createElement("span");
+      iconNode.className = "team-honour-group-icon";
+      iconNode.setAttribute("aria-hidden", "true");
+      iconNode.textContent = icon;
+
+      const title = document.createElement("strong");
+      title.textContent = label;
+      titleWrap.append(iconNode, title);
+
+      const count = document.createElement("span");
+      count.className = "team-honour-group-count";
+      count.textContent = rows.length.toLocaleString("sv-SE");
+
+      heading.append(titleWrap, count);
+
+      const grid = document.createElement("div");
+      grid.className = "team-honour-group-grid";
+      rows.forEach((tournament) => grid.append(createHonourCard(tournament)));
+
+      section.append(heading, grid);
+      return section;
+    }
+
+
     function renderHonours() {
       const honours = honourTournaments();
       const honourEligibleTournaments = state.tournaments.filter(
@@ -6702,33 +8521,92 @@ function SEH_initTeam() {
       const champions = honourEligibleTournaments.filter(
         (row) => row.playoffStatusCode === "CHAMPION"
       ).length;
-      const finals = honourEligibleTournaments.filter(isFinalAppearance).length;
+      const finals = honourEligibleTournaments.filter((row) =>
+        ["RUNNER_UP", "FINALIST_UNDECIDED"].includes(
+          String(row.playoffStatusCode || "").toUpperCase()
+        )
+      ).length;
       const bronze = honourEligibleTournaments.filter(
         (row) => row.playoffStatusCode === "THIRD_PLACE"
       ).length;
-  
+
       elements.championshipsCount.textContent = formatInteger(champions, "0");
       elements.finalsCount.textContent = formatInteger(finals, "0");
       elements.bronzeCount.textContent = formatInteger(bronze, "0");
       elements.teamHonoursList.replaceChildren();
-  
+
+      const honoursHeading = elements.teamHonoursSection?.querySelector(
+        ".history-section-heading h2"
+      );
+      if (honoursHeading) honoursHeading.textContent = "Lagets meriter";
+
+      const summaryLabels = elements.teamHonoursSection?.querySelectorAll(
+        ".history-honour-summary span"
+      );
+      if (summaryLabels?.length >= 3) {
+        summaryLabels[0].textContent = "Guld";
+        summaryLabels[1].textContent = "Silver";
+        summaryLabels[2].textContent = "Brons";
+      }
+
       if (!honours.length) {
-        elements.teamHonoursSection.hidden = true;
-        elements.teamHonoursCount.textContent = "";
+        const empty = document.createElement("div");
+        empty.className = "team-honours-empty-v12815";
+
+        const icon = document.createElement("span");
+        icon.className = "team-honours-empty-v12815__icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = "☆";
+
+        const copy = document.createElement("div");
+        const title = document.createElement("strong");
+        title.textContent = "Inga registrerade meriter";
+        const text = document.createElement("p");
+        text.textContent = "Klubben har ännu inga registrerade guld-, silver- eller bronsplaceringar i historiken.";
+        copy.append(title, text);
+        empty.append(icon, copy);
+
+        elements.teamHonoursList.append(empty);
+        elements.teamHonoursCount.textContent = "0 lagmeriter";
+        elements.teamHonoursSection.hidden = false;
         return;
       }
-  
+
+      const groups = [
+        {
+          key: "gold",
+          label: "GULD",
+          icon: "🏆",
+          rows: honours.filter((row) => row.playoffStatusCode === "CHAMPION")
+        },
+        {
+          key: "silver",
+          label: "SILVER",
+          icon: "🥈",
+          rows: honours.filter((row) =>
+            ["RUNNER_UP", "FINALIST_UNDECIDED"].includes(
+              String(row.playoffStatusCode || "").toUpperCase()
+            )
+          )
+        },
+        {
+          key: "bronze",
+          label: "BRONS",
+          icon: "🥉",
+          rows: honours.filter((row) => row.playoffStatusCode === "THIRD_PLACE")
+        }
+      ].filter((group) => group.rows.length);
+
       const fragment = document.createDocumentFragment();
-      for (const tournament of honours) {
-        fragment.append(createHonourCard(tournament));
-      }
+      groups.forEach((group) => fragment.append(createHonourGroup(group)));
       elements.teamHonoursList.append(fragment);
+
       elements.teamHonoursCount.textContent =
-        `${honours.length.toLocaleString("sv-SE")} meriter`;
+        `${honours.length.toLocaleString("sv-SE")} lagmeriter`;
       elements.teamHonoursSection.hidden = false;
     }
-  
-  
+
+
     function competitionLabel(tournament) {
       return (
         tournament.competitionName ||
@@ -6989,22 +8867,40 @@ function SEH_initTeam() {
     function createPlayerAvatar(player, className = "") {
       const avatar = document.createElement("span");
       avatar.className = `history-player-avatar ${className}`.trim();
-  
+
       const image = document.createElement("img");
       image.src = localPlayerImageUrl(player);
       image.alt = "";
       image.loading = "lazy";
+      image.decoding = "async";
+
+      const isDefaultPortrait = (value) =>
+        String(value || "").includes("players/1DEFAULTBILDID.png");
+
+      if (isDefaultPortrait(image.src)) {
+        avatar.classList.add("is-default");
+      }
+
+      image.addEventListener("load", () => {
+        if (isDefaultPortrait(image.currentSrc || image.src)) {
+          avatar.classList.add("is-default");
+        } else {
+          avatar.classList.remove("is-default");
+        }
+      });
+
       image.addEventListener("error", () => {
         if (!image.dataset.fallback) {
           image.dataset.fallback = "1";
-          image.src = "players/1DEFAULTBILDID.jpg";
+          avatar.classList.add("is-default");
+          image.src = "players/1DEFAULTBILDID.png";
           return;
         }
+        avatar.classList.add("is-empty");
         avatar.replaceChildren();
-        avatar.textContent = initials(player.displayGamertag);
       });
+
       avatar.append(image);
-  
       return avatar;
     }
   
@@ -7013,6 +8909,19 @@ function SEH_initTeam() {
       const link = document.createElement("a");
       link.className = "history-player-card";
       link.href = playerPageUrl(player.playerKey, player.displayGamertag);
+
+      const teamLogoCandidate = state.team
+        ? SEH_teamLogoCandidates(
+            [state.team.logoUrl, state.team.logoPath],
+            state.team.currentName
+          )[0] || ""
+        : "";
+      if (teamLogoCandidate) {
+        link.style.setProperty(
+          "--history-player-logo-image",
+          `url("${teamLogoCandidate.replace(/"/g, '\"')}")`
+        );
+      }
   
       const avatar = createPlayerAvatar(player);
       const content = document.createElement("span");
@@ -8110,6 +10019,7 @@ function SEH_initTeam() {
         renderTeamHeader();
         renderSummary();
         renderHonours();
+        updateTeamMeritsTabVisibility();
         renderSeasonCompetitionFilters();
         renderSeasonsTable();
         renderAllTimePlayers();
@@ -8164,6 +10074,7 @@ function SEH_initTeam() {
       }
     );
 
+    initTeamProfileTabs();
     loadTeamPage();
   })();
 }
@@ -10074,6 +11985,35 @@ function SEH_initTournament() {
 
 
 /* GLOBAL TEAM LOGO RESOLVER */
+const SEH_PLAYER_IMAGE_FILES = new Set(
+  Array.isArray(window.SEH_PLAYER_IMAGE_FILES)
+    ? window.SEH_PLAYER_IMAGE_FILES
+    : []
+);
+
+function SEH_playerImageUrl(value, fallbackCandidate = "") {
+  const fallback = "players/1DEFAULTBILDID.png";
+
+  for (const candidate of [value, fallbackCandidate]) {
+    const raw = String(candidate || "").trim();
+    if (!raw) continue;
+
+    const numericId = raw.match(/^\d+$/)?.[0];
+    const localFile = raw.match(/(?:^|\/)([^/?#]+\.png)(?:[?#].*)?$/i)?.[1];
+    const fileName = numericId ? `${numericId}.png` : localFile;
+
+    if (fileName && SEH_PLAYER_IMAGE_FILES.has(fileName)) {
+      return `players/${encodeURIComponent(fileName)}`;
+    }
+
+    if (/^https?:\/\//i.test(raw) && !/\/players\/\d+(?:[/?#]|$)/i.test(raw)) {
+      return raw;
+    }
+  }
+
+  return fallback;
+}
+
 const SEH_TEAM_LOGO_FILES = (
   window.SEH_TEAM_LOGO_FILES &&
   typeof window.SEH_TEAM_LOGO_FILES === "object"
@@ -10083,11 +12023,27 @@ const SEH_TEAM_LOGO_FILES = (
 const SEH_HAS_TEAM_LOGO_MANIFEST =
   Object.keys(SEH_TEAM_LOGO_FILES).length > 0;
 
+// Historical SportsGamer team logos that are no longer represented by the
+// club's current team name/logo in our local logo archive. These are used as
+// verified fallbacks before initials are shown.
+const SEH_TEAM_LOGO_REMOTE_OVERRIDES = Object.freeze({
+  "nemesis": "https://sportsgamer.gg/storage/team-logos/171/147/IMG-20220314-WA0000_20220314-142104.png",
+  "hc bisons": "https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2019_10/CE821323-0CCE-4C8A-A28D-A39247FDFE0E.thumb.jpeg.af47fb2589046feb52a0a61ec56a3d37.jpeg"
+});
+
+function SEH_normalizeTeamLogoLookupName(value) {
+  return String(value || "")
+    .normalize("NFC")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("sv-SE");
+}
+
 function SEH_resolveLocalTeamLogo(value) {
   const url = String(value || "").trim();
   if (!url) return "";
 
-  const match = url.match(/^(?:\.\/)?teamlogos\/([^?#]+)(?:[?#].*)?$/i);
+  const match = url.match(/^(?:\.\/)?(?:teamlogos\/)?([^/?#]+\.(?:png|jpe?g|webp))(?:[?#].*)?$/i);
   if (!match || !SEH_HAS_TEAM_LOGO_MANIFEST) {
     return url;
   }
@@ -10141,6 +12097,10 @@ function SEH_teamLogoCandidates(primaryUrls, teamName) {
   };
 
   (Array.isArray(primaryUrls) ? primaryUrls : [primaryUrls]).forEach(add);
+
+  const remoteOverride =
+    SEH_TEAM_LOGO_REMOTE_OVERRIDES[SEH_normalizeTeamLogoLookupName(teamName)];
+  if (remoteOverride) add(remoteOverride);
 
   for (const name of SEH_teamLogoNameVariants(teamName)) {
     add(`teamlogos/${encodeURIComponent(name)}.png`);
@@ -10197,6 +12157,144 @@ function SEH_renderTeamLogo(container, primaryUrls, teamName, altText = "") {
   container.append(image);
 
   SEH_applyTeamLogo(image, primaryUrls, teamName, container);
+}
+
+
+/* ============================================================
+   V1.26.7 – KLUBBFÄRG PÅ SPELARKORT
+   Hämtar en diskret tvåfärgspalett från den lokala lagloggan.
+   SportsGamer-ID används aldrig här – endast visat lagnamn/logo-resolver.
+   ============================================================ */
+const SEH_PLAYER_CARD_DEFAULT_PALETTE = {
+  primary: "#0b3855",
+  secondary: "#d6b15f"
+};
+
+const SEH_PLAYER_CARD_TEAM_COLOR_PRESETS = {
+  "ssk esports": { primary: "#0750a0", secondary: "#f0c51b" }
+};
+
+function SEH_playerCardTeamPaletteKey(teamName) {
+  return String(teamName || "").trim().toLocaleLowerCase("sv-SE");
+}
+
+function SEH_playerCardRgbToHex(r, g, b) {
+  const part = (value) => Math.max(0, Math.min(255, Math.round(value)))
+    .toString(16)
+    .padStart(2, "0");
+  return `#${part(r)}${part(g)}${part(b)}`;
+}
+
+function SEH_playerCardColorDistance(a, b) {
+  return Math.sqrt(
+    (a[0] - b[0]) ** 2 +
+    (a[1] - b[1]) ** 2 +
+    (a[2] - b[2]) ** 2
+  );
+}
+
+function SEH_playerCardPaletteFromLogo(image) {
+  try {
+    if (!(image instanceof HTMLImageElement)) return null;
+    if (!image.naturalWidth || !image.naturalHeight) return null;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 40;
+    canvas.height = 40;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) return null;
+
+    context.clearRect(0, 0, 40, 40);
+    context.drawImage(image, 0, 0, 40, 40);
+    const pixels = context.getImageData(0, 0, 40, 40).data;
+    const buckets = new Map();
+
+    for (let index = 0; index < pixels.length; index += 4) {
+      const alpha = pixels[index + 3];
+      if (alpha < 100) continue;
+
+      let r = pixels[index];
+      let g = pixels[index + 1];
+      let b = pixels[index + 2];
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const light = (max + min) / 2;
+      const saturation = max - min;
+
+      /* Undvik svart/vitt/grått – vi vill åt klubbens accentfärger. */
+      if (light < 24 || light > 235 || saturation < 24) continue;
+
+      r = Math.round(r / 32) * 32;
+      g = Math.round(g / 32) * 32;
+      b = Math.round(b / 32) * 32;
+      const key = `${r},${g},${b}`;
+      buckets.set(key, (buckets.get(key) || 0) + 1);
+    }
+
+    const colors = [...buckets.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([key, count]) => ({ rgb: key.split(",").map(Number), count }));
+
+    if (!colors.length) return null;
+
+    const primary = colors[0].rgb;
+    const secondary = (
+      colors.find((item) => SEH_playerCardColorDistance(item.rgb, primary) > 90) ||
+      colors[1] ||
+      colors[0]
+    ).rgb;
+
+    return {
+      primary: SEH_playerCardRgbToHex(...primary),
+      secondary: SEH_playerCardRgbToHex(...secondary)
+    };
+  } catch (_error) {
+    /* Remote legacy logos can be CORS-tainted. Generic palette is safer. */
+    return null;
+  }
+}
+
+function SEH_applyPlayerCardTeamPalette(card, palette) {
+  if (!card) return;
+  const chosen = palette || SEH_PLAYER_CARD_DEFAULT_PALETTE;
+  card.style.setProperty("--player-card-team-primary", chosen.primary || SEH_PLAYER_CARD_DEFAULT_PALETTE.primary);
+  card.style.setProperty("--player-card-team-secondary", chosen.secondary || chosen.primary || SEH_PLAYER_CARD_DEFAULT_PALETTE.secondary);
+}
+
+function SEH_hydratePlayerCardTeamPalette(card, logoContainer, teamName) {
+  if (!card || !logoContainer) return;
+
+  const key = SEH_playerCardTeamPaletteKey(teamName);
+  const configured =
+    window.SEH_TEAM_COLORS?.[teamName] ||
+    window.SEH_TEAM_COLORS?.[key] ||
+    SEH_PLAYER_CARD_TEAM_COLOR_PRESETS[key];
+  const cache = window.__SEH_PLAYER_CARD_PALETTE_CACHE_V1267__ instanceof Map
+    ? window.__SEH_PLAYER_CARD_PALETTE_CACHE_V1267__
+    : (window.__SEH_PLAYER_CARD_PALETTE_CACHE_V1267__ = new Map());
+
+  SEH_applyPlayerCardTeamPalette(card, SEH_PLAYER_CARD_DEFAULT_PALETTE);
+  if (configured) {
+    SEH_applyPlayerCardTeamPalette(card, configured);
+    return;
+  }
+  if (cache.has(key)) {
+    SEH_applyPlayerCardTeamPalette(card, cache.get(key));
+    return;
+  }
+
+  const image = logoContainer.querySelector("img");
+  if (!image) return;
+
+  const read = () => {
+    const palette = SEH_playerCardPaletteFromLogo(image);
+    if (!palette) return;
+    cache.set(key, palette);
+    SEH_applyPlayerCardTeamPalette(card, palette);
+  };
+
+  if (image.complete && image.naturalWidth) read();
+  else image.addEventListener("load", read, { once: true });
 }
 
 function SEH_initShop() {
@@ -10345,9 +12443,370 @@ function SEH_initShop() {
 (() => {
   "use strict";
 
-  const APP_BUILD = "2026-08-15-hash-spa-v98-season-menu-hidden";
+  const APP_BUILD = "2026-09-04-v12864-hash-centers";
 
-  const templates = {"home": "<main class=\"directory-shell portal-shell\">\n<section class=\"portal-hero\">\n<div class=\"portal-hero__copy\">\n<p class=\"directory-kicker\">SVENSK eHOCKEY / LIVE DATA</p>\n<h1>All svensk<br/>eHockey.<br/><em>En plats.</em></h1>\n<p>\n          Svensk eHockey är en samlingsplats för statistik och information om svenska spelare och lag inom eHockey. Syftet med sidan är att göra det enklare att följa den svenska eHockeyscenen och samla information som annars finns utspridd på flera olika platser.\n        </p>\n<p>\n          Här kan du följa svenska spelares och lags utveckling i ECL, se matchresultat, spelarstatistik, lagbyten och historik från tidigare säsonger. Sidan samlar även information om svenska lag genom åren och ger en tydlig överblick över vilka spelare som representerat lagen.\n        </p>\n<p>\n          Svensk eHockey arrangerar även den egna turneringen Svenska eHockey Cupen (SEC). Turneringen har en egen avdelning på sidan där samtliga upplagor av SEC finns samlade. Där går det att se deltagande lag, tabeller, matchresultat och statistik för både lag och spelare från varje turnering.\n        </p>\n<p>\n          Målet är att samla, bevara och göra den svenska eHockeyhistoriken mer tillgänglig – från enskilda spelare och lag till ECL och Svenska eHockey Cupen.\n        </p>\n<div class=\"portal-actions\">\n<a class=\"portal-button portal-button--primary\" href=\"#/laghistoria\">Utforska laghistoriken</a>\n<a class=\"portal-button\" href=\"#/spelare\">Hitta spelare</a>\n</div>\n</div>\n<div aria-hidden=\"true\" class=\"portal-mark\">\n<img alt=\"\" src=\"assets/SeHlogga.png\"/>\n<span>SVENSK<br/>eHOCKEY</span>\n</div>\n</section>\n<section aria-labelledby=\"exploreTitle\" class=\"portal-section\">\n<div class=\"portal-section__heading\">\n<div>\n<p class=\"directory-kicker\">UTFORSKA</p>\n<h2 id=\"exploreTitle\">Allt samlat på ett ställe</h2>\n</div>\n<p>Välj område och gå direkt till aktuell datavy.</p>\n</div>\n<div class=\"portal-grid\">\n<a href=\"#/nyheter\"><span>01</span><h3>Nyheter</h3><p>Uppdateringar om sidan, databasen och svensk eHockey.</p></a>\n<a href=\"#/spelare\"><span>02</span><h3>Spelare</h3><p>Sök bland spelarna i databasen och öppna kompletta profiler.</p></a>\n<a href=\"#/laghistoria\"><span>03</span><h3>Laghistoria</h3><p>Organisationer, historiska namn, säsonger och lagstatistik.</p></a>\n<a href=\"#/sasong/ecl26spring\"><span>04</span><h3>Säsonger</h3><p>Översikt, matcher, byten, lag och statistik per ECL-säsong.</p></a>\n<a href=\"https://www.svenskehockey.se/SEC/\"><span>05</span><h3>SEC</h3><p>Svenska eHockey Cupens egna turneringssidor.</p></a>\n</div>\n</section>\n</main>\n<footer class=\"directory-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>", "news": "\u003cmain class=\"directory-shell news-page-shell\"\u003e\n\u003csection class=\"news-page-hero\"\u003e\n\u003cdiv\u003e\n\u003cp class=\"directory-kicker\"\u003eSVENSK eHOCKEY / REDAKTIONEN\u003c/p\u003e\n\u003ch1\u003eNyheter\u003c/h1\u003e\n\u003cp\u003eArtiklar, uppdateringar och notiser från den svenska eHockeyscenen.\u003c/p\u003e\n\u003c/div\u003e\n\u003caside class=\"news-page-tools\" aria-label=\"Filtrera nyheter\"\u003e\n\u003clabel for=\"newsSearch\"\u003eSÖK I NYHETER\u003c/label\u003e\n\u003cinput id=\"newsSearch\" type=\"search\" autocomplete=\"off\" placeholder=\"Sök titel, text eller tagg…\"\u003e\n\u003cdiv class=\"news-tag-row\" id=\"newsTagFilters\"\u003e\u003c/div\u003e\n\u003csmall id=\"newsResultText\"\u003e\u003c/small\u003e\n\u003c/aside\u003e\n\u003c/section\u003e\n\u003csection class=\"news-featured\" id=\"featuredNews\" aria-label=\"Senaste huvudnyhet\"\u003e\u003c/section\u003e\n\u003csection class=\"news-card-grid\" id=\"newsGrid\" aria-label=\"Fler nyheter\"\u003e\u003c/section\u003e\n\u003c/main\u003e\n\u003cfooter class=\"directory-footer\"\u003e\u003cdiv\u003e\u003cstrong\u003eSVENSK eHOCKEY\u003c/strong\u003e\u003cspan\u003e© 2026 Svensk eHockey\u003c/span\u003e\u003c/div\u003e\u003c/footer\u003e", "players": "<main class=\"directory-shell players-shell\">\n<section aria-labelledby=\"playersTitle\" class=\"players-hero\">\n<div class=\"players-hero__copy\">\n<p class=\"directory-kicker\">SPELARE</p>\n<h1 id=\"playersTitle\">Svenska<br/>Spelare</h1>\n<p>\n          Här hittar du svenska spelare som förekommer i databasen från ECL, SCL,\n          eSHL, SEC, ITHL, LGEL och SM. Sök efter spelare, lag eller division,\n          filtrera efter roll och öppna profilen för klubbhistorik, statistik och\n          tidigare säsonger.\n        </p>\n<div aria-label=\"Registeregenskaper\" class=\"players-hero__tags\">\n<span>SVENSKT SPELARREGISTER</span>\n<span>PROFILER MED HISTORIK</span>\n<span>SORTERBART PÅ KLUBBAR</span>\n</div>\n</div>\n<aside aria-label=\"Översikt\" class=\"players-overview\">\n<p class=\"directory-kicker\">ÖVERSIKT</p>\n<p>Snabbkoll på alla svenska spelare och roller som hittats i databasen.</p>\n<div>\n<article><span>SPELARE</span><strong id=\"overviewPlayers\">–</strong></article>\n<article><span>MÅLVAKTER</span><strong id=\"overviewGoalies\">–</strong></article>\n<article><span>UTESPELARE</span><strong id=\"overviewSkaters\">–</strong></article>\n</div>\n</aside>\n</section>\n<section aria-labelledby=\"playerDirectoryTitle\" class=\"player-directory\">\n<h2 class=\"sr-only\" id=\"playerDirectoryTitle\">Spelarregister</h2>\n<div class=\"players-toolbar\">\n<label class=\"players-field players-field--search\">\n<span>SÖK</span>\n<input autocomplete=\"off\" id=\"playerSearch\" placeholder=\"Sök spelare, lag, division…\" type=\"search\"/>\n</label>\n<label class=\"players-field\">\n<span>ROLL</span>\n<select id=\"roleFilter\">\n<option value=\"all\">Alla roller</option>\n<option value=\"skater\">Utespelare</option>\n<option value=\"goalie\">Målvakter</option>\n</select>\n</label>\n<label class=\"players-field\">\n<span>DIVISION</span>\n<select id=\"divisionFilter\"><option value=\"all\">Alla divisioner</option></select>\n</label>\n<label class=\"players-field\">\n<span>SORTERA</span>\n<select id=\"playerSort\">\n<option value=\"games\">Flest matcher</option>\n<option value=\"points\">Flest poäng</option>\n<option value=\"clubs\">Flest klubbar</option>\n<option value=\"name\">Namn A–Ö</option>\n</select>\n</label>\n<label class=\"players-compact\">\n<span>VY</span>\n<span class=\"players-compact__control\">\n<input id=\"compactToggle\" type=\"checkbox\"/>\n<b>Visa mindre</b>\n</span>\n</label>\n</div>\n<p class=\"player-directory__result\" id=\"playerResultText\">Laddar svenska spelare…</p>\n<div aria-live=\"polite\" class=\"player-directory__grid\" id=\"playerGrid\"></div>\n<nav aria-label=\"Sidnumrering\" class=\"player-pagination\" id=\"playerPagination\"></nav>\n</section>\n</main>\n<footer class=\"directory-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>", "history": "<main class=\"directory-shell\">\n<section aria-labelledby=\"pageTitle\" class=\"directory-hero\">\n<div class=\"directory-hero__copy\">\n<p class=\"directory-kicker\">LAGHISTORIK</p>\n<h1 id=\"pageTitle\">Svensk<br/>laghistoria</h1>\n<p>\n          Här samlas svenska lag från ECL, SCL, eSHL, SEC, ITHL, LGEL och SM.\n          Sök efter lag, spelare, turnering eller division och följ samma\n          organisation genom namnbyten och olika säsonger.\n        </p>\n</div>\n<aside aria-label=\"Historikens omfattning\" class=\"directory-year-card\">\n<strong id=\"historyYearCount\">–</strong>\n<span>ÅR AV SVENSK eHOCKEY</span>\n</aside>\n</section>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>\n        Öppna <code>config.js</code> och fyll i projektets URL och\n        publishable key.\n      </p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta laghistoriken</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<section aria-labelledby=\"directoryTitle\" class=\"directory-section\" id=\"teamDirectory\">\n<div class=\"directory-section__heading\">\n<div>\n<p class=\"directory-kicker\">HISTORIK</p>\n<h2 id=\"directoryTitle\">Svenska lag</h2>\n</div>\n<button class=\"directory-reload\" id=\"reloadButton\" type=\"button\">\n          Uppdatera data\n        </button>\n</div>\n<div aria-label=\"Filtrering och sortering\" class=\"directory-toolbar\">\n<label>\n<span class=\"sr-only\">Namnvisning</span>\n<select id=\"nameModeSelect\">\n<option value=\"current\">Visa via lagnamn</option>\n<option value=\"latest\">Visa senaste turneringsnamn</option>\n</select>\n</label>\n<label>\n<span class=\"sr-only\">Turnering</span>\n<select id=\"tournamentFilter\">\n<option value=\"all\">Alla turneringar</option>\n</select>\n</label>\n<label>\n<span class=\"sr-only\">Sortering</span>\n<select id=\"sortSelect\">\n<option value=\"name-asc\">Namn A–Ö</option>\n<option value=\"name-desc\">Namn Ö–A</option>\n<option value=\"latest\">Senast aktiv</option>\n<option value=\"games\">Flest matcher</option>\n<option value=\"wins\">Flest vinster</option>\n<option value=\"winpct\">Högst vinst%</option>\n<option value=\"tournaments\">Flest turneringar</option>\n<option value=\"players\">Flest spelare</option>\n</select>\n</label>\n<label>\n<span class=\"sr-only\">Kortstorlek</span>\n<select id=\"viewModeSelect\">\n<option value=\"full\">Hela kort</option>\n<option value=\"compact\">Kompakta kort</option>\n</select>\n</label>\n<label class=\"directory-search\">\n<span aria-hidden=\"true\" class=\"directory-search__icon\">⌕</span>\n<input autocomplete=\"off\" id=\"searchInput\" placeholder=\"Sök lag, spelare, ECL eller division\" type=\"search\"/>\n</label>\n</div>\n<section aria-label=\"Samlad lagstatistik\" class=\"directory-stats\" id=\"directoryStats\">\n<article>\n<span>VISAR LAG</span>\n<strong id=\"visibleTeamCount\">–</strong>\n</article>\n<article>\n<span>ALLA LAGNAMN</span>\n<strong id=\"allNameCount\">–</strong>\n</article>\n<article>\n<span>SÄSONGER</span>\n<strong id=\"appearanceCount\">–</strong>\n</article>\n<article>\n<span>DIVISIONER</span>\n<strong id=\"divisionCount\">–</strong>\n</article>\n<article>\n<span>MATCHER / VINSTER</span>\n<strong><span id=\"matchCount\">–</span> / <span id=\"winCount\">–</span></strong>\n</article>\n<article>\n<span>SPELARE</span>\n<strong id=\"playerCount\">–</strong>\n</article>\n</section>\n<div class=\"directory-resultbar\">\n<span id=\"resultText\">Laddar…</span>\n<span id=\"lastUpdated\"></span>\n</div>\n<div class=\"directory-loading\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar lag, turneringar och spelare…</p>\n</div>\n<div aria-live=\"polite\" class=\"directory-grid\" id=\"teamGrid\"></div>\n</section>\n</main>\n<footer class=\"directory-footer\">\n<div>\n<strong>SVENSK eHOCKEY</strong>\n<span>© 2026 Svensk eHockey</span>\n</div>\n<a href=\"#teamDirectory\">Till toppen ↑</a>\n</footer>\n<template id=\"teamCardTemplate\">\n<article class=\"directory-team-card\">\n<a aria-label=\"\" class=\"directory-team-card__main-link\" href=\"#\"></a>\n<span class=\"directory-team-card__number\"></span>\n<div class=\"directory-team-card__header\">\n<div aria-hidden=\"true\" class=\"directory-team-card__logo\"></div>\n<div class=\"directory-team-card__identity\">\n<h3 class=\"directory-team-card__name\"></h3>\n<p class=\"directory-team-card__identity-name\" hidden=\"\"></p>\n<div class=\"directory-team-card__badges\"></div>\n</div>\n</div>\n<dl class=\"directory-team-card__metrics\">\n<div><dt>SPELARE</dt><dd class=\"metric-players\">–</dd></div>\n<div><dt>TURNERINGAR</dt><dd class=\"metric-tournaments\">–</dd></div>\n<div><dt>DIVISIONER</dt><dd class=\"metric-divisions\">–</dd></div>\n<div><dt>MATCHER</dt><dd class=\"metric-games\">–</dd></div>\n<div><dt>RECORD</dt><dd class=\"metric-record\">–</dd></div>\n<div><dt>VINST%</dt><dd class=\"metric-winpct\">–</dd></div>\n<div><dt>GF–GA</dt><dd class=\"metric-goals\">–</dd></div>\n<div><dt>+/−</dt><dd class=\"metric-diff\">–</dd></div>\n<div><dt>SLUTSPEL</dt><dd class=\"metric-playoffs\">–</dd></div>\n</dl>\n<div class=\"directory-team-card__summary\">\n<p><strong>Topp spelare:</strong> <a class=\"summary-top-player\" href=\"#\">–</a></p>\n<p><strong>Senast:</strong> <span class=\"summary-latest\">–</span></p>\n<p class=\"summary-alias-row\"><strong>Namnvariationer:</strong> <span class=\"summary-aliases\">–</span></p>\n</div>\n<div class=\"directory-team-card__action\">\n        Öppna laghistoriken <span aria-hidden=\"true\">→</span>\n</div>\n</article>\n</template>", "player": "<div class=\"page-shell history-page-shell player-profile-shell\">\n  <nav aria-label=\"Navigering\" class=\"page-nav history-nav player-profile-legacy-nav\">\n    <a class=\"back-button\" href=\"#/spelare\" id=\"backLink\">← Tillbaka till spelare</a>\n    <button class=\"reload-button\" id=\"reloadButton\" type=\"button\">Uppdatera</button>\n  </nav>\n\n  <section class=\"notice notice-warning\" hidden id=\"setupNotice\">\n    <h2>Anslut sidan till Supabase</h2>\n    <p>Öppna <code>config.js</code> och fyll i projektets URL och publishable key.</p>\n  </section>\n\n  <section class=\"notice notice-error\" hidden id=\"errorNotice\">\n    <h2>Kunde inte hämta spelaren</h2>\n    <p id=\"errorMessage\"></p>\n  </section>\n\n  <main hidden id=\"playerPage\" class=\"player-profile-page-v5\">\n    <section class=\"player-editorial-profile\" aria-label=\"Spelarprofil\">\n      <div class=\"player-editorial-photo-column\">\n        <div aria-hidden=\"true\" class=\"profile-detail-avatar player-editorial-photo\" id=\"playerAvatar\"></div>\n      </div>\n\n      <div class=\"player-editorial-main\">\n        <p class=\"player-editorial-kicker\">\n          <span id=\"playerFlag\" aria-hidden=\"true\">🇸🇪</span>\n          <span>SPELARPROFIL</span>\n        </p>\n\n        <h1 id=\"playerName\">Laddar spelare…</h1>\n\n        <div class=\"player-editorial-identity\">\n          <span class=\"player-editorial-team\" id=\"playerCurrentTeam\">–</span>\n          <p id=\"playerMeta\">–</p>\n        </div>\n\n        <section class=\"player-editorial-stats\" aria-label=\"Offensiv karriärstatistik\">\n          <article>\n            <strong id=\"careerPoints\">–</strong>\n            <span>POÄNG</span>\n          </article>\n          <article>\n            <strong id=\"careerGoals\">–</strong>\n            <span>MÅL</span>\n          </article>\n          <article>\n            <strong id=\"careerAssists\">–</strong>\n            <span>ASSIST</span>\n          </article>\n        </section>\n\n        <p class=\"player-editorial-competitions\" id=\"playerCompetitions\"></p>\n      </div>\n\n      <aside class=\"player-editorial-bio\" aria-label=\"Spelarpresentation\">\n        <div id=\"playerBio\"></div>\n        <div class=\"team-profile-links player-editorial-links\" id=\"playerLinks\"></div>\n      </aside>\n    </section>\n\n    <section class=\"player-merits-layout\" id=\"playerMeritsSection\" hidden>\n      <article class=\"player-merits-column player-merits-column--team\">\n        <div class=\"player-merits-heading player-merits-heading--team\">\n          <span aria-hidden=\"true\"></span>\n          <h2>MERITER</h2>\n          <span aria-hidden=\"true\"></span>\n        </div>\n        <div class=\"player-merits-list\" id=\"teamMeritsList\"></div>\n      </article>\n\n      <article class=\"player-merits-column player-merits-column--personal\">\n        <div class=\"player-merits-heading player-merits-heading--personal\">\n          <h2>PERSONLIGA MERITER</h2>\n        </div>\n        <div class=\"player-merits-list\" id=\"personalMeritsList\"></div>\n      </article>\n    </section>\n\n    <section class=\"player-secondary-metrics\" aria-label=\"Spelaröversikt\">\n      <article><span>TURNERINGAR</span><strong id=\"tournamentCount\">–</strong></article>\n      <article><span>LAG</span><strong id=\"teamCount\">–</strong></article>\n      <article><span>MATCHER</span><strong id=\"careerGames\">–</strong></article>\n    </section>\n\n    <section class=\"history-alltime-grid player-career-grid player-career-grid-v5\">\n      <article class=\"history-alltime-card\">\n        <p class=\"history-kicker history-kicker--gold\">Utespelare</p>\n        <h2>Karriärstatistik</h2>\n        <div class=\"profile-stat-list\" id=\"skaterCareerStats\"></div>\n      </article>\n\n      <article class=\"history-alltime-card\">\n        <p class=\"history-kicker history-kicker--gold\">Målvakt</p>\n        <h2>Målvaktsstatistik</h2>\n        <div class=\"profile-stat-list\" id=\"goalieCareerStats\"></div>\n      </article>\n    </section>\n\n    <section class=\"player-teams-section-v5\" id=\"playerTeamsSection\" hidden>\n      <div class=\"player-teams-heading-v5\">\n        <h2>Lag</h2>\n        <p>Lag spelaren har representerat i historiken.</p>\n      </div>\n      <div class=\"player-teams-grid-v5\" id=\"playerTeamsGrid\"></div>\n    </section>\n\n    <section class=\"history-section player-history-section-v5\">\n      <div class=\"history-section-heading\">\n        <div>\n          <p class=\"history-kicker history-kicker--gold\">Historik</p>\n          <h2>Alla turneringar</h2>\n          <p>Varje rad länkar till lagets sida för just den turneringen.</p>\n        </div>\n        <span class=\"history-section-count\" id=\"historyCount\"></span>\n      </div>\n\n      <div class=\"player-history-filters\" id=\"historyCompetitionFilters\" aria-label=\"Filtrera turneringshistorik\"></div>\n\n      <div class=\"history-table-wrap\">\n        <table class=\"history-table player-history-table\">\n          <thead>\n            <tr>\n              <th>Säsong</th>\n              <th>Lag</th>\n              <th>Division</th>\n              <th>Roll</th>\n              <th>GP</th>\n              <th>G</th>\n              <th>A</th>\n              <th>PTS</th>\n              <th>SV%</th>\n              <th>GAA</th>\n            </tr>\n          </thead>\n          <tbody id=\"historyTableBody\"></tbody>\n        </table>\n      </div>\n    </section>\n  </main>\n\n  <div class=\"loading-state\" id=\"loadingState\">\n    <div aria-hidden=\"true\" class=\"spinner\"></div>\n    <p>Hämtar spelarens historik…</p>\n  </div>\n</div>\n<footer class=\"directory-footer\">\n  <div>\n    <strong>SVENSK eHOCKEY</strong>\n    <span>© 2026 Svensk eHockey</span>\n  </div>\n</footer>", "team": "<div class=\"page-shell history-page-shell\">\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>\n        Öppna <code>config.js</code> och fyll i projektets URL och\n        publishable key.\n      </p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta laget</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<main hidden=\"\" id=\"teamPage\">\n<section class=\"history-hero\">\n<div class=\"history-hero-main\">\n<p class=\"history-kicker\">Lagets historik</p>\n<h1 id=\"teamName\">Laddar lag…</h1>\n<div class=\"history-hero-content\">\n<div class=\"history-team-identity\">\n<div aria-hidden=\"true\" class=\"history-team-logo\" id=\"teamProfileAvatar\"></div>\n<div aria-label=\"Lagets pallplatser\" class=\"history-badges\" id=\"historyBadges\"></div>\n</div>\n<div class=\"history-profile-copy\">\n<div class=\"history-chip-row\" id=\"heroChips\"></div>\n<div class=\"history-profile-block\">\n<span>Klubbprofil</span>\n<p id=\"clubProfileText\"></p>\n</div>\n<div class=\"history-leaders\">\n<div>\n<span>Flest matcher</span>\n<strong id=\"leaderMatches\">–</strong>\n</div>\n<div>\n<span>Flest poäng</span>\n<strong id=\"leaderPoints\">–</strong>\n</div>\n<div>\n<span>Främsta målvakt</span>\n<strong id=\"leaderGoalie\">–</strong>\n</div>\n</div>\n<div class=\"team-profile-links\" id=\"teamLinks\"></div>\n</div>\n</div>\n</div>\n<aside aria-labelledby=\"divisionCurveHeading\" class=\"history-division-panel\">\n<p class=\"history-kicker history-kicker--gold\">Divisioner</p>\n<h2 id=\"divisionCurveHeading\">Divisionskurva</h2>\n<p>Från NEO längst ner till ELITE högst upp.</p>\n<div class=\"division-curve\" id=\"divisionCurve\"></div>\n<div class=\"division-curve-footer\">\n<span id=\"divisionCurveFirst\">–</span>\n<span id=\"divisionCurveLatest\">–</span>\n</div>\n</aside>\n</section>\n<section aria-label=\"Lagöversikt\" class=\"history-metric-band\">\n<article class=\"history-feature-metric\">\n<span>Matchvinster</span>\n<strong id=\"winsCount\">–</strong>\n<small id=\"winsMetricNote\"></small>\n</article>\n<article class=\"history-feature-metric\">\n<span>Bästa ECL</span>\n<strong id=\"bestEclSeason\">–</strong>\n<small id=\"bestEclNote\"></small>\n</article>\n<article class=\"history-feature-metric\">\n<span>Högsta nivå</span>\n<strong id=\"bestDivision\">–</strong>\n<small id=\"divisionMetricNote\"></small>\n</article>\n<article class=\"history-feature-metric\">\n<span>Slutspel</span>\n<strong id=\"playoffRecord\">–</strong>\n<small id=\"playoffMetricNote\"></small>\n</article>\n<div class=\"history-compact-metrics\">\n<div><span>Matcher</span><strong id=\"gamesCount\">–</strong></div>\n<div><span>Vinster</span><strong id=\"winsCompact\">–</strong></div>\n<div><span>Förluster</span><strong id=\"lossesCount\">–</strong></div>\n<div><span>Vinst%</span><strong id=\"winPercentage\">–</strong></div>\n<div><span>GF–GA</span><strong id=\"goalsRecord\">–</strong></div>\n<div><span>+/−</span><strong id=\"goalDifference\">–</strong></div>\n</div>\n</section>\n<section class=\"history-section history-honours\" hidden=\"\" id=\"teamHonoursSection\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Meriter</p>\n<h2>Pallplatser</h2>\n</div>\n<span class=\"history-section-count\" id=\"teamHonoursCount\"></span>\n</div>\n<div class=\"history-honour-summary\">\n<div><span>Mästare</span><strong id=\"championshipsCount\">0</strong></div>\n<div><span>Finaler</span><strong id=\"finalsCount\">0</strong></div>\n<div><span>Brons</span><strong id=\"bronzeCount\">0</strong></div>\n</div>\n<div class=\"history-honour-list\" id=\"teamHonoursList\"></div>\n</section>\n<section class=\"history-section\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Säsonger</p>\n<h2>Lagets säsonger</h2>\n<p>Säsonger, divisioner och tillgänglig lagstatistik.</p>\n</div>\n<span class=\"history-section-count\" id=\"tournamentCount\">–</span>\n</div>\n<div class=\"player-history-filters team-season-filters\" id=\"seasonCompetitionFilters\" aria-label=\"Filtrera lagets säsonger efter turnering\"></div>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-seasons-table\">\n<thead>\n<tr>\n<th>Säsong</th>\n<th>Datum</th>\n<th>Lagnamn då</th>\n<th>Division</th>\n<th>Spelare</th>\n<th>Matcher</th>\n<th>Record</th>\n<th>Poäng</th>\n<th>GF–GA</th>\n<th>Länk</th>\n</tr>\n</thead>\n<tbody id=\"seasonsTableBody\"></tbody>\n</table>\n</div>\n</section>\n<section class=\"history-section history-player-section\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Spelare</p>\n<h2 id=\"playersHeading\">Spelare – all-time</h2>\n<p>Alla spelare som har representerat laget i importerade turneringar.</p>\n</div>\n<span class=\"history-section-count\" id=\"allTimePlayerCount\">–</span>\n</div>\n<div class=\"history-player-grid\" id=\"playerCards\"></div>\n<div class=\"history-player-grid-actions\">\n<button class=\"history-outline-button\" hidden=\"\" id=\"togglePlayerCards\" type=\"button\">\n            Visa alla spelare\n          </button>\n</div>\n<div class=\"history-alltime-grid\">\n<article class=\"history-alltime-card\">\n<h3>All-time utespelare</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr>\n<th>#</th>\n<th>Spelare</th>\n<th>GP</th>\n<th>G</th>\n<th>A</th>\n<th>PTS</th>\n<th>PIM</th>\n</tr>\n</thead>\n<tbody id=\"allTimeSkaterBody\"></tbody>\n</table>\n</div>\n<div class=\"history-alltime-table-actions\">\n<button class=\"history-outline-button\" hidden=\"\" id=\"toggleAllTimeSkaters\" type=\"button\" aria-expanded=\"false\">Visa alla utespelare</button>\n</div>\n</article>\n<article class=\"history-alltime-card\">\n<h3>All-time målvakter</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr>\n<th>#</th>\n<th>Målvakt</th>\n<th>GP</th>\n<th>SA</th>\n<th>GA</th>\n<th>SV</th>\n<th>SV%</th>\n<th>GAA</th>\n<th>SO</th>\n</tr>\n</thead>\n<tbody id=\"allTimeGoalieBody\"></tbody>\n</table>\n</div>\n<div class=\"history-alltime-table-actions\">\n<button class=\"history-outline-button\" hidden=\"\" id=\"toggleAllTimeGoalies\" type=\"button\" aria-expanded=\"false\">Visa alla målvakter</button>\n</div>\n</article>\n</div>\n</section>\n<section class=\"history-section history-details-section\">\n<details>\n<summary>\n<span>\n<span class=\"history-kicker history-kicker--gold\">Fördjupning</span>\n<strong>Detaljerad turneringshistorik</strong>\n</span>\n<small>Behåller all information från den tidigare lagsidan</small>\n</summary>\n<div class=\"history-details-body\">\n<div class=\"section-heading\">\n<div>\n<h2>Alla turneringar</h2>\n</div>\n<div class=\"tournament-controls\">\n<label>\n<span>Turnering</span>\n<select id=\"competitionFilter\">\n<option value=\"\">Alla turneringar</option>\n</select>\n</label>\n<label>\n<span>Sortering</span>\n<select id=\"tournamentSort\">\n<option value=\"newest\">Nyaste först</option>\n<option value=\"oldest\">Äldsta först</option>\n<option value=\"competition\">Turnering A–Ö</option>\n</select>\n</label>\n</div>\n</div>\n<div class=\"result-bar tournament-result-bar\">\n<span id=\"tournamentResultText\"></span>\n<span id=\"lastUpdated\"></span>\n</div>\n<div class=\"tournament-list\" id=\"tournamentList\"></div>\n</div>\n</details>\n</section>\n<section class=\"team-information-panel history-source-panel\">\n<div>\n<span class=\"information-label\">SportsGamer-ID</span>\n<div class=\"information-value\" id=\"sportsGamerIds\"></div>\n</div>\n<div>\n<span class=\"information-label\">Historiska namn</span>\n<div class=\"information-value\" id=\"historicalNames\"></div>\n</div>\n<div>\n<span class=\"information-label\">Namn i turneringar</span>\n<div class=\"information-value\" id=\"leagueNames\"></div>\n</div>\n</section>\n</main>\n<div class=\"loading-state\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar lagets historik, turneringar och spelare…</p>\n</div>\n</div>", "teamTournament": "<div class=\"page-shell history-page-shell\">\n<nav aria-label=\"Navigering\" class=\"page-nav history-nav\">\n<a class=\"back-button\" href=\"#/laghistoria\" id=\"backLink\">← Tillbaka till laget</a>\n<button class=\"reload-button\" id=\"reloadButton\" type=\"button\">Uppdatera</button>\n</nav>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>Kontrollera att befintliga <code>config.js</code> innehåller projektets URL och publishable key.</p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta turneringen</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<main hidden=\"\" id=\"tournamentPage\">\n<section class=\"profile-detail-hero tournament-detail-hero\">\n<div aria-hidden=\"true\" class=\"profile-detail-avatar profile-detail-avatar--team\" id=\"teamAvatar\"></div>\n<div class=\"profile-detail-copy\">\n<p class=\"history-kicker history-kicker--gold\" id=\"competitionName\"></p>\n<h1 id=\"teamName\">Laddar lag…</h1>\n<h2 class=\"tournament-page-title\" id=\"tournamentName\"></h2>\n<p class=\"profile-detail-meta\" id=\"tournamentMeta\"></p>\n<div class=\"team-profile-links\" id=\"tournamentLinks\"></div>\n</div>\n</section>\n<section aria-label=\"Turneringsöversikt\" class=\"profile-summary-grid tournament-summary-grid\">\n<article><span>Matcher</span><strong id=\"gamesCount\">–</strong></article>\n<article><span>Vinster</span><strong id=\"winsCount\">–</strong></article>\n<article><span>Förluster</span><strong id=\"lossesCount\">–</strong></article>\n<article><span>Vinst%</span><strong id=\"winPercentage\">–</strong></article>\n<article><span>GF–GA</span><strong id=\"goalsRecord\">–</strong></article>\n<article><span>+/−</span><strong id=\"goalDifference\">–</strong></article>\n</section>\n<section class=\"tournament-single-grid\">\n<article class=\"history-alltime-card\">\n<p class=\"history-kicker history-kicker--gold\">Grundserie</p>\n<h2 id=\"regularRecord\">–</h2>\n<div class=\"profile-stat-list\" id=\"regularDetails\"></div>\n</article>\n<article class=\"history-alltime-card\">\n<p class=\"history-kicker history-kicker--gold\">Slutspel</p>\n<h2 id=\"playoffRecord\">–</h2>\n<div class=\"profile-stat-list\" id=\"playoffDetails\"></div>\n</article>\n</section>\n<section class=\"history-section\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Trupp</p>\n<h2>Spelare i turneringen</h2>\n<p>Spelarnamnen länkar till Svensk eHockey-profiler. Kopplade spelare har även en direktlänk till SportsGamer.</p>\n</div>\n<span class=\"history-section-count\" id=\"playerCount\"></span>\n</div>\n<div class=\"history-alltime-grid tournament-roster-grid\">\n<article class=\"history-alltime-card\">\n<h3>Utespelare</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr><th>Spelare</th><th>Pos</th><th>GP</th><th>G</th><th>A</th><th>PTS</th><th>+/−</th><th>PIM</th></tr>\n</thead>\n<tbody id=\"skaterBody\"></tbody>\n</table>\n</div>\n</article>\n<article class=\"history-alltime-card\">\n<h3>Målvakter</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr><th>Målvakt</th><th>GP</th><th>V</th><th>F</th><th>ÖF</th><th>SV%</th><th>GAA</th><th>SO</th></tr>\n</thead>\n<tbody id=\"goalieBody\"></tbody>\n</table>\n</div>\n</article>\n</div>\n</section>\n<section class=\"history-section\" hidden=\"\" id=\"matchesSection\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Matcher</p>\n<h2>Matcher i turneringen</h2>\n<p>Spelade, ospelade, walkover- och rekonstruerade matcher visas med separat status.</p>\n</div>\n<span class=\"history-section-count\" id=\"matchCount\"></span>\n</div>\n<div class=\"tournament-match-list\" id=\"matchList\"></div>\n</section>\n</main>\n<div class=\"loading-state\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar turneringssidan…</p>\n</div>\n</div>", "tournament": "<div class=\"page-shell history-page-shell tournament-overview-shell\">\n<nav aria-label=\"Navigering\" class=\"page-nav history-nav\">\n<a class=\"back-button\" href=\"#/laghistoria\">← Till laghistoriken</a>\n<button class=\"reload-button\" id=\"reloadButton\" type=\"button\">Uppdatera</button>\n</nav>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>Kontrollera att befintliga <code>config.js</code> innehåller projektets URL och publishable key.</p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta turneringen</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<main hidden=\"\" id=\"tournamentOverview\">\n<section class=\"tournament-overview-hero\">\n<div>\n<p class=\"history-kicker history-kicker--gold\" id=\"competitionName\">TURNERING</p>\n<h1 id=\"tournamentTitle\">Laddar turnering…</h1>\n<p class=\"tournament-overview-intro\" id=\"tournamentDescription\"></p>\n<div class=\"team-profile-links\" id=\"tournamentExternalLinks\"></div>\n</div>\n<aside aria-label=\"Turneringsidentitet\" class=\"tournament-overview-identity\">\n<span>LIGA-ID</span>\n<strong id=\"leagueIdValue\">–</strong>\n<small id=\"tournamentPeriod\">–</small>\n</aside>\n</section>\n<nav aria-label=\"Turneringsinnehåll\" class=\"tournament-overview-nav\">\n<a href=\"#overview\">Översikt</a>\n<a href=\"#standings\">Tabeller</a>\n<a href=\"#teams\">Lag</a>\n<a href=\"#matches\">Matcher</a>\n<a href=\"#statistics\">Statistik</a>\n<a href=\"#playoffs\">Slutspel</a>\n</nav>\n<section aria-label=\"Turneringsöversikt\" class=\"tournament-overview-metrics\" id=\"overview\">\n<article><span>Lag</span><strong id=\"metricTeams\">–</strong></article>\n<article><span>Spelare</span><strong id=\"metricPlayers\">–</strong><small id=\"metricLinkedPlayers\"></small></article>\n<article><span>Matcher</span><strong id=\"metricMatches\">–</strong><small id=\"metricPlayedMatches\"></small></article>\n<article><span>Walkovers</span><strong id=\"metricWalkovers\">–</strong></article>\n<article><span>Slutspelsserier</span><strong id=\"metricSeries\">–</strong></article>\n<article><span>Slutspelsmatcher</span><strong id=\"metricPlayoffMatches\">–</strong><small id=\"metricReconstructed\"></small></article>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"standings\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">TABELLER</p><h2>Grundserie och grupper</h2><p>Tabellplaceringar och lagresultat hämtas direkt från Supabase.</p></div>\n<span class=\"history-section-count\" id=\"standingsCount\"></span>\n</div>\n<div class=\"tournament-standings-container\" id=\"standingsContainer\"></div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"teams\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">LAG</p><h2>Deltagande lag</h2><p>Öppna lagets turneringssida för trupp, statistik och samtliga matcher.</p></div>\n<span class=\"history-section-count\" id=\"teamsCount\"></span>\n</div>\n<div class=\"tournament-teams-grid\" id=\"teamsGrid\"></div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"matches\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">MATCHER</p><h2>Alla matcher</h2><p>Ospelade matcher, walkovers och rekonstruerade matcher har egen status.</p></div>\n<span class=\"history-section-count\" id=\"matchesCount\"></span>\n</div>\n<div class=\"tournament-filter-bar\">\n<label><span>FAS</span><select id=\"stageFilter\"><option value=\"all\">Alla faser</option></select></label>\n<label><span>STATUS</span><select id=\"statusFilter\"><option value=\"all\">Alla statusar</option><option value=\"played\">Spelade</option><option value=\"pending\">Ospelade</option><option value=\"walkover\">Walkover</option><option value=\"reconstructed\">Rekonstruerade</option></select></label>\n<label><span>LAG</span><select id=\"teamFilter\"><option value=\"all\">Alla lag</option></select></label>\n</div>\n<div class=\"tournament-global-match-list\" id=\"matchesList\"></div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"statistics\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">STATISTIK</p><h2>Spelarstatistik</h2><p>SportsGamer-kopplade spelare använder permanent playerID och SportsGamer-namn när uppgifterna finns i databasen.</p></div>\n<span class=\"history-section-count\" id=\"statisticsCount\"></span>\n</div>\n<div class=\"history-alltime-grid tournament-statistics-grid\">\n<article class=\"history-alltime-card\">\n<h3>Utespelare</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead><tr><th>#</th><th>Spelare</th><th>Lag</th><th>GP</th><th>G</th><th>A</th><th>PTS</th><th>+/−</th></tr></thead>\n<tbody id=\"skaterStatsBody\"></tbody>\n</table>\n</div>\n</article>\n<article class=\"history-alltime-card\">\n<h3>Målvakter</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead><tr><th>#</th><th>Målvakt</th><th>Lag</th><th>GP</th><th>SV</th><th>SA</th><th>SV%</th><th>GAA</th><th>SO</th></tr></thead>\n<tbody id=\"goalieStatsBody\"></tbody>\n</table>\n</div>\n</article>\n</div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"playoffs\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">SLUTSPEL</p><h2>Slutspelsserier</h2><p>Serierna skapas från turneringens slutspelsmatcher och grupperas per runda.</p></div>\n<span class=\"history-section-count\" id=\"playoffsCount\"></span>\n</div>\n<div class=\"tournament-playoff-bracket\" id=\"playoffBracket\"></div>\n</section>\n</main>\n<div class=\"loading-state\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar turneringsdata…</p>\n</div>\n</div>", "season": "<main class=\"directory-shell portal-shell\">\n<section class=\"portal-page-hero season-hero\">\n<p class=\"directory-kicker\">ECL-SÄSONG</p>\n<h1 id=\"seasonTitle\">ECL ’26:<br/>Spring</h1>\n<p id=\"seasonText\">Samlad ingång till svenska lag, spelare och historik för säsongen.</p>\n</section>\n<nav aria-label=\"Säsongsmeny\" class=\"season-subnav\">\n<a class=\"is-active\" href=\"#overview\">Översikt</a>\n<a href=\"#matches\">Matcher</a>\n<a href=\"#transfers\">Byten</a>\n<a href=\"#teams\">Lag</a>\n<a href=\"#statistics\">Statistik</a>\n</nav>\n<section class=\"season-overview\" id=\"overview\">\n<p class=\"directory-kicker\">ÖVERSIKT</p>\n<h2 id=\"seasonOverviewTitle\">ECL ’26: Spring</h2>\n<p>\n        Den här säsongssidan är navet för säsongens innehåll. Databasens\n        laghistorik kan öppnas direkt med säsongen vald.\n      </p>\n<div class=\"portal-actions\">\n<a class=\"portal-button portal-button--primary\" href=\"#/laghistoria\" id=\"seasonTeamsLink\">Visa lag i databasen</a>\n<a class=\"portal-button\" href=\"#/spelare\">Öppna spelarregistret</a>\n</div>\n</section>\n<section class=\"season-panels\">\n<article id=\"matches\"><span>MATCHER</span><h3>Matcher</h3><p>Säsongens matchvy kopplas in här när matchdata finns i databasen.</p></article>\n<article id=\"transfers\"><span>BYTEN</span><h3>Byten</h3><p>En tydlig plats för svenska spelarbyten under säsongen.</p></article>\n<article id=\"teams\"><span>LAG</span><h3>Svenska lag</h3><p>Öppna laghistoriken och filtrera fram säsongens deltagande lag.</p></article>\n<article id=\"statistics\"><span>STATISTIK</span><h3>Statistik</h3><p>Tabeller och topplistor kan byggas från databasens säsongsdata.</p></article>\n</section>\n</main>\n<footer class=\"directory-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>"};
+  const sehAuthState = {
+    client: null,
+    session: null,
+    writer: null,
+    initialized: false,
+    initPromise: null,
+    refreshToken: 0
+  };
+
+  function sehAuthRpcRow(data) {
+    return Array.isArray(data) ? (data[0] || null) : (data || null);
+  }
+
+  function sehAuthIdentifierToEmail(value) {
+    const identifier = String(value || "").trim().toLowerCase();
+    if (!identifier) return "";
+
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier)) {
+      return identifier;
+    }
+
+    if (/^[a-z0-9._-]{2,40}$/.test(identifier)) {
+      return `${identifier}@writers.svenskehockey.se`;
+    }
+
+    return "";
+  }
+
+  function sehGetAuthClient() {
+    if (sehAuthState.client) return sehAuthState.client;
+
+    const config = window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
+    const supabaseUrl = config.supabaseUrl || config.SUPABASE_URL || "";
+    const supabaseKey = config.supabasePublishableKey || config.supabaseAnonKey || config.SUPABASE_ANON_KEY || config.SUPABASE_PUBLISHABLE_KEY || "";
+
+    if (!window.supabase?.createClient || !supabaseUrl || !supabaseKey) {
+      return null;
+    }
+
+    sehAuthState.client = window.supabase.createClient(supabaseUrl, supabaseKey);
+    return sehAuthState.client;
+  }
+
+  async function sehResolveWriterAccess(client) {
+    if (!client || !sehAuthState.session?.user) return null;
+
+    try {
+      const current = await client.rpc("seh_current_writer");
+      if (!current.error) {
+        const row = sehAuthRpcRow(current.data);
+        if (row?.writer_id) return row;
+      }
+    } catch (error) {
+      console.warn("Kunde inte läsa skribentbehörighet", error);
+    }
+
+    // Samma claim-flöde som Skrivcenter använder. För vanliga användare
+    // ger detta ingen skribentroll och de fortsätter vara vanliga användare.
+    try {
+      const claimed = await client.rpc("seh_claim_writer");
+      if (!claimed.error) {
+        const row = sehAuthRpcRow(claimed.data);
+        if (row?.writer_id) return row;
+      }
+    } catch (error) {
+      console.warn("Kunde inte koppla skribentkonto", error);
+    }
+
+    return null;
+  }
+
+  function sehUpdateHeaderAuth(header = document.querySelector(".seh-header")) {
+    if (!header) return;
+
+    const sessionUser = sehAuthState.session?.user || null;
+    const loggedIn = Boolean(sessionUser && !sessionUser.is_anonymous);
+    const writer = sehAuthState.writer;
+    const role = String(writer?.role || "").toLowerCase();
+    const isWriter = Boolean(writer?.writer_id);
+    const isAdmin = isWriter && role === "admin";
+
+    const writerLink = header.querySelector('[data-seh-auth-link="writer"]');
+    const adminLink = header.querySelector('[data-seh-auth-link="admin"]');
+    if (writerLink) writerLink.hidden = !isWriter;
+    if (adminLink) adminLink.hidden = !isAdmin;
+
+    const authRoot = header.querySelector(".seh-auth");
+    const authButton = header.querySelector("#sehAuthButton");
+    const authPanel = header.querySelector("#sehAuthPanel");
+    const authStatus = header.querySelector("#sehAuthStatus");
+
+    if (authRoot) {
+      authRoot.dataset.state = loggedIn ? "logged-in" : "logged-out";
+    }
+
+    if (authButton) {
+      authButton.textContent = loggedIn ? "LOGGA UT" : "LOGGA IN";
+      authButton.classList.toggle("is-authenticated", loggedIn);
+      authButton.setAttribute("aria-label", loggedIn ? "Logga ut" : "Logga in");
+      if (loggedIn) authButton.setAttribute("aria-expanded", "false");
+    }
+
+    if (loggedIn && authPanel) {
+      authPanel.hidden = true;
+    }
+
+    if (loggedIn && authStatus) {
+      authStatus.textContent = "";
+      authStatus.removeAttribute("data-tone");
+    }
+  }
+
+  async function sehRefreshAuthAccess(session) {
+    const token = ++sehAuthState.refreshToken;
+    const client = sehGetAuthClient();
+    let nextSession = session || null;
+
+    if (nextSession?.user?.is_anonymous) {
+      try { await client?.auth.signOut(); } catch (_) {}
+      nextSession = null;
+    }
+
+    sehAuthState.session = nextSession;
+    sehAuthState.writer = null;
+    sehUpdateHeaderAuth();
+
+    if (!nextSession?.user || !client) return;
+
+    const writer = await sehResolveWriterAccess(client);
+    if (token !== sehAuthState.refreshToken) return;
+
+    sehAuthState.writer = writer;
+    sehUpdateHeaderAuth();
+  }
+
+  function sehInitializeAuth() {
+    if (sehAuthState.initPromise) return sehAuthState.initPromise;
+
+    sehAuthState.initPromise = (async () => {
+      const client = sehGetAuthClient();
+      if (!client) {
+        sehAuthState.initialized = true;
+        sehUpdateHeaderAuth();
+        return;
+      }
+
+      try {
+        const { data, error } = await client.auth.getSession();
+        if (error) throw error;
+        await sehRefreshAuthAccess(data?.session || null);
+      } catch (error) {
+        console.warn("Kunde inte läsa Supabase-sessionen", error);
+        sehAuthState.session = null;
+        sehAuthState.writer = null;
+        sehUpdateHeaderAuth();
+      }
+
+      client.auth.onAuthStateChange((_event, session) => {
+        window.setTimeout(() => {
+          sehRefreshAuthAccess(session || null).catch((error) => {
+            console.warn("Kunde inte uppdatera inloggningsstatus", error);
+          });
+        }, 0);
+      });
+
+      sehAuthState.initialized = true;
+    })();
+
+    return sehAuthState.initPromise;
+  }
+
+  window.SEH_refreshAuth = async function SEH_refreshAuth() {
+    const client = sehGetAuthClient();
+    if (!client) {
+      sehAuthState.session = null;
+      sehAuthState.writer = null;
+      sehUpdateHeaderAuth();
+      return;
+    }
+
+    try {
+      const { data, error } = await client.auth.getSession();
+      if (error) throw error;
+      await sehRefreshAuthAccess(data?.session || null);
+    } catch (error) {
+      console.warn("Kunde inte synka inloggningsstatus", error);
+    }
+  };
+
+  async function sehLoginFromHeader(header) {
+    const client = sehGetAuthClient();
+    const panel = header.querySelector("#sehAuthPanel");
+    const form = header.querySelector("#sehAuthForm");
+    const identifierInput = header.querySelector("#sehAuthIdentifier");
+    const passwordInput = header.querySelector("#sehAuthPassword");
+    const status = header.querySelector("#sehAuthStatus");
+    const submit = form?.querySelector('button[type="submit"]');
+
+    if (!client) {
+      if (status) {
+        status.textContent = "Supabase Auth kunde inte startas.";
+        status.dataset.tone = "error";
+      }
+      return;
+    }
+
+    const email = sehAuthIdentifierToEmail(identifierInput?.value);
+    const password = String(passwordInput?.value || "");
+
+    if (!email) {
+      if (status) {
+        status.textContent = "Skriv ett giltigt användarnamn eller en e-postadress.";
+        status.dataset.tone = "error";
+      }
+      identifierInput?.focus();
+      return;
+    }
+
+    if (!password) {
+      if (status) {
+        status.textContent = "Skriv ditt lösenord.";
+        status.dataset.tone = "error";
+      }
+      passwordInput?.focus();
+      return;
+    }
+
+    if (status) {
+      status.textContent = "Loggar in…";
+      status.dataset.tone = "working";
+    }
+    if (submit) submit.disabled = true;
+
+    try {
+      // Rensar endast en eventuell gammal/trasig session innan ny inloggning.
+      try { await client.auth.signOut(); } catch (_) {}
+
+      const { data, error } = await client.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (/invalid login credentials/i.test(error.message || "")) {
+          throw new Error("Fel användarnamn/e-post eller lösenord.");
+        }
+        throw error;
+      }
+
+      if (!data?.session?.user) throw new Error("Inloggningen misslyckades.");
+
+      await sehRefreshAuthAccess(data.session);
+
+      if (identifierInput) identifierInput.value = "";
+      if (passwordInput) passwordInput.value = "";
+      if (status) {
+        status.textContent = "";
+        status.removeAttribute("data-tone");
+      }
+      if (panel) panel.hidden = true;
+      header.querySelector("#sehAuthButton")?.setAttribute("aria-expanded", "false");
+    } catch (error) {
+      sehAuthState.session = null;
+      sehAuthState.writer = null;
+      try { await client.auth.signOut(); } catch (_) {}
+      sehUpdateHeaderAuth(header);
+      if (status) {
+        status.textContent = `Fel: ${error?.message || error}`;
+        status.dataset.tone = "error";
+      }
+    } finally {
+      if (submit) submit.disabled = false;
+    }
+  }
+
+  const templates = {"home": "<main class=\"directory-shell portal-shell home-one-screen home-one-screen--refined\">\n<section class=\"home-stage\">\n  <div class=\"home-stage__copy\">\n    <div class=\"home-stage__eyebrow\">\n      <p class=\"directory-kicker\">SVENSK eHOCKEY / SAMLAD DATA</p>\n      <span aria-hidden=\"true\"></span>\n    </div>\n    <h1>All svensk<br>eHockey.<br><em>En plats.</em></h1>\n    <div class=\"home-stage__intro\">\n      <p class=\"home-stage__lead\">Svensk eHockey samlar statistik, historia och information om svenska spelare och lag inom eHockey – på ett ställe.</p>\n      <p class=\"home-stage__detail\">Följ ECL-säsonger, spelarprofiler, laghistorik, resultat, statistik och byten. Här finns också Svenska eHockey Cupen (SEC) och en växande historik över den svenska scenen, från enskilda spelare och lag till hela säsonger och turneringar.</p>\n    </div>\n    <div class=\"portal-support-note home-stage__support\" aria-label=\"Stöd Svensk eHockey\">\n      <span>Svensk eHockey drivs ideellt.</span>\n      <a href=\"#/stod\">Stöd Svensk eHockey <span aria-hidden=\"true\">→</span></a>\n    </div>\n  </div>\n\n  <aside class=\"home-stage__identity\" aria-label=\"Svensk eHockey\">\n    <div class=\"home-stage__identity-mark\">\n      <span class=\"home-stage__logo-glow\" aria-hidden=\"true\"></span>\n      <img src=\"assets/SeHlogga.png\" alt=\"Svensk eHockey\">\n    </div>\n    <div class=\"home-stage__identity-text\">\n      <span>SVENSK eHOCKEY</span>\n      <strong>STATISTIK · HISTORIA · SEC</strong>\n      <p>Svenska spelare och lag genom ECL-säsonger, historik och våra egna SEC-turneringar.</p>\n    </div>\n  </aside>\n</section>\n\n<section class=\"home-quicklinks\" aria-labelledby=\"homeQuicklinksTitle\">\n  <div class=\"home-quicklinks__label\">\n    <p class=\"directory-kicker\">GÅ DIREKT TILL</p>\n    <h2 id=\"homeQuicklinksTitle\">Utforska</h2>\n  </div>\n  <nav class=\"home-quicklinks__grid\" aria-label=\"Snabblänkar\">\n    <a href=\"#/nyheter\"><span>01</span><div><strong>Nyheter</strong><small>Senaste nytt från scenen</small></div><b aria-hidden=\"true\">↗</b></a>\n    <a href=\"#/spelare\"><span>02</span><div><strong>Spelare</strong><small>Profiler, klubbar & statistik</small></div><b aria-hidden=\"true\">↗</b></a>\n    <a href=\"#/laghistoria\"><span>03</span><div><strong>Laghistoria</strong><small>Svenska lag genom åren</small></div><b aria-hidden=\"true\">↗</b></a>\n    <a href=\"#/sasong/ecl26spring\"><span>04</span><div><strong>Säsonger</strong><small>ECL samlat säsong för säsong</small></div><b aria-hidden=\"true\">↗</b></a>\n    <a href=\"https://www.svenskehockey.se/SEC/\"><span>05</span><div><strong>SEC</strong><small>Svenska eHockey Cupen</small></div><b aria-hidden=\"true\">↗</b></a>\n  </nav>\n</section>\n</main>\n<footer class=\"directory-footer home-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>", "news": "\u003cmain class=\"directory-shell news-page-shell\"\u003e\n\u003csection class=\"news-page-hero\"\u003e\n\u003cdiv\u003e\n\u003cp class=\"directory-kicker\"\u003eSVENSK eHOCKEY / REDAKTIONEN\u003c/p\u003e\n\u003ch1\u003eNyheter\u003c/h1\u003e\n\u003cp\u003eArtiklar, uppdateringar och notiser från den svenska eHockeyscenen.\u003c/p\u003e\n\u003c/div\u003e\n\u003caside class=\"news-page-tools\" aria-label=\"Filtrera nyheter\"\u003e\n\u003clabel for=\"newsSearch\"\u003eSÖK I NYHETER\u003c/label\u003e\n\u003cinput id=\"newsSearch\" type=\"search\" autocomplete=\"off\" placeholder=\"Sök titel, text eller tagg…\"\u003e\n\u003cdiv class=\"news-tag-row\" id=\"newsTagFilters\"\u003e\u003c/div\u003e\n\u003csmall id=\"newsResultText\"\u003e\u003c/small\u003e\n\u003c/aside\u003e\n\u003c/section\u003e\n\u003csection class=\"news-featured\" id=\"featuredNews\" aria-label=\"Senaste huvudnyhet\"\u003e\u003c/section\u003e\n\u003csection class=\"news-card-grid\" id=\"newsGrid\" aria-label=\"Fler nyheter\"\u003e\u003c/section\u003e\n\u003c/main\u003e\n\u003cfooter class=\"directory-footer\"\u003e\u003cdiv\u003e\u003cstrong\u003eSVENSK eHOCKEY\u003c/strong\u003e\u003cspan\u003e© 2026 Svensk eHockey\u003c/span\u003e\u003c/div\u003e\u003c/footer\u003e", "players": "<main class=\"directory-shell players-shell players-shell-v122\">\n<section aria-labelledby=\"playersTitle\" class=\"players-hero players-hero-v122\">\n  <div class=\"players-hero__copy\">\n    <p class=\"directory-kicker\">SPELARREGISTER</p>\n    <h1 id=\"playersTitle\">Svenska spelare</h1>\n    <p>Samlad svensk eHockey-data med spelarprofiler, klubbhistorik, statistik och Svensk eHockey RP. Sök på gamertag, lag eller division och öppna spelaren för hela karriären.</p>\n    <div aria-label=\"Registeregenskaper\" class=\"players-hero__tags\">\n      <span>SUPABASE LIVE</span><span>RP &amp; RANKING</span><span>KARRIÄRHISTORIK</span>\n    </div>\n  </div>\n  <aside aria-label=\"Översikt\" class=\"players-overview players-overview-v122\">\n    <p class=\"directory-kicker\">ÖVERSIKT</p>\n    <div>\n      <article><span>SPELARE</span><strong id=\"overviewPlayers\">–</strong></article>\n      <article><span>UTESPELARE</span><strong id=\"overviewSkaters\">–</strong></article>\n      <article><span>MÅLVAKTER</span><strong id=\"overviewGoalies\">–</strong></article>\n      <article><span>RP-RANKADE</span><strong id=\"overviewRanked\">–</strong></article>\n    </div>\n  </aside>\n</section>\n<section aria-labelledby=\"playerDirectoryTitle\" class=\"player-directory player-directory-v122\">\n  <div class=\"players-directory-heading-v122\">\n    <div><p class=\"directory-kicker\">HITTA SPELARE</p><h2 id=\"playerDirectoryTitle\">Spelare</h2></div>\n    <p id=\"playerResultText\">Laddar svenska spelare…</p>\n  </div>\n  <div class=\"players-toolbar players-toolbar-v122\">\n    <label class=\"players-field players-field--search\"><span>SÖK</span><input autocomplete=\"off\" id=\"playerSearch\" placeholder=\"Gamertag, lag, division…\" type=\"search\"/></label>\n    <label class=\"players-field\"><span>ROLL</span><select id=\"roleFilter\"><option value=\"all\">Alla roller</option><option value=\"skater\">Utespelare</option><option value=\"goalie\">Målvakter</option></select></label>\n    <label class=\"players-field\"><span>DIVISION</span><select id=\"divisionFilter\"><option value=\"all\">Alla divisioner</option></select></label>\n    <label class=\"players-field\"><span>SORTERA</span><select id=\"playerSort\"><option value=\"ranking\">Sverige-rank</option><option value=\"average-ranking\">Snitt-rank</option><option value=\"games\">Flest matcher</option><option value=\"points\">Flest poäng</option><option value=\"clubs\">Flest klubbar</option><option value=\"name\">Namn A–Ö</option></select></label>\n    <label class=\"players-compact\"><span>VY</span><span class=\"players-compact__control\"><input id=\"compactToggle\" type=\"checkbox\"/><b>Kompakt</b></span></label>\n  </div>\n  <div aria-live=\"polite\" class=\"player-directory__grid\" id=\"playerGrid\"></div>\n  <nav aria-label=\"Sidnumrering\" class=\"player-pagination\" id=\"playerPagination\"></nav>\n</section>\n</main>\n<footer class=\"directory-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>", "history": "<main class=\"directory-shell\">\n<section aria-labelledby=\"pageTitle\" class=\"directory-hero\">\n<div class=\"directory-hero__copy\">\n<p class=\"directory-kicker\">LAGHISTORIK</p>\n<h1 id=\"pageTitle\">Svensk<br/>laghistoria</h1>\n<p>\n          Här samlas svenska lag från ECL, SCL, eSHL, SEC, ITHL, LGEL och SM.\n          Sök efter lag, spelare, turnering eller division och följ samma\n          organisation genom namnbyten och olika säsonger.\n        </p>\n</div>\n<aside aria-label=\"Översikt\" class=\"history-overview history-overview-v124\">\n<p class=\"directory-kicker\">ÖVERSIKT</p>\n<div class=\"history-overview-grid\">\n<article>\n<span>VISAR LAG</span>\n<strong id=\"visibleTeamCount\">–</strong>\n</article>\n<article>\n<span>SÄSONGER</span>\n<strong id=\"appearanceCount\">–</strong>\n</article>\n<article>\n<span>SPELARE</span>\n<strong id=\"playerCount\">–</strong>\n</article>\n<article>\n<span>ÅR AV SVENSK eHOCKEY</span>\n<strong id=\"historyYearCount\">–</strong>\n</article>\n</div>\n</aside>\n</section>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>\n        Öppna <code>config.js</code> och fyll i projektets URL och\n        publishable key.\n      </p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta laghistoriken</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<section aria-labelledby=\"directoryTitle\" class=\"directory-section\" id=\"teamDirectory\">\n<div class=\"directory-section__heading\">\n<div>\n<p class=\"directory-kicker\">HISTORIK</p>\n<h2 id=\"directoryTitle\">Svenska lag</h2>\n</div>\n</div>\n<div aria-label=\"Filtrering och sortering\" class=\"directory-toolbar\">\n<label>\n<span class=\"sr-only\">Namnvisning</span>\n<select id=\"nameModeSelect\">\n<option value=\"current\">Visa via lagnamn</option>\n<option value=\"latest\">Visa senaste turneringsnamn</option>\n</select>\n</label>\n<label>\n<span class=\"sr-only\">Turnering</span>\n<select id=\"tournamentFilter\">\n<option value=\"all\">Alla turneringar</option>\n</select>\n</label>\n<label>\n<span class=\"sr-only\">Sortering</span>\n<select id=\"sortSelect\">\n<option value=\"name-asc\">Namn A–Ö</option>\n<option value=\"name-desc\">Namn Ö–A</option>\n<option value=\"latest\">Senast aktiv</option>\n<option value=\"games\">Flest matcher</option>\n<option value=\"wins\">Flest vinster</option>\n<option value=\"winpct\">Högst vinst%</option>\n<option value=\"tournaments\">Flest turneringar</option>\n<option value=\"players\">Flest spelare</option>\n</select>\n</label>\n<label>\n<span class=\"sr-only\">Kortstorlek</span>\n<select id=\"viewModeSelect\">\n<option value=\"full\">Hela kort</option>\n<option value=\"compact\">Kompakta kort</option>\n</select>\n</label>\n<label class=\"directory-search\">\n<span aria-hidden=\"true\" class=\"directory-search__icon\">⌕</span>\n<input autocomplete=\"off\" id=\"searchInput\" placeholder=\"Sök lag, spelare, ECL eller division\" type=\"search\"/>\n</label>\n</div>\n<div class=\"directory-resultbar\">\n<span id=\"resultText\">Laddar…</span>\n<span id=\"lastUpdated\"></span>\n</div>\n<div class=\"directory-loading\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar lag, turneringar och spelare…</p>\n</div>\n<div aria-live=\"polite\" class=\"directory-grid\" id=\"teamGrid\"></div>\n</section>\n</main>\n<footer class=\"directory-footer\">\n<div>\n<strong>SVENSK eHOCKEY</strong>\n<span>© 2026 Svensk eHockey</span>\n</div>\n<a href=\"#teamDirectory\">Till toppen ↑</a>\n</footer>\n<template id=\"teamCardTemplate\">\n<article class=\"directory-team-card\">\n<a aria-label=\"\" class=\"directory-team-card__main-link\" href=\"#\"></a>\n<span class=\"directory-team-card__number\"></span>\n<div class=\"directory-team-card__header\">\n<div aria-hidden=\"true\" class=\"directory-team-card__logo\"></div>\n<div class=\"directory-team-card__identity\">\n<h3 class=\"directory-team-card__name\"></h3>\n<p class=\"directory-team-card__identity-name\" hidden=\"\"></p>\n<div class=\"directory-team-card__badges\"></div>\n</div>\n</div>\n<dl class=\"directory-team-card__metrics\">\n<div><dt>SPELARE</dt><dd class=\"metric-players\">–</dd></div>\n<div><dt>TURNERINGAR</dt><dd class=\"metric-tournaments\">–</dd></div>\n<div><dt>DIVISIONER</dt><dd class=\"metric-divisions\">–</dd></div>\n<div><dt>MATCHER</dt><dd class=\"metric-games\">–</dd></div>\n<div><dt>RECORD</dt><dd class=\"metric-record\">–</dd></div>\n<div><dt>VINST%</dt><dd class=\"metric-winpct\">–</dd></div>\n<div><dt>GF–GA</dt><dd class=\"metric-goals\">–</dd></div>\n<div><dt>+/−</dt><dd class=\"metric-diff\">–</dd></div>\n<div><dt>SLUTSPEL</dt><dd class=\"metric-playoffs\">–</dd></div>\n</dl>\n<div class=\"directory-team-card__summary\">\n<p><strong>Topp spelare:</strong> <a class=\"summary-top-player\" href=\"#\">–</a></p>\n<p><strong>Senast:</strong> <span class=\"summary-latest\">–</span></p>\n<p class=\"summary-alias-row\"><strong>Namnvariationer:</strong> <span class=\"summary-aliases\">–</span></p>\n</div>\n<div class=\"directory-team-card__action\">\n        Öppna laghistoriken <span aria-hidden=\"true\">→</span>\n</div>\n</article>\n</template>", "player": "<div class=\"page-shell history-page-shell player-profile-shell player-profile-shell-v123\">\n  <nav aria-label=\"Navigering\" class=\"page-nav history-nav player-profile-legacy-nav\">\n    <a class=\"back-button\" href=\"#/spelare\" id=\"backLink\">← Tillbaka till spelare</a>\n    <button class=\"reload-button\" id=\"reloadButton\" type=\"button\">Uppdatera</button>\n  </nav>\n\n  <section class=\"notice notice-warning\" hidden id=\"setupNotice\"><h2>Anslut sidan till Supabase</h2><p>Öppna <code>config.js</code> och fyll i projektets URL och publishable key.</p></section>\n  <section class=\"notice notice-error\" hidden id=\"errorNotice\"><h2>Kunde inte hämta spelaren</h2><p id=\"errorMessage\"></p></section>\n\n  <main hidden id=\"playerPage\" class=\"player-profile-page-v5 player-profile-page-v123\">\n    <div class=\"player-profile-hero-frame-v123\">\n      <section class=\"player-profile-hero-v123\" aria-label=\"Spelarprofil\">\n        <div class=\"player-profile-hero-grid-v123\" aria-hidden=\"true\"></div>\n        <div class=\"player-profile-watermark-v123\" id=\"playerHeroWatermark\" aria-hidden=\"true\"></div>\n\n        <div class=\"player-profile-portrait-v123\">\n          <div class=\"player-profile-portrait-glow-v123\" aria-hidden=\"true\"></div>\n          <div class=\"player-profile-portrait-watermark-v123\" id=\"playerPortraitWatermark\" aria-hidden=\"true\"></div>\n          <div aria-hidden=\"true\" class=\"profile-detail-avatar player-editorial-photo\" id=\"playerAvatar\"></div>\n          <span class=\"player-profile-portrait-tag-v123\">SVENSK eHOCKEY</span>\n        </div>\n\n        <div class=\"player-profile-identity-v123\">\n          <p class=\"player-profile-kicker-v123\"><span id=\"playerFlag\" aria-hidden=\"true\">🇸🇪</span><span>SPELARPROFIL</span></p>\n          <h1 id=\"playerName\">Laddar spelare…</h1>\n\n          <div class=\"player-profile-team-v123\">\n            <span class=\"player-profile-team-logo-v123\" id=\"playerCurrentTeamLogo\" aria-hidden=\"true\"></span>\n            <span class=\"player-editorial-team\" id=\"playerCurrentTeam\">–</span>\n          </div>\n\n          <div class=\"player-profile-context-v123\">\n            <p class=\"player-profile-meta-v123\" id=\"playerMeta\">–</p>\n            <p class=\"player-profile-leagues-v123\" id=\"playerCompetitions\"></p>\n          </div>\n\n          <section class=\"player-editorial-stats player-profile-career-v123\" aria-label=\"Offensiv karriärstatistik\">\n            <article><span>POÄNG</span><strong id=\"careerPoints\">–</strong></article>\n            <article><span>MÅL</span><strong id=\"careerGoals\">–</strong></article>\n            <article><span>ASSIST</span><strong id=\"careerAssists\">–</strong></article>\n          </section>\n        </div>\n\n        <aside class=\"player-profile-ranking-v123\" aria-label=\"Svensk eHockey RP\">\n          <div class=\"player-profile-ranking-label-v123\"><span>SEH</span><b>RANKING</b></div>\n          <div class=\"player-profile-ranking-main-v123\">\n            <span>SVENSK eHOCKEY RP</span>\n            <strong id=\"heroTotalRp\">–</strong>\n            <small>RANKING POINTS</small>\n          </div>\n          <div class=\"player-profile-ranking-grid-v123\">\n            <article><span>SVERIGE</span><strong id=\"heroSwedenRank\">–</strong></article>\n            <article><span>SNITT-RP</span><strong id=\"heroAverageRp\">–</strong></article>\n            <article><span>POSITIONSRANK</span><strong id=\"heroPositionRank\">–</strong></article>\n          </div>\n        </aside>\n      </section>\n\n      <section class=\"player-profile-strip-v123\" aria-label=\"Spelaröversikt\">\n        <article><span>SÄSONGER</span><strong id=\"tournamentCount\">–</strong></article>\n        <article><span>KLUBBAR</span><strong id=\"teamCount\">–</strong></article>\n        <article><span>MATCHER</span><strong id=\"careerGames\">–</strong></article>\n        <article class=\"player-profile-strip-rp-v123\"><span>TOTAL RP</span><strong id=\"profileStripRp\">–</strong></article>\n      </section>\n    </div>\n\n    <nav class=\"player-profile-tabs-v124\" id=\"playerProfileTabs\" role=\"tablist\" aria-label=\"Spelarprofilens innehåll\">\n      <button class=\"is-active\" type=\"button\" role=\"tab\" aria-selected=\"true\" data-player-tab=\"overview\">Översikt</button>\n      <button type=\"button\" role=\"tab\" aria-selected=\"false\" data-player-tab=\"statistics\">Statistik</button>\n      <button type=\"button\" role=\"tab\" aria-selected=\"false\" data-player-tab=\"teams\">Lag</button>\n      <button type=\"button\" role=\"tab\" aria-selected=\"false\" data-player-tab=\"merits\">Meriter</button>\n    </nav>\n\n    <div class=\"player-profile-tab-stage-v124\">\n      <section class=\"player-profile-tab-panel-v124 player-profile-overview-v124\" data-player-panel=\"overview\" role=\"tabpanel\">\n        <div class=\"player-overview-grid-v124\">\n          <section class=\"player-profile-bio-v123\" aria-label=\"Spelarpresentation\">\n            <div class=\"player-profile-bio-copy-v123\" id=\"playerBio\"></div>\n            <div class=\"team-profile-links player-editorial-links\" id=\"playerLinks\" hidden></div>\n          </section>\n          <aside class=\"player-overview-honours-v124\" aria-label=\"Meritöversikt\">\n            <div class=\"player-overview-honours-v124__heading\">\n              <span>MERITER</span>\n              <strong>Karriärens bucklor</strong>\n            </div>\n            <div class=\"player-overview-honours-grid-v124\" id=\"overviewMeritBadges\"></div>\n          </aside>\n        </div>\n      </section>\n\n      <section class=\"player-profile-tab-panel-v124 player-profile-statistics-v124 player-profile-statistics-v1245\" data-player-panel=\"statistics\" role=\"tabpanel\" hidden>\n        <section class=\"player-career-summary-v124 player-career-summary-v1245\" aria-label=\"Sammanlagd karriärstatistik\">\n          <div class=\"player-career-summary-heading-v124 player-career-summary-heading-v1245\">\n            <div>\n              <p class=\"history-kicker history-kicker--gold\">STATISTIK</p>\n              <h2>Karriäröversikt</h2>\n              <p class=\"player-career-summary-lead-v1245\" id=\"careerSummaryLead\">Samlad statistik från spelarens registrerade karriär.</p>\n            </div>\n          </div>\n          <div class=\"history-alltime-grid player-career-grid player-career-grid-v5 player-career-grid-v1245\" id=\"careerSummaryGrid\">\n            <article class=\"history-alltime-card player-career-role-card-v1245\" id=\"skaterCareerCard\">\n              <div class=\"player-career-role-heading-v1245\"><p class=\"history-kicker history-kicker--gold\">UTESPELARE</p><h2>Karriär totalt</h2></div>\n              <div class=\"profile-stat-list\" id=\"skaterCareerStats\"></div>\n            </article>\n            <article class=\"history-alltime-card player-career-role-card-v1245\" id=\"goalieCareerCard\">\n              <div class=\"player-career-role-heading-v1245\"><p class=\"history-kicker history-kicker--gold\">MÅLVAKT</p><h2>Karriär totalt</h2></div>\n              <div class=\"profile-stat-list\" id=\"goalieCareerStats\"></div>\n            </article>\n          </div>\n        </section>\n\n        <section class=\"history-section player-history-section-v5 player-history-section-v1245\">\n          <div class=\"history-section-heading player-history-heading-v1245\">\n            <div>\n              <p class=\"history-kicker history-kicker--gold\">TURNERING FÖR TURNERING</p>\n              <h2>Turneringshistorik</h2>\n              <p>Filtrera på liga och följ statistik, lag, division och roll genom hela karriären.</p>\n            </div>\n            <span class=\"history-section-count\" id=\"historyCount\"></span>\n          </div>\n          <div class=\"player-history-filters\" id=\"historyCompetitionFilters\" aria-label=\"Filtrera turneringsstatistik\"></div>\n          <div class=\"history-table-wrap player-history-table-wrap-v1245\"><table class=\"history-table player-history-table\"><thead><tr><th>Säsong</th><th>Lag</th><th>Division</th><th>Roll</th><th>GP Ute</th><th>GP MV</th><th>G</th><th>A</th><th>PTS</th><th>SV%</th><th>GAA</th></tr></thead><tbody id=\"historyTableBody\"></tbody></table></div>\n        </section>\n      </section>\n\n      <section class=\"player-profile-tab-panel-v124\" data-player-panel=\"teams\" role=\"tabpanel\" hidden>\n        <section class=\"player-teams-section-v5 player-teams-section-v1247\" id=\"playerTeamsSection\" hidden>\n          <div class=\"player-teams-heading-v5 player-teams-heading-v1246 player-teams-heading-v1247\">\n            <div class=\"player-teams-heading-copy-v1246 player-teams-heading-copy-v1247\">\n              <p class=\"history-kicker history-kicker--gold\">KLUBBAR</p>\n              <h2>Laghistorik</h2>\n              <p>Alla lag spelaren har representerat, från senaste klubb och bakåt genom karriären.</p>\n            </div>\n            <div class=\"player-teams-summary-v1246 player-teams-summary-v1247\" aria-label=\"Laghistorik i siffror\">\n              <article class=\"player-teams-summary-number-v1247\"><strong id=\"playerTeamsClubCount\">–</strong><span>KLUBBAR</span></article>\n              <article class=\"player-teams-summary-number-v1247\"><strong id=\"playerTeamsSeasonCount\">–</strong><span>SÄSONGER</span></article>\n              <article class=\"player-teams-summary-text-v1247\"><span>SENASTE LAG</span><strong id=\"playerTeamsLatestTeam\">–</strong></article>\n              <article class=\"player-teams-summary-text-v1247\"><span>FLEST SÄSONGER</span><strong id=\"playerTeamsMostTeam\">–</strong></article>\n            </div>\n          </div>\n          <div class=\"player-teams-grid-v5 player-teams-grid-v1246\" id=\"playerTeamsGrid\"></div>\n        </section>\n      </section>\n\n      <section class=\"player-profile-tab-panel-v124\" data-player-panel=\"merits\" role=\"tabpanel\" hidden>\n        <section class=\"player-merits-layout player-merits-layout-v1248\" id=\"playerMeritsSection\" hidden>\n          <header class=\"player-merits-overview-v1248\">\n            <div class=\"player-merits-overview-copy-v1248\">\n              <p class=\"history-kicker history-kicker--gold\">MERITER</p>\n              <h2>Karriärens meriter</h2>\n              <p>Lagmeriter och personliga utmärkelser från spelarens registrerade turneringshistorik.</p>\n            </div>\n            <div class=\"player-merits-summary-v1248\" aria-label=\"Meriter i siffror\">\n              <article class=\"is-gold\"><span>🏆</span><strong id=\"meritsTitleCount\">0</strong><small>MÄSTARTITLAR</small></article>\n              <article class=\"is-silver\"><span>🥈</span><strong id=\"meritsFinalCount\">0</strong><small>SILVER</small></article>\n              <article class=\"is-bronze\"><span>🥉</span><strong id=\"meritsBronzeCount\">0</strong><small>BRONS</small></article>\n              <article class=\"is-personal\"><span>★</span><strong id=\"meritsPersonalCount\">0</strong><small>PERSONLIGA</small></article>\n            </div>\n          </header>\n          <div class=\"player-merits-sections-v1248\">\n            <article class=\"player-merits-column player-merits-column--team player-merits-section-v1248\">\n              <div class=\"player-merits-section-heading-v1248\">\n                <div><span class=\"player-merits-section-icon-v1248\" aria-hidden=\"true\">🏆</span><div><p>LAGMERITER</p><h3>Lagmeriter</h3></div></div>\n                <strong id=\"teamMeritsHeadingCount\">0</strong>\n              </div>\n              <div class=\"player-merits-list player-merits-list-v1248\" id=\"teamMeritsList\"></div>\n            </article>\n            <article class=\"player-merits-column player-merits-column--personal player-merits-section-v1248\">\n              <div class=\"player-merits-section-heading-v1248\">\n                <div><span class=\"player-merits-section-icon-v1248 is-personal\" aria-hidden=\"true\">★</span><div><p>PERSONLIGT</p><h3>Personliga meriter</h3></div></div>\n                <strong id=\"personalMeritsHeadingCount\">0</strong>\n              </div>\n              <div class=\"player-merits-list player-merits-list-v1248\" id=\"personalMeritsList\"></div>\n            </article>\n          </div>\n        </section>\n      </section>\n    </div>\n  </main>\n\n  <div class=\"loading-state\" id=\"loadingState\"><div aria-hidden=\"true\" class=\"spinner\"></div><p>Hämtar spelarens historik…</p></div>\n</div>\n<footer class=\"directory-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>", "team": "<div class=\"page-shell history-page-shell\">\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>\n        Öppna <code>config.js</code> och fyll i projektets URL och\n        publishable key.\n      </p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta laget</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<main hidden=\"\" id=\"teamPage\">\n<section class=\"history-hero\">\n<div class=\"history-hero-main\">\n<p class=\"history-kicker\">Lagets historik</p>\n<h1 id=\"teamName\">Laddar lag…</h1>\n<div class=\"history-hero-content\">\n<div class=\"history-team-identity\">\n<div aria-hidden=\"true\" class=\"history-team-logo\" id=\"teamProfileAvatar\"></div>\n</div>\n<div class=\"history-profile-copy\">\n<div class=\"history-chip-row\" id=\"heroChips\"></div>\n<div class=\"history-profile-block\">\n<span>Klubbprofil</span>\n<p id=\"clubProfileText\"></p>\n</div>\n</div>\n<div class=\"history-leaders\">\n<div>\n<span>Flest matcher</span>\n<strong id=\"leaderMatches\">–</strong>\n</div>\n<div>\n<span>Flest poäng</span>\n<strong id=\"leaderPoints\">–</strong>\n</div>\n<div>\n<span>Främsta målvakt</span>\n<strong id=\"leaderGoalie\">–</strong>\n</div>\n</div>\n<div class=\"history-hero-footer-v1284\">\n<div class=\"team-profile-links\" id=\"teamLinks\"></div>\n<div aria-label=\"Lagets främsta meriter\" class=\"history-badges history-badges-v1284\" id=\"historyBadges\"></div>\n</div>\n</div>\n</div>\n<aside aria-labelledby=\"divisionCurveHeading\" class=\"history-division-panel\">\n<p class=\"history-kicker history-kicker--gold\">Divisioner</p>\n<h2 id=\"divisionCurveHeading\">Divisionskurva</h2>\n<p>Från NEO längst ner till ELITE högst upp.</p>\n<div class=\"division-curve\" id=\"divisionCurve\"></div>\n<div class=\"division-curve-footer\">\n<span id=\"divisionCurveFirst\">–</span>\n<span id=\"divisionCurveLatest\">–</span>\n</div>\n</aside>\n</section>\n<section aria-label=\"Lagöversikt\" class=\"history-metric-band\">\n<article class=\"history-feature-metric\">\n<span>Matchvinster</span>\n<strong id=\"winsCount\">–</strong>\n<small id=\"winsMetricNote\"></small>\n</article>\n<article class=\"history-feature-metric\">\n<span>Bästa ECL</span>\n<strong id=\"bestEclSeason\">–</strong>\n<small id=\"bestEclNote\"></small>\n</article>\n<article class=\"history-feature-metric\">\n<span>Högsta nivå</span>\n<strong id=\"bestDivision\">–</strong>\n<small id=\"divisionMetricNote\"></small>\n</article>\n<article class=\"history-feature-metric\">\n<span>Slutspel</span>\n<strong id=\"playoffRecord\">–</strong>\n<small id=\"playoffMetricNote\"></small>\n</article>\n<div class=\"history-compact-metrics\">\n<div><span>Matcher</span><strong id=\"gamesCount\">–</strong></div>\n<div><span>Vinster</span><strong id=\"winsCompact\">–</strong></div>\n<div><span>Förluster</span><strong id=\"lossesCount\">–</strong></div>\n<div><span>Vinst%</span><strong id=\"winPercentage\">–</strong></div>\n<div><span>GF–GA</span><strong id=\"goalsRecord\">–</strong></div>\n<div><span>+/−</span><strong id=\"goalDifference\">–</strong></div>\n</div>\n</section>\n<section class=\"history-section history-honours\" hidden=\"\" id=\"teamHonoursSection\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Meriter</p>\n<h2>Pallplatser</h2>\n</div>\n<span class=\"history-section-count\" id=\"teamHonoursCount\"></span>\n</div>\n<div class=\"history-honour-summary\">\n<div><span>Mästare</span><strong id=\"championshipsCount\">0</strong></div>\n<div><span>Silver</span><strong id=\"finalsCount\">0</strong></div>\n<div><span>Brons</span><strong id=\"bronzeCount\">0</strong></div>\n</div>\n<div class=\"history-honour-list\" id=\"teamHonoursList\"></div>\n</section>\n<section class=\"history-section\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Säsonger</p>\n<h2>Lagets säsonger</h2>\n<p>Säsonger, divisioner och tillgänglig lagstatistik.</p>\n</div>\n<span class=\"history-section-count\" id=\"tournamentCount\">–</span>\n</div>\n<div class=\"player-history-filters team-season-filters\" id=\"seasonCompetitionFilters\" aria-label=\"Filtrera lagets säsonger efter turnering\"></div>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-seasons-table\">\n<thead>\n<tr>\n<th>Säsong</th>\n<th>Datum</th>\n<th>Lagnamn då</th>\n<th>Division</th>\n<th>Spelare</th>\n<th>Matcher</th>\n<th>Record</th>\n<th>Poäng</th>\n<th>GF–GA</th>\n<th>Länk</th>\n</tr>\n</thead>\n<tbody id=\"seasonsTableBody\"></tbody>\n</table>\n</div>\n</section>\n<section class=\"history-section history-player-section\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Spelare</p>\n<h2 id=\"playersHeading\">Spelare – all-time</h2>\n<p>Alla spelare som har representerat laget i importerade turneringar.</p>\n</div>\n<span class=\"history-section-count\" id=\"allTimePlayerCount\">–</span>\n</div>\n<div class=\"history-player-grid\" id=\"playerCards\"></div>\n<div class=\"history-player-grid-actions\">\n<button class=\"history-outline-button\" hidden=\"\" id=\"togglePlayerCards\" type=\"button\">\n            Visa alla spelare\n          </button>\n</div>\n<div class=\"history-alltime-grid\">\n<article class=\"history-alltime-card\">\n<h3>All-time utespelare</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr>\n<th>#</th>\n<th>Spelare</th>\n<th>GP</th>\n<th>G</th>\n<th>A</th>\n<th>PTS</th>\n<th>PIM</th>\n</tr>\n</thead>\n<tbody id=\"allTimeSkaterBody\"></tbody>\n</table>\n</div>\n<div class=\"history-alltime-table-actions\">\n<button class=\"history-outline-button\" hidden=\"\" id=\"toggleAllTimeSkaters\" type=\"button\" aria-expanded=\"false\">Visa alla utespelare</button>\n</div>\n</article>\n<article class=\"history-alltime-card\">\n<h3>All-time målvakter</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr>\n<th>#</th>\n<th>Målvakt</th>\n<th>GP</th>\n<th>SA</th>\n<th>GA</th>\n<th>SV</th>\n<th>SV%</th>\n<th>GAA</th>\n<th>SO</th>\n</tr>\n</thead>\n<tbody id=\"allTimeGoalieBody\"></tbody>\n</table>\n</div>\n<div class=\"history-alltime-table-actions\">\n<button class=\"history-outline-button\" hidden=\"\" id=\"toggleAllTimeGoalies\" type=\"button\" aria-expanded=\"false\">Visa alla målvakter</button>\n</div>\n</article>\n</div>\n</section>\n<section class=\"history-section history-details-section\">\n<details>\n<summary>\n<span>\n<span class=\"history-kicker history-kicker--gold\">Fördjupning</span>\n<strong>Detaljerad turneringshistorik</strong>\n</span>\n<small>Behåller all information från den tidigare lagsidan</small>\n</summary>\n<div class=\"history-details-body\">\n<div class=\"section-heading\">\n<div>\n<h2>Alla turneringar</h2>\n</div>\n<div class=\"tournament-controls\">\n<label>\n<span>Turnering</span>\n<select id=\"competitionFilter\">\n<option value=\"\">Alla turneringar</option>\n</select>\n</label>\n<label>\n<span>Sortering</span>\n<select id=\"tournamentSort\">\n<option value=\"newest\">Nyaste först</option>\n<option value=\"oldest\">Äldsta först</option>\n<option value=\"competition\">Turnering A–Ö</option>\n</select>\n</label>\n</div>\n</div>\n<div class=\"result-bar tournament-result-bar\">\n<span id=\"tournamentResultText\"></span>\n<span id=\"lastUpdated\"></span>\n</div>\n<div class=\"tournament-list\" id=\"tournamentList\"></div>\n</div>\n</details>\n</section>\n<section class=\"team-information-panel history-source-panel\">\n<div>\n<span class=\"information-label\">SportsGamer-ID</span>\n<div class=\"information-value\" id=\"sportsGamerIds\"></div>\n</div>\n<div>\n<span class=\"information-label\">Historiska namn</span>\n<div class=\"information-value\" id=\"historicalNames\"></div>\n</div>\n<div>\n<span class=\"information-label\">Namn i turneringar</span>\n<div class=\"information-value\" id=\"leagueNames\"></div>\n</div>\n</section>\n</main>\n<div class=\"loading-state\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar lagets historik, turneringar och spelare…</p>\n</div>\n</div>", "teamTournament": "<div class=\"page-shell history-page-shell\">\n<nav aria-label=\"Navigering\" class=\"page-nav history-nav\">\n<a class=\"back-button\" href=\"#/laghistoria\" id=\"backLink\">← Tillbaka till laget</a>\n<button class=\"reload-button\" id=\"reloadButton\" type=\"button\">Uppdatera</button>\n</nav>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>Kontrollera att befintliga <code>config.js</code> innehåller projektets URL och publishable key.</p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta turneringen</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<main hidden=\"\" id=\"tournamentPage\">\n<section class=\"profile-detail-hero tournament-detail-hero\">\n<div aria-hidden=\"true\" class=\"profile-detail-avatar profile-detail-avatar--team\" id=\"teamAvatar\"></div>\n<div class=\"profile-detail-copy\">\n<p class=\"history-kicker history-kicker--gold\" id=\"competitionName\"></p>\n<h1 id=\"teamName\">Laddar lag…</h1>\n<h2 class=\"tournament-page-title\" id=\"tournamentName\"></h2>\n<p class=\"profile-detail-meta\" id=\"tournamentMeta\"></p>\n<div class=\"team-profile-links\" id=\"tournamentLinks\"></div>\n</div>\n</section>\n<section aria-label=\"Turneringsöversikt\" class=\"profile-summary-grid tournament-summary-grid\">\n<article><span>Matcher</span><strong id=\"gamesCount\">–</strong></article>\n<article><span>Vinster</span><strong id=\"winsCount\">–</strong></article>\n<article><span>Förluster</span><strong id=\"lossesCount\">–</strong></article>\n<article><span>Vinst%</span><strong id=\"winPercentage\">–</strong></article>\n<article><span>GF–GA</span><strong id=\"goalsRecord\">–</strong></article>\n<article><span>+/−</span><strong id=\"goalDifference\">–</strong></article>\n</section>\n<section class=\"tournament-single-grid\">\n<article class=\"history-alltime-card\">\n<p class=\"history-kicker history-kicker--gold\">Grundserie</p>\n<h2 id=\"regularRecord\">–</h2>\n<div class=\"profile-stat-list\" id=\"regularDetails\"></div>\n</article>\n<article class=\"history-alltime-card\">\n<p class=\"history-kicker history-kicker--gold\">Slutspel</p>\n<h2 id=\"playoffRecord\">–</h2>\n<div class=\"profile-stat-list\" id=\"playoffDetails\"></div>\n</article>\n</section>\n<section class=\"history-section\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Trupp</p>\n<h2>Spelare i turneringen</h2>\n<p>Spelarnamnen länkar till Svensk eHockey-profiler. Kopplade spelare har även en direktlänk till SportsGamer.</p>\n</div>\n<span class=\"history-section-count\" id=\"playerCount\"></span>\n</div>\n<div class=\"history-alltime-grid tournament-roster-grid\">\n<article class=\"history-alltime-card\">\n<h3>Utespelare</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr><th>Spelare</th><th>Pos</th><th>GP</th><th>G</th><th>A</th><th>PTS</th><th>+/−</th><th>PIM</th></tr>\n</thead>\n<tbody id=\"skaterBody\"></tbody>\n</table>\n</div>\n</article>\n<article class=\"history-alltime-card\">\n<h3>Målvakter</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead>\n<tr><th>Målvakt</th><th>GP</th><th>V</th><th>F</th><th>ÖF</th><th>SV%</th><th>GAA</th><th>SO</th></tr>\n</thead>\n<tbody id=\"goalieBody\"></tbody>\n</table>\n</div>\n</article>\n</div>\n</section>\n<section class=\"history-section\" hidden=\"\" id=\"matchesSection\">\n<div class=\"history-section-heading\">\n<div>\n<p class=\"history-kicker history-kicker--gold\">Matcher</p>\n<h2>Matcher i turneringen</h2>\n<p>Spelade, ospelade, walkover- och rekonstruerade matcher visas med separat status.</p>\n</div>\n<span class=\"history-section-count\" id=\"matchCount\"></span>\n</div>\n<div class=\"tournament-match-list\" id=\"matchList\"></div>\n</section>\n</main>\n<div class=\"loading-state\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar turneringssidan…</p>\n</div>\n</div>", "tournament": "<div class=\"page-shell history-page-shell tournament-overview-shell\">\n<nav aria-label=\"Navigering\" class=\"page-nav history-nav\">\n<a class=\"back-button\" href=\"#/laghistoria\">← Till laghistoriken</a>\n<button class=\"reload-button\" id=\"reloadButton\" type=\"button\">Uppdatera</button>\n</nav>\n<section class=\"notice notice-warning\" hidden=\"\" id=\"setupNotice\">\n<h2>Anslut sidan till Supabase</h2>\n<p>Kontrollera att befintliga <code>config.js</code> innehåller projektets URL och publishable key.</p>\n</section>\n<section class=\"notice notice-error\" hidden=\"\" id=\"errorNotice\">\n<h2>Kunde inte hämta turneringen</h2>\n<p id=\"errorMessage\"></p>\n</section>\n<main hidden=\"\" id=\"tournamentOverview\">\n<section class=\"tournament-overview-hero\">\n<div>\n<p class=\"history-kicker history-kicker--gold\" id=\"competitionName\">TURNERING</p>\n<h1 id=\"tournamentTitle\">Laddar turnering…</h1>\n<p class=\"tournament-overview-intro\" id=\"tournamentDescription\"></p>\n<div class=\"team-profile-links\" id=\"tournamentExternalLinks\"></div>\n</div>\n<aside aria-label=\"Turneringsidentitet\" class=\"tournament-overview-identity\">\n<span>LIGA-ID</span>\n<strong id=\"leagueIdValue\">–</strong>\n<small id=\"tournamentPeriod\">–</small>\n</aside>\n</section>\n<nav aria-label=\"Turneringsinnehåll\" class=\"tournament-overview-nav\">\n<a href=\"#overview\">Översikt</a>\n<a href=\"#standings\">Tabeller</a>\n<a href=\"#teams\">Lag</a>\n<a href=\"#matches\">Matcher</a>\n<a href=\"#statistics\">Statistik</a>\n<a href=\"#playoffs\">Slutspel</a>\n</nav>\n<section aria-label=\"Turneringsöversikt\" class=\"tournament-overview-metrics\" id=\"overview\">\n<article><span>Lag</span><strong id=\"metricTeams\">–</strong></article>\n<article><span>Spelare</span><strong id=\"metricPlayers\">–</strong><small id=\"metricLinkedPlayers\"></small></article>\n<article><span>Matcher</span><strong id=\"metricMatches\">–</strong><small id=\"metricPlayedMatches\"></small></article>\n<article><span>Walkovers</span><strong id=\"metricWalkovers\">–</strong></article>\n<article><span>Slutspelsserier</span><strong id=\"metricSeries\">–</strong></article>\n<article><span>Slutspelsmatcher</span><strong id=\"metricPlayoffMatches\">–</strong><small id=\"metricReconstructed\"></small></article>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"standings\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">TABELLER</p><h2>Grundserie och grupper</h2><p>Tabellplaceringar och lagresultat hämtas direkt från Supabase.</p></div>\n<span class=\"history-section-count\" id=\"standingsCount\"></span>\n</div>\n<div class=\"tournament-standings-container\" id=\"standingsContainer\"></div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"teams\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">LAG</p><h2>Deltagande lag</h2><p>Öppna lagets turneringssida för trupp, statistik och samtliga matcher.</p></div>\n<span class=\"history-section-count\" id=\"teamsCount\"></span>\n</div>\n<div class=\"tournament-teams-grid\" id=\"teamsGrid\"></div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"matches\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">MATCHER</p><h2>Alla matcher</h2><p>Ospelade matcher, walkovers och rekonstruerade matcher har egen status.</p></div>\n<span class=\"history-section-count\" id=\"matchesCount\"></span>\n</div>\n<div class=\"tournament-filter-bar\">\n<label><span>FAS</span><select id=\"stageFilter\"><option value=\"all\">Alla faser</option></select></label>\n<label><span>STATUS</span><select id=\"statusFilter\"><option value=\"all\">Alla statusar</option><option value=\"played\">Spelade</option><option value=\"pending\">Ospelade</option><option value=\"walkover\">Walkover</option><option value=\"reconstructed\">Rekonstruerade</option></select></label>\n<label><span>LAG</span><select id=\"teamFilter\"><option value=\"all\">Alla lag</option></select></label>\n</div>\n<div class=\"tournament-global-match-list\" id=\"matchesList\"></div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"statistics\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">STATISTIK</p><h2>Spelarstatistik</h2><p>SportsGamer-kopplade spelare använder permanent playerID och SportsGamer-namn när uppgifterna finns i databasen.</p></div>\n<span class=\"history-section-count\" id=\"statisticsCount\"></span>\n</div>\n<div class=\"history-alltime-grid tournament-statistics-grid\">\n<article class=\"history-alltime-card\">\n<h3>Utespelare</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead><tr><th>#</th><th>Spelare</th><th>Lag</th><th>GP</th><th>G</th><th>A</th><th>PTS</th><th>+/−</th></tr></thead>\n<tbody id=\"skaterStatsBody\"></tbody>\n</table>\n</div>\n</article>\n<article class=\"history-alltime-card\">\n<h3>Målvakter</h3>\n<div class=\"history-table-wrap\">\n<table class=\"history-table history-player-table\">\n<thead><tr><th>#</th><th>Målvakt</th><th>Lag</th><th>GP</th><th>SV</th><th>SA</th><th>SV%</th><th>GAA</th><th>SO</th></tr></thead>\n<tbody id=\"goalieStatsBody\"></tbody>\n</table>\n</div>\n</article>\n</div>\n</section>\n<section class=\"history-section tournament-overview-section\" id=\"playoffs\">\n<div class=\"history-section-heading\">\n<div><p class=\"history-kicker history-kicker--gold\">SLUTSPEL</p><h2>Slutspelsserier</h2><p>Serierna skapas från turneringens slutspelsmatcher och grupperas per runda.</p></div>\n<span class=\"history-section-count\" id=\"playoffsCount\"></span>\n</div>\n<div class=\"tournament-playoff-bracket\" id=\"playoffBracket\"></div>\n</section>\n</main>\n<div class=\"loading-state\" id=\"loadingState\">\n<div aria-hidden=\"true\" class=\"spinner\"></div>\n<p>Hämtar turneringsdata…</p>\n</div>\n</div>", "season": "<main class=\"directory-shell portal-shell\">\n<section class=\"portal-page-hero season-hero\">\n<p class=\"directory-kicker\">ECL-SÄSONG</p>\n<h1 id=\"seasonTitle\">ECL ’26:<br/>Spring</h1>\n<p id=\"seasonText\">Samlad ingång till svenska lag, spelare och historik för säsongen.</p>\n</section>\n<nav aria-label=\"Säsongsmeny\" class=\"season-subnav\">\n<a class=\"is-active\" href=\"#overview\">Översikt</a>\n<a href=\"#matches\">Matcher</a>\n<a href=\"#transfers\">Byten</a>\n<a href=\"#teams\">Lag</a>\n<a href=\"#statistics\">Statistik</a>\n</nav>\n<section class=\"season-overview\" id=\"overview\">\n<p class=\"directory-kicker\">ÖVERSIKT</p>\n<h2 id=\"seasonOverviewTitle\">ECL ’26: Spring</h2>\n<p>\n        Den här säsongssidan är navet för säsongens innehåll. Databasens\n        laghistorik kan öppnas direkt med säsongen vald.\n      </p>\n<div class=\"portal-actions\">\n<a class=\"portal-button portal-button--primary\" href=\"#/laghistoria\" id=\"seasonTeamsLink\">Visa lag i databasen</a>\n<a class=\"portal-button\" href=\"#/spelare\">Öppna spelarregistret</a>\n</div>\n</section>\n<section class=\"season-panels\">\n<article id=\"matches\"><span>MATCHER</span><h3>Matcher</h3><p>Säsongens matchvy kopplas in här när matchdata finns i databasen.</p></article>\n<article id=\"transfers\"><span>BYTEN</span><h3>Byten</h3><p>En tydlig plats för svenska spelarbyten under säsongen.</p></article>\n<article id=\"teams\"><span>LAG</span><h3>Svenska lag</h3><p>Öppna laghistoriken och filtrera fram säsongens deltagande lag.</p></article>\n<article id=\"statistics\"><span>STATISTIK</span><h3>Statistik</h3><p>Tabeller och topplistor kan byggas från databasens säsongsdata.</p></article>\n</section>\n</main>\n<footer class=\"directory-footer\"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>"};
+  templates.ecl = `
+    <main class="directory-shell ecl-hub-shell-v12840">
+      <section class="ecl-hub-hero-v12840" aria-labelledby="eclHubTitle">
+        <div class="ecl-hub-hero-v12840__copy">
+          <p class="directory-kicker">ECL / SVENSK BEVAKNING</p>
+          <h1 id="eclHubTitle">ECL</h1>
+          <p>Följ svenska lag och spelare i European Championship League. Här samlas matcher, spelarbyten, lagstatus och svensk spelarstatistik – säsong för säsong.</p>
+          <div class="ecl-hub-tags-v12840" aria-label="ECL-innehåll">
+            <span>MATCHER</span><span>BYTEN</span><span>LAG</span><span>STATISTIK</span>
+          </div>
+        </div>
+        <aside class="ecl-hub-current-v12840" aria-label="Kommande ECL-säsong">
+          <span>KOMMANDE SÄSONG</span>
+          <strong>ECL ’27: Winter</strong>
+          <p>ECL ’27 Winter blir nästa säsong. När säsongsdata finns kopplas samma svenska bevakning in här.</p>
+          <div>
+            <a class="ecl-hub-button-v12840" href="#/sasong/ecl27winter">Öppna ECL ’27 Winter</a>
+            <a class="ecl-hub-button-v12840 ecl-hub-button-v12840--ghost" href="#/sasong/ecl26spring">Senaste fulla ECL-data</a>
+          </div>
+        </aside>
+      </section>
+
+      <section class="ecl-season-focus-v12840" aria-labelledby="eclLatestTitle">
+        <div class="ecl-section-heading-v12840">
+          <div>
+            <p class="directory-kicker">SENAST TILLGÄNGLIGA SÄSONG</p>
+            <h2 id="eclLatestTitle">ECL ’26: Spring</h2>
+            <p>Den senaste kompletta svenska ECL-bevakningen. Öppna direkt den vy du vill följa.</p>
+          </div>
+          <a href="#/sasong/ecl26spring">Öppna säsongsöversikt →</a>
+        </div>
+        <div class="ecl-season-links-v12840">
+          <a href="#/sasong/ecl26spring?section=matches"><span>01</span><strong>Matcher</strong><small>Alla svenska matcher och resultat</small></a>
+          <a href="#/sasong/ecl26spring?section=transfers"><span>02</span><strong>Byten</strong><small>Svenska spelarbyten under säsongen</small></a>
+          <a href="#/sasong/ecl26spring?section=teams"><span>03</span><strong>Lag</strong><small>Hur de svenska lagen presterar</small></a>
+          <a href="#/sasong/ecl26spring?section=statistics"><span>04</span><strong>Statistik</strong><small>Topplistor för svenska spelare</small></a>
+        </div>
+      </section>
+
+      <section class="ecl-archive-v12840" id="eclArchive" aria-labelledby="eclArchiveTitle">
+        <div class="ecl-section-heading-v12840">
+          <div>
+            <p class="directory-kicker">ARKIV</p>
+            <h2 id="eclArchiveTitle">Tidigare ECL-säsonger</h2>
+            <p>ECL-historiken går tillbaka till Season 1 från 2015. Varje säsong visar bara de vyer där vi faktiskt har tillräcklig historisk data.</p>
+          </div>
+        </div>
+        <div class="ecl-archive-groups-v12852" id="eclArchiveGroups">
+          <p class="season-data-status">Laddar ECL-historik…</p>
+        </div>
+      </section>
+    </main>
+    <footer class="directory-footer"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>
+  `;
+
+  templates.season = `
+    <main class="directory-shell season-shell-v12840">
+      <section class="season-hero-v12840" aria-labelledby="seasonTitle">
+        <div class="season-hero-v12840__copy">
+          <p class="directory-kicker">ECL-SÄSONG</p>
+          <h1 id="seasonTitle">ECL ’26: Spring</h1>
+          <p id="seasonText">Svenska lag, matcher, spelarbyten och statistik samlat för säsongen.</p>
+        </div>
+        <aside class="season-hero-v12840__side" aria-label="ECL-säsongsnavigation">
+          <span id="seasonHeroEyebrow">SVENSK ECL-BEVAKNING</span>
+          <strong id="seasonHeroLabel">ECL</strong>
+          <p id="seasonHeroStatus">Välj en vy nedan för att följa säsongens svenska lag och spelare.</p>
+          <a href="#/ecl?view=archive">ECL-arkiv →</a>
+        </aside>
+      </section>
+
+      <nav aria-label="Säsongsmeny" class="season-subnav season-subnav-v12840">
+        <a class="is-active" href="#overview">Översikt</a>
+        <a href="#matches">Matcher</a>
+        <a href="#transfers">Byten</a>
+        <a href="#teams">Lag</a>
+        <a href="#statistics">Statistik</a>
+        <a href="#/ecl?view=archive" data-season-archive="true">Arkiv</a>
+      </nav>
+
+      <section class="season-overview season-overview-v12840" id="overview">
+        <p class="directory-kicker">ÖVERSIKT</p>
+        <h2 id="seasonOverviewTitle">ECL ’26: Spring</h2>
+        <p>Välj vilken del av den svenska ECL-bevakningen du vill öppna.</p>
+      </section>
+      <section class="season-panels"></section>
+    </main>
+    <footer class="directory-footer"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>
+  `;
+
   templates.shop = `
     <main class="shop-page-shell">
       <section class="shop-page-hero shop-page-hero--reference">
@@ -10470,9 +12929,1195 @@ function SEH_initShop() {
     </footer>
   `;
 
-  const routeBodyClasses = {"home": "directory-page portal-page", "news": "directory-page portal-page", "players": "directory-page portal-page", "history": "directory-page", "player": "history-body", "team": "history-body", "teamTournament": "history-body", "tournament": "history-body tournament-overview-body", "shop": "directory-page shop-page", "season": "directory-page portal-page"};
+
+  templates.support = `
+    <main class="directory-shell support-shell">
+      <section class="support-intro">
+        <div class="support-intro__copy">
+          <p class="directory-kicker">SVENSK eHOCKEY / IDEELLT</p>
+          <h1>Stöd Svensk eHockey</h1>
+          <p class="support-lead">
+            Svensk eHockey drivs ideellt och vi tar inte betalt för arbetet bakom
+            sidan, statistiken eller appen.
+          </p>
+          <p class="support-copy">
+            Det finns däremot löpande kostnader för bland annat domän, teknisk drift,
+            databas och andra tjänster. Den som vill får gärna hjälpa till med en liten
+            del av de kostnaderna. Det är helt frivilligt och allt innehåll fortsätter
+            vara tillgängligt oavsett om man bidrar eller inte.
+          </p>
+
+          <div class="support-actions">
+            <a
+              class="support-button support-button--primary"
+              href="https://hihat.io/svenskehockey"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Lämna ett frivilligt bidrag
+              <span aria-hidden="true">↗</span>
+            </a>
+            <span class="support-action-meta">
+              <strong>Swish via Hihat</strong>
+              <small>Hihat hanterar betalning och skatterapportering</small>
+            </span>
+          </div>
+        </div>
+
+        <aside class="support-card" aria-label="Löpande kostnader">
+          <div class="support-card__topline">
+            <p class="directory-kicker">LÖPANDE KOSTNADER</p>
+            <span class="support-card__badge">IDEELLT</span>
+          </div>
+
+          <div class="support-card__mark" aria-hidden="true">
+            <img src="assets/SeHlogga.png" alt="">
+          </div>
+
+          <div class="support-cost-list">
+            <article>
+              <span>01</span>
+              <div><strong>Webb & domän</strong><small>Domän, hosting och teknisk drift.</small></div>
+            </article>
+            <article>
+              <span>02</span>
+              <div><strong>Databas</strong><small>Statistik, historik och lagrad data.</small></div>
+            </article>
+            <article>
+              <span>03</span>
+              <div><strong>App & tjänster</strong><small>Tjänster som behövs för sidan och appen.</small></div>
+            </article>
+            <article>
+              <span>04</span>
+              <div><strong>SEC & innehåll</strong><small>Praktiska kostnader runt Svensk eHockey och SEC.</small></div>
+            </article>
+          </div>
+
+          <div class="support-card__footer">
+            <span>Bidrag är frivilliga</span>
+            <span>Swish via Hihat</span>
+          </div>
+        </aside>
+      </section>
+
+      <section class="support-bottom-note" aria-label="Information om bidrag">
+        <span aria-hidden="true">i</span>
+        <p>
+          Stöd ger inga extra funktioner, fördelar eller tillgång till innehåll.
+          Hihat Basic tillåter valfria belopp mellan 10 och 150 kr.
+        </p>
+      </section>
+    </main>
+
+    <footer class="directory-footer">
+      <div>
+        <strong>SVENSK eHOCKEY</strong>
+        <span>© 2026 Svensk eHockey</span>
+      </div>
+    </footer>
+  `;
+
+  templates.writer = "<main class=\"writer-shell\">\n    <a class=\"writer-back\" href=\"#/nyheter\">← Till nyheter</a>\n\n    <header class=\"writer-hero\">\n      <p class=\"directory-kicker\">SVENSK eHOCKEY / SKRIBENTCENTER</p>\n      <h1>Skriv nyhet</h1>\n      <p>Skriv artikeln, ladda upp desktop- och mobilbild och skicka den för granskning.</p>\n    </header>\n\n    <section id=\"writerLogin\" class=\"writer-panel writer-login-panel\">\n      <p class=\"writer-panel-kicker\">SKRIBENTINLOGGNING</p>\n      <h2>Logga in</h2>\n      <p>Logga in med ditt skribentnamn och lösenord.</p>\n      <div class=\"writer-grid\">\n        <label>\n          <span>Inloggningsnamn</span>\n          <input id=\"writerUsername\" type=\"text\" autocomplete=\"username\" placeholder=\"eSwahn\" spellcheck=\"false\">\n        </label>\n        <label>\n          <span>Lösenord</span>\n          <input id=\"writerPassword\" type=\"password\" autocomplete=\"current-password\" placeholder=\"Ditt lösenord\">\n        </label>\n      </div>\n      <div class=\"writer-actions\">\n        <span></span>\n        <button id=\"writerLoginBtn\" type=\"button\">Logga in</button>\n      </div>\n      <p id=\"writerLoginStatus\" role=\"status\"></p>\n    </section>\n\n    <section id=\"writerSessionBar\" class=\"writer-session-bar\" hidden>\n      <div>\n        <span>INLOGGAD SOM</span>\n        <strong id=\"writerDisplayName\">–</strong>\n        <small id=\"writerRoleLabel\"></small>\n      </div>\n      <button id=\"writerLogout\" class=\"writer-secondary\" type=\"button\">Logga ut</button>\n    </section>\n\n    <form id=\"writerForm\" class=\"writer-panel\" hidden>\n      <div class=\"writer-form-heading\">\n        <div>\n          <p class=\"writer-panel-kicker\" id=\"writerFormKicker\">NY ARTIKEL</p>\n          <h2 id=\"writerFormTitle\">Skriv artikel</h2>\n        </div>\n        <button type=\"button\" id=\"writerCancelEdit\" class=\"writer-secondary\" hidden>Avbryt redigering</button>\n      </div>\n\n      <div class=\"writer-grid\">\n        <label>\n          <span>Rubrik</span>\n          <input id=\"title\" required maxlength=\"140\">\n        </label>\n        <label>\n          <span>Kategori</span>\n          <select id=\"tag\">\n            <option>SEC</option>\n            <option>ECL</option>\n            <option>Svenska lag</option>\n            <option>Sajt</option>\n            <option>Nyhet</option>\n          </select>\n        </label>\n      </div>\n\n      <label>\n        <span>Ingress</span>\n        <textarea id=\"excerpt\" rows=\"3\" required maxlength=\"500\"></textarea>\n      </label>\n\n      <label>\n        <span>Artikeltext</span>\n        <div class=\"writer-editor-toolbar\" aria-label=\"Formatera artikeltext\">\n          <button type=\"button\" data-editor-insert=\"h2\">Mellanrubrik</button>\n          <button type=\"button\" data-editor-insert=\"h3\">Mindre rubrik</button>\n          <button type=\"button\" data-editor-insert=\"ul\">Punktlista</button>\n          <button type=\"button\" data-editor-insert=\"ol\">Numrerad lista</button>\n          <button type=\"button\" data-editor-insert=\"bold\">Fetstil</button>\n          <button type=\"button\" data-editor-insert=\"image1\">Bild 1 här</button>\n          <button type=\"button\" data-editor-insert=\"image2\">Bild 2 här</button>\n        </div>\n        <textarea id=\"body\" rows=\"14\" required placeholder=\"Skriv artikeln här. Tom rad skapar nytt stycke.\"></textarea>\n      </label>\n\n      <aside class=\"writer-format-guide\" aria-label=\"Instruktioner för textformatering\">\n        <strong>Så formaterar du texten</strong>\n        <ul>\n          <li><code>## Rubrik</code><span>Stor mellanrubrik</span></li>\n          <li><code>### Rubrik</code><span>Mindre rubrik</span></li>\n          <li><code>- Din text</code><span>Punktlista</span></li>\n          <li><code>1. Din text</code><span>Numrerad lista</span></li>\n          <li><code>**text**</code><span>Fetstil</span></li>\n          <li><code>[[BILD1]]</code><span>Placera inline-bild 1 här</span></li>\n          <li><code>[[BILD2]]</code><span>Placera inline-bild 2 här</span></li>\n          <li><code>Tom rad</code><span>Nytt stycke</span></li>\n        </ul>\n      </aside>\n\n      <div class=\"writer-image-grid\">\n        <label class=\"writer-upload\">\n          <strong>Desktopbild</strong>\n          <small>Rekommenderat: 1920 × 1080 px (16:9), JPG/PNG/WebP, max 5 MB.</small>\n          <input id=\"desktopImage\" type=\"file\" accept=\"image/jpeg,image/png,image/webp\">\n          <div class=\"writer-file-actions\"><button type=\"button\" class=\"writer-clear-file\" data-clear-file=\"desktopImage\">Ta bort bild</button></div>\n          <span id=\"desktopExisting\" class=\"writer-existing-image\" hidden></span>\n        </label>\n        <label class=\"writer-upload\">\n          <strong>Mobilbild</strong>\n          <small>Rekommenderat: 1080 × 1350 px (4:5), JPG/PNG/WebP, max 5 MB. Valfri – desktopbild används annars.</small>\n          <input id=\"mobileImage\" type=\"file\" accept=\"image/jpeg,image/png,image/webp\">\n          <div class=\"writer-file-actions\"><button type=\"button\" class=\"writer-clear-file\" data-clear-file=\"mobileImage\">Ta bort bild</button></div>\n          <span id=\"mobileExisting\" class=\"writer-existing-image\" hidden></span>\n        </label>\n      </div>\n\n      <label>\n        <span>Bildbeskrivning / alt-text</span>\n        <input id=\"imageAlt\" maxlength=\"180\">\n      </label>\n\n      <section class=\"writer-inline-images\">\n        <div class=\"writer-inline-images__heading\">\n          <div>\n            <strong>Extra bilder i artikeln</strong>\n            <small>Du kan lägga till upp till två bilder. Placera dem exakt mellan stycken med knapparna “Bild 1 här” och “Bild 2 här” ovanför artikeltexten. Om ingen placering anges används en automatisk placering längre ner i artikeln.</small>\n          </div>\n        </div>\n        <div class=\"writer-image-grid writer-image-grid--inline\">\n          <div class=\"writer-upload writer-upload--inline\">\n            <strong>Inline-bild 1</strong>\n            <small>Placeras där <code>[[BILD1]]</code> står i artikeltexten. Lägg gärna in både desktop- och mobilvariant.</small>\n            <div class=\"writer-inline-slot-grid\">\n              <label>\n                <span>Desktopbild 1</span>\n                <input id=\"inlineImage1\" type=\"file\" accept=\"image/jpeg,image/png,image/webp\">\n                <div class=\"writer-file-actions\"><button type=\"button\" class=\"writer-clear-file\" data-clear-file=\"inlineImage1\">Ta bort bild</button></div>\n                <span id=\"inlineExisting1\" class=\"writer-existing-image\" hidden></span>\n              </label>\n              <label>\n                <span>Mobilbild 1</span>\n                <input id=\"inlineImage1Mobile\" type=\"file\" accept=\"image/jpeg,image/png,image/webp\">\n                <div class=\"writer-file-actions\"><button type=\"button\" class=\"writer-clear-file\" data-clear-file=\"inlineImage1Mobile\">Ta bort bild</button></div>\n                <span id=\"inlineExisting1Mobile\" class=\"writer-existing-image\" hidden></span>\n              </label>\n            </div>\n            <label>\n              <span>Bildtext 1</span>\n              <input id=\"inlineCaption1\" maxlength=\"180\">\n            </label>\n            <label>\n              <span>Alt-text 1</span>\n              <input id=\"inlineAlt1\" maxlength=\"180\">\n            </label>\n          </div>\n          <div class=\"writer-upload writer-upload--inline\">\n            <strong>Inline-bild 2</strong>\n            <small>Placeras där <code>[[BILD2]]</code> står i artikeltexten. Lägg gärna in både desktop- och mobilvariant.</small>\n            <div class=\"writer-inline-slot-grid\">\n              <label>\n                <span>Desktopbild 2</span>\n                <input id=\"inlineImage2\" type=\"file\" accept=\"image/jpeg,image/png,image/webp\">\n                <div class=\"writer-file-actions\"><button type=\"button\" class=\"writer-clear-file\" data-clear-file=\"inlineImage2\">Ta bort bild</button></div>\n                <span id=\"inlineExisting2\" class=\"writer-existing-image\" hidden></span>\n              </label>\n              <label>\n                <span>Mobilbild 2</span>\n                <input id=\"inlineImage2Mobile\" type=\"file\" accept=\"image/jpeg,image/png,image/webp\">\n                <div class=\"writer-file-actions\"><button type=\"button\" class=\"writer-clear-file\" data-clear-file=\"inlineImage2Mobile\">Ta bort bild</button></div>\n                <span id=\"inlineExisting2Mobile\" class=\"writer-existing-image\" hidden></span>\n              </label>\n            </div>\n            <label>\n              <span>Bildtext 2</span>\n              <input id=\"inlineCaption2\" maxlength=\"180\">\n            </label>\n            <label>\n              <span>Alt-text 2</span>\n              <input id=\"inlineAlt2\" maxlength=\"180\">\n            </label>\n          </div>\n        </div>\n      </section>\n</section>\n\n      <div class=\"writer-preview-switch\">\n        <button type=\"button\" data-preview=\"desktop\" class=\"is-active\">Desktop</button>\n        <button type=\"button\" data-preview=\"mobile\">Mobil</button>\n      </div>\n\n      <div id=\"writerPreview\" class=\"writer-preview writer-preview--desktop\">\n        <div class=\"writer-preview-card\">\n          <img id=\"previewImage\" hidden alt=\"\">\n          <div>\n            <span id=\"previewTag\">SEC</span>\n            <h2 id=\"previewTitle\">Din rubrik</h2>\n            <p id=\"previewExcerpt\">Din ingress visas här.</p>\n          </div>\n        </div>\n      </div>\n\n      <div class=\"writer-actions\">\n        <span></span>\n        <button type=\"submit\" id=\"writerSubmitBtn\">Skicka för granskning</button>\n      </div>\n      <p id=\"writerStatus\" role=\"status\"></p>\n    </form>\n\n    <section id=\"writerArticleManager\" class=\"writer-panel writer-manager\" hidden>\n      <div class=\"writer-manager-heading\">\n        <div>\n          <p class=\"writer-panel-kicker\" id=\"writerManagerKicker\">MINA ARTIKLAR</p>\n          <h2 id=\"writerManagerTitle\">Artiklar</h2>\n        </div>\n        <button id=\"writerRefreshArticles\" type=\"button\" class=\"writer-secondary\">Uppdatera</button>\n      </div>\n      <p id=\"writerManagerText\" class=\"writer-manager-text\"></p>\n      <div id=\"writerArticleList\" class=\"writer-article-list\"></div>\n    </section>\n\n    <div id=\"writerArticlePreviewModal\" class=\"writer-preview-modal\" hidden>\n      <div class=\"writer-preview-modal__backdrop\" data-close-preview></div>\n      <section class=\"writer-preview-modal__dialog\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"writerPreviewArticleTitle\">\n        <div class=\"writer-preview-modal__topbar\">\n          <strong>FÖRHANDSGRANSKNING</strong>\n          <button type=\"button\" class=\"writer-secondary\" data-close-preview>Stäng</button>\n        </div>\n        <div id=\"writerArticlePreviewContent\"></div>\n      </section>\n    </div>\n  </main>";
+  templates.admin = "<style id=\"sehAdminRouteStyles\">.admin-shell{max-width:1100px;margin:0 auto;padding:3rem 1.25rem 5rem}.admin-hero{margin:2rem 0}.admin-hero h1{margin:.25rem 0 1rem}.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}.admin-card{padding:1.5rem;border:1px solid #303030;background:#0c0d0d}.admin-card h2{margin:.25rem 0 .5rem}.admin-card p{color:#b7b7b7;line-height:1.5}.admin-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem}.admin-actions button[disabled]{opacity:.5;cursor:not-allowed}.admin-status{min-height:1.5rem;margin-top:1rem}.admin-status[data-tone=success]{color:#62e59b}.admin-status[data-tone=error]{color:#ff7272}.admin-status[data-tone=working]{color:#ffd400}.admin-login{max-width:560px}.admin-login label{display:block;margin:1rem 0}.admin-login label span{display:block;margin-bottom:.4rem}.admin-login input{width:100%;box-sizing:border-box}.admin-session{display:flex;justify-content:space-between;align-items:center;gap:1rem;border-bottom:1px solid #303030;padding:1rem 0;margin-bottom:2rem}.admin-session span{display:block;color:#aaa;font-size:.75rem;letter-spacing:.08em}.admin-session strong{font-size:1.1rem}@media(max-width:600px){.admin-session{align-items:flex-start;flex-direction:column}}</style><main class=\"admin-shell\">\n    <a class=\"writer-back\" href=\"#/nyheter\">← Till nyheter</a>\n    <header class=\"admin-hero\"><p class=\"directory-kicker\">SVENSK eHOCKEY / ADMIN</p><h1>Admincenter</h1><p>Här samlas synkningar och framtida verktyg för webbplatsen.</p></header>\n    <section id=\"adminLogin\" class=\"admin-card admin-login\">\n      <p class=\"writer-panel-kicker\">ADMININLOGGNING</p><h2>Logga in</h2>\n      <label><span>Inloggningsnamn</span><input id=\"adminUsername\" autocomplete=\"username\" placeholder=\"eSwahn\" spellcheck=\"false\"></label>\n      <label><span>Lösenord</span><input id=\"adminPassword\" type=\"password\" autocomplete=\"current-password\"></label>\n      <div class=\"admin-actions\"><button id=\"adminLoginBtn\" type=\"button\">Logga in</button></div><p id=\"adminLoginStatus\" class=\"admin-status\" role=\"status\"></p>\n    </section>\n    <div id=\"adminDashboard\" hidden>\n      <section class=\"admin-session\"><div><span>INLOGGAD SOM</span><strong id=\"adminDisplayName\">–</strong></div><button id=\"adminLogout\" class=\"writer-secondary\" type=\"button\">Logga ut</button></section>\n      <section class=\"admin-grid\">\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">SPELARREGISTER</p><h2>Svenska spelare</h2><p>Hämtar nya svenska SportsGamer-profiler och uppdaterar det centrala spelarregistret i Supabase.</p><div class=\"admin-actions\"><button id=\"startPlayerSync\" type=\"button\">Synka svenska spelare</button><button id=\"refreshPlayerSync\" class=\"writer-secondary\" type=\"button\" disabled>Kontrollera status</button></div><p id=\"playerSyncStatus\" class=\"admin-status\" role=\"status\" aria-live=\"polite\"></p></article>\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">SPELARSTATISTIK</p><h2>Alla svenska spelares turneringar</h2><p>Hämtar nya och korrigerade statistik­rader från samtliga SportsGamer-turneringar för spelarna i det svenska registret. SportsGamer läses endast.</p><div class=\"admin-actions\"><button id=\"startStatsSync\" type=\"button\">Uppdatera spelarstatistik</button><button id=\"refreshStatsSync\" class=\"writer-secondary\" type=\"button\" disabled>Kontrollera status</button></div><p id=\"statsSyncStatus\" class=\"admin-status\" role=\"status\" aria-live=\"polite\"></p></article>\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">KOMMANDE</p><h2>SEC-matcher</h2><p>Separat hämtning av nya SEC-matcher kan läggas här när datakällan och reglerna är fastställda.</p><div class=\"admin-actions\"><button type=\"button\" disabled>Kommer senare</button></div></article>\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">KOMMANDE</p><h2>Automatisk timer</h2><p>Timer för återkommande hämtningar aktiveras efter att manuella körningar fungerar stabilt.</p><div class=\"admin-actions\"><button type=\"button\" disabled>Kommer senare</button></div></article>\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">KONTO</p><h2>Byt adminlösenord</h2><p>Sätt ett nytt lösenord direkt för ett konto när återställningsmejl inte kan användas.</p><label><span>Användarnamn</span><input id=\"resetUsername\" value=\"eSwahn\" spellcheck=\"false\"></label><label><span>Nytt lösenord</span><input id=\"resetPassword\" type=\"password\" minlength=\"8\" autocomplete=\"new-password\"></label><div class=\"admin-actions\"><button id=\"resetPasswordBtn\" type=\"button\">Sätt nytt lösenord</button></div><p id=\"resetPasswordStatus\" class=\"admin-status\" role=\"status\"></p></article>\n      </section>\n    </div>\n  </main>";
+
+  function SEH_initWriterCenter() {
+(() => {
+  'use strict';
+
+  const $ = (s) => document.querySelector(s);
+
+  const cfg = window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
+  const supabaseUrl = cfg.supabaseUrl || cfg.SUPABASE_URL || '';
+  const supabaseKey = cfg.supabasePublishableKey || cfg.supabaseAnonKey || cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_PUBLISHABLE_KEY || '';
+
+  let sb = null;
+  try {
+    if (!window.supabase?.createClient) {
+      throw new Error('Supabase-biblioteket kunde inte laddas. Kontrollera internetanslutningen/CDN-länken.');
+    }
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase-inställningar saknas i config.js.');
+    }
+    // Dela Auth-klienten med huvudmenyn. Flera GoTrue-klienter med samma
+    // lagringsnyckel kan annars konkurrera om samma inloggningssession.
+    sb = sehGetAuthClient();
+  } catch (err) {
+    const el = document.querySelector('#writerLoginStatus');
+    if (el) el.textContent = 'Fel: ' + (err?.message || err);
+    console.error('Skribentcenter initieringsfel:', err);
+  }
+
+  const login = $('#writerLogin');
+  const loginStatus = $('#writerLoginStatus');
+  const form = $('#writerForm');
+  const status = $('#writerStatus');
+  const sessionBar = $('#writerSessionBar');
+  const manager = $('#writerArticleManager');
+  const list = $('#writerArticleList');
+
+  let currentWriter = null;
+  let currentAuthUser = null;
+  let editingArticle = null;
+  let existingDesktopUrl = '';
+  let existingMobileUrl = '';
+  let existingInlineImages = [];
+  function normalizeUsername(value) {
+    return String(value || '').trim().toLowerCase();
+  }
+
+  function usernameToEmail(value) {
+    const username = normalizeUsername(value);
+    if (!/^[a-z0-9._-]{2,40}$/.test(username)) return '';
+    return `${username}@writers.svenskehockey.se`;
+  }
+
+  const standaloneHeader = document.querySelector('.seh-header--standalone');
+
+  function headerIdentifierToEmail(value) {
+    const identifier = String(value || '').trim().toLowerCase();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier)) return identifier;
+    return usernameToEmail(identifier);
+  }
+
+  async function resolveHeaderWriter() {
+    if (!sb) return null;
+    try {
+      const current = await sb.rpc('seh_current_writer');
+      if (!current.error) {
+        const row = Array.isArray(current.data) ? current.data[0] : current.data;
+        if (row?.writer_id) return row;
+      }
+    } catch (_) {}
+
+    try {
+      const claimed = await sb.rpc('seh_claim_writer');
+      if (!claimed.error) {
+        const row = Array.isArray(claimed.data) ? claimed.data[0] : claimed.data;
+        if (row?.writer_id) return row;
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
+  function updateStandaloneHeader(session, writerRow) {
+    if (!standaloneHeader) return;
+    const loggedIn = Boolean(session?.user && !session.user.is_anonymous);
+    const role = String(writerRow?.role || '').toLowerCase();
+    const isWriter = Boolean(writerRow?.writer_id);
+    const isAdmin = isWriter && role === 'admin';
+
+    const writerLink = standaloneHeader.querySelector('[data-seh-auth-link="writer"]');
+    const adminLink = standaloneHeader.querySelector('[data-seh-auth-link="admin"]');
+    if (writerLink) writerLink.hidden = !isWriter;
+    if (adminLink) adminLink.hidden = !isAdmin;
+
+    const authRoot = standaloneHeader.querySelector('.seh-auth');
+    const authButton = standaloneHeader.querySelector('#sehAuthButton');
+    const authPanel = standaloneHeader.querySelector('#sehAuthPanel');
+    const authStatus = standaloneHeader.querySelector('#sehAuthStatus');
+    if (authRoot) authRoot.dataset.state = loggedIn ? 'logged-in' : 'logged-out';
+
+    if (authButton) {
+      authButton.textContent = loggedIn ? 'LOGGA UT' : 'LOGGA IN';
+      authButton.classList.toggle('is-authenticated', loggedIn);
+      authButton.setAttribute('aria-expanded', 'false');
+      authButton.setAttribute('aria-label', loggedIn ? 'Logga ut' : 'Logga in');
+    }
+    if (loggedIn && authPanel) authPanel.hidden = true;
+    if (authStatus && loggedIn) {
+      authStatus.textContent = '';
+      authStatus.removeAttribute('data-tone');
+    }
+  }
+
+  async function refreshStandaloneHeader() {
+    if (!standaloneHeader || !sb) return;
+    try {
+      const { data, error } = await sb.auth.getSession();
+      if (error) throw error;
+      const session = data?.session || null;
+      const row = session?.user && !session.user.is_anonymous ? await resolveHeaderWriter() : null;
+      updateStandaloneHeader(session, row);
+    } catch (err) {
+      console.warn('Kunde inte uppdatera huvudmenyns inloggningsstatus:', err);
+      updateStandaloneHeader(null, null);
+    }
+  }
+
+  function bindStandaloneHeader() {
+    if (!standaloneHeader) return;
+    const menuButton = standaloneHeader.querySelector('.seh-menu-button');
+    const navigation = standaloneHeader.querySelector('.seh-nav');
+    const authButton = standaloneHeader.querySelector('#sehAuthButton');
+    const authPanel = standaloneHeader.querySelector('#sehAuthPanel');
+    const authForm = standaloneHeader.querySelector('#sehAuthForm');
+    const identifier = standaloneHeader.querySelector('#sehAuthIdentifier');
+    const password = standaloneHeader.querySelector('#sehAuthPassword');
+    const authStatus = standaloneHeader.querySelector('#sehAuthStatus');
+
+    menuButton?.addEventListener('click', () => {
+      const open = !navigation?.classList.contains('is-open');
+      navigation?.classList.toggle('is-open', open);
+      menuButton.setAttribute('aria-expanded', String(open));
+    });
+
+    authButton?.addEventListener('click', async () => {
+      const { data } = await sb.auth.getSession();
+      const loggedIn = Boolean(data?.session?.user && !data.session.user.is_anonymous);
+      if (loggedIn) {
+        try { await sb.auth.signOut(); } catch (_) {}
+        setLoggedOut();
+        updateStandaloneHeader(null, null);
+        return;
+      }
+      const open = authPanel?.hidden !== false;
+      if (authPanel) authPanel.hidden = !open;
+      authButton.setAttribute('aria-expanded', String(open));
+      if (open) requestAnimationFrame(() => identifier?.focus());
+    });
+
+    authForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = headerIdentifierToEmail(identifier?.value);
+      const passwordValue = String(password?.value || '');
+      const submit = authForm.querySelector('button[type="submit"]');
+
+      if (!email) {
+        authStatus.textContent = 'Skriv ett giltigt användarnamn eller en e-postadress.';
+        authStatus.dataset.tone = 'error';
+        return;
+      }
+      if (!passwordValue) {
+        authStatus.textContent = 'Skriv ditt lösenord.';
+        authStatus.dataset.tone = 'error';
+        return;
+      }
+
+      authStatus.textContent = 'Loggar in…';
+      authStatus.dataset.tone = 'working';
+      if (submit) submit.disabled = true;
+
+      try {
+        try { await sb.auth.signOut(); } catch (_) {}
+        const { data, error } = await sb.auth.signInWithPassword({ email, password: passwordValue });
+        if (error) {
+          if (/invalid login credentials/i.test(error.message || '')) throw new Error('Fel användarnamn/e-post eller lösenord.');
+          throw error;
+        }
+        const row = await resolveHeaderWriter();
+        updateStandaloneHeader(data?.session || null, row);
+        if (identifier) identifier.value = '';
+        if (password) password.value = '';
+        authStatus.textContent = '';
+        authPanel.hidden = true;
+
+        if (row?.writer_id) {
+          await loadCurrentWriter();
+        } else {
+          setLoggedOut(false);
+        }
+      } catch (err) {
+        try { await sb.auth.signOut(); } catch (_) {}
+        updateStandaloneHeader(null, null);
+        authStatus.textContent = 'Fel: ' + (err?.message || err);
+        authStatus.dataset.tone = 'error';
+      } finally {
+        if (submit) submit.disabled = false;
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!authPanel || authPanel.hidden || standaloneHeader.contains(event.target)) return;
+      authPanel.hidden = true;
+      authButton?.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  bindStandaloneHeader();
+
+  function slugify(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 90);
+  }
+
+  function paragraphArray(value) {
+    return String(value || '')
+      .split(/\n\s*\n/)
+      .map((x) => x.trim())
+      .filter(Boolean);
+  }
+
+  function paragraphsToText(value) {
+    if (Array.isArray(value)) return value.join('\n\n');
+    if (typeof value === 'string') return value;
+    return '';
+  }
+
+  function normalizeInlineImages(value) {
+    if (!Array.isArray(value)) return [];
+    return value
+      .map((item, index) => ({
+        slot: Number(item?.slot || index + 1),
+        after_paragraph: Number(item?.after_paragraph || (index === 0 ? 4 : 10)),
+        image_url: String(item?.image_url || '').trim(),
+        image_mobile_url: String(item?.image_mobile_url || '').trim(),
+        image_alt: String(item?.image_alt || '').trim(),
+        caption: String(item?.caption || '').trim()
+      }))
+      .filter((item) => item.image_url || item.image_mobile_url || item.caption || item.image_alt)
+      .sort((a, b) => a.slot - b.slot);
+  }
+
+  function formatRichText(value) {
+    return escapeHtml(value)
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+  }
+
+  function parseEditorBlocks(value) {
+    const raw = Array.isArray(value) ? value.join('\n\n') : String(value || '');
+    const chunks = raw.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
+    const blocks = [];
+    for (const chunk of chunks) {
+      const lines = chunk.split(/\n/).map((line) => line.trim()).filter(Boolean);
+      if (!lines.length) continue;
+      const first = lines[0];
+      if (lines.length === 1 && /^\[\[BILD([12])\]\]$/i.test(first)) {
+        blocks.push({ type: 'imageMarker', slot: Number(first.match(/^\[\[BILD([12])\]\]$/i)[1]) });
+        continue;
+      }
+      if (/^###\s+/.test(first)) {
+        blocks.push({ type: 'heading3', text: first.replace(/^###\s+/, '') });
+        if (lines.length > 1) blocks.push({ type: 'paragraph', text: lines.slice(1).join(' ') });
+        continue;
+      }
+      if (/^##\s+/.test(first)) {
+        blocks.push({ type: 'heading2', text: first.replace(/^##\s+/, '') });
+        if (lines.length > 1) blocks.push({ type: 'paragraph', text: lines.slice(1).join(' ') });
+        continue;
+      }
+      if (lines.every((line) => /^[-*]\s+/.test(line))) {
+        blocks.push({ type: 'ul', items: lines.map((line) => line.replace(/^[-*]\s+/, '')) });
+        continue;
+      }
+      if (lines.every((line) => /^\d+\.\s+/.test(line))) {
+        blocks.push({ type: 'ol', items: lines.map((line) => line.replace(/^\d+\.\s+/, '')) });
+        continue;
+      }
+      blocks.push({ type: 'paragraph', text: lines.join(' ') });
+    }
+    return blocks;
+  }
+
+  function renderInlinePicture(item, className) {
+    const desktop = String(item?.image_url || '').trim();
+    if (!desktop) return '';
+    const mobile = String(item?.image_mobile_url || '').trim();
+    const alt = String(item?.image_alt || '').trim();
+    return `<picture class="${className}">${mobile ? `<source media="(max-width:700px)" srcset="${escapeHtml(mobile)}">` : ''}<img src="${escapeHtml(desktop)}" alt="${escapeHtml(alt)}"></picture>`;
+  }
+
+  function renderRichBlocks(blocks, inlineImages = [], opts = {}) {
+    const blockClass = opts.blockClass || '';
+    const leadClass = opts.leadClass || '';
+    const h2Class = opts.h2Class || '';
+    const h3Class = opts.h3Class || '';
+    const listClass = opts.listClass || '';
+    const inlineFigureClass = opts.inlineFigureClass || '';
+    const inlinePictureClass = opts.inlinePictureClass || '';
+    const inlineCaptionClass = opts.inlineCaptionClass || '';
+    const images = Array.isArray(inlineImages) ? inlineImages : [];
+    const imageBySlot = new Map(images.map((item, index) => [Number(item?.slot || index + 1), item]));
+    const usedSlots = new Set();
+    const explicitSlots = new Set(blocks.filter((block) => block?.type === 'imageMarker').map((block) => Number(block.slot)).filter(Boolean));
+    const figuresByPos = new Map();
+
+    images.forEach((item, index) => {
+      const slot = Number(item?.slot || index + 1);
+      if (explicitSlots.has(slot)) return;
+      const pos = Number(item?.after_paragraph || (slot === 1 ? 4 : 10));
+      if (!figuresByPos.has(pos)) figuresByPos.set(pos, []);
+      figuresByPos.get(pos).push(item);
+    });
+
+    const renderFigure = (item) => {
+      if (!item) return '';
+      const caption = String(item?.caption || '').trim();
+      return `<figure${inlineFigureClass ? ` class="${inlineFigureClass}"` : ''}>${renderInlinePicture(item, inlinePictureClass)}${caption ? `<figcaption${inlineCaptionClass ? ` class="${inlineCaptionClass}"` : ''}>${formatRichText(caption)}</figcaption>` : ''}</figure>`;
+    };
+
+    let html = '';
+    let contentIndex = 0;
+    blocks.forEach((block, index) => {
+      if (block.type === 'imageMarker') {
+        const slot = Number(block.slot);
+        const image = imageBySlot.get(slot);
+        if (image) {
+          html += renderFigure(image);
+          usedSlots.add(slot);
+        }
+        return;
+      }
+
+      contentIndex += 1;
+      if (block.type === 'heading2') {
+        html += `<h2${h2Class ? ` class="${h2Class}"` : ''}>${formatRichText(block.text)}</h2>`;
+      } else if (block.type === 'heading3') {
+        html += `<h3${h3Class ? ` class="${h3Class}"` : ''}>${formatRichText(block.text)}</h3>`;
+      } else if (block.type === 'ul' || block.type === 'ol') {
+        const tag = block.type;
+        html += `<${tag}${listClass ? ` class="${listClass}"` : ''}>${(block.items || []).map((item) => `<li>${formatRichText(item)}</li>`).join('')}</${tag}>`;
+      } else {
+        const cls = [blockClass, contentIndex === 1 ? leadClass : ''].filter(Boolean).join(' ');
+        html += `<p${cls ? ` class="${cls}"` : ''}>${formatRichText(block.text)}</p>`;
+      }
+
+      if (figuresByPos.has(contentIndex)) {
+        html += figuresByPos.get(contentIndex).map((item) => {
+          const slot = Number(item?.slot || 0);
+          if (usedSlots.has(slot)) return '';
+          usedSlots.add(slot);
+          return renderFigure(item);
+        }).join('');
+      }
+    });
+
+    // Om artikeln är kortare än den automatiska placeringen läggs bilden sist, aldrig mitt i ett stycke.
+    images.forEach((item, index) => {
+      const slot = Number(item?.slot || index + 1);
+      if (!usedSlots.has(slot)) {
+        html += renderFigure(item);
+        usedSlots.add(slot);
+      }
+    });
+
+    return html;
+  }
+
+  async function getCurrentAuthUser() {
+    const { data: { user }, error } = await sb.auth.getUser();
+    if (error) throw error;
+    return user || null;
+  }
+
+  async function claimCurrentWriter() {
+    const { data, error } = await sb.rpc('seh_claim_writer');
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row?.writer_id) throw new Error('Kontot är inte registrerat som skribent.');
+    return row;
+  }
+
+  async function loadCurrentWriter() {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session?.user) return setLoggedOut();
+
+      // Gamla anonyma sessioner från den tidigare lösningen ska inte användas.
+      if (session.user.is_anonymous || !session.user.email) {
+        await sb.auth.signOut();
+        return setLoggedOut(false);
+      }
+
+      currentAuthUser = session.user;
+
+      let { data, error } = await sb.rpc('seh_current_writer');
+      if (error) throw error;
+      let row = Array.isArray(data) ? data[0] : data;
+
+      if (!row?.writer_id) {
+        row = await claimCurrentWriter();
+      }
+
+      currentWriter = row;
+      setLoggedIn();
+      await loadArticles();
+    } catch (err) {
+      console.error(err);
+      setLoggedOut(false);
+      await refreshStandaloneHeader(); await window.SEH_refreshAuth?.();
+    }
+  }
+
+  function setLoggedOut(clearStatus = true) {
+    currentWriter = null;
+    currentAuthUser = null;
+    editingArticle = null;
+    login.hidden = false;
+    form.hidden = true;
+    sessionBar.hidden = true;
+    manager.hidden = true;
+    if (clearStatus) loginStatus.textContent = '';
+  }
+
+  function setLoggedIn() {
+    login.hidden = true;
+    form.hidden = false;
+    sessionBar.hidden = false;
+    manager.hidden = false;
+    $('#writerDisplayName').textContent = currentWriter.display_name;
+    $('#writerRoleLabel').textContent = currentWriter.role === 'admin' ? 'ADMIN' : 'SKRIBENT';
+    $('#writerManagerKicker').textContent = currentWriter.role === 'admin' ? 'ADMIN / ALLA ARTIKLAR' : 'MINA ARTIKLAR';
+    $('#writerManagerTitle').textContent = currentWriter.role === 'admin' ? 'Hantera artiklar' : 'Dina artiklar';
+    $('#writerManagerText').textContent = currentWriter.role === 'admin'
+      ? 'Som eSwahn kan du redigera, publicera, avpublicera och ta bort samtliga artiklar.'
+      : 'Här ser du dina inskickade artiklar. Du kan redigera artiklar som ännu inte är publicerade.';
+  }
+
+  async function loginWithPassword() {
+    loginStatus.textContent = 'Loggar in…';
+    try {
+      if (!sb) throw new Error('Supabase är inte initierat. Kontrollera config.js.');
+
+      const username = $('#writerUsername').value.trim();
+      const password = $('#writerPassword').value;
+      const email = usernameToEmail(username);
+
+      if (!email) throw new Error('Skriv ett giltigt inloggningsnamn.');
+      if (!password) throw new Error('Skriv ditt lösenord.');
+
+      // Rensa eventuell gammal anonym session från den tidigare kodlösningen.
+      try { await sb.auth.signOut(); } catch (_) {}
+
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (/invalid login credentials/i.test(error.message || '')) {
+          throw new Error('Fel inloggningsnamn eller lösenord.');
+        }
+        throw error;
+      }
+      if (!data?.user) throw new Error('Inloggningen misslyckades.');
+
+      currentAuthUser = data.user;
+      currentWriter = await claimCurrentWriter();
+      $('#writerUsername').value = '';
+      $('#writerPassword').value = '';
+      loginStatus.textContent = '';
+      setLoggedIn();
+      resetForm();
+      await loadArticles();
+      await refreshStandaloneHeader(); await window.SEH_refreshAuth?.();
+    } catch (err) {
+      try { await sb.auth.signOut(); } catch (_) {}
+      loginStatus.textContent = 'Fel: ' + (err?.message || err);
+    }
+  }
+
+  $('#writerLoginBtn').addEventListener('click', loginWithPassword);
+  ['writerUsername', 'writerPassword'].forEach((id) => {
+    $('#' + id).addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        loginWithPassword();
+      }
+    });
+  });
+
+  $('#writerLogout').addEventListener('click', async () => {
+    try { await sb.auth.signOut(); } catch (_) {}
+    setLoggedOut();
+    updateStandaloneHeader(null, null);
+  });
+
+  function insertEditorSyntax(type) {
+    const textarea = $('#body');
+    if (!textarea) return;
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end = textarea.selectionEnd ?? start;
+    const selected = textarea.value.slice(start, end);
+    const templates = {
+      h2: `## ${selected || 'Mellanrubrik'}`,
+      h3: `### ${selected || 'Mindre rubrik'}`,
+      ul: selected ? selected.split(/\n/).map((line) => `- ${line.replace(/^[-*]\s*/, '')}`).join('\n') : '- Punkt 1\n- Punkt 2',
+      ol: selected ? selected.split(/\n/).map((line, i) => `${i + 1}. ${line.replace(/^\d+\.\s*/, '')}`).join('\n') : '1. Punkt 1\n2. Punkt 2',
+      bold: `**${selected || 'fet text'}**`,
+      image1: '[[BILD1]]',
+      image2: '[[BILD2]]'
+    };
+    const insertion = templates[type] || '';
+    const before = textarea.value.slice(0, start);
+    const after = textarea.value.slice(end);
+    const needsBeforeBreak = before && !before.endsWith('\n\n') && (type === 'image1' || type === 'image2' || type === 'h2' || type === 'h3' || type === 'ul' || type === 'ol');
+    const needsAfterBreak = after && !after.startsWith('\n\n') && (type === 'image1' || type === 'image2' || type === 'h2' || type === 'h3' || type === 'ul' || type === 'ol');
+    const text = `${needsBeforeBreak ? '\n\n' : ''}${insertion}${needsAfterBreak ? '\n\n' : ''}`;
+    textarea.setRangeText(text, start, end, 'end');
+    textarea.focus();
+  }
+
+  document.querySelectorAll('[data-editor-insert]').forEach((button) => {
+    button.addEventListener('click', () => insertEditorSyntax(button.dataset.editorInsert));
+  });
+
+  ['title', 'excerpt', 'tag', 'inlineCaption1', 'inlineCaption2'].forEach((id) => $('#' + id).addEventListener('input', preview));
+  ['desktopImage', 'mobileImage', 'inlineImage1', 'inlineImage1Mobile', 'inlineImage2', 'inlineImage2Mobile'].forEach((id) => $('#' + id).addEventListener('change', preview));
+
+  document.querySelectorAll('[data-clear-file]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = document.getElementById(button.dataset.clearFile);
+      if (!input) return;
+      input.value = '';
+      preview();
+    });
+  });
+
+  document.querySelectorAll('[data-preview]').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('[data-preview]').forEach((x) => x.classList.remove('is-active'));
+      button.classList.add('is-active');
+      $('#writerPreview').className = 'writer-preview writer-preview--' + button.dataset.preview;
+      preview();
+    });
+  });
+
+  function preview() {
+    $('#previewTitle').textContent = $('#title').value || 'Din rubrik';
+    $('#previewExcerpt').textContent = $('#excerpt').value || 'Din ingress visas här.';
+    $('#previewTag').textContent = $('#tag').value;
+
+    const mobile = $('#writerPreview').classList.contains('writer-preview--mobile');
+    const file = mobile && $('#mobileImage').files[0] ? $('#mobileImage').files[0] : $('#desktopImage').files[0];
+    const fallbackUrl = mobile ? (existingMobileUrl || existingDesktopUrl) : existingDesktopUrl;
+
+    if (file) {
+      $('#previewImage').src = URL.createObjectURL(file);
+      $('#previewImage').hidden = false;
+    } else if (fallbackUrl) {
+      $('#previewImage').src = fallbackUrl;
+      $('#previewImage').hidden = false;
+    } else {
+      $('#previewImage').hidden = true;
+    }
+  }
+
+  async function upload(file, kind, writerId, slug) {
+    if (!file) return '';
+    if (file.size > 5 * 1024 * 1024) throw new Error(kind + 'bilden är större än 5 MB.');
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Otillåtet bildformat.');
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${writerId}/${Date.now()}-${slug}-${kind}.${ext}`;
+    const { error } = await sb.storage.from('news-images').upload(path, file, {
+      upsert: false,
+      contentType: file.type
+    });
+    if (error) throw error;
+    return sb.storage.from('news-images').getPublicUrl(path).data.publicUrl;
+  }
+
+  function resetForm() {
+    editingArticle = null;
+    existingDesktopUrl = '';
+    existingMobileUrl = '';
+    existingInlineImages = [];
+    form.reset();
+    $('#writerFormKicker').textContent = 'NY ARTIKEL';
+    $('#writerFormTitle').textContent = 'Skriv artikel';
+    $('#writerSubmitBtn').textContent = 'Skicka för granskning';
+    $('#writerCancelEdit').hidden = true;
+    $('#desktopExisting').hidden = true;
+    $('#mobileExisting').hidden = true;
+    ['inlineExisting1','inlineExisting1Mobile','inlineExisting2','inlineExisting2Mobile'].forEach((id) => { const el = $('#' + id); el.textContent = ''; el.hidden = true; });
+    status.textContent = '';
+    preview();
+  }
+
+  $('#writerCancelEdit').addEventListener('click', resetForm);
+
+  function articleStatusLabel(value) {
+    return ({ draft: 'UTKAST', pending: 'VÄNTAR PÅ GRANSKNING', published: 'PUBLICERAD', rejected: 'AVVISAD' })[value] || String(value || '').toUpperCase();
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  async function loadArticles() {
+    if (!currentWriter) return;
+    list.innerHTML = '<p class="writer-loading">Laddar artiklar…</p>';
+
+    let query = sb.from('seh_news_articles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (currentWriter.role !== 'admin') query = query.eq('writer_id', currentWriter.writer_id);
+
+    const { data, error } = await query;
+    if (error) {
+      list.innerHTML = `<p class="writer-error">Kunde inte hämta artiklar: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+
+    if (!data?.length) {
+      list.innerHTML = '<p class="writer-empty">Inga artiklar ännu.</p>';
+      return;
+    }
+
+    list.innerHTML = data.map((article) => {
+      const canEdit = currentWriter.role === 'admin' || article.status !== 'published';
+      const adminButtons = currentWriter.role === 'admin'
+        ? `<button type="button" data-admin-status="${article.id}" data-next-status="${article.status === 'published' ? 'pending' : 'published'}" class="writer-list-button writer-list-button--publish">${article.status === 'published' ? 'Avpublicera' : 'Publicera'}</button>
+           <button type="button" data-delete-article="${article.id}" class="writer-list-button writer-list-button--danger">Ta bort</button>`
+        : '';
+      return `<article class="writer-article-row" data-article-id="${article.id}">
+        <div class="writer-article-row__copy">
+          <div class="writer-article-row__meta">
+            <span class="writer-status writer-status--${escapeHtml(article.status)}">${escapeHtml(articleStatusLabel(article.status))}</span>
+            <span>${escapeHtml(article.author_name || '')}</span>
+            <span>${escapeHtml(String(article.created_at || '').slice(0,10))}</span>
+          </div>
+          <h3>${escapeHtml(article.title)}</h3>
+          <p>${escapeHtml(article.excerpt || '')}</p>
+        </div>
+        <div class="writer-article-row__actions">
+          <button type="button" data-preview-article="${article.id}" class="writer-list-button writer-list-button--preview">Förhandsgranska</button>
+          ${canEdit ? `<button type="button" data-edit-article="${article.id}" class="writer-list-button">Redigera</button>` : ''}
+          ${adminButtons}
+        </div>
+      </article>`;
+    }).join('');
+
+    list.querySelectorAll('[data-preview-article]').forEach((button) => button.addEventListener('click', () => previewArticle(Number(button.dataset.previewArticle))));
+    list.querySelectorAll('[data-edit-article]').forEach((button) => button.addEventListener('click', () => editArticle(Number(button.dataset.editArticle))));
+    list.querySelectorAll('[data-admin-status]').forEach((button) => button.addEventListener('click', () => setArticleStatus(Number(button.dataset.adminStatus), button.dataset.nextStatus)));
+    list.querySelectorAll('[data-delete-article]').forEach((button) => button.addEventListener('click', () => deleteArticle(Number(button.dataset.deleteArticle))));
+  }
+
+  async function getArticle(id) {
+    const { data, error } = await sb.from('seh_news_articles').select('*').eq('id', id).single();
+    if (error) throw error;
+    return data;
+  }
+
+  function formatPreviewDate(value) {
+    const raw = String(value || '').slice(0, 10);
+    const d = raw ? new Date(raw + 'T12:00:00') : null;
+    return d && !Number.isNaN(d.getTime())
+      ? d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' })
+      : raw;
+  }
+
+  function formatPreviewText(value) {
+    return formatRichText(value);
+  }
+
+  async function previewArticle(id) {
+    try {
+      const article = await getArticle(id);
+      const modal = $('#writerArticlePreviewModal');
+      const host = $('#writerArticlePreviewContent');
+      const bodyBlocks = parseEditorBlocks(Array.isArray(article.body) ? article.body.join('\n\n') : (article.body || article.excerpt || ''));
+      const inlineImages = normalizeInlineImages(article.inline_images);
+      const bodyHtml = renderRichBlocks(bodyBlocks, inlineImages, {
+        blockClass: 'writer-preview-article__paragraph',
+        leadClass: 'writer-preview-article__lead',
+        h2Class: 'writer-preview-article__h2',
+        h3Class: 'writer-preview-article__h3',
+        listClass: 'writer-preview-article__list',
+        inlineFigureClass: 'writer-preview-article__inline',
+        inlinePictureClass: 'writer-preview-article__inline-picture',
+        inlineCaptionClass: 'writer-preview-article__caption'
+      });
+
+      const desktop = String(article.desktop_image_url || '').trim();
+      const mobile = String(article.mobile_image_url || '').trim();
+      const hero = desktop ? `<picture class="writer-preview-article__hero">${mobile ? `<source media="(max-width:700px)" srcset="${escapeHtml(mobile)}">` : ''}<img src="${escapeHtml(desktop)}" alt="${escapeHtml(article.image_alt || article.title || '')}"></picture>` : '';
+
+      host.innerHTML = `<article class="writer-preview-article">
+        <header class="writer-preview-article__header">
+          <div class="writer-preview-article__meta"><span>${escapeHtml(article.tag || 'Nyhet')}</span><time>${escapeHtml(formatPreviewDate(article.created_at || article.published_at))}</time><b>${escapeHtml(article.author_name || currentWriter?.display_name || 'Svensk eHockey')}</b></div>
+          <h1 id="writerPreviewArticleTitle">${escapeHtml(article.title || '')}</h1>
+        </header>
+        ${hero}
+        <div class="writer-preview-article__body">${bodyHtml || `<p class="writer-preview-article__lead">${formatPreviewText(article.excerpt || '')}</p>`}</div>
+      </article>`;
+      modal.hidden = false;
+      document.body.classList.add('writer-preview-open');
+    } catch (err) {
+      alert('Kunde inte förhandsgranska artikeln: ' + (err?.message || err));
+    }
+  }
+
+  function closeArticlePreview() {
+    const modal = $('#writerArticlePreviewModal');
+    if (modal) modal.hidden = true;
+    document.body.classList.remove('writer-preview-open');
+  }
+
+  document.querySelectorAll('[data-close-preview]').forEach((el) => el.addEventListener('click', closeArticlePreview));
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeArticlePreview(); });
+
+  async function editArticle(id) {
+    try {
+      const article = await getArticle(id);
+      editingArticle = article;
+      existingDesktopUrl = article.desktop_image_url || '';
+      existingMobileUrl = article.mobile_image_url || '';
+      existingInlineImages = normalizeInlineImages(article.inline_images);
+      $('#title').value = article.title || '';
+      $('#tag').value = article.tag || 'Nyhet';
+      $('#excerpt').value = article.excerpt || '';
+      $('#body').value = paragraphsToText(article.body);
+      $('#imageAlt').value = article.image_alt || '';
+      const inline1 = existingInlineImages.find((item) => item.slot === 1) || {};
+      const inline2 = existingInlineImages.find((item) => item.slot === 2) || {};
+      $('#inlineCaption1').value = inline1.caption || '';
+      $('#inlineAlt1').value = inline1.image_alt || '';
+      $('#inlineCaption2').value = inline2.caption || '';
+      $('#inlineAlt2').value = inline2.image_alt || '';
+      $('#desktopExisting').textContent = existingDesktopUrl ? 'Nuvarande desktopbild behålls om du inte väljer en ny.' : '';
+      $('#desktopExisting').hidden = !existingDesktopUrl;
+      $('#mobileExisting').textContent = existingMobileUrl ? 'Nuvarande mobilbild behålls om du inte väljer en ny.' : '';
+      $('#mobileExisting').hidden = !existingMobileUrl;
+      $('#inlineExisting1').textContent = inline1.image_url ? 'Nuvarande desktopbild 1 behålls om du inte väljer en ny.' : '';
+      $('#inlineExisting1').hidden = !inline1.image_url;
+      $('#inlineExisting1Mobile').textContent = inline1.image_mobile_url ? 'Nuvarande mobilbild 1 behålls om du inte väljer en ny.' : '';
+      $('#inlineExisting1Mobile').hidden = !inline1.image_mobile_url;
+      $('#inlineExisting2').textContent = inline2.image_url ? 'Nuvarande desktopbild 2 behålls om du inte väljer en ny.' : '';
+      $('#inlineExisting2').hidden = !inline2.image_url;
+      $('#inlineExisting2Mobile').textContent = inline2.image_mobile_url ? 'Nuvarande mobilbild 2 behålls om du inte väljer en ny.' : '';
+      $('#inlineExisting2Mobile').hidden = !inline2.image_mobile_url;
+      $('#writerFormKicker').textContent = currentWriter.role === 'admin' ? 'ADMIN / REDIGERA' : 'REDIGERA ARTIKEL';
+      $('#writerFormTitle').textContent = 'Redigera artikel';
+      $('#writerSubmitBtn').textContent = 'Spara ändringar';
+      $('#writerCancelEdit').hidden = false;
+      status.textContent = '';
+      preview();
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      status.textContent = 'Fel: ' + (err?.message || err);
+    }
+  }
+
+  async function setArticleStatus(id, nextStatus) {
+    if (currentWriter?.role !== 'admin') return;
+    const action = nextStatus === 'published' ? 'publicera' : 'avpublicera';
+    if (!confirm(`Vill du ${action} artikeln?`)) return;
+    const patch = {
+      status: nextStatus,
+      updated_at: new Date().toISOString(),
+      published_at: nextStatus === 'published' ? new Date().toISOString() : null
+    };
+    const { error } = await sb.from('seh_news_articles').update(patch).eq('id', id);
+    if (error) alert('Fel: ' + error.message);
+    await loadArticles();
+  }
+
+  async function deleteArticle(id) {
+    if (currentWriter?.role !== 'admin') return;
+    const article = await getArticle(id).catch(() => null);
+    const name = article?.title ? `“${article.title}”` : 'artikeln';
+    if (!confirm(`Ta bort ${name} permanent?\n\nDetta går inte att ångra.`)) return;
+    const { error } = await sb.from('seh_news_articles').delete().eq('id', id);
+    if (error) {
+      alert('Fel: ' + error.message);
+      return;
+    }
+    if (editingArticle?.id === id) resetForm();
+    await loadArticles();
+  }
+
+  $('#writerRefreshArticles').addEventListener('click', loadArticles);
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    status.textContent = editingArticle ? 'Sparar ändringar…' : 'Laddar upp och skickar…';
+
+    try {
+      if (!currentWriter) throw new Error('Du är inte inloggad.');
+      if (!editingArticle && !$('#desktopImage').files[0]) throw new Error('Välj en desktopbild.');
+
+      const baseSlug = slugify($('#title').value) || 'nyhet';
+      const slug = editingArticle?.slug || `${baseSlug}-${Date.now().toString().slice(-6)}`;
+      const desktop = $('#desktopImage').files[0]
+        ? await upload($('#desktopImage').files[0], 'desktop', currentWriter.writer_id, slug)
+        : existingDesktopUrl;
+      const mobile = $('#mobileImage').files[0]
+        ? await upload($('#mobileImage').files[0], 'mobile', currentWriter.writer_id, slug)
+        : existingMobileUrl;
+
+      const authUser = currentAuthUser || await getCurrentAuthUser();
+      if (!authUser?.id) throw new Error('Kunde inte läsa inloggad användare. Logga ut och in igen.');
+      currentAuthUser = authUser;
+
+      const existingInline1 = existingInlineImages.find((item) => item.slot === 1) || {};
+      const existingInline2 = existingInlineImages.find((item) => item.slot === 2) || {};
+      const inline1Url = $('#inlineImage1').files[0]
+        ? await upload($('#inlineImage1').files[0], 'inline-1', currentWriter.writer_id, slug)
+        : (existingInline1.image_url || '');
+      const inline1MobileUrl = $('#inlineImage1Mobile').files[0]
+        ? await upload($('#inlineImage1Mobile').files[0], 'inline-1-mobile', currentWriter.writer_id, slug)
+        : (existingInline1.image_mobile_url || '');
+      const inline2Url = $('#inlineImage2').files[0]
+        ? await upload($('#inlineImage2').files[0], 'inline-2', currentWriter.writer_id, slug)
+        : (existingInline2.image_url || '');
+      const inline2MobileUrl = $('#inlineImage2Mobile').files[0]
+        ? await upload($('#inlineImage2Mobile').files[0], 'inline-2-mobile', currentWriter.writer_id, slug)
+        : (existingInline2.image_mobile_url || '');
+      const inlineImages = [
+        { slot: 1, after_paragraph: 4, image_url: inline1Url, image_mobile_url: inline1MobileUrl, image_alt: $('#inlineAlt1').value.trim(), caption: $('#inlineCaption1').value.trim() },
+        { slot: 2, after_paragraph: 10, image_url: inline2Url, image_mobile_url: inline2MobileUrl, image_alt: $('#inlineAlt2').value.trim(), caption: $('#inlineCaption2').value.trim() }
+      ].filter((item) => item.image_url || item.image_mobile_url);
+
+      const payload = {
+        writer_id: currentWriter.writer_id,
+        author_id: authUser.id,
+        author_email: authUser.email || '',
+        author_name: editingArticle?.author_name || currentWriter.display_name,
+        slug,
+        title: $('#title').value.trim(),
+        excerpt: $('#excerpt').value.trim(),
+        body: paragraphArray($('#body').value),
+        inline_images: inlineImages,
+        tag: $('#tag').value,
+        desktop_image_url: desktop,
+        mobile_image_url: mobile,
+        image_alt: $('#imageAlt').value.trim(),
+        updated_at: new Date().toISOString()
+      };
+
+      if (editingArticle) {
+        if (currentWriter.role !== 'admin' && editingArticle.status === 'published') throw new Error('En publicerad artikel kan bara redigeras av admin.');
+        const { error } = await sb.from('seh_news_articles').update(payload).eq('id', editingArticle.id);
+        if (error) throw error;
+        status.textContent = 'Ändringarna är sparade.';
+      } else {
+        payload.status = 'pending';
+        const { error } = await sb.from('seh_news_articles').insert(payload);
+        if (error) throw error;
+        status.textContent = 'Klart! Artikeln är inskickad för granskning.';
+      }
+
+      resetForm();
+      await loadArticles();
+      manager.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      status.textContent = 'Fel: ' + (err?.message || err);
+    }
+  });
+
+  if (sb) {
+    loadCurrentWriter().finally(() => { refreshStandaloneHeader(); window.SEH_refreshAuth?.(); });
+  }
+})();
+  }
+
+  function SEH_initAdminCenter() {
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const cfg = window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
+  const supabaseUrl = cfg.supabaseUrl || cfg.SUPABASE_URL || '';
+  const supabaseKey = cfg.supabasePublishableKey || cfg.supabaseAnonKey || cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_PUBLISHABLE_KEY || '';
+  let sb = null;
+  try { if (!window.supabase?.createClient) throw Error('Supabase-biblioteket kunde inte laddas.'); if (!supabaseUrl || !supabaseKey) throw Error('Supabase-inställningar saknas i config.js.'); sb = sehGetAuthClient(); } catch (e) { $('adminLoginStatus').textContent = 'Fel: ' + e.message; }
+  let writer = null, requestId = sessionStorage.getItem('seh_player_sync_request_id') || '', timer = null;
+  let statsRequestId = sessionStorage.getItem('seh_player_stats_sync_request_id') || '', statsTimer = null;
+  const rpcRow = (value) => Array.isArray(value) ? value[0] : value;
+  const emailFor = (v) => { const n = String(v || '').trim().toLowerCase(); return /^[a-z0-9._-]{2,40}$/.test(n) ? n + '@writers.svenskehockey.se' : ''; };
+
+  const standaloneHeader = document.querySelector('.seh-header--standalone');
+
+  const headerIdentifierToEmail = (value) => {
+    const identifier = String(value || '').trim().toLowerCase();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier)) return identifier;
+    return emailFor(identifier);
+  };
+
+  async function resolveHeaderWriter() {
+    if (!sb) return null;
+    try {
+      const current = await sb.rpc('seh_current_writer');
+      if (!current.error) {
+        const row = rpcRow(current.data);
+        if (row?.writer_id) return row;
+      }
+    } catch (_) {}
+    try {
+      const claimed = await sb.rpc('seh_claim_writer');
+      if (!claimed.error) {
+        const row = rpcRow(claimed.data);
+        if (row?.writer_id) return row;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  function updateStandaloneHeader(session, writerRow) {
+    if (!standaloneHeader) return;
+    const loggedIn = Boolean(session?.user && !session.user.is_anonymous);
+    const isWriter = Boolean(writerRow?.writer_id);
+    const isAdmin = isWriter && String(writerRow?.role || '').toLowerCase() === 'admin';
+
+    const writerLink = standaloneHeader.querySelector('[data-seh-auth-link="writer"]');
+    const adminLink = standaloneHeader.querySelector('[data-seh-auth-link="admin"]');
+    if (writerLink) writerLink.hidden = !isWriter;
+    if (adminLink) adminLink.hidden = !isAdmin;
+
+    const authRoot = standaloneHeader.querySelector('.seh-auth');
+    const authButton = standaloneHeader.querySelector('#sehAuthButton');
+    const authPanel = standaloneHeader.querySelector('#sehAuthPanel');
+    const authStatus = standaloneHeader.querySelector('#sehAuthStatus');
+    if (authRoot) authRoot.dataset.state = loggedIn ? 'logged-in' : 'logged-out';
+
+    if (authButton) {
+      authButton.textContent = loggedIn ? 'LOGGA UT' : 'LOGGA IN';
+      authButton.classList.toggle('is-authenticated', loggedIn);
+      authButton.setAttribute('aria-expanded', 'false');
+      authButton.setAttribute('aria-label', loggedIn ? 'Logga ut' : 'Logga in');
+    }
+    if (loggedIn && authPanel) authPanel.hidden = true;
+    if (authStatus && loggedIn) {
+      authStatus.textContent = '';
+      authStatus.removeAttribute('data-tone');
+    }
+  }
+
+  async function refreshStandaloneHeader() {
+    if (!standaloneHeader || !sb) return;
+    try {
+      const { data, error } = await sb.auth.getSession();
+      if (error) throw error;
+      const session = data?.session || null;
+      const row = session?.user && !session.user.is_anonymous ? await resolveHeaderWriter() : null;
+      updateStandaloneHeader(session, row);
+    } catch (err) {
+      console.warn('Kunde inte uppdatera huvudmenyns inloggningsstatus:', err);
+      updateStandaloneHeader(null, null);
+    }
+  }
+
+  function bindStandaloneHeader() {
+    if (!standaloneHeader || !sb) return;
+    const menuButton = standaloneHeader.querySelector('.seh-menu-button');
+    const navigation = standaloneHeader.querySelector('.seh-nav');
+    const authButton = standaloneHeader.querySelector('#sehAuthButton');
+    const authPanel = standaloneHeader.querySelector('#sehAuthPanel');
+    const authForm = standaloneHeader.querySelector('#sehAuthForm');
+    const identifier = standaloneHeader.querySelector('#sehAuthIdentifier');
+    const password = standaloneHeader.querySelector('#sehAuthPassword');
+    const authStatus = standaloneHeader.querySelector('#sehAuthStatus');
+
+    menuButton?.addEventListener('click', () => {
+      const open = !navigation?.classList.contains('is-open');
+      navigation?.classList.toggle('is-open', open);
+      menuButton.setAttribute('aria-expanded', String(open));
+    });
+
+    authButton?.addEventListener('click', async () => {
+      const { data } = await sb.auth.getSession();
+      const loggedIn = Boolean(data?.session?.user && !data.session.user.is_anonymous);
+      if (loggedIn) {
+        clearTimeout(timer);
+        clearTimeout(statsTimer);
+        try { await sb.auth.signOut(); } catch (_) {}
+        writer = null;
+        $('adminDashboard').hidden = true;
+        $('adminLogin').hidden = false;
+        updateStandaloneHeader(null, null);
+        return;
+      }
+      const open = authPanel?.hidden !== false;
+      if (authPanel) authPanel.hidden = !open;
+      authButton.setAttribute('aria-expanded', String(open));
+      if (open) requestAnimationFrame(() => identifier?.focus());
+    });
+
+    authForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = headerIdentifierToEmail(identifier?.value);
+      const passwordValue = String(password?.value || '');
+      const submit = authForm.querySelector('button[type="submit"]');
+
+      if (!email) {
+        authStatus.textContent = 'Skriv ett giltigt användarnamn eller en e-postadress.';
+        authStatus.dataset.tone = 'error';
+        return;
+      }
+      if (!passwordValue) {
+        authStatus.textContent = 'Skriv ditt lösenord.';
+        authStatus.dataset.tone = 'error';
+        return;
+      }
+
+      authStatus.textContent = 'Loggar in…';
+      authStatus.dataset.tone = 'working';
+      if (submit) submit.disabled = true;
+
+      try {
+        try { await sb.auth.signOut(); } catch (_) {}
+        const { data, error } = await sb.auth.signInWithPassword({ email, password: passwordValue });
+        if (error) {
+          if (/invalid login credentials/i.test(error.message || '')) throw new Error('Fel användarnamn/e-post eller lösenord.');
+          throw error;
+        }
+
+        const row = await resolveHeaderWriter();
+        updateStandaloneHeader(data?.session || null, row);
+        if (identifier) identifier.value = '';
+        if (password) password.value = '';
+        authStatus.textContent = '';
+        authPanel.hidden = true;
+
+        if (row?.role === 'admin') {
+          writer = row;
+          $('adminDisplayName').textContent = writer.display_name || email;
+          $('adminLogin').hidden = true;
+          $('adminDashboard').hidden = false;
+          if (requestId) refresh(true);
+          if (statsRequestId) refreshStats(true);
+        }
+      } catch (err) {
+        try { await sb.auth.signOut(); } catch (_) {}
+        updateStandaloneHeader(null, null);
+        authStatus.textContent = 'Fel: ' + (err?.message || err);
+        authStatus.dataset.tone = 'error';
+      } finally {
+        if (submit) submit.disabled = false;
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!authPanel || authPanel.hidden || standaloneHeader.contains(event.target)) return;
+      authPanel.hidden = true;
+      authButton?.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  bindStandaloneHeader();
+  const setStatus = (text, tone='') => { $('playerSyncStatus').textContent = text; $('playerSyncStatus').dataset.tone = tone; };
+  const busy = (v) => { $('startPlayerSync').disabled = v; $('refreshPlayerSync').disabled = v || !requestId; };
+  const makeId = () => window.crypto?.randomUUID ? 'web_' + crypto.randomUUID().replaceAll('-','') : 'web_' + Date.now();
+  async function invoke(action){ const r = await sb.functions.invoke('seh-admin-sync',{body:{action,job:'swedish_players',request_id:requestId}}); if(r.error){let message=r.error.message||'Synktjänsten svarade med ett fel.';try{const details=await r.error.context?.json();if(details?.error)message=details.error}catch(_){}throw new Error(message)} if(r.data?.error) throw new Error(r.data.error); return r.data || {}; }
+  async function invokeStats(action){ const r = await sb.functions.invoke('seh-admin-sync',{body:{action,job:'swedish_player_stats',request_id:statsRequestId}}); if(r.error){let message=r.error.message||'Synktjänsten svarade med ett fel.';try{const details=await r.error.context?.json();if(details?.error)message=details.error}catch(_){}throw new Error(message)} if(r.data?.error) throw new Error(r.data.error); return r.data || {}; }
+  async function refresh(poll=false){ if(!requestId) return; busy(true); try { const d=await invoke('status'); const done=d.state==='completed'; setStatus(done ? (d.conclusion==='success'?'Klart – spelarregistret är uppdaterat.':'Synkningen misslyckades.') : 'Synkningen körs…', done&&d.conclusion==='success'?'success':done?'error':'working'); if(d.run_url){const a=document.createElement('a');a.href=d.run_url;a.target='_blank';a.textContent=' Visa körlogg';$('playerSyncStatus').append(a)} if(poll&&!done) timer=setTimeout(()=>refresh(true),7000); } catch(e){setStatus('Fel: '+(e.message||e),'error')} finally{busy(false)} }
+  const setStatsStatus=(text,tone='')=>{$('statsSyncStatus').textContent=text;$('statsSyncStatus').dataset.tone=tone};
+  const busyStats=(v)=>{$('startStatsSync').disabled=v;$('refreshStatsSync').disabled=v||!statsRequestId};
+  async function refreshStats(poll=false){if(!statsRequestId)return;busyStats(true);try{const d=await invokeStats('status');const done=d.state==='completed';setStatsStatus(done?(d.conclusion==='success'?'Klart – svensk spelarstatistik är uppdaterad.':'Statistiksynkningen misslyckades.'):'Statistiksynkningen körs…',done&&d.conclusion==='success'?'success':done?'error':'working');if(d.run_url){const a=document.createElement('a');a.href=d.run_url;a.target='_blank';a.textContent=' Visa körlogg';$('statsSyncStatus').append(a)}if(poll&&!done)statsTimer=setTimeout(()=>refreshStats(true),7000)}catch(e){setStatsStatus('Fel: '+(e.message||e),'error')}finally{busyStats(false)}}
+  async function login(){ $('adminLoginStatus').textContent='Loggar in…'; try { if(!sb) throw Error('Supabase är inte initierat.'); const em=emailFor($('adminUsername').value); if(!em) throw Error('Skriv ett giltigt inloggningsnamn.'); try { await sb.auth.signOut(); } catch (_) {} const r=await sb.auth.signInWithPassword({email:em,password:$('adminPassword').value}); if(r.error) { if(/invalid login credentials/i.test(r.error.message||'')) throw Error('Fel inloggningsnamn eller lösenord.'); throw r.error; } const c=await sb.rpc('seh_claim_writer'); if(c.error) throw c.error; writer=rpcRow(c.data); if(writer?.role!=='admin') throw Error('Kontot saknar adminbehörighet.'); $('adminDisplayName').textContent=writer.display_name||em; $('adminLogin').hidden=true; $('adminDashboard').hidden=false; $('adminLoginStatus').textContent=''; if(requestId) refresh(true); if(statsRequestId) refreshStats(true); await refreshStandaloneHeader(); await window.SEH_refreshAuth?.(); } catch(e){$('adminLoginStatus').textContent='Fel: '+(e.message||e); await refreshStandaloneHeader(); await window.SEH_refreshAuth?.();} }
+  $('adminLoginBtn').onclick=login; ['adminUsername','adminPassword'].forEach(id=>$(id).onkeydown=e=>{if(e.key==='Enter')login()});
+  $('adminLogout').onclick=async()=>{clearTimeout(timer);clearTimeout(statsTimer);await sb?.auth.signOut();writer=null;$('adminDashboard').hidden=true;$('adminLogin').hidden=false;updateStandaloneHeader(null,null)};
+  $('startPlayerSync').onclick=async()=>{if(!confirm('Starta synkningen av svenska SportsGamer-spelare nu?'))return; requestId=makeId();sessionStorage.setItem('seh_player_sync_request_id',requestId);busy(true);setStatus('Startar synkningen…','working');try{await invoke('start');await refresh(true)}catch(e){setStatus('Fel: '+(e.message||e),'error');busy(false)}};
+  $('refreshPlayerSync').onclick=()=>refresh(false);
+  $('startStatsSync').onclick=async()=>{if(!confirm('Hämta ny statistik för alla registrerade svenska SportsGamer-spelare nu? SportsGamer-databasen kommer endast att läsas.'))return;statsRequestId=makeId();sessionStorage.setItem('seh_player_stats_sync_request_id',statsRequestId);busyStats(true);setStatsStatus('Startar statistiksynkningen…','working');try{await invokeStats('start');await refreshStats(true)}catch(e){setStatsStatus('Fel: '+(e.message||e),'error');busyStats(false)}};
+  $('refreshStatsSync').onclick=()=>refreshStats(false);
+  $('resetPasswordBtn').onclick=async()=>{const username=$('resetUsername').value.trim();const password=$('resetPassword').value;if(!password||password.length<8){$('resetPasswordStatus').textContent='Lösenordet måste vara minst 8 tecken.';return}if(!confirm('Sätt nytt lösenord för '+username+'?'))return;$('resetPasswordStatus').textContent='Uppdaterar…';try{const r=await sb.functions.invoke('seh-admin-password',{body:{username,password}});if(r.error)throw r.error;if(r.data?.error)throw Error(r.data.error);$('resetPasswordStatus').textContent='Lösenordet är uppdaterat.';$('resetPasswordStatus').dataset.tone='success';$('resetPassword').value=''}catch(e){$('resetPasswordStatus').textContent='Fel: '+(e.message||e);$('resetPasswordStatus').dataset.tone='error'}};
+  sb?.auth.getSession().then(async({data})=>{if(data.session){const c=await sb.rpc('seh_current_writer');const current=rpcRow(c.data);if(!c.error&&current?.role==='admin'){writer=current;$('adminDisplayName').textContent=writer.display_name||'Admin';$('adminLogin').hidden=true;$('adminDashboard').hidden=false;if(requestId)refresh(true);if(statsRequestId)refreshStats(true)}}await refreshStandaloneHeader(); await window.SEH_refreshAuth?.()});
+})();
+  }
+
+  const routeBodyClasses = {"home": "directory-page portal-page", "news": "directory-page portal-page", "players": "directory-page portal-page", "history": "directory-page", "player": "history-body", "team": "history-body", "teamTournament": "history-body", "tournament": "history-body tournament-overview-body", "shop": "directory-page shop-page", "support": "directory-page portal-page support-page", "ecl": "directory-page portal-page", "season": "directory-page portal-page", "writer": "directory-page writer-page", "admin": "directory-page"};
 
   const routeControllers = {
+    ecl: SEH_initEcl,
     news: SEH_initNews,
     history: SEH_initHistory,
     players: SEH_initPlayers,
@@ -10480,7 +14125,9 @@ function SEH_initShop() {
     team: SEH_initTeam,
     teamTournament: SEH_initTeamTournament,
     tournament: SEH_initTournament,
-    shop: SEH_initShop
+    shop: SEH_initShop,
+    writer: SEH_initWriterCenter,
+    admin: SEH_initAdminCenter
   };
 
   async function SEH_initNews() {
@@ -10823,24 +14470,195 @@ function SEH_initShop() {
   }
 
   const seasons = {
-    ecl26spring: {
-      id: "ecl26spring",
-      title: "ECL ’26: Spring",
-      databaseLabel: "ECL 26 Spring",
-      leagueIds: [507, 508, 509, 510, 511],
-      countryCode: "SE"
+    ecl1: {
+      id: "ecl1", title: "ECL 1", archiveLabel: "SÄSONG 1", archiveEra: "classic",
+      databaseLabel: "European Championship League - Season 1", leagueIds: [4], countryCode: "SE",
+      divisions: [{ id: "ecl", label: "ECL" }], divisionFallback: "ECL",
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl2: {
+      id: "ecl2", title: "ECL 2", archiveLabel: "SÄSONG 2", archiveEra: "classic",
+      databaseLabel: "European Championship League - Season 2", leagueIds: [5], countryCode: "SE",
+      divisions: [{ id: "ecl", label: "ECL" }], divisionFallback: "ECL",
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl3: {
+      id: "ecl3", title: "ECL 3", archiveLabel: "SÄSONG 3", archiveEra: "classic",
+      databaseLabel: "European Championship League - Season 3", leagueIds: [17], countryCode: "SE",
+      divisions: [{ id: "ecl", label: "ECL" }], divisionFallback: "ECL",
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl4: {
+      id: "ecl4", title: "ECL 4", archiveLabel: "SÄSONG 4", archiveEra: "classic",
+      databaseLabel: "ECL 4", leagueIds: [18, 19, 20], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl5: {
+      id: "ecl5", title: "ECL 5", archiveLabel: "SÄSONG 5", archiveEra: "classic",
+      databaseLabel: "ECL 5", leagueIds: [23, 24, 25], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl6: {
+      id: "ecl6", title: "ECL 6", archiveLabel: "SÄSONG 6", archiveEra: "classic",
+      databaseLabel: "ECL 6", leagueIds: [27, 28, 29], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl7: {
+      id: "ecl7", title: "ECL 7", archiveLabel: "SÄSONG 7", archiveEra: "classic",
+      databaseLabel: "ECL 7", leagueIds: [35, 36, 37], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl8: {
+      id: "ecl8", title: "ECL 8", archiveLabel: "SÄSONG 8", archiveEra: "classic",
+      databaseLabel: "ECL 8", leagueIds: [40, 41, 42], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl9: {
+      id: "ecl9", title: "ECL 9", archiveLabel: "SÄSONG 9", archiveEra: "classic",
+      databaseLabel: "ECL 9", leagueIds: [55, 56, 57, 58], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl10: {
+      id: "ecl10", title: "ECL 10", archiveLabel: "SÄSONG 10", archiveEra: "classic",
+      databaseLabel: "ECL 10", leagueIds: [65, 66, 67, 68], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl11: {
+      id: "ecl11", title: "ECL 11", archiveLabel: "SÄSONG 11", archiveEra: "classic",
+      databaseLabel: "ECL 11", leagueIds: [94, 95, 96, 97], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl12: {
+      id: "ecl12", title: "ECL 12", archiveLabel: "SÄSONG 12", archiveEra: "classic",
+      databaseLabel: "ECL 12", leagueIds: [119, 120, 121, 122, 123], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl22winter: {
+      id: "ecl22winter", title: "ECL ’22: Winter", archiveLabel: "2021/22", archiveEra: "modern",
+      databaseLabel: "ECL 22 Winter", leagueIds: [170, 171, 172, 173, 174], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl22spring: {
+      id: "ecl22spring", title: "ECL ’22: Spring", archiveLabel: "2022", archiveEra: "modern",
+      databaseLabel: "ECL 22 Spring", leagueIds: [190, 191, 192, 193, 194], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl23winter: {
+      id: "ecl23winter", title: "ECL ’23: Winter", archiveLabel: "2022/23", archiveEra: "modern",
+      databaseLabel: "ECL 23 Winter", leagueIds: [250, 251, 252, 253, 254], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl23spring: {
+      id: "ecl23spring", title: "ECL ’23: Spring", archiveLabel: "2023", archiveEra: "modern",
+      databaseLabel: "ECL 23 Spring", leagueIds: [305, 306, 307, 308, 309], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl24winter: {
+      id: "ecl24winter", title: "ECL ’24: Winter", archiveLabel: "2023/24", archiveEra: "modern",
+      databaseLabel: "ECL 24 Winter", leagueIds: [338, 339, 340, 341, 342], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl24spring: {
+      id: "ecl24spring", title: "ECL ’24: Spring", archiveLabel: "2024", archiveEra: "modern",
+      databaseLabel: "ECL 24 Spring", leagueIds: [379, 380, 381, 382, 383], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl25winter: {
+      id: "ecl25winter", title: "ECL ’25: Winter", archiveLabel: "2024/25", archiveEra: "modern",
+      databaseLabel: "ECL 25 Winter", leagueIds: [411, 412, 413, 414, 415], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl25spring: {
+      id: "ecl25spring", title: "ECL ’25: Spring", archiveLabel: "2025", archiveEra: "modern",
+      databaseLabel: "ECL 25 Spring", leagueIds: [461, 462, 463, 464, 465], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
     },
     ecl26winter: {
-      id: "ecl26winter",
-      title: "ECL ’26: Winter",
-      databaseLabel: "ECL 26 Winter"
+      id: "ecl26winter", title: "ECL ’26: Winter", archiveLabel: "2025/26", archiveEra: "modern",
+      databaseLabel: "ECL 26 Winter", leagueIds: [487, 488, 489, 490, 491], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ecl26spring: {
+      id: "ecl26spring", title: "ECL ’26: Spring", archiveLabel: "2026", archiveEra: "modern",
+      databaseLabel: "ECL 26 Spring", leagueIds: [507, 508, 509, 510, 511], countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
+      sections: ["overview", "matches", "transfers", "teams", "statistics"], completed: true
     },
     ecl27winter: {
-      id: "ecl27winter",
-      title: "ECL ’27: Winter",
-      databaseLabel: "ECL 27 Winter"
+      id: "ecl27winter", title: "ECL ’27: Winter", archiveLabel: "2026/27", archiveEra: "current",
+      databaseLabel: "ECL 27 Winter", countryCode: "SE",
+      divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
+      sections: ["overview"], status: "upcoming"
     }
   };
+
+
+  function seasonSectionLabels(season) {
+    const labels = { matches: "Matcher", transfers: "Byten", teams: "Lag", statistics: "Statistik" };
+    return (season.sections || [])
+      .filter((section) => section !== "overview")
+      .map((section) => labels[section])
+      .filter(Boolean);
+  }
+
+  function ECL_archiveCard(season) {
+    const available = seasonSectionLabels(season);
+    return `
+      <a href="#/sasong/${escapeHtml(season.id)}" class="ecl-archive-card-v12852">
+        <span>${escapeHtml(season.archiveLabel || "")}</span>
+        <strong>${escapeHtml(season.title)}</strong>
+        <small>${escapeHtml(available.join(" · ") || "Översikt")}</small>
+        <b>Öppna →</b>
+      </a>`;
+  }
+
+  function SEH_initEcl() {
+    const host = document.querySelector("#eclArchiveGroups");
+    if (!host) return;
+
+    const modern = Object.values(seasons)
+      .filter((season) => season.archiveEra === "modern")
+      .reverse();
+    const classic = Object.values(seasons)
+      .filter((season) => season.archiveEra === "classic")
+      .reverse();
+
+    host.innerHTML = `
+      <section class="ecl-archive-era-v12852">
+        <div class="ecl-archive-era-v12852__heading">
+          <div><span>2022–2026</span><h3>Winter / Spring</h3></div>
+          <small>${modern.length} säsonger</small>
+        </div>
+        <div class="ecl-archive-grid-v12840">${modern.map(ECL_archiveCard).join("")}</div>
+      </section>
+      <section class="ecl-archive-era-v12852">
+        <div class="ecl-archive-era-v12852__heading">
+          <div><span>2015–2021</span><h3>ECL 1–12</h3></div>
+          <small>${classic.length} säsonger</small>
+        </div>
+        <div class="ecl-archive-grid-v12840">${classic.map(ECL_archiveCard).join("")}</div>
+      </section>
+    `;
+  }
+
 
   let renderToken = 0;
 
@@ -10866,7 +14684,7 @@ function SEH_initShop() {
 
   function normalizeSeasonId(value) {
     const id = String(value || "").trim().toLowerCase();
-    return seasons[id] ? id : "ecl26spring";
+    return seasons[id] ? id : "ecl27winter";
   }
 
   function parseRoute() {
@@ -10905,6 +14723,33 @@ function SEH_initShop() {
 
     if (!parts.length) return route;
 
+    if (parts[0] === "skriv" && parts.length === 1) {
+      return {
+        ...route,
+        key: "writer",
+        label: "Skrivcenter",
+        active: "writer"
+      };
+    }
+
+    if (parts[0] === "admin" && parts.length === 1) {
+      return {
+        ...route,
+        key: "admin",
+        label: "Admincenter",
+        active: "admin"
+      };
+    }
+
+    if (parts[0] === "stod" && parts.length === 1) {
+      return {
+        ...route,
+        key: "support",
+        label: "Stöd Svensk eHockey",
+        active: "support"
+      };
+    }
+
     if (parts[0] === "shop" && parts.length === 1) {
       return {
         ...route,
@@ -10934,6 +14779,15 @@ function SEH_initShop() {
         params: {
           newsSlug: parts.slice(1).join("/")
         }
+      };
+    }
+
+    if (parts[0] === "ecl" && parts.length === 1) {
+      return {
+        ...route,
+        key: "ecl",
+        label: "ECL",
+        active: "ecl"
       };
     }
 
@@ -11022,7 +14876,7 @@ function SEH_initShop() {
         ...route,
         key: "season",
         label: seasons[seasonId].title,
-        active: "season",
+        active: "ecl",
         params: {
           seasonId
         }
@@ -11095,17 +14949,43 @@ function SEH_initShop() {
           </a>
 
           <a
+            class="${route.active === "ecl" ? "is-active" : ""}"
+            href="#/sasong/ecl27winter"
+          >
+            ECL
+          </a>
+
+          <a
             class="${route.active === "shop" ? "is-active" : ""}"
             href="#/shop"
           >
             SHOP
           </a>
 
+
           <a
             class="seh-nav-sec"
             href="https://www.svenskehockey.se/SEC/"
           >
             SEC
+          </a>
+
+          <a
+            class="seh-nav-auth seh-nav-auth--writer ${route.active === "writer" ? "is-active" : ""}"
+            data-seh-auth-link="writer"
+            href="#/skriv"
+            hidden
+          >
+            Skrivcenter
+          </a>
+
+          <a
+            class="seh-nav-auth seh-nav-auth--admin ${route.active === "admin" ? "is-active" : ""}"
+            data-seh-auth-link="admin"
+            href="#/admin"
+            hidden
+          >
+            Admincenter
           </a>
         </nav>
 
@@ -11128,6 +15008,46 @@ function SEH_initShop() {
             </select>
           </label>
 
+          <div class="seh-auth" data-state="logged-out">
+            <button
+              id="sehAuthButton"
+              class="seh-auth-trigger"
+              type="button"
+              aria-expanded="false"
+              aria-controls="sehAuthPanel"
+            >
+              LOGGA IN
+            </button>
+
+            <div id="sehAuthPanel" class="seh-auth-panel" hidden>
+              <form id="sehAuthForm" novalidate>
+                <div class="seh-auth-panel__heading">
+                  <span>SVENSK eHOCKEY</span>
+                  <strong>Logga in</strong>
+                </div>
+                <label>
+                  <span>Användarnamn eller e-post</span>
+                  <input
+                    id="sehAuthIdentifier"
+                    type="text"
+                    autocomplete="username"
+                    spellcheck="false"
+                    placeholder="eSwahn"
+                  >
+                </label>
+                <label>
+                  <span>Lösenord</span>
+                  <input
+                    id="sehAuthPassword"
+                    type="password"
+                    autocomplete="current-password"
+                  >
+                </label>
+                <p id="sehAuthStatus" class="seh-auth-status" role="status" aria-live="polite"></p>
+                <button class="seh-auth-submit" type="submit">Logga in</button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -11173,6 +15093,51 @@ function SEH_initShop() {
 
       navigation.classList.remove("is-open");
     });
+
+    const authButton = header.querySelector("#sehAuthButton");
+    const authPanel = header.querySelector("#sehAuthPanel");
+    const authForm = header.querySelector("#sehAuthForm");
+
+    authButton?.addEventListener("click", async () => {
+      const loggedIn = Boolean(sehAuthState.session?.user && !sehAuthState.session.user.is_anonymous);
+
+      if (loggedIn) {
+        const client = sehGetAuthClient();
+        authButton.disabled = true;
+        try {
+          await client?.auth.signOut();
+          await sehRefreshAuthAccess(null);
+        } catch (error) {
+          console.warn("Kunde inte logga ut", error);
+        } finally {
+          authButton.disabled = false;
+        }
+        return;
+      }
+
+      if (!authPanel) return;
+      const open = !authPanel.hidden;
+      authPanel.hidden = open;
+      authButton.setAttribute("aria-expanded", String(!open));
+      if (!open) {
+        requestAnimationFrame(() => header.querySelector("#sehAuthIdentifier")?.focus());
+      }
+    });
+
+    authForm?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      sehLoginFromHeader(header);
+    });
+
+    authPanel?.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      authPanel.hidden = true;
+      authButton?.setAttribute("aria-expanded", "false");
+      authButton?.focus();
+    });
+
+    sehUpdateHeaderAuth(header);
+    sehInitializeAuth();
   }
 
   function titleFor(route) {
@@ -11188,11 +15153,15 @@ function SEH_initShop() {
       news: "Nyheter – Svensk eHockey",
       players: "Spelare – Svensk eHockey",
       history: "Laghistoria – Svensk eHockey",
+      ecl: "ECL – Svensk eHockey",
       player: "Spelarprofil – Svensk eHockey",
       team: "Lagprofil – Svensk eHockey",
       teamTournament: "Lag i turnering – Svensk eHockey",
       tournament: "Turnering – Svensk eHockey",
       shop: "Shop – Svensk eHockey",
+      support: "Stöd Svensk eHockey",
+      writer: "Skrivcenter – Svensk eHockey",
+      admin: "Admincenter – Svensk eHockey",
       notFound: "Sidan saknas – Svensk eHockey"
     };
 
@@ -11322,6 +15291,96 @@ function SEH_initShop() {
     return rows;
   }
 
+  function seasonSupabaseMatchRows(rows) {
+    const stockholmTime = new Intl.DateTimeFormat("sv-SE", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "Europe/Stockholm"
+    });
+
+    return (rows || []).map((row) => {
+      const playedAt = String(row.played_at || "");
+      const parsed = playedAt ? new Date(playedAt) : null;
+      return {
+        division: row.division,
+        stage: row.stage,
+        group: row.group_name,
+        date: playedAt.slice(0, 10),
+        time: parsed && !Number.isNaN(parsed.valueOf()) ? stockholmTime.format(parsed) : "",
+        matchID: row.match_id,
+        leagueID: row.league_id,
+        homeTeam: row.home_team,
+        awayTeam: row.away_team,
+        homeScore: row.home_score,
+        awayScore: row.away_score,
+        ot: row.overtime,
+        svensktLag: row.swedish_team,
+        goalsSummary: row.goals_summary
+      };
+    });
+  }
+
+  function seasonSupabaseTransferRows(rows) {
+    return (rows || []).map((row) => ({
+      Date: row.transfer_date,
+      Player: row.player_name,
+      playerID: row.player_id,
+      userID: row.user_id,
+      nationality: row.nationality,
+      Role: row.player_role,
+      From: row.from_team,
+      FromDiv: row.from_division,
+      FromTeamID: row.from_team_id,
+      FromLeagueID: row.from_league_id,
+      fromTeamLogo: row.from_team_logo,
+      To: row.to_team,
+      ToDiv: row.to_division,
+      ToTeamID: row.to_team_id,
+      ToLeagueID: row.to_league_id,
+      toTeamLogo: row.to_team_logo,
+      playerImage: row.player_image,
+      GroupGames26Winter: row.previous_group_games,
+      TotalGames26Winter: row.previous_total_games,
+      PlayoffGames26Winter: row.previous_playoff_games
+    }));
+  }
+
+  function seasonSupabaseMetricsLegacy(rows) {
+    const legacy = {
+      regular: { skaters: {}, defenders: {}, goalies: {} },
+      playoffs: { skaters: {}, defenders: {}, goalies: {} }
+    };
+
+    (rows || []).forEach((row) => {
+      const stage = row.stage === "playoffs" ? "playoffs" : "regular";
+      const type = ["skaters", "defenders", "goalies"].includes(row.stat_type)
+        ? row.stat_type
+        : "skaters";
+      const division = String(row.division || "").toLowerCase();
+      if (!legacy[stage][type][division]) legacy[stage][type][division] = [];
+      legacy[stage][type][division].push({
+        name: row.player_name,
+        team: row.team_name,
+        gp: row.games,
+        g: row.goals,
+        a: row.assists,
+        p: row.points,
+        pen: row.penalty_minutes,
+        sv: row.saves,
+        svp: row.save_percentage,
+        gaa: row.goals_against_average,
+        w: row.wins,
+        so: row.shutouts,
+        dim: row.defensive_impact,
+        teamMatches: row.team_matches,
+        teamLogo: row.team_logo
+      });
+    });
+
+    return legacy;
+  }
+
   function seasonPlayerId(row) {
     return seasonText(
       row.sports_gamer_player_id || row.central_player_id || row.player_key,
@@ -11343,6 +15402,15 @@ function SEH_initShop() {
 
   function seasonDivision(row) {
     return seasonText(row.division || row.division_name, "Övriga");
+  }
+
+  function seasonRowsWithDivisionFallback(rows, season) {
+    if (!season?.divisionFallback) return rows || [];
+    return (rows || []).map((row) => (
+      row.division || row.division_name
+        ? row
+        : { ...row, division: season.divisionFallback }
+    ));
   }
 
   function aggregateSeasonPlayers(rows) {
@@ -11390,6 +15458,99 @@ function SEH_initShop() {
     return `<a href="${escapeHtml(window.SEH_playerProfileUrl(player.profileKey, player.name))}">${name}</a>`;
   }
 
+  function fitSeasonTop3Portraits(root) {
+    if (!root) return;
+    const medias = root.querySelectorAll('.season-top3-media');
+    medias.forEach((media) => {
+      const img = media.querySelector(':scope > img');
+      if (!img) return;
+
+      const applyFit = () => {
+        const boxWidth = media.clientWidth;
+        const boxHeight = media.clientHeight;
+        if (!boxWidth || !boxHeight || !img.naturalWidth || !img.naturalHeight) return;
+
+        const setFit = (bounds) => {
+          const safeBounds = bounds && bounds.width > 0 && bounds.height > 0
+            ? bounds
+            : { x: 0, y: 0, width: img.naturalWidth, height: img.naturalHeight };
+          const horizontalPadding = boxWidth * 0.018;
+          const topPadding = 0;
+          const scale = Math.max(
+            Math.max(1, boxWidth - horizontalPadding * 2) / safeBounds.width,
+            Math.max(1, boxHeight - topPadding) / safeBounds.height
+          );
+          const translateX = (boxWidth / 2) - ((safeBounds.x + safeBounds.width / 2) * scale);
+          const translateY = topPadding - (safeBounds.y * scale);
+          img.style.width = `${img.naturalWidth * scale}px`;
+          img.style.height = `${img.naturalHeight * scale}px`;
+          img.style.transform = `translate(${translateX}px, ${translateY}px)`;
+          img.dataset.top3Fitted = '1';
+        };
+
+        if (img.dataset.trimBounds) {
+          try {
+            setFit(JSON.parse(img.dataset.trimBounds));
+            return;
+          } catch (error) {
+            delete img.dataset.trimBounds;
+          }
+        }
+
+        try {
+          const canvas = document.createElement('canvas');
+          const sampleMax = 280;
+          const ratio = Math.min(1, sampleMax / Math.max(img.naturalWidth, img.naturalHeight));
+          canvas.width = Math.max(1, Math.round(img.naturalWidth * ratio));
+          canvas.height = Math.max(1, Math.round(img.naturalHeight * ratio));
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          if (!ctx) throw new Error('Canvas context unavailable');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+          let minX = canvas.width;
+          let minY = canvas.height;
+          let maxX = -1;
+          let maxY = -1;
+          for (let y = 0; y < canvas.height; y += 1) {
+            for (let x = 0; x < canvas.width; x += 1) {
+              const alpha = pixels[(y * canvas.width + x) * 4 + 3];
+              if (alpha > 14) {
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+          const bounds = maxX >= 0 && maxY >= 0
+            ? {
+                x: Math.max(0, (minX / ratio) - (img.naturalWidth * 0.012)),
+                y: Math.max(0, (minY / ratio) - (img.naturalHeight * 0.008)),
+                width: Math.min(img.naturalWidth, ((maxX - minX + 1) / ratio) + (img.naturalWidth * 0.024)),
+                height: Math.min(img.naturalHeight, ((maxY - minY + 1) / ratio) + (img.naturalHeight * 0.018))
+              }
+            : { x: 0, y: 0, width: img.naturalWidth, height: img.naturalHeight };
+          img.dataset.trimBounds = JSON.stringify(bounds);
+          setFit(bounds);
+        } catch (error) {
+          img.style.width = '116%';
+          img.style.height = '116%';
+          img.style.left = '50%';
+          img.style.top = '0';
+          img.style.transform = 'translateX(-50%)';
+          img.style.objectFit = 'contain';
+          img.style.objectPosition = 'center top';
+        }
+      };
+
+      if (img.complete) {
+        applyFit();
+      } else {
+        img.addEventListener('load', applyFit, { once: true });
+      }
+    });
+  }
+
   function renderSeasonPlayerTable(players, goalie = false) {
     const sorted = [...players]
       .filter((player) => goalie ? player.goalieGames > 0 : player.skaterGames > 0)
@@ -11432,31 +15593,9 @@ function SEH_initShop() {
     }).join("");
   }
 
-  async function seasonFetchLegacyData() {
-    const candidates = [
-      "./svenskstatistikecl26spring.json",
-      "/svenskstatistikecl26spring.json",
-      "https://www.svenskehockey.se/svenskstatistikecl26spring.json"
-    ];
-
-    for (const url of candidates) {
-      try {
-        const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok) continue;
-        const outer = await response.json();
-        if (outer?.teams || outer?.matcher || outer?.overgangar) return outer;
-        const wrapped = outer?.rows?.[0]?.json_result;
-        if (wrapped) return typeof wrapped === "string" ? JSON.parse(wrapped) : wrapped;
-      } catch {
-        // Prova nästa kända placering.
-      }
-    }
-    return null;
-  }
-
   function seasonLegacyMatches(legacy) {
     return Object.entries(legacy?.matcher || {}).flatMap(([division, matches]) =>
-      (Array.isArray(matches) ? matches : []).map((match) => ({ ...match, division }))
+      (Array.isArray(matches) ? matches : []).map((match) => ({ division, ...match }))
     );
   }
 
@@ -11578,6 +15717,55 @@ function SEH_initShop() {
     return [...players.values()];
   }
 
+  function enrichSeasonTeamsWithPlayers(teamRows, playerRows) {
+    const playerStats = new Map();
+    const teamKey = (row) => {
+      const leagueId = seasonNumber(row.league_id);
+      const teamId = seasonNumber(row.team_id);
+      if (leagueId && teamId) return `${leagueId}:${teamId}`;
+      return `${leagueId}:${seasonTeamName(row).toLocaleLowerCase("sv-SE")}`;
+    };
+
+    playerRows.forEach((row) => {
+      const key = teamKey(row);
+      const current = playerStats.get(key) || {
+        players: new Set(),
+        regularPoints: 0,
+        playoffPoints: 0,
+        topPlayer: "",
+        topPoints: -1
+      };
+      const playerKey = seasonText(row.player_key || row.display_gamertag, "");
+      const playerName = seasonPlayerName(row);
+      const regularPoints = seasonNumber(row.regular_points);
+      if (playerKey) current.players.add(playerKey);
+      current.regularPoints += regularPoints;
+      current.playoffPoints += seasonNumber(row.playoff_points);
+      if (regularPoints > current.topPoints) {
+        current.topPoints = regularPoints;
+        current.topPlayer = playerName;
+      }
+      playerStats.set(key, current);
+    });
+
+    return teamRows.map((row) => {
+      const stats = playerStats.get(teamKey(row));
+      return {
+        ...row,
+        sports_gamer_url:
+          row.sports_gamer_url ||
+          row.sports_gamer_tournament_url ||
+          row.source_url ||
+          "",
+        swedish_players: stats?.players.size || 0,
+        swedish_points: stats?.regularPoints || 0,
+        playoff_swedish_points: stats?.playoffPoints || 0,
+        top_swedish_player: stats?.topPlayer || "",
+        top_swedish_points: Math.max(0, stats?.topPoints || 0)
+      };
+    });
+  }
+
   function seasonDate(value) {
     const text = String(value || "").slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return seasonText(value);
@@ -11587,27 +15775,82 @@ function SEH_initShop() {
   function initializeSeasonMatches(view, legacy) {
     const host = view.querySelector("#seasonMatchList");
     const division = view.querySelector("#seasonMatchDivision");
+    const stage = view.querySelector("#seasonMatchStage");
+    const sort = view.querySelector("#seasonMatchSort");
     const search = view.querySelector("#seasonMatchSearch");
     const summary = view.querySelector("#seasonMatchSummary");
     const matches = seasonLegacyMatches(legacy);
-    if (!host || !division || !search || !summary) return;
+    if (!host || !division || !stage || !sort || !search || !summary) return;
+
+    const isPlayoff = (match) => String(match.stage || "").toLocaleLowerCase("sv-SE") !== "gruppspel";
+    const activateLogos = () => {
+      host.querySelectorAll("[data-season-match-logo]").forEach((container) => {
+        const name = container.dataset.teamName || "";
+        SEH_renderTeamLogo(container, [], name, `${name} logotyp`);
+      });
+    };
+    const eventsMarkup = (value) => String(value || "")
+      .split(" | ")
+      .filter(Boolean)
+      .map((event) => `<li>${escapeHtml(event)}</li>`)
+      .join("");
 
     const render = () => {
-      const query = search.value.trim().toLowerCase();
+      const query = search.value.trim().toLocaleLowerCase("sv-SE");
       const rows = matches.filter((match) => {
         const divisionMatch = division.value === "all" || match.division === division.value;
-        const haystack = [match.homeTeam, match.awayTeam, match.svensktLag, match.group, match.date].join(" ").toLowerCase();
-        return divisionMatch && (!query || haystack.includes(query));
+        const stageMatch = stage.value === "all" || (stage.value === "playoff" ? isPlayoff(match) : !isPlayoff(match));
+        const haystack = [match.homeTeam, match.awayTeam, match.svensktLag, match.group, match.stage, match.date]
+          .join(" ")
+          .toLocaleLowerCase("sv-SE");
+        return divisionMatch && stageMatch && (!query || haystack.includes(query));
       });
-      summary.innerHTML = `<strong>${rows.length}</strong><span>svenska matcher visas</span>`;
-      host.innerHTML = rows.length ? rows.map((match) => `
-        <article class="season-match-card">
-          <div class="season-match-meta"><span>${escapeHtml(String(match.division || "").toUpperCase())}</span><time>${escapeHtml(seasonDate(match.date))} · ${escapeHtml(seasonText(match.time, "Tid saknas"))}</time><small>${escapeHtml(seasonText(match.group, ""))}</small></div>
-          <div class="season-match-score"><span>${escapeHtml(seasonText(match.homeTeam))}</span><strong>${seasonNumber(match.homeScore)}–${seasonNumber(match.awayScore)}${match.ot ? `<small>${escapeHtml(match.ot)}</small>` : ""}</strong><span>${escapeHtml(seasonText(match.awayTeam))}</span></div>
-          ${match.goalsSummary ? `<details><summary>Visa matchhändelser</summary><p>${escapeHtml(match.goalsSummary).replaceAll(" | ", "<br>")}</p></details>` : ""}
-        </article>`).join("") : `<p class="season-empty">Inga matcher matchar filtret.</p>`;
+      rows.sort((a, b) => {
+        const dateOrder = `${a.date || ""}T${a.time || ""}`.localeCompare(`${b.date || ""}T${b.time || ""}`);
+        return sort.value === "oldest" ? dateOrder : -dateOrder;
+      });
+
+      const playoffCount = rows.filter(isPlayoff).length;
+      const overtimeCount = rows.filter((match) => Boolean(match.ot)).length;
+      const swedishTeams = new Set(rows.map((match) => match.svensktLag).filter(Boolean)).size;
+      summary.innerHTML = `<strong>${rows.length}</strong><span>matcher · ${swedishTeams} svenska lag · ${playoffCount} slutspelsmatcher · ${overtimeCount} avgjorda i OT</span>`;
+      host.innerHTML = rows.length ? rows.map((match) => {
+        const home = seasonText(match.homeTeam);
+        const away = seasonText(match.awayTeam);
+        const homeSwedish = home === match.svensktLag;
+        const awaySwedish = away === match.svensktLag;
+        const hasScore = match.homeScore !== null && match.homeScore !== undefined && match.awayScore !== null && match.awayScore !== undefined;
+        const stageLabel = seasonText(match.stage, "Match");
+        return `
+          <article class="season-match-card season-match-card--full">
+            <div class="season-match-meta">
+              <span>${escapeHtml(String(match.division || "").toUpperCase())}</span>
+              <time>${escapeHtml(seasonDate(match.date))} · ${escapeHtml(seasonText(match.time, "Tid saknas"))}</time>
+              <small>${escapeHtml(stageLabel)}${match.group ? ` · ${escapeHtml(match.group)}` : ""}</small>
+            </div>
+            <div class="season-match-row">
+              <div class="season-match-side${homeSwedish ? " is-swedish" : ""}">
+                <div class="season-match-logo" data-season-match-logo data-team-name="${escapeHtml(home)}"></div>
+                <div><small>HEMMALAG</small><strong>${escapeHtml(home)}</strong>${homeSwedish ? "<span>SVENSKT LAG</span>" : ""}</div>
+              </div>
+              <div class="season-match-center">
+                <small>${escapeHtml(stageLabel.toUpperCase())}</small>
+                <strong>${hasScore ? `${seasonNumber(match.homeScore)}–${seasonNumber(match.awayScore)}` : "–"}</strong>
+                <span>${match.ot ? escapeHtml(match.ot) : "SLUT"}</span>
+              </div>
+              <div class="season-match-side season-match-side--away${awaySwedish ? " is-swedish" : ""}">
+                <div><small>BORTALAG</small><strong>${escapeHtml(away)}</strong>${awaySwedish ? "<span>SVENSKT LAG</span>" : ""}</div>
+                <div class="season-match-logo" data-season-match-logo data-team-name="${escapeHtml(away)}"></div>
+              </div>
+            </div>
+            ${match.goalsSummary ? `<details><summary>Visa matchhändelser <span aria-hidden="true">＋</span></summary><ol class="season-match-events">${eventsMarkup(match.goalsSummary)}</ol></details>` : ""}
+          </article>`;
+      }).join("") : `<p class="season-empty">Inga matcher matchar filtret.</p>`;
+      activateLogos();
     };
     division.addEventListener("change", render);
+    stage.addEventListener("change", render);
+    sort.addEventListener("change", render);
     search.addEventListener("input", render);
     render();
   }
@@ -11618,26 +15861,57 @@ function SEH_initShop() {
     const summary = view.querySelector("#seasonTransferSummary");
     if (!host || !search || !summary) return;
     const transfers = (legacy?.overgangar || [])
-      .filter((row) => String(row.nationality || "").toUpperCase() === "SE")
+      .filter((row) => ["SE", "SWE", "SWEDEN", "SVERIGE"].includes(String(row.nationality || "").trim().toUpperCase()))
       .sort((a, b) => String(b.Date || "").localeCompare(String(a.Date || "")));
+    const teamHref = (teamId, leagueId) => seasonNumber(teamId) && seasonNumber(leagueId)
+      ? `#/lag/${encodeURIComponent(seasonNumber(teamId))}/turnering/${encodeURIComponent(seasonNumber(leagueId))}`
+      : "";
+    const teamBox = (row, direction) => {
+      const from = direction === "from";
+      const name = seasonText(row[from ? "From" : "To"], from ? "Free Agent" : "Okänt lag");
+      const division = seasonText(row[from ? "FromDiv" : "ToDiv"], "");
+      const logo = seasonText(row[from ? "fromTeamLogo" : "toTeamLogo"], "");
+      const href = teamHref(row[from ? "FromTeamID" : "ToTeamID"], row[from ? "FromLeagueID" : "ToLeagueID"]);
+      const content = `<div class="season-transfer-team-logo" data-season-transfer-logo data-team-name="${escapeHtml(name)}" data-logo-url="${escapeHtml(logo)}"></div><div><small>${from ? "FRÅN" : "TILL"}</small><strong>${escapeHtml(name)}</strong><span>${escapeHtml(division)}</span></div>`;
+      return href
+        ? `<a class="season-transfer-team" href="${escapeHtml(href)}">${content}</a>`
+        : `<div class="season-transfer-team is-unlinked">${content}</div>`;
+    };
+    const activateLogos = () => {
+      host.querySelectorAll("[data-season-transfer-logo]").forEach((container) => {
+        const name = container.dataset.teamName || "";
+        const logo = container.dataset.logoUrl || "";
+        SEH_renderTeamLogo(container, [logo], name, `${name} logotyp`);
+      });
+    };
     const render = () => {
-      const query = search.value.trim().toLowerCase();
+      const query = search.value.trim().toLocaleLowerCase("sv-SE");
       const rows = transfers.filter((row) =>
-        !query || [row.Player, row.From, row.To, row.FromDiv, row.ToDiv].join(" ").toLowerCase().includes(query)
+        !query || [row.Player, row.From, row.To, row.FromDiv, row.ToDiv, row.Role, row.Date].join(" ").toLocaleLowerCase("sv-SE").includes(query)
       );
-      summary.innerHTML = `<strong>${rows.length}</strong><span>svenska lagbyten</span>`;
+      const uniquePlayers = new Set(rows.map((row) => String(row.playerID || row.Player || "").trim()).filter(Boolean)).size;
+      summary.innerHTML = `<strong>${rows.length}</strong><span>svenska lagbyten · ${uniquePlayers} spelare${query ? " matchar sökningen" : ""}</span>`;
       host.innerHTML = rows.length ? rows.map((row) => `
-        <article class="season-transfer-card">
-          <time>${escapeHtml(seasonDate(row.Date))}</time>
-          <h4>${escapeHtml(seasonText(row.Player))}</h4>
-          <div><span><small>FRÅN</small>${escapeHtml(seasonText(row.From, "Free Agent"))}<em>${escapeHtml(seasonText(row.FromDiv, ""))}</em></span><b>→</b><span><small>TILL</small>${escapeHtml(seasonText(row.To))}<em>${escapeHtml(seasonText(row.ToDiv, ""))}</em></span></div>
+        <article class="season-transfer-full-card">
+          <div class="season-transfer-player">
+            <a href="${escapeHtml(SEH_playerProfileUrl(row.playerID, row.Player))}">
+              <img src="${escapeHtml(SEH_playerImageUrl(row.playerID))}" alt="${escapeHtml(seasonText(row.Player))}" loading="lazy">
+              <div><h4>${escapeHtml(seasonText(row.Player))}</h4><time>${escapeHtml(seasonDate(row.Date))}</time>${row.Role ? `<span>${escapeHtml(row.Role)}</span>` : ""}</div>
+            </a>
+          </div>
+          <div class="season-transfer-move">
+            ${teamBox(row, "from")}
+            <b class="season-transfer-arrow" aria-label="bytte till">→</b>
+            ${teamBox(row, "to")}
+          </div>
         </article>`).join("") : `<p class="season-empty">Inga byten matchar sökningen.</p>`;
+      activateLogos();
     };
     search.addEventListener("input", render);
     render();
   }
 
-  function initializeSeasonTeams(view, rows) {
+  function initializeSeasonTeams(view, rows, options = {}) {
     const host = view.querySelector("#seasonTeamsList");
     const division = view.querySelector("#seasonTeamDivision");
     const sort = view.querySelector("#seasonTeamSort");
@@ -11648,6 +15922,7 @@ function SEH_initShop() {
     if (!host || !division || !sort || !search || !summary || !playoffOnly || !aliveOnly) return;
 
     const divisionRank = { elite: 1, pro: 2, lite: 3, core: 4, neo: 5 };
+    const seasonCompleted = Boolean(options.completed);
     const playoffLabel = (row) => {
       const explicit = seasonText(row.playoff_status, "");
       if (explicit) {
@@ -11665,12 +15940,36 @@ function SEH_initShop() {
       return "–";
     };
     const isPlayoffTeam = (row) => {
+      if (typeof row.qualified_for_playoffs === "boolean") {
+        return row.qualified_for_playoffs;
+      }
+      const statusCode = seasonText(row.playoff_status_code, "").toUpperCase();
+      if (statusCode === "MISSED_PLAYOFFS") return false;
       const label = playoffLabel(row).toLowerCase();
-      return seasonNumber(row.playoff_games) > 0 || (!label.includes("ej slutspel") && !label.includes("nedflyttning") && label !== "–");
+      return seasonNumber(row.playoff_games) > 0 ||
+        (!label.includes("ej slutspel") &&
+          !label.includes("missade slutspel") &&
+          !label.includes("nedflyttning") &&
+          label !== "–");
     };
     const isAlive = (row) => {
+      if (seasonCompleted) return false;
+      const terminalCodes = new Set([
+        "MISSED_PLAYOFFS",
+        "ELIMINATED",
+        "CHAMPION",
+        "RUNNER_UP",
+        "THIRD_PLACE"
+      ]);
+      if (terminalCodes.has(seasonText(row.playoff_status_code, "").toUpperCase())) {
+        return false;
+      }
       const label = playoffLabel(row).toLowerCase();
-      return isPlayoffTeam(row) && !label.includes("utslagen") && !label.includes("ej slutspel") && !label.includes("nedflyttning");
+      return isPlayoffTeam(row) &&
+        !label.includes("utslagen") &&
+        !label.includes("ej slutspel") &&
+        !label.includes("missade slutspel") &&
+        !label.includes("nedflyttning");
     };
     const signed = (value) => seasonNumber(value) > 0 ? `+${seasonNumber(value)}` : String(seasonNumber(value));
     const record = (row) => [
@@ -11741,40 +16040,59 @@ function SEH_initShop() {
           : /kval|möjlig/i.test(playoff) ? "is-warning" : "is-positive";
         const playoffGames = seasonNumber(row.playoff_games);
         const topPlayer = seasonText(row.top_swedish_player, "");
+        const groupLabel = seasonText(row.group_name, "");
+        const placementLabel = row.table_position ? `#${seasonNumber(row.table_position)}` : "–";
+        const actionLabel = external ? "Öppna på SportsGamer" : "Öppna lag";
+        const topPlayerMarkup = topPlayer
+          ? `<div class="season-team-card__summary"><p><strong>Topp svensk:</strong> ${escapeHtml(topPlayer)} · ${seasonNumber(row.top_swedish_points)} p</p><p><strong>Status:</strong> ${escapeHtml(playoff)}</p></div>`
+          : `<div class="season-team-card__summary season-team-card__summary--muted"><p><strong>Topp svensk:</strong> Ingen svensk spelare kopplad ännu</p><p><strong>Status:</strong> ${escapeHtml(playoff)}</p></div>`;
         return `<article class="season-team-card">
           <a class="season-team-card__link" href="${escapeHtml(href)}"${external ? ` target="_blank" rel="noopener noreferrer"` : ""}>
-            <div class="season-team-card__identity">
+            <div class="season-team-card__watermark" data-season-team-logo data-team-name="${escapeHtml(seasonTeamName(row))}" data-logo-url="${escapeHtml(seasonText(row.logo_url, ""))}" aria-hidden="true"></div>
+            <header class="season-team-card__header">
               <div class="season-team-card__logo" data-season-team-logo data-team-name="${escapeHtml(seasonTeamName(row))}" data-logo-url="${escapeHtml(seasonText(row.logo_url, ""))}"></div>
-              <div><h4>${escapeHtml(seasonTeamName(row))}</h4><span class="season-team-division">${escapeHtml(seasonDivision(row))}</span></div>
-            </div>
+              <div class="season-team-card__identity">
+                <div class="season-team-card__eyebrow">
+                  <span class="season-team-division">${escapeHtml(seasonDivision(row))}</span>
+                  ${groupLabel ? `<span class="season-team-group">Grupp ${escapeHtml(groupLabel)}</span>` : ""}
+                  <span class="season-team-status-badge ${playoffClass}">${escapeHtml(playoff)}</span>
+                </div>
+                <h4>${escapeHtml(seasonTeamName(row))}</h4>
+                <p>${row.table_position ? `Tabellplacering ${escapeHtml(placementLabel)}` : "Tabellplacering saknas"}</p>
+              </div>
+            </header>
             <div class="season-team-highlights">
               <div><span>POÄNG</span><strong>${seasonNumber(row.table_points)}</strong></div>
-              <div><span>GRUPPLACERING</span><strong>${row.table_position ? `#${seasonNumber(row.table_position)}` : "–"}</strong></div>
-              <div class="${playoffClass}"><span>SLUTSPEL</span><strong>${escapeHtml(playoff)}</strong></div>
+              <div><span>PLACERING</span><strong>${escapeHtml(placementLabel)}</strong></div>
+              <div><span>SV SPELARE</span><strong>${seasonNumber(row.swedish_players)}</strong></div>
+              <div><span>SV POÄNG</span><strong>${seasonNumber(row.swedish_points)}</strong></div>
             </div>
-            <section class="season-team-card__stats">
-              <h5>GRUPPSPEL</h5>
-              <dl>
-                <div><dt>GRUPP</dt><dd>${escapeHtml(seasonText(row.group_name))}</dd></div>
-                <div><dt>MATCHER</dt><dd>${seasonNumber(row.games_played)}</dd></div>
-                <div><dt>RECORD</dt><dd>${record(row)}</dd></div>
-                <div><dt>P/G</dt><dd>${pointsPerGame(row).toFixed(2).replace(".", ",")}</dd></div>
-                <div><dt>GF–GA</dt><dd>${seasonNumber(row.goals_for)}–${seasonNumber(row.goals_against)}</dd></div>
-                <div><dt>MÅL +/−</dt><dd>${signed(row.goal_diff)}</dd></div>
-                <div><dt>SV SPELARE</dt><dd>${seasonNumber(row.swedish_players)}</dd></div>
-                <div><dt>SV POÄNG</dt><dd>${seasonNumber(row.swedish_points)}</dd></div>
-              </dl>
-            </section>
-            ${playoffGames ? `<section class="season-team-card__stats season-team-card__stats--playoff">
-              <h5>SLUTSPEL</h5>
-              <dl>
-                <div><dt>RUNDA</dt><dd>${escapeHtml(seasonText(row.playoff_round))}</dd></div>
-                <div><dt>MATCHER</dt><dd>${seasonNumber(row.playoff_wins)}–${seasonNumber(row.playoff_losses)}</dd></div>
-                <div><dt>FORMAT</dt><dd>${row.playoff_best_of ? `BO${seasonNumber(row.playoff_best_of)}` : "–"}</dd></div>
-                <div><dt>GF–GA</dt><dd>${seasonNumber(row.playoff_goals_for)}–${seasonNumber(row.playoff_goals_against)}</dd></div>
-              </dl>
-            </section>` : ""}
-            ${topPlayer ? `<p class="season-team-card__note"><strong>TOPP SVENSK:</strong> ${escapeHtml(topPlayer)}, ${seasonNumber(row.top_swedish_points)}p</p>` : ""}
+            <div class="season-team-card__panels">
+              <section class="season-team-card__stats">
+                <h5>GRUNDSERIE</h5>
+                <dl>
+                  <div><dt>GRUPP</dt><dd>${escapeHtml(groupLabel || "–")}</dd></div>
+                  <div><dt>GP</dt><dd>${seasonNumber(row.games_played)}</dd></div>
+                  <div><dt>RECORD</dt><dd>${record(row)}</dd></div>
+                  <div><dt>P/G</dt><dd>${pointsPerGame(row).toFixed(2).replace(".", ",")}</dd></div>
+                  <div><dt>GF–GA</dt><dd>${seasonNumber(row.goals_for)}–${seasonNumber(row.goals_against)}</dd></div>
+                  <div><dt>MÅL +/−</dt><dd>${signed(row.goal_diff)}</dd></div>
+                </dl>
+              </section>
+              <section class="season-team-card__stats${playoffGames ? ' season-team-card__stats--playoff' : ' season-team-card__stats--empty'}">
+                <h5>SLUTSPEL</h5>
+                ${playoffGames ? `<dl>
+                  <div><dt>RUNDA</dt><dd>${escapeHtml(seasonText(row.playoff_round) || "–")}</dd></div>
+                  <div><dt>W–L</dt><dd>${seasonNumber(row.playoff_wins)}–${seasonNumber(row.playoff_losses)}</dd></div>
+                  <div><dt>FORMAT</dt><dd>${row.playoff_best_of ? `BO${seasonNumber(row.playoff_best_of)}` : "–"}</dd></div>
+                  <div><dt>GF–GA</dt><dd>${seasonNumber(row.playoff_goals_for)}–${seasonNumber(row.playoff_goals_against)}</dd></div>
+                </dl>` : `<p class="season-team-card__empty-note">Inga slutspelsmatcher registrerade.</p>`}
+              </section>
+            </div>
+            <footer class="season-team-card__footer">
+              ${topPlayerMarkup}
+              <span class="season-team-card__action">${actionLabel} <b aria-hidden="true">→</b></span>
+            </footer>
           </a>
         </article>`;
       }).join("") : `<p class="season-empty">Inga lag matchar filtret.</p>`;
@@ -11788,47 +16106,302 @@ function SEH_initShop() {
     render();
   }
 
-  function initializeSeasonStatistics(view, playerRows) {
+  function initializeSeasonStatistics(view, playerRows, teamRows, legacy, rawTeamRows = []) {
     const stage = view.querySelector("#seasonStatsStage");
-    const type = view.querySelector("#seasonStatsType");
+    const role = view.querySelector("#seasonStatsRole");
     const division = view.querySelector("#seasonStatsDivision");
     const search = view.querySelector("#seasonStatsSearch");
-    const podium = view.querySelector("#seasonStatsPodium");
-    const host = view.querySelector("#seasonStatsTable");
-    if (!stage || !type || !division || !search || !podium || !host) return;
+    const summary = view.querySelector("#seasonStatsSummary");
+    const top3 = view.querySelector("#seasonStatsTop3");
+    const table = view.querySelector("#seasonStatsTable");
+    const title = view.querySelector("#seasonStatsListTitle");
+    const stageButtons = [...view.querySelectorAll("[data-season-stats-stage]")];
+    const roleButtons = [...view.querySelectorAll("[data-season-stats-role]")];
+    const divisionButtons = [...view.querySelectorAll("[data-season-stats-division]")];
+    if (!stage || !role || !division || !search || !summary || !top3 || !table || !title) return;
 
-    const render = () => {
-      const prefix = stage.value === "playoff" ? "playoff" : "regular";
-      const goalie = type.value === "goalie";
-      const query = search.value.trim().toLowerCase();
-      const rows = playerRows.map((row) => ({
-        row,
-        name: seasonPlayerName(row),
-        team: seasonTeamName(row),
-        division: seasonDivision(row).toLowerCase(),
-        gp: seasonNumber(row[`${prefix}_${goalie ? "goalie" : "skater"}_games`]),
-        goals: seasonNumber(row[`${prefix}_goals`]),
-        assists: seasonNumber(row[`${prefix}_assists`]),
-        points: seasonNumber(row[`${prefix}_points`]),
-        saves: seasonNumber(row[`${prefix}_goalie_saves`]),
-        shots: seasonNumber(row[`${prefix}_goalie_shots_against`]),
-        shutouts: seasonNumber(row[`${prefix}_goalie_shutouts`])
-      })).filter((item) => item.gp > 0 &&
-        (division.value === "all" || item.division === division.value) &&
-        (!query || `${item.name} ${item.team}`.toLowerCase().includes(query))
-      ).sort((a, b) => goalie ? b.gp - a.gp || b.saves - a.saves : b.points - a.points || b.goals - a.goals);
+    const divisionLabels = { ecl: "ECL", elite: "Elite", pro: "Pro", lite: "Lite", core: "Core", neo: "Neo" };
+    const normalKey = (value) => String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("sv-SE")
+      .replace(/[^a-z0-9]+/g, "");
+    const legacyData = legacy?.rows?.[0]?.json_result
+      ? (typeof legacy.rows[0].json_result === "string" ? JSON.parse(legacy.rows[0].json_result) : legacy.rows[0].json_result)
+      : legacy;
+    const legacyLookup = new Map();
+    ["regular", "playoffs"].forEach((legacyStage) => {
+      ["skaters", "goalies", "defenders"].forEach((kind) => {
+        Object.entries(legacyData?.[legacyStage]?.[kind] || {}).forEach(([division, rows]) => {
+          (rows || []).forEach((row) => {
+            const exactKey = `${legacyStage}|${kind}|${normalKey(division)}|${normalKey(row.name)}|${normalKey(row.team)}`;
+            const playerKey = `${legacyStage}|${kind}|${normalKey(division)}|${normalKey(row.name)}|`;
+            legacyLookup.set(exactKey, row);
+            if (!legacyLookup.has(playerKey)) legacyLookup.set(playerKey, row);
+          });
+        });
+      });
+    });
 
-      podium.innerHTML = rows.slice(0, 3).map((item, index) => `<article><span>${index + 1}</span><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.team)}</small><b>${goalie ? `${item.gp} GP` : `${item.points} PTS`}</b></article>`).join("");
-      const headings = goalie
-        ? `<tr><th>#</th><th>Spelare</th><th>Lag</th><th>GP</th><th>SV</th><th>SV%</th><th>SO</th></tr>`
-        : `<tr><th>#</th><th>Spelare</th><th>Lag</th><th>GP</th><th>G</th><th>A</th><th>PTS</th></tr>`;
-      const body = rows.map((item, index) => goalie
-        ? `<tr><td>${index + 1}</td><td>${escapeHtml(item.name)}</td><td>${escapeHtml(item.team)}</td><td>${item.gp}</td><td>${item.saves}</td><td>${item.shots ? (100 * item.saves / item.shots).toFixed(1).replace(".", ",") : "–"}</td><td>${item.shutouts}</td></tr>`
-        : `<tr><td>${index + 1}</td><td>${escapeHtml(item.name)}</td><td>${escapeHtml(item.team)}</td><td>${item.gp}</td><td>${item.goals}</td><td>${item.assists}</td><td>${item.points}</td></tr>`
-      ).join("");
-      host.innerHTML = `<div class="season-table-wrap"><table class="season-data-table"><thead>${headings}</thead><tbody>${body || `<tr><td colspan="7">Ingen statistik matchar filtret.</td></tr>`}</tbody></table></div>`;
+    const teamMatches = new Map();
+    const teamMatchesByName = new Map();
+    const setTeamMatchCount = (map, key, value) => {
+      const count = seasonNumber(value);
+      if (!key || count <= 0) return;
+      map.set(key, Math.max(count, seasonNumber(map.get(key))));
     };
-    [stage, type, division].forEach((control) => control.addEventListener("change", render));
+    const stageTeamGames = (row, stageName) => {
+      const totalGames = seasonNumber(row.games_played);
+      const regularGames = seasonNumber(row.regular_games);
+      const playoffGames = seasonNumber(row.playoff_games);
+      if (stageName === "playoff") return playoffGames;
+      if (regularGames > 0) return regularGames;
+      // Äldre lagrader kan sakna regular_games men ha combined games_played.
+      // Dra då bort slutspelsmatcherna i stället för att använda totalen.
+      if (totalGames > 0 && playoffGames > 0) return Math.max(0, totalGames - playoffGames);
+      return totalGames;
+    };
+
+    (teamRows || []).forEach((row) => {
+      const leagueId = seasonNumber(row.league_id);
+      const teamId = seasonNumber(row.team_id);
+      const teamName = normalKey(row.name_used_in_tournament || row.current_name);
+      const regularGames = stageTeamGames(row, "regular");
+      const playoffGames = stageTeamGames(row, "playoff");
+      if (teamId > 0) {
+        setTeamMatchCount(teamMatches, `${leagueId}:${teamId}:regular`, regularGames);
+        setTeamMatchCount(teamMatches, `${leagueId}:${teamId}:playoff`, playoffGames);
+      }
+      if (teamName) {
+        setTeamMatchCount(teamMatchesByName, `${leagueId}:${teamName}:regular`, regularGames);
+        setTeamMatchCount(teamMatchesByName, `${leagueId}:${teamName}:playoff`, playoffGames);
+      }
+    });
+
+    // Historiska spelarposter saknar ibland internt team_id även om lagnamnet
+    // är korrekt. SportsGamers råa lagtävlingstabell ger då rätt matchantal
+    // per fas och gör 50 %-regeln korrekt även för äldre ECL-säsonger.
+    (rawTeamRows || []).forEach((row) => {
+      const leagueId = seasonNumber(row.sports_gamer_league_id);
+      const teamName = normalKey(row.team_name_in_league || row.current_global_team_name);
+      const stageName = String(row.statistics_stage || "").toLocaleLowerCase("sv-SE");
+      if (!leagueId || !teamName) return;
+      if (stageName === "regular") {
+        setTeamMatchCount(teamMatchesByName, `${leagueId}:${teamName}:regular`, row.games_played);
+      } else if (stageName === "playoffs" || stageName === "playoff") {
+        setTeamMatchCount(teamMatchesByName, `${leagueId}:${teamName}:playoff`, row.games_played);
+      }
+    });
+
+    const configs = {
+      ppg: { label: "Poäng per match", short: "P/M", kind: "skater", rate: true, value: (p) => p.gp ? p.points / p.gp : 0 },
+      gpg: { label: "Mål per match", short: "M/M", kind: "skater", rate: true, value: (p) => p.gp ? p.goals / p.gp : 0 },
+      apg: { label: "Assist per match", short: "A/M", kind: "skater", rate: true, value: (p) => p.gp ? p.assists / p.gp : 0 },
+      goals: { label: "Mål", short: "MÅL", kind: "skater", value: (p) => p.goals },
+      assists: { label: "Assist", short: "A", kind: "skater", value: (p) => p.assists },
+      points: { label: "Poäng", short: "P", kind: "skater", value: (p) => p.points },
+      penalties: { label: "Utvisningsminuter", short: "PIM", kind: "skater", value: (p) => p.penalties },
+      defenderPoints: { label: "Backar – poäng", short: "P", kind: "defender", value: (p) => p.points },
+      defenderAssists: { label: "Backar – assist", short: "A", kind: "defender", value: (p) => p.assists },
+      defenderGoals: { label: "Backar – mål", short: "MÅL", kind: "defender", value: (p) => p.goals },
+      defenderPenalties: { label: "Backar – utvisningsminuter", short: "PIM", kind: "defender", value: (p) => p.penalties },
+      svp: { label: "Räddningsprocent", short: "SV%", kind: "goalie", rate: true, value: (p) => p.savePercentage },
+      gaa: { label: "Insläppta mål per match", short: "GAA", kind: "goalie", rate: true, ascending: true, value: (p) => p.gaa },
+      goalieWins: { label: "Målvaktsvinster", short: "W", kind: "goalie", value: (p) => p.wins },
+      shutouts: { label: "Hållna nollor", short: "SO", kind: "goalie", value: (p) => p.shutouts },
+      dim: { label: "Defensiv impact (DIM)", short: "DIM", kind: "skater", rate: true, legacyOnly: true, value: (p) => p.dim }
+    };
+    let sortKey = "points";
+
+    const formatValue = (value, config) => {
+      if (!Number.isFinite(value)) return "–";
+      if (config.short === "SV%") return `${value.toFixed(2).replace(".", ",")} %`;
+      if (["P/M", "M/M", "A/M", "GAA", "DIM"].includes(config.short)) return value.toFixed(2).replace(".", ",");
+      return String(Math.round(value));
+    };
+    const formatTop3Value = (value, config) => {
+      if (!Number.isFinite(value)) return "–";
+      if (["SV%", "P/M", "M/M", "A/M", "GAA", "DIM"].includes(config.short)) {
+        return value.toFixed(2).replace(".", ",");
+      }
+      return String(Math.round(value));
+    };
+    const seasonTop3NameClass = (name) => {
+      const length = Array.from(String(name || "")).length;
+      if (length >= 16) return " is-very-long";
+      if (length >= 12) return " is-long";
+      if (length >= 10) return " is-medium";
+      return "";
+    };
+    const legacyPlayer = (stageName, kind, division, row) =>
+      legacyLookup.get(`${stageName}|${kind}|${division}|${normalKey(seasonPlayerName(row))}|${normalKey(seasonTeamName(row))}`) ||
+      legacyLookup.get(`${stageName}|${kind}|${division}|${normalKey(seasonPlayerName(row))}|`);
+    const buildPlayers = (stageName, config) => {
+      const prefix = stageName === "playoffs" ? "playoff" : "regular";
+      return playerRows.map((row) => {
+        const division = normalKey(seasonDivision(row));
+        const position = seasonText(row.primary_position, "").toUpperCase();
+        const legacyKind = config.kind === "goalie" ? "goalies" : config.kind === "defender" ? "defenders" : "skaters";
+        const archived = legacyPlayer(stageName, legacyKind, division, row) ||
+          (config.kind === "defender" ? legacyPlayer(stageName, "skaters", division, row) : null);
+        const goalie = config.kind === "goalie";
+        const gp = seasonNumber(row[`${prefix}_${goalie ? "goalie" : "skater"}_games`] ?? archived?.gp);
+        const saves = seasonNumber(row[`${prefix}_goalie_saves`] ?? archived?.sv);
+        const shots = seasonNumber(row[`${prefix}_goalie_shots_against`]);
+        const goalsAllowed = seasonNumber(row[`${prefix}_goalie_goals_allowed`]);
+        const dbSavePercentage = Number(row[`${prefix}_goalie_save_percentage`]);
+        const dbGaa = Number(row[`${prefix}_goalie_goals_against_average`]);
+        const leagueId = seasonNumber(row.league_id);
+        const teamId = seasonNumber(row.team_id);
+        const teamNameKey = normalKey(seasonTeamName(row));
+        const matches =
+          (teamId > 0 ? seasonNumber(teamMatches.get(`${leagueId}:${teamId}:${prefix}`)) : 0) ||
+          seasonNumber(teamMatchesByName.get(`${leagueId}:${teamNameKey}:${prefix}`)) ||
+          seasonNumber(archived?.teamMatches);
+        const sportsGamerId = seasonText(row.sports_gamer_player_url, "").match(/\/players\/(\d+)/i)?.[1];
+        return {
+          row,
+          name: seasonPlayerName(row),
+          team: seasonTeamName(row),
+          division,
+          gp,
+          goals: seasonNumber(row[`${prefix}_goals`] ?? archived?.g),
+          assists: seasonNumber(row[`${prefix}_assists`] ?? archived?.a),
+          points: seasonNumber(row[`${prefix}_points`] ?? archived?.p),
+          penalties: seasonNumber(row[`${prefix}_penalty_minutes`] ?? archived?.pen),
+          saves,
+          savePercentage: (saves + goalsAllowed) > 0
+            ? 100 * saves / (saves + goalsAllowed)
+            : Number.isFinite(dbSavePercentage) && dbSavePercentage > 0
+              ? (dbSavePercentage <= 1 ? dbSavePercentage * 100 : dbSavePercentage)
+              : shots > 0 ? 100 * saves / shots : seasonNumber(archived?.svp),
+          gaa: Number.isFinite(dbGaa) && dbGaa > 0 ? dbGaa : gp > 0 && goalsAllowed > 0 ? goalsAllowed / gp : seasonNumber(archived?.gaa),
+          wins: seasonNumber(row[`${prefix}_goalie_wins`] ?? archived?.w),
+          shutouts: seasonNumber(row[`${prefix}_goalie_shutouts`] ?? archived?.so),
+          dim: seasonNumber(archived?.dim),
+          matchShare: matches > 0 ? 100 * gp / matches : seasonNumber(archived?.matchSharePct),
+          isDefender: position === "LD" || position === "RD" || Boolean(legacyPlayer(stageName, "defenders", division, row)),
+          teamLogo: seasonText(archived?.teamLogo, ""),
+          playerImage: SEH_playerImageUrl(sportsGamerId)
+        };
+      });
+    };
+
+    const activateLogos = () => {
+      view.querySelectorAll("[data-season-stat-logo]").forEach((container) => {
+        const name = container.dataset.teamName || "";
+        const logo = container.dataset.logoUrl || "";
+        SEH_renderTeamLogo(container, [logo], name, `${name} logotyp`);
+      });
+    };
+    const roleConfig = {
+      skater: {
+        label: "Poängliga",
+        kind: "skater",
+        defaultSort: "points",
+        columns: ["gp", "goals", "assists", "points", "ppg", "penalties"]
+      },
+      defender: {
+        label: "Backliga",
+        kind: "defender",
+        defaultSort: "defenderPoints",
+        columns: ["gp", "defenderGoals", "defenderAssists", "defenderPoints", "ppg", "defenderPenalties", "dim"]
+      },
+      goalie: {
+        label: "Målvaktsliga",
+        kind: "goalie",
+        defaultSort: "svp",
+        columns: ["gp", "goalieWins", "saves", "svp", "gaa", "shutouts"]
+      }
+    };
+    const columnConfig = {
+      gp: { label: "GP", short: "GP", kind: "all", value: (p) => p.gp },
+      saves: { label: "SV", short: "SV", kind: "goalie", value: (p) => p.saves },
+      ...configs
+    };
+    const eligibleForSort = (player, config) =>
+      player.gp > 0 &&
+      (!config.rate || player.matchShare >= 50) &&
+      (!config.legacyOnly || player.dim > 0);
+    const sortedRows = (players, config) => players
+      .filter((player) => eligibleForSort(player, config))
+      .map((player) => ({ ...player, statValue: config.value(player) }))
+      .filter((player) => Number.isFinite(player.statValue))
+      .sort((a, b) => (config.ascending ? a.statValue - b.statValue : b.statValue - a.statValue) || b.gp - a.gp || a.name.localeCompare(b.name, "sv"));
+    const setButtonGroup = (buttons, activeButton) => {
+      buttons.forEach((button) => {
+        const active = button === activeButton;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+    };
+    const render = () => {
+      const stageName = stage.value === "playoff" ? "playoffs" : "regular";
+      const query = search.value.trim().toLocaleLowerCase("sv-SE");
+      const currentRole = roleConfig[role.value] || roleConfig.skater;
+      const config = columnConfig[sortKey] || columnConfig[currentRole.defaultSort];
+      const players = buildPlayers(stageName, { kind: currentRole.kind })
+        .filter((player) => player.gp > 0)
+        .filter((player) => currentRole.kind !== "defender" || player.isDefender)
+        .filter((player) => player.division === division.value)
+        .filter((player) => !query || `${player.name} ${player.team}`.toLocaleLowerCase("sv-SE").includes(query));
+      const ranking = sortedRows(players, config);
+      const leaders = ranking.slice(0, 3);
+      const maxStat = Math.max(...leaders.map((player) => Math.abs(player.statValue)), 1);
+      const stageLabel = stageName === "playoffs" ? "Slutspel" : "Grundserie";
+      title.innerHTML = `<span>${escapeHtml(stageLabel.toUpperCase())}</span><h4>${escapeHtml(divisionLabels[division.value])} ${escapeHtml(currentRole.label)} – ${escapeHtml(config.label)}</h4>${config.rate ? `<p>Minst 50 % av lagets matcher krävs för den här topplistan.</p>` : ""}`;
+      top3.innerHTML = leaders.length ? leaders.map((player, index) => `
+        <article class="season-top3-card${index === 0 ? " is-winner" : ""}">
+          <span class="season-top3-medal">${index + 1}</span>
+          <div class="season-top3-team-logo" data-season-stat-logo data-team-name="${escapeHtml(player.team)}" data-logo-url="${escapeHtml(player.teamLogo)}"></div>
+          <div class="season-top3-hero">
+            <div class="season-top3-media">
+              <div class="season-top3-bg-logo" data-season-stat-logo data-team-name="${escapeHtml(player.team)}" data-logo-url="${escapeHtml(player.teamLogo)}"></div>
+              <img src="${escapeHtml(player.playerImage)}" alt="${escapeHtml(player.name)}" loading="lazy" onerror="this.onerror=null;this.src='players/1DEFAULTBILDID.png'">
+            </div>
+            <div class="season-top3-content">
+              <div class="season-top3-content-logo" data-season-stat-logo data-team-name="${escapeHtml(player.team)}" data-logo-url="${escapeHtml(player.teamLogo)}"></div>
+              <div class="season-top3-copy"><strong class="season-top3-player-name${seasonTop3NameClass(player.name)}">${seasonProfileLink({ name: player.name, profileKey: player.row.player_key })}</strong><small>${escapeHtml(player.team)}</small><b class="season-top3-value${config.short === "SV%" ? " season-top3-value--svp" : ""}">${escapeHtml(formatTop3Value(player.statValue, config))} <em>${escapeHtml(config.short)}</em></b></div>
+              <dl>${role.value === "goalie"
+                ? `<div><dt>GP</dt><dd>${player.gp}</dd></div><div><dt>Vinster</dt><dd>${player.wins}</dd></div><div><dt>Nollor</dt><dd>${player.shutouts}</dd></div>`
+                : `<div><dt>GP</dt><dd>${player.gp}</dd></div><div><dt>Mål</dt><dd>${player.goals}</dd></div><div><dt>Assist</dt><dd>${player.assists}</dd></div>`}</dl>
+              <div class="season-top3-bar"><span style="width:${Math.max(5, 100 * Math.abs(player.statValue) / maxStat)}%"></span></div>
+            </div>
+          </div>
+        </article>`).join("") : `<p class="season-empty">Ingen svensk spelare uppfyller kraven.</p>`;
+
+      requestAnimationFrame(() => fitSeasonTop3Portraits(top3));
+
+      const columns = currentRole.columns.map((key) => ({ key, config: columnConfig[key] }));
+      const tableRows = [...players].sort((a, b) => {
+        const av = config.value(a);
+        const bv = config.value(b);
+        return (config.ascending ? av - bv : bv - av) || b.gp - a.gp || a.name.localeCompare(b.name, "sv");
+      });
+      table.innerHTML = `<div class="season-table-wrap"><table class="season-data-table season-stat-table"><thead><tr><th>#</th><th>Spelare</th><th>Lag</th>${columns.map(({ key, config: item }) => `<th><button type="button" data-season-stat-sort="${escapeHtml(key)}" class="${key === sortKey ? "is-active" : ""}">${escapeHtml(item.short)}</button></th>`).join("")}</tr></thead><tbody>${tableRows.length ? tableRows.map((player, index) => `<tr><td><span class="season-stat-rank">${index + 1}</span></td><td class="season-stat-player">${seasonProfileLink({ name: player.name, profileKey: player.row.player_key })}</td><td><div class="season-stat-team"><span class="season-stat-team__logo" data-season-stat-logo data-team-name="${escapeHtml(player.team)}" data-logo-url="${escapeHtml(player.teamLogo)}"></span><span class="season-stat-team__name">${escapeHtml(player.team)}</span></div></td>${columns.map(({ config: item }) => `<td>${escapeHtml(formatValue(item.value(player), item))}</td>`).join("")}</tr>`).join("") : `<tr><td colspan="${columns.length + 3}">Ingen statistik matchar filtret.</td></tr>`}</tbody></table></div>`;
+      table.querySelectorAll("[data-season-stat-sort]").forEach((button) => button.addEventListener("click", () => {
+        sortKey = button.dataset.seasonStatSort || currentRole.defaultSort;
+        render();
+      }));
+      summary.innerHTML = `<strong>${players.length}</strong><span>svenska ${role.value === "goalie" ? "målvakter" : role.value === "defender" ? "backar" : "spelare"} i ${divisionLabels[division.value]} · topp 3 sorterad på ${config.label.toLowerCase()}</span>`;
+      activateLogos();
+    };
+    stageButtons.forEach((button) => button.addEventListener("click", () => {
+      stage.value = button.dataset.seasonStatsStage === "playoff" ? "playoff" : "regular";
+      setButtonGroup(stageButtons, button);
+      render();
+    }));
+    roleButtons.forEach((button) => button.addEventListener("click", () => {
+      role.value = button.dataset.seasonStatsRole || "skater";
+      sortKey = roleConfig[role.value]?.defaultSort || "points";
+      setButtonGroup(roleButtons, button);
+      render();
+    }));
+    divisionButtons.forEach((button) => button.addEventListener("click", () => {
+      division.value = button.dataset.seasonStatsDivision || "elite";
+      setButtonGroup(divisionButtons, button);
+      render();
+    }));
     search.addEventListener("input", render);
     render();
   }
@@ -11844,43 +16417,84 @@ function SEH_initShop() {
     });
     if (selectedSection === "overview") return;
 
-    status.textContent = selectedSection === "teams" || selectedSection === "statistics"
-      ? "Hämtar aktuell säsongsdata från Supabase…"
-      : "Hämtar säsongsarkivet…";
-
-    const legacy = await seasonFetchLegacyData();
-    if (!view.isConnected) return;
+    status.classList.remove("is-error");
+    status.textContent = "Hämtar säsongsdata från Supabase…";
 
     try {
       if (selectedSection === "matches") {
-        if (!legacy) throw new Error("Matchfilen svenskstatistikecl26spring.json kunde inte hämtas.");
-        initializeSeasonMatches(view, legacy);
-        status.textContent = "Svenska matcher från ECL 26 Spring";
+        const matches = await seasonFetchAll("ehockey_season_matches_v1", {
+          select: "match_id,league_id,division,stage,group_name,played_at,home_team,away_team,home_score,away_score,overtime,swedish_team,goals_summary",
+          season_id: `eq.${season.id}`,
+          order: "played_at.desc"
+        });
+        if (!matches.length) throw new Error("Inga matcher hittades i Supabase för säsongen.");
+        initializeSeasonMatches(view, { matcher: { all: seasonSupabaseMatchRows(matches) } });
+        status.textContent = `${matches.length} svenska matcher hämtade från Supabase`;
       } else if (selectedSection === "transfers") {
-        if (!legacy) throw new Error("Den daterade byteshistoriken kunde inte hämtas.");
-        initializeSeasonTransfers(view, legacy);
-        status.textContent = "Daterade svenska spelarbyten";
+        const transfers = await seasonFetchAll("ehockey_season_transfers_v1", {
+          select: "transfer_date,player_name,player_id,user_id,nationality,player_role,from_team,from_division,from_team_id,from_league_id,from_team_logo,to_team,to_division,to_team_id,to_league_id,to_team_logo,player_image,previous_group_games,previous_total_games,previous_playoff_games",
+          season_id: `eq.${season.id}`,
+          order: "transfer_date.desc"
+        });
+        if (!transfers.length) throw new Error("Inga spelarbyten hittades i Supabase för säsongen.");
+        initializeSeasonTransfers(view, { overgangar: seasonSupabaseTransferRows(transfers) });
+        status.textContent = "Daterade svenska spelarbyten hämtade från Supabase";
       } else if (selectedSection === "teams") {
-        const archivedTeams = seasonLegacyTeams(legacy);
-        const teams = archivedTeams.length ? [] : await seasonFetchLeagueSet("v_ehockey_team_tournaments_web_v14", season.leagueIds, {
-          select: "team_id,league_id,current_name,name_used_in_tournament,effective_country,division,division_rank,group_name,table_position,games_played,wins,losses,table_points,goal_diff,playoff_games",
-          effective_country: `eq.${season.countryCode}`
+        const [teams, playerRows] = await Promise.all([
+          seasonFetchLeagueSet("v_ehockey_team_tournaments_web_v14", season.leagueIds, {
+            select: "team_id,league_id,current_name,name_used_in_tournament,effective_country,division,division_rank,group_name,table_position,regular_season_seed,qualified_for_playoffs,final_placement,games_played,wins,losses,overtime_wins,overtime_losses,table_points,goals_for,goals_against,goal_diff,playoff_games,playoff_wins,playoff_losses,playoff_overtime_wins,playoff_overtime_losses,playoff_goals_for,playoff_goals_against,playoff_round_code,playoff_round,playoff_status_code,playoff_status,playoff_series_played,playoff_series_won,playoff_series_lost,final_team_game_wins,final_opponent_game_wins,has_playoff_result,source_url,sports_gamer_tournament_url,chronology_end_date,end_date",
+            effective_country: `eq.${season.countryCode}`
+          }),
+          seasonFetchLeagueSet("v_ehockey_player_tournaments_web_v14", season.leagueIds, {
+            select: "player_key,display_gamertag,player_country,team_id,team_name_in_tournament,league_id,division,regular_points,playoff_points",
+            player_country: `eq.${season.countryCode}`
+          })
+        ]);
+        if (!teams.length) throw new Error("Inga svenska lag hittades i Supabase för säsongen.");
+        const normalizedTeams = seasonRowsWithDivisionFallback(teams, season);
+        const normalizedPlayers = seasonRowsWithDivisionFallback(playerRows, season);
+        initializeSeasonTeams(view, enrichSeasonTeamsWithPlayers(normalizedTeams, normalizedPlayers), {
+          completed: season.completed
         });
-        const effectiveTeams = archivedTeams.length ? archivedTeams : teams;
-        initializeSeasonTeams(view, effectiveTeams);
-        status.textContent = archivedTeams.length
-          ? "Svenska lag och slutspelsstatus från ECL 26 Spring"
-          : "Svenska lag hämtade från Supabase";
+        status.textContent = "Svenska lag, spelare och slutspelsresultat hämtade från Supabase";
       } else if (selectedSection === "statistics") {
-        const playerRows = await seasonFetchLeagueSet("v_ehockey_player_tournaments_web_v14", season.leagueIds, {
-          select: "player_key,sports_gamer_player_id,display_gamertag,player_country,league_id,division,team_id,team_name_in_tournament,regular_skater_games,regular_goals,regular_assists,regular_points,regular_goalie_games,regular_goalie_saves,regular_goalie_shots_against,regular_goalie_shutouts,playoff_skater_games,playoff_goals,playoff_assists,playoff_points,playoff_goalie_games,playoff_goalie_saves,playoff_goalie_shots_against,playoff_goalie_shutouts,total_skater_games,total_goals,total_assists,total_points,total_goalie_games,total_goalie_saves,total_goalie_shots_against,total_goalie_shutouts",
-          player_country: `eq.${season.countryCode}`
-        });
-        const effectivePlayerRows = playerRows.length ? playerRows : seasonLegacyPlayerRows(legacy);
-        initializeSeasonStatistics(view, effectivePlayerRows);
-        status.textContent = playerRows.length
-          ? "Svensk spelarstatistik hämtad från Supabase"
-          : "Svensk spelarstatistik visas från säsongsarkivet";
+        const [playerRows, teamRows, metricRows, rawTeamRows] = await Promise.all([
+          seasonFetchLeagueSet("v_ehockey_player_tournaments_web_v14", season.leagueIds, {
+            select: "player_key,display_gamertag,player_country,league_id,division,team_id,team_name_in_tournament,primary_position,player_type,sports_gamer_player_url,regular_skater_games,regular_goals,regular_assists,regular_points,regular_penalty_minutes,regular_goalie_games,regular_goalie_wins,regular_goalie_saves,regular_goalie_shots_against,regular_goalie_goals_allowed,regular_goalie_save_percentage,regular_goalie_goals_against_average,regular_goalie_shutouts,playoff_skater_games,playoff_goals,playoff_assists,playoff_points,playoff_penalty_minutes,playoff_goalie_games,playoff_goalie_wins,playoff_goalie_saves,playoff_goalie_shots_against,playoff_goalie_goals_allowed,playoff_goalie_save_percentage,playoff_goalie_goals_against_average,playoff_goalie_shutouts",
+            player_country: `eq.${season.countryCode}`
+          }),
+          seasonFetchLeagueSet("v_ehockey_team_tournaments_web_v14", season.leagueIds, {
+            select: "team_id,league_id,current_name,name_used_in_tournament,games_played,regular_games,playoff_games",
+            effective_country: `eq.${season.countryCode}`
+          }),
+          seasonFetchAll("ehockey_season_player_metrics_v1", {
+            select: "stage,stat_type,division,player_name,team_name,games,goals,assists,points,penalty_minutes,saves,save_percentage,goals_against_average,wins,shutouts,defensive_impact,team_matches,team_logo",
+            season_id: `eq.${season.id}`
+          }),
+          (async () => {
+            const rows = [];
+            for (const leagueId of season.leagueIds) {
+              try {
+                rows.push(...await seasonFetchAll("sportsgamer_team_tournament_stats", {
+                  select: "sports_gamer_league_id,team_name_in_league,current_global_team_name,statistics_stage,games_played",
+                  sports_gamer_league_id: `eq.${leagueId}`
+                }));
+              } catch (error) {
+                console.warn(`SportsGamer-lagdata kunde inte hämtas för liga ${leagueId}.`, error);
+              }
+            }
+            return rows;
+          })()
+        ]);
+        if (!playerRows.length) throw new Error("Ingen svensk spelarstatistik hittades i Supabase för säsongen.");
+        initializeSeasonStatistics(
+          view,
+          seasonRowsWithDivisionFallback(playerRows, season),
+          seasonRowsWithDivisionFallback(teamRows, season),
+          seasonSupabaseMetricsLegacy(metricRows),
+          rawTeamRows
+        );
+        status.textContent = "Svensk spelarstatistik och DIM hämtade från Supabase";
       }
     } catch (error) {
       if (!view.isConnected) return;
@@ -11895,19 +16509,16 @@ function SEH_initShop() {
 
     const season = seasons[seasonId];
 
-    const sections = [
-      "overview",
-      "matches",
-      "transfers",
-      "teams",
-      "statistics"
-    ];
+    const sections = ["overview", "matches", "transfers", "teams", "statistics"];
+    const availableSections = new Set(season.sections || ["overview"]);
 
-    const selectedSection = sections.includes(
-      route.query.get("section")
-    )
+    let selectedSection = sections.includes(route.query.get("section"))
       ? route.query.get("section")
       : "overview";
+
+    if (!availableSections.has(selectedSection)) {
+      selectedSection = "overview";
+    }
 
     const seasonTitle =
       view.querySelector("#seasonTitle");
@@ -11919,13 +16530,22 @@ function SEH_initShop() {
       view.querySelector("#seasonTeamsLink");
 
     if (seasonTitle) {
-      seasonTitle.innerHTML =
-        season.title.replace(": ", ":<br>");
+      seasonTitle.textContent = season.title;
     }
 
     if (overviewTitle) {
       overviewTitle.textContent =
         season.title;
+    }
+
+    const seasonHeroLabel = view.querySelector("#seasonHeroLabel");
+    const seasonHeroStatus = view.querySelector("#seasonHeroStatus");
+    if (seasonHeroLabel) seasonHeroLabel.textContent = season.title;
+    if (seasonHeroStatus) {
+      const availableLabels = seasonSectionLabels(season);
+      seasonHeroStatus.textContent = season.leagueIds?.length
+        ? `${availableLabels.join(", ")} finns tillgängligt för den här säsongen.`
+        : "Säsongen är ännu inte igång. När ECL-data finns aktiveras matcher, byten, lag och statistik här.";
     }
 
     if (teamsLink) {
@@ -11948,28 +16568,29 @@ function SEH_initShop() {
       playerLink.href = "#/spelare";
     }
 
-    if (season.leagueIds?.length) {
-      const overview = view.querySelector(".season-overview");
-      const panels = view.querySelector(".season-panels");
+    const overview = view.querySelector(".season-overview");
+    const panels = view.querySelector(".season-panels");
 
+    if (season.leagueIds?.length) {
       if (overview) {
+        const landingCards = [
+          ["matches", "Matcher", "Alla svenska matcher, resultat och datum."],
+          ["transfers", "Byten", `Svenska spelarbyten under ${season.title}.`],
+          ["teams", "Lag", "Svenska lag, tabeller och slutspelsstatus."],
+          ["statistics", "Statistik", "Topplistor och statistik för svenska spelare."]
+        ].filter(([section]) => availableSections.has(section));
+
         overview.innerHTML = `
-          <p class="directory-kicker">SÄSONG</p>
+          <p class="directory-kicker">SVENSK ECL-BEVAKNING</p>
           <h2>${escapeHtml(season.title)}</h2>
-          <p>Samlad ingång till svenska lag, spelare, matcher och historik för säsongen.</p>
-          <div class="season-landing-grid">
-            <a class="season-landing-card" href="${seasonSectionRoute(seasonId, "transfers")}">
-              <span>01</span><h3>Byten</h3><p>Svenska spelarbyten under ECL 26 Spring.</p>
-            </a>
-            <a class="season-landing-card" href="${seasonSectionRoute(seasonId, "matches")}">
-              <span>02</span><h3>Matcher</h3><p>Alla svenska matcher, resultat och datum.</p>
-            </a>
-            <a class="season-landing-card" href="${seasonSectionRoute(seasonId, "teams")}">
-              <span>03</span><h3>Lag</h3><p>Svenska lag i Elite, Pro, Lite, Core och Neo.</p>
-            </a>
-            <a class="season-landing-card" href="${seasonSectionRoute(seasonId, "statistics")}">
-              <span>04</span><h3>Statistik</h3><p>Topplistor och statistik för svenska spelare.</p>
-            </a>
+          <p>${season.archiveEra === "classic"
+            ? "Historisk ECL-data från SportsGamer och Supabase. De vyer som visas nedan är de delar vi har tillräckligt bra data för från säsongen."
+            : "Välj vilken del av den svenska ECL-bevakningen du vill öppna."}</p>
+          <div class="season-landing-grid" style="--season-landing-count:${Math.max(1, landingCards.length)}">
+            ${landingCards.map(([section, label, text], index) => `
+              <a class="season-landing-card" href="${seasonSectionRoute(seasonId, section)}">
+                <span>${String(index + 1).padStart(2, "0")}</span><h3>${escapeHtml(label)}</h3><p>${escapeHtml(text)}</p>
+              </a>`).join("")}
           </div>
         `;
         overview.hidden = selectedSection !== "overview";
@@ -11983,24 +16604,25 @@ function SEH_initShop() {
           <p class="season-data-status" id="seasonDataStatus" aria-live="polite"></p>
           <section class="season-data-section" id="matches" data-season-section="matches">
             <div class="season-data-heading"><div><span>MATCHER</span><h3>Alla svenska matcher</h3></div></div>
-            <div class="season-legacy-controls">
+            <div class="season-legacy-controls season-match-controls">
               <label><span>DIVISION</span><select id="seasonMatchDivision"><option value="all">Alla divisioner</option><option value="elite">Elite</option><option value="pro">Pro</option><option value="lite">Lite</option><option value="core">Core</option><option value="neo">Neo</option></select></label>
-              <label><span>SÖK</span><input id="seasonMatchSearch" type="search" placeholder="Sök lag, grupp eller datum…"></label>
+              <label><span>FAS</span><select id="seasonMatchStage"><option value="all">Alla faser</option><option value="regular">Gruppspel</option><option value="playoff">Slutspel</option></select></label>
+              <label><span>SORTERA</span><select id="seasonMatchSort"><option value="newest">Nyaste först</option><option value="oldest">Äldsta först</option></select></label>
+              <label class="season-match-search"><span>SÖK</span><input id="seasonMatchSearch" type="search" placeholder="Sök lag, grupp, fas eller datum…"></label>
             </div>
             <div class="season-summary-bar" id="seasonMatchSummary"></div>
             <div class="season-match-list" id="seasonMatchList"></div>
           </section>
           <section class="season-data-section" id="transfers" data-season-section="transfers">
-            <div class="season-data-heading"><div><span>BYTEN</span><h3>Svenska ECL-byten</h3></div></div>
-            <p>Spelare, datum, tidigare lag och nytt lag – samma daterade byteshistorik som på den gamla sidan.</p>
-            <div class="season-legacy-controls"><label><span>SÖK</span><input id="seasonTransferSearch" type="search" placeholder="Sök spelare eller lag…"></label></div>
+            <div class="season-data-heading"><div><span>BYTEN</span><h3>Svenska ECL-byten</h3><p>Här visas svenska spelare som bytt ECL-lag inför eller under säsongen. Varje kort visar spelare, datum, tidigare lag och nytt lag.</p></div></div>
+            <div class="season-transfer-toolbar"><div><span>ÖVERGÅNGAR</span><h4>Svenska spelare som bytt lag</h4></div><label><span>SÖK</span><input id="seasonTransferSearch" type="search" placeholder="Sök spelare eller lag…"></label></div>
             <div class="season-summary-bar" id="seasonTransferSummary"></div>
             <div class="season-transfer-list" id="seasonTransferList"></div>
           </section>
           <section class="season-data-section" id="teams" data-season-section="teams">
-            <div class="season-data-heading"><div><span>LAG</span><h3>Svenska eHockey-lag</h3><p>Här samlas svenska lag i ECL 26 Spring med division, tabellplacering, poäng och aktuell slutspelsstatus.</p></div></div>
+            <div class="season-data-heading"><div><span>LAG</span><h3>Svenska eHockey-lag</h3><p>Här samlas svenska lag i ${escapeHtml(season.title)} med division, tabellplacering, poäng och aktuell slutspelsstatus.</p></div></div>
             <div class="season-team-controls">
-              <label><span>DIVISION</span><select id="seasonTeamDivision"><option value="all">Alla divisioner</option><option value="elite">Elite</option><option value="pro">Pro</option><option value="lite">Lite</option><option value="core">Core</option><option value="neo">Neo</option></select></label>
+              <label><span>DIVISION</span><select id="seasonTeamDivision"><option value="all">Alla divisioner</option>${(season.divisions || []).map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.label)}</option>`).join("")}</select></label>
               <label><span>SORTERA</span><select id="seasonTeamSort"><option value="division">Division + poäng</option><option value="name-asc">Namn A–Ö</option><option value="name-desc">Namn Ö–A</option><option value="players-desc">Flest spelare</option><option value="points-desc">Flest poäng</option><option value="ppg-desc">Bäst poängsnitt</option><option value="form-desc">Bäst form</option><option value="swedish-points-desc">Flest svenska poäng</option><option value="matches-desc">Flest matcher</option></select></label>
               <label class="season-team-controls__search"><span>SÖK</span><input id="seasonTeamSearch" type="search" placeholder="Sök lag eller division…"></label>
               <label class="season-team-toggle"><input id="seasonTeamPlayoffOnly" type="checkbox"><span>Endast slutspel</span></label>
@@ -12010,45 +16632,72 @@ function SEH_initShop() {
             <div class="season-team-list" id="seasonTeamsList"></div>
           </section>
           <section class="season-data-section" id="statistics" data-season-section="statistics">
-            <div class="season-data-heading"><div><span>STATISTIK</span><h3>Svensk statistik</h3></div></div>
-            <div class="season-stats-menu">
-              <label><span>SPELFORM</span><select id="seasonStatsStage"><option value="regular">Grundserie</option><option value="playoff">Slutspel</option></select></label>
-              <label><span>SPELARTYP</span><select id="seasonStatsType"><option value="skater">Utespelare</option><option value="goalie">Målvakter</option></select></label>
-              <label><span>DIVISION</span><select id="seasonStatsDivision"><option value="all">Alla divisioner</option><option value="elite">Elite</option><option value="pro">Pro</option><option value="lite">Lite</option><option value="core">Core</option><option value="neo">Neo</option></select></label>
-              <label><span>SÖK</span><input id="seasonStatsSearch" type="search" placeholder="Sök spelare eller lag…"></label>
+            <div class="season-data-heading"><div><span>STATISTIK</span><h3>${escapeHtml(season.title)} – svensk statistik</h3><p>Välj spelform, roll och division. Se topp tre svenska spelare och hela topplistan för den valda kategorin.</p></div></div>
+            <div class="season-stats-tabs" aria-label="Statistikfilter">
+              <div><span>SPELFORM</span><input id="seasonStatsStage" type="hidden" value="regular"><nav><button class="is-active" type="button" data-season-stats-stage="regular" aria-pressed="true">Grundserie</button><button type="button" data-season-stats-stage="playoff" aria-pressed="false">Slutspel</button></nav></div>
+              <div><span>ROLL</span><input id="seasonStatsRole" type="hidden" value="skater"><nav><button class="is-active" type="button" data-season-stats-role="skater" aria-pressed="true">Spelare</button><button type="button" data-season-stats-role="defender" aria-pressed="false">Backar</button><button type="button" data-season-stats-role="goalie" aria-pressed="false">Målvakter</button></nav></div>
+              <div><span>DIVISION</span><input id="seasonStatsDivision" type="hidden" value="${escapeHtml(season.divisions?.[0]?.id || "elite")}"><nav>${(season.divisions || []).map((item, index) => `<button class="${index === 0 ? "is-active" : ""}" type="button" data-season-stats-division="${escapeHtml(item.id)}" aria-pressed="${index === 0 ? "true" : "false"}">${escapeHtml(item.label)}</button>`).join("")}</nav></div>
             </div>
-            <div class="season-stats-podium" id="seasonStatsPodium"></div>
-            <div id="seasonStatsTable"></div>
+            <div class="season-stats-heading"><div id="seasonStatsListTitle"></div><label><span>SÖK</span><input id="seasonStatsSearch" type="search" placeholder="Sök spelare eller lag…"></label></div>
+            <div class="season-summary-bar" id="seasonStatsSummary"></div>
+            <div class="season-top3" id="seasonStatsTop3"></div>
+            <div class="season-stat-table-host" id="seasonStatsTable"></div>
           </section>
         `;
       }
 
       loadSeasonDashboard(view, season, selectedSection);
+    } else {
+      if (overview) {
+        overview.innerHTML = `
+          <p class="directory-kicker">KOMMANDE SÄSONG</p>
+          <h2>${escapeHtml(season.title)}</h2>
+          <p>Säsongen är ännu inte igång. När data finns läggs samma svenska ECL-bevakning in här automatiskt.</p>
+          <div class="season-upcoming-actions-v12840">
+            <a href="#/ecl">Till ECL</a>
+            <a href="#/ecl?view=archive">Öppna ECL-arkivet</a>
+            <a href="#/sasong/ecl26spring">Senaste fulla ECL-data</a>
+          </div>
+        `;
+        overview.hidden = false;
+      }
+      if (panels) panels.hidden = true;
+      view.querySelectorAll(".season-subnav a:not([data-season-archive])").forEach((anchor) => {
+        const href = String(anchor.getAttribute("href") || "");
+        if (href !== "#overview") anchor.hidden = true;
+      });
     }
 
     view
       .querySelectorAll(".season-subnav a")
       .forEach((anchor) => {
+        if (anchor.dataset.seasonArchive === "true") {
+          anchor.href = "#/ecl?view=archive";
+          anchor.classList.remove("is-active");
+          return;
+        }
+
         const original =
           String(anchor.getAttribute("href") || "");
 
-        const section =
-          original.replace(/^#/, "") || "overview";
+        const section = original.replace(/^#/, "") || "overview";
+        const isAvailable = availableSections.has(section);
+        anchor.hidden = !isAvailable;
+        if (!isAvailable) {
+          anchor.classList.remove("is-active");
+          return;
+        }
 
-        anchor.href =
-          seasonSectionRoute(
-            seasonId,
-            section
-          );
-
-        anchor.classList.toggle(
-          "is-active",
-          section === selectedSection
-        );
+        anchor.href = seasonSectionRoute(seasonId, section);
+        anchor.classList.toggle("is-active", section === selectedSection);
       });
 
-    view
-      .querySelector(".season-subnav")
+    const seasonNav = view.querySelector(".season-subnav");
+    if (seasonNav) {
+      seasonNav.style.setProperty("--season-tab-count", String(availableSections.size + 1));
+    }
+
+    seasonNav
       ?.addEventListener("click", (event) => {
         const anchor =
           event.target.closest("a[href]");
@@ -12124,6 +16773,35 @@ function SEH_initShop() {
     }
   }
 
+  function ensureGlobalFooter(view) {
+    if (!view) return;
+
+    let footer = view.querySelector(":scope > .directory-footer:last-child");
+    if (!footer) {
+      footer = document.createElement("footer");
+      footer.className = "directory-footer site-global-footer";
+      footer.innerHTML = `<div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div>`;
+      view.append(footer);
+    } else {
+      footer.classList.add("site-global-footer");
+    }
+
+    let footerInner = footer.querySelector(":scope > div");
+    if (!footerInner) {
+      footerInner = document.createElement("div");
+      footerInner.innerHTML = `<strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span>`;
+      footer.replaceChildren(footerInner);
+    }
+
+    if (!footerInner.querySelector(".directory-footer__support")) {
+      const supportLink = document.createElement("a");
+      supportLink.className = "directory-footer__support";
+      supportLink.href = "#/stod";
+      supportLink.textContent = "Svensk eHockey drivs ideellt · Stöd sidan →";
+      footerInner.append(supportLink);
+    }
+  }
+
   async function render() {
     const token = ++renderToken;
     const route = parseRoute();
@@ -12173,10 +16851,18 @@ function SEH_initShop() {
       view
     );
 
+    ensureGlobalFooter(view);
+
     bindHeader(
       header,
       route
     );
+
+    if (route.key === "ecl" && route.query.get("view") === "archive") {
+      requestAnimationFrame(() => {
+        view.querySelector("#eclArchive")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
 
     if (route.key === "season") {
       initializeSeasonView(
@@ -12201,6 +16887,10 @@ function SEH_initShop() {
         route,
         token
       );
+
+      if (token === renderToken) {
+        ensureGlobalFooter(view);
+      }
     } catch (error) {
       if (token !== renderToken) {
         return;

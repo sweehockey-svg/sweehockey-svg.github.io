@@ -65,7 +65,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Svensk eHockey">
-  <link rel="stylesheet" href="styles.css?v=20260816-v108-advanced-default-denied">
+  <link rel="stylesheet" href="styles.css?v=20260904-v12876-ecl-goalie-name-below-logo">
 <style>
     .portal-button--primary,
     .portal-button--primary:hover,
@@ -116,6 +116,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="players-register-v1276.css?v=20260901-v12833-compact-tight-gap">
 </head>
 <body class="directory-page portal-page">
   <noscript>
@@ -127,11 +128,14 @@
     </main>
   </noscript>
 
+  <!-- Samma Supabase Auth-klient som används av Skrivcenter och Admincenter. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Behåll din befintliga config.js. Den innehåller Supabase URL + publishable key. -->
   <script src="config.js?v=20260812-filter-source-styles1"></script>
-  <script src="teamlogos-manifest.js?v=20260812-v54"></script>
+  <script src="teamlogos-manifest.js?v=20260830-v60"></script>
+  <script src="playerimages-manifest.js?v=20260904-v1"></script>
   <script src="news-articles.js?v=20260816-v5"></script>
-  <script src="app.js?v=20260818-v112-inline-images"></script>
+  <script src="app.js?v=20260905-v12877-shared-auth-client"></script>
 
   <script>
     // Rensa den tidigare PWA-service workern/cache om den hann installeras.

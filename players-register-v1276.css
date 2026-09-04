@@ -1,0 +1,2661 @@
+/* ============================================================
+   SVENSK eHOCKEY — SPELARREGISTER V1.27.4
+   Standardkort även utan porträtt; transparent fallback utan speciallayout.
+   Endast registervyn påverkas; spelarprofiler och övriga sidor lämnas orörda.
+   ============================================================ */
+
+/* ---------- Registerpanel ---------- */
+.players-shell-v122 .player-directory-v122 {
+  margin-top: 22px;
+  border-color: rgba(214, 177, 95, .22);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 88% -10%, rgba(61, 216, 208, .035), transparent 32rem),
+    linear-gradient(180deg, rgba(7, 11, 18, .97), rgba(2, 4, 8, .99));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .20);
+}
+
+.players-directory-heading-v122 {
+  min-height: 106px;
+  align-items: end;
+  padding: 25px 26px 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,.018), transparent);
+}
+
+.players-directory-heading-v122 .directory-kicker {
+  margin-bottom: 7px;
+}
+
+.players-directory-heading-v122 h2 {
+  font-size: clamp(34px, 3vw, 48px);
+  line-height: .95;
+}
+
+.players-directory-heading-v122 > p {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  margin-bottom: 1px;
+  padding: 0 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 999px;
+  color: rgba(244, 243, 239, .68);
+  background: rgba(255,255,255,.018);
+  font-size: 11px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+/* ---------- Filterrad ---------- */
+.players-toolbar-v122 {
+  top: 88px;
+  gap: 10px;
+  padding: 13px 14px 14px;
+  background: rgba(3, 5, 10, .965);
+  box-shadow: 0 12px 30px rgba(0,0,0,.18);
+}
+
+.players-toolbar-v122 .players-field > span,
+.players-toolbar-v122 .players-compact > span:first-child {
+  padding-left: 2px;
+  font-size: 8px;
+  letter-spacing: .10em;
+}
+
+.players-toolbar-v122 .players-field input,
+.players-toolbar-v122 .players-field select,
+.players-toolbar-v122 .players-compact__control {
+  min-height: 44px;
+  border: 1px solid rgba(255,255,255,.105);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+  color: #f4f3ef;
+  font-size: 12px;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+
+.players-toolbar-v122 .players-field input:hover,
+.players-toolbar-v122 .players-field select:hover,
+.players-toolbar-v122 .players-compact__control:hover {
+  border-color: rgba(214,177,95,.30);
+  background: rgba(255,255,255,.037);
+}
+
+.players-toolbar-v122 .players-field input:focus,
+.players-toolbar-v122 .players-field select:focus {
+  border-color: rgba(214,177,95,.62);
+  box-shadow: 0 0 0 3px rgba(214,177,95,.08);
+}
+
+.players-toolbar-v122 .players-compact__control {
+  justify-content: center;
+  border-color: rgba(214,177,95,.26);
+}
+
+.players-toolbar-v122 .players-compact__control input {
+  accent-color: #d6b15f;
+}
+
+/* ---------- Fyra jämna kort per rad ---------- */
+.players-shell-v122 .player-directory__grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+  border: 0;
+  background: rgba(0, 0, 0, .10);
+}
+
+.players-card-v122 {
+  min-width: 0;
+  min-height: 276px;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.095);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(214,177,95,.065), transparent 34%),
+    linear-gradient(145deg, rgba(10,15,24,.96), rgba(3,6,11,.985));
+  box-shadow: 0 8px 24px rgba(0,0,0,.10);
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.players-card-v122:hover,
+.players-card-v122:focus-visible {
+  z-index: 3;
+  transform: translateY(-2px);
+  border-color: rgba(214,177,95,.46);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(214,177,95,.095), transparent 35%),
+    linear-gradient(145deg, rgba(14,20,31,.98), rgba(4,7,13,.995));
+  box-shadow: 0 16px 34px rgba(0,0,0,.24);
+}
+
+.players-card-v122 .players-card__avatar,
+.players-card-v122 .players-card__avatar img {
+  width: 96px;
+  height: 132px;
+}
+
+.players-card-v122 .players-card__avatar {
+  border-color: rgba(214,177,95,.48);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(25,67,105,.55), transparent 60%),
+    #06101d;
+  box-shadow: 0 10px 22px rgba(0,0,0,.22);
+}
+
+.players-card-v122 .players-card__avatar img {
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.players-card__role-v122 {
+  margin-top: 7px;
+  color: #58ddd6;
+  font-size: 7.5px;
+  letter-spacing: .095em;
+}
+
+.players-card__content-v122 {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.players-card__title-v122 h3 {
+  max-width: 100%;
+  font-size: clamp(18px, 1.28vw, 22px);
+  line-height: 1.05;
+  letter-spacing: -.035em;
+}
+
+.players-card__ranking-v122 {
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.players-card__ranking-v122 b {
+  min-width: 31px;
+  padding: 4px 7px;
+  border-color: rgba(214,177,95,.34);
+  border-radius: 7px;
+  background: rgba(214,177,95,.075);
+  font-size: 10px;
+  text-align: center;
+}
+
+.players-card__ranking-v122 em {
+  color: #f0d58b;
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: .01em;
+}
+
+.players-card__team-v122 {
+  grid-template-columns: 27px minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.players-card__team-logo-v122 {
+  width: 27px;
+  height: 27px;
+  border-color: rgba(255,255,255,.10);
+  border-radius: 7px;
+  background: rgba(255,255,255,.022);
+}
+
+.players-card__team-logo-v122 img {
+  width: 23px;
+  height: 23px;
+}
+
+.players-card__team-v122 strong {
+  color: rgba(244,243,239,.86);
+  font-size: 10.5px;
+  font-weight: 850;
+}
+
+.players-card__metrics-v122 {
+  margin-top: auto;
+  border-color: rgba(255,255,255,.085);
+  border-radius: 9px;
+  background: rgba(255,255,255,.014);
+}
+
+.players-card__metrics-v122 > div {
+  padding: 8px 3px 7px;
+  border-right-color: rgba(255,255,255,.075);
+}
+
+.players-card__metrics-v122 span {
+  color: #707987;
+  font-size: 6px;
+  letter-spacing: .075em;
+}
+
+.players-card__metrics-v122 strong {
+  margin-top: 4px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.players-card__latest-v122 {
+  min-height: 23px;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+
+.players-card__latest-v122 span {
+  font-size: 6.5px;
+}
+
+.players-card__latest-v122 strong {
+  max-width: 72%;
+  font-size: 8.5px;
+}
+
+.players-card__leagues-v122 {
+  margin-top: 5px;
+  color: #626c79;
+  font-size: 7.5px;
+  line-height: 1.25;
+  -webkit-line-clamp: 1;
+}
+
+/* ---------- Pagination ---------- */
+.players-shell-v122 .player-pagination {
+  align-items: center;
+  min-height: 78px;
+  gap: 7px;
+  padding: 17px 20px 18px;
+  border-top: 1px solid rgba(255,255,255,.075);
+  background: rgba(2,4,8,.78);
+}
+
+.players-shell-v122 .player-pagination button {
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0 12px;
+  border-color: rgba(255,255,255,.16);
+  border-radius: 9px;
+  background: rgba(255,255,255,.015);
+  color: rgba(244,243,239,.88);
+  font-size: 12px;
+  transition: border-color .15s ease, background .15s ease, color .15s ease, transform .15s ease;
+}
+
+.players-shell-v122 .player-pagination button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(214,177,95,.48);
+  background: rgba(214,177,95,.06);
+  color: #fff;
+}
+
+.players-shell-v122 .player-pagination button.is-active {
+  border-color: #ffd000;
+  background: #ffd000;
+  color: #070808;
+}
+
+.players-shell-v122 .player-pagination button:disabled {
+  opacity: .28;
+}
+
+/* ---------- Kompaktvy: 6 kolumner, 48 spelare = 8 fulla rader ---------- */
+.players-shell-v122 .player-directory__grid.is-compact {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.player-directory__grid.is-compact .players-card-v122 {
+  min-height: 218px;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 10px;
+  padding: 11px;
+}
+
+.player-directory__grid.is-compact .players-card-v122 .players-card__avatar,
+.player-directory__grid.is-compact .players-card-v122 .players-card__avatar img {
+  width: 70px;
+  height: 98px;
+}
+
+/* ---------- Responsivt ---------- */
+@media (max-width: 1280px) {
+  .players-shell-v122 .player-directory__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .players-card-v122 {
+    min-height: 270px;
+  }
+}
+
+@media (max-width: 980px) {
+  .players-directory-heading-v122 {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .players-directory-heading-v122 > p {
+    white-space: normal;
+  }
+
+  .players-shell-v122 .player-directory__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .players-directory-heading-v122 {
+    min-height: 0;
+    padding: 20px 18px 16px;
+  }
+
+  .players-directory-heading-v122 h2 {
+    font-size: 34px;
+  }
+
+  .players-toolbar-v122 {
+    top: auto;
+    padding: 11px;
+  }
+
+  .players-shell-v122 .player-directory__grid,
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .players-card-v122,
+  .player-directory__grid.is-compact .players-card-v122 {
+    min-height: 246px;
+    grid-template-columns: 1fr;
+    gap: 7px;
+    padding: 11px 9px;
+    text-align: center;
+  }
+
+  .players-card-v122 .players-card__avatar,
+  .players-card-v122 .players-card__avatar img,
+  .player-directory__grid.is-compact .players-card-v122 .players-card__avatar,
+  .player-directory__grid.is-compact .players-card-v122 .players-card__avatar img {
+    width: 82px;
+    height: 108px;
+    margin-inline: auto;
+  }
+
+  .players-card__ranking-v122,
+  .players-card__team-v122 {
+    justify-content: center;
+  }
+
+  .players-card__metrics-v122 {
+    margin-top: 8px;
+  }
+
+  .players-card__latest-v122,
+  .players-card__leagues-v122 {
+    display: none;
+  }
+
+  .players-shell-v122 .player-pagination {
+    justify-content: flex-start;
+    min-height: 66px;
+    padding: 12px;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 430px) {
+  .players-shell-v122 .player-directory__grid,
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: 1fr;
+  }
+
+  .players-card-v122,
+  .player-directory__grid.is-compact .players-card-v122 {
+    grid-template-columns: 88px minmax(0, 1fr);
+    min-height: 220px;
+    text-align: left;
+  }
+
+  .players-card-v122 .players-card__avatar,
+  .players-card-v122 .players-card__avatar img,
+  .player-directory__grid.is-compact .players-card-v122 .players-card__avatar,
+  .player-directory__grid.is-compact .players-card-v122 .players-card__avatar img {
+    width: 88px;
+    height: 120px;
+  }
+
+  .players-card__ranking-v122,
+  .players-card__team-v122 {
+    justify-content: initial;
+  }
+}
+
+/* ============================================================
+   SVENSK eHOCKEY — SPELARREGISTER V1.26.3
+   Design polish: kompakt hero, tätare register, tydligare spelarkort.
+   ============================================================ */
+
+/* ---------- Sidans rytm ---------- */
+.players-shell-v122 {
+  padding-top: 26px !important;
+  padding-bottom: 48px;
+}
+
+/* ---------- Kompakt editorial hero ---------- */
+.players-hero-v122 {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px !important;
+  align-items: center;
+  gap: clamp(42px, 5vw, 82px) !important;
+  min-height: 430px !important;
+  padding: 42px 56px !important;
+  overflow: hidden;
+  border: 1px solid rgba(214,177,95,.28) !important;
+  border-radius: 20px !important;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(31,76,111,.22), transparent 31rem),
+    radial-gradient(circle at 88% 80%, rgba(214,177,95,.055), transparent 24rem),
+    linear-gradient(115deg, rgba(10,18,30,.985), rgba(3,7,13,.995) 68%) !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,.22);
+}
+
+.players-hero-v122::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -110px;
+  bottom: -250px;
+  width: 470px;
+  height: 470px;
+  border: 1px solid rgba(214,177,95,.12);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 48px rgba(214,177,95,.022),
+    0 0 0 96px rgba(62,217,210,.012);
+}
+
+.players-hero-v122::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 61%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(214,177,95,.16), transparent);
+  transform: rotate(11deg);
+  transform-origin: center;
+}
+
+.players-hero-v122 .players-hero__copy {
+  position: relative;
+  z-index: 1;
+  padding: 0 !important;
+}
+
+.players-hero-v122 .directory-kicker {
+  margin-bottom: 14px;
+  color: #58ddd6;
+  font-size: 10px;
+  letter-spacing: .11em;
+}
+
+.players-hero-v122 h1 {
+  max-width: 880px;
+  margin: 0 0 18px !important;
+  color: #f4f3ef;
+  font-size: clamp(58px, 5.05vw, 88px) !important;
+  line-height: .92 !important;
+  letter-spacing: -.045em !important;
+}
+
+.players-hero-v122 .players-hero__copy > p:not(.directory-kicker) {
+  max-width: 720px;
+  color: rgba(222,226,229,.76);
+  font-size: 14px;
+  line-height: 1.58;
+}
+
+.players-hero-v122 .players-hero__tags {
+  gap: 7px;
+  margin-top: 20px;
+}
+
+.players-hero-v122 .players-hero__tags span {
+  min-height: 29px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border-color: rgba(214,177,95,.25);
+  border-radius: 999px;
+  color: #e7c66f;
+  background: rgba(214,177,95,.045);
+  font-size: 8px;
+  letter-spacing: .06em;
+}
+
+/* ---------- Översikt ---------- */
+.players-overview-v122 {
+  position: relative;
+  z-index: 2;
+  align-self: center;
+  width: 100%;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.players-overview-v122 > .directory-kicker {
+  margin: 0 0 10px;
+  color: #58ddd6;
+  font-size: 10px;
+}
+
+.players-overview-v122 > div {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 14px;
+  background: rgba(0,0,0,.22) !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.025);
+}
+
+.players-overview-v122 article {
+  min-height: 82px !important;
+  justify-content: center;
+  padding: 14px 16px !important;
+  border-right: 1px solid rgba(255,255,255,.08) !important;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  text-align: left !important;
+}
+
+.players-overview-v122 article:nth-child(2n) {
+  border-right: 0 !important;
+}
+
+.players-overview-v122 article:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.players-overview-v122 article span {
+  font-size: 8px;
+  letter-spacing: .07em;
+}
+
+.players-overview-v122 article strong {
+  margin-top: 7px;
+  color: #ffd000;
+  font-size: clamp(25px, 1.9vw, 31px) !important;
+  letter-spacing: -.035em !important;
+}
+
+/* ---------- Registerpanel ---------- */
+.players-shell-v122 .player-directory-v122 {
+  margin-top: 14px !important;
+  overflow: hidden;
+  border-radius: 18px !important;
+  border-color: rgba(255,255,255,.10) !important;
+  background:
+    radial-gradient(circle at 84% 0%, rgba(63,220,211,.025), transparent 30rem),
+    linear-gradient(180deg, rgba(6,10,16,.985), rgba(2,4,8,.995)) !important;
+  box-shadow: 0 22px 58px rgba(0,0,0,.16) !important;
+}
+
+.players-directory-heading-v122 {
+  min-height: 82px !important;
+  padding: 17px 20px 14px !important;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  background: linear-gradient(180deg, rgba(255,255,255,.014), transparent) !important;
+}
+
+.players-directory-heading-v122 .directory-kicker {
+  margin-bottom: 4px;
+  font-size: 8px;
+  letter-spacing: .10em;
+}
+
+.players-directory-heading-v122 h2 {
+  font-size: clamp(30px, 2.5vw, 40px) !important;
+  line-height: .96 !important;
+  letter-spacing: -.035em !important;
+}
+
+.players-directory-heading-v122 > p {
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  border-color: rgba(255,255,255,.07) !important;
+  background: rgba(255,255,255,.012) !important;
+  color: rgba(207,213,220,.58) !important;
+  font-size: 9.5px !important;
+}
+
+/* ---------- Filterrad ---------- */
+.players-toolbar-v122 {
+  gap: 9px !important;
+  padding: 10px 12px 12px !important;
+  border-bottom: 1px solid rgba(255,255,255,.075) !important;
+  background: rgba(2,5,9,.97) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.14) !important;
+}
+
+.players-toolbar-v122 .players-field > span,
+.players-toolbar-v122 .players-compact > span:first-child {
+  color: rgba(88,221,214,.82) !important;
+  font-size: 7px !important;
+  letter-spacing: .12em !important;
+}
+
+.players-toolbar-v122 .players-field input,
+.players-toolbar-v122 .players-field select,
+.players-toolbar-v122 .players-compact__control {
+  min-height: 42px !important;
+  border-radius: 8px !important;
+  border-color: rgba(255,255,255,.095) !important;
+  background: rgba(255,255,255,.018) !important;
+  font-size: 11px !important;
+}
+
+.players-toolbar-v122 .players-field input:focus,
+.players-toolbar-v122 .players-field select:focus {
+  border-color: rgba(214,177,95,.58) !important;
+  box-shadow: 0 0 0 3px rgba(214,177,95,.07) !important;
+}
+
+.players-toolbar-v122 .players-compact__control {
+  border-color: rgba(214,177,95,.22) !important;
+  color: rgba(244,243,239,.78);
+}
+
+/* ---------- 4 × 5 kort, mer editorial och mindre "datatabell" ---------- */
+.players-shell-v122 .player-directory__grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  padding: 12px !important;
+  background: rgba(0,0,0,.075) !important;
+}
+
+.players-card-v122 {
+  display: grid !important;
+  grid-template-columns: 90px minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  gap: 13px !important;
+  min-height: 248px !important;
+  padding: 13px !important;
+  border: 1px solid rgba(255,255,255,.085) !important;
+  border-radius: 12px !important;
+  background:
+    radial-gradient(circle at 4% 0%, rgba(214,177,95,.05), transparent 38%),
+    linear-gradient(145deg, rgba(9,14,22,.97), rgba(3,5,10,.992)) !important;
+  box-shadow: none !important;
+}
+
+.players-card-v122::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(214,177,95,.34), transparent);
+  opacity: 0;
+  transition: opacity .16s ease;
+}
+
+.players-card-v122:hover,
+.players-card-v122:focus-visible {
+  transform: translateY(-2px) !important;
+  border-color: rgba(214,177,95,.36) !important;
+  background:
+    radial-gradient(circle at 4% 0%, rgba(214,177,95,.075), transparent 38%),
+    linear-gradient(145deg, rgba(12,18,28,.985), rgba(3,6,11,.995)) !important;
+  box-shadow: 0 15px 34px rgba(0,0,0,.20) !important;
+}
+
+.players-card-v122:hover::after,
+.players-card-v122:focus-visible::after {
+  opacity: 1;
+}
+
+.players-card-v122 .players-card__media-v122 {
+  align-self: start;
+}
+
+.players-card-v122 .players-card__avatar,
+.players-card-v122 .players-card__avatar img {
+  width: 90px !important;
+  height: 124px !important;
+}
+
+.players-card-v122 .players-card__avatar {
+  border-radius: 10px !important;
+  border-color: rgba(214,177,95,.42) !important;
+  background: #06101d !important;
+}
+
+.players-card-v122 .players-card__avatar img {
+  object-fit: contain !important;
+  object-position: center bottom !important;
+}
+
+.players-card__role-v122 {
+  margin-top: 6px !important;
+  color: #58ddd6 !important;
+  font-size: 7px !important;
+  letter-spacing: .105em !important;
+}
+
+.players-card__content-v122 {
+  min-height: 100%;
+}
+
+.players-card__title-v122 h3 {
+  font-size: clamp(17px, 1.12vw, 20px) !important;
+  line-height: 1.03 !important;
+  letter-spacing: -.03em !important;
+}
+
+.players-card__ranking-v122 {
+  margin-top: 6px !important;
+}
+
+.players-card__ranking-v122 b {
+  min-width: 29px !important;
+  padding: 3px 6px !important;
+  border-radius: 6px !important;
+  font-size: 9px !important;
+}
+
+.players-card__ranking-v122 em {
+  color: #e7c66f !important;
+  font-size: 8.5px !important;
+}
+
+.players-card__team-v122 {
+  margin-top: 9px !important;
+}
+
+.players-card__team-logo-v122 {
+  width: 25px !important;
+  height: 25px !important;
+  border-radius: 6px !important;
+}
+
+.players-card__team-logo-v122 img {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+.players-card__team-v122 strong {
+  font-size: 9.5px !important;
+  line-height: 1.2;
+}
+
+.players-card__metrics-v122 {
+  margin-top: auto !important;
+  border-radius: 8px !important;
+  background: rgba(255,255,255,.012) !important;
+}
+
+.players-card__metrics-v122 > div {
+  min-width: 0;
+  padding: 7px 2px 6px !important;
+}
+
+.players-card__metrics-v122 span {
+  font-size: 5.5px !important;
+}
+
+.players-card__metrics-v122 strong {
+  margin-top: 3px !important;
+  font-size: 12px !important;
+}
+
+.players-card__latest-v122 {
+  margin-top: 7px !important;
+  padding-top: 6px !important;
+}
+
+.players-card__latest-v122 span {
+  font-size: 5.7px !important;
+}
+
+.players-card__latest-v122 strong {
+  max-width: 74% !important;
+  font-size: 7.7px !important;
+}
+
+.players-card__leagues-v122 {
+  margin-top: 4px !important;
+  color: #596471 !important;
+  font-size: 6.7px !important;
+}
+
+/* ---------- Pagination ---------- */
+.players-shell-v122 .player-pagination {
+  min-height: 66px !important;
+  gap: 6px !important;
+  padding: 12px 16px 13px !important;
+  background: rgba(2,4,8,.82) !important;
+}
+
+.players-shell-v122 .player-pagination button {
+  min-width: 38px !important;
+  min-height: 38px !important;
+  padding: 0 10px !important;
+  border-radius: 7px !important;
+  font-size: 10.5px !important;
+}
+
+/* ---------- Kompaktläge ---------- */
+.players-shell-v122 .player-directory__grid.is-compact {
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+}
+
+.player-directory__grid.is-compact .players-card-v122 {
+  grid-template-columns: 66px minmax(0, 1fr) !important;
+  min-height: 204px !important;
+  gap: 9px !important;
+  padding: 10px !important;
+}
+
+.player-directory__grid.is-compact .players-card-v122 .players-card__avatar,
+.player-directory__grid.is-compact .players-card-v122 .players-card__avatar img {
+  width: 66px !important;
+  height: 92px !important;
+}
+
+/* ---------- Responsivt ---------- */
+@media (min-width: 1181px) {
+  .players-hero-v122 h1 {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 1280px) {
+  .players-hero-v122 {
+    grid-template-columns: minmax(0, 1fr) 320px !important;
+    gap: 36px !important;
+    padding: 38px 40px !important;
+  }
+
+  .players-shell-v122 .player-directory__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .players-shell-v122 {
+    padding-top: 18px !important;
+  }
+
+  .players-hero-v122 {
+    grid-template-columns: 1fr !important;
+    gap: 26px !important;
+    min-height: 0 !important;
+    padding: 34px 30px !important;
+  }
+
+  .players-hero-v122::after {
+    display: none;
+  }
+
+  .players-overview-v122 {
+    max-width: 520px;
+  }
+
+  .players-shell-v122 .player-directory__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .players-shell-v122 {
+    padding-top: 12px !important;
+  }
+
+  .players-hero-v122 {
+    padding: 28px 20px !important;
+    border-radius: 14px !important;
+  }
+
+  .players-hero-v122 h1 {
+    font-size: clamp(48px, 15vw, 68px) !important;
+  }
+
+  .players-hero-v122 .players-hero__copy > p:not(.directory-kicker) {
+    font-size: 13px;
+  }
+
+  .players-overview-v122 article {
+    min-height: 72px !important;
+    padding: 12px !important;
+  }
+
+  .players-directory-heading-v122 {
+    min-height: 0 !important;
+    padding: 17px 15px 14px !important;
+  }
+
+  .players-toolbar-v122 {
+    padding: 10px !important;
+  }
+
+  .players-shell-v122 .player-directory__grid,
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+    padding: 7px !important;
+  }
+
+  .players-card-v122,
+  .player-directory__grid.is-compact .players-card-v122 {
+    grid-template-columns: 1fr !important;
+    min-height: 236px !important;
+    padding: 10px 8px !important;
+    text-align: center;
+  }
+
+  .players-card-v122 .players-card__avatar,
+  .players-card-v122 .players-card__avatar img,
+  .player-directory__grid.is-compact .players-card-v122 .players-card__avatar,
+  .player-directory__grid.is-compact .players-card-v122 .players-card__avatar img {
+    width: 78px !important;
+    height: 104px !important;
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 430px) {
+  .players-shell-v122 .player-directory__grid,
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: 1fr !important;
+  }
+
+  .players-card-v122,
+  .player-directory__grid.is-compact .players-card-v122 {
+    grid-template-columns: 84px minmax(0, 1fr) !important;
+    min-height: 214px !important;
+    text-align: left;
+  }
+
+  .players-card-v122 .players-card__avatar,
+  .players-card-v122 .players-card__avatar img,
+  .player-directory__grid.is-compact .players-card-v122 .players-card__avatar,
+  .player-directory__grid.is-compact .players-card-v122 .players-card__avatar img {
+    width: 84px !important;
+    height: 116px !important;
+  }
+}
+
+/* ============================================================
+   SVENSK eHOCKEY — SPELARREGISTER V1.26.4
+   Final desktop polish: lägre hero + bättre läsbarhet i korten.
+   ============================================================ */
+
+/* Toppen ska kännas som en introduktion, inte som en egen hel skärm. */
+@media (min-width: 981px) {
+  .players-shell-v122 {
+    padding-top: 22px !important;
+  }
+
+  .players-hero-v122 {
+    grid-template-columns: minmax(0, 1fr) 330px !important;
+    gap: clamp(38px, 4.4vw, 70px) !important;
+    min-height: 374px !important;
+    padding: 32px 46px !important;
+  }
+
+  .players-hero-v122 h1 {
+    max-width: 820px;
+    margin-bottom: 15px !important;
+    font-size: clamp(54px, 4.55vw, 78px) !important;
+    line-height: .94 !important;
+  }
+
+  .players-hero-v122 .players-hero__copy > p:not(.directory-kicker) {
+    max-width: 690px;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  .players-hero-v122 .players-hero__tags {
+    margin-top: 17px;
+  }
+
+  .players-overview-v122 article {
+    min-height: 74px !important;
+    padding: 12px 14px !important;
+  }
+
+  .players-overview-v122 article strong {
+    font-size: clamp(24px, 1.7vw, 29px) !important;
+  }
+}
+
+/* Lite mindre dödyta mellan hero och register. */
+.players-shell-v122 .player-directory-v122 {
+  margin-top: 12px !important;
+}
+
+.players-directory-heading-v122 {
+  min-height: 76px !important;
+  padding: 14px 18px 12px !important;
+}
+
+.players-directory-heading-v122 h2 {
+  font-size: clamp(30px, 2.25vw, 38px) !important;
+}
+
+.players-directory-heading-v122 > p {
+  min-height: 28px !important;
+  font-size: 9px !important;
+}
+
+.players-toolbar-v122 {
+  padding-top: 9px !important;
+  padding-bottom: 10px !important;
+}
+
+.players-toolbar-v122 .players-field input,
+.players-toolbar-v122 .players-field select,
+.players-toolbar-v122 .players-compact__control {
+  min-height: 40px !important;
+}
+
+/* Korten får vara kompakta, men ingen viktig information ska kännas mikroskopisk. */
+.players-card-v122 {
+  grid-template-columns: 92px minmax(0, 1fr) !important;
+  gap: 14px !important;
+  min-height: 254px !important;
+  padding: 13px 14px !important;
+}
+
+.players-card-v122 .players-card__avatar,
+.players-card-v122 .players-card__avatar img {
+  width: 92px !important;
+  height: 128px !important;
+}
+
+.players-card__role-v122 {
+  margin-top: 7px !important;
+  font-size: 8px !important;
+  letter-spacing: .095em !important;
+}
+
+.players-card__title-v122 h3 {
+  font-size: clamp(18px, 1.18vw, 21px) !important;
+  line-height: 1.04 !important;
+}
+
+.players-card__ranking-v122 b {
+  min-width: 31px !important;
+  font-size: 9.5px !important;
+}
+
+.players-card__ranking-v122 em {
+  font-size: 9.5px !important;
+}
+
+.players-card__team-v122 {
+  margin-top: 10px !important;
+}
+
+.players-card__team-logo-v122 {
+  width: 27px !important;
+  height: 27px !important;
+}
+
+.players-card__team-logo-v122 img {
+  width: 23px !important;
+  height: 23px !important;
+}
+
+.players-card__team-v122 strong {
+  font-size: 10.5px !important;
+}
+
+.players-card__metrics-v122 > div {
+  padding: 8px 3px 7px !important;
+}
+
+.players-card__metrics-v122 span {
+  font-size: 6.4px !important;
+  letter-spacing: .06em !important;
+}
+
+.players-card__metrics-v122 strong {
+  margin-top: 4px !important;
+  font-size: 13.5px !important;
+}
+
+.players-card__latest-v122 {
+  min-height: 25px;
+  margin-top: 8px !important;
+  padding-top: 7px !important;
+}
+
+.players-card__latest-v122 span {
+  font-size: 6.5px !important;
+}
+
+.players-card__latest-v122 strong {
+  max-width: 75% !important;
+  font-size: 8.6px !important;
+}
+
+.players-card__leagues-v122 {
+  margin-top: 5px !important;
+  color: #687381 !important;
+  font-size: 7.3px !important;
+}
+
+/* Paginationen ska avsluta registret, inte skapa ett nytt stort block. */
+.players-shell-v122 .player-pagination {
+  min-height: 58px !important;
+  padding: 9px 14px 10px !important;
+}
+
+.players-shell-v122 .player-pagination button {
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 9px !important;
+}
+
+/* På mycket bred desktop får korten mer rum utan att sidan blir bredare. */
+@media (min-width: 1500px) {
+  .players-shell-v122 .player-directory__grid {
+    gap: 11px !important;
+  }
+
+  .players-card__title-v122 h3 {
+    font-size: 21px !important;
+  }
+}
+
+/* Mellanstor desktop: behåll tre kolumner men samma läsbarhet. */
+@media (max-width: 1280px) and (min-width: 981px) {
+  .players-hero-v122 {
+    min-height: 360px !important;
+    padding: 30px 36px !important;
+  }
+}
+
+
+/* ============================================================
+   V1.26.5 – LAGLOGGA BAKOM SPELARPORTRÄTTET
+   ============================================================ */
+
+/* Porträttboxen blir en liten klubbscen: loggan ligger bakom spelaren,
+   medan porträttet och ramen alltid ligger överst. */
+.players-card-v122 .players-card__avatar {
+  position: relative !important;
+  isolation: isolate;
+  overflow: hidden !important;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(255,255,255,.035), transparent 56%),
+    linear-gradient(180deg, #081421 0%, #040b14 100%) !important;
+}
+
+.players-card__team-watermark-v1265 {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 86% !important;
+  height: 86% !important;
+  transform: translate(-50%, -49%) scale(1.06);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: .20;
+  filter: saturate(.88) contrast(1.05);
+  font-size: 0 !important; /* dölj initials-fallback om riktig logga saknas */
+  line-height: 0 !important;
+}
+
+.players-card__team-watermark-v1265 img {
+  position: static !important;
+  z-index: auto !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.players-card-v122 .players-card__avatar > img {
+  position: relative !important;
+  z-index: 2 !important;
+  background: transparent !important;
+}
+
+/* Lite mer närvaro vid hover, men fortfarande bakom personen. */
+.players-card-v122:hover .players-card__team-watermark-v1265,
+.players-card-v122:focus-visible .players-card__team-watermark-v1265 {
+  opacity: .26;
+  transform: translate(-50%, -49%) scale(1.10);
+  transition: opacity .16s ease, transform .18s ease;
+}
+
+/* Kompaktläget ska inte få en för dominant watermark. */
+.player-directory__grid.is-compact .players-card__team-watermark-v1265 {
+  opacity: .16;
+  transform: translate(-50%, -49%) scale(1.02);
+}
+
+/* ============================================================
+   V1.26.6 – 5 KOLUMNER / KORT UTAN TOMT VÄNSTERFÄLT
+   ============================================================ */
+
+/* Bred desktop: 5 kort per rad. Varje normal sida får 25 spelare = 5 hela rader. */
+@media (min-width: 1500px) {
+  .players-shell-v122 .player-directory__grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+}
+
+/* Kortet delas nu i en tydlig toppdel och fullbreddsdata under.
+   Därmed uppstår inget tomt område under porträttet. */
+.players-card-v122 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto auto auto auto !important;
+  align-content: start !important;
+  gap: 0 !important;
+  min-height: 268px !important;
+  padding: 12px !important;
+}
+
+.players-card__top-v1266 {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: start;
+  gap: 11px;
+  min-width: 0;
+}
+
+.players-card__identity-v1266 {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.players-card-v122 .players-card__media-v122 {
+  min-width: 0;
+  align-self: start !important;
+}
+
+.players-card-v122 .players-card__avatar,
+.players-card-v122 .players-card__avatar img {
+  width: 92px !important;
+  height: 126px !important;
+}
+
+.players-card__role-v122 {
+  display: block;
+  width: 92px;
+  margin-top: 6px !important;
+  text-align: center;
+  font-size: 7.6px !important;
+}
+
+.players-card__title-v122 h3 {
+  max-width: 100%;
+  margin: 0 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(16px, .98vw, 18.5px) !important;
+}
+
+.players-card__ranking-v122 {
+  margin-top: 7px !important;
+  gap: 5px !important;
+}
+
+.players-card__ranking-v122 b {
+  min-width: 29px !important;
+  padding: 3px 5px !important;
+  font-size: 9px !important;
+}
+
+.players-card__ranking-v122 em {
+  font-size: 9px !important;
+  white-space: nowrap;
+}
+
+.players-card__team-v122 {
+  min-width: 0;
+  margin-top: 13px !important;
+}
+
+.players-card__team-logo-v122 {
+  flex: 0 0 26px;
+  width: 26px !important;
+  height: 26px !important;
+}
+
+.players-card__team-v122 strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9.8px !important;
+}
+
+/* Statistik och senaste säsong går över hela kortbredden. */
+.players-card__metrics-v122 {
+  width: 100%;
+  margin-top: 11px !important;
+}
+
+.players-card__metrics-v122 > div {
+  padding: 7px 2px 6px !important;
+}
+
+.players-card__metrics-v122 span {
+  font-size: 5.9px !important;
+}
+
+.players-card__metrics-v122 strong {
+  font-size: 12.8px !important;
+}
+
+.players-card__latest-v122 {
+  width: 100%;
+  min-height: 24px !important;
+  margin-top: 7px !important;
+  padding-top: 6px !important;
+}
+
+.players-card__latest-v122 strong {
+  max-width: 79% !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 8px !important;
+}
+
+.players-card__leagues-v122 {
+  min-height: 12px;
+  margin: 5px 0 0 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 6.8px !important;
+}
+
+/* Watermarken kan vara lite större när porträttytan är mer definierad. */
+.players-card__team-watermark-v1265 {
+  width: 94% !important;
+  height: 94% !important;
+  opacity: .22;
+}
+
+/* 4 kolumner på vanlig desktop = 20 per sida och fortfarande fem hela rader. */
+@media (max-width: 1499px) and (min-width: 1181px) {
+  .players-shell-v122 .player-directory__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .players-card__top-v1266 {
+    grid-template-columns: 98px minmax(0, 1fr);
+  }
+
+  .players-card-v122 .players-card__avatar,
+  .players-card-v122 .players-card__avatar img {
+    width: 98px !important;
+    height: 132px !important;
+  }
+
+  .players-card__role-v122 {
+    width: 98px;
+  }
+}
+
+/* 3 kolumner på mindre desktop = 15 per sida. */
+@media (max-width: 1180px) and (min-width: 901px) {
+  .players-shell-v122 .player-directory__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Tablet: 2 kolumner = 10 per sida. */
+@media (max-width: 900px) and (min-width: 621px) {
+  .players-shell-v122 .player-directory__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Mobil: 1 kolumn = 5 per sida. */
+@media (max-width: 620px) {
+  .players-shell-v122 .player-directory__grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .players-card__top-v1266 {
+    grid-template-columns: 104px minmax(0, 1fr);
+  }
+
+  .players-card-v122 .players-card__avatar,
+  .players-card-v122 .players-card__avatar img {
+    width: 104px !important;
+    height: 140px !important;
+  }
+
+  .players-card__role-v122 {
+    width: 104px;
+  }
+}
+
+/* Kompaktläget behåller sin tätare karaktär men använder samma rena struktur. */
+.player-directory__grid.is-compact .players-card-v122 {
+  min-height: 206px !important;
+  padding: 10px !important;
+}
+
+.player-directory__grid.is-compact .players-card__top-v1266 {
+  grid-template-columns: 66px minmax(0, 1fr);
+  gap: 9px;
+}
+
+.player-directory__grid.is-compact .players-card__role-v122 {
+  width: 66px;
+  font-size: 6.5px !important;
+}
+
+.player-directory__grid.is-compact .players-card__metrics-v122 {
+  margin-top: 8px !important;
+}
+
+/* ============================================================
+   V1.26.7 – KLUBBKÄNSLA I SPELARKORTEN
+   Stor transparent logga bakom spelaren + diskret färgpalett i hela kortet.
+   ============================================================ */
+
+.players-card-v122 {
+  --player-card-team-primary: #0b3855;
+  --player-card-team-secondary: #d6b15f;
+  position: relative !important;
+  isolation: isolate;
+  overflow: hidden !important;
+  border-color: color-mix(in srgb, var(--player-card-team-primary) 34%, #25303a) !important;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--player-card-team-primary) 10%, #050a10) 0%,
+      #05090f 39%,
+      #05080d 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.018),
+    0 8px 26px rgba(0,0,0,.12) !important;
+  transition:
+    border-color .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease !important;
+}
+
+/* Två mjuka klubbfärgsfält över hela kortet. */
+.players-card-v122::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 5% 13%,
+      color-mix(in srgb, var(--player-card-team-primary) 20%, transparent) 0%,
+      transparent 34%),
+    radial-gradient(circle at 95% 103%,
+      color-mix(in srgb, var(--player-card-team-secondary) 8%, transparent) 0%,
+      transparent 34%);
+  opacity: .92;
+}
+
+/* Tunn klubbaccent längs toppen – inte en helfärgad ram. */
+.players-card-v122::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  width: 68%;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--player-card-team-primary) 78%, white 6%),
+    color-mix(in srgb, var(--player-card-team-secondary) 48%, transparent),
+    transparent);
+  opacity: .72;
+}
+
+.players-card-v122 > * {
+  position: relative;
+  z-index: 2;
+}
+
+.players-card-v122:hover,
+.players-card-v122:focus-visible {
+  transform: translateY(-2px) !important;
+  border-color: color-mix(in srgb, var(--player-card-team-primary) 58%, #39434d) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.025),
+    0 13px 32px rgba(0,0,0,.24),
+    0 0 24px color-mix(in srgb, var(--player-card-team-primary) 10%, transparent) !important;
+}
+
+/* Porträttytan blir en riktig klubbpanel. */
+.players-card-v122 .players-card__avatar {
+  border-color: color-mix(in srgb, var(--player-card-team-primary) 48%, #715e2d) !important;
+  background:
+    radial-gradient(circle at 50% 37%,
+      color-mix(in srgb, var(--player-card-team-secondary) 15%, transparent) 0%,
+      transparent 43%),
+    linear-gradient(155deg,
+      color-mix(in srgb, var(--player-card-team-primary) 28%, #07111a) 0%,
+      #050b12 72%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.018),
+    inset 0 -20px 32px rgba(0,0,0,.18) !important;
+}
+
+/* Lagloggan får fylla porträttytan. Den är stor men betydligt mer transparent. */
+.players-card__team-watermark-v1265 {
+  top: -15% !important;
+  right: -34% !important;
+  bottom: -14% !important;
+  left: -34% !important;
+  width: auto !important;
+  height: auto !important;
+  transform: none !important;
+  place-items: center !important;
+  opacity: .115 !important;
+  filter: saturate(.94) contrast(1.08) brightness(1.06) !important;
+  transition: opacity .18s ease, transform .22s ease !important;
+}
+
+.players-card__team-watermark-v1265 img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  transform: scale(1.10);
+}
+
+/* Personen ska ligga tydligt framför klubbgrafiken. */
+.players-card-v122 .players-card__avatar > img {
+  z-index: 3 !important;
+  filter: drop-shadow(0 4px 7px rgba(0,0,0,.26));
+}
+
+.players-card-v122:hover .players-card__team-watermark-v1265,
+.players-card-v122:focus-visible .players-card__team-watermark-v1265 {
+  opacity: .17 !important;
+  transform: scale(1.025) !important;
+}
+
+/* Små loggan och teamraden får samma färgton utan att ändra textfärgen. */
+.players-card__team-logo-v122 {
+  border-color: color-mix(in srgb, var(--player-card-team-primary) 42%, #27323c) !important;
+  background: color-mix(in srgb, var(--player-card-team-primary) 7%, #070b10) !important;
+}
+
+.players-card__metrics-v122 {
+  border-color: color-mix(in srgb, var(--player-card-team-primary) 23%, #26313b) !important;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--player-card-team-primary) 5%, rgba(5,9,15,.78)),
+      rgba(5,9,15,.72)) !important;
+}
+
+.players-card__latest-v122 {
+  border-top-color: color-mix(in srgb, var(--player-card-team-primary) 20%, #252d36) !important;
+}
+
+/* Rank 1/hover-guld får fortfarande synas, men klubbtonen ska vara basen. */
+.players-card-v122:first-child {
+  border-color: color-mix(in srgb, var(--player-card-team-secondary) 42%, #5d5128) !important;
+}
+
+/* Kompaktläget behöver en ännu lugnare bakgrund. */
+.player-directory__grid.is-compact .players-card__team-watermark-v1265 {
+  opacity: .08 !important;
+}
+
+@media (max-width: 760px) {
+  .players-card__team-watermark-v1265 {
+    opacity: .095 !important;
+  }
+
+  .players-card-v122::before {
+    opacity: .72;
+  }
+}
+
+/* ============================================================
+   V1.26.8 – MINI-HERO SPELARKORT
+   Spelarregistrens kort följer nu spelarprofilens hero-språk:
+   kant-i-kant porträtt, stor svag klubblogga och klubbtonad toppanel.
+   ============================================================ */
+
+/* Neutralare bas. Klubbidentiteten koncentreras till mini-heron. */
+.players-card-v122 {
+  min-height: 260px !important;
+  padding: 0 !important;
+  border-color: color-mix(in srgb, var(--player-card-team-primary) 28%, #28323c) !important;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--player-card-team-primary) 4%, #05090f) 0%,
+      #05090f 52%,
+      #04070c 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.018),
+    0 9px 28px rgba(0,0,0,.16) !important;
+}
+
+/* Vänster klubbkant, inspirerad av spelarprofilens hero. */
+.players-card-v122::after {
+  content: "";
+  position: absolute;
+  z-index: 8;
+  inset: 0 auto 0 0;
+  width: 3px;
+  height: auto;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--player-card-team-secondary) 72%, #ffd700),
+    color-mix(in srgb, var(--player-card-team-primary) 80%, transparent) 54%,
+    transparent 100%);
+  opacity: .82;
+}
+
+/* Ta bort den gamla hela-kortet-glowen – mini-heron står för klubbkänslan. */
+.players-card-v122::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 100% 100%,
+      color-mix(in srgb, var(--player-card-team-secondary) 4%, transparent),
+      transparent 34%);
+  opacity: .9;
+}
+
+/* Överdelen blir en sammanhängande mini-hero, inte två små boxar. */
+.players-card__top-v1266 {
+  position: relative;
+  z-index: 2;
+  display: grid !important;
+  grid-template-columns: 112px minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  min-height: 150px;
+  overflow: hidden;
+  border-bottom: 1px solid color-mix(in srgb, var(--player-card-team-primary) 22%, #202a34);
+  background:
+    linear-gradient(108deg,
+      color-mix(in srgb, var(--player-card-team-primary) 38%, #07121f) 0%,
+      color-mix(in srgb, var(--player-card-team-primary) 19%, #07111b) 38%,
+      #06101a 67%,
+      #050b12 100%);
+}
+
+/* Ljus/smoke över mini-heron likt den stora profilen. */
+.players-card__top-v1266::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(108deg, rgba(255,255,255,.035), transparent 29%),
+    radial-gradient(circle at 72% 30%, rgba(255,255,255,.022), transparent 38%);
+}
+
+.players-card-v122 .players-card__media-v122 {
+  position: relative !important;
+  z-index: 2;
+  width: 112px;
+  min-width: 112px;
+  height: 150px;
+  align-self: stretch !important;
+  overflow: visible;
+}
+
+/* Porträttet går kant-i-kant och känns som profilheron. */
+.players-card-v122 .players-card__avatar {
+  position: relative !important;
+  width: 112px !important;
+  height: 150px !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-right: 1px solid color-mix(in srgb, var(--player-card-team-secondary) 18%, rgba(255,255,255,.08)) !important;
+  border-radius: 0 !important;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--player-card-team-primary) 28%, #0a2033),
+      color-mix(in srgb, var(--player-card-team-primary) 8%, #06101a)) !important;
+  box-shadow: none !important;
+}
+
+.players-card-v122 .players-card__avatar > img {
+  position: absolute !important;
+  z-index: 4 !important;
+  inset: 0 !important;
+  width: 112px !important;
+  height: 150px !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  filter: drop-shadow(5px 3px 8px rgba(0,0,0,.28)) !important;
+}
+
+/* Stor, blek klubblogga. Den får gå utanför porträttfältet och in bakom identiteten. */
+.players-card__team-watermark-v1265 {
+  position: absolute !important;
+  z-index: 1 !important;
+  top: -28px !important;
+  left: -34px !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 262px !important;
+  height: 206px !important;
+  transform: rotate(-5deg) scale(1.02) !important;
+  display: grid !important;
+  place-items: center !important;
+  opacity: .075 !important;
+  filter: saturate(.9) contrast(1.06) brightness(1.1) !important;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .22s ease !important;
+}
+
+.players-card__team-watermark-v1265 img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: none !important;
+}
+
+.players-card-v122:hover .players-card__team-watermark-v1265,
+.players-card-v122:focus-visible .players-card__team-watermark-v1265 {
+  opacity: .105 !important;
+  transform: rotate(-5deg) scale(1.055) !important;
+}
+
+/* Rollen blir en liten hero-label ovanpå nederdelen av spelarbilden. */
+.players-card__role-v122 {
+  position: absolute !important;
+  z-index: 6;
+  left: 8px;
+  bottom: 7px;
+  width: auto !important;
+  max-width: 96px;
+  margin: 0 !important;
+  padding: 4px 7px 3px;
+  border-left: 2px solid color-mix(in srgb, var(--player-card-team-secondary) 70%, #ffd400);
+  background: rgba(3,8,14,.76);
+  color: #69e6df !important;
+  font-size: 6.7px !important;
+  line-height: 1;
+  letter-spacing: .09em !important;
+  text-align: left !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Identiteten får mer hero-känsla och större visuellt lugn. */
+.players-card__identity-v1266 {
+  position: relative;
+  z-index: 3;
+  min-width: 0;
+  padding: 15px 12px 10px 13px !important;
+}
+
+.players-card__title-v122 h3 {
+  font-size: clamp(16px, .98vw, 19px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.025em;
+  text-shadow: 0 2px 12px rgba(0,0,0,.38);
+}
+
+.players-card__ranking-v122 {
+  margin-top: 8px !important;
+}
+
+.players-card__ranking-v122 b {
+  border-color: color-mix(in srgb, var(--player-card-team-secondary) 46%, #665724) !important;
+  background: color-mix(in srgb, var(--player-card-team-secondary) 7%, rgba(8,12,17,.9)) !important;
+}
+
+.players-card__ranking-v122 em {
+  color: #f0d58b !important;
+}
+
+/* Laget fungerar mer som hero-klubbknappen, men i kompakt skala. */
+.players-card__team-v122 {
+  display: inline-flex !important;
+  max-width: 100%;
+  margin-top: 15px !important;
+  padding: 5px 7px 5px 5px;
+  border: 1px solid color-mix(in srgb, var(--player-card-team-primary) 30%, #28343f);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--player-card-team-primary) 8%, rgba(4,9,14,.68)) !important;
+}
+
+.players-card__team-logo-v122 {
+  flex: 0 0 27px;
+  width: 27px !important;
+  height: 27px !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.players-card__team-logo-v122 img {
+  width: 25px !important;
+  height: 25px !important;
+}
+
+.players-card__team-v122 strong {
+  font-size: 9.4px !important;
+  letter-spacing: .01em;
+}
+
+/* Dataområdet ligger på neutral mörk botten, som nederdelen i profilheron. */
+.players-card__metrics-v122 {
+  position: relative;
+  z-index: 3;
+  width: auto !important;
+  margin: 10px 11px 0 !important;
+  border-color: rgba(255,255,255,.085) !important;
+  background: rgba(3,7,12,.72) !important;
+}
+
+.players-card__metrics-v122 > div {
+  padding: 7px 2px 6px !important;
+}
+
+.players-card__metrics-v122 span {
+  color: #778595 !important;
+  font-size: 5.8px !important;
+}
+
+.players-card__metrics-v122 strong {
+  font-size: 12.9px !important;
+}
+
+.players-card__latest-v122 {
+  position: relative;
+  z-index: 3;
+  width: auto !important;
+  min-height: 23px !important;
+  margin: 6px 11px 0 !important;
+  padding-top: 6px !important;
+  border-top-color: rgba(255,255,255,.065) !important;
+}
+
+.players-card__latest-v122 strong {
+  max-width: 78% !important;
+  font-size: 7.8px !important;
+}
+
+.players-card__leagues-v122 {
+  position: relative;
+  z-index: 3;
+  min-height: 12px;
+  margin: 4px 11px 9px !important;
+  color: #657180 !important;
+  font-size: 6.5px !important;
+}
+
+.players-card-v122:hover,
+.players-card-v122:focus-visible {
+  transform: translateY(-2px) !important;
+  border-color: color-mix(in srgb, var(--player-card-team-secondary) 28%, var(--player-card-team-primary)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.025),
+    0 14px 34px rgba(0,0,0,.26),
+    0 0 26px color-mix(in srgb, var(--player-card-team-primary) 8%, transparent) !important;
+}
+
+/* Rank 1 behåller guldet men utan att förstöra klubbpaletten. */
+.players-card-v122:first-child {
+  border-color: color-mix(in srgb, var(--player-card-team-secondary) 54%, #8b762f) !important;
+}
+
+/* På 4-kolumners desktop får porträttet lite mer plats. */
+@media (max-width: 1499px) and (min-width: 1181px) {
+  .players-card__top-v1266 {
+    grid-template-columns: 118px minmax(0, 1fr) !important;
+    min-height: 156px;
+  }
+
+  .players-card-v122 .players-card__media-v122,
+  .players-card-v122 .players-card__avatar,
+  .players-card-v122 .players-card__avatar > img {
+    width: 118px !important;
+    height: 156px !important;
+  }
+
+  .players-card-v122 .players-card__media-v122 {
+    min-width: 118px;
+  }
+
+  .players-card__team-watermark-v1265 {
+    width: 282px !important;
+    height: 220px !important;
+  }
+}
+
+/* Kompaktläget använder samma språk men mindre dramatisk klubbgrafik. */
+.player-directory__grid.is-compact .players-card-v122 {
+  min-height: 208px !important;
+}
+
+.player-directory__grid.is-compact .players-card__top-v1266 {
+  grid-template-columns: 74px minmax(0, 1fr) !important;
+  min-height: 108px;
+}
+
+.player-directory__grid.is-compact .players-card-v122 .players-card__media-v122,
+.player-directory__grid.is-compact .players-card-v122 .players-card__avatar,
+.player-directory__grid.is-compact .players-card-v122 .players-card__avatar > img {
+  width: 74px !important;
+  height: 108px !important;
+}
+
+.player-directory__grid.is-compact .players-card-v122 .players-card__media-v122 {
+  min-width: 74px;
+}
+
+.player-directory__grid.is-compact .players-card__team-watermark-v1265 {
+  width: 190px !important;
+  height: 145px !important;
+  opacity: .055 !important;
+}
+
+.player-directory__grid.is-compact .players-card__identity-v1266 {
+  padding: 10px 9px 7px 10px !important;
+}
+
+.player-directory__grid.is-compact .players-card__role-v122 {
+  left: 6px;
+  bottom: 5px;
+  max-width: 64px;
+  padding: 3px 5px;
+  font-size: 5.6px !important;
+}
+
+/* Mobilen får en tydligare större bild men samma mini-hero-princip. */
+@media (max-width: 620px) {
+  .players-card__top-v1266 {
+    grid-template-columns: 118px minmax(0, 1fr) !important;
+    min-height: 156px;
+  }
+
+  .players-card-v122 .players-card__media-v122,
+  .players-card-v122 .players-card__avatar,
+  .players-card-v122 .players-card__avatar > img {
+    width: 118px !important;
+    height: 156px !important;
+  }
+
+  .players-card-v122 .players-card__media-v122 {
+    min-width: 118px;
+  }
+
+  .players-card__team-watermark-v1265 {
+    width: 285px !important;
+    height: 218px !important;
+    opacity: .065 !important;
+  }
+}
+
+/* ============================================================
+   V1.26.9 – STÖRRE KLUBBLOGGA I MINI-HERO
+   Klubbloggan används mer som i spelarprofilens hero: stor, blek och
+   utsträckt bakom både porträtt och identitet utan att störa texten.
+   ============================================================ */
+
+/* Lite djupare hero-yta så den större klubbgrafiken får plats visuellt. */
+.players-card__top-v1266 {
+  isolation: isolate;
+  background:
+    linear-gradient(108deg,
+      color-mix(in srgb, var(--player-card-team-primary) 44%, #071522) 0%,
+      color-mix(in srgb, var(--player-card-team-primary) 22%, #07111b) 40%,
+      #06101a 72%,
+      #050a11 100%) !important;
+}
+
+/* Mjuk klubbglöd från vänster och diskret mörkning bakom texten. */
+.players-card__top-v1266::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 21% 44%,
+      color-mix(in srgb, var(--player-card-team-secondary) 11%, transparent) 0%,
+      transparent 42%),
+    linear-gradient(90deg,
+      transparent 0 35%,
+      rgba(3,8,14,.08) 48%,
+      rgba(3,8,14,.42) 72%,
+      rgba(3,8,14,.68) 100%);
+}
+
+/* Befintlig ljus/smoke hålls ovanför klubbgrafiken men under innehållet. */
+.players-card__top-v1266::after {
+  z-index: 2 !important;
+  background:
+    linear-gradient(108deg, rgba(255,255,255,.038), transparent 31%),
+    radial-gradient(circle at 72% 28%, rgba(255,255,255,.025), transparent 40%) !important;
+}
+
+/* Gör loggan till en stor hero-watermark som täcker hela övre kortdelen. */
+.players-card__team-watermark-v1265 {
+  z-index: 0 !important;
+  top: -58px !important;
+  left: -88px !important;
+  width: 390px !important;
+  height: 292px !important;
+  opacity: .095 !important;
+  transform: rotate(-5deg) scale(1.02) !important;
+  filter: saturate(.96) contrast(1.13) brightness(1.30) !important;
+}
+
+.players-card__team-watermark-v1265 img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+.players-card-v122:hover .players-card__team-watermark-v1265,
+.players-card-v122:focus-visible .players-card__team-watermark-v1265 {
+  opacity: .13 !important;
+  transform: rotate(-5deg) scale(1.055) !important;
+}
+
+/* Porträtt och identitet hålls tydligt framför den stora loggan. */
+.players-card-v122 .players-card__media-v122 {
+  z-index: 4 !important;
+}
+
+.players-card__identity-v1266 {
+  z-index: 5 !important;
+  background: linear-gradient(90deg, rgba(3,8,14,.05), rgba(3,8,14,.18) 72%, rgba(3,8,14,.30));
+}
+
+/* Lite tydligare klubbknapp mot den större grafiken. */
+.players-card__team-v122 {
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  background: color-mix(in srgb, var(--player-card-team-primary) 9%, rgba(3,8,14,.76)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+/* På riktigt bred femkolumners-layout får loggan nästan fylla hela mini-heron. */
+@media (min-width: 1500px) {
+  .players-card__team-watermark-v1265 {
+    top: -64px !important;
+    left: -94px !important;
+    width: 410px !important;
+    height: 306px !important;
+  }
+}
+
+/* Fyra kolumner: behåll samma proportion men anpassa till bredare kort. */
+@media (max-width: 1499px) and (min-width: 1181px) {
+  .players-card__team-watermark-v1265 {
+    top: -64px !important;
+    left: -92px !important;
+    width: 430px !important;
+    height: 318px !important;
+  }
+}
+
+/* Kompaktläge ska fortfarande vara lugnare. */
+.player-directory__grid.is-compact .players-card__team-watermark-v1265 {
+  top: -38px !important;
+  left: -58px !important;
+  width: 260px !important;
+  height: 194px !important;
+  opacity: .065 !important;
+}
+
+.player-directory__grid.is-compact .players-card-v122:hover .players-card__team-watermark-v1265,
+.player-directory__grid.is-compact .players-card-v122:focus-visible .players-card__team-watermark-v1265 {
+  opacity: .09 !important;
+}
+
+@media (max-width: 620px) {
+  .players-card__team-watermark-v1265 {
+    top: -58px !important;
+    left: -86px !important;
+    width: 390px !important;
+    height: 292px !important;
+    opacity: .085 !important;
+  }
+}
+
+/* ============================================================
+   V1.27.0 – HERO-WATERMARK / KLUBBKÄNSLA POLISH
+   Bakgrundsloggan flyttas från porträttets vänstersida till hela mini-heron,
+   får större skala, mjuk maskning och lägre opacity – närmare spelarprofilen.
+   ============================================================ */
+
+/* Mer sammanhängande hero-bakgrund över hela övre kortet. */
+.players-card__top-v1266 {
+  background:
+    radial-gradient(ellipse 72% 115% at 16% 46%,
+      color-mix(in srgb, var(--player-card-team-primary) 34%, transparent) 0%,
+      transparent 70%),
+    linear-gradient(108deg,
+      color-mix(in srgb, var(--player-card-team-primary) 43%, #071522) 0%,
+      color-mix(in srgb, var(--player-card-team-primary) 21%, #07111b) 39%,
+      #06101a 72%,
+      #050a11 100%) !important;
+}
+
+/* Hero-lik diagonal klubbaccent + mjuk textmörkning. */
+.players-card__top-v1266::before {
+  z-index: 2 !important;
+  background:
+    linear-gradient(101deg,
+      transparent 0 43.2%,
+      color-mix(in srgb, var(--player-card-team-secondary) 26%, transparent) 43.45%,
+      transparent 43.8%),
+    linear-gradient(90deg,
+      transparent 0 39%,
+      rgba(2,7,12,.045) 48%,
+      rgba(2,7,12,.31) 74%,
+      rgba(2,7,12,.58) 100%) !important;
+}
+
+.players-card__top-v1266::after {
+  z-index: 3 !important;
+  background:
+    linear-gradient(108deg, rgba(255,255,255,.032), transparent 27%),
+    radial-gradient(ellipse 66% 72% at 68% 31%, rgba(255,255,255,.022), transparent 68%) !important;
+}
+
+/*
+   Watermarken är fortfarande DOM-mässigt inne i avatarblocket, men placeras
+   visuellt över hela mini-heron. Mittpunkten ligger nu bakom identiteten,
+   inte bakom spelarens ansikte.
+*/
+.players-card__team-watermark-v1265 {
+  z-index: 1 !important;
+  top: -82px !important;
+  left: 24px !important;
+  width: 360px !important;
+  height: 312px !important;
+  opacity: .058 !important;
+  transform: scale(1.08) !important;
+  filter: saturate(.94) contrast(1.16) brightness(1.28) !important;
+  -webkit-mask-image: radial-gradient(ellipse 72% 72% at 48% 48%, #000 26%, rgba(0,0,0,.94) 55%, rgba(0,0,0,.48) 78%, transparent 100%);
+  mask-image: radial-gradient(ellipse 72% 72% at 48% 48%, #000 26%, rgba(0,0,0,.94) 55%, rgba(0,0,0,.48) 78%, transparent 100%);
+  transform-origin: 50% 50% !important;
+}
+
+.players-card__team-watermark-v1265 img {
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+.players-card-v122:hover .players-card__team-watermark-v1265,
+.players-card-v122:focus-visible .players-card__team-watermark-v1265 {
+  opacity: .082 !important;
+  transform: scale(1.12) !important;
+}
+
+/* Porträttet får lite mer separation från den stora watermarken. */
+.players-card-v122 .players-card__avatar > img {
+  filter:
+    drop-shadow(5px 3px 8px rgba(0,0,0,.31))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--player-card-team-primary) 9%, transparent)) !important;
+}
+
+/* Låt klubbloggan synas bakom identiteten utan att störa läsbarheten. */
+.players-card__identity-v1266 {
+  z-index: 5 !important;
+  background:
+    linear-gradient(90deg,
+      rgba(3,8,14,.015) 0%,
+      rgba(3,8,14,.08) 34%,
+      rgba(3,8,14,.20) 72%,
+      rgba(3,8,14,.34) 100%) !important;
+}
+
+.players-card__title-v122 h3 {
+  text-shadow: 0 2px 10px rgba(0,0,0,.62), 0 0 18px rgba(0,0,0,.26) !important;
+}
+
+.players-card__team-v122 {
+  background: color-mix(in srgb, var(--player-card-team-primary) 7%, rgba(3,8,14,.74)) !important;
+  border-color: color-mix(in srgb, var(--player-card-team-secondary) 17%, rgba(255,255,255,.12)) !important;
+}
+
+/* Femkolumners desktop: störst watermark och tydlig hero-känsla. */
+@media (min-width: 1500px) {
+  .players-card__team-watermark-v1265 {
+    top: -86px !important;
+    left: 22px !important;
+    width: 374px !important;
+    height: 322px !important;
+    opacity: .06 !important;
+  }
+}
+
+/* Fyra kolumner: lite bredare kort, loggan kan växa ytterligare. */
+@media (max-width: 1499px) and (min-width: 1181px) {
+  .players-card__team-watermark-v1265 {
+    top: -94px !important;
+    left: 38px !important;
+    width: 410px !important;
+    height: 344px !important;
+    opacity: .06 !important;
+  }
+}
+
+/* Kompaktläget behåller watermarken men låter den vara betydligt lugnare. */
+.player-directory__grid.is-compact .players-card__team-watermark-v1265 {
+  top: -56px !important;
+  left: 12px !important;
+  width: 280px !important;
+  height: 218px !important;
+  opacity: .038 !important;
+  transform: scale(1.03) !important;
+}
+
+.player-directory__grid.is-compact .players-card-v122:hover .players-card__team-watermark-v1265,
+.player-directory__grid.is-compact .players-card-v122:focus-visible .players-card__team-watermark-v1265 {
+  opacity: .055 !important;
+  transform: scale(1.06) !important;
+}
+
+@media (max-width: 620px) {
+  .players-card__team-watermark-v1265 {
+    top: -80px !important;
+    left: 26px !important;
+    width: 360px !important;
+    height: 306px !important;
+    opacity: .052 !important;
+  }
+}
+
+/* ============================================================
+   V1.27.1 – FINAL MINI-HERO BALANCE
+   Starkare men mjukare klubb-watermark + bättre plats för långa gamertags.
+   ============================================================ */
+
+/* Lite mer närvaro från klubbmärket utan att det konkurrerar med porträtt/text. */
+.players-card__team-watermark-v1265 {
+  opacity: .078 !important;
+  filter: saturate(.98) contrast(1.16) brightness(1.36) !important;
+  -webkit-mask-image: radial-gradient(ellipse 82% 80% at 50% 50%, #000 30%, rgba(0,0,0,.96) 62%, rgba(0,0,0,.58) 84%, transparent 100%) !important;
+  mask-image: radial-gradient(ellipse 82% 80% at 50% 50%, #000 30%, rgba(0,0,0,.96) 62%, rgba(0,0,0,.58) 84%, transparent 100%) !important;
+}
+
+.players-card-v122:hover .players-card__team-watermark-v1265,
+.players-card-v122:focus-visible .players-card__team-watermark-v1265 {
+  opacity: .105 !important;
+}
+
+/* Femkolumners desktop: nästan profil-hero-storlek, centrerad bakom identiteten. */
+@media (min-width: 1500px) {
+  .players-card__team-watermark-v1265 {
+    top: -96px !important;
+    left: 6px !important;
+    width: 420px !important;
+    height: 350px !important;
+    transform: scale(1.04) !important;
+  }
+
+  .players-card-v122:hover .players-card__team-watermark-v1265,
+  .players-card-v122:focus-visible .players-card__team-watermark-v1265 {
+    transform: scale(1.075) !important;
+  }
+}
+
+/* Fyra kolumner: korten är bredare, så watermarken kan växa ytterligare. */
+@media (max-width: 1499px) and (min-width: 1181px) {
+  .players-card__team-watermark-v1265 {
+    top: -102px !important;
+    left: 20px !important;
+    width: 448px !important;
+    height: 366px !important;
+  }
+}
+
+/* Långa gamertags ska i första hand få plats, inte kapas efter några tecken. */
+.players-card__title-v122 h3 {
+  font-size: clamp(15px, .85vw, 18px) !important;
+  letter-spacing: -.045em !important;
+}
+
+.players-card__team-v122 {
+  margin-top: 12px !important;
+}
+
+/* En aning mindre mörkning precis bakom loggans centrum. */
+.players-card__identity-v1266 {
+  background:
+    linear-gradient(90deg,
+      rgba(3,8,14,.005) 0%,
+      rgba(3,8,14,.05) 32%,
+      rgba(3,8,14,.17) 73%,
+      rgba(3,8,14,.32) 100%) !important;
+}
+
+
+/* ============================================================
+   V1.27.5 – PORTRÄTTZOOM
+   Spelarbilder fyller porträttytan bättre men är fortsatt
+   förankrade i överkant. Lag-watermarken påverkas inte.
+   ============================================================ */
+
+.players-card-v122 .players-card__avatar > img {
+  object-fit: contain !important;
+  object-position: center top !important;
+  transform: scale(1.08) !important;
+  transform-origin: center top !important;
+}
+
+/* Lite lugnare zoom i kompaktläge. */
+.player-directory__grid.is-compact .players-card-v122 .players-card__avatar > img {
+  transform: scale(1.055) !important;
+  transform-origin: center top !important;
+}
+
+/* Mobil: behåll top-anchor men undvik onödig beskärning. */
+@media (max-width: 620px) {
+  .players-card-v122 .players-card__avatar > img {
+    transform: scale(1.06) !important;
+    transform-origin: center top !important;
+  }
+}
+
+/* ============================================================
+   V1.27.7 – 115 % PORTRÄTTZOOM / KORREKT KLIPPNING
+   Behåller top-anchor och 115 % zoom men ser till att porträttet
+   visuellt slutar exakt vid mini-herons horisontella skiljelinje.
+   ============================================================ */
+
+/* Din önskade större klubb-watermark behålls. */
+.players-card__team-watermark-v1265 img {
+  transform: scale(2.25) !important;
+  transform-origin: center center !important;
+}
+
+/* Gör skiljelinjen under mini-heron tydlig och konsekvent. */
+.players-card__top-v1266 {
+  border-bottom: 0 !important;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--player-card-team-primary) 32%, rgba(255,255,255,.10)) !important;
+}
+
+/*
+   I stället för transform:scale() på spelarbilden görs själva bildboxen
+   15 % större. Nederdelen klipps tillbaka till porträttfältets höjd.
+   Resultat: lite mer zoom, fortsatt top-anchor, men inget bildinnehåll
+   fortsätter nedanför den horisontella skiljelinjen.
+*/
+.players-card-v122 .players-card__avatar > img {
+  inset: auto !important;
+  top: 0 !important;
+  left: -7.5% !important;
+  width: 115% !important;
+  height: 115% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: center top !important;
+  transform: none !important;
+  transform-origin: center top !important;
+  clip-path: inset(0 6.53% 13.05% 6.53%) !important;
+}
+
+/* Kompaktläge: samma 115 % zoom och samma hårda avslut vid linjen. */
+.player-directory__grid.is-compact .players-card-v122 .players-card__avatar > img {
+  left: -7.5% !important;
+  width: 115% !important;
+  height: 115% !important;
+  transform: none !important;
+  clip-path: inset(0 6.53% 13.05% 6.53%) !important;
+}
+
+/* Mobil: samma 115 % zoom och fortsatt exakt avslut vid hero-linjen. */
+@media (max-width: 620px) {
+  .players-card-v122 .players-card__avatar > img {
+    left: -7.5% !important;
+    width: 115% !important;
+    height: 115% !important;
+    transform: none !important;
+    clip-path: inset(0 6.53% 13.05% 6.53%) !important;
+  }
+}
+
+/* ============================================================
+   V1.28.32 – SPELARREGISTER / RIKTIGT KOMPAKTLÄGE
+   Kompaktvy = porträtt + namn. Namnet ligger under porträttet och
+   senaste lagets logga ligger diskret bakom spelaren i porträttboxen.
+   ============================================================ */
+
+/* Fler verkligt kompakta kort per rad på bred desktop. */
+.players-shell-v122 .player-directory__grid.is-compact {
+  grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.player-directory__grid.is-compact .players-card-v122 {
+  min-height: 148px !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 7px !important;
+  padding: 9px 7px 10px !important;
+  text-align: center !important;
+}
+
+/* Hela toppdelen staplas: porträtt först, namn direkt under. */
+.player-directory__grid.is-compact .players-card__top-v1266 {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  grid-template-columns: none !important;
+}
+
+.player-directory__grid.is-compact .players-card-v122 .players-card__media-v122 {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+/* Porträttet blir huvudobjektet i kompaktvyn. */
+.player-directory__grid.is-compact .players-card-v122 .players-card__avatar,
+.player-directory__grid.is-compact .players-card-v122 .players-card__avatar > img {
+  width: 74px !important;
+  height: 98px !important;
+}
+
+.player-directory__grid.is-compact .players-card-v122 .players-card__avatar {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(214,177,95,.28) !important;
+  background:
+    radial-gradient(circle at 50% 36%, rgba(255,255,255,.035), transparent 62%),
+    linear-gradient(180deg, #091827 0%, #040a12 100%) !important;
+  box-shadow: none !important;
+}
+
+/* Lagloggan bakom själva spelaren – inte ute i resten av kortet. */
+.player-directory__grid.is-compact .players-card__team-watermark-v1265 {
+  position: absolute !important;
+  z-index: 1 !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 90% !important;
+  height: 90% !important;
+  display: grid !important;
+  place-items: center !important;
+  transform: translate(-50%, -50%) scale(1.02) !important;
+  opacity: .18 !important;
+  filter: saturate(.85) contrast(1.03) !important;
+  pointer-events: none !important;
+}
+
+.player-directory__grid.is-compact .players-card__team-watermark-v1265 img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+.player-directory__grid.is-compact .players-card-v122 .players-card__avatar > img {
+  position: relative !important;
+  z-index: 2 !important;
+  display: block !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  background: transparent !important;
+}
+
+/* Namnet under porträttet, mindre och lugnare än i normalvyn. */
+.player-directory__grid.is-compact .players-card-v122 .players-card__identity-v1266,
+.player-directory__grid.is-compact .players-card-v122 .players-card__title-v122,
+.player-directory__grid.is-compact .players-card-v122 .players-card__title-v122 > div {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: block !important;
+  padding: 0 !important;
+}
+
+.player-directory__grid.is-compact .players-card-v122 .players-card__title-v122 h3 {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: -webkit-box !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  color: #f4f5f7 !important;
+  font-size: 10.5px !important;
+  font-weight: 850 !important;
+  line-height: 1.16 !important;
+  letter-spacing: 0 !important;
+  text-align: center !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+}
+
+/* All annan information bort i compact. */
+.player-directory__grid.is-compact .players-card-v122 .players-card__role-v122,
+.player-directory__grid.is-compact .players-card-v122 .players-card__ranking-v122,
+.player-directory__grid.is-compact .players-card-v122 .players-card__team-v122,
+.player-directory__grid.is-compact .players-card-v122 .players-card__metrics-v122,
+.player-directory__grid.is-compact .players-card-v122 .players-card__latest-v122,
+.player-directory__grid.is-compact .players-card-v122 .players-card__leagues-v122 {
+  display: none !important;
+}
+
+@media (max-width: 1450px) {
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1220px) {
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .player-directory__grid.is-compact .players-card-v122 {
+    min-height: 138px !important;
+    padding: 8px 6px 9px !important;
+  }
+
+  .player-directory__grid.is-compact .players-card-v122 .players-card__avatar,
+  .player-directory__grid.is-compact .players-card-v122 .players-card__avatar > img {
+    width: 66px !important;
+    height: 88px !important;
+  }
+
+  .player-directory__grid.is-compact .players-card-v122 .players-card__title-v122 h3 {
+    font-size: 9.5px !important;
+  }
+}
+
+@media (max-width: 460px) {
+  .players-shell-v122 .player-directory__grid.is-compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* ============================================================
+   V1.28.33 – KOMPAKTVY / TAJTARE MELLAN SPELARNA
+   Mindre mellanrum mellan korten utan att ändra kortens innehåll.
+   ============================================================ */
+.players-shell-v122 .player-directory__grid.is-compact {
+  gap: 3px !important;
+  column-gap: 3px !important;
+  row-gap: 3px !important;
+}

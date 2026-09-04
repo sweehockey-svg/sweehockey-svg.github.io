@@ -1,0 +1,7 @@
+project_id = "oujqnvrczdavqbqaavuh"
+
+[functions.seh-admin-sync]
+verify_jwt = true
+
+[functions.seh-admin-password]
+verify_jwt = true
