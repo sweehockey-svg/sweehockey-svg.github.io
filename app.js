@@ -2332,7 +2332,7 @@ function SEH_initPlayer() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-30-v1261-player-performance";
+    const APP_BUILD = "2026-09-05-v12878-no-qualifier-merits";
     const config = window.EHOCKEY_CONFIG || {};
     const elements = {
       backLink: document.querySelector("#backLink"),
@@ -4433,6 +4433,31 @@ function SEH_initPlayer() {
       );
     }
 
+    function isTeamMeritEligible(row, tournamentLabel = "") {
+      const text = [
+        tournamentLabel,
+        row?.season_label,
+        row?.league_name,
+        row?.division,
+        row?.competition_name
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLocaleLowerCase("sv-SE");
+
+      const excludedWords = [
+        "qualifier",
+        "qualification",
+        "kval",
+        "wildcard",
+        "crossover",
+        "registration",
+        "free agent"
+      ];
+
+      return !excludedWords.some((word) => text.includes(word));
+    }
+
     function buildTeamMerits(meritRows) {
       const seen = new Set();
 
@@ -4442,6 +4467,8 @@ function SEH_initPlayer() {
           if (![1, 2, 3].includes(placement)) return null;
 
           const tournament = meritTournamentLabel(null, row);
+          if (!isTeamMeritEligible(row, tournament)) return null;
+
           const teamName = String(row?.team_name || "Okänt lag").trim() || "Okänt lag";
           const key = [
             String(row?.external_league_id || row?.league_id || ""),
