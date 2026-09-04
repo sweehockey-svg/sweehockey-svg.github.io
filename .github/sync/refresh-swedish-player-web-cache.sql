@@ -219,3 +219,72 @@ where player_source='SPORTSGAMER'
     select encode(digest('SPORTSGAMER:' || sports_gamer_player_id::text,'sha256'),'hex')
     from public.v_ehockey_player_registry where country_code='SE'
   );
+
+-- Spelarprofilerna läser en separat historikcache. Bygg nästa version helt
+-- innan den befintliga tabellen låses, validera radantalet och gör sedan ett
+-- kort atomiskt byte. På så sätt blir nya turneringar synliga även på
+-- profilsidan utan en manuell cachekörning.
+select pg_advisory_lock(hashtext('seh_refresh_player_history_cache_v25'));
+
+create temp table swedish_player_history_cache_next
+(like public.ehockey_player_history_cache_v25 including defaults)
+on commit preserve rows;
+
+with previous_ids as materialized (
+  select player_key, max(effective_sports_gamer_player_id) as effective_sports_gamer_player_id
+  from public.ehockey_player_history_cache_v25
+  where effective_sports_gamer_player_id is not null
+  group by player_key
+)
+insert into swedish_player_history_cache_next
+select (jsonb_populate_record(
+  null::public.ehockey_player_history_cache_v25,
+  to_jsonb(source.*) || jsonb_build_object(
+    'effective_sports_gamer_player_id',
+    coalesce(
+      case
+        when source.sports_gamer_player_url ~ '/players/[0-9]+'
+          then substring(source.sports_gamer_player_url from '/players/([0-9]+)')::bigint
+        else null
+      end,
+      previous.effective_sports_gamer_player_id
+    )
+  )
+)).* 
+from public.v_ehockey_player_tournaments_chronological_canonical_v13 source
+left join previous_ids previous using (player_key);
+
+do $$
+declare
+  current_count bigint;
+  next_count bigint;
+begin
+  select count(*) into current_count
+  from public.ehockey_player_history_cache_v25;
+
+  select count(*) into next_count
+  from swedish_player_history_cache_next;
+
+  if next_count < greatest(1000, floor(current_count * 0.95)::bigint) then
+    raise exception
+      'Player history cache safety check failed: current %, next %',
+      current_count,
+      next_count;
+  end if;
+end
+$$;
+
+begin;
+delete from public.ehockey_player_history_cache_v25;
+insert into public.ehockey_player_history_cache_v25
+select * from swedish_player_history_cache_next;
+commit;
+
+analyze public.ehockey_player_history_cache_v25;
+select public.refresh_app_player_directory_cache();
+select public.refresh_app_player_ranking_cache();
+select pg_advisory_unlock(hashtext('seh_refresh_player_history_cache_v25'));
+
+select count(*)::bigint as cached_player_history_rows,
+       count(*) filter (where league_id=521)::bigint as cached_history_sec_sommar26_rows
+from public.ehockey_player_history_cache_v25;
