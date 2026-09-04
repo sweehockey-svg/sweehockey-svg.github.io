@@ -9,7 +9,6 @@ window.SEH_NEWS_ARTICLES = Object.freeze([
     "heroImageAlt": "Ztarsailor i topp i SEC Sommar ’26",
     "excerpt": "SEC Sommar ’26 är igång på allvar. Lag Ztarsailor har tagit kommandot i tabellen, flera lag jagar tätt bakom och Zonkji v har öppnat turneringen starkast av alla poängmässigt. Samtidigt börjar de första individuella toppstriderna ta form – där KFC Melker just nu leder målvaktsligan.",
     "url": "#ztarsailor-i-topp-sec-sommar-26",
-    "shareUrl": "/nyheter/ztarsailor-i-topp.html",
     "body": [
       "**SEC Sommar ’26 är igång på allvar. Lag Ztarsailor har tagit kommandot i tabellen, flera lag jagar tätt bakom och Zonkji v har öppnat turneringen starkast av alla poängmässigt. Samtidigt börjar de första individuella toppstriderna ta form – där KFC Melker just nu leder målvaktsligan.**",
       "Åtta lag gör upp i årets skandinaviska draftturnering och gruppspelet består totalt av **56 matcher**.",
