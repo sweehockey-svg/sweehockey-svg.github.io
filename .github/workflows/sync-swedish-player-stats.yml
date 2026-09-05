@@ -26,6 +26,10 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      # Do not let a transient Supabase pooler connection stall the entire
+      # admin job. SQL statements retain their own longer safety timeouts.
+      PGCONNECT_TIMEOUT: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
