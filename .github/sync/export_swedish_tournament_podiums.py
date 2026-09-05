@@ -187,6 +187,8 @@ def main() -> int:
     rows: list[dict[str, Any]] = []
     skipped_incomplete = 0
     skipped_mismatch = 0
+    skipped_ambiguous = 0
+    verified_by_league: dict[int, dict[int, dict[tuple[int, int], dict[str, Any]]]] = {}
     for series in series_rows:
         if excluded_competition(series.get("leagueName")):
             continue
@@ -200,12 +202,29 @@ def main() -> int:
         if bracket_winner_id and bracket_winner_id != winner_id:
             skipped_mismatch += 1
             continue
+        league_id = integer(series.get("leagueID"))
+        playoff_stage = integer(series.get("playoffStage"))
+        pair = (min(home_id, away_id), max(home_id, away_id))
+        verified_by_league.setdefault(league_id, {}).setdefault(playoff_stage, {})[pair] = series
+
+    for stages in verified_by_league.values():
+        finals = list(stages.get(1, {}).values())
+        if len(finals) != 1:
+            if len(finals) > 1:
+                skipped_ambiguous += 1
+            continue
+        final = finals[0]
+        home_id, away_id = integer(final["homeTeamID"]), integer(final["awayTeamID"])
+        winner_id = home_id if integer(final["homeWins"]) > integer(final["awayWins"]) else away_id
         loser_id = away_id if winner_id == home_id else home_id
-        if integer(series.get("playoffStage")) == 1:
-            rows.append(result_row(series, winner_id, 1))
-            rows.append(result_row(series, loser_id, 2))
-        elif integer(series.get("hasBronzeGame")) == 1:
-            rows.append(result_row(series, winner_id, 3))
+        rows.append(result_row(final, winner_id, 1))
+        rows.append(result_row(final, loser_id, 2))
+
+        bronze_series = list(stages.get(0, {}).values())
+        if len(bronze_series) == 1 and integer(bronze_series[0].get("hasBronzeGame")) == 1:
+            bronze = bronze_series[0]
+            bronze_winner = integer(bronze["homeTeamID"]) if integer(bronze["homeWins"]) > integer(bronze["awayWins"]) else integer(bronze["awayTeamID"])
+            rows.append(result_row(bronze, bronze_winner, 3))
 
     unique = {(integer(row["sports_gamer_league_id"]), integer(row["sports_gamer_team_id"])): row for row in rows}
     rows = [unique[key] for key in sorted(unique)]
@@ -216,13 +235,14 @@ def main() -> int:
         writer.writerows({field: "" if row.get(field) is None else row.get(field) for field in FIELDS} for row in rows)
 
     champions = sum(integer(row["final_placement"]) == 1 for row in rows)
-    print(f"Read-only podium export complete: {len(league_ids)} relevant tournaments, {champions} verified champions, {len(rows)} podium rows, {skipped_incomplete} unfinished series, {skipped_mismatch} bracket mismatches.")
+    print(f"Read-only podium export complete: {len(league_ids)} relevant tournaments, {champions} verified champions, {len(rows)} podium rows, {skipped_incomplete} unfinished series, {skipped_mismatch} bracket mismatches, {skipped_ambiguous} ambiguous multi-final tournaments skipped.")
     github_output = os.environ.get("GITHUB_OUTPUT")
     if github_output:
         with open(github_output, "a", encoding="utf-8") as handle:
             handle.write(f"podium_row_count={len(rows)}\n")
             handle.write(f"champion_count={champions}\n")
             handle.write(f"podium_mismatch_count={skipped_mismatch}\n")
+            handle.write(f"podium_ambiguous_count={skipped_ambiguous}\n")
     return 0
 
 

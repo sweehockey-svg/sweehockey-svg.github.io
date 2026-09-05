@@ -115,6 +115,7 @@ jobs:
           PODIUM_COUNT: ${{ steps.podiums.outputs.podium_row_count }}
           CHAMPION_COUNT: ${{ steps.podiums.outputs.champion_count }}
           PODIUM_MISMATCH_COUNT: ${{ steps.podiums.outputs.podium_mismatch_count }}
+          PODIUM_AMBIGUOUS_COUNT: ${{ steps.podiums.outputs.podium_ambiguous_count }}
         run: |
           {
             echo "## Swedish player tournament statistics"
@@ -124,6 +125,7 @@ jobs:
             echo "Verified champions: ${CHAMPION_COUNT:-0}"
             echo "Verified podium rows: ${PODIUM_COUNT:-0}"
             echo "Bracket/result mismatches skipped: ${PODIUM_MISMATCH_COUNT:-0}"
+            echo "Ambiguous multi-final tournaments skipped: ${PODIUM_AMBIGUOUS_COUNT:-0}"
             echo "SportsGamer access: read-only SELECT"
             echo "Dry run: ${{ inputs.dry_run }}"
             echo "Result: ${{ job.status }}"
