@@ -1,0 +1,97 @@
+\set ON_ERROR_STOP on
+
+begin;
+
+create temporary table sec_site_cup_sources_import (
+  source_key text not null,
+  cup_key text not null,
+  sort_order numeric not null,
+  code text not null,
+  display_name text not null,
+  source_file text not null,
+  source_generated_at timestamptz,
+  payload jsonb not null,
+  content_sha256 text not null
+) on commit drop;
+
+\copy sec_site_cup_sources_import from '/tmp/sec-site-cups.tsv' with (format csv, header true, delimiter E'\t');
+
+do $$
+declare
+  imported_count integer;
+begin
+  select count(*) into imported_count from sec_site_cup_sources_import;
+  if imported_count < 30 then
+    raise exception 'Safety stop: expected at least 30 SEC cup source objects, got %', imported_count;
+  end if;
+  if exists (
+    select 1
+    from sec_site_cup_sources_import
+    group by source_key, cup_key
+    having count(*) > 1
+  ) then
+    raise exception 'Safety stop: duplicate SEC source/cup keys';
+  end if;
+end
+$$;
+
+insert into public.sec_site_cup_sources (
+  source_key,
+  cup_key,
+  sort_order,
+  code,
+  display_name,
+  source_file,
+  source_generated_at,
+  payload,
+  content_sha256,
+  is_active,
+  imported_at,
+  updated_at
+)
+select
+  source_key,
+  cup_key,
+  sort_order,
+  code,
+  display_name,
+  source_file,
+  source_generated_at,
+  payload,
+  content_sha256,
+  true,
+  now(),
+  now()
+from sec_site_cup_sources_import
+on conflict (source_key, cup_key) do update
+set sort_order = excluded.sort_order,
+    code = excluded.code,
+    display_name = excluded.display_name,
+    source_file = excluded.source_file,
+    source_generated_at = excluded.source_generated_at,
+    payload = excluded.payload,
+    content_sha256 = excluded.content_sha256,
+    is_active = true,
+    imported_at = excluded.imported_at,
+    updated_at = case
+      when public.sec_site_cup_sources.content_sha256 is distinct from excluded.content_sha256
+        then now()
+      else public.sec_site_cup_sources.updated_at
+    end;
+
+update public.sec_site_cup_sources published
+set is_active = false,
+    imported_at = now()
+where published.is_active
+  and not exists (
+    select 1
+    from sec_site_cup_sources_import incoming
+    where incoming.source_key = published.source_key
+      and incoming.cup_key = published.cup_key
+  );
+
+commit;
+
+select count(*) as active_sec_cup_source_objects
+from public.sec_site_cup_sources
+where is_active;

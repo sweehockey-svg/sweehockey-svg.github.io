@@ -1,0 +1,54 @@
+name: Publish SEC data to Supabase
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "SEC/database-cups-1-13.json"
+      - "SEC/database-cups-14-20.json"
+      - "SEC/database-cups.json"
+      - ".github/sync/import-sec-site-cups.py"
+      - ".github/sync/import-sec-site-cups.psql"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-sec-site-data
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PGCONNECT_TIMEOUT: 20
+      PGTCP_USER_TIMEOUT: 30000
+      PGKEEPALIVES: 1
+      PGKEEPALIVES_IDLE: 30
+      PGKEEPALIVES_INTERVAL: 10
+      PGKEEPALIVES_COUNT: 3
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate and prepare SEC data
+        run: |
+          python .github/sync/import-sec-site-cups.py \
+            --output /tmp/sec-site-cups.tsv \
+            SEC/database-cups-1-13.json \
+            SEC/database-cups-14-20.json \
+            SEC/database-cups.json
+
+      - name: Publish SEC data to Supabase
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          : "${PGURL:?Missing SUPABASE_DB_URL secret}"
+          timeout --foreground --kill-after=30s 15m \
+            psql "$PGURL" -v ON_ERROR_STOP=1 \
+              -f .github/sync/import-sec-site-cups.psql

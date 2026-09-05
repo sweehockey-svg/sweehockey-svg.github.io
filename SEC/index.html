@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Svenska eHockey Cupen</title>
+  <meta name="description" content="Svenska eHockey Cupen med cuper, tabeller, slutspel, matcher, lag, spelare och målvakter.">
+  <meta name="theme-color" content="#05070b">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <link rel="icon" type="image/png" sizes="192x192" href="./assets/icons/sec-icon-192.png?v=20260817">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/sec-apple-touch-icon.png?v=20260817">
+  <link rel="manifest" href="./manifest.webmanifest?v=20260817">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="analytics.js?v=20260816-v110-seh-route"></script>
+</head>
+
+<body>
+  <div id="app">
+    <div class="boot">
+      <img src="https://sweehockey-svg.github.io/assets/SECLOGGA.png?v=site-20260810-draft-portraits-v3" alt="Svenska eHockey Cupen">
+      <span>Laddar SEC</span>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var version = "site-20260810-draft-portraits-v3";
+
+      var css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = "./styles-modern.css?v=" + version;
+      document.head.appendChild(css);
+
+      function loadScript(src) {
+        return new Promise(function (resolve, reject) {
+          var script = document.createElement("script");
+          script.src = src + "?v=" + version;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.body.appendChild(script);
+        });
+      }
+
+      loadScript("../config.js")
+        .then(function () {
+          return loadScript("./config.js");
+        })
+        .then(function () {
+          return loadScript("./app-modern.js");
+        })
+        .then(function () {
+          return loadScript("./admin-update-controls.js");
+        })
+        .then(function () {
+          return loadScript("./sec-draft-archive.js");
+        })
+        .catch(function () {
+          var app = document.getElementById("app");
+          if (app) {
+            app.innerHTML = "<div class=\"emptyPage\">Kunde inte ladda sidan.</div>";
+          }
+        });
+    }());
+  </script>
+</body>
+</html>

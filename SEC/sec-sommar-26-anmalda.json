@@ -1,0 +1,324 @@
+{
+  "title": "SEC Sommar 26",
+  "subtitle": "Skandinavisk draftcup",
+  "startDate": "2026-08-10",
+  "endDate": "2026-09-10",
+  "updatedAt": "2026-07-27",
+  "players": [
+    {
+      "gt": "MYTEN-LEGENDEN",
+      "mainPosition": "LW",
+      "alternativePosition": "RW/C",
+      "latestTeam": "Northern Ztars Hockey",
+      "division": "Core",
+      "availability": "50–80 %",
+      "captain": ""
+    },
+    {
+      "gt": "Alex96rizz",
+      "mainPosition": "RD",
+      "alternativePosition": "LD",
+      "latestTeam": "Sampo",
+      "division": "Lite",
+      "availability": "100 %",
+      "captain": ""
+    },
+    {
+      "gt": "Daanks_TTV",
+      "mainPosition": "RW",
+      "alternativePosition": "LW",
+      "latestTeam": "Northern Ztars Hockey",
+      "division": "Core",
+      "availability": "100 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "Gremlingswe",
+      "mainPosition": "G",
+      "alternativePosition": "",
+      "latestTeam": "Conexion",
+      "division": "Pro",
+      "availability": "80–100 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "Malmenlid",
+      "mainPosition": "LD",
+      "alternativePosition": "RD",
+      "latestTeam": "vNexs Wisemen",
+      "division": "Core",
+      "availability": "100 %",
+      "captain": ""
+    },
+    {
+      "gt": "Stenborg431",
+      "mainPosition": "G",
+      "alternativePosition": "D",
+      "latestTeam": "Brynäs IF Esport ",
+      "division": "Pro",
+      "availability": "50–100 %",
+      "captain": "Ja"
+    },
+    {
+      "gt": "Mackedavid",
+      "mainPosition": "RW",
+      "alternativePosition": "LW/C",
+      "latestTeam": "BIK Karlskoga Esport",
+      "division": "Core",
+      "availability": "50–70 %",
+      "captain": ""
+    },
+    {
+      "gt": "BuffaViana",
+      "mainPosition": "LD",
+      "alternativePosition": "",
+      "latestTeam": "Västerås IK",
+      "division": "Pro",
+      "availability": "85 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "Edluund___",
+      "mainPosition": "RW",
+      "alternativePosition": "LW",
+      "latestTeam": "Invasion Hockey",
+      "division": "Lite",
+      "availability": "80–100 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "Jompasnell",
+      "mainPosition": "LW",
+      "alternativePosition": "C",
+      "latestTeam": "Northern Ztars Hockey",
+      "division": "Core",
+      "availability": "100 %",
+      "captain": ""
+    },
+    {
+      "gt": "mctook1",
+      "mainPosition": "C",
+      "alternativePosition": "RW",
+      "latestTeam": "vNexs Wisemen",
+      "division": "Core",
+      "availability": "80–100 %",
+      "captain": ""
+    },
+    {
+      "gt": "therozz94",
+      "mainPosition": "G",
+      "alternativePosition": "",
+      "latestTeam": "SSK Prospects",
+      "division": "Pro",
+      "availability": "100 % (kan även spela 50 % om det blir många målvakter)",
+      "captain": "Nej"
+    },
+    {
+      "gt": "MrBumban1",
+      "mainPosition": "G",
+      "alternativePosition": "FWD/D",
+      "latestTeam": "BIK Karlskoga Academy",
+      "division": "Neo",
+      "availability": "75 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "Troublemakingswe",
+      "mainPosition": "RW",
+      "alternativePosition": "Alla utepositioner",
+      "latestTeam": "PRIMA",
+      "division": "Core",
+      "availability": "50–100 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "Zeven1988",
+      "mainPosition": "RD",
+      "alternativePosition": "LD",
+      "latestTeam": "Refuse Too Lose",
+      "division": "Lite",
+      "availability": "75 %",
+      "captain": ""
+    },
+    {
+      "gt": "Bulten_49",
+      "mainPosition": "LD",
+      "alternativePosition": "RD",
+      "latestTeam": "PRIMA",
+      "division": "Core",
+      "availability": "50–100 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "Maxboeeee_",
+      "mainPosition": "C",
+      "alternativePosition": "LW/RW",
+      "latestTeam": "Afterlife",
+      "division": "Elite",
+      "availability": "50–100 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "HerrLarsson80",
+      "mainPosition": "RW",
+      "alternativePosition": "RD",
+      "latestTeam": "N E O N X",
+      "division": "Neo",
+      "availability": "50–100 %",
+      "captain": ""
+    },
+    {
+      "gt": "Mrantonn-",
+      "mainPosition": "G",
+      "alternativePosition": "RW",
+      "latestTeam": "vNexs Wisemen",
+      "division": "Core",
+      "availability": "80–100 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "Axelzonee",
+      "mainPosition": "RW",
+      "alternativePosition": "C/RD",
+      "latestTeam": "SSK ESPORTS",
+      "division": "Elite",
+      "availability": "80–100 %",
+      "captain": ""
+    },
+    {
+      "gt": "Diizzylicious",
+      "mainPosition": "RW",
+      "alternativePosition": "C",
+      "latestTeam": "SSK Adepts",
+      "division": "Lite",
+      "availability": "100 %",
+      "captain": "Ja"
+    },
+    {
+      "gt": "Prolane",
+      "mainPosition": "RW",
+      "alternativePosition": "",
+      "latestTeam": "Macho HC",
+      "division": "Lite",
+      "availability": "100 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "Sebbanejad",
+      "mainPosition": "RD",
+      "alternativePosition": "",
+      "latestTeam": "Västerås IK",
+      "division": "Pro",
+      "availability": "50 %",
+      "captain": ""
+    },
+    {
+      "gt": "hodini90",
+      "mainPosition": "G",
+      "alternativePosition": "LD",
+      "latestTeam": "Northern Ztars Hockey",
+      "division": "Core",
+      "availability": "50 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "Adaam-2",
+      "mainPosition": "LD",
+      "alternativePosition": "RD/C",
+      "latestTeam": "Brynäs IF Esport ",
+      "division": "Pro",
+      "availability": "50–100 %",
+      "captain": ""
+    },
+    {
+      "gt": "Mathiasgamer_07",
+      "mainPosition": "LW",
+      "alternativePosition": "RW/C",
+      "latestTeam": "Västerås IK",
+      "division": "Pro",
+      "availability": "50 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "MrXbox79",
+      "mainPosition": "C",
+      "alternativePosition": "LW",
+      "latestTeam": "Västerås IK",
+      "division": "Pro",
+      "availability": "100 %",
+      "captain": ""
+    },
+    {
+      "gt": "Stickovic",
+      "mainPosition": "C",
+      "alternativePosition": "RW/LW/RD",
+      "latestTeam": "Brynäs IF Esport ",
+      "division": "Pro",
+      "availability": "50–100 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "MekNoXEr",
+      "mainPosition": "G",
+      "alternativePosition": "RD",
+      "latestTeam": "Västerås IK",
+      "division": "Pro",
+      "availability": "50–100 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "Snus97_",
+      "mainPosition": "Alla utepositioner",
+      "alternativePosition": "",
+      "latestTeam": "Unwanted",
+      "division": "Elite",
+      "availability": "Max 50 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "Zonkji v",
+      "mainPosition": "LW",
+      "alternativePosition": "C",
+      "latestTeam": "Brynäs IF Esport",
+      "division": "Pro",
+      "availability": "80–100 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "KFC Melker",
+      "mainPosition": "G",
+      "alternativePosition": "",
+      "latestTeam": "SSK Adepts",
+      "division": "Lite",
+      "availability": "70 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "KabbeTV",
+      "mainPosition": "RW",
+      "alternativePosition": "LW",
+      "latestTeam": "PHOENIX HC",
+      "division": "Lite",
+      "availability": "80–100 %",
+      "captain": "Nej"
+    },
+    {
+      "gt": "LaxenHD",
+      "mainPosition": "LW",
+      "alternativePosition": "C/G",
+      "latestTeam": "SSK ESPORTS",
+      "division": "Elite",
+      "availability": "0–100 %",
+      "captain": "Ja"
+    },
+    {
+      "gt": "I Braxsiö I",
+      "mainPosition": "C",
+      "alternativePosition": "RD/RW",
+      "latestTeam": "Grim Reapers HC",
+      "division": "Pro",
+      "availability": "50–100 %",
+      "captain": "Nej"
+    }
+  ]
+}
