@@ -52,7 +52,7 @@ jobs:
         run: |
           set -euo pipefail
           : "${PGURL:?Missing SUPABASE_DB_URL secret}"
-          psql "$PGURL" -v ON_ERROR_STOP=1 -c "\\copy (select distinct sports_gamer_player_id from public.v_ehockey_player_registry where country_code = 'SE' and sports_gamer_player_id is not null order by sports_gamer_player_id) to '/tmp/swedish_player_ids.csv' with (format csv, header true)"
+          timeout --foreground --kill-after=30s 5m psql "$PGURL" -v ON_ERROR_STOP=1 -c "\\copy (select distinct sports_gamer_player_id from public.v_ehockey_player_registry where country_code = 'SE' and sports_gamer_player_id is not null order by sports_gamer_player_id) to '/tmp/swedish_player_ids.csv' with (format csv, header true)"
 
       - name: Open read-only SSH tunnel to SportsGamer
         env:
@@ -102,19 +102,19 @@ jobs:
         if: ${{ !inputs.dry_run }}
         env:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
-        run: psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-swedish-player-stats.psql
+        run: timeout --foreground --kill-after=30s 10m psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-swedish-player-stats.psql
 
       - name: Upsert verified tournament podiums into Supabase
         if: ${{ !inputs.dry_run }}
         env:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
-        run: psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-swedish-tournament-podiums.psql
+        run: timeout --foreground --kill-after=30s 10m psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-swedish-tournament-podiums.psql
 
       - name: Refresh player statistics used by the website
         if: ${{ !inputs.dry_run }}
         env:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
-        run: psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/refresh-swedish-player-web-cache.sql
+        run: timeout --foreground --kill-after=30s 18m psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/refresh-swedish-player-web-cache.sql
 
       - name: Write summary
         if: always()
