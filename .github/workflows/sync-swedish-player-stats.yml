@@ -76,11 +76,29 @@ jobs:
           SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
         run: python .github/sync/export_swedish_player_stats.py
 
+      - name: Read verified tournament podiums for Swedish players
+        id: podiums
+        env:
+          DB_HOST: ${{ secrets.SVENSK_DB_HOST }}
+          DB_PORT: ${{ secrets.SVENSK_DB_PORT }}
+          DB_NAME: ${{ secrets.SVENSK_DB_NAME }}
+          DB_USER: ${{ secrets.SVENSK_DB_USER }}
+          DB_PASSWORD: ${{ secrets.SVENSK_DB_PASSWORD }}
+          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+        run: python .github/sync/export_swedish_tournament_podiums.py
+
       - name: Upsert Swedish player statistics into Supabase
         if: ${{ !inputs.dry_run }}
         env:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
         run: psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-swedish-player-stats.psql
+
+      - name: Upsert verified tournament podiums into Supabase
+        if: ${{ !inputs.dry_run }}
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-swedish-tournament-podiums.psql
 
       - name: Refresh player statistics used by the website
         if: ${{ !inputs.dry_run }}
@@ -94,12 +112,18 @@ jobs:
           PLAYER_COUNT: ${{ steps.export.outputs.player_count }}
           ROW_COUNT: ${{ steps.export.outputs.row_count }}
           MISSING_COUNT: ${{ steps.export.outputs.missing_profile_count }}
+          PODIUM_COUNT: ${{ steps.podiums.outputs.podium_row_count }}
+          CHAMPION_COUNT: ${{ steps.podiums.outputs.champion_count }}
+          PODIUM_MISMATCH_COUNT: ${{ steps.podiums.outputs.podium_mismatch_count }}
         run: |
           {
             echo "## Swedish player tournament statistics"
             echo "Canonical Swedish IDs: ${PLAYER_COUNT:-0}"
             echo "Tournament/team/player rows: ${ROW_COUNT:-0}"
             echo "Profiles absent from current source: ${MISSING_COUNT:-0}"
+            echo "Verified champions: ${CHAMPION_COUNT:-0}"
+            echo "Verified podium rows: ${PODIUM_COUNT:-0}"
+            echo "Bracket/result mismatches skipped: ${PODIUM_MISMATCH_COUNT:-0}"
             echo "SportsGamer access: read-only SELECT"
             echo "Dry run: ${{ inputs.dry_run }}"
             echo "Result: ${{ job.status }}"

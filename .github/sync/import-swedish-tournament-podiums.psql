@@ -1,0 +1,102 @@
+\set ON_ERROR_STOP on
+
+begin;
+set local statement_timeout = '10min';
+set local lock_timeout = '30s';
+
+create temporary table swedish_tournament_podiums_stage
+(like public.sportsgamer_team_playoff_results including defaults)
+on commit preserve rows;
+
+\copy swedish_tournament_podiums_stage (sports_gamer_league_id,official_league_name,league_phase,league_stage,playoff_type_id,bracket_type,active_league,regular_season_end,sports_gamer_team_id,team_name_in_league,current_global_team_name,qualified_for_playoffs,final_playoff_stage,reached_playoff_stage,playoff_round_code,playoff_round_name,playoff_status_code,playoff_status_name,final_placement,series_played,series_won,series_lost,matched_playoff_games,matched_playoff_game_wins,matched_playoff_game_losses,playoff_first_match_date,playoff_last_match_date,final_winner_team_id,final_opponent_team_id,final_team_game_wins,final_opponent_game_wins,won_bronze_series,lost_bronze_series,sports_gamer_team_url) from '/tmp/swedish_tournament_podiums.csv' with (format csv, header true, null '');
+
+select 1 / case
+  when count(*) >= 2
+   and count(*) = count(distinct (sports_gamer_league_id,sports_gamer_team_id))
+   and count(*) filter (where final_placement=1) = count(distinct sports_gamer_league_id) filter (where final_placement in (1,2))
+   and count(*) filter (where final_placement=2) = count(distinct sports_gamer_league_id) filter (where final_placement in (1,2))
+   and count(*) filter (where final_placement not in (1,2,3)) = 0
+  then 1 else 0 end as podium_safety_check_must_equal_1
+from swedish_tournament_podiums_stage;
+
+-- Clear only prior podium flags for leagues with a newly verified final. This
+-- prevents stale winners after a corrected result without deleting history.
+update public.sportsgamer_team_playoff_results target
+set final_placement=null,
+    playoff_status_code=null,
+    playoff_status_name=null,
+    imported_at=now()
+where target.sports_gamer_league_id in (
+  select distinct sports_gamer_league_id
+  from swedish_tournament_podiums_stage
+  where final_placement=1
+)
+and target.final_placement in (1,2,3);
+
+insert into public.sportsgamer_team_playoff_results (
+  sports_gamer_league_id,official_league_name,league_phase,league_stage,
+  playoff_type_id,bracket_type,active_league,regular_season_end,
+  sports_gamer_team_id,team_name_in_league,current_global_team_name,
+  qualified_for_playoffs,final_playoff_stage,reached_playoff_stage,
+  playoff_round_code,playoff_round_name,playoff_status_code,
+  playoff_status_name,final_placement,series_played,series_won,series_lost,
+  matched_playoff_games,matched_playoff_game_wins,matched_playoff_game_losses,
+  playoff_first_match_date,playoff_last_match_date,final_winner_team_id,
+  final_opponent_team_id,final_team_game_wins,final_opponent_game_wins,
+  won_bronze_series,lost_bronze_series,sports_gamer_team_url,imported_at
+)
+select
+  sports_gamer_league_id,official_league_name,league_phase,league_stage,
+  playoff_type_id,bracket_type,active_league,regular_season_end,
+  sports_gamer_team_id,team_name_in_league,current_global_team_name,
+  qualified_for_playoffs,final_playoff_stage,reached_playoff_stage,
+  playoff_round_code,playoff_round_name,playoff_status_code,
+  playoff_status_name,final_placement,series_played,series_won,series_lost,
+  matched_playoff_games,matched_playoff_game_wins,matched_playoff_game_losses,
+  playoff_first_match_date,playoff_last_match_date,final_winner_team_id,
+  final_opponent_team_id,final_team_game_wins,final_opponent_game_wins,
+  won_bronze_series,lost_bronze_series,sports_gamer_team_url,now()
+from swedish_tournament_podiums_stage
+on conflict (sports_gamer_league_id,sports_gamer_team_id) do update set
+  official_league_name=excluded.official_league_name,
+  league_phase=excluded.league_phase,
+  league_stage=excluded.league_stage,
+  playoff_type_id=excluded.playoff_type_id,
+  bracket_type=excluded.bracket_type,
+  active_league=excluded.active_league,
+  regular_season_end=excluded.regular_season_end,
+  team_name_in_league=excluded.team_name_in_league,
+  current_global_team_name=excluded.current_global_team_name,
+  qualified_for_playoffs=excluded.qualified_for_playoffs,
+  final_playoff_stage=excluded.final_playoff_stage,
+  reached_playoff_stage=excluded.reached_playoff_stage,
+  playoff_round_code=excluded.playoff_round_code,
+  playoff_round_name=excluded.playoff_round_name,
+  playoff_status_code=excluded.playoff_status_code,
+  playoff_status_name=excluded.playoff_status_name,
+  final_placement=excluded.final_placement,
+  series_played=excluded.series_played,
+  series_won=excluded.series_won,
+  series_lost=excluded.series_lost,
+  matched_playoff_games=excluded.matched_playoff_games,
+  matched_playoff_game_wins=excluded.matched_playoff_game_wins,
+  matched_playoff_game_losses=excluded.matched_playoff_game_losses,
+  playoff_first_match_date=excluded.playoff_first_match_date,
+  playoff_last_match_date=excluded.playoff_last_match_date,
+  final_winner_team_id=excluded.final_winner_team_id,
+  final_opponent_team_id=excluded.final_opponent_team_id,
+  final_team_game_wins=excluded.final_team_game_wins,
+  final_opponent_game_wins=excluded.final_opponent_game_wins,
+  won_bronze_series=excluded.won_bronze_series,
+  lost_bronze_series=excluded.lost_bronze_series,
+  sports_gamer_team_url=excluded.sports_gamer_team_url,
+  imported_at=now();
+
+commit;
+
+analyze public.sportsgamer_team_playoff_results;
+select public.refresh_ehockey_player_merits_cache_v1();
+
+select count(*) as imported_podium_rows,
+       count(*) filter (where final_placement=1) as imported_champions
+from swedish_tournament_podiums_stage;
