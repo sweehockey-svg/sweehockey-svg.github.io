@@ -43,6 +43,7 @@ def main() -> int:
         connect_timeout=20,
         read_timeout=120,
         autocommit=True,
+        init_command="SET SESSION TRANSACTION READ ONLY",
     )
     inventory: dict[str, object] = {"tables": {}, "candidate_leagues": []}
     try:
@@ -58,6 +59,10 @@ def main() -> int:
                     lower(table_name) like '%%league%%'
                     or lower(table_name) like '%%playerstat%%'
                     or lower(table_name) like '%%goaliestat%%'
+                    or lower(table_name) like '%%match%%'
+                    or lower(table_name) like '%%playoff%%'
+                    or lower(table_name) like '%%bracket%%'
+                    or lower(table_name) like '%%series%%'
                   )
                 order by table_name
                 """,
