@@ -1,8 +1,12 @@
 \set ON_ERROR_STOP on
 
+-- This script commits several independently validated cache stages. Session
+-- settings must therefore survive those commits, especially for the final
+-- player-history rebuild which can take longer than the project default.
+set statement_timeout = '15min';
+set lock_timeout = '30s';
+
 begin;
-set local statement_timeout = '15min';
-set local lock_timeout = '30s';
 
 create temporary table swedish_player_web_stage
 (like public.v_ehockey_player_tournaments_merged_v21_1 including defaults)
