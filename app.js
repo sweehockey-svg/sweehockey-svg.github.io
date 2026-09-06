@@ -1174,10 +1174,19 @@ function SEH_initHistory() {
     function latestSummary(tournament) {
       if (!tournament) return "Ingen turnering";
       const division = meaningfulDivision(tournament);
-      return [
-        tournament.seasonLabel,
-        division ? divisionDisplay(division).toUpperCase() : competitionDisplay(tournament.competitionCode)
-      ].join(" · ");
+      const seasonLabel = SEH_tableSeasonLabel(tournament.seasonLabel);
+      const divisionLabel = division
+        ? divisionDisplay(division).toUpperCase()
+        : competitionDisplay(tournament.competitionCode);
+
+      if (!seasonLabel) return divisionLabel || "Ingen turnering";
+      if (!divisionLabel) return seasonLabel;
+
+      const normalizedSeason = seasonLabel.toLocaleLowerCase("sv-SE");
+      const normalizedDivision = divisionLabel.toLocaleLowerCase("sv-SE");
+      if (normalizedSeason.includes(normalizedDivision)) return seasonLabel;
+
+      return `${seasonLabel} · ${divisionLabel}`;
     }
   
     function createTeamCard(team, index) {
@@ -1191,7 +1200,7 @@ function SEH_initHistory() {
       mainLink.href = teamUrl;
       mainLink.setAttribute("aria-label", `Öppna laghistoriken för ${team.currentName}`);
       fragment.querySelector(".directory-team-card__number").textContent =
-        String(index + 1).padStart(2, "0");
+        `#${index + 1}`;
  
       renderLogo(fragment.querySelector(".directory-team-card__logo"), team);
 
@@ -12509,7 +12518,7 @@ function SEH_initShop() {
 (() => {
   "use strict";
 
-  const APP_BUILD = "2026-09-04-v12864-hash-centers";
+  const APP_BUILD = "2026-09-06-v12960-discord-fa";
 
   const sehAuthState = {
     client: null,
@@ -13084,7 +13093,7 @@ function SEH_initShop() {
   `;
 
   templates.writer = "<main class=\"writer-shell\">\n    <a class=\"writer-back\" href=\"#/nyheter\">← Till nyheter</a>\n\n    <header class=\"writer-hero\">\n      <p class=\"directory-kicker\">SVENSK eHOCKEY / SKRIBENTCENTER</p>\n      <h1>Skriv nyhet</h1>\n      <p>Skriv artikeln, ladda upp desktop- och mobilbild och skicka den för granskning.</p>\n    </header>\n\n    <section id=\"writerLogin\" class=\"writer-panel writer-login-panel\">\n      <p class=\"writer-panel-kicker\">SKRIBENTINLOGGNING</p>\n      <h2>Logga in</h2>\n      <p>Logga in med ditt skribentnamn och lösenord.</p>\n      <div class=\"writer-grid\">\n        <label>\n          <span>Inloggningsnamn</span>\n          <input id=\"writerUsername\" type=\"text\" autocomplete=\"username\" placeholder=\"eSwahn\" spellcheck=\"false\">\n        </label>\n        <label>\n          <span>Lösenord</span>\n          <input id=\"writerPassword\" type=\"password\" autocomplete=\"current-password\" placeholder=\"Ditt lösenord\">\n        </label>\n      </div>\n      <div class=\"writer-actions\">\n        <span></span>\n        <button id=\"writerLoginBtn\" type=\"button\">Logga in</button>\n      </div>\n      <p id=\"writerLoginStatus\" role=\"status\"></p>\n    </section>\n\n    <section id=\"writerSessionBar\" class=\"writer-session-bar\" hidden>\n      <div>\n        <span>INLOGGAD SOM</span>\n        <strong id=\"writerDisplayName\">–</strong>\n        <small id=\"writerRoleLabel\"></small>\n      </div>\n      <button id=\"writerLogout\" class=\"writer-secondary\" type=\"button\">Logga ut</button>\n    </section>\n\n    <form id=\"writerForm\" class=\"writer-panel\" hidden>\n      <div class=\"writer-form-heading\">\n        <div>\n          <p class=\"writer-panel-kicker\" id=\"writerFormKicker\">NY ARTIKEL</p>\n          <h2 id=\"writerFormTitle\">Skriv artikel</h2>\n        </div>\n        <button type=\"button\" id=\"writerCancelEdit\" class=\"writer-secondary\" hidden>Avbryt redigering</button>\n      </div>\n\n      <div class=\"writer-grid\">\n        <label>\n          <span>Rubrik</span>\n          <input id=\"title\" required maxlength=\"140\">\n        </label>\n        <label>\n          <span>Kategori</span>\n          <select id=\"tag\">\n            <option>SEC</option>\n            <option>ECL</option>\n            <option>Svenska lag</option>\n            <option>Sajt</option>\n            <option>Nyhet</option>\n          </select>\n        </label>\n      </div>\n\n      <label>\n        <span>Ingress</span>\n        <textarea id=\"excerpt\" rows=\"3\" required maxlength=\"500\"></textarea>\n      </label>\n\n      <label>\n        <span>Artikeltext</span>\n        <div class=\"writer-editor-toolbar\" aria-label=\"Formatera artikeltext\">\n          <button type=\"button\" data-editor-insert=\"h2\">Mellanrubrik</button>\n          <button type=\"button\" data-editor-insert=\"h3\">Mindre rubrik</button>\n          <button type=\"button\" data-editor-insert=\"ul\">Punktlista</button>\n          <button type=\"button\" data-editor-insert=\"ol\">Numrerad lista</button>\n          <button type=\"button\" data-editor-insert=\"bold\">Fetstil</button>\n          <button type=\"button\" data-editor-insert=\"image1\">Bild 1 här</button>\n          <button type=\"button\" data-editor-insert=\"image2\">Bild 2 här</button>\n        </div>\n        <textarea id=\"body\" rows=\"14\" required placeholder=\"Skriv artikeln här. Tom rad skapar nytt stycke.\"></textarea>\n      </label>\n\n      <aside class=\"writer-format-guide\" aria-label=\"Instruktioner för textformatering\">\n        <strong>Så formaterar du texten</strong>\n        <ul>\n          <li><code>## Rubrik</code><span>Stor mellanrubrik</span></li>\n          <li><code>### Rubrik</code><span>Mindre rubrik</span></li>\n          <li><code>- Din text</code><span>Punktlista</span></li>\n          <li><code>1. Din text</code><span>Numrerad lista</span></li>\n          <li><code>**text**</code><span>Fetstil</span></li>\n          <li><code>[[BILD1]]</code><span>Placera inline-bild 1 här</span></li>\n          <li><code>[[BILD2]]</code><span>Placera inline-bild 2 här</span></li>\n          <li><code>Tom rad</code><span>Nytt stycke</span></li>\n        </ul>\n      </aside>\n\n      <div class=\"writer-image-grid\">\n        <label class=\"writer-upload\">\n          <strong>Desktopbild</strong>\n          <small>Rekommenderat: 1920 × 1080 px (16:9), JPG/PNG/WebP, max 5 MB.</small>\n          <input id=\"desktopImage\" type=\"file\" accept=\"image/jpeg,image/png,image/webp\">\n          <div class=\"writer-file-actions\"><button type=\"button\" class=\"writer-clear-file\" data-clear-file=\"desktopImage\">Ta bort bild</button></div>\n          <span id=\"desktopExisting\" class=\"writer-existing-image\" hidden></span>\n        </label>\n        <label class=\"writer-upload\">\n          <strong>Mobilbild</strong>\n          <small>Rekommenderat: 1080 × 1350 px (4:5), JPG/PNG/WebP, max 5 MB. Valfri – desktopbild används annars.</small>\n          <input id=\"mobileImage\" type=\"file\" accept=\"image/jpeg,image/png,image/webp\">\n          <div class=\"writer-file-actions\"><button type=\"button\" class=\"writer-clear-file\" data-clear-file=\"mobileImage\">Ta bort bild</button></div>\n          <span id=\"mobileExisting\" class=\"writer-existing-image\" hidden></span>\n        </label>\n      </div>\n\n      <label>\n        <span>Bildbeskrivning / alt-text</span>\n        <input id=\"imageAlt\" maxlength=\"180\">\n      </label>\n\n      <section class=\"writer-inline-images\">\n        <div class=\"writer-inline-images__heading\">\n          <div>\n            <strong>Extra bilder i artikeln</strong>\n            <small>Du kan lägga till upp till två bilder. Placera dem exakt mellan stycken med knapparna “Bild 1 här” och “Bild 2 här” ovanför artikeltexten. Om ingen placering anges används en automatisk placering längre ner i artikeln.</small>\n          </div>\n        </div>\n        <div class=\"writer-image-grid writer-image-grid--inline\">\n          <div class=\"writer-upload writer-upload--inline\">\n            <strong>Inline-bild 1</strong>\n            <small>Placeras där <code>[[BILD1]]</code> står i artikeltexten. Lägg gärna in både desktop- och mobilvariant.</small>\n            <div class=\"writer-inline-slot-grid\">\n              <label>\n                <span>Desktopbild 1</span>\n                <input id=\"inlineImage1\" type=\"file\" accept=\"image/jpeg,image/png,image/webp\">\n                <div class=\"writer-file-actions\"><button type=\"button\" class=\"writer-clear-file\" data-clear-file=\"inlineImage1\">Ta bort bild</button></div>\n                <span id=\"inlineExisting1\" class=\"writer-existing-image\" hidden></span>\n              </label>\n              <label>\n                <span>Mobilbild 1</span>\n                <input id=\"inlineImage1Mobile\" type=\"file\" accept=\"image/jpeg,image/png,image/webp\">\n                <div class=\"writer-file-actions\"><button type=\"button\" class=\"writer-clear-file\" data-clear-file=\"inlineImage1Mobile\">Ta bort bild</button></div>\n                <span id=\"inlineExisting1Mobile\" class=\"writer-existing-image\" hidden></span>\n              </label>\n            </div>\n            <label>\n              <span>Bildtext 1</span>\n              <input id=\"inlineCaption1\" maxlength=\"180\">\n            </label>\n            <label>\n              <span>Alt-text 1</span>\n              <input id=\"inlineAlt1\" maxlength=\"180\">\n            </label>\n          </div>\n          <div class=\"writer-upload writer-upload--inline\">\n            <strong>Inline-bild 2</strong>\n            <small>Placeras där <code>[[BILD2]]</code> står i artikeltexten. Lägg gärna in både desktop- och mobilvariant.</small>\n            <div class=\"writer-inline-slot-grid\">\n              <label>\n                <span>Desktopbild 2</span>\n                <input id=\"inlineImage2\" type=\"file\" accept=\"image/jpeg,image/png,image/webp\">\n                <div class=\"writer-file-actions\"><button type=\"button\" class=\"writer-clear-file\" data-clear-file=\"inlineImage2\">Ta bort bild</button></div>\n                <span id=\"inlineExisting2\" class=\"writer-existing-image\" hidden></span>\n              </label>\n              <label>\n                <span>Mobilbild 2</span>\n                <input id=\"inlineImage2Mobile\" type=\"file\" accept=\"image/jpeg,image/png,image/webp\">\n                <div class=\"writer-file-actions\"><button type=\"button\" class=\"writer-clear-file\" data-clear-file=\"inlineImage2Mobile\">Ta bort bild</button></div>\n                <span id=\"inlineExisting2Mobile\" class=\"writer-existing-image\" hidden></span>\n              </label>\n            </div>\n            <label>\n              <span>Bildtext 2</span>\n              <input id=\"inlineCaption2\" maxlength=\"180\">\n            </label>\n            <label>\n              <span>Alt-text 2</span>\n              <input id=\"inlineAlt2\" maxlength=\"180\">\n            </label>\n          </div>\n        </div>\n      </section>\n</section>\n\n      <div class=\"writer-preview-switch\">\n        <button type=\"button\" data-preview=\"desktop\" class=\"is-active\">Desktop</button>\n        <button type=\"button\" data-preview=\"mobile\">Mobil</button>\n      </div>\n\n      <div id=\"writerPreview\" class=\"writer-preview writer-preview--desktop\">\n        <div class=\"writer-preview-card\">\n          <img id=\"previewImage\" hidden alt=\"\">\n          <div>\n            <span id=\"previewTag\">SEC</span>\n            <h2 id=\"previewTitle\">Din rubrik</h2>\n            <p id=\"previewExcerpt\">Din ingress visas här.</p>\n          </div>\n        </div>\n      </div>\n\n      <div class=\"writer-actions\">\n        <span></span>\n        <button type=\"submit\" id=\"writerSubmitBtn\">Skicka för granskning</button>\n      </div>\n      <p id=\"writerStatus\" role=\"status\"></p>\n    </form>\n\n    <section id=\"writerArticleManager\" class=\"writer-panel writer-manager\" hidden>\n      <div class=\"writer-manager-heading\">\n        <div>\n          <p class=\"writer-panel-kicker\" id=\"writerManagerKicker\">MINA ARTIKLAR</p>\n          <h2 id=\"writerManagerTitle\">Artiklar</h2>\n        </div>\n        <button id=\"writerRefreshArticles\" type=\"button\" class=\"writer-secondary\">Uppdatera</button>\n      </div>\n      <p id=\"writerManagerText\" class=\"writer-manager-text\"></p>\n      <div id=\"writerArticleList\" class=\"writer-article-list\"></div>\n    </section>\n\n    <div id=\"writerArticlePreviewModal\" class=\"writer-preview-modal\" hidden>\n      <div class=\"writer-preview-modal__backdrop\" data-close-preview></div>\n      <section class=\"writer-preview-modal__dialog\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"writerPreviewArticleTitle\">\n        <div class=\"writer-preview-modal__topbar\">\n          <strong>FÖRHANDSGRANSKNING</strong>\n          <button type=\"button\" class=\"writer-secondary\" data-close-preview>Stäng</button>\n        </div>\n        <div id=\"writerArticlePreviewContent\"></div>\n      </section>\n    </div>\n  </main>";
-  templates.admin = "<style id=\"sehAdminRouteStyles\">.admin-shell{max-width:1100px;margin:0 auto;padding:3rem 1.25rem 5rem}.admin-hero{margin:2rem 0}.admin-hero h1{margin:.25rem 0 1rem}.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}.admin-card{padding:1.5rem;border:1px solid #303030;background:#0c0d0d}.admin-card h2{margin:.25rem 0 .5rem}.admin-card p{color:#b7b7b7;line-height:1.5}.admin-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem}.admin-actions button[disabled]{opacity:.5;cursor:not-allowed}.admin-status{min-height:1.5rem;margin-top:1rem}.admin-status[data-tone=success]{color:#62e59b}.admin-status[data-tone=error]{color:#ff7272}.admin-status[data-tone=working]{color:#ffd400}.admin-login{max-width:560px}.admin-login label{display:block;margin:1rem 0}.admin-login label span{display:block;margin-bottom:.4rem}.admin-login input{width:100%;box-sizing:border-box}.admin-session{display:flex;justify-content:space-between;align-items:center;gap:1rem;border-bottom:1px solid #303030;padding:1rem 0;margin-bottom:2rem}.admin-session span{display:block;color:#aaa;font-size:.75rem;letter-spacing:.08em}.admin-session strong{font-size:1.1rem}@media(max-width:600px){.admin-session{align-items:flex-start;flex-direction:column}}</style><main class=\"admin-shell\">\n    <a class=\"writer-back\" href=\"#/nyheter\">← Till nyheter</a>\n    <header class=\"admin-hero\"><p class=\"directory-kicker\">SVENSK eHOCKEY / ADMIN</p><h1>Admincenter</h1><p>Här samlas synkningar och framtida verktyg för webbplatsen.</p></header>\n    <section id=\"adminLogin\" class=\"admin-card admin-login\">\n      <p class=\"writer-panel-kicker\">ADMININLOGGNING</p><h2>Logga in</h2>\n      <label><span>Inloggningsnamn</span><input id=\"adminUsername\" autocomplete=\"username\" placeholder=\"eSwahn\" spellcheck=\"false\"></label>\n      <label><span>Lösenord</span><input id=\"adminPassword\" type=\"password\" autocomplete=\"current-password\"></label>\n      <div class=\"admin-actions\"><button id=\"adminLoginBtn\" type=\"button\">Logga in</button></div><p id=\"adminLoginStatus\" class=\"admin-status\" role=\"status\"></p>\n    </section>\n    <div id=\"adminDashboard\" hidden>\n      <section class=\"admin-session\"><div><span>INLOGGAD SOM</span><strong id=\"adminDisplayName\">–</strong></div><button id=\"adminLogout\" class=\"writer-secondary\" type=\"button\">Logga ut</button></section>\n      <section class=\"admin-grid\">\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">SPELARREGISTER</p><h2>Svenska spelare</h2><p>Hämtar nya svenska SportsGamer-profiler och uppdaterar det centrala spelarregistret i Supabase.</p><div class=\"admin-actions\"><button id=\"startPlayerSync\" type=\"button\">Synka svenska spelare</button><button id=\"refreshPlayerSync\" class=\"writer-secondary\" type=\"button\" disabled>Kontrollera status</button></div><p id=\"playerSyncStatus\" class=\"admin-status\" role=\"status\" aria-live=\"polite\"></p></article>\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">SPELARSTATISTIK</p><h2>Alla svenska spelares turneringar</h2><p>Hämtar nya och korrigerade statistik­rader från samtliga SportsGamer-turneringar för spelarna i det svenska registret. SportsGamer läses endast.</p><div class=\"admin-actions\"><button id=\"startStatsSync\" type=\"button\">Uppdatera spelarstatistik</button><button id=\"refreshStatsSync\" class=\"writer-secondary\" type=\"button\" disabled>Kontrollera status</button></div><p id=\"statsSyncStatus\" class=\"admin-status\" role=\"status\" aria-live=\"polite\"></p></article>\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">KOMMANDE</p><h2>SEC-matcher</h2><p>Separat hämtning av nya SEC-matcher kan läggas här när datakällan och reglerna är fastställda.</p><div class=\"admin-actions\"><button type=\"button\" disabled>Kommer senare</button></div></article>\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">KOMMANDE</p><h2>Automatisk timer</h2><p>Timer för återkommande hämtningar aktiveras efter att manuella körningar fungerar stabilt.</p><div class=\"admin-actions\"><button type=\"button\" disabled>Kommer senare</button></div></article>\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">KONTO</p><h2>Byt adminlösenord</h2><p>Sätt ett nytt lösenord direkt för ett konto när återställningsmejl inte kan användas.</p><label><span>Användarnamn</span><input id=\"resetUsername\" value=\"eSwahn\" spellcheck=\"false\"></label><label><span>Nytt lösenord</span><input id=\"resetPassword\" type=\"password\" minlength=\"8\" autocomplete=\"new-password\"></label><div class=\"admin-actions\"><button id=\"resetPasswordBtn\" type=\"button\">Sätt nytt lösenord</button></div><p id=\"resetPasswordStatus\" class=\"admin-status\" role=\"status\"></p></article>\n      </section>\n    </div>\n  </main>";
+  templates.admin = "<style id=\"sehAdminRouteStyles\">.admin-shell{max-width:1100px;margin:0 auto;padding:3rem 1.25rem 5rem}.admin-hero{margin:2rem 0}.admin-hero h1{margin:.25rem 0 1rem}.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}.admin-card{padding:1.5rem;border:1px solid #303030;background:#0c0d0d}.admin-card h2{margin:.25rem 0 .5rem}.admin-card p{color:#b7b7b7;line-height:1.5}.admin-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem}.admin-actions button[disabled]{opacity:.5;cursor:not-allowed}.admin-status{min-height:1.5rem;margin-top:1rem}.admin-status[data-tone=success]{color:#62e59b}.admin-status[data-tone=error]{color:#ff7272}.admin-status[data-tone=working]{color:#ffd400}.admin-login{max-width:560px}.admin-login label{display:block;margin:1rem 0}.admin-login label span{display:block;margin-bottom:.4rem}.admin-login input{width:100%;box-sizing:border-box}.admin-session{display:flex;justify-content:space-between;align-items:center;gap:1rem;border-bottom:1px solid #303030;padding:1rem 0;margin-bottom:2rem}.admin-session span{display:block;color:#aaa;font-size:.75rem;letter-spacing:.08em}.admin-session strong{font-size:1.1rem}@media(max-width:600px){.admin-session{align-items:flex-start;flex-direction:column}}</style><main class=\"admin-shell\">\n    <a class=\"writer-back\" href=\"#/nyheter\">← Till nyheter</a>\n    <header class=\"admin-hero\"><p class=\"directory-kicker\">SVENSK eHOCKEY / ADMIN</p><h1>Admincenter</h1><p>Här samlas synkningar och framtida verktyg för webbplatsen.</p></header>\n    <section id=\"adminLogin\" class=\"admin-card admin-login\">\n      <p class=\"writer-panel-kicker\">ADMININLOGGNING</p><h2>Logga in</h2>\n      <label><span>Inloggningsnamn</span><input id=\"adminUsername\" autocomplete=\"username\" placeholder=\"eSwahn\" spellcheck=\"false\"></label>\n      <label><span>Lösenord</span><input id=\"adminPassword\" type=\"password\" autocomplete=\"current-password\"></label>\n      <div class=\"admin-actions\"><button id=\"adminLoginBtn\" type=\"button\">Logga in</button></div><p id=\"adminLoginStatus\" class=\"admin-status\" role=\"status\"></p>\n    </section>\n    <div id=\"adminDashboard\" hidden>\n      <section class=\"admin-session\"><div><span>INLOGGAD SOM</span><strong id=\"adminDisplayName\">–</strong></div><button id=\"adminLogout\" class=\"writer-secondary\" type=\"button\">Logga ut</button></section>\n      <section class=\"admin-grid\">\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">SPELARREGISTER</p><h2>Svenska spelare</h2><p>Hämtar nya svenska SportsGamer-profiler och uppdaterar det centrala spelarregistret i Supabase.</p><div class=\"admin-actions\"><button id=\"startPlayerSync\" type=\"button\">Synka svenska spelare</button><button id=\"refreshPlayerSync\" class=\"writer-secondary\" type=\"button\" disabled>Kontrollera status</button></div><p id=\"playerSyncStatus\" class=\"admin-status\" role=\"status\" aria-live=\"polite\"></p></article>\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">SPELARSTATISTIK</p><h2>Alla svenska spelares turneringar</h2><p>Hämtar nya och korrigerade statistik­rader från samtliga SportsGamer-turneringar för spelarna i det svenska registret. SportsGamer läses endast.</p><div class=\"admin-actions\"><button id=\"startStatsSync\" type=\"button\">Uppdatera spelarstatistik</button><button id=\"refreshStatsSync\" class=\"writer-secondary\" type=\"button\" disabled>Kontrollera status</button></div><p id=\"statsSyncStatus\" class=\"admin-status\" role=\"status\" aria-live=\"polite\"></p></article>\n        <article class=\"admin-card fa-admin-card\">\n          <div class=\"fa-admin-heading\"><div><p class=\"writer-panel-kicker\">FREE AGENTS</p><h2>Hantera lediga spelare</h2><p>Lägg till en spelare på Free Agent-sidan eller uppdatera en befintlig annons.</p></div><a class=\"writer-secondary fa-admin-public-link\" href=\"#/free-agents\">Öppna Free Agents →</a></div>\n          <div class=\"fa-admin-approval-grid\">\n            <section class=\"fa-admin-approval-panel\">\n              <div class=\"fa-admin-current__head\"><div><span>DISCORD → SPELARPROFIL</span><strong id=\"faAdminLinkRequestCount\">0</strong></div></div>\n              <p class=\"fa-admin-approval-help\">Spelaren har loggat in med Discord och valt vilken Svensk eHockey-profil som ska kopplas till kontot.</p>\n              <div id=\"faAdminLinkRequests\" class=\"fa-admin-request-list\"></div>\n            </section>\n            <section class=\"fa-admin-approval-panel\">\n              <div class=\"fa-admin-current__head\"><div><span>FA-FÖRFRÅGNINGAR</span><strong id=\"faAdminRequestCount\">0</strong></div></div>\n              <p class=\"fa-admin-approval-help\">Nya annonser, ändringar och önskemål om borttagning visas här tills admin godkänner eller avslår.</p>\n              <div id=\"faAdminRequests\" class=\"fa-admin-request-list\"></div>\n            </section>\n          </div>\n          <div class=\"fa-admin-layout\">\n            <section class=\"fa-admin-form\">\n              <label><span>Sök spelare i registret</span><input id=\"faAdminSearch\" type=\"search\" autocomplete=\"off\" placeholder=\"Skriv gamertag…\"></label>\n              <div id=\"faAdminSearchResults\" class=\"fa-admin-search-results\"></div>\n              <div id=\"faAdminSelected\" class=\"fa-admin-selected\" hidden><span id=\"faAdminSelectedType\">VALD SPELARE</span><strong id=\"faAdminSelectedName\">–</strong><small id=\"faAdminSelectedMeta\"></small></div>\n              <div class=\"fa-admin-grid\"><label><span>Positioner</span><input id=\"faAdminPositions\" maxlength=\"100\" placeholder=\"T.ex. HF / HB, VF / C eller G\"></label><label><span>Division / nivå</span><input id=\"faAdminLevels\" maxlength=\"100\" placeholder=\"T.ex. Neo / Core, Elite+ eller Alla\"></label></div>\n              <div class=\"fa-admin-grid\"><label><span>FA-datum</span><input id=\"faAdminDate\" type=\"date\"></label><label><span>Gäller till (valfritt)</span><input id=\"faAdminExpires\" type=\"date\"></label></div>\n              <div class=\"fa-admin-grid\"><label><span>Tillgänglighet</span><input id=\"faAdminAvailability\" maxlength=\"160\" placeholder=\"T.ex. 4–5 kvällar/vecka\"></label><label><span>Kontakt</span><input id=\"faAdminContact\" maxlength=\"160\" placeholder=\"T.ex. Discord: gamertag\"></label></div>\n              <label><span>Kommentar</span><textarea id=\"faAdminMessage\" rows=\"3\" maxlength=\"500\" placeholder=\"T.ex. Nästa ECL, Backup eller Gärna moget gäng\"></textarea></label>\n              <div class=\"admin-actions\"><button id=\"faAdminSave\" type=\"button\" disabled>Spara Free Agent</button><button id=\"faAdminClear\" class=\"writer-secondary\" type=\"button\">Rensa</button></div><p id=\"faAdminStatus\" class=\"admin-status\" role=\"status\" aria-live=\"polite\"></p>\n            </section>\n            <section class=\"fa-admin-current\"><div class=\"fa-admin-current__head\"><div><span>PUBLICERADE / SPARADE</span><strong id=\"faAdminCount\">0</strong></div><button id=\"faAdminRefresh\" class=\"writer-secondary\" type=\"button\">Uppdatera</button></div><div id=\"faAdminList\" class=\"fa-admin-list\"></div></section>\n          </div>\n        </article>\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">KOMMANDE</p><h2>SEC-matcher</h2><p>Separat hämtning av nya SEC-matcher kan läggas här när datakällan och reglerna är fastställda.</p><div class=\"admin-actions\"><button type=\"button\" disabled>Kommer senare</button></div></article>\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">KOMMANDE</p><h2>Automatisk timer</h2><p>Timer för återkommande hämtningar aktiveras efter att manuella körningar fungerar stabilt.</p><div class=\"admin-actions\"><button type=\"button\" disabled>Kommer senare</button></div></article>\n        <article class=\"admin-card\"><p class=\"writer-panel-kicker\">KONTO</p><h2>Byt adminlösenord</h2><p>Sätt ett nytt lösenord direkt för ett konto när återställningsmejl inte kan användas.</p><label><span>Användarnamn</span><input id=\"resetUsername\" value=\"eSwahn\" spellcheck=\"false\"></label><label><span>Nytt lösenord</span><input id=\"resetPassword\" type=\"password\" minlength=\"8\" autocomplete=\"new-password\"></label><div class=\"admin-actions\"><button id=\"resetPasswordBtn\" type=\"button\">Sätt nytt lösenord</button></div><p id=\"resetPasswordStatus\" class=\"admin-status\" role=\"status\"></p></article>\n      </section>\n    </div>\n  </main>";
 
   function SEH_initWriterCenter() {
 (() => {
@@ -13977,6 +13986,344 @@ function SEH_initShop() {
 })();
   }
 
+
+
+  templates.freeAgents = `
+    <main class="directory-shell free-agents-shell">
+      <section class="free-agents-hero">
+        <div class="free-agents-hero__copy">
+          <p class="directory-kicker">FREE AGENTS</p>
+          <h1>Lediga spelare</h1>
+          <p>Spelare som söker lag inför kommande turneringar. Filtrera på position och nivå eller öppna spelarprofilen för hela karriären.</p>
+          <div class="free-agents-hero__tags" aria-label="Free Agent-information"><span>AKTIVA ANNONSER</span><span>SVENSK eHOCKEY RP</span><span>SUPABASE LIVE</span></div>
+        </div>
+        <aside class="free-agents-overview" aria-label="Översikt">
+          <p class="directory-kicker">ÖVERSIKT</p>
+          <div><article><span>LEDIGA</span><strong id="faOverviewTotal">–</strong></article><article><span>UTESPELARE</span><strong id="faOverviewSkaters">–</strong></article><article><span>MÅLVAKTER</span><strong id="faOverviewGoalies">–</strong></article><article><span>NYA 7 DAGAR</span><strong id="faOverviewNew">–</strong></article></div>
+        </aside>
+      </section>
+      <section class="fa-self-service" id="faSelfService" aria-labelledby="faSelfTitle">
+        <div class="fa-self-service__intro">
+          <p class="directory-kicker">MIN FREE AGENT</p>
+          <h2 id="faSelfTitle">Skriv in dig själv</h2>
+          <p>Logga in med Discord, koppla kontot till din Svensk eHockey-profil och skicka din FA-annons. Allt måste godkännas av admin innan det publiceras eller tas bort.</p>
+        </div>
+        <div class="fa-self-service__panel">
+          <div id="faSelfLoggedOut" class="fa-self-state">
+            <button id="faDiscordLogin" class="fa-discord-button" type="button"><span aria-hidden="true">◉</span> Logga in med Discord</button>
+            <small>Discord används för att verifiera vilket konto som skickar förfrågan.</small>
+            <p id="faDiscordLoginStatus" class="fa-self-status" role="status" aria-live="polite"></p>
+          </div>
+          <div id="faSelfWrongProvider" class="fa-self-state" hidden>
+            <strong>Du är redan inloggad med ett annat konto.</strong>
+            <span>Spelarhanteringen kräver Discord-inloggning.</span>
+            <button id="faDiscordSwitch" class="fa-discord-button" type="button">Byt till Discord</button>
+          </div>
+          <div id="faSelfLoggedIn" hidden>
+            <div class="fa-discord-identity">
+              <img id="faDiscordAvatar" alt="" hidden>
+              <div><span>INLOGGAD MED DISCORD</span><strong id="faDiscordName">–</strong></div>
+              <button id="faDiscordLogout" class="fa-self-secondary" type="button">Logga ut</button>
+            </div>
+
+            <div id="faLinkSetup" class="fa-self-link" hidden>
+              <p class="fa-self-kicker">KOPPLA SPELARPROFIL</p>
+              <h3>Vilken spelare är du?</h3>
+              <p>Sök fram din egen profil. Kopplingen skickas till admin för godkännande.</p>
+              <label><span>Sök gamertag</span><input id="faSelfPlayerSearch" type="search" autocomplete="off" placeholder="Skriv ditt gamertag…"></label>
+              <div id="faSelfPlayerResults" class="fa-self-player-results"></div>
+              <p id="faSelfLinkStatus" class="fa-self-status" role="status" aria-live="polite"></p>
+            </div>
+
+            <div id="faLinkPending" class="fa-self-notice" hidden>
+              <span>VÄNTAR PÅ ADMIN</span><strong id="faLinkPendingName">Spelarkoppling skickad</strong><p>Du kan skicka FA-annonsen när kopplingen har godkänts.</p>
+            </div>
+            <div id="faLinkRejected" class="fa-self-notice is-rejected" hidden>
+              <span>KOPPLING AVSLAGEN</span><strong id="faLinkRejectedName">Välj profil igen</strong><p>Du kan söka fram rätt spelarprofil och skicka en ny begäran.</p>
+              <button id="faLinkTryAgain" class="fa-self-secondary" type="button">Välj profil igen</button>
+            </div>
+
+            <div id="faSelfApproved" hidden>
+              <div class="fa-self-approved-head"><div><span>KOPPLAD SPELARE</span><strong id="faSelfPlayerName">–</strong><small id="faSelfPlayerMeta"></small></div><em>GODKÄND</em></div>
+              <div id="faSelfRequestNotice" class="fa-self-notice" hidden><span>VÄNTAR PÅ ADMIN</span><strong id="faSelfRequestTitle">FA-förfrågan skickad</strong><p>Din publika annons ändras först när admin godkänt förfrågan.</p></div>
+              <div class="fa-self-form">
+                <div class="fa-self-form-grid"><label><span>Positioner</span><input id="faSelfPositions" maxlength="100" placeholder="T.ex. HF / HB eller G"></label><label><span>Söker nivå</span><input id="faSelfLevels" maxlength="100" placeholder="T.ex. Lite / Pro eller Alla"></label></div>
+                <div class="fa-self-form-grid"><label><span>Tillgänglighet</span><input id="faSelfAvailability" maxlength="160" placeholder="Valfritt"></label><label><span>Kontakt</span><input id="faSelfContact" maxlength="160" placeholder="Discord fylls i automatiskt"></label></div>
+                <label><span>Kommentar</span><textarea id="faSelfMessage" rows="3" maxlength="500" placeholder="T.ex. Nästa ECL, Backup eller annan information"></textarea></label>
+                <div class="fa-self-actions"><button id="faSelfSubmit" type="button">Skicka FA-ansökan</button><button id="faSelfRemove" class="fa-self-danger" type="button" hidden>Begär borttagning</button></div>
+                <p id="faSelfFormStatus" class="fa-self-status" role="status" aria-live="polite"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="free-agents-directory" aria-labelledby="freeAgentsTitle">
+        <div class="free-agents-heading"><div><p class="directory-kicker">HITTA SPELARE</p><h2 id="freeAgentsTitle">Free Agents</h2></div><p id="faResultText">Laddar lediga spelare…</p></div>
+        <div class="free-agents-toolbar">
+          <label class="free-agents-field free-agents-field--search"><span>SÖK</span><input id="faSearch" type="search" autocomplete="off" placeholder="Gamertag, senaste lag…"></label>
+          <label class="free-agents-field"><span>POSITION</span><select id="faPosition"><option value="all">Alla positioner</option><option value="F">Forward</option><option value="VF">VF</option><option value="C">C</option><option value="HF">HF</option><option value="D">Back</option><option value="VB">VB</option><option value="HB">HB</option><option value="G">Målvakt</option></select></label>
+          <label class="free-agents-field"><span>SÖKER NIVÅ</span><select id="faLevel"><option value="all">Alla nivåer</option><option>Elite</option><option>Pro</option><option>Lite</option><option>Core</option><option>Neo</option></select></label>
+          <label class="free-agents-field"><span>SORTERA</span><select id="faSort"><option value="rank">Sverige-rank</option><option value="newest">Nyast först</option><option value="rp">Högst RP</option><option value="name">Namn A–Ö</option></select></label>
+        </div>
+        <div id="faLoading" class="free-agents-loading"><div class="spinner" aria-hidden="true"></div><p>Hämtar Free Agents…</p></div>
+        <div id="faEmpty" class="free-agents-empty" hidden><strong>Inga Free Agents matchar filtret.</strong><span>Ändra filtreringen eller kom tillbaka senare.</span></div>
+        <div id="faGrid" class="free-agents-grid" aria-live="polite"></div>
+      </section>
+    </main>
+    <footer class="directory-footer"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>
+  `;
+
+  function SEH_initFreeAgents() {
+    const root = document.querySelector('#spaRouteView[data-route="freeAgents"]');
+    if (!root) return;
+    const $ = (selector) => root.querySelector(selector);
+    const clean = (value) => String(value ?? '').trim();
+    const list = (value) => Array.isArray(value) ? value.map(clean).filter(Boolean) : [];
+    const splitDisplay = (value) => clean(value).split(/\s*[\/,;+]\s*/).map(clean).filter(Boolean);
+    const number = (value) => Number.isFinite(Number(value)) ? Number(value) : 0;
+    const format = (value) => new Intl.NumberFormat('sv-SE').format(number(value));
+    const sb = sehGetAuthClient();
+    const state = { rows: [] };
+
+    const positionCanonical = (value) => {
+      const p = clean(value).toUpperCase().replace(/\s+/g, ' ');
+      const map = { VF:'LW', HF:'RW', VB:'LD', HB:'RD', BACK:'D', DEF:'D', FORWARD:'F', MÅLVAKT:'G', GOALIE:'G' };
+      return map[p] || p;
+    };
+    const positionGroup = (value) => {
+      const p = positionCanonical(value);
+      if (p === 'G') return 'G';
+      if (['LD','RD','D'].includes(p)) return 'D';
+      if (['LW','C','RW','F'].includes(p)) return 'F';
+      return p;
+    };
+    const positionTokens = (row) => {
+      const display = splitDisplay(row.positions_text);
+      if (display.length) return display;
+      return [clean(row.primary_position), ...list(row.alternate_positions)].filter(Boolean);
+    };
+    const levelDisplayTokens = (row) => {
+      const source = `${clean(row.levels_text)} ${list(row.looking_for_levels).join(' ')}`.trim();
+      if (!source || /\balla\b|öppen för förslag/i.test(source)) return [];
+      const display = splitDisplay(row.levels_text);
+      return display.length ? display : list(row.looking_for_levels);
+    };
+    const levelCanonicals = (row) => {
+      const source = `${clean(row.levels_text)} ${list(row.looking_for_levels).join(' ')}`.trim().toLowerCase();
+      if (!source || /\balla\b|öppen för förslag/.test(source)) return ['Elite','Pro','Lite','Core','Neo'];
+      return ['Elite','Pro','Lite','Core','Neo'].filter((level) => source.includes(level.toLowerCase()));
+    };
+    const playerImage = (row) => {
+      if (!clean(row.player_image) && !clean(row.sports_gamer_player_url)) return 'players/1DEFAULTBILDID.png';
+      const match = clean(row.sports_gamer_player_url).match(/\/players\/(\d+)/i);
+      return SEH_playerImageUrl(match?.[1] || '', clean(row.player_image));
+    };
+    const dateText = (value) => {
+      const date = value ? new Date(`${String(value).slice(0,10)}T12:00:00`) : null;
+      return (!date || Number.isNaN(date.getTime())) ? '–' : new Intl.DateTimeFormat('sv-SE',{day:'numeric',month:'short',year:'numeric'}).format(date);
+    };
+    const ageDays = (value) => {
+      const date = value ? new Date(`${String(value).slice(0,10)}T12:00:00`) : null;
+      return (!date || Number.isNaN(date.getTime())) ? 99999 : (Date.now()-date.getTime())/86400000;
+    };
+    const latestPlayedEclTeam = (row) => clean(row.latest_ecl_team) || '–';
+    const latestPlayedEclDivision = (row) => clean(row.latest_ecl_division) || '–';
+
+    function updateOverview() {
+      const goalies = state.rows.filter((row)=>positionTokens(row).some((p)=>positionGroup(p)==='G')).length;
+      $('#faOverviewTotal').textContent=format(state.rows.length);
+      $('#faOverviewGoalies').textContent=format(goalies);
+      $('#faOverviewSkaters').textContent=format(state.rows.length-goalies);
+      $('#faOverviewNew').textContent=format(state.rows.filter((row)=>ageDays(row.fa_date || row.created_at)<=7).length);
+    }
+
+    function card(row) {
+      const article=document.createElement('article');
+      article.className=`free-agent-card${row.player_key ? '' : ' is-manual'}`;
+      const levels=levelDisplayTokens(row), positions=positionTokens(row);
+      const primary=positions[0] || clean(row.primary_position) || (clean(row.player_type).toLowerCase()==='goalie'?'G':'–');
+      const alternate=positions.slice(1);
+      const rp=Number(row.ranking_points), rank=Number(row.overall_rank);
+      const isGoalie=positionGroup(primary)==='G';
+      const secondary=isGoalie
+        ? (Number(row.total_goalie_save_percentage)>0 ? `${(Number(row.total_goalie_save_percentage)*100).toLocaleString('sv-SE',{maximumFractionDigits:1})}% SV` : `${format(row.total_goalie_games)} GP`)
+        : `${format(row.total_points)} PTS`;
+      const name=clean(row.display_gamertag)||'Okänd spelare';
+      const href=row.player_key ? SEH_playerProfileUrl(row.player_key,name) : '';
+      const linkMarkup=href ? `<a class="free-agent-card__link" href="${escapeHtml(href)}" aria-label="Öppna spelarprofilen för ${escapeHtml(name)}"></a>` : '';
+      article.innerHTML=`${linkMarkup}<div class="free-agent-card__portrait"><img src="${escapeHtml(playerImage(row))}" alt="${escapeHtml(name)}" loading="lazy" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='players/1DEFAULTBILDID.png'}"><span>FREE AGENT</span></div><div class="free-agent-card__content"><div class="free-agent-card__topline"><span class="free-agent-card__rank">${rank>0?`#${format(rank)}`:'ORANKAD'}</span><strong>${Number.isFinite(rp)?`${SEH_formatRpNumber(rp)} RP`:'RP –'}</strong></div><h3>${escapeHtml(name)}</h3><div class="free-agent-card__positions"><b>${escapeHtml(primary)}</b>${alternate.map((p)=>`<span>${escapeHtml(p)}</span>`).join('')}</div><div class="free-agent-card__facts"><div><span>SENASTE ECL-LAG</span><strong>${escapeHtml(latestPlayedEclTeam(row))}</strong></div><div><span>DIVISION</span><strong>${escapeHtml(latestPlayedEclDivision(row))}</strong></div></div><div class="free-agent-card__career"><span>KARRIÄR</span><strong>${row.player_key?`${format(row.career_games)} GP · ${escapeHtml(secondary)}`:'–'}</strong></div><div class="free-agent-card__looking"><span>SÖKER</span><div>${levels.length?levels.map((level)=>`<b>${escapeHtml(level)}</b>`).join(''):'<b>Öppen för förslag</b>'}</div></div>${clean(row.availability)?`<p class="free-agent-card__availability"><span>TILLGÄNGLIGHET</span>${escapeHtml(row.availability)}</p>`:''}${clean(row.message)?`<p class="free-agent-card__message">${escapeHtml(row.message)}</p>`:''}<div class="free-agent-card__footer"><span>FA sedan ${escapeHtml(dateText(row.fa_date || row.created_at))}</span>${clean(row.contact)?`<strong>${escapeHtml(row.contact)}</strong>`:(href?'<strong>Öppna profil →</strong>':'<strong>Manuell FA-post</strong>')}</div></div>`;
+      return article;
+    }
+
+    function applyFilters() {
+      const search=clean($('#faSearch').value).toLocaleLowerCase('sv-SE');
+      const position=$('#faPosition').value, level=$('#faLevel').value, sort=$('#faSort').value;
+      let rows=state.rows.filter((row)=>{
+        const rawPositions=positionTokens(row), canonical=rawPositions.map(positionCanonical), groups=canonical.map(positionGroup);
+        const selected=positionCanonical(position);
+        const posMatch=position==='all' || canonical.includes(selected) || (selected==='F'&&groups.includes('F')) || (selected==='D'&&groups.includes('D'));
+        const canonicalLevels=levelCanonicals(row);
+        const levelMatch=level==='all' || canonicalLevels.some((x)=>x.toLowerCase()===level.toLowerCase());
+        const haystack=[row.display_gamertag,row.latest_ecl_team,row.latest_ecl_division,row.latest_ecl_season,row.latest_team,row.latest_season,row.positions_text,row.levels_text,row.message,...list(row.looking_for_levels),...rawPositions].join(' ').toLocaleLowerCase('sv-SE');
+        return posMatch&&levelMatch&&(!search||haystack.includes(search));
+      });
+      rows.sort((a,b)=>{
+        if(sort==='rank')return(number(a.overall_rank)||999999)-(number(b.overall_rank)||999999);
+        if(sort==='rp')return number(b.ranking_points)-number(a.ranking_points);
+        if(sort==='name')return clean(a.display_gamertag).localeCompare(clean(b.display_gamertag),'sv-SE');
+        return String(b.fa_date||b.created_at||'').localeCompare(String(a.fa_date||a.created_at||''));
+      });
+      $('#faGrid').replaceChildren(...rows.map(card));
+      $('#faEmpty').hidden=rows.length>0;
+      $('#faResultText').textContent=`${format(rows.length)} av ${format(state.rows.length)} lediga spelare`;
+    }
+
+    async function load() {
+      $('#faLoading').hidden=false; $('#faEmpty').hidden=true;
+      try {
+        const {data,error}=await sb.from('v_ehockey_free_agents_public').select('*').order('fa_date',{ascending:false});
+        if(error)throw error;
+        state.rows=Array.isArray(data)?data:[];
+        updateOverview(); applyFilters();
+      } catch(error) {
+        console.error('Kunde inte hämta Free Agents:',error);
+        $('#faResultText').textContent='Kunde inte hämta Free Agents.';
+        $('#faEmpty').hidden=false;
+        $('#faEmpty').querySelector('strong').textContent='Kunde inte hämta Free Agents.';
+        $('#faEmpty').querySelector('span').textContent=error?.message||'Försök igen senare.';
+      } finally { $('#faLoading').hidden=true; }
+    }
+    const selfState = { session:null, link:null, activeFa:null, pendingRequest:null, approvedPlayer:null, searchTimer:null };
+    const selfEl = (id) => root.querySelector(`#${id}`);
+    const selfStatus = (id,message,tone='') => { const el=selfEl(id); if(!el)return; el.textContent=message||''; if(tone)el.dataset.tone=tone; else el.removeAttribute('data-tone'); };
+    const isDiscordUser = (user) => Boolean(user && (String(user.app_metadata?.provider||'').toLowerCase()==='discord' || (Array.isArray(user.identities)&&user.identities.some((x)=>String(x?.provider||'').toLowerCase()==='discord'))));
+    const discordDisplayName = (user) => clean(user?.user_metadata?.global_name)||clean(user?.user_metadata?.full_name)||clean(user?.user_metadata?.name)||clean(user?.user_metadata?.preferred_username)||clean(user?.email)||'Discord-användare';
+    const discordAvatar = (user) => clean(user?.user_metadata?.avatar_url)||clean(user?.user_metadata?.picture);
+    const hideSelfStates = () => ['faSelfLoggedOut','faSelfWrongProvider','faSelfLoggedIn','faLinkSetup','faLinkPending','faLinkRejected','faSelfApproved','faSelfRequestNotice'].forEach((id)=>{const el=selfEl(id);if(el)el.hidden=true;});
+
+    async function selfFetchPlayer(key){
+      if(!key)return null;
+      const {data,error}=await sb.from('app_player_directory_cache').select('player_key,display_gamertag,primary_position,latest_team').eq('player_key',key).maybeSingle();
+      if(error)throw error;
+      return data||null;
+    }
+    async function selfRefresh(){
+      if(!sb||!selfEl('faSelfService'))return;
+      hideSelfStates();
+      const {data:sessionData,error:sessionError}=await sb.auth.getSession();
+      if(sessionError){selfEl('faSelfLoggedOut').hidden=false;selfStatus('faDiscordLoginStatus',sessionError.message,'error');return;}
+      const session=sessionData?.session||null;selfState.session=session;
+      if(!session?.user){selfEl('faSelfLoggedOut').hidden=false;return;}
+      if(!isDiscordUser(session.user)){selfEl('faSelfWrongProvider').hidden=false;return;}
+      selfEl('faSelfLoggedIn').hidden=false;
+      selfEl('faDiscordName').textContent=discordDisplayName(session.user);
+      const avatar=discordAvatar(session.user);const avatarEl=selfEl('faDiscordAvatar');
+      if(avatarEl){avatarEl.hidden=!avatar;if(avatar)avatarEl.src=avatar;}
+      const [{data:link,error:linkError},{data:requests,error:reqError}]=await Promise.all([
+        sb.from('ehockey_discord_player_links').select('*').eq('user_id',session.user.id).maybeSingle(),
+        sb.from('ehockey_free_agent_requests').select('*').eq('user_id',session.user.id).order('submitted_at',{ascending:false}).limit(10)
+      ]);
+      if(linkError)throw linkError;if(reqError)throw reqError;
+      selfState.link=link||null;
+      selfState.pendingRequest=(requests||[]).find((x)=>x.status==='pending')||null;
+      const approvedKey=clean(link?.approved_player_key);
+      if(!approvedKey){
+        if(link?.status==='pending'){
+          selfEl('faLinkPending').hidden=false;
+          const pendingPlayer=await selfFetchPlayer(link.requested_player_key).catch(()=>null);
+          selfEl('faLinkPendingName').textContent=pendingPlayer?.display_gamertag||'Spelarkoppling skickad';
+        }else if(link?.status==='rejected'){
+          selfEl('faLinkRejected').hidden=false;
+          const rejectedPlayer=await selfFetchPlayer(link.requested_player_key).catch(()=>null);
+          selfEl('faLinkRejectedName').textContent=rejectedPlayer?.display_gamertag||'Välj profil igen';
+        }else{
+          selfEl('faLinkSetup').hidden=false;
+        }
+        return;
+      }
+      selfState.approvedPlayer=await selfFetchPlayer(approvedKey);
+      const {data:activeRows,error:activeError}=await sb.from('v_ehockey_free_agents_public').select('*').eq('player_key',approvedKey).limit(1);
+      if(activeError)throw activeError;
+      selfState.activeFa=activeRows?.[0]||null;
+      selfEl('faSelfApproved').hidden=false;
+      selfEl('faSelfPlayerName').textContent=selfState.approvedPlayer?.display_gamertag||approvedKey;
+      selfEl('faSelfPlayerMeta').textContent=[selfState.approvedPlayer?.primary_position,selfState.approvedPlayer?.latest_team].filter(Boolean).join(' · ');
+      const source=selfState.pendingRequest&&selfState.pendingRequest.request_type!=='remove'?selfState.pendingRequest:selfState.activeFa;
+      selfEl('faSelfPositions').value=clean(source?.positions_text)||clean(selfState.approvedPlayer?.primary_position);
+      selfEl('faSelfLevels').value=clean(source?.levels_text);
+      selfEl('faSelfAvailability').value=clean(source?.availability);
+      selfEl('faSelfMessage').value=clean(source?.message);
+      selfEl('faSelfContact').value=clean(source?.contact)||`Discord: ${discordDisplayName(session.user)}`;
+      selfEl('faSelfSubmit').textContent=selfState.activeFa?'Skicka ändring':'Skicka FA-ansökan';
+      selfEl('faSelfRemove').hidden=!selfState.activeFa;
+      if(selfState.pendingRequest){
+        selfEl('faSelfRequestNotice').hidden=false;
+        selfEl('faSelfRequestTitle').textContent=selfState.pendingRequest.request_type==='remove'?'Borttagning väntar på admin':selfState.pendingRequest.request_type==='update'?'Ändring väntar på admin':'FA-ansökan väntar på admin';
+      }
+    }
+    async function selfDiscordLogin(){
+      selfStatus('faDiscordLoginStatus','Öppnar Discord…','working');
+      try{
+        const {data:existing}=await sb.auth.getSession();
+        if(existing?.session&&!isDiscordUser(existing.session.user))await sb.auth.signOut();
+        localStorage.setItem('seh_oauth_return','#/free-agents');
+        const redirectTo=`${window.location.origin}${window.location.pathname}`;
+        const {error}=await sb.auth.signInWithOAuth({provider:'discord',options:{redirectTo}});
+        if(error)throw error;
+      }catch(error){
+        localStorage.removeItem('seh_oauth_return');
+        selfStatus('faDiscordLoginStatus',/provider.*enabled/i.test(error?.message||'')?'Discord-inloggning är inte aktiverad i Supabase ännu.':`Fel: ${error?.message||error}`,'error');
+      }
+    }
+    async function selfSearchPlayers(){
+      const host=selfEl('faSelfPlayerResults');if(!host)return;
+      const q=clean(selfEl('faSelfPlayerSearch')?.value);host.replaceChildren();
+      if(q.length<2)return;
+      const {data,error}=await sb.from('app_player_directory_cache').select('player_key,display_gamertag,primary_position,latest_team').ilike('display_gamertag',`%${q.replaceAll('%','')}%`).order('display_gamertag',{ascending:true}).limit(8);
+      if(error){selfStatus('faSelfLinkStatus',`Fel: ${error.message}`,'error');return;}
+      for(const player of data||[]){
+        const button=document.createElement('button');button.type='button';button.dataset.faSelfPlayer=player.player_key;
+        button.innerHTML=`<strong>${escapeHtml(player.display_gamertag||player.player_key)}</strong><span>${escapeHtml([player.primary_position,player.latest_team].filter(Boolean).join(' · ')||'Spelarprofil')}</span>`;host.append(button);
+      }
+      if(!(data||[]).length){const p=document.createElement('p');p.textContent='Ingen spelarprofil hittades.';host.append(p);}
+    }
+    async function selfRequestLink(playerKey){
+      selfStatus('faSelfLinkStatus','Skickar kopplingen till admin…','working');
+      const {data,error}=await sb.rpc('seh_request_discord_player_link',{p_player_key:playerKey});
+      if(error){selfStatus('faSelfLinkStatus',`Fel: ${error.message}`,'error');return;}
+      selfStatus('faSelfLinkStatus','Skickad. Admin måste godkänna kopplingen.','success');
+      await selfRefresh();
+    }
+    async function selfSubmitRequest(type){
+      const statusId='faSelfFormStatus';selfStatus(statusId,type==='remove'?'Skickar borttagningsbegäran…':'Skickar till admin…','working');
+      const args={
+        p_request_type:type,
+        p_positions_text:type==='remove'?null:clean(selfEl('faSelfPositions')?.value),
+        p_levels_text:type==='remove'?null:clean(selfEl('faSelfLevels')?.value),
+        p_availability:type==='remove'?null:clean(selfEl('faSelfAvailability')?.value),
+        p_message:type==='remove'?null:clean(selfEl('faSelfMessage')?.value),
+        p_contact:type==='remove'?null:clean(selfEl('faSelfContact')?.value)
+      };
+      const {error}=await sb.rpc('seh_submit_free_agent_request',args);
+      if(error){selfStatus(statusId,`Fel: ${error.message}`,'error');return;}
+      selfStatus(statusId,type==='remove'?'Borttagningsbegäran är skickad. Du ligger kvar tills admin godkänner.':'Förfrågan är skickad. Den publiceras när admin godkänt.','success');
+      await selfRefresh();
+    }
+    selfEl('faDiscordLogin')?.addEventListener('click',selfDiscordLogin);
+    selfEl('faDiscordSwitch')?.addEventListener('click',selfDiscordLogin);
+    selfEl('faDiscordLogout')?.addEventListener('click',async()=>{await sb.auth.signOut();await window.SEH_refreshAuth?.();await selfRefresh();});
+    selfEl('faLinkTryAgain')?.addEventListener('click',()=>{selfEl('faLinkRejected').hidden=true;selfEl('faLinkSetup').hidden=false;requestAnimationFrame(()=>selfEl('faSelfPlayerSearch')?.focus());});
+    selfEl('faSelfPlayerSearch')?.addEventListener('input',()=>{clearTimeout(selfState.searchTimer);selfState.searchTimer=setTimeout(selfSearchPlayers,180);});
+    selfEl('faSelfPlayerResults')?.addEventListener('click',(event)=>{const button=event.target.closest('[data-fa-self-player]');if(button)selfRequestLink(button.dataset.faSelfPlayer);});
+    selfEl('faSelfSubmit')?.addEventListener('click',()=>selfSubmitRequest(selfState.activeFa?'update':'create'));
+    selfEl('faSelfRemove')?.addEventListener('click',()=>{if(confirm('Begär att tas bort från Free Agent-listan? Du ligger kvar tills admin godkänner.'))selfSubmitRequest('remove');});
+    sb?.auth.onAuthStateChange(()=>window.setTimeout(()=>selfRefresh().catch((error)=>selfStatus('faDiscordLoginStatus',`Fel: ${error?.message||error}`,'error')),0));
+
+    ['#faSearch','#faPosition','#faLevel','#faSort'].forEach((selector)=>$(selector)?.addEventListener(selector==='#faSearch'?'input':'change',applyFilters));
+    load();
+    selfRefresh().catch((error)=>selfStatus('faDiscordLoginStatus',`Fel: ${error?.message||error}`,'error'));
+  }
+
   function SEH_initAdminCenter() {
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -13989,6 +14336,243 @@ function SEH_initShop() {
   let statsRequestId = sessionStorage.getItem('seh_player_stats_sync_request_id') || '', statsTimer = null;
   const rpcRow = (value) => Array.isArray(value) ? value[0] : value;
   const emailFor = (v) => { const n = String(v || '').trim().toLowerCase(); return /^[a-z0-9._-]{2,40}$/.test(n) ? n + '@writers.svenskehockey.se' : ''; };
+
+  let faDirectory = [], faEntries = [], faLinkRequests = [], faApprovalRequests = [], faSelectedKey = '', faSelectedId = 0, faManualName = '';
+  const faClean = (v) => String(v ?? '').trim();
+  const faToday = () => new Date().toLocaleDateString('sv-SE');
+  const faSplitDisplay = (v) => [...new Set(String(v || '').split(/[,;\/+]+/).map((x) => x.trim()).filter(Boolean))];
+  const faDirectoryMap = () => new Map(faDirectory.map((row) => [String(row.player_key), row]));
+  const faPositionCanonical = (value) => {
+    const p = faClean(value).toUpperCase();
+    const map = { VF:'LW', HF:'RW', VB:'LD', HB:'RD', BACK:'D', DEF:'D', FORWARD:'F', MÅLVAKT:'G', GOALIE:'G' };
+    return map[p] || p;
+  };
+  const faPositionParts = (value) => faSplitDisplay(value).map(faPositionCanonical).filter(Boolean);
+  const faLevelParts = (value) => {
+    const source = faClean(value).toLowerCase();
+    if (!source) return [];
+    if (/\balla\b/.test(source)) return ['Elite','Pro','Lite','Core','Neo'];
+    return ['Elite','Pro','Lite','Core','Neo'].filter((level) => source.includes(level.toLowerCase()));
+  };
+  async function faFetchDirectory(){
+    const rows=[],pageSize=1000;
+    for(let from=0;;from+=pageSize){
+      const{data,error}=await sb.from('app_player_directory_cache').select('player_key,display_gamertag,primary_position,latest_team').order('display_gamertag',{ascending:true}).range(from,from+pageSize-1);
+      if(error)throw error;
+      rows.push(...(data||[]));
+      if(!data||data.length<pageSize)break;
+    }
+    return rows;
+  }
+  function faSetStatus(message,tone=''){const el=$('faAdminStatus');if(!el)return;el.textContent=message;el.dataset.tone=tone;}
+  function faEntryForKey(key){return faEntries.find((row)=>row.player_key && String(row.player_key)===String(key))||null;}
+  function faEntryForManual(name){const n=faClean(name).toLocaleLowerCase('sv-SE');return faEntries.find((row)=>!row.player_key&&faClean(row.manual_gamertag).toLocaleLowerCase('sv-SE')===n)||null;}
+  function faEntryById(id){return faEntries.find((row)=>Number(row.id)===Number(id))||null;}
+  function faPositionText(entry,player){
+    if(faClean(entry?.positions_text))return faClean(entry.positions_text);
+    const values=[faClean(entry?.primary_position)||faClean(player?.primary_position),...(Array.isArray(entry?.alternate_positions)?entry.alternate_positions:[])].filter(Boolean);
+    return values.join(' / ');
+  }
+  function faLevelsText(entry){
+    if(faClean(entry?.levels_text))return faClean(entry.levels_text);
+    return Array.isArray(entry?.looking_for_levels)?entry.looking_for_levels.join(' / '):'';
+  }
+  function faResetForm(){
+    faSelectedKey='';faSelectedId=0;faManualName='';
+    if($('faAdminSearch'))$('faAdminSearch').value='';
+    $('faAdminSearchResults')?.replaceChildren();
+    if($('faAdminSelected'))$('faAdminSelected').hidden=true;
+    if($('faAdminSelectedType'))$('faAdminSelectedType').textContent='VALD SPELARE';
+    if($('faAdminPositions'))$('faAdminPositions').value='';
+    if($('faAdminLevels'))$('faAdminLevels').value='';
+    if($('faAdminDate'))$('faAdminDate').value=faToday();
+    if($('faAdminAvailability'))$('faAdminAvailability').value='';
+    if($('faAdminContact'))$('faAdminContact').value='';
+    if($('faAdminMessage'))$('faAdminMessage').value='';
+    if($('faAdminExpires'))$('faAdminExpires').value='';
+    if($('faAdminSave')){$('faAdminSave').disabled=true;$('faAdminSave').textContent='Spara Free Agent';}
+  }
+  function faFillForm(entry,player){
+    $('faAdminPositions').value=faPositionText(entry,player);
+    $('faAdminLevels').value=faLevelsText(entry);
+    $('faAdminDate').value=entry?.fa_date?String(entry.fa_date).slice(0,10):faToday();
+    $('faAdminAvailability').value=entry?.availability||'';
+    $('faAdminContact').value=entry?.contact||'';
+    $('faAdminMessage').value=entry?.message||'';
+    $('faAdminExpires').value=entry?.expires_at?String(entry.expires_at).slice(0,10):'';
+    $('faAdminSave').textContent=entry?'Uppdatera Free Agent':'Spara Free Agent';
+    $('faAdminSave').disabled=false;
+  }
+  function faSelectPlayer(key){
+    const player=faDirectoryMap().get(String(key));if(!player)return;
+    const entry=faEntryForKey(key);
+    faSelectedKey=String(key);faSelectedId=Number(entry?.id)||0;faManualName='';
+    $('faAdminSelected').hidden=false;
+    $('faAdminSelectedType').textContent='KOPPLAD SPELARE';
+    $('faAdminSelectedName').textContent=player.display_gamertag||player.player_key;
+    $('faAdminSelectedMeta').textContent=[player.primary_position,player.latest_team].filter(Boolean).join(' · ')||'Spelarprofil hittad';
+    $('faAdminSearch').value=player.display_gamertag||'';
+    $('faAdminSearchResults').replaceChildren();
+    faFillForm(entry,player);
+    faSetStatus('');
+  }
+  function faSelectManual(name,entry=null){
+    const manual=faClean(name);if(!manual)return;
+    const existing=entry||faEntryForManual(manual);
+    faSelectedKey='';faSelectedId=Number(existing?.id)||0;faManualName=manual;
+    $('faAdminSelected').hidden=false;
+    $('faAdminSelectedType').textContent='MANUELL GAMERTAG';
+    $('faAdminSelectedName').textContent=existing?.manual_gamertag||manual;
+    $('faAdminSelectedMeta').textContent='Ingen kopplad spelarprofil – posten kan ändå publiceras som Free Agent.';
+    $('faAdminSearch').value=existing?.manual_gamertag||manual;
+    $('faAdminSearchResults').replaceChildren();
+    faFillForm(existing,null);
+    faSetStatus('');
+  }
+  function faRenderSearch(){
+    const host=$('faAdminSearchResults');if(!host)return;
+    const raw=faClean($('faAdminSearch')?.value),q=raw.toLocaleLowerCase('sv-SE');host.replaceChildren();
+    if(q.length<2)return;
+    const matches=faDirectory.filter((row)=>`${row.display_gamertag||''} ${row.latest_team||''}`.toLocaleLowerCase('sv-SE').includes(q)).slice(0,10);
+    matches.forEach((row)=>{
+      const button=document.createElement('button');button.type='button';button.dataset.faPlayerKey=row.player_key;
+      button.innerHTML=`<strong>${escapeHtml(row.display_gamertag||row.player_key)}</strong><span>${escapeHtml([row.primary_position,row.latest_team].filter(Boolean).join(' · ')||'–')}</span>`;
+      host.append(button);
+    });
+    const exact=matches.some((row)=>faClean(row.display_gamertag).toLocaleLowerCase('sv-SE')===q);
+    if(!exact){
+      const manual=document.createElement('button');manual.type='button';manual.className='fa-admin-manual';manual.dataset.faManual=raw;
+      const existing=faEntryForManual(raw);
+      manual.innerHTML=`<strong>${existing?'Redigera manuell post':'Använd gamertag manuellt'}: ${escapeHtml(raw)}</strong><span>${existing?'Redan sparad som Free Agent':'För spelare som inte finns i registret'}</span>`;
+      host.append(manual);
+    }
+  }
+  function faRenderList(){
+    const host=$('faAdminList');if(!host)return;
+    const playerMap=faDirectoryMap();host.replaceChildren();$('faAdminCount').textContent=String(faEntries.length);
+    if(!faEntries.length){const empty=document.createElement('p');empty.className='fa-admin-empty';empty.textContent='Inga Free Agents är registrerade ännu.';host.append(empty);return;}
+    faEntries.forEach((entry)=>{
+      const player=entry.player_key?playerMap.get(String(entry.player_key)):null;
+      const name=player?.display_gamertag||entry.manual_gamertag||entry.player_key||'Okänd';
+      const detail=[faPositionText(entry,player),faLevelsText(entry),entry.fa_date?`FA ${String(entry.fa_date).slice(0,10)}`:''].filter(Boolean).join(' · ');
+      const row=document.createElement('article');row.className=`fa-admin-row${entry.is_active?'':' is-inactive'}`;
+      row.innerHTML=`<div><strong>${escapeHtml(name)}</strong><span>${escapeHtml(detail||'–')}</span></div><em>${entry.is_active?'AKTIV':'INAKTIV'}</em><div class="fa-admin-row__actions"><button type="button" class="writer-secondary" data-fa-edit-id="${entry.id}">Redigera</button><button type="button" class="writer-secondary" data-fa-toggle="${entry.id}">${entry.is_active?'Avaktivera':'Aktivera'}</button><button type="button" class="writer-secondary fa-admin-delete" data-fa-delete="${entry.id}">Ta bort</button></div>`;
+      host.append(row);
+    });
+  }
+  function faApprovalPlayerName(key){return faDirectoryMap().get(String(key))?.display_gamertag||String(key||'Okänd spelare');}
+  function faRenderApprovals(){
+    const linkHost=$('faAdminLinkRequests'),requestHost=$('faAdminRequests');
+    if($('faAdminLinkRequestCount'))$('faAdminLinkRequestCount').textContent=String(faLinkRequests.length);
+    if($('faAdminRequestCount'))$('faAdminRequestCount').textContent=String(faApprovalRequests.length);
+    if(linkHost){
+      linkHost.replaceChildren();
+      if(!faLinkRequests.length){const p=document.createElement('p');p.className='fa-admin-empty';p.textContent='Inga spelarkopplingar väntar.';linkHost.append(p);}
+      for(const row of faLinkRequests){const item=document.createElement('article');item.className='fa-admin-request-row';item.innerHTML=`<div><span>DISCORD</span><strong>${escapeHtml(row.discord_username||row.discord_user_id||'Discord-konto')}</strong><small>vill kopplas till <b>${escapeHtml(faApprovalPlayerName(row.requested_player_key))}</b></small></div><div class="fa-admin-request-actions"><button type="button" data-fa-link-approve="${escapeHtml(row.user_id)}">Godkänn</button><button type="button" class="writer-secondary" data-fa-link-reject="${escapeHtml(row.user_id)}">Avslå</button></div>`;linkHost.append(item);}
+    }
+    if(requestHost){
+      requestHost.replaceChildren();
+      if(!faApprovalRequests.length){const p=document.createElement('p');p.className='fa-admin-empty';p.textContent='Inga FA-förfrågningar väntar.';requestHost.append(p);}
+      for(const row of faApprovalRequests){const typeLabel=row.request_type==='remove'?'TA BORT':row.request_type==='update'?'ÄNDRING':'NY FA';const detail=[row.positions_text,row.levels_text,row.message].filter(Boolean).join(' · ');const item=document.createElement('article');item.className=`fa-admin-request-row${row.request_type==='remove'?' is-remove':''}`;item.innerHTML=`<div><span>${escapeHtml(typeLabel)} · ${escapeHtml(row.discord_username||'Discord')}</span><strong>${escapeHtml(faApprovalPlayerName(row.player_key))}</strong><small>${escapeHtml(detail||'Ingen extra kommentar')}</small></div><div class="fa-admin-request-actions"><button type="button" data-fa-request-approve="${row.id}">${row.request_type==='remove'?'Godkänn borttagning':'Godkänn'}</button><button type="button" class="writer-secondary" data-fa-request-reject="${row.id}">Avslå</button></div>`;requestHost.append(item);}
+    }
+  }
+  async function loadFreeAgentApprovals(){
+    if(!sb||writer?.role!=='admin')return;
+    const [linksResult,requestsResult]=await Promise.all([
+      sb.from('ehockey_discord_player_links').select('*').eq('status','pending').order('updated_at',{ascending:true}),
+      sb.from('ehockey_free_agent_requests').select('*').eq('status','pending').order('submitted_at',{ascending:true})
+    ]);
+    if(linksResult.error)throw linksResult.error;if(requestsResult.error)throw requestsResult.error;
+    faLinkRequests=linksResult.data||[];faApprovalRequests=requestsResult.data||[];faRenderApprovals();
+  }
+  async function faReviewLink(userId,decision){
+    faSetStatus(decision==='approved'?'Godkänner spelarkoppling…':'Avslår spelarkoppling…','working');
+    const{error}=await sb.rpc('seh_review_discord_player_link',{p_user_id:userId,p_decision:decision});
+    if(error){faSetStatus('Fel: '+error.message,'error');return;}faSetStatus(decision==='approved'?'Spelarkopplingen är godkänd.':'Spelarkopplingen är avslagen.','success');await loadFreeAgentApprovals();
+  }
+  async function faReviewRequest(id,decision){
+    faSetStatus(decision==='approved'?'Behandlar FA-förfrågan…':'Avslår FA-förfrågan…','working');
+    const{error}=await sb.rpc('seh_review_free_agent_request',{p_request_id:Number(id),p_decision:decision,p_admin_note:null});
+    if(error){faSetStatus('Fel: '+error.message,'error');return;}faSetStatus(decision==='approved'?'FA-förfrågan är godkänd.':'FA-förfrågan är avslagen.','success');await loadFreeAgentAdmin();
+  }
+  async function loadFreeAgentAdmin(){
+    if(!sb||writer?.role!=='admin'||!$('faAdminList'))return;
+    faSetStatus('Laddar Free Agents…','working');
+    try{
+      const[directory,entriesResult]=await Promise.all([faFetchDirectory(),sb.from('ehockey_free_agents').select('*').order('fa_date',{ascending:false}).order('updated_at',{ascending:false})]);
+      if(entriesResult.error)throw entriesResult.error;
+      faDirectory=directory;faEntries=entriesResult.data||[];faRenderList();await loadFreeAgentApprovals();faSetStatus('');
+    }catch(error){faSetStatus('Fel: '+(error?.message||error),'error');}
+  }
+  async function faSave(){
+    if(!faSelectedKey&&!faManualName)return faSetStatus('Välj en spelare eller använd en manuell gamertag först.','error');
+    const positionsText=faClean($('faAdminPositions').value),levelsText=faClean($('faAdminLevels').value),positions=faPositionParts(positionsText),expires=faClean($('faAdminExpires').value),faDate=faClean($('faAdminDate').value)||faToday();
+    const payload={
+      player_key:faSelectedKey||null,
+      manual_gamertag:faSelectedKey?null:faManualName,
+      positions_text:positionsText||null,
+      levels_text:levelsText||null,
+      primary_position:positions[0]||null,
+      alternate_positions:positions.slice(1),
+      looking_for_levels:faLevelParts(levelsText),
+      fa_date:faDate,
+      availability:faClean($('faAdminAvailability').value)||null,
+      contact:faClean($('faAdminContact').value)||null,
+      message:faClean($('faAdminMessage').value)||null,
+      expires_at:expires?`${expires}T23:59:59+02:00`:null,
+      is_active:true
+    };
+    $('faAdminSave').disabled=true;faSetStatus('Sparar…','working');
+    try{
+      let result;
+      if(faSelectedId) result=await sb.from('ehockey_free_agents').update(payload).eq('id',faSelectedId);
+      else result=await sb.from('ehockey_free_agents').insert(payload);
+      if(result.error)throw result.error;
+      const keepKey=faSelectedKey,keepManual=faManualName;
+      faSetStatus('Free Agent-annonsen är sparad.','success');
+      await loadFreeAgentAdmin();
+      if(keepKey)faSelectPlayer(keepKey);else faSelectManual(keepManual);
+    }catch(error){faSetStatus('Fel: '+(error?.message||error),'error');}
+    finally{$('faAdminSave').disabled=!(faSelectedKey||faManualName);}
+  }
+  function bindFreeAgentAdmin(){
+    faResetForm();
+    $('faAdminSearch')?.addEventListener('input',faRenderSearch);
+    $('faAdminSearchResults')?.addEventListener('click',(event)=>{
+      const linked=event.target.closest('[data-fa-player-key]');if(linked){faSelectPlayer(linked.dataset.faPlayerKey);return;}
+      const manual=event.target.closest('[data-fa-manual]');if(manual)faSelectManual(manual.dataset.faManual);
+    });
+    $('faAdminSave')?.addEventListener('click',faSave);
+    $('faAdminClear')?.addEventListener('click',()=>{faResetForm();faSetStatus('');});
+    $('faAdminRefresh')?.addEventListener('click',loadFreeAgentAdmin);
+    $('faAdminLinkRequests')?.addEventListener('click',(event)=>{
+      const approve=event.target.closest('[data-fa-link-approve]'),reject=event.target.closest('[data-fa-link-reject]');
+      if(approve)faReviewLink(approve.dataset.faLinkApprove,'approved');else if(reject)faReviewLink(reject.dataset.faLinkReject,'rejected');
+    });
+    $('faAdminRequests')?.addEventListener('click',(event)=>{
+      const approve=event.target.closest('[data-fa-request-approve]'),reject=event.target.closest('[data-fa-request-reject]');
+      if(approve)faReviewRequest(approve.dataset.faRequestApprove,'approved');else if(reject)faReviewRequest(reject.dataset.faRequestReject,'rejected');
+    });
+    $('faAdminList')?.addEventListener('click',async(event)=>{
+      const edit=event.target.closest('[data-fa-edit-id]');
+      if(edit){
+        const entry=faEntryById(Number(edit.dataset.faEditId));if(!entry)return;
+        if(entry.player_key&&faDirectoryMap().has(String(entry.player_key)))faSelectPlayer(entry.player_key);else faSelectManual(entry.manual_gamertag||String(entry.player_key||''),entry);
+        $('faAdminSearch')?.scrollIntoView({behavior:'smooth',block:'center'});return;
+      }
+      const toggle=event.target.closest('[data-fa-toggle]'),remove=event.target.closest('[data-fa-delete]');
+      if(toggle){
+        const id=Number(toggle.dataset.faToggle),entry=faEntryById(id);if(!entry)return;
+        const{error}=await sb.from('ehockey_free_agents').update({is_active:!entry.is_active}).eq('id',id);
+        if(error)return faSetStatus('Fel: '+error.message,'error');await loadFreeAgentAdmin();
+      }else if(remove){
+        const id=Number(remove.dataset.faDelete);if(!confirm('Ta bort Free Agent-annonsen permanent?'))return;
+        const{error}=await sb.from('ehockey_free_agents').delete().eq('id',id);
+        if(error)return faSetStatus('Fel: '+error.message,'error');
+        if(faSelectedId===id)faResetForm();await loadFreeAgentAdmin();
+      }
+    });
+  }
 
   const standaloneHeader = document.querySelector('.seh-header--standalone');
 
@@ -14159,6 +14743,7 @@ function SEH_initShop() {
   }
 
   bindStandaloneHeader();
+  bindFreeAgentAdmin();
   const setStatus = (text, tone='') => { $('playerSyncStatus').textContent = text; $('playerSyncStatus').dataset.tone = tone; };
   const busy = (v) => { $('startPlayerSync').disabled = v; $('refreshPlayerSync').disabled = v || !requestId; };
   const makeId = () => window.crypto?.randomUUID ? 'web_' + crypto.randomUUID().replaceAll('-','') : 'web_' + Date.now();
@@ -14168,7 +14753,7 @@ function SEH_initShop() {
   const setStatsStatus=(text,tone='')=>{$('statsSyncStatus').textContent=text;$('statsSyncStatus').dataset.tone=tone};
   const busyStats=(v)=>{$('startStatsSync').disabled=v;$('refreshStatsSync').disabled=v||!statsRequestId};
   async function refreshStats(poll=false){if(!statsRequestId)return;busyStats(true);try{const d=await invokeStats('status');const done=d.state==='completed';setStatsStatus(done?(d.conclusion==='success'?'Klart – svensk spelarstatistik är uppdaterad.':'Statistiksynkningen misslyckades.'):'Statistiksynkningen körs…',done&&d.conclusion==='success'?'success':done?'error':'working');if(d.run_url){const a=document.createElement('a');a.href=d.run_url;a.target='_blank';a.textContent=' Visa körlogg';$('statsSyncStatus').append(a)}if(poll&&!done)statsTimer=setTimeout(()=>refreshStats(true),7000)}catch(e){setStatsStatus('Fel: '+(e.message||e),'error')}finally{busyStats(false)}}
-  async function login(){ $('adminLoginStatus').textContent='Loggar in…'; try { if(!sb) throw Error('Supabase är inte initierat.'); const em=emailFor($('adminUsername').value); if(!em) throw Error('Skriv ett giltigt inloggningsnamn.'); try { await sb.auth.signOut(); } catch (_) {} const r=await sb.auth.signInWithPassword({email:em,password:$('adminPassword').value}); if(r.error) { if(/invalid login credentials/i.test(r.error.message||'')) throw Error('Fel inloggningsnamn eller lösenord.'); throw r.error; } const c=await sb.rpc('seh_claim_writer'); if(c.error) throw c.error; writer=rpcRow(c.data); if(writer?.role!=='admin') throw Error('Kontot saknar adminbehörighet.'); $('adminDisplayName').textContent=writer.display_name||em; $('adminLogin').hidden=true; $('adminDashboard').hidden=false; $('adminLoginStatus').textContent=''; if(requestId) refresh(true); if(statsRequestId) refreshStats(true); await refreshStandaloneHeader(); await window.SEH_refreshAuth?.(); } catch(e){$('adminLoginStatus').textContent='Fel: '+(e.message||e); await refreshStandaloneHeader(); await window.SEH_refreshAuth?.();} }
+  async function login(){ $('adminLoginStatus').textContent='Loggar in…'; try { if(!sb) throw Error('Supabase är inte initierat.'); const em=emailFor($('adminUsername').value); if(!em) throw Error('Skriv ett giltigt inloggningsnamn.'); try { await sb.auth.signOut(); } catch (_) {} const r=await sb.auth.signInWithPassword({email:em,password:$('adminPassword').value}); if(r.error) { if(/invalid login credentials/i.test(r.error.message||'')) throw Error('Fel inloggningsnamn eller lösenord.'); throw r.error; } const c=await sb.rpc('seh_claim_writer'); if(c.error) throw c.error; writer=rpcRow(c.data); if(writer?.role!=='admin') throw Error('Kontot saknar adminbehörighet.'); $('adminDisplayName').textContent=writer.display_name||em; $('adminLogin').hidden=true; $('adminDashboard').hidden=false; $('adminLoginStatus').textContent=''; await loadFreeAgentAdmin(); if(requestId) refresh(true); if(statsRequestId) refreshStats(true); await refreshStandaloneHeader(); await window.SEH_refreshAuth?.(); } catch(e){$('adminLoginStatus').textContent='Fel: '+(e.message||e); await refreshStandaloneHeader(); await window.SEH_refreshAuth?.();} }
   $('adminLoginBtn').onclick=login; ['adminUsername','adminPassword'].forEach(id=>$(id).onkeydown=e=>{if(e.key==='Enter')login()});
   $('adminLogout').onclick=async()=>{clearTimeout(timer);clearTimeout(statsTimer);await sb?.auth.signOut();writer=null;$('adminDashboard').hidden=true;$('adminLogin').hidden=false;updateStandaloneHeader(null,null)};
   $('startPlayerSync').onclick=async()=>{if(!confirm('Starta synkningen av svenska SportsGamer-spelare nu?'))return; requestId=makeId();sessionStorage.setItem('seh_player_sync_request_id',requestId);busy(true);setStatus('Startar synkningen…','working');try{await invoke('start');await refresh(true)}catch(e){setStatus('Fel: '+(e.message||e),'error');busy(false)}};
@@ -14176,17 +14761,18 @@ function SEH_initShop() {
   $('startStatsSync').onclick=async()=>{if(!confirm('Hämta ny statistik för alla registrerade svenska SportsGamer-spelare nu? SportsGamer-databasen kommer endast att läsas.'))return;statsRequestId=makeId();sessionStorage.setItem('seh_player_stats_sync_request_id',statsRequestId);busyStats(true);setStatsStatus('Startar statistiksynkningen…','working');try{await invokeStats('start');await refreshStats(true)}catch(e){setStatsStatus('Fel: '+(e.message||e),'error');busyStats(false)}};
   $('refreshStatsSync').onclick=()=>refreshStats(false);
   $('resetPasswordBtn').onclick=async()=>{const username=$('resetUsername').value.trim();const password=$('resetPassword').value;if(!password||password.length<8){$('resetPasswordStatus').textContent='Lösenordet måste vara minst 8 tecken.';return}if(!confirm('Sätt nytt lösenord för '+username+'?'))return;$('resetPasswordStatus').textContent='Uppdaterar…';try{const r=await sb.functions.invoke('seh-admin-password',{body:{username,password}});if(r.error)throw r.error;if(r.data?.error)throw Error(r.data.error);$('resetPasswordStatus').textContent='Lösenordet är uppdaterat.';$('resetPasswordStatus').dataset.tone='success';$('resetPassword').value=''}catch(e){$('resetPasswordStatus').textContent='Fel: '+(e.message||e);$('resetPasswordStatus').dataset.tone='error'}};
-  sb?.auth.getSession().then(async({data})=>{if(data.session){const c=await sb.rpc('seh_current_writer');const current=rpcRow(c.data);if(!c.error&&current?.role==='admin'){writer=current;$('adminDisplayName').textContent=writer.display_name||'Admin';$('adminLogin').hidden=true;$('adminDashboard').hidden=false;if(requestId)refresh(true);if(statsRequestId)refreshStats(true)}}await refreshStandaloneHeader(); await window.SEH_refreshAuth?.()});
+  sb?.auth.getSession().then(async({data})=>{if(data.session){const c=await sb.rpc('seh_current_writer');const current=rpcRow(c.data);if(!c.error&&current?.role==='admin'){writer=current;$('adminDisplayName').textContent=writer.display_name||'Admin';$('adminLogin').hidden=true;$('adminDashboard').hidden=false;await loadFreeAgentAdmin();if(requestId)refresh(true);if(statsRequestId)refreshStats(true)}}await refreshStandaloneHeader(); await window.SEH_refreshAuth?.()});
 })();
   }
 
-  const routeBodyClasses = {"home": "directory-page portal-page", "news": "directory-page portal-page", "players": "directory-page portal-page", "history": "directory-page", "player": "history-body", "team": "history-body", "teamTournament": "history-body", "tournament": "history-body tournament-overview-body", "shop": "directory-page shop-page", "support": "directory-page portal-page support-page", "ecl": "directory-page portal-page", "season": "directory-page portal-page", "writer": "directory-page writer-page", "admin": "directory-page"};
+  const routeBodyClasses = {"home": "directory-page portal-page", "news": "directory-page portal-page", "players": "directory-page portal-page", "freeAgents": "directory-page portal-page free-agents-page", "history": "directory-page", "player": "history-body", "team": "history-body", "teamTournament": "history-body", "tournament": "history-body tournament-overview-body", "shop": "directory-page shop-page", "support": "directory-page portal-page support-page", "ecl": "directory-page portal-page", "season": "directory-page portal-page", "writer": "directory-page writer-page", "admin": "directory-page"};
 
   const routeControllers = {
     ecl: SEH_initEcl,
     news: SEH_initNews,
     history: SEH_initHistory,
     players: SEH_initPlayers,
+    freeAgents: SEH_initFreeAgents,
     player: SEH_initPlayer,
     team: SEH_initTeam,
     teamTournament: SEH_initTeamTournament,
@@ -14882,6 +15468,10 @@ function SEH_initShop() {
       };
     }
 
+    if ((parts[0] === "free-agents" || parts[0] === "freeagents") && parts.length === 1) {
+      return { ...route, key: "freeAgents", label: "Free Agents", active: "freeAgents" };
+    }
+
     if (parts[0] === "spelare" && parts.length === 1) {
       return {
         ...route,
@@ -15030,6 +15620,13 @@ function SEH_initShop() {
             href="#/spelare"
           >
             Spelare
+          </a>
+
+          <a
+            class="${route.active === "freeAgents" ? "is-active" : ""}"
+            href="#/free-agents"
+          >
+            Free Agents
           </a>
 
           <a
@@ -15243,6 +15840,7 @@ function SEH_initShop() {
       home: "Svensk eHockey – Hem",
       news: "Nyheter – Svensk eHockey",
       players: "Spelare – Svensk eHockey",
+      freeAgents: "Free Agents – Svensk eHockey",
       history: "Laghistoria – Svensk eHockey",
       ecl: "ECL – Svensk eHockey",
       player: "Spelarprofil – Svensk eHockey",
@@ -17036,7 +17634,19 @@ function SEH_initShop() {
 
   window.addEventListener(
     "DOMContentLoaded",
-    () => {
+    async () => {
+      const oauthReturn = localStorage.getItem("seh_oauth_return");
+      if (oauthReturn) {
+        try {
+          await sehInitializeAuth();
+          if (sehAuthState.session?.user) {
+            localStorage.removeItem("seh_oauth_return");
+            history.replaceState(null, "", `${location.pathname}${location.search}${oauthReturn}`);
+          }
+        } catch (error) {
+          console.warn("Kunde inte återgå till Free Agents efter Discord-inloggning", error);
+        }
+      }
       if (!location.hash) {
         history.replaceState(
           null,
