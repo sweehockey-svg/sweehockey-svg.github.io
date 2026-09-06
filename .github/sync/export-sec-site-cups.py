@@ -53,9 +53,11 @@ def main() -> None:
     args = parser.parse_args()
 
     sql = Path(args.sql).read_text(encoding="utf-8-sig").strip().rstrip(";")
-    if FORBIDDEN_SQL.search(sql):
+    guard_sql = re.sub(r"/\*.*?\*/", " ", sql, flags=re.DOTALL)
+    guard_sql = re.sub(r"(?m)^\s*--.*$", " ", guard_sql).strip()
+    if FORBIDDEN_SQL.search(guard_sql):
         raise RuntimeError("Säkerhetsstopp: SEC-frågan innehåller ett skrivande SQL-kommando.")
-    if not re.match(r"^(with|select)\b", sql, re.IGNORECASE):
+    if not re.match(r"^(with|select)\b", guard_sql, re.IGNORECASE):
         raise RuntimeError("Säkerhetsstopp: SEC-frågan måste vara SELECT/CTE.")
 
     league_id = None
