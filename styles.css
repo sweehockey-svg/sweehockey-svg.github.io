@@ -26081,3 +26081,17 @@ body.directory-page[data-card-view="compact"] #spaRouteView[data-route="history"
   #spaRouteView[data-route="admin"] .fa-admin-request-row { grid-template-columns:1fr; }
   #spaRouteView[data-route="admin"] .fa-admin-request-actions { justify-content:flex-start; }
 }
+
+
+/* V1.29.61 — godkända Discord-kopplingar i Admincenter */
+#spaRouteView[data-route="admin"] .fa-admin-approved-links-panel {
+  grid-column:1 / -1;
+}
+#spaRouteView[data-route="admin"] .fa-admin-approved-links-panel .fa-admin-request-list {
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+@media(max-width:900px){
+  #spaRouteView[data-route="admin"] .fa-admin-approved-links-panel .fa-admin-request-list {
+    grid-template-columns:1fr;
+  }
+}
