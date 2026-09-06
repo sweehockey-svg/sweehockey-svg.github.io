@@ -21,8 +21,8 @@ declare
   imported_count integer;
 begin
   select count(*) into imported_count from sec_site_cup_sources_import;
-  if imported_count < 30 then
-    raise exception 'Safety stop: expected at least 30 SEC cup source objects, got %', imported_count;
+  if imported_count < 1 then
+    raise exception 'Safety stop: expected at least one SEC cup source object, got %', imported_count;
   end if;
   if exists (
     select 1
@@ -79,19 +79,22 @@ set sort_order = excluded.sort_order,
       else public.sec_site_cup_sources.updated_at
     end;
 
-update public.sec_site_cup_sources published
-set is_active = false,
-    imported_at = now()
-where published.is_active
-  and not exists (
-    select 1
-    from sec_site_cup_sources_import incoming
-    where incoming.source_key = published.source_key
-      and incoming.cup_key = published.cup_key
-  );
+do $$
+declare
+  active_count integer;
+begin
+  select count(*) into active_count
+  from public.sec_site_cup_sources
+  where is_active;
+  if active_count < 40 then
+    raise exception 'Safety stop: only % active SEC cup source objects remain', active_count;
+  end if;
+end
+$$;
 
 commit;
 
-select count(*) as active_sec_cup_source_objects
+select count(*) as active_sec_cup_source_objects,
+       count(*) filter (where source_key = 'database-cups') as live_sportsgamer_cups
 from public.sec_site_cup_sources
 where is_active;

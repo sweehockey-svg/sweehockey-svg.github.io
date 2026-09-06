@@ -1,16 +1,12 @@
 window.SEC_CONFIG = {
   dataSource: "supabase",
-  allowStaticDataFallback: true,
+  allowStaticDataFallback: false,
   supabaseUrl: window.EHOCKEY_CONFIG?.supabaseUrl || "",
   supabasePublishableKey: window.EHOCKEY_CONFIG?.supabasePublishableKey || "",
   supabaseCupTable: "sec_site_cup_sources",
   summer26SignupsUrl: "./sec-sommar-26-anmalda.json",
-  dataUrls: [
-    "./database-cups-1-13.json",
-    "./database-cups-14-20.json",
-    "./database-cups.json"
-  ],
-  sheetUrl: "./database-cups-1-13.json",
+  dataUrls: [],
+  sheetUrl: "",
   rulesUrl: "",
   placementsUrl: "",
   rawDataApiBaseUrl: "",
@@ -23,7 +19,7 @@ window.SEC_CONFIG = {
       playoffCut2: 5
     }
   },
-  databaseUrl: "./database-cups.json",
+  databaseUrl: "",
   teamLogoBaseUrl: "https://sweehockey-svg.github.io/teamlogos",
   playerImageBaseUrl: "https://sweehockey-svg.github.io/players",
   siteAssetBaseUrl: "https://sweehockey-svg.github.io/assets",

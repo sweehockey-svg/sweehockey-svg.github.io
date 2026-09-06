@@ -1,26 +1,32 @@
-name: Publish SEC data to Supabase
+name: Sync SEC data to Supabase
+run-name: SEC-data · ${{ inputs.request_id || 'manual' }}
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "SEC/database-cups-1-13.json"
-      - "SEC/database-cups-14-20.json"
-      - "SEC/database-cups.json"
-      - ".github/sync/import-sec-site-cups.py"
-      - ".github/sync/import-sec-site-cups.psql"
+    inputs:
+      request_id:
+        description: Request id from the Svensk eHockey admin page
+        required: false
+        default: manual
+        type: string
+      mode:
+        description: Latest SEC cup or every live cup in the SQL map
+        required: false
+        default: latest
+        type: choice
+        options:
+          - latest
+          - all
 
 permissions:
   contents: read
 
 concurrency:
-  group: publish-sec-site-data
+  group: sync-sec-site-data
   cancel-in-progress: false
 
 jobs:
-  publish:
+  sync:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -35,15 +41,66 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Validate and prepare SEC data
+      - name: Install database clients
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client openssh-client
+          python -m pip install --disable-pip-version-check --no-cache-dir pymysql==1.1.2
+
+      - name: Open read-only SSH tunnel to SportsGamer
+        env:
+          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+          SSH_PORT: ${{ secrets.SVENSK_SSH_PORT }}
+          SSH_USER: ${{ secrets.SVENSK_SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SVENSK_SSH_PRIVATE_KEY }}
+          SSH_REMOTE_DB_HOST: ${{ secrets.SVENSK_SSH_REMOTE_DB_HOST }}
+          SSH_REMOTE_DB_PORT: ${{ secrets.SVENSK_SSH_REMOTE_DB_PORT }}
+          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+        run: |
+          set -euo pipefail
+          : "${SSH_HOST:?Missing SVENSK_SSH_HOST secret}"
+          : "${SSH_USER:?Missing SVENSK_SSH_USER secret}"
+          : "${SSH_PRIVATE_KEY:?Missing SVENSK_SSH_PRIVATE_KEY secret}"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/svensk_db_tunnel_key
+          chmod 600 ~/.ssh/svensk_db_tunnel_key
+          ssh-keyscan -p "${SSH_PORT:-22}" "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh -fN -i ~/.ssh/svensk_db_tunnel_key -p "${SSH_PORT:-22}" \
+            -L "${SSH_LOCAL_DB_PORT:-3307}:${SSH_REMOTE_DB_HOST:-127.0.0.1}:${SSH_REMOTE_DB_PORT:-3306}" \
+            "$SSH_USER@$SSH_HOST"
+
+      - name: Read SEC data from SportsGamer
+        env:
+          UPDATE_MODE: ${{ inputs.mode || 'latest' }}
+          DB_HOST: ${{ secrets.SVENSK_DB_HOST }}
+          DB_PORT: ${{ secrets.SVENSK_DB_PORT }}
+          DB_NAME: ${{ secrets.SVENSK_DB_NAME }}
+          DB_USER: ${{ secrets.SVENSK_DB_USER }}
+          DB_PASSWORD: ${{ secrets.SVENSK_DB_PASSWORD }}
+          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+        run: |
+          set -euo pipefail
+          timeout --foreground --kill-after=30s 16m \
+            python .github/sync/export-sec-site-cups.py \
+              --sql SEC/sql/database-cups.sql \
+              --output /tmp/sec-site-source.json \
+              --mode "$UPDATE_MODE"
+
+      - name: Add SEC rules and podiums from the editorial sheet
+        env:
+          SEC_SHEET_ID: "11uT6pvc1aK9W6lXbysanYXsjSdWFmeNlu03OZgBKucU"
+        run: python .github/sync/apply-sec-sheet-metadata.py /tmp/sec-site-source.json
+
+      - name: Validate and prepare Supabase import
         run: |
           python .github/sync/import-sec-site-cups.py \
             --output /tmp/sec-site-cups.tsv \
-            SEC/database-cups-1-13.json \
-            SEC/database-cups-14-20.json \
-            SEC/database-cups.json
+            --source-key database-cups \
+            --minimum-cups 1 \
+            /tmp/sec-site-source.json
 
-      - name: Publish SEC data to Supabase
+      - name: Upsert SEC data into Supabase
         env:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
@@ -52,3 +109,15 @@ jobs:
           timeout --foreground --kill-after=30s 15m \
             psql "$PGURL" -v ON_ERROR_STOP=1 \
               -f .github/sync/import-sec-site-cups.psql
+
+      - name: Write summary
+        if: always()
+        run: |
+          {
+            echo "## SEC site data"
+            echo "Mode: ${{ inputs.mode || 'latest' }}"
+            echo "SportsGamer access: READ ONLY transaction"
+            echo "Destination: Supabase sec_site_cup_sources"
+            echo "Static JSON files: not used"
+            echo "Result: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"

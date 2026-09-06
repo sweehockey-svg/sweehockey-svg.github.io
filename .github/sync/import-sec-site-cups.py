@@ -25,6 +25,8 @@ def numeric_sort_order(value: object) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True)
+    parser.add_argument("--source-key", default="")
+    parser.add_argument("--minimum-cups", type=int, default=1)
     parser.add_argument("sources", nargs="+")
     args = parser.parse_args()
 
@@ -38,7 +40,7 @@ def main() -> None:
         if not isinstance(cups, list):
             raise ValueError(f"{source_path}: cups måste vara en lista")
 
-        source_key = source_path.stem.lower()
+        source_key = clean(args.source_key) or source_path.stem.lower()
         generated_at = clean(document.get("generatedAt"))
 
         for cup in cups:
@@ -68,8 +70,11 @@ def main() -> None:
                 checksum,
             ])
 
-    if len(rows) < 30:
-        raise ValueError(f"Säkerhetsstopp: endast {len(rows)} SEC-cupobjekt hittades")
+    if len(rows) < args.minimum_cups:
+        raise ValueError(
+            f"Säkerhetsstopp: endast {len(rows)} SEC-cupobjekt hittades "
+            f"(minst {args.minimum_cups} krävs)"
+        )
 
     output_path = Path(args.output)
     with output_path.open("w", encoding="utf-8", newline="") as handle:
