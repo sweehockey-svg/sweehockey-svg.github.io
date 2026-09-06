@@ -57,9 +57,6 @@
         .then(function () {
           return loadScript("./admin-update-controls.js");
         })
-        .then(function () {
-          return loadScript("./sec-draft-archive.js");
-        })
         .catch(function () {
           var app = document.getElementById("app");
           if (app) {

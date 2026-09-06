@@ -4,7 +4,7 @@ window.SEC_CONFIG = {
   supabaseUrl: window.EHOCKEY_CONFIG?.supabaseUrl || "",
   supabasePublishableKey: window.EHOCKEY_CONFIG?.supabasePublishableKey || "",
   supabaseCupTable: "sec_site_cup_sources",
-  summer26SignupsUrl: "./sec-sommar-26-anmalda.json",
+  summer26SignupsUrl: "",
   dataUrls: [],
   sheetUrl: "",
   rulesUrl: "",

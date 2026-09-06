@@ -203,7 +203,8 @@
   }
 
   async function loadSummer26Signups() {
-    const url = window.SEC_CONFIG?.summer26SignupsUrl || "./sec-sommar-26-anmalda.json";
+    const url = text(window.SEC_CONFIG?.summer26SignupsUrl || "");
+    if (!url) return { players: [], updatedAt: "" };
     try {
       const payload = await loadJson(url);
       const rows = Array.isArray(payload) ? payload : payload.players || payload.data || [];
