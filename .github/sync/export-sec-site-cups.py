@@ -20,7 +20,8 @@ FORBIDDEN_SQL = re.compile(
 
 
 def env(name: str, default: str = "") -> str:
-    return str(os.environ.get(name, default)).strip()
+    value = str(os.environ.get(name, "")).strip()
+    return value or default
 
 
 def latest_only(sql: str) -> tuple[str, int]:
