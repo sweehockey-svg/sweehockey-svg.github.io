@@ -24787,3 +24787,147 @@ body.directory-page[data-card-view="compact"] #spaRouteView[data-route="history"
     height: 44px !important;
   }
 }
+
+
+/* =========================================================
+   v1.28.84 — Spelarkort / bredare porträtyta + diagonal brytning
+   Målet är att matcha godkänd mockup bättre på desktop/laptop.
+   ========================================================= */
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 {
+  min-height: 360px !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__top-v1266 {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(156px, 34%) minmax(0, 1fr) !important;
+  gap: 0 !important;
+  align-items: stretch !important;
+  min-height: 232px !important;
+  overflow: hidden !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__media-v122 {
+  position: relative !important;
+  min-width: 0 !important;
+  min-height: 232px !important;
+  overflow: hidden !important;
+  align-self: stretch !important;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%) !important;
+  background:
+    linear-gradient(180deg, rgba(11, 38, 70, .16), rgba(4, 10, 18, .06)),
+    linear-gradient(145deg, rgba(6, 18, 35, .98), rgba(3, 7, 12, .98)) !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__media-v122::after {
+  content: "";
+  position: absolute;
+  top: -11%;
+  right: 14px;
+  width: 2px;
+  height: 126%;
+  background: linear-gradient(180deg, rgba(83, 234, 224, .40) 0%, rgba(255, 208, 0, .95) 100%);
+  transform: rotate(7deg);
+  transform-origin: center;
+  box-shadow: 0 0 10px rgba(255, 208, 0, .18);
+  pointer-events: none;
+  z-index: 3;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__avatar,
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__avatar img {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__avatar {
+  position: relative !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__avatar > img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center top !important;
+  transform: scale(1.10) !important;
+  transform-origin: center top !important;
+  background: transparent !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__role-v122 {
+  position: absolute !important;
+  left: 10px !important;
+  right: 26px !important;
+  bottom: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 36px !important;
+  margin: 0 !important;
+  padding: 0 10px 0 10px !important;
+  overflow: hidden !important;
+  border-left: 4px solid #ffd000 !important;
+  background: linear-gradient(90deg, rgba(3, 8, 14, .94) 0%, rgba(4, 10, 16, .72) 82%, rgba(4, 10, 16, 0) 100%) !important;
+  color: var(--player-cyan) !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  letter-spacing: .055em !important;
+  text-align: left !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  z-index: 4 !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__identity-v1266 {
+  min-width: 0 !important;
+  padding: 18px 18px 8px 16px !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__title-v122 h3 {
+  font-size: clamp(21px, 1.55vw, 27px) !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__ranking-v122 b {
+  min-width: 46px !important;
+  min-height: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__team-v122 {
+  grid-template-columns: 36px minmax(0, 1fr) !important;
+  min-height: 52px !important;
+  gap: 8px !important;
+  margin-top: 10px !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__team-logo-v122 {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__team-logo-v122 img {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__team-v122 strong {
+  font-size: 14px !important;
+}
+
+@media (max-width: 1180px) {
+  #spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__top-v1266 {
+    grid-template-columns: minmax(144px, 32%) minmax(0, 1fr) !important;
+    min-height: 220px !important;
+  }
+
+  #spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__media-v122 {
+    min-height: 220px !important;
+  }
+}

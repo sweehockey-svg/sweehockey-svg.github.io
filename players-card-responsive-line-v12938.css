@@ -1,0 +1,18 @@
+/* The crop-edge line is tied to the portrait polygon so it stays aligned
+   in both the two- and three-column player grids. */
+@media (min-width: 681px) {
+  #spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__top-v1266::before {
+    background: linear-gradient(90deg, transparent 0 37%, rgba(2,7,12,.07) 48%, rgba(2,7,12,.34) 74%, rgba(1,5,10,.68) 100%) !important;
+  }
+
+  #spaRouteView[data-route="players"] .player-directory__grid:not(.is-compact) .players-card-v122 .players-card__avatar::after {
+    content: "" !important;
+    position: absolute !important;
+    z-index: 6 !important;
+    inset: 0 !important;
+    pointer-events: none !important;
+    background: linear-gradient(90deg, rgba(255,208,20,.30), #fff29a 48%, #ffd51f 100%) !important;
+    clip-path: polygon(calc(100% - 3px) 0, 100% 0, 68.1314% 100%, calc(68.1314% - 3px) 100%) !important;
+    filter: drop-shadow(0 0 3px rgba(255,213,31,.42)) !important;
+  }
+}

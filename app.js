@@ -1970,6 +1970,36 @@ function SEH_initPlayers() {
       return replaceNationalTeamLatest(rows);
     }
   
+    function compactPlayerCardTournamentName(value) {
+      let label = clean(value);
+      if (!label) return "";
+
+      const replacements = [
+        [/Western European Championship League/gi, "WECL"],
+        [/Xbox European Championship League/gi, "XECL"],
+        [/North American Championship League/gi, "NACL"],
+        [/Czech Slovak Championship League/gi, "CSCL"],
+        [/European Championship League/gi, "ECL"],
+        [/Finnish Championship League/gi, "FCL"],
+        [/Swedish Championship League/gi, "SCL"],
+        [/German Championship League/gi, "GCL"],
+        [/Russian Championship League/gi, "RCL"]
+      ];
+
+      replacements.forEach(([pattern, shortName]) => {
+        label = label.replace(pattern, shortName);
+      });
+
+      return label
+        // Ta bort lands-/regionsflaggor från turneringsnamnet.
+        .replace(/[\u{1F1E6}-\u{1F1FF}]{2}/gu, "")
+        // Ta bort avslutande region-/landskoder som används i SportsGamer-namnen.
+        .replace(/(?:\s*[|·/\-]\s*)?\b(?:EU|EUR|SE|SWE|FI|FIN|NO|NOR|DK|DEN|DE|GER|CZ|CZE|SK|SVK|PL|POL|RU|RUS|AT|AUT|CH|SUI|GB|GBR|UK|US|USA|CA|CAN)\b\s*$/i, "")
+        .replace(/\s{2,}/g, " ")
+        .replace(/\s+([:;,])/g, "$1")
+        .trim();
+    }
+
     function normalizePlayer(row) {
       const sportsGamerId = sportsGamerIdFromValue(row.sports_gamer_player_url);
       const skaterGames = number(row.total_skater_games);
@@ -2012,7 +2042,7 @@ function SEH_initPlayers() {
         if (player.filterDivisions.includes(competition)) labels.add(competition);
       });
       return [...labels].filter((label) =>
-        !["SPORTSGAMER", "MAIN", "DIVISION A"].includes(clean(label).toUpperCase())
+        !["SPORTSGAMER", "MAIN", "DIVISION A", "6V6"].includes(clean(label).toUpperCase())
       );
     }
   
@@ -2078,34 +2108,47 @@ function SEH_initPlayers() {
       link.className = "players-card players-card-v122";
       link.href = SEH_playerProfileUrl(player.key, player.name);
       link.innerHTML = `
+        <span class="players-card__team-watermark-v1265" aria-hidden="true"></span>
         <div class="players-card__top-v1266">
           <div class="players-card__media-v122">
             <div class="players-card__avatar">
-              <span class="players-card__team-watermark-v1265" aria-hidden="true"></span>
               ${avatarMarkup(player)}
             </div>
             <span class="players-card__role-v122">${player.role === "goalie" ? "MÅLVAKT" : "UTESPELARE"}</span>
           </div>
           <div class="players-card__identity-v1266">
+            <span class="players-card__corner-logo-v12901" aria-hidden="true"></span>
+            <span class="players-card__ranking-v122"><b>${overallRank}</b><em>${totalRp}</em></span>
             <div class="players-card__title-v122">
-              <div><h3>${escapeHtml(player.name)}</h3><span class="players-card__ranking-v122"><b>${overallRank}</b><em>${totalRp}</em></span></div>
+              <h3>${escapeHtml(player.name)}</h3>
             </div>
             <div class="players-card__team-v122">
               <span class="players-card__team-logo-v122" aria-hidden="true"></span>
               <strong>${escapeHtml(player.latestTeam || "Okänt lag")}</strong>
             </div>
+            <div class="players-card__metrics-v122">
+              <div><span>MATCHER</span><strong>${player.games.toLocaleString("sv-SE")}</strong></div>
+              <div><span>${secondaryLabel}</span><strong>${secondaryValue}</strong></div>
+              <div><span>SÄSONGER</span><strong>${player.seasons.toLocaleString("sv-SE")}</strong></div>
+            </div>
+            <div class="players-card__footer-v12882">
+              <div class="players-card__latest-v122">
+                <span>SENAST</span>
+                <strong>${escapeHtml(compactPlayerCardTournamentName(player.latestSeason) || "–")}</strong>
+              </div>
+              <div class="players-card__career-v12882">
+                <span>KARRIÄR</span>
+                <strong>${escapeHtml(divisionLabels(player).slice(0, 6).join(" · ") || "–")}</strong>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="players-card__metrics-v122">
-          <div><span>MATCHER</span><strong>${player.games.toLocaleString("sv-SE")}</strong></div>
-          <div><span>${secondaryLabel}</span><strong>${secondaryValue}</strong></div>
-          <div><span>SÄSONGER</span><strong>${player.seasons.toLocaleString("sv-SE")}</strong></div>
-        </div>
-        <div class="players-card__latest-v122"><span>SENAST</span><strong>${escapeHtml(player.latestSeason || "–")}</strong></div>
-        <p class="players-card__leagues-v122">${escapeHtml(divisionLabels(player).slice(0, 6).join(" · ") || "–")}</p>
       `;
       const logoNode = link.querySelector(".players-card__team-logo-v122");
       if (logoNode) SEH_renderTeamLogo(logoNode, [], player.latestTeam, `${player.latestTeam || "Lag"} logotyp`);
+
+      const cornerLogoNode = link.querySelector(".players-card__corner-logo-v12901");
+      if (cornerLogoNode) SEH_renderTeamLogo(cornerLogoNode, [], player.latestTeam, "");
 
       const watermarkNode = link.querySelector(".players-card__team-watermark-v1265");
       if (watermarkNode) {
@@ -2203,15 +2246,11 @@ function SEH_initPlayers() {
       const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
       const pageSize = compact
         ? 48
-        : viewportWidth >= 1500
-          ? 25
-          : viewportWidth >= 1181
+        : viewportWidth >= 901
+          ? 30
+          : viewportWidth >= 621
             ? 20
-            : viewportWidth >= 901
-              ? 15
-              : viewportWidth >= 621
-                ? 10
-                : 5;
+            : 10;
       const totalPages = Math.max(1, Math.ceil(state.filtered.length / pageSize));
       state.page = Math.min(state.page, totalPages);
       const start = state.showAll ? 0 : (state.page - 1) * pageSize;
@@ -15017,7 +15056,7 @@ function SEH_initShop() {
 
           <a
             class="seh-nav-sec"
-            href="https://www.svenskehockey.se/SEC/"
+            href="SEC/"
           >
             SEC
           </a>

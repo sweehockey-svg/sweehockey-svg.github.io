@@ -529,10 +529,10 @@
     return `
       <nav class="mainNav" aria-label="Huvudmeny">
         <select class="mobileMainNav" aria-label="Meny" data-mobile-main-nav>
-          <option value="https://www.svenskehockey.se/">Svensk eHockey</option>
+          <option value="../">Svensk eHockey</option>
           <option value="#/cups" selected>SEC</option>
         </select>
-        <a class="mainNavLink" href="https://www.svenskehockey.se/">Svensk eHockey</a>
+        <a class="mainNavLink" href="../">Svensk eHockey</a>
         <a class="mainNavLink active" href="#/cups">SEC</a>
       </nav>
     `;
