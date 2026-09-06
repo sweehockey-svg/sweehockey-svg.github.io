@@ -14222,43 +14222,64 @@ function SEH_initShop() {
     }
     async function selfRefresh(){
       if(!sb||!selfEl('faSelfService'))return;
-      hideSelfStates();
+      const refreshToken=(selfState.refreshToken||0)+1;selfState.refreshToken=refreshToken;
+      const isCurrent=()=>selfState.refreshToken===refreshToken;
       const {data:sessionData,error:sessionError}=await sb.auth.getSession();
-      if(sessionError){selfEl('faSelfLoggedOut').hidden=false;selfStatus('faDiscordLoginStatus',sessionError.message,'error');return;}
+      if(!isCurrent())return;
+      if(sessionError){hideSelfStates();selfEl('faSelfLoggedOut').hidden=false;selfStatus('faDiscordLoginStatus',sessionError.message,'error');return;}
       const session=sessionData?.session||null;selfState.session=session;
-      if(!session?.user){selfEl('faSelfLoggedOut').hidden=false;return;}
-      if(!isDiscordUser(session.user)){selfEl('faSelfWrongProvider').hidden=false;return;}
+      if(!session?.user){hideSelfStates();selfEl('faSelfLoggedOut').hidden=false;return;}
+      if(!isDiscordUser(session.user)){hideSelfStates();selfEl('faSelfWrongProvider').hidden=false;return;}
+
+      // Keep the already rendered approved form visible while fresh data is
+      // fetched. This prevents the whole "Min Free Agent" panel from briefly
+      // disappearing on auth/session refreshes.
       selfEl('faSelfLoggedIn').hidden=false;
       selfEl('faDiscordName').textContent=discordDisplayName(session.user);
       const avatar=discordAvatar(session.user);const avatarEl=selfEl('faDiscordAvatar');
       if(avatarEl){avatarEl.hidden=!avatar;if(avatar)avatarEl.src=avatar;}
+
       const [{data:link,error:linkError},{data:requests,error:reqError}]=await Promise.all([
         sb.from('ehockey_discord_player_links').select('*').eq('user_id',session.user.id).maybeSingle(),
         sb.from('ehockey_free_agent_requests').select('*').eq('user_id',session.user.id).order('submitted_at',{ascending:false}).limit(10)
       ]);
+      if(!isCurrent())return;
       if(linkError)throw linkError;if(reqError)throw reqError;
       selfState.link=link||null;
       selfState.pendingRequest=(requests||[]).find((x)=>x.status==='pending')||null;
       const approvedKey=clean(link?.approved_player_key);
+
       if(!approvedKey){
+        hideSelfStates();selfEl('faSelfLoggedIn').hidden=false;
         if(link?.status==='pending'){
           selfEl('faLinkPending').hidden=false;
           const pendingPlayer=await selfFetchPlayer(link.requested_player_key).catch(()=>null);
+          if(!isCurrent())return;
           selfEl('faLinkPendingName').textContent=pendingPlayer?.display_gamertag||'Spelarkoppling skickad';
         }else if(link?.status==='rejected'){
           selfEl('faLinkRejected').hidden=false;
           const rejectedPlayer=await selfFetchPlayer(link.requested_player_key).catch(()=>null);
+          if(!isCurrent())return;
           selfEl('faLinkRejectedName').textContent=rejectedPlayer?.display_gamertag||'Välj profil igen';
         }else{
           selfEl('faLinkSetup').hidden=false;
         }
         return;
       }
-      selfState.approvedPlayer=await selfFetchPlayer(approvedKey);
-      const {data:activeRows,error:activeError}=await sb.from('v_ehockey_free_agents_public').select('*').eq('player_key',approvedKey).limit(1);
-      if(activeError)throw activeError;
-      selfState.activeFa=activeRows?.[0]||null;
-      selfEl('faSelfApproved').hidden=false;
+
+      const [approvedPlayer,activeResult]=await Promise.all([
+        selfFetchPlayer(approvedKey),
+        sb.from('v_ehockey_free_agents_public').select('*').eq('player_key',approvedKey).limit(1)
+      ]);
+      if(!isCurrent())return;
+      selfState.approvedPlayer=approvedPlayer||selfState.approvedPlayer||null;
+      if(activeResult.error){
+        console.warn('Kunde inte uppdatera spelarens aktiva FA-annons:',activeResult.error);
+      }else{
+        selfState.activeFa=activeResult.data?.[0]||null;
+      }
+
+      hideSelfStates();selfEl('faSelfLoggedIn').hidden=false;selfEl('faSelfApproved').hidden=false;
       selfEl('faSelfPlayerName').textContent=selfState.approvedPlayer?.display_gamertag||approvedKey;
       selfEl('faSelfPlayerMeta').textContent=[selfState.approvedPlayer?.primary_position,selfState.approvedPlayer?.latest_ecl_team,selfState.approvedPlayer?.latest_ecl_division].filter(Boolean).join(' · ');
       const source=selfState.pendingRequest&&selfState.pendingRequest.request_type!=='remove'?selfState.pendingRequest:selfState.activeFa;
@@ -14294,11 +14315,22 @@ function SEH_initShop() {
       if(q.length<2)return;
       const {data,error}=await sb.from('app_player_directory_cache').select('player_key,display_gamertag,primary_position,latest_team').ilike('display_gamertag',`%${q.replaceAll('%','')}%`).order('display_gamertag',{ascending:true}).limit(8);
       if(error){selfStatus('faSelfLinkStatus',`Fel: ${error.message}`,'error');return;}
-      for(const player of data||[]){
-        const button=document.createElement('button');button.type='button';button.dataset.faSelfPlayer=player.player_key;
-        button.innerHTML=`<strong>${escapeHtml(player.display_gamertag||player.player_key)}</strong><span>${escapeHtml([player.primary_position,player.latest_team].filter(Boolean).join(' · ')||'Spelarprofil')}</span>`;host.append(button);
+      const players=data||[];
+      let linkedKeys=new Set();
+      if(players.length){
+        const {data:linkStates,error:linkStateError}=await sb.rpc('seh_discord_player_link_status',{p_player_keys:players.map((player)=>player.player_key)});
+        if(linkStateError){console.warn('Kunde inte kontrollera Discord-kopplingar:',linkStateError);}
+        else linkedKeys=new Set((linkStates||[]).filter((row)=>row.is_linked).map((row)=>String(row.player_key)));
       }
-      if(!(data||[]).length){const p=document.createElement('p');p.textContent='Ingen spelarprofil hittades.';host.append(p);}
+      for(const player of players){
+        const isLinked=linkedKeys.has(String(player.player_key));
+        const button=document.createElement('button');button.type='button';
+        if(isLinked){button.disabled=true;button.classList.add('is-linked');button.setAttribute('aria-label',`${player.display_gamertag||'Spelaren'} är redan kopplad till ett Discord-konto`);}
+        else button.dataset.faSelfPlayer=player.player_key;
+        button.innerHTML=`<span class="fa-self-player-result__identity"><strong>${escapeHtml(player.display_gamertag||player.player_key)}</strong><small>${escapeHtml([player.primary_position,player.latest_team].filter(Boolean).join(' · ')||'Spelarprofil')}</small></span>${isLinked?'<em>Redan kopplad</em>':'<span>Välj profil</span>'}`;
+        host.append(button);
+      }
+      if(!players.length){const p=document.createElement('p');p.textContent='Ingen spelarprofil hittades.';host.append(p);}
     }
     async function selfRequestLink(playerKey){
       selfStatus('faSelfLinkStatus','Skickar kopplingen till admin…','working');
