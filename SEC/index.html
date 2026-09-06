@@ -54,9 +54,6 @@
         .then(function () {
           return loadScript("./app-modern.js");
         })
-        .then(function () {
-          return loadScript("./admin-update-controls.js");
-        })
         .catch(function () {
           var app = document.getElementById("app");
           if (app) {

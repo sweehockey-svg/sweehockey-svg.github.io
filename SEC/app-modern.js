@@ -34,10 +34,7 @@
     activeMatchCupId: "",
     activeMatchId: "",
     activeCupTeamName: "",
-    activeTeamTab: "roster",
-    adminUpdateVisible: false,
-    adminUpdateKey: "",
-    adminUpdateStatus: ""
+    activeTeamTab: "roster"
   };
 
   const routes = new Set(["cups", "teams", "players", "goalies", "matches", "match", "about", "sommar26"]);
@@ -955,32 +952,12 @@
             <span aria-hidden="true">i</span>
             <h2>V&auml;lkommen</h2>
           </div>
-          <button type="button" class="adminUnlockButton" data-admin-unlock>Admin</button>
         </div>
         <p>V&auml;lkommen till Svenska eHockey Cupen (SEC) - en communitydriven eHockey-cup som spelas i <strong>EA Sports NHL</strong>. Cupen &auml;r i grunden svensk, men vi vill att v&aring;ra skandinaviska spelare ska vara helt likv&auml;rdiga. D&auml;rf&ouml;r r&auml;knas spelare fr&aring;n <strong>Sverige, Danmark och Norge</strong> p&aring; samma villkor, b&aring;de i lagbyggen och i t&auml;vlingssammanhang.</p>
         <p>Genom &aring;ren har reglerna kunnat skilja sig n&aring;got mellan olika upplagor av cupen, men en sak har varit tydlig: antalet spelare utanf&ouml;r Skandinavien brukar vara <strong>begr&auml;nsat</strong> f&ouml;r att beh&aring;lla cupens skandinaviska profil och en j&auml;mn, tydlig identitet.</p>
         <p>H&auml;r p&aring; sidan hittar du allt f&ouml;r att f&ouml;lja SEC: matchresultat, tabeller, topplistor, spelarstatistik, historiska resultat, matchdata och lagrepresentationer. Sidan <strong>uppdateras kontinuerligt</strong> och fylls p&aring; med nya detaljer, f&ouml;rb&auml;ttringar och mer inneh&aring;ll.</p>
         <p class="cupsWelcomeStats">Just nu finns <strong>${state.cups.length} cuper</strong>, <strong>${model.totalMatches} matcher</strong>, <strong>${state.teams.length} lag</strong> och <strong>${archivePlayers.size} spelare</strong> i arkivet.</p>
-        ${renderAdminUpdatePanel()}
       </section>
-    `;
-  }
-
-  function renderAdminUpdatePanel() {
-    if (!state.adminUpdateVisible) return "";
-    const endpoint = text(window.SEC_CONFIG?.manualUpdateEndpointUrl || "");
-    const workflowUrl = text(window.SEC_CONFIG?.manualUpdateWorkflowUrl || "https://github.com/sweehockey-svg/SEC/actions/workflows/update-database-cups.yml");
-    return `
-      <div class="adminUpdatePanel">
-        <div>
-          <strong>Admin</strong>
-          <span>${endpoint ? "Kör uppdatering från databasen." : "Öppna GitHub Actions och kör workflow manuellt."}</span>
-          ${state.adminUpdateStatus ? `<em>${escapeHtml(state.adminUpdateStatus)}</em>` : ""}
-        </div>
-        <button type="button" data-admin-update data-workflow-url="${escapeHtml(workflowUrl)}">
-          Uppdatera data
-        </button>
-      </div>
     `;
   }
 
@@ -5514,73 +5491,6 @@
         sortStandingTable(button);
       });
     });
-    const adminUnlockButton = document.querySelector("[data-admin-unlock]");
-    if (adminUnlockButton) {
-      adminUnlockButton.addEventListener("click", handleAdminUnlockClick);
-    }
-    const adminUpdateButton = document.querySelector("[data-admin-update]");
-    if (adminUpdateButton) {
-      adminUpdateButton.addEventListener("click", handleAdminUpdateClick);
-    }
-  }
-
-  async function handleAdminUnlockClick() {
-    const adminKey = window.prompt("Admin-l\u00f6senord:");
-    if (!adminKey) return;
-    const endpoint = text(window.SEC_CONFIG?.manualUpdateEndpointUrl || "");
-    if (!endpoint) {
-      state.adminUpdateKey = adminKey;
-      state.adminUpdateVisible = true;
-      state.adminUpdateStatus = "Admin uppl\u00e5st.";
-      render();
-      return;
-    }
-    try {
-      const body = new URLSearchParams();
-      body.set("key", adminKey);
-      body.set("action", "check");
-      const response = await fetch(endpoint, {
-        method: "POST",
-        cache: "no-store",
-        body: body
-      });
-      if (!response.ok) throw new Error(response.status === 401 ? "Fel l\u00f6senord." : "HTTP " + response.status);
-      state.adminUpdateKey = adminKey;
-      state.adminUpdateVisible = true;
-      state.adminUpdateStatus = "Admin uppl\u00e5st.";
-      render();
-    } catch (error) {
-      state.adminUpdateKey = "";
-      state.adminUpdateVisible = false;
-      window.alert(error.message || "Fel l\u00f6senord.");
-    }
-  }
-  async function handleAdminUpdateClick(event) {
-    const button = event.currentTarget;
-    const endpoint = text(window.SEC_CONFIG?.manualUpdateEndpointUrl || "");
-    if (!endpoint) {
-      window.open(button.dataset.workflowUrl || "https://github.com/sweehockey-svg/SEC/actions/workflows/update-database-cups.yml", "_blank", "noopener");
-      return;
-    }
-    const adminKey = state.adminUpdateKey || window.prompt("Admin-l\u00f6senord:");
-    if (!adminKey) return;
-    button.disabled = true;
-    state.adminUpdateStatus = "Startar uppdatering...";
-    render();
-    try {
-      const body = new URLSearchParams();
-      body.set("key", adminKey);
-      const response = await fetch(endpoint, {
-        method: "POST",
-        cache: "no-store",
-        body: body
-      });
-      if (!response.ok) throw new Error("HTTP " + response.status);
-      state.adminUpdateStatus = "Uppdatering startad.";
-    } catch (error) {
-      state.adminUpdateStatus = "Kunde inte starta: " + (error.message || String(error));
-    }
-    render();
   }
 
   function closeMainNavMenus() {

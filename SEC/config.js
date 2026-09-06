@@ -25,7 +25,5 @@ window.SEC_CONFIG = {
   siteAssetBaseUrl: "https://sweehockey-svg.github.io/assets",
   teamLogoManifestUrl: "https://api.github.com/repos/sweehockey-svg/sweehockey-svg.github.io/contents/teamlogos",
   playerImageManifestUrl: "https://api.github.com/repos/sweehockey-svg/sweehockey-svg.github.io/contents/players",
-  manualUpdateWorkflowUrl: "https://github.com/sweehockey-svg/sweehockey-svg.github.io/actions/workflows/sync-sec-site-data.yml",
-  manualUpdateEndpointUrl: "",
   signupApiUrl: "https://script.google.com/macros/s/AKfycbxhNNjRiz7OcrT2zDrGgj_h2GCkkWYOjDo7oq4xRhXH6socZXc6dmJFpZHPRuTpnUoI/exec"
 };
