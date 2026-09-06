@@ -353,8 +353,9 @@ def apply_metadata(data_files=None):
         )
 
     if applied_winners == 0:
-        raise RuntimeError(
-            "Ingen cup i JSON-filerna matchade vinnare-fliken."
+        print(
+            "Ingen importerad cup matchade vinnare-fliken; "
+            "SportsGamer-resultatet importeras utan redaktionell vinnare."
         )
 
     print(
