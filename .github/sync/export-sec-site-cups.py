@@ -53,6 +53,11 @@ def main() -> None:
     args = parser.parse_args()
 
     sql = Path(args.sql).read_text(encoding="utf-8-sig").strip().rstrip(";")
+    session_prefix = re.compile(
+        r"^\s*SET\s+SESSION\s+group_concat_max_len\s*=\s*1000000\s*;",
+        re.IGNORECASE,
+    )
+    sql = session_prefix.sub("", sql, count=1).strip()
     guard_sql = re.sub(r"/\*.*?\*/", " ", sql, flags=re.DOTALL)
     guard_sql = re.sub(r"(?m)^\s*--.*$", " ", guard_sql).strip()
     if FORBIDDEN_SQL.search(guard_sql):
@@ -87,6 +92,7 @@ def main() -> None:
     )
     try:
         with connection.cursor() as cursor:
+            cursor.execute("SET SESSION group_concat_max_len = 1000000")
             cursor.execute("START TRANSACTION READ ONLY")
             cursor.execute(sql)
             row = cursor.fetchone()
