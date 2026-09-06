@@ -12518,7 +12518,7 @@ function SEH_initShop() {
 (() => {
   "use strict";
 
-  const APP_BUILD = "2026-09-07-v12961-discord-fa-unlink";
+  const APP_BUILD = "2026-09-07-v12962-fa-self-form-fix";
 
   const sehAuthState = {
     client: null,
@@ -14203,27 +14203,22 @@ function SEH_initShop() {
 
     async function selfFetchPlayer(key){
       if(!key)return null;
-      const [playerResult,eclResult]=await Promise.all([
-        sb.from('app_player_directory_cache').select('player_key,display_gamertag,primary_position,latest_team').eq('player_key',key).maybeSingle(),
-        sb.from('v_ehockey_player_tournaments_chronological_canonical_v13')
-          .select('team_name_in_tournament,team_current_name,division,chronology_date,appearance_games')
-          .eq('player_key',key)
-          .eq('competition_code','ECL')
-          .gt('appearance_games',0)
-          .order('chronology_date',{ascending:false})
-          .limit(1)
-          .maybeSingle()
-      ]);
-      if(playerResult.error)throw playerResult.error;
-      if(eclResult.error)throw eclResult.error;
-      const player=playerResult.data||null;
-      if(!player)return null;
-      const ecl=eclResult.data||null;
-      return {
-        ...player,
-        latest_ecl_team:clean(ecl?.team_name_in_tournament)||clean(ecl?.team_current_name),
-        latest_ecl_division:clean(ecl?.division)
-      };
+
+      // Use a small authenticated RPC for the linked-player summary. The raw
+      // tournament-history view is not guaranteed to be readable by ordinary
+      // Discord users and could previously make the entire FA form disappear.
+      const {data:summary,error:summaryError}=await sb.rpc('seh_get_linked_player_summary',{p_player_key:key});
+      if(!summaryError&&summary)return summary;
+
+      // Safe fallback: always keep the self-service form usable even if the
+      // ECL summary cannot be loaded for some reason.
+      const {data:player,error:playerError}=await sb
+        .from('app_player_directory_cache')
+        .select('player_key,display_gamertag,primary_position,latest_team')
+        .eq('player_key',key)
+        .maybeSingle();
+      if(playerError)throw playerError;
+      return player||null;
     }
     async function selfRefresh(){
       if(!sb||!selfEl('faSelfService'))return;
