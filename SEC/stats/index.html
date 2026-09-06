@@ -1,0 +1,1639 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Svensk statistik – SEC 21</title>
+  <meta name="description" content="Svensk statistik för SEC 21 hämtad från Svensk eHockey-databasen." />
+  <link rel="icon" type="image/png" href="favicon.png?v=1" />
+  <link rel="apple-touch-icon" href="favicon.png?v=1" />
+
+  <style>
+    :root{
+      --bg:#070c14;
+      --panel:#0e1626;
+      --panel2:#111b31;
+      --card:#132044;
+      --text:#f5f6ff;
+      --muted:rgba(245,246,255,.68);
+      --border:rgba(255,255,255,.12);
+      --yellow:#f7d35f;
+      --orange:#f49a3a;
+      --shadow:0 18px 45px rgba(0,0,0,.42);
+    }
+
+    *{box-sizing:border-box;}
+
+    html{
+      min-height:100%;
+      background:
+        radial-gradient(1100px 500px at 50% -10%, rgba(247,211,95,.13), transparent 60%),
+        radial-gradient(900px 520px at 10% 0%, rgba(70,110,220,.16), transparent 55%),
+        var(--bg);
+    }
+
+    body{
+      margin:0;
+      min-height:100%;
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:transparent;
+      overflow-x:hidden;
+    }
+
+    a{color:inherit;text-decoration:none;}
+
+    .container{
+      width:min(1320px, calc(100% - 32px));
+      margin:0 auto;
+    }
+
+    main{padding:0 0 40px;}
+
+    .cup-title{
+      margin:0 0 18px;
+      padding:16px 22px;
+      border-radius:18px 18px 0 0;
+      background:linear-gradient(90deg, var(--orange), #f6b64f);
+      color:#08101c;
+      font-size:20px;
+      line-height:1;
+      font-weight:950;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      box-shadow:var(--shadow);
+    }
+
+    .page-wrap{
+      padding-top:0;
+      border-left:1px solid rgba(255,255,255,.08);
+      border-right:1px solid rgba(255,255,255,.08);
+      background:rgba(4,9,18,.42);
+      min-height:100vh;
+    }
+
+    .top-row{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      padding:0 18px 18px;
+    }
+
+    .page-heading{
+      display:grid;
+      gap:4px;
+    }
+
+    .page-title{
+      margin:0;
+      font-size:24px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .page-sub{
+      font-size:12px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.14em;
+    }
+
+    .tabs-wrap{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:8px;
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--border);
+    }
+
+    .ecl-tab{
+      border:1px solid rgba(255,255,255,.10);
+      padding:9px 16px;
+      border-radius:999px;
+      background:#121c2c;
+      color:rgba(245,246,255,.76);
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      cursor:pointer;
+    }
+
+    .ecl-tab.active{
+      background:linear-gradient(135deg, var(--orange), var(--yellow));
+      color:#10131c;
+      border-color:transparent;
+    }
+
+    .section-desc{
+      margin:0 18px 18px;
+      max-width:980px;
+      color:rgba(245,246,255,.74);
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .stat-pickers{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:14px;
+      margin:0 18px 22px;
+    }
+
+    .picker-box{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(8,16,32,.72);
+      padding:14px;
+      box-shadow:0 10px 30px rgba(0,0,0,.28);
+    }
+
+    .picker-label{
+      display:block;
+      margin-bottom:8px;
+      color:var(--yellow);
+      font-size:11px;
+      font-weight:950;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+    }
+
+    .picker-help{
+      margin-top:8px;
+      font-size:11px;
+      line-height:1.45;
+      color:rgba(255,255,255,.56);
+    }
+
+    .stat-select{
+      width:100%;
+      min-height:42px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:#172235;
+      color:#fff;
+      padding:0 12px;
+      font-size:14px;
+      font-weight:800;
+      color-scheme:dark;
+    }
+
+    .division-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:24px;
+      padding:0 18px;
+    }
+
+    .division-section{
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
+      overflow:hidden;
+      box-shadow:0 12px 34px rgba(0,0,0,.42);
+    }
+
+    .division-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:16px 18px;
+      background:linear-gradient(90deg, var(--orange), var(--yellow));
+      color:#10131c;
+    }
+
+    .division-title{
+      font-size:17px;
+      font-weight:950;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+    }
+
+    .division-sub{
+      font-size:11px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.10em;
+      opacity:.78;
+    }
+
+    .leaderboards{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:18px;
+      padding:18px;
+    }
+
+    .leaderboard-box{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(7,14,28,.84);
+      overflow:hidden;
+      min-width:0;
+    }
+
+    .leaderboard-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+    }
+
+    .leaderboard-title{
+      color:var(--yellow);
+      font-size:12px;
+      font-weight:950;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+    }
+
+    .leaderboard-note{
+      color:rgba(255,255,255,.68);
+      font-size:10px;
+      text-align:right;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      white-space:nowrap;
+    }
+
+    .leaderboard-cards{
+      display:grid;
+      gap:12px;
+      padding:14px;
+    }
+
+    .player-card{
+      position:relative;
+      overflow:hidden;
+      min-width:0;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.11);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.08), transparent 32%),
+        linear-gradient(180deg, rgba(35,63,145,.28), rgba(0,0,0,.22));
+      padding:12px;
+      box-shadow:0 10px 28px rgba(0,0,0,.48);
+    }
+
+    .team-logo-wrap{
+      position:absolute;
+      top:10px;
+      right:10px;
+      z-index:4;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:5px;
+    }
+
+    .team-logo-card{
+      width:44px;
+      height:44px;
+      object-fit:contain;
+      filter:drop-shadow(0 3px 8px rgba(0,0,0,.8));
+    }
+
+    .player-ribbon{
+      font-size:18px;
+      line-height:1;
+      filter:drop-shadow(0 2px 4px rgba(0,0,0,.6));
+    }
+
+    .player-top-row{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .player-img-wrap{
+      flex:0 0 84px;
+      height:110px;
+      overflow:hidden;
+      background:#000;
+      border:2px solid rgba(255,255,255,.82);
+      border-radius:12px;
+      box-shadow:0 2px 10px rgba(0,0,0,.35);
+    }
+
+    .player-img{
+      display:block;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      border-radius:10px;
+    }
+
+    .player-info{min-width:0;}
+
+    .player-name{
+      padding-right:50px;
+      font-size:15px;
+      font-weight:950;
+      text-transform:uppercase;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .player-team{
+      margin-top:2px;
+      padding-right:50px;
+      color:rgba(255,255,255,.72);
+      font-size:12px;
+      text-transform:uppercase;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .player-main{
+      margin-top:6px;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .player-sub{
+      margin-top:4px;
+      color:rgba(255,255,255,.78);
+      font-size:12px;
+      line-height:1.45;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .stat-bars{margin-top:10px;}
+
+    .bar-row{
+      margin-bottom:5px;
+      font-size:11px;
+    }
+
+    .bar-label{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .bar-track{
+      height:6px;
+      margin-top:3px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      overflow:hidden;
+    }
+
+    .bar-fill{
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg, var(--yellow), var(--orange));
+    }
+
+    .empty-box{
+      padding:16px;
+      color:rgba(255,255,255,.84);
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .lastUpdated{
+      margin:14px 18px 0;
+      color:rgba(255,255,255,.62);
+      text-align:right;
+      font-size:11px;
+    }
+
+    footer{
+      margin-top:28px;
+      border-top:1px solid rgba(255,255,255,.10);
+      background:rgba(5,10,18,.82);
+    }
+
+    .footer__inner{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:16px 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .sep{opacity:.5;}
+
+    @media (max-width:1180px){
+      .leaderboards,.stat-pickers{grid-template-columns:1fr;}
+    }
+
+    @media (max-width:760px){
+      .container{width:100%;}
+      .page-wrap{border:0;}
+      .cup-title{border-radius:0;margin-bottom:14px;}
+      .top-row{align-items:flex-start;}
+      .tabs-wrap{width:100%;justify-content:flex-start;flex-wrap:wrap;border-radius:18px;}
+      .page-title{font-size:20px;}
+      .leaderboards{padding:14px;gap:14px;}
+      .division-header{flex-direction:column;align-items:flex-start;}
+      .player-sub{white-space:normal;overflow:visible;text-overflow:clip;}
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container page-wrap">
+    <div class="cup-title">SEC 21</div>
+
+    <div class="top-row">
+      <div class="page-heading">
+        <h1 class="page-title">SEC 21 – Topp 3</h1>
+        <div class="page-sub" id="titleSub">Laddar</div>
+      </div>
+      <div class="tabs-wrap" id="stageTabs" aria-label="Spelform"></div>
+    </div>
+
+    <div class="section-desc" id="sectionDesc">
+      Här kan du själv välja vilken stat varje av de tre sektionerna ska visa. Nordic Nosebleed-matcher räknas inte med. Kravet för vissa topplistor är minst 40% av lagets matcher.
+    </div>
+
+    <div class="stat-pickers">
+      <div class="picker-box">
+        <label class="picker-label" for="pickerOne">Sektion 1</label>
+        <select id="pickerOne" class="stat-select"></select>
+        <div class="picker-help">Första topplistan.</div>
+      </div>
+      <div class="picker-box">
+        <label class="picker-label" for="pickerTwo">Sektion 2</label>
+        <select id="pickerTwo" class="stat-select"></select>
+        <div class="picker-help">Andra topplistan.</div>
+      </div>
+      <div class="picker-box">
+        <label class="picker-label" for="pickerThree">Sektion 3</label>
+        <select id="pickerThree" class="stat-select"></select>
+        <div class="picker-help">Tredje topplistan.</div>
+      </div>
+    </div>
+
+    <div id="contentHost" class="division-grid">
+      <div class="empty-box">Laddar statistik…</div>
+    </div>
+
+    <p id="updated" class="lastUpdated"></p>
+  </main>
+
+  <footer>
+    <div class="container footer__inner">
+      <span>© <span id="year"></span> Svensk eHockey</span>
+      <span class="sep">•</span>
+      <span>SEC 21 statistik</span>
+    </div>
+  </footer>
+
+  <script src="../../config.js"></script>
+  <script>
+  (function(){
+    "use strict";
+
+    const CUP_ID = "21";
+    const DIVISION_KEY = "sec21";
+    const MIN_MATCH_SHARE_PCT = 40;
+    const FORCED_REGULAR_TEAM_MATCHES = 8;
+    const EXCLUDED_TEAMS = new Set(["nordic nosebleed"]);
+
+    const DEFAULT_IMG = "/players/1DEFAULTBILDID.jpg";
+    const DEFAULT_LOGO = "";
+    const STAGE_ORDER = ["regular", "playoffs"];
+    const DIVISION_ORDER = [DIVISION_KEY];
+
+    const STAT_OPTIONS = [
+      { id:"points", title:"Poängligan", league:"skaters", statKey:"p", metricKeys:["p","ppg","gp"], extraKeys:["g","a"], eligibility:"none", note:"Ingen matchgräns", better:"desc" },
+      { id:"goals", title:"Målkungar", league:"skaters", statKey:"g", metricKeys:["g","p","gp"], extraKeys:["a","ppg"], eligibility:"none", note:"Ingen matchgräns", better:"desc" },
+      { id:"assists", title:"Assistligan", league:"skaters", statKey:"a", metricKeys:["a","p","gp"], extraKeys:["g","ppg"], eligibility:"none", note:"Ingen matchgräns", better:"desc" },
+      { id:"ppg", title:"PPG-ligan", league:"skaters", statKey:"ppg", metricKeys:["ppg","p","gp"], extraKeys:["g","a"], eligibility:"skater40", note:"Minst 40% matcher", better:"desc" },
+      { id:"gpg", title:"GPG-ligan", league:"skaters", statKey:"gpg", metricKeys:["gpg","g","gp"], extraKeys:["p","a"], eligibility:"skater40", note:"Minst 40% matcher", better:"desc" },
+      { id:"apg", title:"APG-ligan", league:"skaters", statKey:"apg", metricKeys:["apg","a","gp"], extraKeys:["p","g"], eligibility:"skater40", note:"Minst 40% matcher", better:"desc" },
+      { id:"pen", title:"Utvisningar", league:"skaters", statKey:"pen", metricKeys:["pen","gp","p"], extraKeys:["g","a"], eligibility:"none", note:"Ingen matchgräns", better:"desc" },
+      { id:"dim", title:"DIM-ligan", league:"skaters", statKey:"dim", metricKeys:["dim","gp","p"], extraKeys:["pen"], eligibility:"skater40", note:"Minst 40% matcher", better:"desc" },
+
+      { id:"defenderPoints", title:"Poängligan backar", league:"defenders", statKey:"p", metricKeys:["p","dim","gp"], extraKeys:["g","a"], eligibility:"none", note:"Ingen matchgräns", better:"desc" },
+      { id:"defenderAssists", title:"Assistligan backar", league:"defenders", statKey:"a", metricKeys:["a","p","gp"], extraKeys:["g","dim"], eligibility:"none", note:"Ingen matchgräns", better:"desc" },
+      { id:"defenderGoals", title:"Målkungar backar", league:"defenders", statKey:"g", metricKeys:["g","p","gp"], extraKeys:["a","dim"], eligibility:"none", note:"Ingen matchgräns", better:"desc" },
+      { id:"defenderPen", title:"Utvisningar backar", league:"defenders", statKey:"pen", metricKeys:["pen","dim","gp"], extraKeys:["p"], eligibility:"none", note:"Ingen matchgräns", better:"desc" },
+
+      { id:"svpercent", title:"Bästa SV%", league:"goalies", statKey:"svp", metricKeys:["svp","gaa","so"], extraKeys:["gp","w"], eligibility:"goalie40", note:"Minst 40% matcher", better:"desc" },
+      { id:"gaa", title:"Bästa GAA", league:"goalies", statKey:"gaa", metricKeys:["gaa","svp","so"], extraKeys:["gp","w"], eligibility:"goalie40", note:"Minst 40% matcher", better:"asc" },
+      { id:"wins", title:"Flest segrar", league:"goalies", statKey:"w", metricKeys:["w","svp","gp"], extraKeys:["gaa","so"], eligibility:"none", note:"Ingen matchgräns", better:"desc" },
+      { id:"shutouts", title:"Flest nollor", league:"goalies", statKey:"so", metricKeys:["so","svp","gaa"], extraKeys:["gp","w"], eligibility:"none", note:"Ingen matchgräns", better:"desc" }
+    ];
+
+    const statMap = new Map(STAT_OPTIONS.map((item) => [item.id, item]));
+
+    const stageTabs = document.getElementById("stageTabs");
+    const contentHost = document.getElementById("contentHost");
+    const updated = document.getElementById("updated");
+    const titleSub = document.getElementById("titleSub");
+    const sectionDesc = document.getElementById("sectionDesc");
+    const pickerOne = document.getElementById("pickerOne");
+    const pickerTwo = document.getElementById("pickerTwo");
+    const pickerThree = document.getElementById("pickerThree");
+
+    let rawData = null;
+    let loadedJsonUrl = "";
+    let activeStage = "regular";
+    let activeBoards = ["points", "svpercent", "dim"];
+
+    document.getElementById("year").textContent = String(new Date().getFullYear());
+
+    function safeText(value){
+      if(value === null || value === undefined) return "";
+      return String(value);
+    }
+
+    function htmlEscape(value){
+      return safeText(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+    }
+
+    function toNum(value){
+      const text = safeText(value).replace(",", ".").replace("%", "").trim();
+      if(text === "") return null;
+      const number = Number.parseFloat(text);
+      return Number.isFinite(number) ? number : null;
+    }
+
+    function num(value, fallback = 0){
+      const number = toNum(value);
+      return number === null ? fallback : number;
+    }
+
+    function round2(value){
+      const number = Number(value);
+      if(!Number.isFinite(number)) return 0;
+      return Math.round(number * 100) / 100;
+    }
+
+    function slugify(value){
+      return cleanPlayerName(value)
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/&/g, " and ")
+        .replace(/[^a-zA-Z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase();
+    }
+
+    function normalizeName(value){
+      return safeText(value).trim().replace(/\s+/g, " ").toLowerCase();
+    }
+
+    function cleanPlayerName(value){
+      return safeText(value)
+        .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, "")
+        .replace(/[\u{FE0F}\u{200D}]/gu, "")
+        .replace(/^\s*[^0-9A-Za-zÅÄÖåäö_\-]+/g, "")
+        .replace(/\s*,\s*[A-ZÅÄÖ]{2,3}\s*$/i, "")
+        .trim();
+    }
+
+    function getRaw(row, keys){
+      if(!row || typeof row !== "object") return undefined;
+      for(const key of keys){
+        if(Object.prototype.hasOwnProperty.call(row, key) && row[key] !== null && row[key] !== undefined && row[key] !== ""){
+          return row[key];
+        }
+      }
+      return undefined;
+    }
+
+    function getNum(row, keys, fallback = 0){
+      const raw = getRaw(row, keys);
+      return num(raw, fallback);
+    }
+
+    function prettyLabel(key){
+      const map = {
+        regular:"Gruppspel",
+        playoffs:"Slutspel",
+        sec21:"SEC 21",
+        p:"P",
+        g:"G",
+        a:"A",
+        gp:"GP",
+        ppg:"PPG",
+        gpg:"GPG",
+        apg:"APG",
+        pen:"Utv.",
+        pim:"PIM",
+        dim:"DIM",
+        w:"W",
+        sv:"SV",
+        sa:"SA",
+        svp:"SV%",
+        gaa:"GAA",
+        so:"SO",
+        teamMatches:"Lagmatcher",
+        matchSharePct:"Andel"
+      };
+      return map[key] || key;
+    }
+
+    function isExcludedTeam(team){
+      return EXCLUDED_TEAMS.has(normalizeName(team));
+    }
+
+    function shouldSkipMatch(match){
+      const awayTeam = getTeamName(match, "away");
+      const homeTeam = getTeamName(match, "home");
+      return isExcludedTeam(awayTeam) || isExcludedTeam(homeTeam);
+    }
+
+    function getTeamName(match, side){
+      if(side === "away"){
+        return safeText(match.awayTeam || match.away || match.away_name || match.away_team || "").trim();
+      }
+      return safeText(match.homeTeam || match.home || match.home_name || match.home_team || "").trim();
+    }
+
+    function getStage(match){
+      const stage = normalizeName(match.stage || match.phase || match.round || match.group || "");
+      if(stage.includes("playoff") || stage.includes("slutspel") || stage.includes("final") || stage.includes("semi") || stage.includes("quarter")){
+        return "playoffs";
+      }
+      return "regular";
+    }
+
+    function getPlayerName(row){
+      return cleanPlayerName(getRaw(row, ["player", "name", "playerName", "gamertag", "psn", "userName", "username", "nickname"]));
+    }
+
+    function getPlayerId(row){
+      return safeText(getRaw(row, ["playerId", "playerID", "id", "userId", "userID"])).trim();
+    }
+
+    function getPlayerTeam(row, fallbackTeam){
+      return safeText(getRaw(row, ["team", "teamName", "club", "clubName", "lag"]) || fallbackTeam || "").trim();
+    }
+
+    function getPosition(row){
+      return safeText(getRaw(row, ["position", "pos", "playerPosition", "role"])).trim().toUpperCase();
+    }
+
+    function isDefender(row){
+      const position = getPosition(row);
+      return ["D", "LD", "RD", "B", "VB", "HB", "DEF", "DEFENDER"].includes(position);
+    }
+
+    function rowArray(value){
+      if(Array.isArray(value)) return value;
+      return [];
+    }
+
+    function normalizeStatsCollection(stats){
+      if(Array.isArray(stats)) return stats;
+      if(stats && typeof stats === "object"){
+        const out = [];
+        ["away", "home"].forEach((side) => {
+          if(Array.isArray(stats[side])) out.push(...stats[side]);
+        });
+        return out;
+      }
+      return [];
+    }
+
+    function sideStats(stats, side){
+      if(Array.isArray(stats)) return stats.filter((row) => normalizeName(row.side || row.homeAway) === side);
+      if(stats && typeof stats === "object" && Array.isArray(stats[side])) return stats[side];
+      return [];
+    }
+
+    function makeKey(team, playerId, name){
+      const id = safeText(playerId).trim();
+      if(id) return `${normalizeName(team)}|||id:${id}`;
+      return `${normalizeName(team)}|||name:${normalizeName(name)}`;
+    }
+
+    function newSkater(team, row){
+      const name = getPlayerName(row);
+      const playerId = getPlayerId(row);
+      return {
+        name,
+        playerId,
+        team,
+        teamLogo: safeText(getRaw(row, ["teamLogo", "logo", "laglogo"])) || `${slugify(team)}.png`,
+        playerImage: safeText(getRaw(row, ["playerImage", "image", "img", "photo", "foto", "portrait"])),
+        gp:0,
+        g:0,
+        a:0,
+        p:0,
+        pen:0,
+        shots:0,
+        dimSum:0
+      };
+    }
+
+    function newGoalie(team, row){
+      const name = getPlayerName(row);
+      const playerId = getPlayerId(row);
+      return {
+        name,
+        playerId,
+        team,
+        teamLogo: safeText(getRaw(row, ["teamLogo", "logo", "laglogo"])) || `${slugify(team)}.png`,
+        playerImage: safeText(getRaw(row, ["playerImage", "image", "img", "photo", "foto", "portrait"])),
+        gp:0,
+        w:0,
+        so:0,
+        sa:0,
+        sv:0,
+        ga:0
+      };
+    }
+
+    function ensureEntry(map, team, row, factory){
+      const name = getPlayerName(row);
+      if(!name || !team || isExcludedTeam(team)) return null;
+      const playerId = getPlayerId(row);
+      const key = makeKey(team, playerId, name);
+      if(!map.has(key)) map.set(key, factory(team, row));
+      return map.get(key);
+    }
+
+    function addTeamMatch(teamMatches, stage, team){
+      if(!team || isExcludedTeam(team)) return;
+      teamMatches[stage][team] = (teamMatches[stage][team] || 0) + 1;
+    }
+
+    function addSkaterRow(stage, team, row, stores){
+      const skater = ensureEntry(stores.skaters[stage], team, row, newSkater);
+      if(!skater) return;
+
+      const goals = getNum(row, ["g", "goals"]);
+      const assists = getNum(row, ["a", "assists"]);
+      const points = getNum(row, ["pts", "p", "points"], goals + assists);
+      const penalties = getNum(row, ["pim", "pen", "penaltyMinutes", "penalties"]);
+      const shots = getNum(row, ["shots", "s"]);
+      const dim = getNum(row, ["dim", "DIM"]);
+
+      skater.gp += 1;
+      skater.g += goals;
+      skater.a += assists;
+      skater.p += points;
+      skater.pen += penalties;
+      skater.shots += shots;
+      skater.dimSum += dim;
+
+      if(isDefender(row)){
+        const defender = ensureEntry(stores.defenders[stage], team, row, newSkater);
+        if(!defender) return;
+        defender.gp += 1;
+        defender.g += goals;
+        defender.a += assists;
+        defender.p += points;
+        defender.pen += penalties;
+        defender.shots += shots;
+        defender.dimSum += dim;
+      }
+    }
+
+    function addGoalieRow(stage, team, row, match, stores){
+      const goalie = ensureEntry(stores.goalies[stage], team, row, newGoalie);
+      if(!goalie) return;
+
+      const awayTeam = getTeamName(match, "away");
+      const homeTeam = getTeamName(match, "home");
+      const awayScore = getNum(match, ["awayScore", "awayGoals", "away_score"]);
+      const homeScore = getNum(match, ["homeScore", "homeGoals", "home_score"]);
+      const awayShots = getNum(match, ["awayShots", "away_shots", "awayS"]);
+      const homeShots = getNum(match, ["homeShots", "home_shots", "homeS"]);
+
+      const isAway = normalizeName(team) === normalizeName(awayTeam);
+      const fallbackGa = isAway ? homeScore : awayScore;
+      const fallbackSa = isAway ? homeShots : awayShots;
+
+      const ga = getNum(row, ["ga", "goalsAgainst"], fallbackGa);
+      const sa = getNum(row, ["sa", "shotsAgainst"], fallbackSa || ga + getNum(row, ["sv", "saves"]));
+      const sv = getNum(row, ["sv", "saves"], Math.max(0, sa - ga));
+
+      const won = isAway ? awayScore > homeScore : homeScore > awayScore;
+
+      goalie.gp += 1;
+      goalie.w += won ? 1 : 0;
+      goalie.so += ga === 0 ? 1 : 0;
+      goalie.sa += sa;
+      goalie.sv += sv;
+      goalie.ga += ga;
+    }
+
+    function finalizeSkater(row, stage, teamMatches){
+      const countedTm = teamMatches[stage][row.team] || row.gp || 0;
+      const tm = stage === "regular" ? FORCED_REGULAR_TEAM_MATCHES : countedTm;
+      return {
+        name:row.name,
+        playerId:row.playerId,
+        team:row.team,
+        teamLogo:row.teamLogo,
+        playerImage:row.playerImage,
+        gp:row.gp,
+        g:row.g,
+        a:row.a,
+        p:row.p,
+        pen:row.pen,
+        shots:row.shots,
+        ppg:row.gp ? round2(row.p / row.gp) : 0,
+        gpg:row.gp ? round2(row.g / row.gp) : 0,
+        apg:row.gp ? round2(row.a / row.gp) : 0,
+        dim:row.gp ? round2(row.dimSum / row.gp) : 0,
+        teamMatches:tm,
+        matchSharePct:tm ? round2((row.gp / tm) * 100) : 0
+      };
+    }
+
+    function finalizeGoalie(row, stage, teamMatches){
+      const countedTm = teamMatches[stage][row.team] || row.gp || 0;
+      const tm = stage === "regular" ? FORCED_REGULAR_TEAM_MATCHES : countedTm;
+      return {
+        name:row.name,
+        playerId:row.playerId,
+        team:row.team,
+        teamLogo:row.teamLogo,
+        playerImage:row.playerImage,
+        gp:row.gp,
+        w:row.w,
+        so:row.so,
+        sa:row.sa,
+        sv:row.sv,
+        ga:row.ga,
+        gaa:row.gp ? round2(row.ga / row.gp) : 0,
+        svp:row.sa ? round2((row.sv / row.sa) * 100) : 0,
+        teamMatches:tm,
+        matchSharePct:tm ? round2((row.gp / tm) * 100) : 0
+      };
+    }
+
+    function getCupStatsCollection(cup, keys){
+      const wanted = new Set(keys.map((key) => normalizeName(key)));
+      const rows = [];
+      const seenObjects = new WeakSet();
+
+      function addRowsFrom(value){
+        if(Array.isArray(value)){
+          value.forEach((item) => {
+            if(item && typeof item === "object" && !Array.isArray(item)){
+              rows.push(item);
+            }
+          });
+          return;
+        }
+
+        if(!value || typeof value !== "object" || seenObjects.has(value)) return;
+        seenObjects.add(value);
+
+        Object.entries(value).forEach(([childKey, childValue]) => {
+          if(normalizeName(childKey) === "matches") return;
+          addRowsFrom(childValue);
+        });
+      }
+
+      function scan(value){
+        if(!value || typeof value !== "object" || seenObjects.has(value)) return;
+        seenObjects.add(value);
+
+        Object.entries(value).forEach(([key, child]) => {
+          const normalizedKey = normalizeName(key);
+          if(normalizedKey === "matches") return;
+
+          if(wanted.has(normalizedKey)){
+            addRowsFrom(child);
+            return;
+          }
+
+          if(child && typeof child === "object" && !Array.isArray(child)){
+            scan(child);
+          }
+        });
+      }
+
+      scan(cup);
+      return rows;
+    }
+
+    function hasAggregateSkaterValues(row){
+      return getRaw(row, ["gp", "games", "gamesPlayed", "matches", "played"]) !== undefined ||
+        getRaw(row, ["pts", "p", "points"]) !== undefined ||
+        getRaw(row, ["g", "goals"]) !== undefined ||
+        getRaw(row, ["a", "assists"]) !== undefined;
+    }
+
+    function hasAggregateGoalieValues(row){
+      return getRaw(row, ["gp", "games", "gamesPlayed", "matches", "played"]) !== undefined ||
+        getRaw(row, ["sv", "saves"]) !== undefined ||
+        getRaw(row, ["sa", "shotsAgainst"]) !== undefined ||
+        getRaw(row, ["svp", "sv%", "savePct", "savePercentage"]) !== undefined ||
+        getRaw(row, ["gaa", "GAA"]) !== undefined;
+    }
+
+    function aggregateRowKey(row){
+      const team = getPlayerTeam(row);
+      const name = getPlayerName(row);
+      const playerId = getPlayerId(row);
+      return makeKey(team, playerId, name);
+    }
+
+    function betterSkaterAggregate(candidate, current){
+      if(!current) return true;
+
+      const cg = getNum(candidate, ["gp", "games", "gamesPlayed", "matches", "played"]);
+      const og = getNum(current, ["gp", "games", "gamesPlayed", "matches", "played"]);
+      if(cg !== og) return cg > og;
+
+      const cp = getNum(candidate, ["pts", "p", "points"], getNum(candidate, ["g", "goals"]) + getNum(candidate, ["a", "assists"]));
+      const op = getNum(current, ["pts", "p", "points"], getNum(current, ["g", "goals"]) + getNum(current, ["a", "assists"]));
+      if(cp !== op) return cp > op;
+
+      const cs = getNum(candidate, ["shots", "s"]);
+      const os = getNum(current, ["shots", "s"]);
+      if(cs !== os) return cs > os;
+
+      return true;
+    }
+
+    function betterGoalieAggregate(candidate, current){
+      if(!current) return true;
+
+      const cg = getNum(candidate, ["gp", "games", "gamesPlayed", "matches", "played"]);
+      const og = getNum(current, ["gp", "games", "gamesPlayed", "matches", "played"]);
+      if(cg !== og) return cg > og;
+
+      const csa = getNum(candidate, ["sa", "shotsAgainst"]);
+      const osa = getNum(current, ["sa", "shotsAgainst"]);
+      if(csa !== osa) return csa > osa;
+
+      const csv = getNum(candidate, ["sv", "saves"]);
+      const osv = getNum(current, ["sv", "saves"]);
+      if(csv !== osv) return csv > osv;
+
+      return true;
+    }
+
+    function setAggregateSkaterRow(stage, row, stores){
+      const team = getPlayerTeam(row);
+      const skater = ensureEntry(stores.skaters[stage], team, row, newSkater);
+      if(!skater) return;
+
+      const gp = getNum(row, ["gp", "games", "gamesPlayed", "matches", "played"]);
+      const goals = getNum(row, ["g", "goals"]);
+      const assists = getNum(row, ["a", "assists"]);
+      const points = getNum(row, ["pts", "p", "points"], goals + assists);
+      const penalties = getNum(row, ["pim", "pen", "penaltyMinutes", "penalties"]);
+      const shots = getNum(row, ["shots", "s"]);
+      const dim = getNum(row, ["dim", "DIM"]);
+
+      skater.gp = gp;
+      skater.g = goals;
+      skater.a = assists;
+      skater.p = points;
+      skater.pen = penalties;
+      skater.shots = shots;
+      skater.dimSum = dim * (gp || 1);
+
+      if(isDefender(row)){
+        const defender = ensureEntry(stores.defenders[stage], team, row, newSkater);
+        if(!defender) return;
+        defender.gp = gp;
+        defender.g = goals;
+        defender.a = assists;
+        defender.p = points;
+        defender.pen = penalties;
+        defender.shots = shots;
+        defender.dimSum = dim * (gp || 1);
+      }
+    }
+
+    function setAggregateGoalieRow(stage, row, stores){
+      const team = getPlayerTeam(row);
+      const goalie = ensureEntry(stores.goalies[stage], team, row, newGoalie);
+      if(!goalie) return;
+
+      const gp = getNum(row, ["gp", "games", "gamesPlayed", "matches", "played"]);
+      const wins = getNum(row, ["w", "wins"]);
+      const shutouts = getNum(row, ["so", "shutouts", "cleanSheets"]);
+      let sa = getNum(row, ["sa", "shotsAgainst"]);
+      let sv = getNum(row, ["sv", "saves"]);
+      let ga = getNum(row, ["ga", "goalsAgainst"]);
+
+      const gaaRaw = getRaw(row, ["gaa", "GAA"]);
+      const gaa = gaaRaw === undefined ? null : num(gaaRaw, null);
+
+      if(!ga && gaa !== null && gp){
+        ga = gaa * gp;
+      }
+
+      if(!sa && sv && ga){
+        sa = sv + ga;
+      }
+
+      if(!sv && sa && ga){
+        sv = Math.max(0, sa - ga);
+      }
+
+      goalie.gp = gp;
+      goalie.w = wins;
+      goalie.so = shutouts;
+      goalie.sa = sa;
+      goalie.sv = sv;
+      goalie.ga = ga;
+    }
+
+    function filterStatsRows(rows, valueTest){
+      return rows.filter((row) => {
+        const team = getPlayerTeam(row);
+        const name = getPlayerName(row);
+        return team && name && !isExcludedTeam(team) && valueTest(row);
+      });
+    }
+
+    function collectTopLevelStatsRows(cup, keys, valueTest){
+      const topLevel = getCupStatsCollection(cup, keys);
+      return filterStatsRows(topLevel, valueTest);
+    }
+
+    function dedupeAggregateRows(rows, betterFn){
+      const best = new Map();
+
+      rows.forEach((row) => {
+        const key = aggregateRowKey(row);
+        const current = best.get(key);
+        if(betterFn(row, current)) best.set(key, row);
+      });
+
+      return [...best.values()];
+    }
+
+    function buildFromAggregateStats(cup, teamMatches, stores){
+      const aggregateSkaters = dedupeAggregateRows(
+        collectTopLevelStatsRows(cup, ["playerStats", "skaterStats", "playersStats", "players", "skaters"], hasAggregateSkaterValues),
+        betterSkaterAggregate
+      );
+
+      const aggregateGoalies = dedupeAggregateRows(
+        collectTopLevelStatsRows(cup, ["goalieStats", "goaltenderStats", "goaliesStats", "goalies"], hasAggregateGoalieValues),
+        betterGoalieAggregate
+      );
+
+      aggregateSkaters.forEach((row) => setAggregateSkaterRow("regular", row, stores));
+      aggregateGoalies.forEach((row) => setAggregateGoalieRow("regular", row, stores));
+
+      return {
+        skaters: aggregateSkaters.length > 0,
+        goalies: aggregateGoalies.length > 0
+      };
+    }
+
+    function buildFromMatchStats(cup, teamMatches, stores, options = {}){
+      const buildSkaters = options.skaters !== false;
+      const buildGoalies = options.goalies !== false;
+
+      rowArray(cup.matches).forEach((match) => {
+        if(shouldSkipMatch(match)) return;
+
+        const stage = getStage(match);
+        const awayTeam = getTeamName(match, "away");
+        const homeTeam = getTeamName(match, "home");
+
+        const playerStats = match.playerStats || match.players || match.skaterStats || match.skaters;
+        const goalieStats = match.goalieStats || match.goalies || match.goaltenderStats;
+
+        if(buildSkaters){
+          if(Array.isArray(playerStats)){
+            playerStats.forEach((row) => addSkaterRow(stage, getPlayerTeam(row), row, stores));
+          } else {
+            sideStats(playerStats, "away").forEach((row) => addSkaterRow(stage, getPlayerTeam(row, awayTeam), row, stores));
+            sideStats(playerStats, "home").forEach((row) => addSkaterRow(stage, getPlayerTeam(row, homeTeam), row, stores));
+          }
+        }
+
+        if(buildGoalies){
+          if(Array.isArray(goalieStats)){
+            goalieStats.forEach((row) => addGoalieRow(stage, getPlayerTeam(row), row, match, stores));
+          } else {
+            sideStats(goalieStats, "away").forEach((row) => addGoalieRow(stage, getPlayerTeam(row, awayTeam), row, match, stores));
+            sideStats(goalieStats, "home").forEach((row) => addGoalieRow(stage, getPlayerTeam(row, homeTeam), row, match, stores));
+          }
+        }
+      });
+    }
+
+    function buildTeamMatchesFromMatches(cup){
+      const teamMatches = {
+        regular:{},
+        playoffs:{}
+      };
+
+      rowArray(cup.matches).forEach((match) => {
+        if(shouldSkipMatch(match)) return;
+        const stage = getStage(match);
+        addTeamMatch(teamMatches, stage, getTeamName(match, "away"));
+        addTeamMatch(teamMatches, stage, getTeamName(match, "home"));
+      });
+
+      return teamMatches;
+    }
+
+    function buildStatsFromDatabaseCups(data){
+      const cup = rowArray(data && data.cups).find((item) => String(item.id) === String(CUP_ID));
+      if(!cup) throw new Error(`Hittar inte cup med id ${CUP_ID} i Supabase.`);
+
+      const teamMatches = buildTeamMatchesFromMatches(cup);
+
+      const stores = {
+        skaters:{regular:new Map(), playoffs:new Map()},
+        defenders:{regular:new Map(), playoffs:new Map()},
+        goalies:{regular:new Map(), playoffs:new Map()}
+      };
+
+      const aggregateStatus = buildFromAggregateStats(cup, teamMatches, stores);
+      if(!aggregateStatus.skaters || !aggregateStatus.goalies){
+        buildFromMatchStats(cup, teamMatches, stores, {
+          skaters: !aggregateStatus.skaters,
+          goalies: !aggregateStatus.goalies
+        });
+      }
+
+      const out = {
+        regular:{
+          skaters:{[DIVISION_KEY]:[]},
+          defenders:{[DIVISION_KEY]:[]},
+          goalies:{[DIVISION_KEY]:[]}
+        },
+        playoffs:{
+          skaters:{[DIVISION_KEY]:[]},
+          defenders:{[DIVISION_KEY]:[]},
+          goalies:{[DIVISION_KEY]:[]}
+        },
+        updated:data.updated || data.lastUpdated || data.updatedAt || "",
+        cupName:cup.name || cup.code || "SEC 21",
+        excludedTeams:[...EXCLUDED_TEAMS]
+      };
+
+      STAGE_ORDER.forEach((stage) => {
+        out[stage].skaters[DIVISION_KEY] = [...stores.skaters[stage].values()].map((row) => finalizeSkater(row, stage, teamMatches));
+        out[stage].defenders[DIVISION_KEY] = [...stores.defenders[stage].values()].map((row) => finalizeSkater(row, stage, teamMatches));
+        out[stage].goalies[DIVISION_KEY] = [...stores.goalies[stage].values()].map((row) => finalizeGoalie(row, stage, teamMatches));
+      });
+
+      return out;
+    }
+
+    function unwrapData(data){
+      if(data && data.regular && data.playoffs) return data;
+
+      if(data && Array.isArray(data.cups)){
+        return buildStatsFromDatabaseCups(data);
+      }
+
+      if(data && Array.isArray(data.rows) && data.rows.length){
+        const raw = data.rows[0] && data.rows[0].json_result;
+        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+        if(parsed && parsed.regular && parsed.playoffs) return parsed;
+        if(parsed && Array.isArray(parsed.cups)) return buildStatsFromDatabaseCups(parsed);
+      }
+
+      throw new Error("JSON-formatet känns inte igen.");
+    }
+
+    async function fetchFirstJson(){
+      const config = window.EHOCKEY_CONFIG || {};
+      const baseUrl = String(config.supabaseUrl || "").replace(/\/$/, "");
+      const apiKey = String(config.supabasePublishableKey || config.supabaseAnonKey || "");
+      if(!baseUrl || !apiKey) throw new Error("Supabase-inställningar saknas.");
+
+      const query = new URLSearchParams({
+        select: "payload",
+        is_active: "eq.true",
+        cup_key: `eq.${CUP_ID}`,
+        limit: "1"
+      });
+      const response = await fetch(`${baseUrl}/rest/v1/sec_site_cup_sources?${query}`, {
+        cache: "no-store",
+        headers: {apikey: apiKey, Authorization: `Bearer ${apiKey}`}
+      });
+      if(!response.ok) throw new Error(`Supabase svarade ${response.status}.`);
+      const rows = await response.json();
+      if(!Array.isArray(rows) || !rows[0]?.payload) throw new Error(`SEC ${CUP_ID} saknas i Supabase.`);
+      loadedJsonUrl = "Supabase";
+      return unwrapData({cups: [rows[0].payload]});
+    }
+
+    function getRows(stage, league, division){
+      const rows = rawData && rawData[stage] && rawData[stage][league] && rawData[stage][league][division];
+      return Array.isArray(rows) ? rows.slice() : [];
+    }
+
+    function getAvailableStages(data){
+      return STAGE_ORDER.filter((stage) => {
+        return ["skaters", "goalies", "defenders"].some((league) => {
+          const rows = data && data[stage] && data[stage][league] && data[stage][league][DIVISION_KEY];
+          return Array.isArray(rows) && rows.length > 0;
+        });
+      });
+    }
+
+    function compareNumbers(a, b, asc){
+      const na = toNum(a);
+      const nb = toNum(b);
+      if(na !== null && nb !== null) return asc ? na - nb : nb - na;
+      return 0;
+    }
+
+    function compareText(a, b){
+      return safeText(a).localeCompare(safeText(b), "sv", {sensitivity:"base"});
+    }
+
+    function sortRows(rows, board){
+      const asc = board.better === "asc";
+
+      return rows.slice().sort((a, b) => {
+        let value = compareNumbers(a[board.statKey], b[board.statKey], asc);
+        if(value !== 0) return value;
+
+        if(board.id === "points"){
+          value = compareNumbers(a.g, b.g, false);
+          if(value !== 0) return value;
+          value = compareNumbers(a.a, b.a, false);
+          if(value !== 0) return value;
+        }
+
+        if(board.id === "svpercent"){
+          value = compareNumbers(a.gaa, b.gaa, true);
+          if(value !== 0) return value;
+          value = compareNumbers(a.sv, b.sv, false);
+          if(value !== 0) return value;
+        }
+
+        if(board.id === "gaa"){
+          value = compareNumbers(a.svp, b.svp, false);
+          if(value !== 0) return value;
+        }
+
+        value = compareNumbers(a.gp, b.gp, true);
+        if(value !== 0) return value;
+
+        return compareText(a.name, b.name);
+      });
+    }
+
+    function getMatchShare(row){
+      const explicit = toNum(row.matchSharePct);
+      if(explicit !== null) return explicit;
+      const gp = num(row.gp);
+      const tm = num(row.teamMatches);
+      return tm ? (gp / tm) * 100 : 0;
+    }
+
+    function rowEligible(row, rule){
+      if(rule === "goalie40" || rule === "skater40") return getMatchShare(row) >= MIN_MATCH_SHARE_PCT;
+      return true;
+    }
+
+    function getBoardRows(board, division){
+      const rows = getRows(activeStage, board.league, division)
+        .filter((row) => rowEligible(row, board.eligibility))
+        .filter((row) => toNum(row[board.statKey]) !== null);
+
+      return sortRows(rows, board).slice(0, 3);
+    }
+
+    function buildTabs(host, items, activeValue, onClick){
+      host.innerHTML = items.map((item) => `
+        <button class="ecl-tab ${item === activeValue ? "active" : ""}" type="button" data-stage="${htmlEscape(item)}">
+          ${htmlEscape(prettyLabel(item))}
+        </button>
+      `).join("");
+
+      host.querySelectorAll("[data-stage]").forEach((button) => {
+        button.addEventListener("click", () => onClick(button.dataset.stage));
+      });
+    }
+
+    function buildPicker(selectElement, selectedId){
+      selectElement.innerHTML = STAT_OPTIONS.map((option) => `
+        <option value="${htmlEscape(option.id)}" ${option.id === selectedId ? "selected" : ""}>${htmlEscape(option.title)}</option>
+      `).join("");
+    }
+
+    function syncPickers(){
+      buildPicker(pickerOne, activeBoards[0]);
+      buildPicker(pickerTwo, activeBoards[1]);
+      buildPicker(pickerThree, activeBoards[2]);
+    }
+
+    function formatValue(key, value){
+      const number = toNum(value);
+      if(number === null) return safeText(value);
+      if(["ppg", "gpg", "apg", "gaa", "dim"].includes(key)) return String(round2(number));
+      if(key === "svp" || key === "matchSharePct") return String(round2(number));
+      return String(Math.round(number));
+    }
+
+    function buildCardMetrics(row, board){
+      return board.metricKeys
+        .map((key) => ({key, label:prettyLabel(key), raw:formatValue(key, row[key]), num:toNum(row[key])}))
+        .filter((metric) => metric.raw !== "");
+    }
+
+    function metricPercent(rows, metric){
+      const value = metric.num;
+      if(value === null) return 0;
+
+      const values = rows.map((row) => toNum(row[metric.key])).filter((number) => number !== null);
+      if(!values.length) return 0;
+
+      if(metric.key === "gaa"){
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        return max === min ? 100 : ((max - value) / (max - min)) * 100;
+      }
+
+      const max = Math.max(...values, 1);
+      return (value / max) * 100;
+    }
+
+    function cardSubText(row, board){
+      const parts = [];
+      const gp = safeText(row.gp || 0);
+      const teamMatches = safeText(row.teamMatches || 0);
+
+      if(board.eligibility === "goalie40" || board.eligibility === "skater40"){
+        parts.push(`Matcher: ${gp}/${teamMatches}`);
+        parts.push(`${Math.round(getMatchShare(row))}%`);
+      } else if(gp){
+        parts.push(`Matcher: ${gp}`);
+      }
+
+      board.extraKeys.forEach((key) => {
+        const raw = row[key];
+        if(raw !== undefined && raw !== null && raw !== "") parts.push(`${prettyLabel(key)}: ${formatValue(key, raw)}`);
+      });
+
+      return parts.join(" · ");
+    }
+
+    function playerCandidates(row){
+      const name = row.name || "";
+      const slug = slugify(name);
+      const playerId = safeText(row.playerId).trim();
+      const explicit = safeText(row.playerImage).trim();
+      const out = [];
+
+      function add(path){
+        if(path && !out.includes(path)) out.push(path);
+      }
+
+      if(explicit){
+        if(/^https?:\/\//i.test(explicit) || explicit.startsWith("/") || explicit.startsWith("./") || explicit.startsWith("../")) add(explicit);
+        else add(`/players/${explicit}`);
+      }
+
+      if(playerId){
+        ["png", "jpg", "jpeg", "webp"].forEach((ext) => add(`/players/${playerId}.${ext}`));
+      }
+
+      if(slug){
+        ["png", "jpg", "jpeg", "webp"].forEach((ext) => add(`/players/${slug}.${ext}`));
+      }
+
+      if(name){
+        ["png", "jpg", "jpeg", "webp"].forEach((ext) => add(`/players/${name}.${ext}`));
+      }
+
+      return out;
+    }
+
+    function logoCandidates(row){
+      const team = row.team || "";
+      const slug = slugify(team);
+      const explicit = safeText(row.teamLogo).trim();
+      const out = [];
+
+      function add(path){
+        if(path && !out.includes(path)) out.push(path);
+      }
+
+      if(explicit){
+        if(/^https?:\/\//i.test(explicit) || explicit.startsWith("/") || explicit.startsWith("./") || explicit.startsWith("../")) add(explicit);
+        else add(`/teamlogos/${explicit}`);
+      }
+
+      if(slug){
+        ["png", "jpg", "jpeg", "webp"].forEach((ext) => add(`/teamlogos/${slug}.${ext}`));
+      }
+
+      if(team){
+        ["png", "jpg", "jpeg", "webp"].forEach((ext) => add(`/teamlogos/${team}.${ext}`));
+      }
+
+      return out;
+    }
+
+    function loadImageWithFallback(img, candidates, fallback){
+      let index = 0;
+      img.onerror = () => {
+        index += 1;
+        if(index < candidates.length){
+          img.src = candidates[index];
+        } else if(fallback){
+          img.onerror = null;
+          img.src = fallback;
+        } else {
+          img.onerror = null;
+          img.style.display = "none";
+        }
+      };
+      img.src = candidates[0] || fallback || "";
+    }
+
+    function renderPlayerCard(row, index, board, allRows){
+      const medal = ["🥇", "🥈", "🥉"][index] || "";
+      const metrics = buildCardMetrics(row, board);
+      const sub = cardSubText(row, board);
+      const safeName = htmlEscape(row.name || "Okänd");
+      const safeTeam = htmlEscape(row.team || "");
+
+      return `
+        <div class="player-card">
+          <div class="team-logo-wrap">
+            <img class="team-logo-card" alt="${safeTeam}">
+            <div class="player-ribbon">${medal}</div>
+          </div>
+
+          <div class="player-top-row">
+            <div class="player-img-wrap">
+              <img class="player-img" alt="${safeName}">
+            </div>
+            <div class="player-info">
+              <div class="player-name">${safeName}</div>
+              <div class="player-team">${safeTeam}</div>
+              ${metrics[0] ? `<div class="player-main">${htmlEscape(metrics[0].label)}: ${htmlEscape(metrics[0].raw)}</div>` : ""}
+              ${metrics[1] || metrics[2] ? `<div class="player-sub">${[metrics[1], metrics[2]].filter(Boolean).map((m) => `${htmlEscape(m.label)}: ${htmlEscape(m.raw)}`).join(" · ")}</div>` : ""}
+              ${sub ? `<div class="player-sub">${htmlEscape(sub)}</div>` : ""}
+            </div>
+          </div>
+
+          <div class="stat-bars">
+            ${metrics.map((metric) => `
+              <div class="bar-row">
+                <div class="bar-label">
+                  <span>${htmlEscape(metric.label)}</span>
+                  <span>${htmlEscape(metric.raw)}</span>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width:${Math.max(0, Math.min(100, metricPercent(allRows, metric)))}%"></div>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function initCardImages(scope, rows){
+      rows.forEach((row, index) => {
+        const card = scope.children[index];
+        if(!card) return;
+
+        const playerImg = card.querySelector(".player-img");
+        if(playerImg) loadImageWithFallback(playerImg, playerCandidates(row), DEFAULT_IMG);
+
+        const logoImg = card.querySelector(".team-logo-card");
+        if(logoImg) loadImageWithFallback(logoImg, logoCandidates(row), DEFAULT_LOGO);
+      });
+    }
+
+    function renderLeaderboard(board, rows){
+      if(!rows.length){
+        return `
+          <div class="leaderboard-box">
+            <div class="leaderboard-head">
+              <div class="leaderboard-title">${htmlEscape(board.title)}</div>
+              <div class="leaderboard-note">${htmlEscape(board.note || "")}</div>
+            </div>
+            <div class="empty-box">Ingen data att visa.</div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="leaderboard-box" data-board-id="${htmlEscape(board.id)}">
+          <div class="leaderboard-head">
+            <div class="leaderboard-title">${htmlEscape(board.title)}</div>
+            <div class="leaderboard-note">${htmlEscape(board.note || "")}</div>
+          </div>
+          <div class="leaderboard-cards">
+            ${rows.map((row, index) => renderPlayerCard(row, index, board, rows)).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDivision(division){
+      const boards = activeBoards.map((id) => statMap.get(id)).filter(Boolean);
+      const boardRows = boards.map((board) => ({board, rows:getBoardRows(board, division)}));
+
+      return `
+        <section class="division-section" data-division="${htmlEscape(division)}">
+          <div class="division-header">
+            <div class="division-title">${htmlEscape(prettyLabel(division))}</div>
+            <div class="division-sub">${htmlEscape(prettyLabel(activeStage))}</div>
+          </div>
+          <div class="leaderboards">
+            ${boardRows.map((item) => renderLeaderboard(item.board, item.rows)).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function updateDescription(){
+      const labels = activeBoards.map((id) => statMap.get(id)).filter(Boolean).map((board) => board.title);
+      sectionDesc.textContent = `Här kan du själv välja vilken stat varje av de tre sektionerna ska visa. Just nu visas ${labels.join(", ")}. Nordic Nosebleed-matcher räknas inte med. 40%-regeln gäller för SV%, GAA, PPG, GPG, APG och DIM.`;
+    }
+
+    function renderAll(){
+      titleSub.textContent = prettyLabel(activeStage).toUpperCase();
+      updateDescription();
+
+      const divisions = DIVISION_ORDER.filter((division) => {
+        return activeBoards.some((boardId) => {
+          const board = statMap.get(boardId);
+          return board && getRows(activeStage, board.league, division).length > 0;
+        });
+      });
+
+      if(!divisions.length){
+        contentHost.innerHTML = `<div class="empty-box">Ingen SEC 21-data att visa. Kontrollera att Supabase innehåller cup med id ${htmlEscape(CUP_ID)} och playerStats/goalieStats.</div>`;
+        return;
+      }
+
+      contentHost.innerHTML = divisions.map(renderDivision).join("");
+
+      divisions.forEach((division) => {
+        const section = contentHost.querySelector(`[data-division="${division}"]`);
+        if(!section) return;
+
+        activeBoards.forEach((boardId) => {
+          const board = statMap.get(boardId);
+          const scope = section.querySelector(`[data-board-id="${boardId}"] .leaderboard-cards`);
+          if(scope && board) initCardImages(scope, getBoardRows(board, division));
+        });
+      });
+
+      const updateText = rawData.updated || rawData.lastUpdated || rawData.updatedAt || "";
+      updated.textContent = updateText ? `Senast uppdaterad: ${updateText} · Källa: ${loadedJsonUrl}` : `Källa: ${loadedJsonUrl}`;
+    }
+
+    function updateBoard(slotIndex, value){
+      activeBoards[slotIndex] = value;
+      syncPickers();
+      renderAll();
+    }
+
+    async function init(){
+      rawData = await fetchFirstJson();
+
+      const stages = getAvailableStages(rawData);
+      activeStage = stages.includes("regular") ? "regular" : (stages[0] || "regular");
+
+      function setStage(stage){
+        activeStage = stage;
+        buildTabs(stageTabs, stages, activeStage, setStage);
+        renderAll();
+      }
+
+      buildTabs(stageTabs, stages.length ? stages : ["regular"], activeStage, setStage);
+      syncPickers();
+
+      pickerOne.addEventListener("change", (event) => updateBoard(0, event.target.value));
+      pickerTwo.addEventListener("change", (event) => updateBoard(1, event.target.value));
+      pickerThree.addEventListener("change", (event) => updateBoard(2, event.target.value));
+
+      renderAll();
+    }
+
+    init().catch((error) => {
+      contentHost.innerHTML = `<div class="empty-box">Fel vid laddning: ${htmlEscape(error.message)}</div>`;
+    });
+  })();
+  </script>
+</body>
+</html>
