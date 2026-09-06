@@ -12518,7 +12518,7 @@ function SEH_initShop() {
 (() => {
   "use strict";
 
-  const APP_BUILD = "2026-09-07-v12962-fa-self-form-fix";
+  const APP_BUILD = "2026-09-07-v12964-fa-self-stable-link-lock";
 
   const sehAuthState = {
     client: null,
@@ -14200,6 +14200,34 @@ function SEH_initShop() {
     const discordDisplayName = (user) => clean(user?.user_metadata?.global_name)||clean(user?.user_metadata?.full_name)||clean(user?.user_metadata?.name)||clean(user?.user_metadata?.preferred_username)||clean(user?.email)||'Discord-användare';
     const discordAvatar = (user) => clean(user?.user_metadata?.avatar_url)||clean(user?.user_metadata?.picture);
     const hideSelfStates = () => ['faSelfLoggedOut','faSelfWrongProvider','faSelfLoggedIn','faLinkSetup','faLinkPending','faLinkRejected','faSelfApproved','faSelfRequestNotice'].forEach((id)=>{const el=selfEl(id);if(el)el.hidden=true;});
+    const selfCacheKey = (userId) => `seh_fa_self_v1_${String(userId||'')}`;
+    function selfReadCache(userId){
+      try{const raw=sessionStorage.getItem(selfCacheKey(userId));return raw?JSON.parse(raw):null;}catch{return null;}
+    }
+    function selfWriteCache(userId,approvedKey){
+      if(!userId||!approvedKey)return;
+      try{sessionStorage.setItem(selfCacheKey(userId),JSON.stringify({approvedKey,approvedPlayer:selfState.approvedPlayer||null,activeFa:selfState.activeFa||null,pendingRequest:selfState.pendingRequest||null,savedAt:Date.now()}));}catch{}
+    }
+    function selfClearCache(userId){try{if(userId)sessionStorage.removeItem(selfCacheKey(userId));}catch{}}
+    function selfRenderApproved(session,approvedKey){
+      hideSelfStates();
+      selfEl('faSelfLoggedIn').hidden=false;
+      selfEl('faSelfApproved').hidden=false;
+      selfEl('faSelfPlayerName').textContent=selfState.approvedPlayer?.display_gamertag||approvedKey||'Kopplad spelare';
+      selfEl('faSelfPlayerMeta').textContent=[selfState.approvedPlayer?.primary_position,selfState.approvedPlayer?.latest_ecl_team,selfState.approvedPlayer?.latest_ecl_division].filter(Boolean).join(' · ');
+      const source=selfState.pendingRequest&&selfState.pendingRequest.request_type!=='remove'?selfState.pendingRequest:selfState.activeFa;
+      selfEl('faSelfPositions').value=clean(source?.positions_text)||clean(selfState.approvedPlayer?.primary_position);
+      selfEl('faSelfLevels').value=clean(source?.levels_text);
+      selfEl('faSelfAvailability').value=clean(source?.availability);
+      selfEl('faSelfMessage').value=clean(source?.message);
+      selfEl('faSelfContact').value=clean(source?.contact)||`Discord: ${discordDisplayName(session?.user)}`;
+      selfEl('faSelfSubmit').textContent=selfState.activeFa?'Skicka ändring':'Skicka FA-ansökan';
+      selfEl('faSelfRemove').hidden=!selfState.activeFa;
+      if(selfState.pendingRequest){
+        selfEl('faSelfRequestNotice').hidden=false;
+        selfEl('faSelfRequestTitle').textContent=selfState.pendingRequest.request_type==='remove'?'Borttagning väntar på admin':selfState.pendingRequest.request_type==='update'?'Ändring väntar på admin':'FA-ansökan väntar på admin';
+      }
+    }
 
     async function selfFetchPlayer(key){
       if(!key)return null;
@@ -14231,13 +14259,20 @@ function SEH_initShop() {
       if(!session?.user){hideSelfStates();selfEl('faSelfLoggedOut').hidden=false;return;}
       if(!isDiscordUser(session.user)){hideSelfStates();selfEl('faSelfWrongProvider').hidden=false;return;}
 
-      // Keep the already rendered approved form visible while fresh data is
-      // fetched. This prevents the whole "Min Free Agent" panel from briefly
-      // disappearing on auth/session refreshes.
+      // Restore the last approved self-service state immediately on refresh.
+      // Fresh Supabase data replaces it a moment later, but the form never
+      // collapses to an empty Discord header while requests are in flight.
       selfEl('faSelfLoggedIn').hidden=false;
       selfEl('faDiscordName').textContent=discordDisplayName(session.user);
       const avatar=discordAvatar(session.user);const avatarEl=selfEl('faDiscordAvatar');
       if(avatarEl){avatarEl.hidden=!avatar;if(avatar)avatarEl.src=avatar;}
+      const cachedSelf=selfReadCache(session.user.id);
+      if(cachedSelf?.approvedKey){
+        selfState.approvedPlayer=cachedSelf.approvedPlayer||selfState.approvedPlayer||null;
+        selfState.activeFa=cachedSelf.activeFa||selfState.activeFa||null;
+        selfState.pendingRequest=cachedSelf.pendingRequest||selfState.pendingRequest||null;
+        selfRenderApproved(session,clean(cachedSelf.approvedKey));
+      }
 
       const [{data:link,error:linkError},{data:requests,error:reqError}]=await Promise.all([
         sb.from('ehockey_discord_player_links').select('*').eq('user_id',session.user.id).maybeSingle(),
@@ -14250,6 +14285,8 @@ function SEH_initShop() {
       const approvedKey=clean(link?.approved_player_key);
 
       if(!approvedKey){
+        selfClearCache(session.user.id);
+        selfState.approvedPlayer=null;selfState.activeFa=null;
         hideSelfStates();selfEl('faSelfLoggedIn').hidden=false;
         if(link?.status==='pending'){
           selfEl('faLinkPending').hidden=false;
@@ -14279,21 +14316,8 @@ function SEH_initShop() {
         selfState.activeFa=activeResult.data?.[0]||null;
       }
 
-      hideSelfStates();selfEl('faSelfLoggedIn').hidden=false;selfEl('faSelfApproved').hidden=false;
-      selfEl('faSelfPlayerName').textContent=selfState.approvedPlayer?.display_gamertag||approvedKey;
-      selfEl('faSelfPlayerMeta').textContent=[selfState.approvedPlayer?.primary_position,selfState.approvedPlayer?.latest_ecl_team,selfState.approvedPlayer?.latest_ecl_division].filter(Boolean).join(' · ');
-      const source=selfState.pendingRequest&&selfState.pendingRequest.request_type!=='remove'?selfState.pendingRequest:selfState.activeFa;
-      selfEl('faSelfPositions').value=clean(source?.positions_text)||clean(selfState.approvedPlayer?.primary_position);
-      selfEl('faSelfLevels').value=clean(source?.levels_text);
-      selfEl('faSelfAvailability').value=clean(source?.availability);
-      selfEl('faSelfMessage').value=clean(source?.message);
-      selfEl('faSelfContact').value=clean(source?.contact)||`Discord: ${discordDisplayName(session.user)}`;
-      selfEl('faSelfSubmit').textContent=selfState.activeFa?'Skicka ändring':'Skicka FA-ansökan';
-      selfEl('faSelfRemove').hidden=!selfState.activeFa;
-      if(selfState.pendingRequest){
-        selfEl('faSelfRequestNotice').hidden=false;
-        selfEl('faSelfRequestTitle').textContent=selfState.pendingRequest.request_type==='remove'?'Borttagning väntar på admin':selfState.pendingRequest.request_type==='update'?'Ändring väntar på admin':'FA-ansökan väntar på admin';
-      }
+      selfRenderApproved(session,approvedKey);
+      selfWriteCache(session.user.id,approvedKey);
     }
     async function selfDiscordLogin(){
       selfStatus('faDiscordLoginStatus','Öppnar Discord…','working');
@@ -14356,7 +14380,7 @@ function SEH_initShop() {
     }
     selfEl('faDiscordLogin')?.addEventListener('click',selfDiscordLogin);
     selfEl('faDiscordSwitch')?.addEventListener('click',selfDiscordLogin);
-    selfEl('faDiscordLogout')?.addEventListener('click',async()=>{await sb.auth.signOut();await window.SEH_refreshAuth?.();await selfRefresh();});
+    selfEl('faDiscordLogout')?.addEventListener('click',async()=>{const userId=selfState.session?.user?.id;selfClearCache(userId);await sb.auth.signOut();await window.SEH_refreshAuth?.();await selfRefresh();});
     selfEl('faLinkTryAgain')?.addEventListener('click',()=>{selfEl('faLinkRejected').hidden=true;selfEl('faLinkSetup').hidden=false;requestAnimationFrame(()=>selfEl('faSelfPlayerSearch')?.focus());});
     selfEl('faSelfPlayerSearch')?.addEventListener('input',()=>{clearTimeout(selfState.searchTimer);selfState.searchTimer=setTimeout(selfSearchPlayers,180);});
     selfEl('faSelfPlayerResults')?.addEventListener('click',(event)=>{const button=event.target.closest('[data-fa-self-player]');if(button)selfRequestLink(button.dataset.faSelfPlayer);});
