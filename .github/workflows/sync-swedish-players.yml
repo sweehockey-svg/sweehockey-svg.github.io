@@ -107,7 +107,19 @@ jobs:
               on p.canonical_key = 'SG:' || s.player_id::text
             left join public.ehockey_player_nationality n
               on n.player_id = p.id
-            where n.country_code is distinct from 'SE';
+            where n.country_code is distinct from 'SE'
+              and not (coalesce(n.is_locked, false) and n.country_code is distinct from 'SE');
+          ")
+
+          blocked_swedish_count=$(psql "$PGURL" -At -v ON_ERROR_STOP=1 -c "
+            select count(*)
+            from private.sportsgamer_player_master_import s
+            join public.ehockey_players p
+              on p.canonical_key = 'SG:' || s.player_id::text
+            join public.ehockey_player_nationality n
+              on n.player_id = p.id
+            where n.is_locked = true
+              and n.country_code is distinct from 'SE';
           ")
 
           gamertag_change_count=$(psql "$PGURL" -At -v ON_ERROR_STOP=1 -c "
@@ -123,6 +135,7 @@ jobs:
 
           echo "new_profile_count=${new_profile_count}" >> "$GITHUB_OUTPUT"
           echo "new_swedish_count=${new_swedish_count}" >> "$GITHUB_OUTPUT"
+          echo "blocked_swedish_count=${blocked_swedish_count}" >> "$GITHUB_OUTPUT"
           echo "gamertag_change_count=${gamertag_change_count}" >> "$GITHUB_OUTPUT"
           echo "total_change_count=${total_change_count}" >> "$GITHUB_OUTPUT"
 
@@ -155,7 +168,7 @@ jobs:
             if [ "$new_swedish_count" -gt 0 ]; then
               echo "### 🇸🇪 Nya svenska spelare (${new_swedish_count})"
               echo ""
-              echo "Spelare som redan fanns i registret men nu är svenska enligt SportsGamer."
+              echo "Spelare som redan fanns i registret men nu är svenska enligt SportsGamer och inte har en manuell nationalitetslåsning."
               echo ""
               echo "| SportsGamer ID | Gamertag | Tidigare land |"
               echo "| ---: | --- | --- |"
@@ -170,9 +183,37 @@ jobs:
                 left join public.ehockey_player_nationality n
                   on n.player_id = p.id
                 where n.country_code is distinct from 'SE'
+                  and not (coalesce(n.is_locked, false) and n.country_code is distinct from 'SE')
                 order by lower(s.display_gamertag), s.player_id;
               " | while IFS='|' read -r player_id gamertag old_country; do
                 echo "| ${player_id} | ${gamertag} | ${old_country} |"
+              done
+              echo ""
+            fi
+
+            if [ "$blocked_swedish_count" -gt 0 ]; then
+              echo "### 🔒 Ignorerade nationalitetsändringar (${blocked_swedish_count})"
+              echo ""
+              echo "SportsGamer anger dessa som svenska, men Svensk eHockey har en manuell låsning som har företräde."
+              echo ""
+              echo "| SportsGamer ID | Gamertag | Låst land | Orsak |"
+              echo "| ---: | --- | --- | --- |"
+              psql "$PGURL" -At -F '|' -v ON_ERROR_STOP=1 -c "
+                select
+                  s.player_id,
+                  replace(replace(coalesce(nullif(btrim(s.display_gamertag), ''), 'SportsGamer #' || s.player_id::text), '|', '\\|'), E'\\n', ' '),
+                  coalesce(n.country_code, '–'),
+                  replace(replace(coalesce(nullif(btrim(n.reason), ''), 'Manuellt låst'), '|', '\\|'), E'\\n', ' ')
+                from private.sportsgamer_player_master_import s
+                join public.ehockey_players p
+                  on p.canonical_key = 'SG:' || s.player_id::text
+                join public.ehockey_player_nationality n
+                  on n.player_id = p.id
+                where n.is_locked = true
+                  and n.country_code is distinct from 'SE'
+                order by lower(s.display_gamertag), s.player_id;
+              " | while IFS='|' read -r player_id gamertag locked_country reason; do
+                echo "| ${player_id} | ${gamertag} | ${locked_country} | ${reason} |"
               done
               echo ""
             fi
@@ -230,6 +271,7 @@ jobs:
           PROFILE_COUNT: ${{ steps.export.outputs.profile_count }}
           NEW_PROFILE_COUNT: ${{ steps.changes.outputs.new_profile_count }}
           NEW_SWEDISH_COUNT: ${{ steps.changes.outputs.new_swedish_count }}
+          BLOCKED_SWEDISH_COUNT: ${{ steps.changes.outputs.blocked_swedish_count }}
           GAMERTAG_CHANGE_COUNT: ${{ steps.changes.outputs.gamertag_change_count }}
           TOTAL_CHANGE_COUNT: ${{ steps.changes.outputs.total_change_count }}
         run: |
@@ -241,6 +283,7 @@ jobs:
             echo ""
             echo "- Nya spelarprofiler: **${NEW_PROFILE_COUNT:-0}**"
             echo "- Befintliga spelare som nu är svenska: **${NEW_SWEDISH_COUNT:-0}**"
+            echo "- Manuellt spärrade nationalitetsändringar: **${BLOCKED_SWEDISH_COUNT:-0}**"
             echo "- Gamertag-byten: **${GAMERTAG_CHANGE_COUNT:-0}**"
             echo ""
             if [ -f /tmp/swedish-player-changes.md ]; then
