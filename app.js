@@ -16168,7 +16168,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     }
 
     if ((parts[0] === "min-profil" || parts[0] === "minprofil") && parts.length === 1) {
-      return { ...route, key: "myProfile", label: "Min profil", active: "freeAgents" };
+      return { ...route, key: "myProfile", label: "Min profil", active: "players" };
     }
 
     if (parts[0] === "spelare" && parts.length === 1) {
