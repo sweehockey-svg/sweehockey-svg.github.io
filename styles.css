@@ -26708,3 +26708,453 @@ body.directory-page[data-card-view="compact"] #spaRouteView[data-route="history"
   }
   #spaRouteView[data-route="admin"] .profile-admin-change i::before { content: "Till: "; }
 }
+
+
+/* V1.29.93 — Spelarhantering som egen adminsida + tydligare Discord-status */
+#spaRouteView[data-route="admin"] .admin-player-module {
+  display: none;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-home-card {
+  display: none !important;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-module {
+  display: block;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-shell {
+  max-width: 1500px;
+  padding-inline: 28px;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-grid {
+  display: block;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-module {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+#spaRouteView[data-route="admin"] .admin-player-hub-card {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  border-color: rgba(214,177,95,.30);
+  background:
+    linear-gradient(120deg, rgba(8,18,27,.96), rgba(7,9,11,.98)),
+    #080a0b;
+}
+
+#spaRouteView[data-route="admin"] .admin-player-hub-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+#spaRouteView[data-route="admin"] .admin-hub-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+#spaRouteView[data-route="admin"] .admin-hub-stats {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+
+#spaRouteView[data-route="admin"] .admin-hub-stats > span {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #28323a;
+  background: #070b0e;
+}
+
+#spaRouteView[data-route="admin"] .admin-hub-stats b {
+  display: block;
+  color: #ffd400;
+  font-size: 24px;
+  line-height: 1;
+}
+
+#spaRouteView[data-route="admin"] .admin-hub-stats small {
+  display: block;
+  margin-top: 6px;
+  color: #80909d;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: .08em;
+}
+
+#spaRouteView[data-route="admin"] .admin-hub-notify {
+  margin: 12px 0 0;
+  min-height: 0;
+  font-size: 10px;
+}
+
+/* Spelarhantering — tydlig arbetsyta */
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-heading {
+  margin: 0 0 14px;
+  padding: 20px 22px;
+  border: 1px solid #2b3640;
+  background:
+    linear-gradient(110deg, rgba(8,23,34,.98), rgba(5,8,10,.98));
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-heading h2 {
+  margin: 4px 0 6px;
+  font-size: clamp(24px,2vw,34px);
+}
+
+#spaRouteView[data-route="admin"] .fa-admin-heading__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#spaRouteView[data-route="admin"] .fa-admin-heading__actions button,
+#spaRouteView[data-route="admin"] .fa-admin-heading__actions a {
+  min-height: 38px;
+}
+
+#spaRouteView[data-route="admin"] .fa-admin-notify-state {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 0 13px;
+  border: 1px solid #28323a;
+  background: #070b0e;
+  color: #8d9aa5;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+#spaRouteView[data-route="admin"] .fa-admin-notify-state:empty::before {
+  content: "Discord: kontrollerar väntande notiser…";
+  color: #71808b;
+}
+
+#spaRouteView[data-route="admin"] .fa-admin-notify-state[data-tone="success"] {
+  border-color: rgba(98,229,155,.28);
+  color: #62e59b;
+}
+
+#spaRouteView[data-route="admin"] .fa-admin-notify-state[data-tone="working"] {
+  border-color: rgba(255,212,0,.28);
+  color: #ffd400;
+}
+
+#spaRouteView[data-route="admin"] .fa-admin-notify-state[data-tone="error"] {
+  border-color: rgba(255,114,114,.34);
+  color: #ff8585;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approval-grid {
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approval-panel {
+  min-height: 190px;
+  padding: 16px;
+  border-color: #2b3640;
+  background: #070b0e;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approved-links-panel {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approved-links-panel .fa-admin-request-list {
+  grid-template-columns: repeat(3,minmax(0,1fr));
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
+  grid-template-columns: minmax(0,1.05fr) minmax(420px,.95fr);
+  gap: 14px;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-form,
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-current {
+  padding: 18px;
+  border-color: #2b3640;
+  background: #070b0e;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-list {
+  max-height: 760px;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-request-list {
+  max-height: 420px;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .profile-admin-change {
+  grid-template-columns: 150px minmax(0,1fr);
+}
+
+@media (max-width:1180px) {
+  body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approval-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approved-links-panel {
+    grid-column: 1 / -1;
+  }
+  body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approved-links-panel .fa-admin-request-list {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width:760px) {
+  body.admin-player-page #spaRouteView[data-route="admin"] .admin-shell {
+    padding-inline: 14px;
+  }
+  #spaRouteView[data-route="admin"] .admin-player-hub-card__top,
+  body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-heading {
+    flex-direction: column;
+  }
+  #spaRouteView[data-route="admin"] .admin-hub-stats,
+  body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approval-grid,
+  body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approved-links-panel .fa-admin-request-list {
+    grid-template-columns: 1fr;
+  }
+  #spaRouteView[data-route="admin"] .fa-admin-heading__actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+}
+
+/* V1.29.94 — Spelaradmin: live ärendekoll + tydligare arbetsyta */
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-livebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #2b3841;
+  background: linear-gradient(110deg, rgba(5,18,24,.98), rgba(4,8,10,.98));
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-livebar__state,
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-livebar__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-livebar__state > div {
+  display: grid;
+  gap: 2px;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-livebar__state strong {
+  color: #eef6f7;
+  font-size: 12px;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] #adminPlayerLiveState,
+body.admin-player-page #spaRouteView[data-route="admin"] #adminPlayerLiveUpdated {
+  color: #7f909b;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] #adminPlayerLiveState[data-tone="new"] {
+  color: #ffd400;
+  font-weight: 900;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] #adminPlayerLiveState[data-tone="error"] {
+  color: #ff8585;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(64,220,208,.36);
+  border-radius: 999px;
+  background: rgba(14,55,59,.24);
+  color: #55f0e8;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: .08em;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-live-pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #55f0e8;
+  box-shadow: 0 0 0 0 rgba(85,240,232,.5);
+  animation: sehAdminLivePulse 1.9s ease-out infinite;
+}
+
+@keyframes sehAdminLivePulse {
+  0% { box-shadow: 0 0 0 0 rgba(85,240,232,.48); }
+  70% { box-shadow: 0 0 0 7px rgba(85,240,232,0); }
+  100% { box-shadow: 0 0 0 0 rgba(85,240,232,0); }
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-livebar__actions button {
+  min-height: 34px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 22px 0 10px;
+  padding: 0 2px 9px;
+  border-bottom: 1px solid #202a30;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-section-head:first-of-type {
+  margin-top: 10px;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-section-head h3 {
+  margin: 2px 0 3px;
+  color: #f5f2ea;
+  font-size: clamp(20px, 1.7vw, 28px);
+  line-height: 1.05;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-section-head p:not(.writer-panel-kicker) {
+  margin: 0;
+  color: #72838e;
+  font-size: 10px;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-pending-total,
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-approved-total {
+  display: grid;
+  place-items: center;
+  min-width: 54px;
+  height: 46px;
+  padding: 0 12px;
+  border: 1px solid rgba(214,177,95,.36);
+  background: #080b0d;
+  color: #ffd400;
+  font-size: 25px;
+  line-height: 1;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-approved-total {
+  color: #55f0e8;
+  border-color: rgba(85,240,232,.26);
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approval-grid {
+  align-items: stretch;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approval-panel[data-admin-queue] {
+  position: relative;
+  overflow: hidden;
+  transition: border-color .18s ease, background .18s ease;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approval-panel[data-admin-queue].has-pending {
+  border-color: rgba(214,177,95,.44);
+  background: linear-gradient(145deg, rgba(18,18,13,.98), rgba(5,9,11,.99));
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approval-panel[data-admin-queue].has-pending::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: #d6b15f;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-current__head strong {
+  min-width: 34px;
+  text-align: right;
+  font-size: 27px;
+  line-height: 1;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approved-links-panel {
+  margin-bottom: 20px;
+  min-height: 0;
+  padding: 16px;
+  border-color: #2b3640;
+  background: #070b0e;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approved-links-panel .fa-admin-request-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  max-height: 360px;
+  overflow: auto;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-request-row.is-new {
+  border-color: #d6b15f !important;
+  box-shadow: inset 3px 0 0 #d6b15f, 0 0 0 1px rgba(214,177,95,.08);
+  animation: sehAdminNewRequest 1.2s ease-out 2;
+}
+
+@keyframes sehAdminNewRequest {
+  0%,100% { background-color: rgba(7,11,14,.98); }
+  45% { background-color: rgba(46,38,13,.64); }
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .profile-admin-request-row {
+  padding: 13px;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-section-head--fa {
+  margin-top: 26px;
+}
+
+body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
+  padding-top: 2px;
+}
+
+@media (max-width: 1180px) {
+  body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approved-links-panel .fa-admin-request-list {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-livebar,
+  body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  body.admin-player-page #spaRouteView[data-route="admin"] .admin-player-livebar__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-approved-links-panel .fa-admin-request-list {
+    grid-template-columns: 1fr;
+  }
+}
