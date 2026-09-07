@@ -84,27 +84,133 @@ jobs:
           : "${PGURL:?Missing SUPABASE_DB_URL secret}"
           psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-swedish-players.psql
 
+      - name: Compare with current player registry
+        id: changes
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          : "${PGURL:?Missing SUPABASE_DB_URL secret}"
+
+          new_profile_count=$(psql "$PGURL" -At -v ON_ERROR_STOP=1 -c "
+            select count(*)
+            from private.sportsgamer_player_master_import s
+            left join public.ehockey_players p
+              on p.canonical_key = 'SG:' || s.player_id::text
+            where p.id is null;
+          ")
+
+          new_swedish_count=$(psql "$PGURL" -At -v ON_ERROR_STOP=1 -c "
+            select count(*)
+            from private.sportsgamer_player_master_import s
+            join public.ehockey_players p
+              on p.canonical_key = 'SG:' || s.player_id::text
+            left join public.ehockey_player_nationality n
+              on n.player_id = p.id
+            where n.country_code is distinct from 'SE';
+          ")
+
+          gamertag_change_count=$(psql "$PGURL" -At -v ON_ERROR_STOP=1 -c "
+            select count(*)
+            from private.sportsgamer_player_master_import s
+            join public.ehockey_player_identities i
+              on i.identity_key = 'SPORTSGAMER:' || s.player_id::text
+            where nullif(btrim(i.gamertag), '') is distinct from
+                  nullif(btrim(s.display_gamertag), '');
+          ")
+
+          total_change_count=$((new_profile_count + new_swedish_count + gamertag_change_count))
+
+          echo "new_profile_count=${new_profile_count}" >> "$GITHUB_OUTPUT"
+          echo "new_swedish_count=${new_swedish_count}" >> "$GITHUB_OUTPUT"
+          echo "gamertag_change_count=${gamertag_change_count}" >> "$GITHUB_OUTPUT"
+          echo "total_change_count=${total_change_count}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Ändringar som hittades"
+            echo ""
+            echo "**Totalt:** ${total_change_count} ändringar"
+            echo ""
+
+            if [ "$new_profile_count" -gt 0 ]; then
+              echo "### 🆕 Nya spelarprofiler (${new_profile_count})"
+              echo ""
+              echo "| SportsGamer ID | Gamertag |"
+              echo "| ---: | --- |"
+              psql "$PGURL" -At -F '|' -v ON_ERROR_STOP=1 -c "
+                select
+                  s.player_id,
+                  replace(replace(coalesce(nullif(btrim(s.display_gamertag), ''), 'SportsGamer #' || s.player_id::text), '|', '\\|'), E'\\n', ' ')
+                from private.sportsgamer_player_master_import s
+                left join public.ehockey_players p
+                  on p.canonical_key = 'SG:' || s.player_id::text
+                where p.id is null
+                order by lower(s.display_gamertag), s.player_id;
+              " | while IFS='|' read -r player_id gamertag; do
+                echo "| ${player_id} | ${gamertag} |"
+              done
+              echo ""
+            fi
+
+            if [ "$new_swedish_count" -gt 0 ]; then
+              echo "### 🇸🇪 Nya svenska spelare (${new_swedish_count})"
+              echo ""
+              echo "Spelare som redan fanns i registret men nu är svenska enligt SportsGamer."
+              echo ""
+              echo "| SportsGamer ID | Gamertag | Tidigare land |"
+              echo "| ---: | --- | --- |"
+              psql "$PGURL" -At -F '|' -v ON_ERROR_STOP=1 -c "
+                select
+                  s.player_id,
+                  replace(replace(coalesce(nullif(btrim(s.display_gamertag), ''), 'SportsGamer #' || s.player_id::text), '|', '\\|'), E'\\n', ' '),
+                  coalesce(n.country_code, '–')
+                from private.sportsgamer_player_master_import s
+                join public.ehockey_players p
+                  on p.canonical_key = 'SG:' || s.player_id::text
+                left join public.ehockey_player_nationality n
+                  on n.player_id = p.id
+                where n.country_code is distinct from 'SE'
+                order by lower(s.display_gamertag), s.player_id;
+              " | while IFS='|' read -r player_id gamertag old_country; do
+                echo "| ${player_id} | ${gamertag} | ${old_country} |"
+              done
+              echo ""
+            fi
+
+            if [ "$gamertag_change_count" -gt 0 ]; then
+              echo "### 🔄 Bytta gamertags (${gamertag_change_count})"
+              echo ""
+              echo "| SportsGamer ID | Från | Till |"
+              echo "| ---: | --- | --- |"
+              psql "$PGURL" -At -F '|' -v ON_ERROR_STOP=1 -c "
+                select
+                  s.player_id,
+                  replace(replace(coalesce(nullif(btrim(i.gamertag), ''), '–'), '|', '\\|'), E'\\n', ' '),
+                  replace(replace(coalesce(nullif(btrim(s.display_gamertag), ''), '–'), '|', '\\|'), E'\\n', ' ')
+                from private.sportsgamer_player_master_import s
+                join public.ehockey_player_identities i
+                  on i.identity_key = 'SPORTSGAMER:' || s.player_id::text
+                where nullif(btrim(i.gamertag), '') is distinct from
+                      nullif(btrim(s.display_gamertag), '')
+                order by lower(s.display_gamertag), s.player_id;
+              " | while IFS='|' read -r player_id old_gt new_gt; do
+                echo "| ${player_id} | ${old_gt} | ${new_gt} |"
+              done
+              echo ""
+            fi
+
+            if [ "$total_change_count" -eq 0 ]; then
+              echo "✅ Inga nya svenska spelare eller gamertag-byten hittades."
+              echo ""
+            fi
+          } > /tmp/swedish-player-changes.md
+
+          cat /tmp/swedish-player-changes.md
+
       - name: Update the central player registry
         env:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
         run: psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/sync-swedish-player-registry.sql
-
-      - name: Check for changed gamertags
-        id: gamertags
-        env:
-          PGURL: ${{ secrets.SUPABASE_DB_URL }}
-          SYNC_STARTED_AT: ${{ env.SYNC_STARTED_AT }}
-        run: |
-          set -euo pipefail
-          : "${PGURL:?Missing SUPABASE_DB_URL secret}"
-          count=$(psql "$PGURL" -At -v ON_ERROR_STOP=1 -c "select count(*) from public.ehockey_player_gamertag_history where changed_at >= '${SYNC_STARTED_AT}'::timestamptz;")
-          echo "gamertag_change_count=${count}" >> "$GITHUB_OUTPUT"
-          if [ "$count" -gt 0 ]; then
-            echo "Changed gamertags detected:"
-            psql "$PGURL" -v ON_ERROR_STOP=1 -P pager=off -c "select sports_gamer_player_id as player_id, old_gamertag, new_gamertag, changed_at from public.ehockey_player_gamertag_history where changed_at >= '${SYNC_STARTED_AT}'::timestamptz order by changed_at;"
-          else
-            echo "No gamertag changes detected."
-          fi
 
       - name: Start Swedish player statistics sync
         env:
@@ -122,12 +228,26 @@ jobs:
         if: always()
         env:
           PROFILE_COUNT: ${{ steps.export.outputs.profile_count }}
-          GAMERTAG_CHANGE_COUNT: ${{ steps.gamertags.outputs.gamertag_change_count }}
+          NEW_PROFILE_COUNT: ${{ steps.changes.outputs.new_profile_count }}
+          NEW_SWEDISH_COUNT: ${{ steps.changes.outputs.new_swedish_count }}
+          GAMERTAG_CHANGE_COUNT: ${{ steps.changes.outputs.gamertag_change_count }}
+          TOTAL_CHANGE_COUNT: ${{ steps.changes.outputs.total_change_count }}
         run: |
           {
-            echo "## Swedish player sync"
-            echo "Profiles exported: ${PROFILE_COUNT:-0}"
-            echo "Gamertag changes detected: ${GAMERTAG_CHANGE_COUNT:-0}"
-            echo "Player statistics sync: started automatically after a successful registry update"
-            echo "Result: ${{ job.status }}"
+            echo "## Svenska spelare"
+            echo ""
+            echo "Profiler kontrollerade: **${PROFILE_COUNT:-0}**"
+            echo "Ändringar hittade: **${TOTAL_CHANGE_COUNT:-0}**"
+            echo ""
+            echo "- Nya spelarprofiler: **${NEW_PROFILE_COUNT:-0}**"
+            echo "- Befintliga spelare som nu är svenska: **${NEW_SWEDISH_COUNT:-0}**"
+            echo "- Gamertag-byten: **${GAMERTAG_CHANGE_COUNT:-0}**"
+            echo ""
+            if [ -f /tmp/swedish-player-changes.md ]; then
+              cat /tmp/swedish-player-changes.md
+            fi
+            echo ""
+            echo "Spelarstatistik: startas automatiskt efter lyckad registeruppdatering."
+            echo ""
+            echo "Resultat: **${{ job.status }}**"
           } >> "$GITHUB_STEP_SUMMARY"
