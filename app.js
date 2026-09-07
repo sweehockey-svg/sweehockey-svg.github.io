@@ -14636,7 +14636,7 @@ function SEH_initShop() {
         <p class="directory-kicker">DISCORD</p>
         <h2 id="myProfileGateTitle">Logga in för att fortsätta</h2>
         <p id="myProfileGateText">Du behöver ett godkänt Discord-konto kopplat till din spelarprofil.</p>
-        <div id="myProfileGateActions" class="my-profile-gate__actions"><button id="myProfileDiscordLogin" type="button">Logga in med Discord</button><a id="myProfileConnectLink" href="#/free-agents">Koppla spelarprofil →</a></div>
+        <div id="myProfileGateActions" class="my-profile-gate__actions"><button id="myProfileDiscordLogin" type="button">Logga in med Discord</button><a id="myProfileConnectLink" href="#/free-agents">Koppla spelarprofil →</a><button id="myProfileRetry" type="button" hidden>Försök igen</button></div>
         <p id="myProfileGateStatus" class="my-profile-status" role="status"></p>
       </section>
 
@@ -14716,6 +14716,8 @@ function SEH_initShop() {
     const clean = (value) => String(value ?? '').trim();
     let dashboard = null;
     let selectedImageUrl = '';
+    let loadPromise = null;
+    let authReloadTimer = 0;
 
     const status = (id, text, tone='') => { const el=$(id); if(!el)return; el.textContent=text||''; if(tone)el.dataset.tone=tone; else el.removeAttribute('data-tone'); };
     const isDiscord = (user) => (user?.app_metadata?.provider === 'discord') || (user?.app_metadata?.providers || []).includes('discord') || (user?.identities || []).some((x)=>x.provider==='discord');
@@ -14726,19 +14728,22 @@ function SEH_initShop() {
 
     function showProfileGate(mode, text='', statusText='', tone='') {
       const gate=$('myProfileGate'), dash=$('myProfileDashboard'), title=$('myProfileGateTitle');
-      const actions=$('myProfileGateActions'), login=$('myProfileDiscordLogin'), connect=$('myProfileConnectLink');
+      const actions=$('myProfileGateActions'), login=$('myProfileDiscordLogin'), connect=$('myProfileConnectLink'), retry=$('myProfileRetry');
       if(gate)gate.hidden=false;
       if(dash)dash.hidden=true;
       if(actions)actions.hidden=false;
       if(login)login.hidden=false;
       if(connect)connect.hidden=false;
+      if(retry)retry.hidden=true;
 
       if(mode==='loading'){
         if(title)title.textContent='Laddar din profil';
         if(actions)actions.hidden=true;
       }else if(mode==='linked-error'){
         if(title)title.textContent='Din profil är kopplad';
-        if(actions)actions.hidden=true;
+        if(login)login.hidden=true;
+        if(connect)connect.hidden=true;
+        if(retry)retry.hidden=false;
       }else if(mode==='pending'){
         if(title)title.textContent='Kopplingen väntar på godkännande';
         if(login)login.hidden=true;
@@ -14815,15 +14820,20 @@ function SEH_initShop() {
       fillForm();renderRequests();
     }
 
-    async function load(){
-      // Visa alltid en riktig laddningsruta. Tidigare doldes både gate och dashboard
-      // medan RPC:n kördes, vilket gav den helt tomma Min profil-sidan i några sekunder.
-      showProfileGate('loading','Kontrollerar ditt Discord-konto och hämtar spelarprofilen…','Kontrollerar konto…','working');
+    async function loadCore(){
+      // Första laddningen visar en tydlig laddningsruta. Om dashboarden redan
+      // är renderad låter vi den ligga kvar under en vanlig session-refresh.
+      if(!dashboard){
+        showProfileGate('loading','Kontrollerar ditt Discord-konto och hämtar spelarprofilen…','Kontrollerar konto…','working');
+      }
 
       let session=sehAuthState.session||null;
       if(!session?.user){
         const sessionResult=await sb.auth.getSession();
-        if(sessionResult.error){showProfileGate('logged-out','Discord-sessionen kunde inte kontrolleras.',`Fel: ${sessionResult.error.message}`,'error');return;}
+        if(sessionResult.error){
+          showProfileGate('logged-out','Discord-sessionen kunde inte kontrolleras.',`Fel: ${sessionResult.error.message}`,'error');
+          return;
+        }
         session=sessionResult.data?.session||null;
         if(session?.user){
           try{await sehRefreshAuthAccess(session);}catch(_){}
@@ -14831,10 +14841,12 @@ function SEH_initShop() {
       }
 
       if(!session?.user){
+        dashboard=null;
         showProfileGate('logged-out','Du behöver logga in med Discord för att öppna Min profil.');
         return;
       }
       if(!sehAuthIsDiscordUser(session.user)){
+        dashboard=null;
         showProfileGate('wrong-account','Du är inloggad med admin/skribentkonto. Min profil använder spelarens Discord-inloggning.');
         return;
       }
@@ -14843,7 +14855,6 @@ function SEH_initShop() {
       if(!account || account.status==='unknown'){
         account=await sehResolvePlayerAccount(sb,session.user);
         if(sehAuthState.session?.user?.id===session.user.id){
-          // Behåll gammal verifierad koppling om en enstaka kontroll skulle misslyckas.
           const previous=sehAuthState.playerAccount;
           if(!(account?.status==='unknown' && previous?.status==='approved' && previous?.playerKey)){
             sehAuthState.playerAccount=account;
@@ -14853,40 +14864,48 @@ function SEH_initShop() {
       }
 
       if(account?.status==='pending'){
+        dashboard=null;
         showProfileGate('pending','Din spelarprofil är vald men måste godkännas av admin innan du kan ändra den.');
         return;
       }
       if(account?.status!=='approved' || !clean(account?.playerKey)){
+        dashboard=null;
         showProfileGate('unlinked','Discord-kontot är inloggat, men ingen godkänd spelarprofil är kopplad ännu.');
         return;
       }
 
       const playerLabel=clean(account.playerName)||'din spelarprofil';
-      showProfileGate('loading',`${playerLabel} är godkänd och kopplad. Hämtar dina profiluppgifter…`,'Laddar profil…','working');
-
-      let result=null;
-      for(let attempt=0;attempt<5;attempt+=1){
-        result=await sb.rpc('seh_get_my_player_dashboard');
-        if(!result.error)break;
-        if(attempt===0){try{await sb.auth.getUser();}catch{}}
-        if(attempt<4)await new Promise((resolve)=>window.setTimeout(resolve,300+(attempt*350)));
+      if(!dashboard){
+        showProfileGate('loading',`${playerLabel} är godkänd och kopplad. Hämtar dina profiluppgifter…`,'Laddar profil…','working');
       }
 
+      const result=await sb.rpc('seh_get_my_player_dashboard');
       if(result?.error){
-        // Viktigt: visa aldrig Discord-login här. Kontot är redan verifierat.
-        showProfileGate(
-          'linked-error',
-          `${playerLabel} är fortfarande godkänd och kopplad. Profildatan svarar långsamt just nu och laddas om automatiskt.`,
-          `Försöker igen… (${result.error.message})`,
-          'working'
-        );
-        window.setTimeout(()=>load().catch(()=>{}),1500);
+        // Ingen automatisk loop. Kopplingen är redan verifierad, så låt
+        // användaren försöka igen manuellt om ett nätverksfel faktiskt uppstår.
+        if(dashboard){
+          renderDashboard();
+          status('myProfileFormStatus',`Profilen kunde inte uppdateras just nu: ${result.error.message}`,'error');
+        }else{
+          showProfileGate(
+            'linked-error',
+            `${playerLabel} är godkänd och kopplad. Profildatan kunde inte hämtas just nu.`,
+            `Fel: ${result.error.message}`,
+            'error'
+          );
+        }
         return;
       }
 
       dashboard=Array.isArray(result?.data)?(result.data[0]||{}):(result?.data||{});
       renderDashboard();
       status('myProfileGateStatus','');
+    }
+
+    function load(){
+      if(loadPromise)return loadPromise;
+      loadPromise=loadCore().finally(()=>{loadPromise=null;});
+      return loadPromise;
     }
 
     async function uploadImage(file){
@@ -14923,12 +14942,16 @@ function SEH_initShop() {
     }
 
     $('myProfileDiscordLogin')?.addEventListener('click',discordLogin);
+    $('myProfileRetry')?.addEventListener('click',()=>load().catch((error)=>status('myProfileGateStatus',`Fel: ${error?.message||error}`,'error')));
     $('myProfilePresentation')?.addEventListener('input',()=>{$('myProfilePresentationCount').textContent=String($('myProfilePresentation').value.length);});
     $('myProfileImage')?.addEventListener('change',()=>{const file=$('myProfileImage').files?.[0],preview=$('myProfileImagePreview');if(!file){preview.hidden=true;return;}preview.src=URL.createObjectURL(file);preview.hidden=false;});
     $('myProfileSubmit')?.addEventListener('click',submitProfile);
     $('myProfileReset')?.addEventListener('click',()=>{fillForm();status('myProfileFormStatus','');});
     $('myProfileReportSubmit')?.addEventListener('click',submitReport);
-    sb.auth.onAuthStateChange(()=>window.setTimeout(()=>load().catch((error)=>status('myProfileGateStatus',`Fel: ${error?.message||error}`,'error')),0));
+    sb.auth.onAuthStateChange(()=>{
+      window.clearTimeout(authReloadTimer);
+      authReloadTimer=window.setTimeout(()=>load().catch((error)=>status('myProfileGateStatus',`Fel: ${error?.message||error}`,'error')),180);
+    });
     load().catch((error)=>status('myProfileGateStatus',`Fel: ${error?.message||error}`,'error'));
   }
 
