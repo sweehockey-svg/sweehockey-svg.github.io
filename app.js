@@ -12554,12 +12554,13 @@ function SEH_initShop() {
 (() => {
   "use strict";
 
-  const APP_BUILD = "2026-09-07-v12972-min-profil-session-fix";
+  const APP_BUILD = "2026-09-07-v12980-discord-account-menu";
 
   const sehAuthState = {
     client: null,
     session: null,
     writer: null,
+    playerAccount: null,
     initialized: false,
     initPromise: null,
     refreshToken: 0
@@ -12599,6 +12600,69 @@ function SEH_initShop() {
     return sehAuthState.client;
   }
 
+  function sehAuthIsDiscordUser(user) {
+    if (!user) return false;
+    const provider = String(user.app_metadata?.provider || "").toLowerCase();
+    if (provider === "discord") return true;
+    if ((user.app_metadata?.providers || []).some((value) => String(value).toLowerCase() === "discord")) return true;
+    return (user.identities || []).some((identity) => String(identity?.provider || "").toLowerCase() === "discord");
+  }
+
+  function sehAuthDiscordName(user) {
+    return String(
+      user?.user_metadata?.global_name ||
+      user?.user_metadata?.full_name ||
+      user?.user_metadata?.name ||
+      user?.user_metadata?.preferred_username ||
+      user?.email ||
+      "Discord-användare"
+    ).trim();
+  }
+
+  function sehAuthDiscordAvatar(user) {
+    return String(user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "").trim();
+  }
+
+  async function sehResolvePlayerAccount(client, user) {
+    if (!client || !user || !sehAuthIsDiscordUser(user)) return null;
+
+    try {
+      const { data: link, error } = await client
+        .from("ehockey_discord_player_links")
+        .select("status,approved_player_key,requested_player_key,discord_username")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!link) return { isDiscord: true, status: "unlinked", playerKey: "", playerName: "", discordUsername: sehAuthDiscordName(user) };
+
+      const playerKey = String(link.approved_player_key || "").trim();
+      let playerName = "";
+
+      if (link.status === "approved" && playerKey) {
+        try {
+          const { data: dashboard, error: dashboardError } = await client.rpc("seh_get_my_player_dashboard");
+          if (!dashboardError) {
+            const payload = Array.isArray(dashboard) ? (dashboard[0] || {}) : (dashboard || {});
+            playerName = String(payload?.player?.display_gamertag || "").trim();
+          }
+        } catch (_) {}
+      }
+
+      return {
+        isDiscord: true,
+        status: String(link.status || "unlinked"),
+        playerKey,
+        requestedPlayerKey: String(link.requested_player_key || "").trim(),
+        playerName,
+        discordUsername: String(link.discord_username || sehAuthDiscordName(user)).trim()
+      };
+    } catch (error) {
+      console.warn("Kunde inte läsa Discord-spelarkopplingen", error);
+      return { isDiscord: true, status: "unknown", playerKey: "", playerName: "", discordUsername: sehAuthDiscordName(user) };
+    }
+  }
+
   async function sehResolveWriterAccess(client) {
     if (!client || !sehAuthState.session?.user) return null;
 
@@ -12627,9 +12691,12 @@ function SEH_initShop() {
     return null;
   }
 
-  function sehUpdateHeaderAuth(header = document.querySelector(".seh-header")) {
-    if (!header) return;
+  function sehUpdateFooterAdminAuth() {
+    const root = document.querySelector(".seh-footer-admin");
+    if (!root) return;
 
+    const button = root.querySelector("#sehFooterAdminButton");
+    const panel = root.querySelector("#sehAuthPanel");
     const sessionUser = sehAuthState.session?.user || null;
     const loggedIn = Boolean(sessionUser && !sessionUser.is_anonymous);
     const writer = sehAuthState.writer;
@@ -12637,35 +12704,112 @@ function SEH_initShop() {
     const isWriter = Boolean(writer?.writer_id);
     const isAdmin = isWriter && role === "admin";
 
+    root.dataset.state = isAdmin ? "admin" : isWriter ? "writer" : loggedIn ? "user" : "logged-out";
+
+    if (button) {
+      button.textContent = isAdmin ? "ADMINCENTER" : isWriter ? "SKRIVCENTER" : "ADMIN / SKRIV";
+      button.dataset.destination = isAdmin ? "#/admin" : isWriter ? "#/skriv" : "";
+    }
+
+    if ((isAdmin || isWriter) && panel) panel.hidden = true;
+  }
+
+  function sehUpdateHeaderAuth(header = document.querySelector(".seh-header")) {
+    if (!header) {
+      sehUpdateFooterAdminAuth();
+      return;
+    }
+
+    const sessionUser = sehAuthState.session?.user || null;
+    const loggedIn = Boolean(sessionUser && !sessionUser.is_anonymous);
+    const writer = sehAuthState.writer;
+    const role = String(writer?.role || "").toLowerCase();
+    const isWriter = Boolean(writer?.writer_id);
+    const isAdmin = isWriter && role === "admin";
+    const isDiscord = loggedIn && sehAuthIsDiscordUser(sessionUser);
+    const account = sehAuthState.playerAccount || null;
+    const approvedPlayerKey = account?.status === "approved" ? String(account.playerKey || "") : "";
+    const hasApprovedPlayer = Boolean(approvedPlayerKey);
+    const playerAccountReady = !isDiscord || account !== null;
+
     const writerLink = header.querySelector('[data-seh-auth-link="writer"]');
     const adminLink = header.querySelector('[data-seh-auth-link="admin"]');
     if (writerLink) writerLink.hidden = !isWriter;
     if (adminLink) adminLink.hidden = !isAdmin;
 
-    const authRoot = header.querySelector(".seh-auth");
-    const authButton = header.querySelector("#sehAuthButton");
-    const authPanel = header.querySelector("#sehAuthPanel");
-    const authStatus = header.querySelector("#sehAuthStatus");
+    const accountRoot = header.querySelector(".seh-account");
+    const accountButton = header.querySelector("#sehAccountButton");
+    const accountAvatar = header.querySelector("#sehAccountAvatar");
+    const accountAvatarFallback = header.querySelector("#sehAccountAvatarFallback");
+    const accountEyebrow = header.querySelector("#sehAccountEyebrow");
+    const accountLabel = header.querySelector("#sehAccountLabel");
+    const accountPanel = header.querySelector("#sehAccountPanel");
+    const accountPanelName = header.querySelector("#sehAccountPanelName");
+    const accountPanelMeta = header.querySelector("#sehAccountPanelMeta");
+    const playerCardLink = header.querySelector("#sehAccountPlayerCard");
+    const profileLink = header.querySelector("#sehAccountProfile");
+    const connectLink = header.querySelector("#sehAccountConnect");
+    const writerMenuLink = header.querySelector("#sehAccountWriter");
+    const adminMenuLink = header.querySelector("#sehAccountAdmin");
 
-    if (authRoot) {
-      authRoot.dataset.state = loggedIn ? "logged-in" : "logged-out";
+    if (accountRoot) {
+      accountRoot.dataset.state = !loggedIn ? "logged-out" : isDiscord ? "discord" : isAdmin ? "admin" : isWriter ? "writer" : "account";
     }
 
-    if (authButton) {
-      authButton.textContent = loggedIn ? "LOGGA UT" : "LOGGA IN";
-      authButton.classList.toggle("is-authenticated", loggedIn);
-      authButton.setAttribute("aria-label", loggedIn ? "Logga ut" : "Logga in");
-      if (loggedIn) authButton.setAttribute("aria-expanded", "false");
+    const avatarUrl = isDiscord ? sehAuthDiscordAvatar(sessionUser) : "";
+    if (accountAvatar) {
+      accountAvatar.src = avatarUrl || "";
+      accountAvatar.hidden = !avatarUrl;
+    }
+    if (accountAvatarFallback) {
+      accountAvatarFallback.hidden = Boolean(avatarUrl);
+      accountAvatarFallback.textContent = !loggedIn ? "D" : isDiscord ? (sehAuthDiscordName(sessionUser).slice(0, 1).toUpperCase() || "D") : isAdmin ? "A" : "S";
     }
 
-    if (loggedIn && authPanel) {
-      authPanel.hidden = true;
+    if (accountEyebrow) {
+      accountEyebrow.textContent = !loggedIn ? "DISCORD" : isDiscord ? "MITT KONTO" : isAdmin ? "ADMIN" : isWriter ? "SKRIBENT" : "KONTO";
     }
 
-    if (loggedIn && authStatus) {
-      authStatus.textContent = "";
-      authStatus.removeAttribute("data-tone");
+    const playerName = String(account?.playerName || "").trim();
+    const discordName = String(account?.discordUsername || sehAuthDiscordName(sessionUser)).trim();
+    if (accountLabel) {
+      accountLabel.textContent = !loggedIn ? "LOGGA IN" : isDiscord ? (playerName || discordName || "MIN PROFIL") : isAdmin ? "ADMIN" : isWriter ? "SKRIBENT" : "KONTO";
     }
+
+    if (accountButton) {
+      accountButton.classList.toggle("is-authenticated", loggedIn);
+      accountButton.setAttribute("aria-label", !loggedIn ? "Logga in med Discord" : "Öppna kontomeny");
+      if (!loggedIn) accountButton.setAttribute("aria-expanded", "false");
+    }
+
+    if (accountPanelName) {
+      accountPanelName.textContent = isDiscord ? (playerName || discordName || "Discord-konto") : isAdmin ? "Admin" : isWriter ? "Skribent" : "Inloggad";
+    }
+    if (accountPanelMeta) {
+      if (isDiscord && !playerAccountReady) accountPanelMeta.textContent = `Discord: ${discordName} · Laddar spelarprofil…`;
+      else if (isDiscord && hasApprovedPlayer) accountPanelMeta.textContent = `Discord: ${discordName} · Spelarprofil kopplad`;
+      else if (isDiscord && account?.status === "pending") accountPanelMeta.textContent = `Discord: ${discordName} · Väntar på godkännande`;
+      else if (isDiscord) accountPanelMeta.textContent = `Discord: ${discordName}`;
+      else if (isAdmin) accountPanelMeta.textContent = "Administratörskonto";
+      else if (isWriter) accountPanelMeta.textContent = "Skribentkonto";
+      else accountPanelMeta.textContent = "";
+    }
+
+    if (playerCardLink) {
+      playerCardLink.hidden = !(isDiscord && hasApprovedPlayer);
+      if (hasApprovedPlayer) playerCardLink.href = `#/spelare/${encodeURIComponent(approvedPlayerKey)}`;
+    }
+    if (profileLink) profileLink.hidden = !(isDiscord && hasApprovedPlayer);
+    if (connectLink) {
+      connectLink.hidden = !(isDiscord && playerAccountReady && !hasApprovedPlayer);
+      connectLink.textContent = account?.status === "pending" ? "Koppling väntar på godkännande" : "Koppla spelarprofil";
+    }
+    if (writerMenuLink) writerMenuLink.hidden = !isWriter;
+    if (adminMenuLink) adminMenuLink.hidden = !isAdmin;
+
+    if (!loggedIn && accountPanel) accountPanel.hidden = true;
+
+    sehUpdateFooterAdminAuth();
   }
 
   async function sehRefreshAuthAccess(session) {
@@ -12680,14 +12824,19 @@ function SEH_initShop() {
 
     sehAuthState.session = nextSession;
     sehAuthState.writer = null;
+    sehAuthState.playerAccount = null;
     sehUpdateHeaderAuth();
 
     if (!nextSession?.user || !client) return;
 
-    const writer = await sehResolveWriterAccess(client);
+    const [writer, playerAccount] = await Promise.all([
+      sehResolveWriterAccess(client),
+      sehResolvePlayerAccount(client, nextSession.user)
+    ]);
     if (token !== sehAuthState.refreshToken) return;
 
     sehAuthState.writer = writer;
+    sehAuthState.playerAccount = playerAccount;
     sehUpdateHeaderAuth();
   }
 
@@ -12710,6 +12859,7 @@ function SEH_initShop() {
         console.warn("Kunde inte läsa Supabase-sessionen", error);
         sehAuthState.session = null;
         sehAuthState.writer = null;
+        sehAuthState.playerAccount = null;
         sehUpdateHeaderAuth();
       }
 
@@ -12732,6 +12882,7 @@ function SEH_initShop() {
     if (!client) {
       sehAuthState.session = null;
       sehAuthState.writer = null;
+      sehAuthState.playerAccount = null;
       sehUpdateHeaderAuth();
       return;
     }
@@ -12745,13 +12896,13 @@ function SEH_initShop() {
     }
   };
 
-  async function sehLoginFromHeader(header) {
+  async function sehLoginFromHeader(root) {
     const client = sehGetAuthClient();
-    const panel = header.querySelector("#sehAuthPanel");
-    const form = header.querySelector("#sehAuthForm");
-    const identifierInput = header.querySelector("#sehAuthIdentifier");
-    const passwordInput = header.querySelector("#sehAuthPassword");
-    const status = header.querySelector("#sehAuthStatus");
+    const panel = root.querySelector("#sehAuthPanel");
+    const form = root.querySelector("#sehAuthForm");
+    const identifierInput = root.querySelector("#sehAuthIdentifier");
+    const passwordInput = root.querySelector("#sehAuthPassword");
+    const status = root.querySelector("#sehAuthStatus");
     const submit = form?.querySelector('button[type="submit"]');
 
     if (!client) {
@@ -12812,12 +12963,13 @@ function SEH_initShop() {
         status.removeAttribute("data-tone");
       }
       if (panel) panel.hidden = true;
-      header.querySelector("#sehAuthButton")?.setAttribute("aria-expanded", "false");
+      root.querySelector("#sehFooterAdminButton")?.setAttribute("aria-expanded", "false");
     } catch (error) {
       sehAuthState.session = null;
       sehAuthState.writer = null;
+      sehAuthState.playerAccount = null;
       try { await client.auth.signOut(); } catch (_) {}
-      sehUpdateHeaderAuth(header);
+      sehUpdateHeaderAuth();
       if (status) {
         status.textContent = `Fel: ${error?.message || error}`;
         status.dataset.tone = "error";
@@ -16141,44 +16293,39 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
             </select>
           </label>
 
-          <div class="seh-auth" data-state="logged-out">
+          <div class="seh-account" data-state="logged-out">
             <button
-              id="sehAuthButton"
-              class="seh-auth-trigger"
+              id="sehAccountButton"
+              class="seh-account-trigger"
               type="button"
               aria-expanded="false"
-              aria-controls="sehAuthPanel"
+              aria-controls="sehAccountPanel"
             >
-              LOGGA IN
+              <span class="seh-account-avatar" aria-hidden="true">
+                <img id="sehAccountAvatar" alt="" hidden>
+                <b id="sehAccountAvatarFallback">D</b>
+              </span>
+              <span class="seh-account-trigger__copy">
+                <small id="sehAccountEyebrow">DISCORD</small>
+                <strong id="sehAccountLabel">LOGGA IN</strong>
+              </span>
+              <span class="seh-account-trigger__chevron" aria-hidden="true">⌄</span>
             </button>
 
-            <div id="sehAuthPanel" class="seh-auth-panel" hidden>
-              <form id="sehAuthForm" novalidate>
-                <div class="seh-auth-panel__heading">
-                  <span>SVENSK eHOCKEY</span>
-                  <strong>Logga in</strong>
-                </div>
-                <label>
-                  <span>Användarnamn eller e-post</span>
-                  <input
-                    id="sehAuthIdentifier"
-                    type="text"
-                    autocomplete="username"
-                    spellcheck="false"
-                    placeholder="eSwahn"
-                  >
-                </label>
-                <label>
-                  <span>Lösenord</span>
-                  <input
-                    id="sehAuthPassword"
-                    type="password"
-                    autocomplete="current-password"
-                  >
-                </label>
-                <p id="sehAuthStatus" class="seh-auth-status" role="status" aria-live="polite"></p>
-                <button class="seh-auth-submit" type="submit">Logga in</button>
-              </form>
+            <div id="sehAccountPanel" class="seh-account-panel" hidden>
+              <div class="seh-account-panel__identity">
+                <span>SVENSK eHOCKEY</span>
+                <strong id="sehAccountPanelName">Mitt konto</strong>
+                <small id="sehAccountPanelMeta"></small>
+              </div>
+              <nav class="seh-account-menu" aria-label="Mitt konto">
+                <a id="sehAccountPlayerCard" href="#/spelare" hidden>Mitt spelarkort <span aria-hidden="true">→</span></a>
+                <a id="sehAccountProfile" href="#/min-profil" hidden>Min profil / ändra <span aria-hidden="true">→</span></a>
+                <a id="sehAccountConnect" href="#/free-agents" hidden>Koppla spelarprofil <span aria-hidden="true">→</span></a>
+                <a id="sehAccountWriter" href="#/skriv" hidden>Skrivcenter <span aria-hidden="true">→</span></a>
+                <a id="sehAccountAdmin" href="#/admin" hidden>Admincenter <span aria-hidden="true">→</span></a>
+              </nav>
+              <button id="sehAccountLogout" class="seh-account-logout" type="button">Logga ut</button>
             </div>
           </div>
         </div>
@@ -16227,46 +16374,58 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       navigation.classList.remove("is-open");
     });
 
-    const authButton = header.querySelector("#sehAuthButton");
-    const authPanel = header.querySelector("#sehAuthPanel");
-    const authForm = header.querySelector("#sehAuthForm");
+    const accountButton = header.querySelector("#sehAccountButton");
+    const accountPanel = header.querySelector("#sehAccountPanel");
+    const accountLogout = header.querySelector("#sehAccountLogout");
 
-    authButton?.addEventListener("click", async () => {
-      const loggedIn = Boolean(sehAuthState.session?.user && !sehAuthState.session.user.is_anonymous);
+    accountButton?.addEventListener("click", async () => {
+      const sessionUser = sehAuthState.session?.user || null;
+      const loggedIn = Boolean(sessionUser && !sessionUser.is_anonymous);
 
-      if (loggedIn) {
+      if (!loggedIn) {
         const client = sehGetAuthClient();
-        authButton.disabled = true;
+        if (!client) return;
+        accountButton.disabled = true;
         try {
-          await client?.auth.signOut();
-          await sehRefreshAuthAccess(null);
+          const redirectTo = `${window.location.origin}${window.location.pathname}`;
+          const { error } = await client.auth.signInWithOAuth({
+            provider: "discord",
+            options: { redirectTo }
+          });
+          if (error) throw error;
         } catch (error) {
-          console.warn("Kunde inte logga ut", error);
-        } finally {
-          authButton.disabled = false;
+          console.warn("Kunde inte starta Discord-inloggningen", error);
+          accountButton.disabled = false;
         }
         return;
       }
 
-      if (!authPanel) return;
-      const open = !authPanel.hidden;
-      authPanel.hidden = open;
-      authButton.setAttribute("aria-expanded", String(!open));
-      if (!open) {
-        requestAnimationFrame(() => header.querySelector("#sehAuthIdentifier")?.focus());
+      if (!accountPanel) return;
+      const open = !accountPanel.hidden;
+      accountPanel.hidden = open;
+      accountButton.setAttribute("aria-expanded", String(!open));
+    });
+
+    accountLogout?.addEventListener("click", async () => {
+      const client = sehGetAuthClient();
+      accountLogout.disabled = true;
+      try {
+        await client?.auth.signOut();
+        await sehRefreshAuthAccess(null);
+        if (accountPanel) accountPanel.hidden = true;
+        accountButton?.setAttribute("aria-expanded", "false");
+      } catch (error) {
+        console.warn("Kunde inte logga ut", error);
+      } finally {
+        accountLogout.disabled = false;
       }
     });
 
-    authForm?.addEventListener("submit", (event) => {
-      event.preventDefault();
-      sehLoginFromHeader(header);
-    });
-
-    authPanel?.addEventListener("keydown", (event) => {
+    accountPanel?.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
-      authPanel.hidden = true;
-      authButton?.setAttribute("aria-expanded", "false");
-      authButton?.focus();
+      accountPanel.hidden = true;
+      accountButton?.setAttribute("aria-expanded", "false");
+      accountButton?.focus();
     });
 
     sehUpdateHeaderAuth(header);
@@ -17935,6 +18094,59 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       supportLink.textContent = "Svensk eHockey drivs ideellt · Stöd sidan →";
       footerInner.append(supportLink);
     }
+
+    let adminRoot = footerInner.querySelector(".seh-footer-admin");
+    if (!adminRoot) {
+      adminRoot = document.createElement("div");
+      adminRoot.className = "seh-footer-admin";
+      adminRoot.dataset.state = "logged-out";
+      adminRoot.innerHTML = `
+        <button id="sehFooterAdminButton" class="seh-footer-admin__trigger" type="button" aria-expanded="false" aria-controls="sehAuthPanel">ADMIN / SKRIV</button>
+        <div id="sehAuthPanel" class="seh-auth-panel seh-auth-panel--footer" hidden>
+          <form id="sehAuthForm" novalidate>
+            <div class="seh-auth-panel__heading"><span>ADMIN / SKRIVCENTER</span><strong>Logga in</strong></div>
+            <label><span>Användarnamn eller e-post</span><input id="sehAuthIdentifier" type="text" autocomplete="username" spellcheck="false" placeholder="eSwahn"></label>
+            <label><span>Lösenord</span><input id="sehAuthPassword" type="password" autocomplete="current-password"></label>
+            <p id="sehAuthStatus" class="seh-auth-status" role="status" aria-live="polite"></p>
+            <button class="seh-auth-submit" type="submit">Logga in</button>
+          </form>
+        </div>`;
+      footerInner.append(adminRoot);
+    }
+
+    if (adminRoot.dataset.bound !== "1") {
+      adminRoot.dataset.bound = "1";
+      const button = adminRoot.querySelector("#sehFooterAdminButton");
+      const panel = adminRoot.querySelector("#sehAuthPanel");
+      const form = adminRoot.querySelector("#sehAuthForm");
+
+      button?.addEventListener("click", () => {
+        const destination = String(button.dataset.destination || "");
+        if (destination) {
+          location.hash = destination;
+          return;
+        }
+        if (!panel) return;
+        const open = !panel.hidden;
+        panel.hidden = open;
+        button.setAttribute("aria-expanded", String(!open));
+        if (!open) requestAnimationFrame(() => adminRoot.querySelector("#sehAuthIdentifier")?.focus());
+      });
+
+      form?.addEventListener("submit", (event) => {
+        event.preventDefault();
+        sehLoginFromHeader(adminRoot);
+      });
+
+      panel?.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        panel.hidden = true;
+        button?.setAttribute("aria-expanded", "false");
+        button?.focus();
+      });
+    }
+
+    sehUpdateFooterAdminAuth();
   }
 
   async function render() {
