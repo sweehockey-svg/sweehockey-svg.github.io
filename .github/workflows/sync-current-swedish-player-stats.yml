@@ -1,0 +1,135 @@
+name: Sync current Swedish player statistics
+run-name: Aktuell spelarstatistik · ${{ inputs.request_id || 'manual' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: Request id from the Svensk eHockey admin page
+        required: false
+        default: manual
+        type: string
+      league_ids:
+        description: SportsGamer league IDs, comma-separated. Leave blank for automatic current leagues.
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+# Never let the lightweight and full historical stats jobs write the same
+# caches at the same time.
+concurrency:
+  group: sync-swedish-player-tournament-statistics
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PGCONNECT_TIMEOUT: 20
+      PGTCP_USER_TIMEOUT: 30000
+      PGKEEPALIVES: 1
+      PGKEEPALIVES_IDLE: 30
+      PGKEEPALIVES_INTERVAL: 10
+      PGKEEPALIVES_COUNT: 3
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install database clients
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client openssh-client
+          python -m pip install --disable-pip-version-check --no-cache-dir pymysql==1.1.2
+
+      - name: Export canonical Swedish IDs from Supabase
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          : "${PGURL:?Missing SUPABASE_DB_URL secret}"
+          timeout --foreground --kill-after=30s 5m psql "$PGURL" -v ON_ERROR_STOP=1 -c "\\copy (select distinct sports_gamer_player_id from public.v_ehockey_player_registry where country_code = 'SE' and sports_gamer_player_id is not null order by sports_gamer_player_id) to '/tmp/swedish_player_ids.csv' with (format csv, header true)"
+
+      - name: Open read-only SSH tunnel to SportsGamer
+        env:
+          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+          SSH_PORT: ${{ secrets.SVENSK_SSH_PORT }}
+          SSH_USER: ${{ secrets.SVENSK_SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SVENSK_SSH_PRIVATE_KEY }}
+          SSH_REMOTE_DB_HOST: ${{ secrets.SVENSK_SSH_REMOTE_DB_HOST }}
+          SSH_REMOTE_DB_PORT: ${{ secrets.SVENSK_SSH_REMOTE_DB_PORT }}
+          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SSH_HOST:-}" ]; then exit 0; fi
+          : "${SSH_USER:?Missing SVENSK_SSH_USER secret}"
+          : "${SSH_PRIVATE_KEY:?Missing SVENSK_SSH_PRIVATE_KEY secret}"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/svensk_db_tunnel_key
+          chmod 600 ~/.ssh/svensk_db_tunnel_key
+          ssh-keyscan -p "${SSH_PORT:-22}" "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh -fN -i ~/.ssh/svensk_db_tunnel_key -p "${SSH_PORT:-22}" -L "${SSH_LOCAL_DB_PORT:-3307}:${SSH_REMOTE_DB_HOST:-127.0.0.1}:${SSH_REMOTE_DB_PORT:-3306}" "$SSH_USER@$SSH_HOST"
+
+      - name: Read current tournament statistics for Swedish players
+        id: export
+        env:
+          DB_HOST: ${{ secrets.SVENSK_DB_HOST }}
+          DB_PORT: ${{ secrets.SVENSK_DB_PORT }}
+          DB_NAME: ${{ secrets.SVENSK_DB_NAME }}
+          DB_USER: ${{ secrets.SVENSK_DB_USER }}
+          DB_PASSWORD: ${{ secrets.SVENSK_DB_PASSWORD }}
+          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+          LEAGUE_IDS: ${{ inputs.league_ids }}
+          CURRENT_LEAGUE_WINDOW: '8'
+        run: python .github/sync/export_current_swedish_player_stats.py
+
+      - name: Upsert current player statistics into Supabase
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: timeout --foreground --kill-after=30s 8m psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-current-swedish-player-stats.psql
+
+      - name: Refresh current player website caches
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+          LEAGUE_IDS_CSV: ${{ steps.export.outputs.league_ids_csv }}
+        run: |
+          set -euo pipefail
+          : "${LEAGUE_IDS_CSV:?Current league selection was empty}"
+          timeout --foreground --kill-after=30s 10m psql "$PGURL" \
+            -v ON_ERROR_STOP=1 \
+            -v league_ids_csv="$LEAGUE_IDS_CSV" \
+            -f .github/sync/refresh-current-swedish-player-web-cache.sql
+
+      - name: Write summary
+        if: always()
+        env:
+          PLAYER_COUNT: ${{ steps.export.outputs.player_count }}
+          ROW_COUNT: ${{ steps.export.outputs.row_count }}
+          MISSING_COUNT: ${{ steps.export.outputs.missing_profile_count }}
+          LEAGUE_COUNT: ${{ steps.export.outputs.league_count }}
+          LEAGUE_IDS_CSV: ${{ steps.export.outputs.league_ids_csv }}
+        run: |
+          {
+            echo "## Aktuell spelarstatistik"
+            echo ""
+            echo "Detta är snabbkörningen. Äldre turneringar läses eller byggs inte om."
+            echo ""
+            echo "- Svenska spelar-ID:n kontrollerade: **${PLAYER_COUNT:-0}**"
+            echo "- Aktuella turneringsrader: **${ROW_COUNT:-0}**"
+            echo "- Turneringar uppdaterade: **${LEAGUE_COUNT:-0}**"
+            echo "- League IDs: **${LEAGUE_IDS_CSV:-–}**"
+            echo "- Profiler som saknas i SportsGamer-källan: **${MISSING_COUNT:-0}**"
+            echo ""
+            if [ -f /tmp/current-swedish-player-leagues.md ]; then
+              cat /tmp/current-swedish-player-leagues.md
+            fi
+            echo ""
+            echo "Historiska turneringar lämnas orörda. Podium-/meritlogiken körs inte för pågående turneringar."
+            echo ""
+            echo "Resultat: **${{ job.status }}**"
+          } >> "$GITHUB_STEP_SUMMARY"
