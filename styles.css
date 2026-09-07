@@ -26638,3 +26638,73 @@ body.directory-page[data-card-view="compact"] #spaRouteView[data-route="history"
   font-size:9px;
   line-height:1.45;
 }
+
+/* V1.29.91 — Admin visar exakt vad spelaren ändrat: Från → Till */
+#spaRouteView[data-route="admin"] .profile-admin-request-row > div:first-child {
+  min-width: 0;
+}
+#spaRouteView[data-route="admin"] .profile-admin-changes {
+  display: grid;
+  gap: 6px;
+  margin-top: 9px;
+}
+#spaRouteView[data-route="admin"] .profile-admin-change {
+  display: grid;
+  grid-template-columns: 128px minmax(0,1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 7px 8px;
+  border: 1px solid #263038;
+  background: #080c0f;
+}
+#spaRouteView[data-route="admin"] .profile-admin-change > span {
+  color: #43e8e1;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+#spaRouteView[data-route="admin"] .profile-admin-change > div {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  gap: 8px;
+  align-items: start;
+  min-width: 0;
+  font-size: 10px;
+  line-height: 1.45;
+}
+#spaRouteView[data-route="admin"] .profile-admin-change b {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+#spaRouteView[data-route="admin"] .profile-admin-change__from {
+  color: #87939c;
+  font-weight: 700;
+}
+#spaRouteView[data-route="admin"] .profile-admin-change__to {
+  color: #f0d58b;
+  font-weight: 900;
+}
+#spaRouteView[data-route="admin"] .profile-admin-change i {
+  color: #ffd400;
+  font-style: normal;
+  font-weight: 950;
+}
+#spaRouteView[data-route="admin"] .profile-admin-nochanges {
+  margin: 8px 0 0;
+  color: #82909c;
+  font-size: 9px;
+  line-height: 1.4;
+}
+@media(max-width:720px){
+  #spaRouteView[data-route="admin"] .profile-admin-change {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  #spaRouteView[data-route="admin"] .profile-admin-change > div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+  #spaRouteView[data-route="admin"] .profile-admin-change i::before { content: "Till: "; }
+}

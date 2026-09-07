@@ -15010,7 +15010,7 @@ function SEH_initShop() {
   const rpcRow = (value) => Array.isArray(value) ? value[0] : value;
   const emailFor = (v) => { const n = String(v || '').trim().toLowerCase(); return /^[a-z0-9._-]{2,40}$/.test(n) ? n + '@writers.svenskehockey.se' : ''; };
 
-  let faDirectory = [], faEntries = [], faLinkRequests = [], faApprovedLinks = [], faApprovalRequests = [], profileApprovalRequests = [], faSelectedKey = '', faSelectedId = 0, faManualName = '';
+  let faDirectory = [], faEntries = [], faLinkRequests = [], faApprovedLinks = [], faApprovalRequests = [], profileApprovalRequests = [], profileApprovalBaselines = new Map(), faSelectedKey = '', faSelectedId = 0, faManualName = '';
   const faClean = (v) => String(v ?? '').trim();
   const faToday = () => new Date().toLocaleDateString('sv-SE');
   const faSplitDisplay = (v) => [...new Set(String(v || '').split(/[,;\/+]+/).map((x) => x.trim()).filter(Boolean))];
@@ -15155,12 +15155,55 @@ function SEH_initShop() {
       for(const row of faApprovalRequests){const typeLabel=row.request_type==='remove'?'TA BORT':row.request_type==='update'?'ÄNDRING':'NY FA';const detail=[row.positions_text,row.levels_text,row.message].filter(Boolean).join(' · ');const item=document.createElement('article');item.className=`fa-admin-request-row${row.request_type==='remove'?' is-remove':''}`;item.innerHTML=`<div><span>${escapeHtml(typeLabel)} · ${escapeHtml(row.discord_username||'Discord')}</span><strong>${escapeHtml(faApprovalPlayerName(row.player_key))}</strong><small>${escapeHtml(detail||'Ingen extra kommentar')}</small></div><div class="fa-admin-request-actions"><button type="button" data-fa-request-approve="${row.id}">${row.request_type==='remove'?'Godkänn borttagning':'Godkänn'}</button><button type="button" class="writer-secondary" data-fa-request-reject="${row.id}">Avslå</button></div>`;requestHost.append(item);}
     }
   }
+  const PROFILE_CHANGE_FIELDS=[
+    ['presentation','Presentation'],
+    ['positions_text','Positioner'],
+    ['availability_status','Tillgänglighet / status'],
+    ['team_status','Lagstatus'],
+    ['contact','Kontakt / Discord'],
+    ['twitch_url','Twitch'],
+    ['x_url','X / Twitter'],
+    ['instagram_url','Instagram'],
+    ['image_url','Spelarbild']
+  ];
   function profileRequestDetail(row){
     const payload=row?.payload||{};
     if(row?.request_type==='report'){
       return [payload.category,payload.reference,payload.details].filter(Boolean).join(' · ');
     }
-    return [payload.positions_text,payload.availability_status,payload.team_status,payload.presentation].filter(Boolean).join(' · ');
+    return '';
+  }
+  function profileRequestBaseline(row){
+    const approved=profileApprovalBaselines.get(String(row?.player_key||''))||{};
+    const player=faDirectoryMap().get(String(row?.player_key||''))||{};
+    const link=faApprovedLinks.find((entry)=>String(entry.user_id)===String(row?.user_id))||{};
+    return {
+      presentation:faClean(approved.presentation),
+      positions_text:faClean(approved.positions_text)||faClean(player.primary_position),
+      availability_status:faClean(approved.availability_status),
+      team_status:faClean(approved.team_status),
+      contact:faClean(approved.contact)||(faClean(link.discord_username)?`Discord: ${faClean(link.discord_username)}`:''),
+      twitch_url:faClean(approved.twitch_url),
+      x_url:faClean(approved.x_url),
+      instagram_url:faClean(approved.instagram_url),
+      image_url:faClean(approved.image_url)
+    };
+  }
+  function profileValueForAdmin(key,value){
+    const text=faClean(value);
+    if(key==='image_url')return text?'Spelarbild inskickad':'Ingen spelarbild';
+    return text||'Tomt';
+  }
+  function profileChangedFields(row){
+    const payload=row?.payload||{};
+    const baseline=profileRequestBaseline(row);
+    return PROFILE_CHANGE_FIELDS.map(([key,label])=>({key,label,from:faClean(baseline[key]),to:faClean(payload[key])}))
+      .filter((change)=>change.from!==change.to);
+  }
+  function profileChangesHtml(row){
+    const changes=profileChangedFields(row);
+    if(!changes.length)return '<p class="profile-admin-nochanges">Inga faktiska skillnader hittades i de inskickade profilfälten.</p>';
+    return `<div class="profile-admin-changes">${changes.map((change)=>`<div class="profile-admin-change"><span>${escapeHtml(change.label)}</span><div><b class="profile-admin-change__from">${escapeHtml(profileValueForAdmin(change.key,change.from))}</b><i aria-hidden="true">→</i><b class="profile-admin-change__to">${escapeHtml(profileValueForAdmin(change.key,change.to))}</b></div></div>`).join('')}</div>`;
   }
   function renderProfileApprovals(){
     const host=$('profileAdminRequests');
@@ -15171,8 +15214,11 @@ function SEH_initShop() {
     for(const row of profileApprovalRequests){
       const label=row.request_type==='report'?'FELRAPPORT':'PROFILÄNDRING';
       const detail=profileRequestDetail(row)||'Ingen extra information';
-      const item=document.createElement('article');item.className=`fa-admin-request-row${row.request_type==='report'?' is-report':''}`;
-      item.innerHTML=`<div><span>${label}</span><strong>${escapeHtml(faApprovalPlayerName(row.player_key))}</strong><small>${escapeHtml(detail)}</small></div><div class="fa-admin-request-actions"><button type="button" data-profile-request-approve="${row.id}">${row.request_type==='report'?'Markera hanterad':'Godkänn'}</button><button type="button" class="writer-secondary" data-profile-request-reject="${row.id}">${row.request_type==='report'?'Avslå / stäng':'Avslå'}</button></div>`;
+      const item=document.createElement('article');item.className=`fa-admin-request-row profile-admin-request-row${row.request_type==='report'?' is-report':''}`;
+      const content=row.request_type==='report'
+        ? `<small>${escapeHtml(detail)}</small>`
+        : profileChangesHtml(row);
+      item.innerHTML=`<div><span>${label}</span><strong>${escapeHtml(faApprovalPlayerName(row.player_key))}</strong>${content}</div><div class="fa-admin-request-actions"><button type="button" data-profile-request-approve="${row.id}">${row.request_type==='report'?'Markera hanterad':'Godkänn'}</button><button type="button" class="writer-secondary" data-profile-request-reject="${row.id}">${row.request_type==='report'?'Avslå / stäng':'Avslå'}</button></div>`;
       host.append(item);
     }
   }
@@ -15181,6 +15227,13 @@ function SEH_initShop() {
     const result=await sb.from('ehockey_player_profile_requests').select('*').eq('status','pending').order('submitted_at',{ascending:true});
     if(result.error)throw result.error;
     profileApprovalRequests=result.data||[];
+    profileApprovalBaselines=new Map();
+    const keys=[...new Set(profileApprovalRequests.map((row)=>faClean(row.player_key)).filter(Boolean))];
+    if(keys.length){
+      const approvedResult=await sb.from('ehockey_player_self_profiles').select('player_key,presentation,positions_text,contact,twitch_url,x_url,instagram_url,availability_status,team_status,image_url').in('player_key',keys);
+      if(approvedResult.error)throw approvedResult.error;
+      profileApprovalBaselines=new Map((approvedResult.data||[]).map((row)=>[String(row.player_key),row]));
+    }
     renderProfileApprovals();
   }
   async function flushDiscordNotifications(){
