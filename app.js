@@ -15238,8 +15238,29 @@ function SEH_initShop() {
   }
   async function flushDiscordNotifications(){
     try{
-      const {data,error}=await sb.functions.invoke('seh-discord-notify',{body:{action:'flush'}});
-      if(error)throw error;
+      let {data:sessionData,error:sessionError}=await sb.auth.getSession();
+      if(sessionError)throw sessionError;
+      let session=sessionData?.session||null;
+      if(!session?.access_token){
+        const refreshed=await sb.auth.refreshSession();
+        if(refreshed.error)throw refreshed.error;
+        session=refreshed.data?.session||null;
+      }
+      if(!session?.access_token)throw new Error('Adminsession saknas. Logga in igen.');
+
+      const endpoint=`${String(supabaseUrl).replace(/\/+$/,'')}/functions/v1/seh-discord-notify`;
+      const response=await fetch(endpoint,{
+        method:'POST',
+        headers:{
+          'Authorization':`Bearer ${session.access_token}`,
+          'apikey':supabaseKey,
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({action:'flush'})
+      });
+      let data={};
+      try{data=await response.json();}catch(_){data={};}
+      if(!response.ok)throw new Error(data?.error||`Discord-notistjänsten svarade ${response.status}.`);
       return data||{};
     }catch(error){
       console.warn('Discord-notis kunde inte skickas:',error);
@@ -15305,7 +15326,12 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     try{
       const[directory,entriesResult]=await Promise.all([faFetchDirectory(),sb.from('ehockey_free_agents').select('*').order('fa_date',{ascending:false}).order('updated_at',{ascending:false})]);
       if(entriesResult.error)throw entriesResult.error;
-      faDirectory=directory;faEntries=entriesResult.data||[];faRenderList();await loadFreeAgentApprovals();faSetStatus('');
+      faDirectory=directory;faEntries=entriesResult.data||[];faRenderList();await loadFreeAgentApprovals();
+      const notify=await flushDiscordNotifications();
+      if(notify?.sent>0)faSetStatus(`Discord-notis skickad${notify.sent>1?'e':''}: ${notify.sent}.`,'success');
+      else if(notify?.failed>0)faSetStatus('Discord-notisen kunde inte levereras. Kontrollera Discord-inställningarna.','error');
+      else if(notify?.error)faSetStatus(`Discord-notiser: ${notify.error}`,'error');
+      else faSetStatus('');
     }catch(error){faSetStatus('Fel: '+(error?.message||error),'error');}
   }
   async function faSave(){
