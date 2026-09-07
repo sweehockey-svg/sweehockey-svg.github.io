@@ -12554,7 +12554,7 @@ function SEH_initShop() {
 (() => {
   "use strict";
 
-  const APP_BUILD = "2026-09-07-v12982-account-menu-stable";
+  const APP_BUILD = "2026-09-07-v12983-account-profile-stable";
 
   const sehAuthState = {
     client: null,
@@ -12653,39 +12653,29 @@ function SEH_initShop() {
   async function sehResolvePlayerAccount(client, user) {
     if (!client || !user || !sehAuthIsDiscordUser(user)) return null;
 
+    const cached = sehReadPlayerAccountCache(user.id);
     try {
-      const { data: link, error } = await client
-        .from("ehockey_discord_player_links")
-        .select("status,approved_player_key,requested_player_key,discord_username")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
+      // En enda auth-säker RPC används av både headern och Min profil.
+      // Den läser den godkända Discord-kopplingen och spelarens visningsnamn atomärt,
+      // så menyn inte behöver vänta på dashboarden eller flera separata frågor.
+      const { data, error } = await client.rpc("seh_get_my_player_account");
       if (error) throw error;
-      if (!link) return { isDiscord: true, status: "unlinked", playerKey: "", playerName: "", discordUsername: sehAuthDiscordName(user) };
-
-      const playerKey = String(link.approved_player_key || "").trim();
-      let playerName = "";
-
-      if (link.status === "approved" && playerKey) {
-        try {
-          const { data: dashboard, error: dashboardError } = await client.rpc("seh_get_my_player_dashboard");
-          if (!dashboardError) {
-            const payload = Array.isArray(dashboard) ? (dashboard[0] || {}) : (dashboard || {});
-            playerName = String(payload?.player?.display_gamertag || "").trim();
-          }
-        } catch (_) {}
-      }
-
-      return {
+      const link = Array.isArray(data) ? (data[0] || {}) : (data || {});
+      const account = {
         isDiscord: true,
         status: String(link.status || "unlinked"),
-        playerKey,
+        playerKey: String(link.player_key || "").trim(),
         requestedPlayerKey: String(link.requested_player_key || "").trim(),
-        playerName,
+        playerName: String(link.player_name || "").trim(),
         discordUsername: String(link.discord_username || sehAuthDiscordName(user)).trim()
       };
+      sehWritePlayerAccountCache(user.id, account);
+      return account;
     } catch (error) {
       console.warn("Kunde inte läsa Discord-spelarkopplingen", error);
+      // Ett tillfälligt nätverks-/RPC-fel får aldrig radera en redan verifierad
+      // koppling i samma session. Det är det som tidigare gav en meny med bara Logga ut.
+      if (cached?.status === "approved" && cached?.playerKey) return cached;
       return { isDiscord: true, status: "unknown", playerKey: "", playerName: "", discordUsername: sehAuthDiscordName(user) };
     }
   }
@@ -12875,9 +12865,15 @@ function SEH_initShop() {
     if (token !== sehAuthState.refreshToken) return;
 
     sehAuthState.writer = writer;
-    sehAuthState.playerAccount = playerAccount;
-    if (sehAuthIsDiscordUser(nextSession.user) && playerAccount) {
-      sehWritePlayerAccountCache(nextUserId, playerAccount);
+    const knownApprovedAccount = (previousAccount?.status === "approved" && previousAccount?.playerKey)
+      ? previousAccount
+      : (cachedAccount?.status === "approved" && cachedAccount?.playerKey ? cachedAccount : null);
+    // Skriv inte över en bekräftad koppling med ett tillfälligt "unknown"-resultat.
+    sehAuthState.playerAccount = (playerAccount?.status === "unknown" && knownApprovedAccount)
+      ? knownApprovedAccount
+      : playerAccount;
+    if (sehAuthIsDiscordUser(nextSession.user) && sehAuthState.playerAccount) {
+      sehWritePlayerAccountCache(nextUserId, sehAuthState.playerAccount);
     }
     sehUpdateHeaderAuth();
   }
@@ -14638,9 +14634,9 @@ function SEH_initShop() {
 
       <section id="myProfileGate" class="my-profile-gate">
         <p class="directory-kicker">DISCORD</p>
-        <h2>Logga in för att fortsätta</h2>
+        <h2 id="myProfileGateTitle">Logga in för att fortsätta</h2>
         <p id="myProfileGateText">Du behöver ett godkänt Discord-konto kopplat till din spelarprofil.</p>
-        <div class="my-profile-gate__actions"><button id="myProfileDiscordLogin" type="button">Logga in med Discord</button><a href="#/free-agents">Koppla spelarprofil →</a></div>
+        <div id="myProfileGateActions" class="my-profile-gate__actions"><button id="myProfileDiscordLogin" type="button">Logga in med Discord</button><a id="myProfileConnectLink" href="#/free-agents">Koppla spelarprofil →</a></div>
         <p id="myProfileGateStatus" class="my-profile-status" role="status"></p>
       </section>
 
@@ -14728,6 +14724,38 @@ function SEH_initShop() {
     const requestLabel = (row) => row.request_type==='report' ? `Felrapport · ${clean(row.payload?.category)||'Annat'}` : 'Profiländring';
     const statusLabel = (value) => value==='approved'?'Godkänd':value==='rejected'?'Avslagen':'Väntar på admin';
 
+    function showProfileGate(mode, text='', statusText='', tone='') {
+      const gate=$('myProfileGate'), dash=$('myProfileDashboard'), title=$('myProfileGateTitle');
+      const actions=$('myProfileGateActions'), login=$('myProfileDiscordLogin'), connect=$('myProfileConnectLink');
+      if(gate)gate.hidden=false;
+      if(dash)dash.hidden=true;
+      if(actions)actions.hidden=false;
+      if(login)login.hidden=false;
+      if(connect)connect.hidden=false;
+
+      if(mode==='loading'){
+        if(title)title.textContent='Laddar din profil';
+        if(actions)actions.hidden=true;
+      }else if(mode==='linked-error'){
+        if(title)title.textContent='Din profil är kopplad';
+        if(actions)actions.hidden=true;
+      }else if(mode==='pending'){
+        if(title)title.textContent='Kopplingen väntar på godkännande';
+        if(login)login.hidden=true;
+      }else if(mode==='unlinked'){
+        if(title)title.textContent='Koppla din spelarprofil';
+        if(login)login.hidden=true;
+      }else if(mode==='wrong-account'){
+        if(title)title.textContent='Logga in med Discord';
+        if(connect)connect.hidden=true;
+      }else{
+        if(title)title.textContent='Logga in för att fortsätta';
+      }
+
+      $('myProfileGateText').textContent=text||'';
+      status('myProfileGateStatus',statusText,tone);
+    }
+
     async function discordLogin(){
       status('myProfileGateStatus','Öppnar Discord…','working');
       try{
@@ -14788,14 +14816,14 @@ function SEH_initShop() {
     }
 
     async function load(){
-      status('myProfileGateStatus','Kontrollerar Discord-kontot…','working');
+      // Visa alltid en riktig laddningsruta. Tidigare doldes både gate och dashboard
+      // medan RPC:n kördes, vilket gav den helt tomma Min profil-sidan i några sekunder.
+      showProfileGate('loading','Kontrollerar ditt Discord-konto och hämtar spelarprofilen…','Kontrollerar konto…','working');
 
-      // Headern och Min profil ska använda exakt samma auth-state. Om kontot redan syns
-      // uppe till höger ska spelaren inte mötas av en andra "Logga in"-ruta här.
       let session=sehAuthState.session||null;
       if(!session?.user){
         const sessionResult=await sb.auth.getSession();
-        if(sessionResult.error){status('myProfileGateStatus',`Fel: ${sessionResult.error.message}`,'error');return;}
+        if(sessionResult.error){showProfileGate('logged-out','Discord-sessionen kunde inte kontrolleras.',`Fel: ${sessionResult.error.message}`,'error');return;}
         session=sessionResult.data?.session||null;
         if(session?.user){
           try{await sehRefreshAuthAccess(session);}catch(_){}
@@ -14803,82 +14831,60 @@ function SEH_initShop() {
       }
 
       if(!session?.user){
-        $('myProfileGate').hidden=false;$('myProfileDashboard').hidden=true;
-        $('myProfileGateText').textContent='Du behöver logga in med Discord för att öppna Min profil.';
-        status('myProfileGateStatus','');return;
+        showProfileGate('logged-out','Du behöver logga in med Discord för att öppna Min profil.');
+        return;
       }
       if(!sehAuthIsDiscordUser(session.user)){
-        $('myProfileGate').hidden=false;$('myProfileDashboard').hidden=true;
-        $('myProfileGateText').textContent='Du är inloggad med ett annat konto. Den här sidan kräver Discord.';
-        status('myProfileGateStatus','');return;
-      }
-
-      // Använd först kopplingen som headern redan har laddat. Det gör övergången från
-      // "Min profil / ändra" omedelbar och undviker att sidan tillfälligt tror att spelaren
-      // är okopplad medan en extra databasfråga startar.
-      let account=sehAuthState.playerAccount||null;
-      if(account===null){
-        try{
-          account=await sehResolvePlayerAccount(sb,session.user);
-          if(sehAuthState.session?.user?.id===session.user.id){
-            sehAuthState.playerAccount=account;
-            sehUpdateHeaderAuth();
-          }
-        }catch(_){}
-      }
-
-      let link=null;
-      if(account){
-        link={
-          status:account.status,
-          approved_player_key:account.playerKey,
-          discord_username:account.discordUsername||sehAuthDiscordName(session.user)
-        };
-      }else{
-        const linkResult=await sb
-          .from('ehockey_discord_player_links')
-          .select('status,approved_player_key,discord_username')
-          .eq('user_id',session.user.id)
-          .maybeSingle();
-        if(linkResult.error){
-          $('myProfileGate').hidden=false;$('myProfileDashboard').hidden=true;
-          $('myProfileGateText').textContent='Din Discord-session är aktiv, men spelar-kopplingen kunde inte kontrolleras just nu.';
-          status('myProfileGateStatus',`Försöker igen… (${linkResult.error.message})`,'working');
-          window.setTimeout(()=>load().catch(()=>{}),800);
-          return;
-        }
-        link=linkResult.data||null;
-      }
-
-      const approvedKey=clean(link?.approved_player_key);
-      if(link?.status!=='approved' || !approvedKey){
-        $('myProfileGate').hidden=false;$('myProfileDashboard').hidden=true;
-        $('myProfileGateText').textContent=link?.status==='pending'
-          ? 'Din spelarkoppling väntar fortfarande på admin-godkännande.'
-          : 'Discord-kontot är inte kopplat till en godkänd spelarprofil ännu. Gå till Free Agents och koppla din profil först.';
-        status('myProfileGateStatus','');return;
-      }
-
-      // Vi vet nu att Discord + spelarprofil är godkända. Visa aldrig login-gaten igen
-      // under dashboard-laddningen; behåll istället en tydlig laddstatus tills profilen är klar.
-      $('myProfileGate').hidden=true;
-      let result=null;
-      for(let attempt=0;attempt<4;attempt+=1){
-        result=await sb.rpc('seh_get_my_player_dashboard');
-        if(!result.error)break;
-        if(attempt===0){try{await sb.auth.getUser();}catch{}}
-        if(attempt<3)await new Promise((resolve)=>window.setTimeout(resolve,250+(attempt*300)));
-      }
-
-      if(result?.error){
-        $('myProfileGate').hidden=false;$('myProfileDashboard').hidden=true;
-        $('myProfileGateText').textContent=`${link?.discord_username||'Discord-kontot'} är godkänt och kopplat till en spelarprofil, men profildatan kunde inte laddas just nu.`;
-        status('myProfileGateStatus',`Laddar om automatiskt… (${result.error.message})`,'working');
-        window.setTimeout(()=>load().catch(()=>{}),1200);
+        showProfileGate('wrong-account','Du är inloggad med admin/skribentkonto. Min profil använder spelarens Discord-inloggning.');
         return;
       }
 
-      dashboard=result?.data||{};
+      let account=sehAuthState.playerAccount||sehReadPlayerAccountCache(session.user.id)||null;
+      if(!account || account.status==='unknown'){
+        account=await sehResolvePlayerAccount(sb,session.user);
+        if(sehAuthState.session?.user?.id===session.user.id){
+          // Behåll gammal verifierad koppling om en enstaka kontroll skulle misslyckas.
+          const previous=sehAuthState.playerAccount;
+          if(!(account?.status==='unknown' && previous?.status==='approved' && previous?.playerKey)){
+            sehAuthState.playerAccount=account;
+          }
+          sehUpdateHeaderAuth();
+        }
+      }
+
+      if(account?.status==='pending'){
+        showProfileGate('pending','Din spelarprofil är vald men måste godkännas av admin innan du kan ändra den.');
+        return;
+      }
+      if(account?.status!=='approved' || !clean(account?.playerKey)){
+        showProfileGate('unlinked','Discord-kontot är inloggat, men ingen godkänd spelarprofil är kopplad ännu.');
+        return;
+      }
+
+      const playerLabel=clean(account.playerName)||'din spelarprofil';
+      showProfileGate('loading',`${playerLabel} är godkänd och kopplad. Hämtar dina profiluppgifter…`,'Laddar profil…','working');
+
+      let result=null;
+      for(let attempt=0;attempt<5;attempt+=1){
+        result=await sb.rpc('seh_get_my_player_dashboard');
+        if(!result.error)break;
+        if(attempt===0){try{await sb.auth.getUser();}catch{}}
+        if(attempt<4)await new Promise((resolve)=>window.setTimeout(resolve,300+(attempt*350)));
+      }
+
+      if(result?.error){
+        // Viktigt: visa aldrig Discord-login här. Kontot är redan verifierat.
+        showProfileGate(
+          'linked-error',
+          `${playerLabel} är fortfarande godkänd och kopplad. Profildatan svarar långsamt just nu och laddas om automatiskt.`,
+          `Försöker igen… (${result.error.message})`,
+          'working'
+        );
+        window.setTimeout(()=>load().catch(()=>{}),1500);
+        return;
+      }
+
+      dashboard=Array.isArray(result?.data)?(result.data[0]||{}):(result?.data||{});
       renderDashboard();
       status('myProfileGateStatus','');
     }
