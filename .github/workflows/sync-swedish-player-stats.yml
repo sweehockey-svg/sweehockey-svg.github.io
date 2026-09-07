@@ -25,7 +25,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       # Do not let a transient Supabase pooler connection stall the entire
       # admin job, including a dead TCP connection after completed SQL.
@@ -110,11 +110,18 @@ jobs:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
         run: timeout --foreground --kill-after=30s 10m psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-swedish-tournament-podiums.psql
 
+      - name: Refresh personal leaderboard merits
+        if: ${{ !inputs.dry_run }}
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          timeout --foreground --kill-after=30s 10m psql "$PGURL" -v ON_ERROR_STOP=1 -c "set statement_timeout='0'; select public.refresh_ehockey_personal_merits_pipeline_v1();"
+
       - name: Refresh player statistics used by the website
         if: ${{ !inputs.dry_run }}
         env:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
-        run: timeout --foreground --kill-after=30s 18m psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/refresh-swedish-player-web-cache.sql
+        run: timeout --foreground --kill-after=30s 30m psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/refresh-swedish-player-web-cache.sql
 
       - name: Write summary
         if: always()
