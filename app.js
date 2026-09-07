@@ -12554,7 +12554,7 @@ function SEH_initShop() {
 (() => {
   "use strict";
 
-  const APP_BUILD = "2026-09-07-v12980-discord-account-menu";
+  const APP_BUILD = "2026-09-07-v12982-account-menu-stable";
 
   const sehAuthState = {
     client: null,
@@ -12621,6 +12621,33 @@ function SEH_initShop() {
 
   function sehAuthDiscordAvatar(user) {
     return String(user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "").trim();
+  }
+
+  function sehPlayerAccountCacheKey(userId) {
+    return `seh_player_account_v1_${String(userId || "")}`;
+  }
+
+  function sehReadPlayerAccountCache(userId) {
+    if (!userId) return null;
+    try {
+      const raw = sessionStorage.getItem(sehPlayerAccountCacheKey(userId));
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || parsed.userId !== userId || !parsed.account) return null;
+      return parsed.account;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function sehWritePlayerAccountCache(userId, account) {
+    if (!userId || !account) return;
+    try {
+      sessionStorage.setItem(
+        sehPlayerAccountCacheKey(userId),
+        JSON.stringify({ userId, account, savedAt: Date.now() })
+      );
+    } catch (_) {}
   }
 
   async function sehResolvePlayerAccount(client, user) {
@@ -12822,9 +12849,21 @@ function SEH_initShop() {
       nextSession = null;
     }
 
+    const previousUserId = String(sehAuthState.session?.user?.id || "");
+    const nextUserId = String(nextSession?.user?.id || "");
+    const sameUser = Boolean(previousUserId && nextUserId && previousUserId === nextUserId);
+    const previousWriter = sameUser ? sehAuthState.writer : null;
+    const previousAccount = sameUser ? sehAuthState.playerAccount : null;
+    const cachedAccount = nextUserId && sehAuthIsDiscordUser(nextSession?.user)
+      ? sehReadPlayerAccountCache(nextUserId)
+      : null;
+
     sehAuthState.session = nextSession;
-    sehAuthState.writer = null;
-    sehAuthState.playerAccount = null;
+    // Behåll redan känd kontodata när samma användare navigerar mellan SPA-vyer.
+    // Tidigare nollställdes playerAccount vid varje refresh, vilket gjorde att
+    // kontomenyn tillfälligt tappade "Mitt spelarkort" och "Min profil".
+    sehAuthState.writer = previousWriter;
+    sehAuthState.playerAccount = previousAccount || cachedAccount || null;
     sehUpdateHeaderAuth();
 
     if (!nextSession?.user || !client) return;
@@ -12837,6 +12876,9 @@ function SEH_initShop() {
 
     sehAuthState.writer = writer;
     sehAuthState.playerAccount = playerAccount;
+    if (sehAuthIsDiscordUser(nextSession.user) && playerAccount) {
+      sehWritePlayerAccountCache(nextUserId, playerAccount);
+    }
     sehUpdateHeaderAuth();
   }
 
@@ -16429,6 +16471,28 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           accountButton.disabled = false;
         }
         return;
+      }
+
+      // Om Discord-sessionen redan finns men spelarprofilen ännu inte hunnit
+      // återställas, läs kopplingen innan menyn öppnas. Då öppnas inte en
+      // halv meny med bara Logga ut.
+      if (sehAuthIsDiscordUser(sessionUser) && sehAuthState.playerAccount === null) {
+        const client = sehGetAuthClient();
+        if (client) {
+          accountButton.disabled = true;
+          try {
+            const account = await sehResolvePlayerAccount(client, sessionUser);
+            if (sehAuthState.session?.user?.id === sessionUser.id) {
+              sehAuthState.playerAccount = account;
+              if (account) sehWritePlayerAccountCache(sessionUser.id, account);
+              sehUpdateHeaderAuth(header);
+            }
+          } catch (error) {
+            console.warn("Kunde inte läsa spelarprofil innan kontomenyn öppnades", error);
+          } finally {
+            accountButton.disabled = false;
+          }
+        }
       }
 
       if (!accountPanel) return;
