@@ -14686,6 +14686,15 @@ function SEH_initShop() {
               <div class="my-profile-status-links"><a href="#/free-agents"><span>FREE AGENT</span><strong id="myProfileFaLinkText">Hantera FA</strong><b>→</b></a><a id="myProfileSportsGamer" href="#" target="_blank" rel="noopener noreferrer" hidden><span>SPORTSGAMER</span><strong>Öppna originalprofil</strong><b>↗</b></a></div>
             </section>
 
+            <section class="my-profile-card my-profile-notify-card">
+              <div class="my-profile-card__head"><div><p class="directory-kicker">DISCORD-NOTISER</p><h2>Få besked direkt</h2></div></div>
+              <label class="my-profile-notify-toggle">
+                <input id="myProfileDiscordNotify" type="checkbox" checked>
+                <span><strong>Skicka DM när admin behandlar mina ärenden</strong><small>Du får ett Discord-meddelande när profil-, Free Agent- eller kopplingsärenden godkänns eller avslås.</small></span>
+              </label>
+              <p id="myProfileNotifyStatus" class="my-profile-status" role="status" aria-live="polite"></p>
+            </section>
+
             <section class="my-profile-card">
               <div class="my-profile-card__head"><div><p class="directory-kicker">MINA ÄRENDEN</p><h2>Godkännanden</h2></div><strong id="myProfilePendingCount">0</strong></div>
               <div id="myProfileRequests" class="my-profile-request-list"></div>
@@ -14806,6 +14815,37 @@ function SEH_initShop() {
       }
     }
 
+    async function loadNotificationPreference(){
+      const toggle=$('myProfileDiscordNotify');
+      if(!toggle)return;
+      try{
+        const {data,error}=await sb.rpc('seh_get_my_discord_notification_preferences');
+        if(error)throw error;
+        const row=Array.isArray(data)?(data[0]||{}):(data||{});
+        toggle.checked=row.dm_enabled!==false;
+        status('myProfileNotifyStatus',toggle.checked?'Discord-notiser är på.':'Discord-notiser är av.');
+      }catch(error){
+        status('myProfileNotifyStatus',`Kunde inte läsa notisinställningen: ${error?.message||error}`,'error');
+      }
+    }
+
+    async function saveNotificationPreference(){
+      const toggle=$('myProfileDiscordNotify');
+      if(!toggle)return;
+      toggle.disabled=true;
+      status('myProfileNotifyStatus','Sparar…','working');
+      try{
+        const {data,error}=await sb.rpc('seh_set_my_discord_notifications',{p_enabled:Boolean(toggle.checked)});
+        if(error)throw error;
+        const row=Array.isArray(data)?(data[0]||{}):(data||{});
+        toggle.checked=row.dm_enabled!==false;
+        status('myProfileNotifyStatus',toggle.checked?'Discord-notiser är på.':'Discord-notiser är av.','success');
+      }catch(error){
+        toggle.checked=!toggle.checked;
+        status('myProfileNotifyStatus',`Fel: ${error?.message||error}`,'error');
+      }finally{toggle.disabled=false;}
+    }
+
     function renderDashboard(){
       const player=dashboard?.player||{}, profile=dashboard?.profile||{}, fa=dashboard?.free_agent||{};
       $('myProfileGate').hidden=true;$('myProfileDashboard').hidden=false;
@@ -14818,6 +14858,7 @@ function SEH_initShop() {
       const profileLink=$('myProfilePublicLink');profileLink.href=player.player_key?`#/spelare/${encodeURIComponent(player.player_key)}`:'#/spelare';
       const sg=$('myProfileSportsGamer');if(clean(player.sports_gamer_player_url)){sg.href=player.sports_gamer_player_url;sg.hidden=false;}else sg.hidden=true;
       fillForm();renderRequests();
+      loadNotificationPreference();
     }
 
     async function loadCore(){
@@ -14946,6 +14987,7 @@ function SEH_initShop() {
     $('myProfilePresentation')?.addEventListener('input',()=>{$('myProfilePresentationCount').textContent=String($('myProfilePresentation').value.length);});
     $('myProfileImage')?.addEventListener('change',()=>{const file=$('myProfileImage').files?.[0],preview=$('myProfileImagePreview');if(!file){preview.hidden=true;return;}preview.src=URL.createObjectURL(file);preview.hidden=false;});
     $('myProfileSubmit')?.addEventListener('click',submitProfile);
+    $('myProfileDiscordNotify')?.addEventListener('change',saveNotificationPreference);
     $('myProfileReset')?.addEventListener('click',()=>{fillForm();status('myProfileFormStatus','');});
     $('myProfileReportSubmit')?.addEventListener('click',submitReport);
     sb.auth.onAuthStateChange(()=>{
@@ -15141,11 +15183,28 @@ function SEH_initShop() {
     profileApprovalRequests=result.data||[];
     renderProfileApprovals();
   }
+  async function flushDiscordNotifications(){
+    try{
+      const {data,error}=await sb.functions.invoke('seh-discord-notify',{body:{action:'flush'}});
+      if(error)throw error;
+      return data||{};
+    }catch(error){
+      console.warn('Discord-notis kunde inte skickas:',error);
+      return {configured:null,sent:0,failed:0,error:error?.message||String(error)};
+    }
+  }
+  function discordNotifySuffix(result){
+    if(result?.sent>0)return ` Discord-notis skickad${result.sent>1?'e':''}.`;
+    if(result?.configured===false)return ' Discord-botten väntar på bot-token.';
+    if(result?.failed>0)return ' Discord-notisen kunde inte levereras.';
+    return '';
+  }
   async function reviewProfileRequest(id,decision){
     faSetStatus(decision==='approved'?'Behandlar profilärendet…':'Avslår profilärendet…','working');
     const{error}=await sb.rpc('seh_review_player_profile_request',{p_request_id:Number(id),p_decision:decision,p_admin_note:null});
     if(error){faSetStatus('Fel: '+error.message,'error');return;}
-    faSetStatus(decision==='approved'?'Profilärendet är godkänt/hanterat.':'Profilärendet är avslaget.','success');
+    const notify=await flushDiscordNotifications();
+    faSetStatus((decision==='approved'?'Profilärendet är godkänt/hanterat.':'Profilärendet är avslaget.')+discordNotifySuffix(notify),'success');
     await loadProfileApprovals();
   }
   async function loadFreeAgentApprovals(){
@@ -15161,7 +15220,10 @@ function SEH_initShop() {
   async function faReviewLink(userId,decision){
     faSetStatus(decision==='approved'?'Godkänner spelarkoppling…':'Avslår spelarkoppling…','working');
     const{error}=await sb.rpc('seh_review_discord_player_link',{p_user_id:userId,p_decision:decision});
-    if(error){faSetStatus('Fel: '+error.message,'error');return;}faSetStatus(decision==='approved'?'Spelarkopplingen är godkänd.':'Spelarkopplingen är avslagen.','success');await loadFreeAgentApprovals();
+    if(error){faSetStatus('Fel: '+error.message,'error');return;}
+    const notify=await flushDiscordNotifications();
+    faSetStatus((decision==='approved'?'Spelarkopplingen är godkänd.':'Spelarkopplingen är avslagen.')+discordNotifySuffix(notify),'success');
+    await loadFreeAgentApprovals();
   }
   async function faUnlinkPlayer(userId){
     const link=faApprovedLinks.find((row)=>String(row.user_id)===String(userId));
@@ -15179,7 +15241,10 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
   async function faReviewRequest(id,decision){
     faSetStatus(decision==='approved'?'Behandlar FA-förfrågan…':'Avslår FA-förfrågan…','working');
     const{error}=await sb.rpc('seh_review_free_agent_request',{p_request_id:Number(id),p_decision:decision,p_admin_note:null});
-    if(error){faSetStatus('Fel: '+error.message,'error');return;}faSetStatus(decision==='approved'?'FA-förfrågan är godkänd.':'FA-förfrågan är avslagen.','success');await loadFreeAgentAdmin();
+    if(error){faSetStatus('Fel: '+error.message,'error');return;}
+    const notify=await flushDiscordNotifications();
+    faSetStatus((decision==='approved'?'FA-förfrågan är godkänd.':'FA-förfrågan är avslagen.')+discordNotifySuffix(notify),'success');
+    await loadFreeAgentAdmin();
   }
   async function loadFreeAgentAdmin(){
     if(!sb||writer?.role!=='admin'||!$('faAdminList'))return;
