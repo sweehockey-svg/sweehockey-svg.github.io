@@ -33,6 +33,9 @@ jobs:
           sudo apt-get install -y postgresql-client openssh-client
           python -m pip install --disable-pip-version-check --no-cache-dir pymysql==1.1.2
 
+      - name: Mark sync start
+        run: echo "SYNC_STARTED_AT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
+
       - name: Open SSH tunnel to SportsGamer
         env:
           SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
@@ -86,6 +89,23 @@ jobs:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
         run: psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/sync-swedish-player-registry.sql
 
+      - name: Check for changed gamertags
+        id: gamertags
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+          SYNC_STARTED_AT: ${{ env.SYNC_STARTED_AT }}
+        run: |
+          set -euo pipefail
+          : "${PGURL:?Missing SUPABASE_DB_URL secret}"
+          count=$(psql "$PGURL" -At -v ON_ERROR_STOP=1 -c "select count(*) from public.ehockey_player_gamertag_history where changed_at >= '${SYNC_STARTED_AT}'::timestamptz;")
+          echo "gamertag_change_count=${count}" >> "$GITHUB_OUTPUT"
+          if [ "$count" -gt 0 ]; then
+            echo "Changed gamertags detected:"
+            psql "$PGURL" -v ON_ERROR_STOP=1 -P pager=off -c "select sports_gamer_player_id as player_id, old_gamertag, new_gamertag, changed_at from public.ehockey_player_gamertag_history where changed_at >= '${SYNC_STARTED_AT}'::timestamptz order by changed_at;"
+          else
+            echo "No gamertag changes detected."
+          fi
+
       - name: Start Swedish player statistics sync
         env:
           GH_TOKEN: ${{ github.token }}
@@ -102,10 +122,12 @@ jobs:
         if: always()
         env:
           PROFILE_COUNT: ${{ steps.export.outputs.profile_count }}
+          GAMERTAG_CHANGE_COUNT: ${{ steps.gamertags.outputs.gamertag_change_count }}
         run: |
           {
             echo "## Swedish player sync"
             echo "Profiles exported: ${PROFILE_COUNT:-0}"
+            echo "Gamertag changes detected: ${GAMERTAG_CHANGE_COUNT:-0}"
             echo "Player statistics sync: started automatically after a successful registry update"
             echo "Result: ${{ job.status }}"
           } >> "$GITHUB_STEP_SUMMARY"
