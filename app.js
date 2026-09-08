@@ -2819,6 +2819,7 @@ function SEH_initPlayer() {
     }
   
     let playerSlugDirectoryPromise = null;
+    const playerRouteFallbackRows = new Map();
 
     async function fetchPlayerSlugDirectory() {
       if (!playerSlugDirectoryPromise) {
@@ -2854,6 +2855,27 @@ function SEH_initPlayer() {
       );
 
       if (!matches.length) {
+        // Spelarregistret är medvetet Sverige-filtrerat. Svenska lag kan ändå
+        // innehålla utländska spelare, så rena profil-URL:er får en all-player
+        // fallback mot samma historik som ECL 27-lagbygget använder.
+        try {
+          const fallbackRows = await fetchRpcJson(
+            "seh_ecl27_player_card_rows",
+            { p_names: [value] }
+          );
+          const fallback = fallbackRows[0] || null;
+          const fallbackKey = String(fallback?.player_key || "").trim();
+          if (fallback && fallbackKey) {
+            playerRouteFallbackRows.set(fallbackKey, fallback);
+            return fallbackKey;
+          }
+        } catch (error) {
+          console.warn(
+            `${APP_BUILD}: kunde inte slå upp spelaren utanför svenska katalogen.`,
+            error
+          );
+        }
+
         return value;
       }
 
@@ -2875,7 +2897,11 @@ function SEH_initPlayer() {
         limit: "25"
       });
 
-      return fetchJson("app_player_directory_cache", params);
+      const rows = await fetchJson("app_player_directory_cache", params);
+      if (rows.length) return rows;
+
+      const fallback = playerRouteFallbackRows.get(String(playerKey || "").trim());
+      return fallback ? [fallback] : [];
     }
   
     async function fetchPlayerHistory(playerKey, directoryRow) {
