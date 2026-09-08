@@ -218,7 +218,8 @@
     ["2026-09-06T21:08","Västerås Vipers","out","Lunkan_7","",""],
     ["2026-09-07T18:20","AFTERLIFE","out","Rubituss_","",""],
     ["2026-09-07T23:12","Unwanted","in","benjamint737","",""],
-    ["2026-09-07T23:12","Unwanted","in","Dzouvi_","",""]
+    ["2026-09-07T23:12","Unwanted","in","Dzouvi_","",""],
+    ["2026-09-08T17:28","Västerås IK","out","I-alb1n-I","",""]
   ].map(([at,team,type,player,otherTeam,note]) => ({at,team,type,player,otherTeam,note}));
 
   const posterMemberships = [
@@ -264,8 +265,8 @@
   ].map(([at,team,players]) => ({at,team,players:players.split("|")}));
 
   window.SEH_ECL27_DATA = Object.freeze({
-    build:"2026-09-08-v4-vasteras-recruitment",
-    updated:"8 sep 2026 · Västerås IK söker HF + backup",
+    build:"2026-09-08-v5-vasteras-albin-out",
+    updated:"8 sep 2026 · Västerås IK ut: I-alb1n-I",
     aliases:Object.freeze({"sloogan08":"Sloogan9498","sloogan9498":"Sloogan9498","erik":"Elonnholm","elonnholm":"Elonnholm","love engelkrans":"toretussan","toretussan":"toretussan","sjögren":"I-Sjogren-I","i-sjogren-i":"I-Sjogren-I","edlund":"Edluund___","edluund___":"Edluund___","wadde":"Wadde95","wadde95":"Wadde95","weeman":"weeman400_","weeman400_":"weeman400_","makk makk":"MakkMakk1980","makkmakk1980":"MakkMakk1980","sille":"sille_","sille_":"sille_","lunkan_7":"FaZe_lunkan07","faze_lunkan07":"FaZe_lunkan07","curhed":"Curheed","curheed":"Curheed","disctrasan":"Disctrasan-","disctrasan-":"Disctrasan-","kxner":"Kxner__TTV","kxner__ttv":"Kxner__TTV","yungs":"Yungs99","yungs99":"Yungs99"}),
     springTeams:Object.freeze(springTeams),
     newTeams:Object.freeze(newTeams),
