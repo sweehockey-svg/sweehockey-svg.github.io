@@ -13,6 +13,7 @@
   }
 
   const ROUTE_PREFIX = "#/sasong/ecl27winter";
+  const TEAM_QUERY_PARAM = "ecl27lag";
   const DIVISION_ORDER = Object.freeze({Elite:0,Pro:1,Lite:2,Core:3,Neo:4,Nytt:5});
   const state = {search:"",division:"all",status:"all"};
   const $ = (selector, root=document) => root.querySelector(selector);
@@ -85,6 +86,25 @@
     const url = teamUrl(label);
     if (!url) return `<span${className ? ` class="${esc(className)}"` : ""}>${esc(label)}</span>`;
     return `<a${className ? ` class="${esc(className)}"` : ""} href="${esc(url)}">${esc(label)}</a>`;
+  }
+
+  function seasonListUrl() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(TEAM_QUERY_PARAM);
+    url.hash = ROUTE_PREFIX;
+    return `${url.pathname}${url.search}${url.hash}`;
+  }
+
+  function teamBuildUrl(name) {
+    const url = new URL(window.location.href);
+    url.searchParams.set(TEAM_QUERY_PARAM, slug(name));
+    url.hash = ROUTE_PREFIX;
+    return `${url.pathname}${url.search}${url.hash}`;
+  }
+
+  function requestedTeamSlug() {
+    try { return new URL(window.location.href).searchParams.get(TEAM_QUERY_PARAM) || ""; }
+    catch (_) { return ""; }
   }
 
   function dateOnly(at) {
@@ -309,13 +329,13 @@
     </div>`;
   }
 
-  function renderRecruitment(team) {
+  function renderRecruitment(team, detail=false) {
     const item = team.recruitment;
     if (!item) return "";
     const parts = [];
     if (item.seeks) parts.push(item.seeks);
     if (item.target) parts.push(`Mål: ${item.target}`);
-    return `<section class="ecl27v2-recruit"><label>LAGET SÖKER</label><div>${esc(parts.join(" · "))}</div><time datetime="${esc(item.date)}">${esc(formatDate(item.date))}</time></section>`;
+    return `<section class="ecl27v2-recruit${detail ? " ecl27v2-detail-recruit" : ""}"><label>LAGET SÖKER</label><div>${esc(parts.join(" · "))}</div><time datetime="${esc(item.date)}">${esc(formatDate(item.date))}</time></section>`;
   }
 
   function renderTeamHeader(team,logo,status) {
@@ -334,8 +354,9 @@
     const status = statusFor(team);
     const logo = logoUrl(team);
     const recent = team.timeline.slice(0,4);
+    const buildUrl = teamBuildUrl(team.name);
 
-    return `<article class="ecl27v2-card" data-status="${status.key}" data-team="${esc(team.name)}">
+    return `<article class="ecl27v2-card is-clickable" data-status="${status.key}" data-team="${esc(team.name)}" data-build-url="${esc(buildUrl)}" role="link" tabindex="0" aria-label="Öppna ECL 27-lagbygget för ${esc(team.name)}">
       <div class="ecl27v2-watermark">${logo ? `<img src="${logo}" alt="">` : ""}</div>
       ${renderTeamHeader(team,logo,status)}
       <div class="ecl27v2-metrics">
@@ -347,6 +368,7 @@
       ${renderRecruitment(team)}
       <section class="ecl27v2-moves"><label>SENASTE BEKRÄFTADE RÖRELSER</label>${recent.length ? recent.map(renderMove).join("") : `<p>Inga in/ut-poster i underlaget.</p>`}</section>
       ${team.timeline.length > 4 ? `<details><summary>Visa alla ${team.timeline.length} rörelser</summary><div>${team.timeline.map(renderMove).join("")}</div></details>` : ""}
+      <div class="ecl27v2-card-open" aria-hidden="true">Öppna lagbygget →</div>
     </article>`;
   }
 
@@ -398,6 +420,87 @@
     if (result) result.textContent = `${teams.length} av ${model.teams.length} lag/projekt`;
   }
 
+  function springBasePlayers(team) {
+    if (team.kind !== "spring") return [];
+    return (team.players || []).map(canonical).filter(Boolean).sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
+  }
+
+  function renderTeamDetail(team) {
+    const status = statusFor(team);
+    const logo = logoUrl(team);
+    const regularUrl = teamUrl(team.name);
+    const basePlayers = springBasePlayers(team);
+    const source = team.kind === "new"
+      ? "NYTT PROJEKT INFÖR ECL 27"
+      : `ECL 26 SPRING · ${team.division}${team.springName && team.springName !== team.name ? ` · ${team.springName}` : ""}`;
+
+    return `<div class="ecl27v2-detail">
+      <a class="ecl27v2-back" href="${esc(seasonListUrl())}">← Alla svenska lagbyggen</a>
+      <header class="ecl27v2-detail-hero">
+        <div class="ecl27v2-detail-logo">${logo ? `<img src="${logo}" alt="${esc(team.name)}">` : `<span>${esc(initials(team.name))}</span>`}</div>
+        <div class="ecl27v2-detail-title">
+          <p class="directory-kicker">${esc(source)}</p>
+          <h2>${esc(team.name)}</h2>
+          <div class="ecl27v2-badges"><span>${team.kind === "new" ? "NYTT" : esc(team.division)}</span><b class="is-${status.tone}">${esc(status.label)}</b></div>
+          <p>Det här är Svensk eHockeys aktuella arbetsbild av lagbygget inför ECL 27, baserad på Spring-truppen och de daterade IN/UT-, lagpost- och ECL-Free Agent-händelser som finns i underlaget.</p>
+          ${regularUrl ? `<a class="ecl27v2-team-profile" href="${esc(regularUrl)}">Öppna ordinarie lagprofil →</a>` : ""}
+        </div>
+      </header>
+
+      <div class="ecl27v2-detail-metrics">
+        <div><span>KÄNDA NU</span><strong>${team.playersNow.length}</strong></div>
+        <div><span>IN</span><strong class="in">${team.inCount}</strong></div>
+        <div><span>UT</span><strong class="out">${team.outCount}</strong></div>
+        <div><span>STATUS</span><strong class="status-text">${esc(status.label)}</strong></div>
+      </div>
+
+      <div class="ecl27v2-detail-grid">
+        <section class="ecl27v2-detail-panel ecl27v2-detail-roster">
+          <div class="ecl27v2-detail-panel-head"><p class="directory-kicker">JUST NU</p><h3>Känd trupp</h3></div>
+          <div class="ecl27v2-detail-player-list">${team.playersNow.length ? team.playersNow.map((name) => playerLink(name,"ecl27v2-detail-player")).join("") : `<em>Ingen säker spelare kvar i sammanställningen.</em>`}</div>
+        </section>
+        <section class="ecl27v2-detail-panel">
+          <div class="ecl27v2-detail-panel-head"><p class="directory-kicker">REKRYTERING</p><h3>Lagets senaste sökpost</h3></div>
+          ${team.recruitment ? renderRecruitment(team,true) : `<p class="ecl27v2-detail-empty">Ingen aktuell sökpost finns i underlaget.</p>`}
+        </section>
+      </div>
+
+      <section class="ecl27v2-detail-panel ecl27v2-detail-timeline">
+        <div class="ecl27v2-detail-panel-head"><p class="directory-kicker">KRONOLOGI</p><h3>Bekräftade rörelser</h3><span>${team.timeline.length} händelser</span></div>
+        <div class="ecl27v2-detail-moves">${team.timeline.length ? team.timeline.map(renderMove).join("") : `<p class="ecl27v2-detail-empty">Inga bekräftade IN/UT-rörelser i underlaget.</p>`}</div>
+      </section>
+
+      <section class="ecl27v2-detail-panel">
+        <div class="ecl27v2-detail-panel-head"><p class="directory-kicker">UTGÅNGSPUNKT</p><h3>${team.kind === "spring" ? "ECL ’26 Spring-trupp" : "Nytt projekt"}</h3></div>
+        ${team.kind === "spring"
+          ? `<div class="ecl27v2-detail-base-list">${basePlayers.map((name) => playerLink(name,"ecl27v2-detail-base-player")).join("")}</div>`
+          : `<p class="ecl27v2-detail-empty">Laget hade ingen Spring-trupp som bas och byggs därför enbart från senare bekräftade händelser.</p>`}
+      </section>
+
+      <aside class="ecl27v2-method"><strong>Arbetsbild – inte officiell ECL 27-roster</strong>En UT-händelse kan inte lämna samma spelare kvar i KÄND TRUPP JUST NU. En senare IN flyttar spelaren till det nya laget. ECL-Free Agents behandlas som UT från senast kända ECL-lag.</aside>
+    </div>`;
+  }
+
+  function bindCardNavigation(host) {
+    if (!host || host.dataset.cardNavigationBound === "true") return;
+    host.dataset.cardNavigationBound = "true";
+
+    host.addEventListener("click", (event) => {
+      const card = event.target.closest(".ecl27v2-card[data-build-url]");
+      if (!card || !host.contains(card)) return;
+      if (event.target.closest("a,button,input,select,option,summary,details,label")) return;
+      window.location.href = card.dataset.buildUrl;
+    });
+
+    host.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const card = event.target.closest(".ecl27v2-card[data-build-url]");
+      if (!card || event.target !== card) return;
+      event.preventDefault();
+      window.location.href = card.dataset.buildUrl;
+    });
+  }
+
   function injectStyles() {
     if ($("#ecl27TeamBuildsV2Style")) return;
     const style = document.createElement("style");
@@ -410,17 +513,40 @@
       .ecl27v2-panel{margin-top:16px;border:1px solid #172839;border-radius:18px;background:#02080e;overflow:hidden}.ecl27v2-head{display:flex;justify-content:space-between;align-items:end;gap:16px;padding:20px 22px;border-bottom:1px solid #172839}.ecl27v2-head h3{margin:3px 0 0;font-size:27px}.ecl27v2-head>span{color:#71879a;font-size:11px}
       .ecl27v2-feed{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:#172839}.ecl27v2-feed-row{display:grid;grid-template-columns:48px 32px minmax(90px,.8fr) minmax(100px,1fr);gap:8px;align-items:center;min-height:52px;padding:9px 14px;background:#030a11}.ecl27v2-feed-row>time{color:#71879a;font-size:10px}.ecl27v2-feed-row>b{display:grid;place-items:center;height:23px;border-radius:5px;font-size:9px}.ecl27v2-feed-row>b.in{color:#46e8d2;background:rgba(38,209,177,.1)}.ecl27v2-feed-row>b.out{color:#ff7777;background:rgba(255,90,90,.1)}.ecl27v2-feed-row>small{grid-column:4;color:#738698}
       .ecl27v2-toolbar{display:grid;grid-template-columns:1.4fr .7fr .8fr;gap:10px;padding:14px;border-bottom:1px solid #172839}.ecl27v2-toolbar label{display:grid;gap:5px;color:#52e4dc;font-size:8px;font-weight:950;letter-spacing:.12em}.ecl27v2-toolbar input,.ecl27v2-toolbar select{height:43px;border:1px solid #203549;border-radius:9px;background:#020811;color:#fff;padding:0 12px}
-      .ecl27v2-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:14px}.ecl27v2-card{position:relative;overflow:hidden;padding:17px;border:1px solid rgba(214,177,95,.27);border-radius:16px;background:linear-gradient(155deg,#04111d,#02080e)}.ecl27v2-watermark{position:absolute;right:-20px;top:55px;width:150px;height:150px;opacity:.05;filter:grayscale(1)}.ecl27v2-watermark img{width:100%;height:100%;object-fit:contain}
+      .ecl27v2-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:14px}.ecl27v2-card{position:relative;overflow:hidden;padding:17px;border:1px solid rgba(214,177,95,.27);border-radius:16px;background:linear-gradient(155deg,#04111d,#02080e);transition:border-color .16s ease,transform .16s ease,box-shadow .16s ease}.ecl27v2-card.is-clickable{cursor:pointer}.ecl27v2-card.is-clickable:hover,.ecl27v2-card.is-clickable:focus-visible{border-color:rgba(240,213,139,.7);transform:translateY(-2px);box-shadow:0 18px 36px rgba(0,0,0,.28);outline:none}.ecl27v2-card-open{margin-top:12px;color:#d6b15f;font-size:9px;font-weight:900;letter-spacing:.04em;text-align:right}.ecl27v2-watermark{position:absolute;right:-20px;top:55px;width:150px;height:150px;opacity:.05;filter:grayscale(1)}.ecl27v2-watermark img{width:100%;height:100%;object-fit:contain}
       .ecl27v2-card header{position:relative;z-index:1;display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:center}.ecl27v2-logo{display:grid;place-items:center;width:64px;height:64px;border:1px solid #203549;border-radius:14px;background:#061522;overflow:hidden}.ecl27v2-logo img{width:86%;height:86%;object-fit:contain}.ecl27v2-logo span{color:#e4c56f;font-weight:950}.ecl27v2-card header p{margin:0 0 3px;color:#5de5dd;font-size:8px;font-weight:900;letter-spacing:.1em}.ecl27v2-card h3{margin:0;font-size:24px;line-height:1.05}
       .ecl27v2-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.ecl27v2-badges span,.ecl27v2-badges b{padding:4px 7px;border:1px solid #264056;border-radius:999px;font-size:8px;letter-spacing:.06em}.ecl27v2-badges .is-green{color:#44e6b9}.ecl27v2-badges .is-yellow{color:#f0d58b}.ecl27v2-badges .is-orange{color:#ffb35f}.ecl27v2-badges .is-red{color:#ff7e7e}
-      .ecl27v2-metrics{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:15px 0}.ecl27v2-metrics>div{padding:9px;border:1px solid #152b3c;border-radius:9px;background:#030c14}.ecl27v2-metrics span{display:block;color:#6b879a;font-size:7px;font-weight:900}.ecl27v2-metrics strong{display:block;margin-top:4px;font-size:20px}.ecl27v2-metrics .in{color:#45e3c5}.ecl27v2-metrics .out{color:#ff7d7d}
+      .ecl27v2-metrics{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:15px 0}.ecl27v2-metrics>div{padding:9px;border:1px solid #152b3c;border-radius:9px;background:#030c14}.ecl27v2-metrics span{display:block;color:#6b879a;font-size:7px;font-weight:900}.ecl27v2-metrics strong{display:block;margin-top:4px;font-size:20px}.ecl27v2-metrics .in,.ecl27v2-detail-metrics .in{color:#45e3c5}.ecl27v2-metrics .out,.ecl27v2-detail-metrics .out{color:#ff7d7d}
       .ecl27v2-roster label,.ecl27v2-recruit label,.ecl27v2-moves label{display:block;margin-bottom:7px;color:#6d879a;font-size:8px;font-weight:950;letter-spacing:.1em}.ecl27v2-roster>div{display:flex;flex-wrap:wrap;gap:5px}.ecl27v2-roster-player{padding:5px 7px;border:1px solid #1c3447;border-radius:6px;background:#05121c;color:#dfe7ed;font-size:9px}.ecl27v2-roster em{color:#778b9c;font-size:10px}
       .ecl27v2-recruit{position:relative;margin-top:12px;padding:10px 72px 10px 10px;border:1px solid rgba(214,177,95,.18);border-radius:9px;background:rgba(214,177,95,.035)}.ecl27v2-recruit div{color:#d9c790;font-size:9px}.ecl27v2-recruit time{position:absolute;right:10px;top:10px;color:#71879a;font-size:8px}
       .ecl27v2-moves{margin-top:14px;padding-top:12px;border-top:1px solid #142737}.ecl27v2-move{display:grid;grid-template-columns:28px minmax(80px,1fr) minmax(0,1.1fr) 42px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(24,47,63,.45)}.ecl27v2-move>span{font-size:8px;font-weight:950}.ecl27v2-move--in>span{color:#45e3c5}.ecl27v2-move--out>span{color:#ff7d7d}.ecl27v2-move.is-fa{background:rgba(255,211,79,.025)}.ecl27v2-player{font-size:10px;font-weight:800}.ecl27v2-move small{color:#71879a;font-size:8px}.ecl27v2-move time{color:#61798d;font-size:8px;text-align:right}.ecl27v2-inline-team{color:#8ba4b7!important}.ecl27v2-moves>p{color:#738698;font-size:10px}.ecl27v2-card details{margin-top:10px}.ecl27v2-card summary{cursor:pointer;color:#d9bd71;font-size:9px;font-weight:900}
       .ecl27v2-method{margin-top:15px;padding:18px 20px;border-left:3px solid #d6b15f;background:#060d14;color:#91a4b4;font-size:11px;line-height:1.55}.ecl27v2-method strong{display:block;margin-bottom:4px;color:#f0d58b}
-      @media(max-width:1180px){.ecl27v2-grid{grid-template-columns:repeat(2,1fr)}.ecl27v2-feed{grid-template-columns:1fr}}@media(max-width:780px){.ecl27v2-hero{grid-template-columns:1fr;padding:23px}.ecl27v2-overview{grid-template-columns:repeat(2,1fr)}.ecl27v2-toolbar{grid-template-columns:1fr}.ecl27v2-grid{grid-template-columns:1fr}.ecl27v2-feed-row{grid-template-columns:42px 30px 1fr}.ecl27v2-feed-row>.ecl27v2-feed-team,.ecl27v2-feed-row>small{grid-column:3}.ecl27v2-move{grid-template-columns:28px minmax(90px,1fr) 46px}.ecl27v2-move small{grid-column:2}.ecl27v2-move time{grid-column:3;grid-row:1}}
+      .ecl27v2-detail{display:grid;gap:16px}.ecl27v2-back{width:max-content;padding:8px 12px;border:1px solid #203549;border-radius:999px;background:#030a11;color:#b8c7d2!important;font-size:10px;font-weight:850}.ecl27v2-detail-hero{display:grid;grid-template-columns:150px minmax(0,1fr);gap:26px;align-items:center;padding:28px;border:1px solid rgba(214,177,95,.32);border-radius:20px;background:linear-gradient(145deg,#04111d,#02080e);box-shadow:0 24px 54px rgba(0,0,0,.24)}.ecl27v2-detail-logo{display:grid;place-items:center;width:150px;height:150px;border:1px solid #203549;border-radius:24px;background:#061522;overflow:hidden}.ecl27v2-detail-logo img{width:88%;height:88%;object-fit:contain}.ecl27v2-detail-logo span{color:#e4c56f;font-size:32px;font-weight:950}.ecl27v2-detail-title h2{margin:3px 0 10px;font-size:clamp(40px,5vw,72px);line-height:.92;letter-spacing:-.045em}.ecl27v2-detail-title>p:last-of-type{max-width:850px;color:#91a4b4;line-height:1.6}.ecl27v2-team-profile{display:inline-flex;margin-top:10px;padding:9px 12px;border:1px solid rgba(214,177,95,.35);border-radius:9px;color:#f0d58b!important;font-size:10px;font-weight:900}.ecl27v2-detail-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.ecl27v2-detail-metrics>div{padding:16px;border:1px solid #172839;border-radius:12px;background:#030a11}.ecl27v2-detail-metrics span{display:block;color:#6b879a;font-size:8px;font-weight:950;letter-spacing:.1em}.ecl27v2-detail-metrics strong{display:block;margin-top:6px;font-size:28px}.ecl27v2-detail-metrics .status-text{font-size:15px;color:#f0d58b;line-height:1.25}.ecl27v2-detail-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:12px}.ecl27v2-detail-panel{padding:20px;border:1px solid #172839;border-radius:16px;background:#02080e}.ecl27v2-detail-panel-head{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:14px}.ecl27v2-detail-panel-head h3{margin:2px 0 0;font-size:24px}.ecl27v2-detail-panel-head>span{color:#70869a;font-size:9px}.ecl27v2-detail-player-list,.ecl27v2-detail-base-list{display:flex;flex-wrap:wrap;gap:8px}.ecl27v2-detail-player,.ecl27v2-detail-base-player{padding:9px 11px;border:1px solid #1c3447;border-radius:8px;background:#05121c;font-size:11px;font-weight:850}.ecl27v2-detail-player{border-color:rgba(214,177,95,.28)}.ecl27v2-detail-recruit{margin:0}.ecl27v2-detail-empty{margin:0;color:#71879a;font-size:11px;line-height:1.5}.ecl27v2-detail-timeline .ecl27v2-move{grid-template-columns:42px minmax(140px,.8fr) minmax(160px,1.2fr) 62px;padding:10px 0}.ecl27v2-detail-timeline .ecl27v2-player{font-size:12px}.ecl27v2-detail-timeline .ecl27v2-move small,.ecl27v2-detail-timeline .ecl27v2-move time{font-size:10px}
+      @media(max-width:1180px){.ecl27v2-grid{grid-template-columns:repeat(2,1fr)}.ecl27v2-feed{grid-template-columns:1fr}}@media(max-width:780px){.ecl27v2-hero{grid-template-columns:1fr;padding:23px}.ecl27v2-overview{grid-template-columns:repeat(2,1fr)}.ecl27v2-toolbar{grid-template-columns:1fr}.ecl27v2-grid{grid-template-columns:1fr}.ecl27v2-feed-row{grid-template-columns:42px 30px 1fr}.ecl27v2-feed-row>.ecl27v2-feed-team,.ecl27v2-feed-row>small{grid-column:3}.ecl27v2-move{grid-template-columns:28px minmax(90px,1fr) 46px}.ecl27v2-move small{grid-column:2}.ecl27v2-move time{grid-column:3;grid-row:1}.ecl27v2-detail-hero{grid-template-columns:92px 1fr;padding:18px;gap:16px}.ecl27v2-detail-logo{width:92px;height:92px;border-radius:16px}.ecl27v2-detail-title h2{font-size:36px}.ecl27v2-detail-metrics{grid-template-columns:repeat(2,1fr)}.ecl27v2-detail-grid{grid-template-columns:1fr}.ecl27v2-detail-timeline .ecl27v2-move{grid-template-columns:28px minmax(90px,1fr) 46px}.ecl27v2-detail-timeline .ecl27v2-move small{grid-column:2}.ecl27v2-detail-timeline .ecl27v2-move time{grid-column:3;grid-row:1}}
     `;
     document.head.appendChild(style);
+  }
+
+  function renderListSection(section) {
+    const springCount = DATA.springTeams.length;
+    const newCount = DATA.newTeams.length;
+    const knownNow = model.teams.reduce((sum,team) => sum + team.playersNow.length,0);
+    const movementCount = model.teams.reduce((sum,team) => sum + team.timeline.length,0);
+
+    section.innerHTML = `<header class="ecl27v2-hero"><div><p class="directory-kicker">SILLY SEASON · SVERIGE</p><h2>ECL 27 – Svenska lagbyggen</h2><p>Arbetsbilden börjar alltid i den registrerade ECL ’26 Spring-truppen. Därefter spelas bekräftade svenska IN/UT, lagposter och ECL-Free Agents igenom kronologiskt. En senare IN kan därför alltid aktivera spelaren i sitt nya lag.</p></div><div class="ecl27v2-stamp"><span>SENAST UPPDATERAD</span><strong>${esc(DATA.updated)}</strong><small>Spring-bas + daterade Discord-händelser</small></div></header>
+      <div class="ecl27v2-overview"><div><span>SPRING-LAG</span><strong>${springCount}</strong><small>Elite → Neo</small></div><div><span>NYA PROJEKT</span><strong>${newCount}</strong><small>Västerås Vipers borttaget</small></div><div><span>KÄNDA SPELARE NU</span><strong>${knownNow}</strong><small>unika per lag efter replay</small></div><div><span>RÖRELSER</span><strong>${movementCount}</strong><small>IN / UT / FA, härledda byten inkluderade</small></div></div>
+      <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">SENASTE</p><h3>Transferflödet</h3></div><span>Bekräftade rörelser + Free Agents</span></div><div class="ecl27v2-feed">${renderLatestFeed()}</div></section>
+      <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">LAG FÖR LAG</p><h3>Svenska lagbyggen just nu</h3></div><span id="ecl27v2Result">${model.teams.length} lag/projekt</span></div><div class="ecl27v2-toolbar"><label>SÖK<input id="ecl27v2Search" type="search" placeholder="Lag eller spelare…"></label><label>SPRING-NIVÅ<select id="ecl27v2Division"><option value="all">Alla nivåer</option><option>Elite</option><option>Pro</option><option>Lite</option><option>Core</option><option>Neo</option><option value="Nytt">Nya projekt</option></select></label><label>STATUS<select id="ecl27v2Status"><option value="all">Alla statusar</option><option value="ready">Ser färdigt ut</option><option value="building">På god väg</option><option value="thin">Tunt / bygger</option><option value="rebuild">Kraftigt ombyggt / tidigt</option></select></label></div><div id="ecl27v2Grid" class="ecl27v2-grid"></div></section>
+      <aside class="ecl27v2-method"><strong>Arbetsbild – inte officiella ECL 27-rosters</strong>En UT-händelse kan aldrig lämna samma spelare kvar i KÄND TRUPP JUST NU. En senare IN flyttar spelaren från tidigare känt lag till det nya laget. En aktiv ECL-Free Agent behandlas som UT från spelarens senaste kända ECL-lag, medan SEC-only-poster inte används. Alias normaliseras centralt innan någon händelse räknas.</aside>`;
+
+    const search = $("#ecl27v2Search");
+    const division = $("#ecl27v2Division");
+    const status = $("#ecl27v2Status");
+    search?.addEventListener("input",() => {state.search=search.value.trim();renderGrid();});
+    division?.addEventListener("change",() => {state.division=division.value;renderGrid();});
+    status?.addEventListener("change",() => {state.status=status.value;renderGrid();});
+    bindCardNavigation($("#ecl27v2Grid"));
+    renderGrid();
   }
 
   function mount() {
@@ -432,20 +558,20 @@
     $("#ecl27TeamBuildsV2")?.remove();
     injectStyles();
 
-    const springCount = DATA.springTeams.length;
-    const newCount = DATA.newTeams.length;
-    const knownNow = model.teams.reduce((sum,team) => sum + team.playersNow.length,0);
-    const movementCount = model.teams.reduce((sum,team) => sum + team.timeline.length,0);
-
     const section = document.createElement("section");
     section.id = "ecl27TeamBuildsV2";
     section.className = "ecl27v2";
     section.dataset.build = DATA.build;
-    section.innerHTML = `<header class="ecl27v2-hero"><div><p class="directory-kicker">SILLY SEASON · SVERIGE</p><h2>ECL 27 – Svenska lagbyggen</h2><p>Arbetsbilden börjar alltid i den registrerade ECL ’26 Spring-truppen. Därefter spelas bekräftade svenska IN/UT, lagposter och ECL-Free Agents igenom kronologiskt. En senare IN kan därför alltid aktivera spelaren i sitt nya lag.</p></div><div class="ecl27v2-stamp"><span>SENAST UPPDATERAD</span><strong>${esc(DATA.updated)}</strong><small>Spring-bas + daterade Discord-händelser</small></div></header>
-      <div class="ecl27v2-overview"><div><span>SPRING-LAG</span><strong>${springCount}</strong><small>Elite → Neo</small></div><div><span>NYA PROJEKT</span><strong>${newCount}</strong><small>Västerås Vipers borttaget</small></div><div><span>KÄNDA SPELARE NU</span><strong>${knownNow}</strong><small>unika per lag efter replay</small></div><div><span>RÖRELSER</span><strong>${movementCount}</strong><small>IN / UT / FA, härledda byten inkluderade</small></div></div>
-      <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">SENASTE</p><h3>Transferflödet</h3></div><span>Bekräftade rörelser + Free Agents</span></div><div class="ecl27v2-feed">${renderLatestFeed()}</div></section>
-      <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">LAG FÖR LAG</p><h3>Svenska lagbyggen just nu</h3></div><span id="ecl27v2Result">${model.teams.length} lag/projekt</span></div><div class="ecl27v2-toolbar"><label>SÖK<input id="ecl27v2Search" type="search" placeholder="Lag eller spelare…"></label><label>SPRING-NIVÅ<select id="ecl27v2Division"><option value="all">Alla nivåer</option><option>Elite</option><option>Pro</option><option>Lite</option><option>Core</option><option>Neo</option><option value="Nytt">Nya projekt</option></select></label><label>STATUS<select id="ecl27v2Status"><option value="all">Alla statusar</option><option value="ready">Ser färdigt ut</option><option value="building">På god väg</option><option value="thin">Tunt / bygger</option><option value="rebuild">Kraftigt ombyggt / tidigt</option></select></label></div><div id="ecl27v2Grid" class="ecl27v2-grid"></div></section>
-      <aside class="ecl27v2-method"><strong>Arbetsbild – inte officiella ECL 27-rosters</strong>En UT-händelse kan aldrig lämna samma spelare kvar i KÄND TRUPP JUST NU. En senare IN flyttar spelaren från tidigare känt lag till det nya laget. En aktiv ECL-Free Agent behandlas som UT från spelarens senaste kända ECL-lag, medan SEC-only-poster inte används. Alias normaliseras centralt innan någon händelse räknas.</aside>`;
+
+    const wantedSlug = requestedTeamSlug();
+    const wantedTeam = wantedSlug ? model.teams.find((team) => slug(team.name) === wantedSlug) : null;
+    if (wantedTeam) {
+      section.innerHTML = renderTeamDetail(wantedTeam);
+      document.title = `${wantedTeam.name} – ECL 27 lagbygge | Svensk eHockey`;
+    } else {
+      if (wantedSlug) history.replaceState(null,"",seasonListUrl());
+      renderListSection(section);
+    }
 
     overview.insertAdjacentElement("afterend",section);
 
@@ -456,19 +582,14 @@
       const button = document.createElement("button");
       button.type = "button";
       button.dataset.ecl27v2Jump = "true";
-      button.textContent = "Svenska lagbyggen →";
-      button.addEventListener("click",() => section.scrollIntoView({behavior:"smooth",block:"start"}));
+      button.textContent = wantedTeam ? "← Alla lagbyggen" : "Svenska lagbyggen →";
+      button.addEventListener("click",() => {
+        if (wantedTeam) window.location.href = seasonListUrl();
+        else section.scrollIntoView({behavior:"smooth",block:"start"});
+      });
       actions.prepend(button);
     }
 
-    const search = $("#ecl27v2Search");
-    const division = $("#ecl27v2Division");
-    const status = $("#ecl27v2Status");
-    search?.addEventListener("input",() => {state.search=search.value.trim();renderGrid();});
-    division?.addEventListener("change",() => {state.division=division.value;renderGrid();});
-    status?.addEventListener("change",() => {state.status=status.value;renderGrid();});
-
-    renderGrid();
     return true;
   }
 
@@ -486,6 +607,7 @@
   window.SEH_ECL27_PLAYER_ALIASES = DATA.aliases;
   window.addEventListener("hashchange",scheduleMount);
   window.addEventListener("load",scheduleMount);
+  window.addEventListener("pageshow",scheduleMount);
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded",scheduleMount,{once:true});
   } else {
