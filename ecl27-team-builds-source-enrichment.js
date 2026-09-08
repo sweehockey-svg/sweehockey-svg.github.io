@@ -1,280 +1,146 @@
 /*
-  ECL 27 canonical source model.
-  Data only: no DOM writes, no observers, no roster patching.
+  ECL 27 canonical source model – Supabase backed.
+  The renderer still consumes window.SEH_ECL27_DATA, but the data now comes
+  from the shared database used by the Android app. One fetch per page load;
+  localStorage is only a read cache/fallback and never writes back to Supabase.
 */
 (function () {
   "use strict";
 
-  const springTeams = [
-    ["AFTERLIFE","Elite",11,"","","borjee__|Bystrom33|bystromjr_|hajjeh37|Maxboeeee_|Rubituss_|Zuppe_29"],
-    ["Södertälje SK","Elite",340,"SSK ESPORTS","Södertälje SK","Axelzonee|Brokenrice2000|l-Furyan-l|LaxenHD|minokin-|SmAyK99|Wagge01"],
-    ["Unwanted","Elite",391,"","","Fin_S1su|Henka0009|NerazzuriSWE|oggezed|Snus97_|Suth98_|sveti-|XD_Jacke"],
-    ["vNexs","Elite",408,"vNexs I","vNexs I","antoniomannen_|AntonLxnd|Curheed|Dzouvi_|karlssonadam_|launonexx|pappeen-|Skumboo"],
-    ["Brynäs IF Esport","Pro",55,"","","Adaam-2|Bu-ffy|I-Bysse-I|Jonass1551|Stenborg431|stickovic|Vibholm_10|Wadde95|Zonkji v"],
-    ["SSK Prospects","Pro",344,"","","Bullbaz|Disctrasan-|el_cisne_loco|HambergD|Kaxen88|MightyJalt|nikuy92|therozz94"],
-    ["Sunne IK Esport","Pro",354,"","","Antites_|ePsych0-|Larzzon96|O3_DAFA|Patflex_|Svana_22|vPahlen"],
-    ["Västerås IK","Pro",393,"","","amadee_|BuffaViana|Dobby the Joker|I-alb1n-I|Mathiasgamer_07|MeKNoXEr|MrXbox79|r4mme-0|Sebbanejad|sneipthegunner"],
-    ["vNexs II","Pro",409,"","","Azzez_88|benjamint737|Gudinge|Hisens__|immuszn|iSvamp|JoakimOilers|Putteekiing|SeboLHD"],
-    ["Invasion Hockey","Lite",172,"","","Aker36|BigKaxen|Brobeck86|Edluund___|GD_Hampezzz|I-Sjogren-I|Mrclaper09|RookieLIAMOVIC|xlcelQx"],
-    ["Macho HC","Lite",228,"","","Andre_24x|D4nzk80|IIFaranII|Linx Mau5|MrWennerstrom|Prolane|Strandis96|xBerra_"],
-    ["Nordic Nosebleed","Lite",260,"","","cherrykicks|Eliekamel_|Feffe1och2|Jean-Claes|Lidaas_79|Pedaliv|Sayatu14|Thedisneytime"],
-    ["Refuse Too Lose","Lite",300,"","","IVIotti_-|JezuzKristuz|nigeltje1|octo--8|Sonnysprofil|suomiboe88|Vindows2608|x0RIXELIT3xD|xLeppix|Zeven1988"],
-    ["Sjukstugan","Lite",323,"","","Dirty86er|DUNZA|IbjonoI|Jaiken--|Nephenzy|Robbin974|softa_tofta|Supremski|xDisauttaja"],
-    ["SSK Academy","Lite",338,"","","Ejamannen|FaZe_lunkan07|fimpen_365|gtasir1|HultNiklas|Jungledonk|MakkMakk1980|Mesimaki94|SwedenFtW99|Tuupe12"],
-    ["SSK Adepts","Lite",339,"","","AG_Jarl|Allant03|Diizzylicious|jcarlton89|KaiserHanzo|kecke72|KFC Melker|Sloogan9498"],
-    ["TROJANS","Lite",383,"","","BeJutiFul|ElTorstenero|foxflyers|Hermelin999|imosi1|Janikka-|Rootmos|TiSuLiNo|xHampe29x"],
-    ["vNexs Vipers","Lite",410,"","","Dan9105|Dannu1237|DE BOHM|FrogNHL|Hescoores|Jaksii_|Jonsson03|Kungenanton02"],
-    ["BIK Karlskoga","Core",33,"BIK Karlskoga Esport","BIK Karlskoga Esport","casse 33 40|Elisx95|HyDraVenoM92|itsWalsy|Mackedavid|MarreMurre|Robin_86_6|Toivo4936|Westbergg1891"],
-    ["Carolus Icemen","Core",70,"","","I-Ashborn-I|Kvarneen|Mellerudspils|mj_slam|PaisleyJr|pepsicharlie|Skogspyssling|XxKotilainen17xX"],
-    ["Northern Ztars","Core",274,"Northern Ztars Hockey","Northern Ztars Hockey","Askewfungus|hodini90|Kassby83|Kxner__TTV|MelleMakrill|melwin71|MYTEN-LEGENDEN|Neowise-25|Philip_050505|Phyreon|Redhawk1765|wheelchair_88"],
-    ["PRIMA","Core",291,"","","Bdahlo05|Bulten_49|JNHL-_-|Liimp_92|Mmmgott|Pawlo_jr|Tobzzon|troublemakingswe|Twitch_wannika"],
-    ["Style","Core",351,"","","Ael-miK|Antonqs|Borjewiseman|FezH_88|jokkz-|LordOlii|Matth3ws34|mayX-swe|RHannu|Truesnap"],
-    ["vNexs Wisemen","Core",411,"","","Chrillzoork|Glamborg81|Gurliver|juhi1891|Ma-X-imilian|Malmenlid|Mctook1|Mrantonn--|skillfull85"],
-    ["BIK Karlskoga Academy","Neo",32,"","","Bersson_92|D24tic_BTW|KetchupBTW_|L-sk1y-L|MrBumban1|Olsson_lir89|Polisbilen|Raggsockar|Runhager96|Shn1pez|Yungs99"],
-    ["Free From Rodents","Neo",125,"","","barke_89|Fellywoop|fixarjocke|Pjoter79|Pralle-|Sir_Wasp|Swe_WASP|WILD_-AT-_HEART"],
-    ["N E O N X","Neo",249,"","","Drummerking83|FearlezZ_92|Gogulus87|Hampuzz105|HerrLarsson80|Lapilsner|weeman400_|Ztarsailor"]
-  ].map(([name,division,teamId,springName,logoName,players]) => ({
-    name, division, teamId,
-    springName: springName || undefined,
-    logoName: logoName || undefined,
-    players: players ? players.split("|") : []
-  }));
-
-  const newTeams = [
-    ["Monarchs HC","Nytt",null,""],
-    ["Zero Ping","Nytt",419,""],
-    ["Shadow Skulls","Nytt",317,"Shadow skulls"],
-    ["Lilmix","Nytt",null,""],
-    ["Burchurs HC","Nytt",null,""],
-    ["VBO Stars","Nytt",398,"VBO STARS"],
-    ["Lila skeppet","Nytt",null,""]
-  ].map(([name,division,teamId,logoName]) => ({
-    name, division, teamId,
-    logoName: logoName || undefined,
-    players: []
-  }));
-
-  const moveEvents = [
-    ["2026-04-23T23:41","Västerås IK","out","KaptenHavoc","",""],
-    ["2026-04-28T17:11","Lila skeppet","in","wilhelmsson90","",""],
-    ["2026-05-03T22:13","Lila skeppet","in","Bylle67","",""],
-    ["2026-05-06T05:31","VBO Stars","out","hodini90","",""],
-    ["2026-05-06T18:54","SSK Academy","out","hultniklas","",""],
-    ["2026-05-06T22:27","Invasion Hockey","out","Sjögren","",""],
-    ["2026-05-11T15:12","Monarchs HC","out","HulaDoome","",""],
-    ["2026-05-11T15:12","Monarchs HC","out","handsken111","",""],
-    ["2026-05-11T20:38","Shadow Skulls","out","mr_gren-","",""],
-    ["2026-05-12T12:28","vNexs II","out","Azzez_88","Gifu Hockey",""],
-    ["2026-05-15T01:50","N E O N X","in","FearlezZ_92","",""],
-    ["2026-05-15T01:50","N E O N X","in","weeman","",""],
-    ["2026-05-15T01:50","N E O N X","in","Lundin18","",""],
-    ["2026-05-15T01:50","N E O N X","in","FIFTY CHENG","",""],
-    ["2026-05-15T01:50","N E O N X","in","HerrLarsson80","",""],
-    ["2026-05-15T01:50","N E O N X","in","Poppen","",""],
-    ["2026-05-15T01:50","N E O N X","in","Simme96a","",""],
-    ["2026-05-15T01:50","N E O N X","in","handsken111","",""],
-    ["2026-05-21T11:05","Monarchs HC","out","Zeven","",""],
-    ["2026-05-23T20:55","Shadow Skulls","in","Rospiggen","",""],
-    ["2026-05-24T10:04","Shadow Skulls","in","benandRhian","",""],
-    ["2026-05-25T21:34","Södertälje SK","out","LaxenHD","Unwanted",""],
-    ["2026-05-25T21:34","Södertälje SK","out","Brokenrice2000","Lilmix",""],
-    ["2026-05-25T22:58","Unwanted","in","LaxenHD","Södertälje SK",""],
-    ["2026-05-26T09:51","Unwanted","out","NerazzuriSWE","",""],
-    ["2026-05-26T22:00","SSK Academy","out","fimpen_365","",""],
-    ["2026-05-29T12:07","Brynäs IF Esport","out","henk","BIK Karlskoga",""],
-    ["2026-05-29T20:12","Invasion Hockey","out","Kaxen21","",""],
-    ["2026-05-29T20:49","Invasion Hockey","out","Aker36","",""],
-    ["2026-05-30T01:01","SSK Academy","out","Jungledonk","Zero Ping",""],
-    ["2026-05-30T01:12","Invasion Hockey","out","Edlund","",""],
-    ["2026-05-30T16:04","Sjukstugan","out","DUNZA","SSK Adepts",""],
-    ["2026-05-30T16:43","SSK Adepts","in","DUNZA","Sjukstugan",""],
-    ["2026-05-31T13:41","SSK Academy","out","Makk Makk","SSK Adepts",""],
-    ["2026-05-31T13:41","SSK Academy","out","SwedenFtW99","SSK Adepts",""],
-    ["2026-05-31T13:42","SSK Adepts","in","Makk Makk","SSK Academy",""],
-    ["2026-05-31T13:42","SSK Adepts","in","SwedenFtW99","SSK Academy",""],
-    ["2026-05-31T13:43","SSK Adepts","out","KaiserHanzo","SSK Academy",""],
-    ["2026-05-31T13:43","SSK Adepts","out","Sloogan08","SSK Academy",""],
-    ["2026-05-31T13:44","SSK Academy","in","Sloogan08","SSK Adepts",""],
-    ["2026-05-31T13:44","SSK Academy","in","KaiserHanzo","SSK Adepts",""],
-    ["2026-05-31T18:45","SSK Academy","out","Lunkan_7","",""],
-    ["2026-05-31T18:46","SSK Adepts","out","KFC Melker","SSK Academy",""],
-    ["2026-05-31T18:47","SSK Academy","in","KFC Melker","SSK Adepts",""],
-    ["2026-06-03T18:25","Brynäs IF Esport","out","I-Bysse-I","",""],
-    ["2026-06-04T17:10","SSK Adepts","out","Diizzylicious","Zero Ping",""],
-    ["2026-06-04T17:10","SSK Adepts","out","AG_Jarl","Zero Ping",""],
-    ["2026-06-04T17:10","SSK Adepts","out","jcarlton89","Zero Ping",""],
-    ["2026-06-04T18:28","Zero Ping","in","jcarlton89","",""],
-    ["2026-06-04T18:28","Zero Ping","in","AG_Jarl","",""],
-    ["2026-06-04T18:28","Zero Ping","in","Jungledonk","",""],
-    ["2026-06-04T18:28","Zero Ping","in","Diizzylicious","",""],
-    ["2026-06-05T15:53","Shadow Skulls","in","Gurrolito1976","",""],
-    ["2026-06-10T13:21","PRIMA","out","JNHL-_-","",""],
-    ["2026-06-10T13:21","PRIMA","out","byrran_","",""],
-    ["2026-06-11T16:22","Shadow Skulls","out","Gurrolito1976","",""],
-    ["2026-06-11T19:36","Shadow Skulls","out","Rospiggen","N E O N X",""],
-    ["2026-06-14T21:55","BIK Karlskoga","out","Mackedavid","",""],
-    ["2026-06-14T21:55","BIK Karlskoga","out","HyDraVenoM92","",""],
-    ["2026-06-14T21:55","BIK Karlskoga","out","R.kokkonen","",""],
-    ["2026-06-14T21:55","BIK Karlskoga","out","westbergg1891","",""],
-    ["2026-06-14T22:06","BIK Karlskoga","in","henk","",""],
-    ["2026-06-14T22:06","BIK Karlskoga","in","Hoefi_24","",""],
-    ["2026-06-14T22:06","BIK Karlskoga","in","I Braxsiö I","",""],
-    ["2026-06-17T22:55","Macho HC","out","Prolane","Zero Ping",""],
-    ["2026-06-17T22:56","Zero Ping","in","Prolane","Macho HC",""],
-    ["2026-06-21T23:00","BIK Karlskoga Academy","out","L-sk1y-L","Monarchs HC",""],
-    ["2026-06-23T19:33","BIK Karlskoga Academy","out","Yungs","",""],
-    ["2026-06-24T21:59","Monarchs HC","in","Bergman_29","",""],
-    ["2026-06-25T09:03","Shadow Skulls","in","FERNA","",""],
-    ["2026-06-25T14:35","Gifu Hockey","in","Azzez_88","vNexs II",""],
-    ["2026-06-25T15:16","vNexs Wisemen","out","Mrantonn--","Västerås IK",""],
-    ["2026-06-27T15:39","vNexs Vipers","out","Jaksii_","",""],
-    ["2026-06-29T20:46","Northern Ztars","out","Kxner","",""],
-    ["2026-06-30T12:31","N E O N X","out","HerrLarsson80","",""],
-    ["2026-06-30T12:54","N E O N X","out","FIFTY CHENG","",""],
-    ["2026-06-30T21:01","BIK Karlskoga Academy","out","Shn1pez","",""],
-    ["2026-07-06T00:27","SSK Adepts","in","ePsycoShow","",""],
-    ["2026-07-08T16:14","Västerås IK","out","sneipthegunner","",""],
-    ["2026-07-09T20:29","Monarchs HC","out","xRedhawk93","",""],
-    ["2026-07-09T20:29","Monarchs HC","out","Mockingjayyz","",""],
-    ["2026-07-09T20:29","Monarchs HC","out","pastorn!","",""],
-    ["2026-07-09T20:29","Monarchs HC","out","HyDraVenoM92","",""],
-    ["2026-07-09T20:29","Monarchs HC","out","Phyreon","",""],
-    ["2026-07-09T20:29","Monarchs HC","out","deeliice","",""],
-    ["2026-07-09T20:29","Monarchs HC","out","Bergman_29","",""],
-    ["2026-07-09T20:29","Monarchs HC","out","Jompahell!","",""],
-    ["2026-07-09T20:30","Monarchs HC","in","xRedhawk93","",""],
-    ["2026-07-09T20:30","Monarchs HC","in","Mockingjayyz","",""],
-    ["2026-07-09T20:30","Monarchs HC","in","pastorn!","",""],
-    ["2026-07-09T20:30","Monarchs HC","in","HyDraVenoM92","",""],
-    ["2026-07-09T20:30","Monarchs HC","in","Phyreon","",""],
-    ["2026-07-09T20:30","Monarchs HC","in","deeliice","",""],
-    ["2026-07-09T20:30","Monarchs HC","in","Bergman_29","",""],
-    ["2026-07-09T20:30","Monarchs HC","in","Jompahell!","",""],
-    ["2026-07-21T12:56","Northern Ztars","in","Mackedavid","BIK Karlskoga",""],
-    ["2026-07-22T21:17","BIK Karlskoga","out","Elisx95","",""],
-    ["2026-07-23T17:47","Monarchs HC","in","Viiken","",""],
-    ["2026-07-23T19:00","Zero Ping","out","AG_Jarl","",""],
-    ["2026-07-26T20:56","Shadow Skulls","in","BeJutiFul","TROJANS",""],
-    ["2026-07-27T22:35","SSK Adepts","out","KFC Melker","VBO Stars",""],
-    ["2026-07-28T08:23","SSK Academy","out","Igelkottskonung","",""],
-    ["2026-07-31T13:10","Monarchs HC","in","R.kokkonen","BIK Karlskoga",""],
-    ["2026-08-03T17:29","SSK Adepts","out","Makk Makk","SSK Prospects",""],
-    ["2026-08-03T17:29","SSK Adepts","out","SwedenFtW99","SSK Prospects",""],
-    ["2026-08-03T17:29","SSK Academy","out","Tuupe12","SSK Prospects",""],
-    ["2026-08-03T17:29","SSK Academy","out","Mesimaki94","SSK Prospects",""],
-    ["2026-08-03T17:30","SSK Prospects","in","Makk Makk","",""],
-    ["2026-08-03T17:30","SSK Prospects","in","SwedenFtW99","",""],
-    ["2026-08-03T17:30","SSK Prospects","in","Tuupe12","",""],
-    ["2026-08-03T17:30","SSK Prospects","in","Mesimaki94","",""],
-    ["2026-08-03T22:31","SSK Prospects","out","kax jr","Lilmix",""],
-    ["2026-08-03T22:31","SSK Prospects","out","Disctrasan","Lilmix",""],
-    ["2026-08-06T20:23","BIK Karlskoga","out","MarreMurre","",""],
-    ["2026-08-06T20:24","BIK Karlskoga Academy","out","Shn1pez","",""],
-    ["2026-08-06T21:15","BIK Karlskoga Academy","out","Olsson_lir89","",""],
-    ["2026-08-07T12:39","BIK Karlskoga","in","meeskojr_","",""],
-    ["2026-08-07T16:55","Monarchs HC","in","L-sk1y-L","BIK Karlskoga Academy",""],
-    ["2026-08-10T15:35","N E O N X","in","Rospiggen","Shadow Skulls",""],
-    ["2026-08-11T14:18","Lila skeppet","out","wilhelmsson90","",""],
-    ["2026-08-12T00:00","Västerås IK","in","Bullbaz","SSK Prospects",""],
-    ["2026-08-12T21:25","SSK Prospects","in","patsukka","",""],
-    ["2026-08-13T21:57","SSK Prospects","out","therozz94","Södertälje SK",""],
-    ["2026-08-13T21:58","Södertälje SK","in","therozz94","SSK Prospects",""],
-    ["2026-08-17T13:33","SSK Prospects","in","KrissaNSE","",""],
-    ["2026-08-17T22:31","Lila skeppet","out","Bylle67","",""],
-    ["2026-08-18T16:21","vNexs Vipers","out","FrogNHL","",""],
-    ["2026-08-23T11:57","Sjukstugan","out","Dirty86er","",""],
-    ["2026-08-24T13:53","Västerås IK","in","Mrantonn--","vNexs Wisemen",""],
-    ["2026-08-24T15:04","Västerås Vipers","in","fimpen_365","",""],
-    ["2026-08-24T15:04","Västerås Vipers","in","JNHL-_-","",""],
-    ["2026-08-24T15:04","Västerås Vipers","in","Lunkan_7","",""],
-    ["2026-08-24T16:38","Västerås IK","out","Meknoxer","",""],
-    ["2026-08-24T20:05","Västerås Vipers","in","meeskojr_","BIK Karlskoga",""],
-    ["2026-08-25T13:23","VBO Stars","in","KFC Melker","SSK Academy",""],
-    ["2026-08-26T22:32","SSK Academy","in","Qben","",""],
-    ["2026-08-26T22:32","SSK Academy","in","softa_tofta","",""],
-    ["2026-08-31T16:56","vNexs","out","Curhed","Lilmix",""],
-    ["2026-08-31T17:52","Lilmix","in","Sallee42","",""],
-    ["2026-08-31T17:52","Lilmix","in","Curhed","",""],
-    ["2026-08-31T17:52","Lilmix","in","kax jr","",""],
-    ["2026-08-31T17:52","Lilmix","in","Disctrasan","",""],
-    ["2026-08-31T17:52","Lilmix","in","Brokenrice2000","",""],
-    ["2026-08-31T21:58","AFTERLIFE","out","Zuppe_29","Brynäs IF Esport",""],
-    ["2026-09-01T18:10","Brynäs IF Esport","in","Zuppe_29","AFTERLIFE",""],
-    ["2026-09-01T20:08","Brynäs IF Esport","out","Wadde","Burchurs HC",""],
-    ["2026-09-03T15:02","Burchurs HC","in","Wadde","",""],
-    ["2026-09-03T15:02","Burchurs HC","in","MrWennerstrom","",""],
-    ["2026-09-03T15:02","Burchurs HC","in","D4nzk80","",""],
-    ["2026-09-03T15:02","Burchurs HC","in","strandis96","",""],
-    ["2026-09-03T15:02","Burchurs HC","in","Andre_24x","",""],
-    ["2026-09-03T15:02","Burchurs HC","in","IIFaranII","",""],
-    ["2026-09-03T18:21","Brynäs IF Esport","in","Gremlingswe","",""],
-    ["2026-09-03T19:54","Monarchs HC","in","arfurins","",""],
-    ["2026-09-04T22:07","vNexs","out","karlssonadam_","",""],
-    ["2026-09-06T14:04","Shadow Skulls","out","BeJutiFul","",""],
-    ["2026-09-06T16:55","Monarchs HC","out","Viiken","",""],
-    ["2026-09-06T21:08","Västerås Vipers","out","meeskojr_","",""],
-    ["2026-09-06T21:08","Västerås Vipers","out","JNHL-_-","",""],
-    ["2026-09-06T21:08","Västerås Vipers","out","fimpen_365","",""],
-    ["2026-09-06T21:08","Västerås Vipers","out","Lunkan_7","",""],
-    ["2026-09-07T18:20","AFTERLIFE","out","Rubituss_","",""],
-    ["2026-09-07T23:12","Unwanted","in","benjamint737","",""],
-    ["2026-09-07T23:12","Unwanted","in","Dzouvi_","",""],
-    ["2026-09-08T17:28","Västerås IK","out","I-alb1n-I","",""]
-  ].map(([at,team,type,player,otherTeam,note]) => ({at,team,type,player,otherTeam,note}));
-
-  const posterMemberships = [
-    ["2026-04-28T17:11","Lila skeppet","Gyldisen"],
-    ["2026-05-06T05:31","VBO Stars","Bulten_49"],
-    ["2026-05-23T20:55","Shadow Skulls","Erik"],
-    ["2026-05-24T10:04","Shadow Skulls","Love Engelkrans"],
-    ["2026-06-05T15:53","Shadow Skulls","mactheking."],
-    ["2026-06-14T21:55","BIK Karlskoga","strandh85"],
-    ["2026-06-24T21:59","Monarchs HC","HyDraVenoM92"],
-    ["2026-07-26T20:56","Shadow Skulls","Erik"],
-    ["2026-07-29T11:59","PRIMA","troublemakingswe"],
-    ["2026-07-31T15:02","vNexs Wisemen","Malmenlid"],
-    ["2026-08-03T08:08","Lila skeppet","Gyldisen"],
-    ["2026-08-10T19:42","SSK Academy","Sloogan08"],
-    ["2026-08-18T15:49","vNexs Vipers","KUNGENANTON02"],
-    ["2026-08-20T14:47","BIK Karlskoga Academy","MrBumban1"],
-    ["2026-08-25T10:52","Burchurs HC","D4nzk80"],
-    ["2026-08-25T13:23","VBO Stars","Bulten_49"],
-    ["2026-08-31T18:21","Lilmix","Sallee42"],
-    ["2026-09-03T18:07","Burchurs HC","D4nzk80"],
-    ["2026-09-06T14:04","Shadow Skulls","Love Engelkrans"],
-    ["2026-09-07T18:20","AFTERLIFE","bystromjr_"],
-    ["2026-09-07T23:12","Unwanted","Snus97_"],
-    ["2026-09-08T10:58","Västerås IK","MrXbox79"]
-  ].map(([at,team,player]) => ({at,team,player}));
-
-  const freeAgentEvents = [
-    ["2026-06-25T11:15","ePsych0-"],
-    ["2026-08-11T14:52","wilhelmsson90"],
-    ["2026-08-17T22:03","HerrLarsson80"],
-    ["2026-08-24T08:50","hajjeh37"],
-    ["2026-08-25T20:28","Edlund"],
-    ["2026-08-26T17:22","Liimp_92"],
-    ["2026-09-02T18:47","Meknoxer"],
-    ["2026-09-06T21:36","JNHL-_-"],
-    ["2026-09-07T15:22","XD_Jacke"],
-    ["2026-09-07T16:52","BeJutiFul"]
-  ].map(([at,player]) => ({at,player}));
-
-  const rosterSnapshots = [
-    ["2026-09-03T18:07","Burchurs HC","Andre_24x|IIFaranII|Wadde95|Anan20|Strandis96|D4nzk80|Mrwennerstrom"]
-  ].map(([at,team,players]) => ({at,team,players:players.split("|")}));
-
-  window.SEH_ECL27_DATA = Object.freeze({
-    build:"2026-09-08-v5-vasteras-albin-out",
-    updated:"8 sep 2026 · Västerås IK ut: I-alb1n-I",
-    aliases:Object.freeze({"sloogan08":"Sloogan9498","sloogan9498":"Sloogan9498","erik":"Elonnholm","elonnholm":"Elonnholm","love engelkrans":"toretussan","toretussan":"toretussan","sjögren":"I-Sjogren-I","i-sjogren-i":"I-Sjogren-I","edlund":"Edluund___","edluund___":"Edluund___","wadde":"Wadde95","wadde95":"Wadde95","weeman":"weeman400_","weeman400_":"weeman400_","makk makk":"MakkMakk1980","makkmakk1980":"MakkMakk1980","sille":"sille_","sille_":"sille_","lunkan_7":"FaZe_lunkan07","faze_lunkan07":"FaZe_lunkan07","curhed":"Curheed","curheed":"Curheed","disctrasan":"Disctrasan-","disctrasan-":"Disctrasan-","kxner":"Kxner__TTV","kxner__ttv":"Kxner__TTV","yungs":"Yungs99","yungs99":"Yungs99"}),
-    springTeams:Object.freeze(springTeams),
-    newTeams:Object.freeze(newTeams),
-    moveEvents:Object.freeze(moveEvents),
-    posterMemberships:Object.freeze(posterMemberships),
-    freeAgentEvents:Object.freeze(freeAgentEvents),
-    rosterSnapshots:Object.freeze(rosterSnapshots),
-    recruitment:Object.freeze({"Unwanted":{"date":"2026-08-11","target":"Elite","seeks":"Startande RD"},"Zero Ping":{"date":"2026-07-26","target":"Pro-kval","seeks":"G + HB/VF"},"PRIMA":{"date":"2026-07-29","target":"Lite","seeks":"C + back"},"BIK Karlskoga Academy":{"date":"2026-08-20","target":"Core","seeks":"C + vinge + back + backup G"},"vNexs Wisemen":{"date":"2026-07-31","target":"Lite","seeks":"G"},"Lila skeppet":{"date":"2026-08-03","target":"","seeks":"Back + G, ev. C"},"SSK Academy":{"date":"2026-08-10","target":"Lite","seeks":"VF + C + back"},"vNexs Vipers":{"date":"2026-08-18","target":"Pro","seeks":"2 forwards"},"Burchurs HC":{"date":"2026-09-03","target":"","seeks":"G + forward"},"Lilmix":{"date":"2026-08-31","target":"","seeks":"LD"},"Västerås IK":{"date":"2026-09-08","target":"Pro","seeks":"Start HF + backup Fwd/Back"}}),
-    extraTeamIds:Object.freeze({"Shadow Skulls":317,"VBO Stars":398,"Zero Ping":419})
+  const CACHE_KEY = "seh_ecl27_shared_source_v1";
+  const EMPTY = Object.freeze({
+    build:"supabase-loading",updated:"Hämtar ECL27-data…",aliases:{},
+    springTeams:[],newTeams:[],moveEvents:[],posterMemberships:[],freeAgentEvents:[],
+    rosterSnapshots:[],recruitment:{},extraTeamIds:{}
   });
+
+  function readCache() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+      return parsed && Array.isArray(parsed.springTeams) && Array.isArray(parsed.newTeams) ? parsed : null;
+    } catch (_) { return null; }
+  }
+
+  const cached = readCache();
+  window.SEH_ECL27_DATA = Object.freeze(cached || EMPTY);
+
+  const cfg = window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
+  const url = String(cfg.supabaseUrl || cfg.SUPABASE_URL || "").replace(/\/+$/, "");
+  const key = String(cfg.supabasePublishableKey || cfg.supabaseAnonKey || cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_PUBLISHABLE_KEY || "");
+  if (!url || !key) {
+    console.error("[ECL27] Supabase config missing; using cache/fallback");
+    return;
+  }
+
+  const headers = { apikey:key, Accept:"application/json" };
+  if (/^eyJ/i.test(key)) headers.Authorization = `Bearer ${key}`;
+
+  async function get(view, query) {
+    const response = await fetch(`${url}/rest/v1/${view}?${query}`, {headers,cache:"no-store"});
+    if (!response.ok) throw new Error(`${view}: HTTP ${response.status}`);
+    return response.json();
+  }
+
+  function atLocal(value) {
+    const text = String(value || "");
+    return text ? text.replace(/Z$/i, "").replace(/([+-]\d\d:\d\d)$/i, "").replace(" ", "T").slice(0,16) : "";
+  }
+
+  function dateOnly(value) { return String(value || "").slice(0,10); }
+
+  async function loadSharedSource() {
+    const [baseline,teams,events,recruitmentRows] = await Promise.all([
+      get("v_ecl27_spring_baseline","select=team_project_id,team_name,division,source_team_id,player_key,gamertag&order=team_name.asc,gamertag.asc"),
+      get("v_ecl27_team_builds_public","select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"),
+      get("v_ecl27_events_resolved","select=id,occurred_at,team_project_id,team_name,event_type,subject_key,display_gamertag,source_gamertag,from_team,to_team,source_note&order=occurred_at.asc,id.asc"),
+      get("ecl27_recruitment_posts","select=team_project_id,posted_at,text,is_active&is_active=eq.true&order=posted_at.asc,id.asc")
+    ]);
+
+    const byId = new Map(teams.map(t => [Number(t.id),t]));
+    const springMap = new Map();
+    for (const row of baseline) {
+      const id = Number(row.team_project_id);
+      if (!springMap.has(id)) {
+        const team = byId.get(id) || {};
+        springMap.set(id,{
+          name:String(row.team_name || team.name || ""),
+          division:String(row.division || team.division || ""),
+          teamId:Number(row.source_team_id || team.source_team_id) || null,
+          logoName:team.logo_name || undefined,
+          players:[]
+        });
+      }
+      const gt = String(row.gamertag || "").trim();
+      if (gt) springMap.get(id).players.push(gt);
+    }
+
+    const springTeams = Array.from(springMap.values());
+    const newTeams = teams.filter(t => t.is_new_project).map(t => ({
+      name:String(t.name || ""),division:"Nytt",teamId:Number(t.source_team_id) || null,
+      logoName:t.logo_name || undefined,players:[]
+    }));
+
+    const moveEvents=[];
+    const posterMemberships=[];
+    const freeAgentEvents=[];
+    for (const row of events) {
+      const at=atLocal(row.occurred_at);
+      const player=String(row.display_gamertag || row.source_gamertag || "").trim();
+      const note=String(row.source_note || "");
+      if (!player || !at) continue;
+      if (/poster membership/i.test(note)) {
+        posterMemberships.push({at,team:String(row.team_name || ""),player});
+      } else if (row.event_type === "free_agent") {
+        freeAgentEvents.push({at,player});
+      } else if (row.event_type === "in" || row.event_type === "out") {
+        moveEvents.push({
+          at,team:String(row.team_name || ""),type:row.event_type,player,
+          otherTeam:String(row.event_type === "in" ? (row.from_team || "") : (row.to_team || "")),
+          note:/imported from/i.test(note) ? "" : note
+        });
+      }
+    }
+
+    const latestRecruitment = new Map();
+    for (const row of recruitmentRows) latestRecruitment.set(Number(row.team_project_id),row);
+    const recruitment={};
+    for (const [id,row] of latestRecruitment) {
+      const team=byId.get(id); if (!team) continue;
+      const text=String(row.text || "").trim();
+      const parts=text.split(/\s+·\s+/);
+      recruitment[team.name]={
+        date:dateOnly(row.posted_at),
+        target:parts.length > 1 ? parts.shift() : "",
+        seeks:parts.length ? parts.join(" · ") : text
+      };
+    }
+
+    const extraTeamIds={};
+    for (const t of teams) if (t.is_new_project && Number(t.source_team_id)>0) extraTeamIds[t.name]=Number(t.source_team_id);
+    const latest = events.length ? events[events.length-1] : null;
+    const model={
+      build:`supabase-${latest ? String(latest.id) : "0"}`,
+      updated:latest ? `${dateOnly(latest.occurred_at)} · ${latest.team_name} ${latest.event_type === "in" ? "IN" : "UT"}: ${latest.display_gamertag || latest.source_gamertag}` : "Supabase",
+      aliases:{},springTeams,newTeams,moveEvents,posterMemberships,freeAgentEvents,
+      rosterSnapshots:[],recruitment,extraTeamIds
+    };
+
+    const next=JSON.stringify(model);
+    let previous="";
+    try { previous=localStorage.getItem(CACHE_KEY) || ""; localStorage.setItem(CACHE_KEY,next); } catch (_) {}
+    window.SEH_ECL27_DATA=Object.freeze(model);
+
+    // Existing deterministic renderer reads the model synchronously at script load.
+    // Reload only when the one-shot server refresh produced a newer model.
+    if (previous !== next) {
+      if (sessionStorage.getItem("seh_ecl27_supabase_reload") !== next.slice(0,256)) {
+        try { sessionStorage.setItem("seh_ecl27_supabase_reload",next.slice(0,256)); } catch (_) {}
+        window.location.reload();
+      }
+    } else {
+      try { sessionStorage.removeItem("seh_ecl27_supabase_reload"); } catch (_) {}
+    }
+  }
+
+  loadSharedSource().catch(error => console.error("[ECL27] Supabase source refresh failed; using cache/fallback",error));
 })();
