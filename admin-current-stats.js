@@ -169,4 +169,29 @@
     window.setTimeout(mount, 0);
   });
   mount();
+
+  /*
+    ECL 27 emergency guard:
+    De tre ECL 27-tilläggsskripten laddas direkt efter denna fil. Två av dem skapade
+    MutationObservers som själva skrev om DOM:en och därmed triggade sig själva i en
+    oändlig render-loop. Admin-observern ovan är redan skapad, så vi kan tillfälligt
+    ersätta MutationObserver medan ECL-skripten evalueras och återställa den på nästa
+    event-loop-varv. ECL-skripten har egna hash/load/input-handlers och fungerar utan
+    de kontinuerliga observers som orsakade låsningen.
+  */
+  if (!window.__sehNativeMutationObserver && window.MutationObserver) {
+    window.__sehNativeMutationObserver = window.MutationObserver;
+    window.MutationObserver = class SehNoopMutationObserver {
+      constructor() {}
+      observe() {}
+      disconnect() {}
+      takeRecords() { return []; }
+    };
+    window.setTimeout(function () {
+      if (window.__sehNativeMutationObserver) {
+        window.MutationObserver = window.__sehNativeMutationObserver;
+        delete window.__sehNativeMutationObserver;
+      }
+    }, 0);
+  }
 }());
