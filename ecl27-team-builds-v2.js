@@ -17,6 +17,8 @@
   const DIVISION_ORDER = Object.freeze({Elite:0,Pro:1,Lite:2,Core:3,Neo:4,Nytt:5});
   const state = {search:"",division:"all",status:"all"};
   const $ = (selector, root=document) => root.querySelector(selector);
+  const numberFormat = new Intl.NumberFormat("sv-SE");
+  let directoryClient = null;
 
   function norm(value) {
     return String(value || "").trim().toLocaleLowerCase("sv-SE").replace(/\s+/g, " ");
@@ -425,6 +427,159 @@
     return (team.players || []).map(canonical).filter(Boolean).sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
   }
 
+  function rosterEvidence(team, name) {
+    const key = playerKey(name);
+    const candidates = [];
+
+    for (const row of team.timeline || []) {
+      if (row.type !== "in" || playerKey(row.player) !== key) continue;
+      candidates.push({
+        at: row.at,
+        type: "in",
+        label: `IN ${formatDate(row.at)}`,
+        detail: row.otherTeam ? `från ${row.otherTeam}` : "bekräftad IN-post"
+      });
+    }
+
+    for (const row of DATA.posterMemberships || []) {
+      if (norm(row.team) !== norm(team.name) || playerKey(row.player) !== key) continue;
+      candidates.push({
+        at: row.at,
+        type: "poster",
+        label: `LAGPOST ${formatDate(row.at)}`,
+        detail: "bekräftad via lagets egen post"
+      });
+    }
+
+    for (const row of DATA.rosterSnapshots || []) {
+      if (norm(row.team) !== norm(team.name)) continue;
+      if (!(row.players || []).some((player) => playerKey(player) === key)) continue;
+      candidates.push({
+        at: row.at,
+        type: "snapshot",
+        label: `TRUPPPOST ${formatDate(row.at)}`,
+        detail: "med i senaste uttryckliga truppen"
+      });
+    }
+
+    candidates.sort((a,b) => String(b.at).localeCompare(String(a.at)));
+    if (candidates.length) return candidates[0];
+
+    const inSpring = team.kind === "spring" && (team.players || []).some((player) => playerKey(player) === key);
+    if (inSpring) {
+      return {at:"",type:"spring",label:"SPRING-BAS",detail:`ECL ’26 Spring · ${team.division}`};
+    }
+
+    return {at:"",type:"known",label:"KÄND NU",detail:"aktuell enligt sammanställningen"};
+  }
+
+  function sportsGamerId(url) {
+    return String(url || "").match(/\/players\/(\d+)/i)?.[1] || "";
+  }
+
+  function localPlayerImage(row) {
+    const fallback = "players/1DEFAULTBILDID.png";
+    if (!row) return fallback;
+
+    const id = sportsGamerId(row.sports_gamer_player_url);
+    if (id) {
+      const file = `${id}.png`;
+      if (Array.isArray(window.SEH_PLAYER_IMAGE_FILES) && window.SEH_PLAYER_IMAGE_FILES.includes(file)) {
+        return `players/${encodeURIComponent(file)}`;
+      }
+    }
+
+    const raw = String(row.player_image || "").trim();
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return fallback;
+  }
+
+  function compactLatestSeason(value) {
+    return String(value || "")
+      .replace(/\s*[🇦-🇿]{2}\s*$/u, "")
+      .replace(/^European Championship League\b/i, "ECL")
+      .trim();
+  }
+
+  function formatMetaNumber(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? numberFormat.format(n) : "–";
+  }
+
+  function renderDetailRosterCard(team, name, row=null) {
+    const evidence = rosterEvidence(team,name);
+    const position = String(row?.primary_position || "–").trim() || "–";
+    const isGoalie = position.toUpperCase() === "G" || String(row?.player_type || "").toLowerCase() === "goalie";
+    const statTwoLabel = isGoalie ? "RÄDDNINGAR" : "POÄNG";
+    const statTwoValue = isGoalie ? row?.total_goalie_saves : row?.total_points;
+    const latest = [row?.latest_team, compactLatestSeason(row?.latest_season)].filter(Boolean).join(" · ");
+    const teamLogo = logoUrl(team);
+    const image = localPlayerImage(row);
+
+    return `<a class="ecl27v2-roster-feature${row ? " is-hydrated" : " is-loading"}" href="${esc(playerUrl(name))}" data-player-card-key="${esc(playerKey(name))}">
+      <div class="ecl27v2-roster-feature__portrait"><img src="${esc(image)}" alt="${esc(name)}" loading="lazy" onerror="this.onerror=null;this.src='players/1DEFAULTBILDID.png'"></div>
+      ${teamLogo ? `<img class="ecl27v2-roster-feature__watermark" src="${esc(teamLogo)}" alt="" aria-hidden="true">` : ""}
+      <div class="ecl27v2-roster-feature__body">
+        <div class="ecl27v2-roster-feature__top"><span>AKTUELL TRUPP</span><b>${esc(position)}</b></div>
+        <h4>${esc(name)}</h4>
+        <div class="ecl27v2-roster-feature__evidence is-${esc(evidence.type)}"><strong>${esc(evidence.label)}</strong><small>${esc(evidence.detail)}</small></div>
+        <div class="ecl27v2-roster-feature__stats">
+          <div><span>MATCHER</span><strong>${formatMetaNumber(row?.career_games)}</strong></div>
+          <div><span>${statTwoLabel}</span><strong>${formatMetaNumber(statTwoValue)}</strong></div>
+          <div><span>TURNERINGAR</span><strong>${formatMetaNumber(row?.tournament_count)}</strong></div>
+        </div>
+        <div class="ecl27v2-roster-feature__latest"><span>SENAST I DATABASEN</span><strong>${esc(latest || "Laddar spelaruppgifter…")}</strong></div>
+      </div>
+    </a>`;
+  }
+
+  function getDirectoryClient() {
+    if (directoryClient) return directoryClient;
+    const config = window.EHOCKEY_CONFIG || {};
+    if (!window.supabase?.createClient || !config.supabaseUrl || !config.supabasePublishableKey) return null;
+    directoryClient = window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey,{
+      auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+    });
+    return directoryClient;
+  }
+
+  async function fetchDirectoryRows(names) {
+    const client = getDirectoryClient();
+    if (!client || !names.length) return [];
+
+    const select = "player_key,display_gamertag,player_image,sports_gamer_player_url,primary_position,latest_season,latest_team,career_games,total_points,player_type,tournament_count,total_goalie_saves";
+    const {data,error} = await client.from("app_player_directory_cache").select(select).in("display_gamertag",names);
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? [...data] : [];
+    const found = new Set(rows.map((row) => norm(row.display_gamertag)));
+    const missing = names.filter((name) => !found.has(norm(name)));
+
+    if (missing.length) {
+      const extras = await Promise.all(missing.map(async (name) => {
+        const result = await client.from("app_player_directory_cache").select(select).ilike("display_gamertag",name).limit(8);
+        if (result.error) return null;
+        return (result.data || []).find((row) => norm(row.display_gamertag) === norm(name)) || null;
+      }));
+      for (const row of extras) if (row) rows.push(row);
+    }
+
+    return rows;
+  }
+
+  async function hydrateDetailRoster(team, section) {
+    const host = $("#ecl27v2DetailRosterCards",section);
+    if (!host || !team.playersNow.length) return;
+
+    try {
+      const rows = await fetchDirectoryRows(team.playersNow);
+      const byName = new Map(rows.map((row) => [norm(row.display_gamertag),row]));
+      host.innerHTML = team.playersNow.map((name) => renderDetailRosterCard(team,name,byName.get(norm(name)) || null)).join("");
+    } catch (error) {
+      console.warn("[ECL27] kunde inte hämta spelaruppgifter för lagbygget",error);
+    }
+  }
+
   function renderTeamDetail(team) {
     const status = statusFor(team);
     const logo = logoUrl(team);
@@ -454,24 +609,25 @@
         <div><span>STATUS</span><strong class="status-text">${esc(status.label)}</strong></div>
       </div>
 
-      <div class="ecl27v2-detail-grid">
-        <section class="ecl27v2-detail-panel ecl27v2-detail-roster">
-          <div class="ecl27v2-detail-panel-head"><p class="directory-kicker">JUST NU</p><h3>Känd trupp</h3></div>
-          <div class="ecl27v2-detail-player-list">${team.playersNow.length ? team.playersNow.map((name) => playerLink(name,"ecl27v2-detail-player")).join("") : `<em>Ingen säker spelare kvar i sammanställningen.</em>`}</div>
-        </section>
-        <section class="ecl27v2-detail-panel">
-          <div class="ecl27v2-detail-panel-head"><p class="directory-kicker">REKRYTERING</p><h3>Lagets senaste sökpost</h3></div>
-          ${team.recruitment ? renderRecruitment(team,true) : `<p class="ecl27v2-detail-empty">Ingen aktuell sökpost finns i underlaget.</p>`}
-        </section>
-      </div>
+      <section class="ecl27v2-detail-panel ecl27v2-detail-roster-featured">
+        <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">JUST NU</p><h3>Känd trupp</h3></div><span>${team.playersNow.length} spelare</span></div>
+        <div id="ecl27v2DetailRosterCards" class="ecl27v2-roster-feature-grid">${team.playersNow.length
+          ? team.playersNow.map((name) => renderDetailRosterCard(team,name)).join("")
+          : `<p class="ecl27v2-detail-empty">Ingen säker spelare kvar i sammanställningen.</p>`}</div>
+      </section>
+
+      <section class="ecl27v2-detail-panel">
+        <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">REKRYTERING</p><h3>Lagets senaste sökpost</h3></div></div>
+        ${team.recruitment ? renderRecruitment(team,true) : `<p class="ecl27v2-detail-empty">Ingen aktuell sökpost finns i underlaget.</p>`}
+      </section>
 
       <section class="ecl27v2-detail-panel ecl27v2-detail-timeline">
-        <div class="ecl27v2-detail-panel-head"><p class="directory-kicker">KRONOLOGI</p><h3>Bekräftade rörelser</h3><span>${team.timeline.length} händelser</span></div>
+        <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">KRONOLOGI</p><h3>Bekräftade rörelser</h3></div><span>${team.timeline.length} händelser</span></div>
         <div class="ecl27v2-detail-moves">${team.timeline.length ? team.timeline.map(renderMove).join("") : `<p class="ecl27v2-detail-empty">Inga bekräftade IN/UT-rörelser i underlaget.</p>`}</div>
       </section>
 
       <section class="ecl27v2-detail-panel">
-        <div class="ecl27v2-detail-panel-head"><p class="directory-kicker">UTGÅNGSPUNKT</p><h3>${team.kind === "spring" ? "ECL ’26 Spring-trupp" : "Nytt projekt"}</h3></div>
+        <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">UTGÅNGSPUNKT</p><h3>${team.kind === "spring" ? "ECL ’26 Spring-trupp" : "Nytt projekt"}</h3></div></div>
         ${team.kind === "spring"
           ? `<div class="ecl27v2-detail-base-list">${basePlayers.map((name) => playerLink(name,"ecl27v2-detail-base-player")).join("")}</div>`
           : `<p class="ecl27v2-detail-empty">Laget hade ingen Spring-trupp som bas och byggs därför enbart från senare bekräftade händelser.</p>`}
@@ -521,8 +677,10 @@
       .ecl27v2-recruit{position:relative;margin-top:12px;padding:10px 72px 10px 10px;border:1px solid rgba(214,177,95,.18);border-radius:9px;background:rgba(214,177,95,.035)}.ecl27v2-recruit div{color:#d9c790;font-size:9px}.ecl27v2-recruit time{position:absolute;right:10px;top:10px;color:#71879a;font-size:8px}
       .ecl27v2-moves{margin-top:14px;padding-top:12px;border-top:1px solid #142737}.ecl27v2-move{display:grid;grid-template-columns:28px minmax(80px,1fr) minmax(0,1.1fr) 42px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(24,47,63,.45)}.ecl27v2-move>span{font-size:8px;font-weight:950}.ecl27v2-move--in>span{color:#45e3c5}.ecl27v2-move--out>span{color:#ff7d7d}.ecl27v2-move.is-fa{background:rgba(255,211,79,.025)}.ecl27v2-player{font-size:10px;font-weight:800}.ecl27v2-move small{color:#71879a;font-size:8px}.ecl27v2-move time{color:#61798d;font-size:8px;text-align:right}.ecl27v2-inline-team{color:#8ba4b7!important}.ecl27v2-moves>p{color:#738698;font-size:10px}.ecl27v2-card details{margin-top:10px}.ecl27v2-card summary{cursor:pointer;color:#d9bd71;font-size:9px;font-weight:900}
       .ecl27v2-method{margin-top:15px;padding:18px 20px;border-left:3px solid #d6b15f;background:#060d14;color:#91a4b4;font-size:11px;line-height:1.55}.ecl27v2-method strong{display:block;margin-bottom:4px;color:#f0d58b}
-      .ecl27v2-detail{display:grid;gap:16px}.ecl27v2-back{width:max-content;padding:8px 12px;border:1px solid #203549;border-radius:999px;background:#030a11;color:#b8c7d2!important;font-size:10px;font-weight:850}.ecl27v2-detail-hero{display:grid;grid-template-columns:150px minmax(0,1fr);gap:26px;align-items:center;padding:28px;border:1px solid rgba(214,177,95,.32);border-radius:20px;background:linear-gradient(145deg,#04111d,#02080e);box-shadow:0 24px 54px rgba(0,0,0,.24)}.ecl27v2-detail-logo{display:grid;place-items:center;width:150px;height:150px;border:1px solid #203549;border-radius:24px;background:#061522;overflow:hidden}.ecl27v2-detail-logo img{width:88%;height:88%;object-fit:contain}.ecl27v2-detail-logo span{color:#e4c56f;font-size:32px;font-weight:950}.ecl27v2-detail-title h2{margin:3px 0 10px;font-size:clamp(40px,5vw,72px);line-height:.92;letter-spacing:-.045em}.ecl27v2-detail-title>p:last-of-type{max-width:850px;color:#91a4b4;line-height:1.6}.ecl27v2-team-profile{display:inline-flex;margin-top:10px;padding:9px 12px;border:1px solid rgba(214,177,95,.35);border-radius:9px;color:#f0d58b!important;font-size:10px;font-weight:900}.ecl27v2-detail-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.ecl27v2-detail-metrics>div{padding:16px;border:1px solid #172839;border-radius:12px;background:#030a11}.ecl27v2-detail-metrics span{display:block;color:#6b879a;font-size:8px;font-weight:950;letter-spacing:.1em}.ecl27v2-detail-metrics strong{display:block;margin-top:6px;font-size:28px}.ecl27v2-detail-metrics .status-text{font-size:15px;color:#f0d58b;line-height:1.25}.ecl27v2-detail-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:12px}.ecl27v2-detail-panel{padding:20px;border:1px solid #172839;border-radius:16px;background:#02080e}.ecl27v2-detail-panel-head{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:14px}.ecl27v2-detail-panel-head h3{margin:2px 0 0;font-size:24px}.ecl27v2-detail-panel-head>span{color:#70869a;font-size:9px}.ecl27v2-detail-player-list,.ecl27v2-detail-base-list{display:flex;flex-wrap:wrap;gap:8px}.ecl27v2-detail-player,.ecl27v2-detail-base-player{padding:9px 11px;border:1px solid #1c3447;border-radius:8px;background:#05121c;font-size:11px;font-weight:850}.ecl27v2-detail-player{border-color:rgba(214,177,95,.28)}.ecl27v2-detail-recruit{margin:0}.ecl27v2-detail-empty{margin:0;color:#71879a;font-size:11px;line-height:1.5}.ecl27v2-detail-timeline .ecl27v2-move{grid-template-columns:42px minmax(140px,.8fr) minmax(160px,1.2fr) 62px;padding:10px 0}.ecl27v2-detail-timeline .ecl27v2-player{font-size:12px}.ecl27v2-detail-timeline .ecl27v2-move small,.ecl27v2-detail-timeline .ecl27v2-move time{font-size:10px}
-      @media(max-width:1180px){.ecl27v2-grid{grid-template-columns:repeat(2,1fr)}.ecl27v2-feed{grid-template-columns:1fr}}@media(max-width:780px){.ecl27v2-hero{grid-template-columns:1fr;padding:23px}.ecl27v2-overview{grid-template-columns:repeat(2,1fr)}.ecl27v2-toolbar{grid-template-columns:1fr}.ecl27v2-grid{grid-template-columns:1fr}.ecl27v2-feed-row{grid-template-columns:42px 30px 1fr}.ecl27v2-feed-row>.ecl27v2-feed-team,.ecl27v2-feed-row>small{grid-column:3}.ecl27v2-move{grid-template-columns:28px minmax(90px,1fr) 46px}.ecl27v2-move small{grid-column:2}.ecl27v2-move time{grid-column:3;grid-row:1}.ecl27v2-detail-hero{grid-template-columns:92px 1fr;padding:18px;gap:16px}.ecl27v2-detail-logo{width:92px;height:92px;border-radius:16px}.ecl27v2-detail-title h2{font-size:36px}.ecl27v2-detail-metrics{grid-template-columns:repeat(2,1fr)}.ecl27v2-detail-grid{grid-template-columns:1fr}.ecl27v2-detail-timeline .ecl27v2-move{grid-template-columns:28px minmax(90px,1fr) 46px}.ecl27v2-detail-timeline .ecl27v2-move small{grid-column:2}.ecl27v2-detail-timeline .ecl27v2-move time{grid-column:3;grid-row:1}}
+      .ecl27v2-detail{display:grid;gap:16px}.ecl27v2-back{width:max-content;padding:8px 12px;border:1px solid #203549;border-radius:999px;background:#030a11;color:#b8c7d2!important;font-size:10px;font-weight:850}.ecl27v2-detail-hero{display:grid;grid-template-columns:150px minmax(0,1fr);gap:26px;align-items:center;padding:28px;border:1px solid rgba(214,177,95,.32);border-radius:20px;background:linear-gradient(145deg,#04111d,#02080e);box-shadow:0 24px 54px rgba(0,0,0,.24)}.ecl27v2-detail-logo{display:grid;place-items:center;width:150px;height:150px;border:1px solid #203549;border-radius:24px;background:#061522;overflow:hidden}.ecl27v2-detail-logo img{width:88%;height:88%;object-fit:contain}.ecl27v2-detail-logo span{color:#e4c56f;font-size:32px;font-weight:950}.ecl27v2-detail-title h2{margin:3px 0 10px;font-size:clamp(40px,5vw,72px);line-height:.92;letter-spacing:-.045em}.ecl27v2-detail-title>p:last-of-type{max-width:850px;color:#91a4b4;line-height:1.6}.ecl27v2-team-profile{display:inline-flex;margin-top:10px;padding:9px 12px;border:1px solid rgba(214,177,95,.35);border-radius:9px;color:#f0d58b!important;font-size:10px;font-weight:900}.ecl27v2-detail-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.ecl27v2-detail-metrics>div{padding:16px;border:1px solid #172839;border-radius:12px;background:#030a11}.ecl27v2-detail-metrics span{display:block;color:#6b879a;font-size:8px;font-weight:950;letter-spacing:.1em}.ecl27v2-detail-metrics strong{display:block;margin-top:6px;font-size:28px}.ecl27v2-detail-metrics .status-text{font-size:15px;color:#f0d58b;line-height:1.25}.ecl27v2-detail-panel{padding:20px;border:1px solid #172839;border-radius:16px;background:#02080e}.ecl27v2-detail-panel-head{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:14px}.ecl27v2-detail-panel-head h3{margin:2px 0 0;font-size:24px}.ecl27v2-detail-panel-head>span{color:#70869a;font-size:9px}.ecl27v2-detail-base-list{display:flex;flex-wrap:wrap;gap:8px}.ecl27v2-detail-base-player{padding:9px 11px;border:1px solid #1c3447;border-radius:8px;background:#05121c;font-size:11px;font-weight:850}.ecl27v2-detail-recruit{margin:0}.ecl27v2-detail-empty{margin:0;color:#71879a;font-size:11px;line-height:1.5}.ecl27v2-detail-timeline .ecl27v2-move{grid-template-columns:42px minmax(140px,.8fr) minmax(160px,1.2fr) 62px;padding:10px 0}.ecl27v2-detail-timeline .ecl27v2-player{font-size:12px}.ecl27v2-detail-timeline .ecl27v2-move small,.ecl27v2-detail-timeline .ecl27v2-move time{font-size:10px}
+      .ecl27v2-detail-roster-featured{padding:22px}.ecl27v2-roster-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ecl27v2-roster-feature{position:relative;display:grid;grid-template-columns:150px minmax(0,1fr);min-height:248px;overflow:hidden;border:1px solid rgba(214,177,95,.42);border-radius:16px;background:linear-gradient(135deg,#04111d 0%,#02070d 75%);color:#fff!important;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}.ecl27v2-roster-feature:hover,.ecl27v2-roster-feature:focus-visible{transform:translateY(-2px);border-color:#f0d58b;box-shadow:0 18px 34px rgba(0,0,0,.3);text-decoration:none!important;outline:none}.ecl27v2-roster-feature:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:#f0d000;z-index:3}.ecl27v2-roster-feature__portrait{position:relative;z-index:2;overflow:hidden;background:linear-gradient(155deg,#0a2a48,#06101b)}.ecl27v2-roster-feature__portrait:after{content:"";position:absolute;inset:0;border-right:1px solid rgba(240,208,0,.5);pointer-events:none}.ecl27v2-roster-feature__portrait img{display:block;width:100%;height:100%;min-height:248px;object-fit:cover;object-position:center top}.ecl27v2-roster-feature__watermark{position:absolute;right:-22px;top:-12px;width:145px;height:145px;object-fit:contain;opacity:.07;filter:grayscale(1);pointer-events:none}.ecl27v2-roster-feature__body{position:relative;z-index:2;display:flex;flex-direction:column;padding:16px}.ecl27v2-roster-feature__top{display:flex;align-items:center;justify-content:space-between;gap:12px}.ecl27v2-roster-feature__top span{color:#48e4dc;font-size:8px;font-weight:950;letter-spacing:.12em}.ecl27v2-roster-feature__top b{display:grid;place-items:center;min-width:34px;height:28px;padding:0 8px;border:1px solid #e6cb36;border-radius:8px;color:#ffe52b;font-size:13px}.ecl27v2-roster-feature h4{margin:8px 0 10px;font-size:clamp(22px,2vw,32px);line-height:.95;letter-spacing:-.035em}.ecl27v2-roster-feature__evidence{display:flex;align-items:center;gap:8px;min-height:34px;padding:7px 9px;border:1px solid rgba(214,177,95,.24);border-radius:8px;background:rgba(214,177,95,.045)}.ecl27v2-roster-feature__evidence strong{color:#f0d58b;font-size:9px;letter-spacing:.04em}.ecl27v2-roster-feature__evidence small{color:#8ca1b2;font-size:8px}.ecl27v2-roster-feature__evidence.is-in strong{color:#49e7cb}.ecl27v2-roster-feature__evidence.is-poster strong,.ecl27v2-roster-feature__evidence.is-snapshot strong{color:#ffe257}.ecl27v2-roster-feature__stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:11px;border:1px solid #193247;border-radius:9px;overflow:hidden;background:#020a12}.ecl27v2-roster-feature__stats>div{padding:8px 7px;border-right:1px solid #193247}.ecl27v2-roster-feature__stats>div:last-child{border-right:0}.ecl27v2-roster-feature__stats span,.ecl27v2-roster-feature__latest span{display:block;color:#5be5dc;font-size:6px;font-weight:950;letter-spacing:.1em}.ecl27v2-roster-feature__stats strong{display:block;margin-top:3px;font-size:17px}.ecl27v2-roster-feature__latest{margin-top:auto;padding-top:9px}.ecl27v2-roster-feature__latest strong{display:block;margin-top:3px;color:#aebdca;font-size:8px;line-height:1.35}.ecl27v2-roster-feature.is-loading{opacity:.78}.ecl27v2-roster-feature.is-loading .ecl27v2-roster-feature__portrait img{filter:grayscale(.25)}
+      @media(max-width:1180px){.ecl27v2-grid{grid-template-columns:repeat(2,1fr)}.ecl27v2-feed{grid-template-columns:1fr}.ecl27v2-roster-feature-grid{grid-template-columns:1fr}}
+      @media(max-width:780px){.ecl27v2-hero{grid-template-columns:1fr;padding:23px}.ecl27v2-overview{grid-template-columns:repeat(2,1fr)}.ecl27v2-toolbar{grid-template-columns:1fr}.ecl27v2-grid{grid-template-columns:1fr}.ecl27v2-feed-row{grid-template-columns:42px 30px 1fr}.ecl27v2-feed-row>.ecl27v2-feed-team,.ecl27v2-feed-row>small{grid-column:3}.ecl27v2-move{grid-template-columns:28px minmax(90px,1fr) 46px}.ecl27v2-move small{grid-column:2}.ecl27v2-move time{grid-column:3;grid-row:1}.ecl27v2-detail-hero{grid-template-columns:92px 1fr;padding:18px;gap:16px}.ecl27v2-detail-logo{width:92px;height:92px;border-radius:16px}.ecl27v2-detail-title h2{font-size:36px}.ecl27v2-detail-metrics{grid-template-columns:repeat(2,1fr)}.ecl27v2-detail-timeline .ecl27v2-move{grid-template-columns:28px minmax(90px,1fr) 46px}.ecl27v2-detail-timeline .ecl27v2-move small{grid-column:2}.ecl27v2-detail-timeline .ecl27v2-move time{grid-column:3;grid-row:1}.ecl27v2-roster-feature{grid-template-columns:112px minmax(0,1fr);min-height:218px}.ecl27v2-roster-feature__portrait img{min-height:218px}.ecl27v2-roster-feature__body{padding:12px}.ecl27v2-roster-feature__stats strong{font-size:14px}.ecl27v2-roster-feature__evidence{align-items:flex-start;flex-direction:column;gap:2px}}
     `;
     document.head.appendChild(style);
   }
@@ -562,13 +720,13 @@
     section.id = "ecl27TeamBuildsV2";
     section.className = "ecl27v2";
     section.dataset.build = DATA.build;
-
     overview.insertAdjacentElement("afterend",section);
 
     const wantedSlug = requestedTeamSlug();
     const wantedTeam = wantedSlug ? model.teams.find((team) => slug(team.name) === wantedSlug) : null;
     if (wantedTeam) {
       section.innerHTML = renderTeamDetail(wantedTeam);
+      hydrateDetailRoster(wantedTeam,section);
       document.title = `${wantedTeam.name} – ECL 27 lagbygge | Svensk eHockey`;
     } else {
       if (wantedSlug) history.replaceState(null,"",seasonListUrl());
