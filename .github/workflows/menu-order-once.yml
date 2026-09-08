@@ -19,80 +19,18 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import base64
 
           path = Path('app.js')
           text = path.read_text(encoding='utf-8')
-
-          start_marker = '''          <a
-            class="${route.active === "home" ? "is-active" : ""}"
-            href="#/"
-          >'''
-          end_marker = '''          <a
-            class="seh-nav-auth seh-nav-auth--writer'''
-
+          start_marker = '          <a\n            class="${route.active === "home" ? "is-active" : ""}"'
+          end_marker = '          <a\n            class="seh-nav-auth seh-nav-auth--writer'
           start = text.find(start_marker)
           end = text.find(end_marker, start)
           if start < 0 or end < 0:
               raise SystemExit('Main navigation block not found; refusing to patch')
 
-          new_links = '''          <a
-            class="${route.active === "home" ? "is-active" : ""}"
-            href="#/"
-          >
-            Hem
-          </a>
-
-          <a
-            class="${route.active === "news" ? "is-active" : ""}"
-            href="#/nyheter"
-          >
-            Nyheter
-          </a>
-
-          <a
-            class="${route.active === "players" ? "is-active" : ""}"
-            href="#/spelare"
-          >
-            Spelare
-          </a>
-
-          <a
-            class="${route.active === "history" ? "is-active" : ""}"
-            href="#/laghistoria"
-          >
-            Laghistoria
-          </a>
-
-          <a
-            class="${route.active === "ecl" ? "is-active" : ""}"
-            href="#/sasong/ecl27winter"
-          >
-            Tävlingar
-          </a>
-
-          <a
-            class="${route.active === "freeAgents" ? "is-active" : ""}"
-            href="#/free-agents"
-          >
-            Free Agents
-          </a>
-
-          <a
-            class="${route.active === "shop" ? "is-active" : ""}"
-            href="#/shop"
-          >
-            Shop
-          </a>
-
-          <a
-            class="seh-nav-sec"
-            href="SEC/"
-          >
-            SEC
-          </a>
-
-'''
-
+          new_links = base64.b64decode('ICAgICAgICAgIDxhCiAgICAgICAgICAgIGNsYXNzPSIke3JvdXRlLmFjdGl2ZSA9PT0gImhvbWUiID8gImlzLWFjdGl2ZSIgOiAiIn0iCiAgICAgICAgICAgIGhyZWY9IiMvIgogICAgICAgICAgPgogICAgICAgICAgICBIZW0KICAgICAgICAgIDwvYT4KCiAgICAgICAgICA8YQogICAgICAgICAgICBjbGFzcz0iJHtyb3V0ZS5hY3RpdmUgPT09ICJuZXdzIiA/ICJpcy1hY3RpdmUiIDogIiJ9IgogICAgICAgICAgICBocmVmPSIjL255aGV0ZXIiCiAgICAgICAgICA+CiAgICAgICAgICAgIE55aGV0ZXIKICAgICAgICAgIDwvYT4KCiAgICAgICAgICA8YQogICAgICAgICAgICBjbGFzcz0iJHtyb3V0ZS5hY3RpdmUgPT09ICJwbGF5ZXJzIiA/ICJpcy1hY3RpdmUiIDogIiJ9IgogICAgICAgICAgICBocmVmPSIjL3NwZWxhcmUiCiAgICAgICAgICA+CiAgICAgICAgICAgIFNwZWxhcmUKICAgICAgICAgIDwvYT4KCiAgICAgICAgICA8YQogICAgICAgICAgICBjbGFzcz0iJHtyb3V0ZS5hY3RpdmUgPT09ICJoaXN0b3J5IiA/ICJpcy1hY3RpdmUiIDogIiJ9IgogICAgICAgICAgICBocmVmPSIjL2xhZ2hpc3RvcmlhIgogICAgICAgICAgPgogICAgICAgICAgICBMYWdoaXN0b3JpYQogICAgICAgICAgPC9hPgoKICAgICAgICAgIDxhCiAgICAgICAgICAgIGNsYXNzPSIke3JvdXRlLmFjdGl2ZSA9PT0gImVjbCIgPyAiaXMtYWN0aXZlIiA6ICIifSIKICAgICAgICAgICAgaHJlZj0iIy9zYXNvbmcvc2VjbDI3d2ludGVyIgogICAgICAgICAgPgogICAgICAgICAgICBUw6R2bGluZ2FyCiAgICAgICAgICA8L2E+CgogICAgICAgICAgPGEKICAgICAgICAgICAgY2xhc3M9IiR7cm91dGUuYWN0aXZlID09PSAiZnJlZUFnZW50cyIgPyAiaXMtYWN0aXZlIiA6ICIifSIKICAgICAgICAgICAgaHJlZj0iIy9mcmVlLWFnZW50cyIKICAgICAgICAgID4KICAgICAgICAgICAgRnJlZSBBZ2VudHMKICAgICAgICAgIDwvYT4KCiAgICAgICAgICA8YQogICAgICAgICAgICBjbGFzcz0iJHtyb3V0ZS5hY3RpdmUgPT09ICJzaG9wIiA/ICJpcy1hY3RpdmUiIDogIiJ9IgogICAgICAgICAgICBocmVmPSIjL3Nob3AiCiAgICAgICAgICA+CiAgICAgICAgICAgIFNob3AKICAgICAgICAgIDwvYT4KCiAgICAgICAgICA8YQogICAgICAgICAgICBjbGFzcz0ic2VoLW5hdi1zZWMiCiAgICAgICAgICAgIGhyZWY9IlNFQy8iCiAgICAgICAgICA+CiAgICAgICAgICAgIFNFQwogICAgICAgICAgPC9hPgoK').decode('utf-8')
           text = text[:start] + new_links + text[end:]
           path.write_text(text, encoding='utf-8')
 
@@ -102,8 +40,7 @@ jobs:
           new = 'app.js?v=20260908-v12996-competitions-menu'
           if old not in html:
               raise SystemExit('Expected app.js cache version not found; refusing to patch index')
-          html = html.replace(old, new, 1)
-          index.write_text(html, encoding='utf-8')
+          index.write_text(html.replace(old, new, 1), encoding='utf-8')
           PY
       - name: Commit menu update
         shell: bash
