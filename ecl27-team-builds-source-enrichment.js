@@ -1,8 +1,9 @@
 /*
   ECL 27 canonical source model – Supabase backed.
-  The renderer still consumes window.SEH_ECL27_DATA, but the data now comes
-  from the shared database used by the Android app. One fetch per page load;
-  localStorage is only a read cache/fallback and never writes back to Supabase.
+  The renderer consumes window.SEH_ECL27_DATA after waiting for
+  window.SEH_ECL27_DATA_READY. The shared Supabase model is fetched once per
+  page load; localStorage is only a read cache/fallback and never writes back
+  to Supabase.
 */
 (function () {
   "use strict";
@@ -27,10 +28,6 @@
   const cfg = window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
   const url = String(cfg.supabaseUrl || cfg.SUPABASE_URL || "").replace(/\/+$/, "");
   const key = String(cfg.supabasePublishableKey || cfg.supabaseAnonKey || cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_PUBLISHABLE_KEY || "");
-  if (!url || !key) {
-    console.error("[ECL27] Supabase config missing; using cache/fallback");
-    return;
-  }
 
   const headers = { apikey:key, Accept:"application/json" };
   if (/^eyJ/i.test(key)) headers.Authorization = `Bearer ${key}`;
@@ -49,6 +46,8 @@
   function dateOnly(value) { return String(value || "").slice(0,10); }
 
   async function loadSharedSource() {
+    if (!url || !key) throw new Error("Supabase config missing");
+
     const [baseline,teams,events,recruitmentRows] = await Promise.all([
       get("v_ecl27_spring_baseline","select=team_project_id,team_name,division,source_team_id,player_key,gamertag&order=team_name.asc,gamertag.asc"),
       get("v_ecl27_team_builds_public","select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"),
@@ -125,22 +124,20 @@
       rosterSnapshots:[],recruitment,extraTeamIds
     };
 
-    const next=JSON.stringify(model);
-    let previous="";
-    try { previous=localStorage.getItem(CACHE_KEY) || ""; localStorage.setItem(CACHE_KEY,next); } catch (_) {}
+    try { localStorage.setItem(CACHE_KEY,JSON.stringify(model)); } catch (_) {}
     window.SEH_ECL27_DATA=Object.freeze(model);
-
-    // Existing deterministic renderer reads the model synchronously at script load.
-    // Reload only when the one-shot server refresh produced a newer model.
-    if (previous !== next) {
-      if (sessionStorage.getItem("seh_ecl27_supabase_reload") !== next.slice(0,256)) {
-        try { sessionStorage.setItem("seh_ecl27_supabase_reload",next.slice(0,256)); } catch (_) {}
-        window.location.reload();
-      }
-    } else {
-      try { sessionStorage.removeItem("seh_ecl27_supabase_reload"); } catch (_) {}
-    }
+    window.dispatchEvent(new CustomEvent("seh:ecl27-data-ready",{detail:window.SEH_ECL27_DATA}));
+    return window.SEH_ECL27_DATA;
   }
 
-  loadSharedSource().catch(error => console.error("[ECL27] Supabase source refresh failed; using cache/fallback",error));
+  window.SEH_ECL27_DATA_READY = loadSharedSource().catch(error => {
+    console.error("[ECL27] Supabase source refresh failed",error);
+    if (cached) {
+      window.SEH_ECL27_DATA=Object.freeze(cached);
+      return window.SEH_ECL27_DATA;
+    }
+    const failed=Object.freeze({...EMPTY,build:"supabase-error",updated:"Kunde inte hämta ECL27-data"});
+    window.SEH_ECL27_DATA=failed;
+    return failed;
+  });
 })();
