@@ -743,6 +743,13 @@
   }
 
   function renderListSection(section) {
+    // The SPA keeps this module alive when navigating between routes.
+    // A newly mounted list view must therefore start with clean filters,
+    // otherwise an old search can stay active behind an empty new input.
+    state.search = "";
+    state.division = "all";
+    state.status = "all";
+
     const springCount = DATA.springTeams.length;
     const newCount = DATA.newTeams.length;
     const knownNow = model.teams.reduce((sum,team) => sum + team.playersNow.length,0);
