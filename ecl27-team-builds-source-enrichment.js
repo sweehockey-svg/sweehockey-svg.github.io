@@ -242,7 +242,8 @@
     ["2026-09-03T18:07","Burchurs HC","D4nzk80"],
     ["2026-09-06T14:04","Shadow Skulls","Love Engelkrans"],
     ["2026-09-07T18:20","AFTERLIFE","bystromjr_"],
-    ["2026-09-07T23:12","Unwanted","Snus97_"]
+    ["2026-09-07T23:12","Unwanted","Snus97_"],
+    ["2026-09-08T10:58","Västerås IK","MrXbox79"]
   ].map(([at,team,player]) => ({at,team,player}));
 
   const freeAgentEvents = [
@@ -263,8 +264,8 @@
   ].map(([at,team,players]) => ({at,team,players:players.split("|")}));
 
   window.SEH_ECL27_DATA = Object.freeze({
-    build:"2026-09-08-v3-deterministic",
-    updated:"8 sep 2026 · konsoliderad kronologi",
+    build:"2026-09-08-v4-vasteras-recruitment",
+    updated:"8 sep 2026 · Västerås IK söker HF + backup",
     aliases:Object.freeze({"sloogan08":"Sloogan9498","sloogan9498":"Sloogan9498","erik":"Elonnholm","elonnholm":"Elonnholm","love engelkrans":"toretussan","toretussan":"toretussan","sjögren":"I-Sjogren-I","i-sjogren-i":"I-Sjogren-I","edlund":"Edluund___","edluund___":"Edluund___","wadde":"Wadde95","wadde95":"Wadde95","weeman":"weeman400_","weeman400_":"weeman400_","makk makk":"MakkMakk1980","makkmakk1980":"MakkMakk1980","sille":"sille_","sille_":"sille_","lunkan_7":"FaZe_lunkan07","faze_lunkan07":"FaZe_lunkan07","curhed":"Curheed","curheed":"Curheed","disctrasan":"Disctrasan-","disctrasan-":"Disctrasan-","kxner":"Kxner__TTV","kxner__ttv":"Kxner__TTV","yungs":"Yungs99","yungs99":"Yungs99"}),
     springTeams:Object.freeze(springTeams),
     newTeams:Object.freeze(newTeams),
@@ -272,7 +273,7 @@
     posterMemberships:Object.freeze(posterMemberships),
     freeAgentEvents:Object.freeze(freeAgentEvents),
     rosterSnapshots:Object.freeze(rosterSnapshots),
-    recruitment:Object.freeze({"Unwanted":{"date":"2026-08-11","target":"Elite","seeks":"Startande RD"},"Zero Ping":{"date":"2026-07-26","target":"Pro-kval","seeks":"G + HB/VF"},"PRIMA":{"date":"2026-07-29","target":"Lite","seeks":"C + back"},"BIK Karlskoga Academy":{"date":"2026-08-20","target":"Core","seeks":"C + vinge + back + backup G"},"vNexs Wisemen":{"date":"2026-07-31","target":"Lite","seeks":"G"},"Lila skeppet":{"date":"2026-08-03","target":"","seeks":"Back + G, ev. C"},"SSK Academy":{"date":"2026-08-10","target":"Lite","seeks":"VF + C + back"},"vNexs Vipers":{"date":"2026-08-18","target":"Pro","seeks":"2 forwards"},"Burchurs HC":{"date":"2026-09-03","target":"","seeks":"G + forward"},"Lilmix":{"date":"2026-08-31","target":"","seeks":"LD"}}),
+    recruitment:Object.freeze({"Unwanted":{"date":"2026-08-11","target":"Elite","seeks":"Startande RD"},"Zero Ping":{"date":"2026-07-26","target":"Pro-kval","seeks":"G + HB/VF"},"PRIMA":{"date":"2026-07-29","target":"Lite","seeks":"C + back"},"BIK Karlskoga Academy":{"date":"2026-08-20","target":"Core","seeks":"C + vinge + back + backup G"},"vNexs Wisemen":{"date":"2026-07-31","target":"Lite","seeks":"G"},"Lila skeppet":{"date":"2026-08-03","target":"","seeks":"Back + G, ev. C"},"SSK Academy":{"date":"2026-08-10","target":"Lite","seeks":"VF + C + back"},"vNexs Vipers":{"date":"2026-08-18","target":"Pro","seeks":"2 forwards"},"Burchurs HC":{"date":"2026-09-03","target":"","seeks":"G + forward"},"Lilmix":{"date":"2026-08-31","target":"","seeks":"LD"},"Västerås IK":{"date":"2026-09-08","target":"Pro","seeks":"Start HF + backup Fwd/Back"}}),
     extraTeamIds:Object.freeze({"Shadow Skulls":317,"VBO Stars":398,"Zero Ping":419})
   });
 })();
