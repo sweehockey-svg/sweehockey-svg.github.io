@@ -19,80 +19,18 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-
+          import base64
+          old = base64.b64decode('ICBhc3luYyBmdW5jdGlvbiBmZXRjaERpcmVjdG9yeVJvd3MobmFtZXMpIHsKICAgIGNvbnN0IGNsaWVudCA9IGdldERpcmVjdG9yeUNsaWVudCgpOwogICAgaWYgKCFjbGllbnQgfHwgIW5hbWVzLmxlbmd0aCkgcmV0dXJuIFtdOwoKICAgIGNvbnN0IHNlbGVjdCA9ICJwbGF5ZXJfa2V5LGRpc3BsYXlfZ2FtZXJ0YWcscGxheWVyX2ltYWdlLHNwb3J0c19nYW1lcl9wbGF5ZXJfdXJsLHByaW1hcnlfcG9zaXRpb24sbGF0ZXN0X3NlYXNvbixsYXRlc3RfdGVhbSxjYXJlZXJfZ2FtZXMsdG90YWxfcG9pbnRzLHBsYXllcl90eXBlLHRvdXJuYW1lbnRfY291bnQsdG90YWxfZ29hbGllX3NhdmVzIjsKICAgIGNvbnN0IHtkYXRhLGVycm9yfSA9IGF3YWl0IGNsaWVudC5mcm9tKCJhcHBfcGxheWVyX2RpcmVjdG9yeV9jYWNoZSIpLnNlbGVjdChzZWxlY3QpLmluKCJkaXNwbGF5X2dhbWVydGFnIixuYW1lcyk7CiAgICBpZiAoZXJyb3IpIHRocm93IGVycm9yOwoKICAgIGNvbnN0IHJvd3MgPSBBcnJheS5pc0FycmF5KGRhdGEpID8gWy4uLmRhdGFdIDogW107CiAgICBjb25zdCBmb3VuZCA9IG5ldyBTZXQocm93cy5tYXAoKHJvdykgPT4gbm9ybShyb3cuZGlzcGxheV9nYW1lcnRhZykpKTsKICAgIGNvbnN0IG1pc3NpbmcgPSBuYW1lcy5maWx0ZXIoKG5hbWUpID0+ICFmb3VuZC5oYXMobm9ybShuYW1lKSkpOwoKICAgIGlmIChtaXNzaW5nLmxlbmd0aCkgewogICAgICBjb25zdCBleHRyYXMgPSBhd2FpdCBQcm9taXNlLmFsbChtaXNzaW5nLm1hcChhc3luYyAobmFtZSkgPT4gewogICAgICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IGNsaWVudC5mcm9tKCJhcHBfcGxheWVyX2RpcmVjdG9yeV9jYWNoZSIpLnNlbGVjdChzZWxlY3QpLmlsaWtlKCJkaXNwbGF5X2dhbWVydGFnIixuYW1lKS5saW1pdCg4KTsKICAgICAgICBpZiAocmVzdWx0LmVycm9yKSByZXR1cm4gbnVsbDsKICAgICAgICByZXR1cm4gKHJlc3VsdC5kYXRhIHx8IFtdKS5maW5kKChyb3cpID0+IG5vcm0ocm93LmRpc3BsYXlfZ2FtZXJ0YWcpID09PSBub3JtKG5hbWUpKSB8fCBudWxsOwogICAgICB9KSk7CiAgICAgIGZvciAoY29uc3Qgcm93IG9mIGV4dHJhcykgaWYgKHJvdykgcm93cy5wdXNoKHJvdyk7CiAgICB9CgogICAgcmV0dXJuIHJvd3M7CiAgfQo=').decode('utf-8')
+          new = base64.b64decode('ICBhc3luYyBmdW5jdGlvbiBmZXRjaERpcmVjdG9yeVJvd3MobmFtZXMpIHsKICAgIGNvbnN0IGNsaWVudCA9IGdldERpcmVjdG9yeUNsaWVudCgpOwogICAgaWYgKCFjbGllbnQgfHwgIW5hbWVzLmxlbmd0aCkgcmV0dXJuIFtdOwoKICAgIGNvbnN0IHNlbGVjdCA9ICJwbGF5ZXJfa2V5LGRpc3BsYXlfZ2FtZXJ0YWcscGxheWVyX2ltYWdlLHNwb3J0c19nYW1lcl9wbGF5ZXJfdXJsLHByaW1hcnlfcG9zaXRpb24sbGF0ZXN0X3NlYXNvbixsYXRlc3RfdGVhbSxjYXJlZXJfZ2FtZXMsdG90YWxfcG9pbnRzLHBsYXllcl90eXBlLHRvdXJuYW1lbnRfY291bnQsdG90YWxfZ29hbGllX3NhdmVzIjsKICAgIGNvbnN0IHtkYXRhLGVycm9yfSA9IGF3YWl0IGNsaWVudC5mcm9tKCJhcHBfcGxheWVyX2RpcmVjdG9yeV9jYWNoZSIpLnNlbGVjdChzZWxlY3QpLmluKCJkaXNwbGF5X2dhbWVydGFnIixuYW1lcyk7CiAgICBpZiAoZXJyb3IpIHRocm93IGVycm9yOwoKICAgIGNvbnN0IHJvd3MgPSBBcnJheS5pc0FycmF5KGRhdGEpID8gWy4uLmRhdGFdIDogW107CiAgICBjb25zdCBmb3VuZCA9IG5ldyBTZXQocm93cy5tYXAoKHJvdykgPT4gbm9ybShyb3cuZGlzcGxheV9nYW1lcnRhZykpKTsKICAgIGNvbnN0IG1pc3NpbmcgPSBuYW1lcy5maWx0ZXIoKG5hbWUpID0+ICFmb3VuZC5oYXMobm9ybShuYW1lKSkpOwoKICAgIC8vIGFwcF9wbGF5ZXJfZGlyZWN0b3J5X2NhY2hlIGlzIGludGVudGlvbmFsbHkgdGhlIFN3ZWRpc2ggcGxheWVyIGRpcmVjdG9yeS4KICAgIC8vIEEgU3dlZGlzaCBFQ0wgdGVhbSBjYW4gc3RpbGwgY29udGFpbiBmb3JlaWduIHBsYXllcnMsIHNvIHJvc3RlciBjYXJkcyBtdXN0CiAgICAvLyBmYWxsIGJhY2sgdG8gdGhlIGFsbC1wbGF5ZXIgU3VwYWJhc2Ugc3VtbWFyeSBpbnN0ZWFkIG9mIHNob3dpbmcgZW1wdHkgZGF0YS4KICAgIGlmIChtaXNzaW5nLmxlbmd0aCkgewogICAgICBjb25zdCB7ZGF0YTpmYWxsYmFjayxlcnJvcjpmYWxsYmFja0Vycm9yfSA9IGF3YWl0IGNsaWVudC5ycGMoCiAgICAgICAgInNlaF9lY2wyN19wbGF5ZXJfY2FyZF9yb3dzIiwKICAgICAgICB7cF9uYW1lczptaXNzaW5nfQogICAgICApOwogICAgICBpZiAoZmFsbGJhY2tFcnJvcikgewogICAgICAgIGNvbnNvbGUud2FybigiW0VDTDI3XSBrdW5kZSBpbnRlIGjDpG10YSBmYWxsYmFjay1kYXRhIGbDtnIgdXRsw6RuZHNrYS9laiBrYXRhbG9nZsO2cmRhIHNwZWxhcmUiLGZhbGxiYWNrRXJyb3IpOwogICAgICB9IGVsc2UgewogICAgICAgIGZvciAoY29uc3Qgcm93IG9mIGZhbGxiYWNrIHx8IFtdKSB7CiAgICAgICAgICBpZiAocm93ICYmICFmb3VuZC5oYXMobm9ybShyb3cuZGlzcGxheV9nYW1lcnRhZykpKSB7CiAgICAgICAgICAgIHJvd3MucHVzaChyb3cpOwogICAgICAgICAgICBmb3VuZC5hZGQobm9ybShyb3cuZGlzcGxheV9nYW1lcnRhZykpOwogICAgICAgICAgfQogICAgICAgIH0KICAgICAgfQogICAgfQoKICAgIHJldHVybiByb3dzOwogIH0K').decode('utf-8')
           path = Path('ecl27-team-builds-v2.js')
           text = path.read_text(encoding='utf-8')
-          old = '''  async function fetchDirectoryRows(names) {
-    const client = getDirectoryClient();
-    if (!client || !names.length) return [];
-
-    const select = "player_key,display_gamertag,player_image,sports_gamer_player_url,primary_position,latest_season,latest_team,career_games,total_points,player_type,tournament_count,total_goalie_saves";
-    const {data,error} = await client.from("app_player_directory_cache").select(select).in("display_gamertag",names);
-    if (error) throw error;
-
-    const rows = Array.isArray(data) ? [...data] : [];
-    const found = new Set(rows.map((row) => norm(row.display_gamertag)));
-    const missing = names.filter((name) => !found.has(norm(name)));
-
-    if (missing.length) {
-      const extras = await Promise.all(missing.map(async (name) => {
-        const result = await client.from("app_player_directory_cache").select(select).ilike("display_gamertag",name).limit(8);
-        if (result.error) return null;
-        return (result.data || []).find((row) => norm(row.display_gamertag) === norm(name)) || null;
-      }));
-      for (const row of extras) if (row) rows.push(row);
-    }
-
-    return rows;
-  }
-'''
-          new = '''  async function fetchDirectoryRows(names) {
-    const client = getDirectoryClient();
-    if (!client || !names.length) return [];
-
-    const select = "player_key,display_gamertag,player_image,sports_gamer_player_url,primary_position,latest_season,latest_team,career_games,total_points,player_type,tournament_count,total_goalie_saves";
-    const {data,error} = await client.from("app_player_directory_cache").select(select).in("display_gamertag",names);
-    if (error) throw error;
-
-    const rows = Array.isArray(data) ? [...data] : [];
-    const found = new Set(rows.map((row) => norm(row.display_gamertag)));
-    const missing = names.filter((name) => !found.has(norm(name)));
-
-    // app_player_directory_cache is intentionally the Swedish player directory.
-    // A Swedish ECL team can still contain foreign players, so roster cards must
-    // fall back to the all-player Supabase summary instead of showing empty data.
-    if (missing.length) {
-      const {data:fallback,error:fallbackError} = await client.rpc(
-        "seh_ecl27_player_card_rows",
-        {p_names:missing}
-      );
-      if (fallbackError) {
-        console.warn("[ECL27] kunde inte hämta fallback-data för utländska/ej katalogförda spelare",fallbackError);
-      } else {
-        for (const row of fallback || []) {
-          if (row && !found.has(norm(row.display_gamertag))) {
-            rows.push(row);
-            found.add(norm(row.display_gamertag));
-          }
-        }
-      }
-    }
-
-    return rows;
-  }
-'''
           if old in text:
-              text = text.replace(old, new, 1)
-              path.write_text(text, encoding='utf-8')
+              path.write_text(text.replace(old, new, 1), encoding='utf-8')
           elif 'seh_ecl27_player_card_rows' not in text:
               raise SystemExit('Expected fetchDirectoryRows block not found; refusing to patch')
-
           index = Path('index.html')
           html = index.read_text(encoding='utf-8')
-          html = html.replace(
-              'ecl27-team-builds-v2.js?v=20260908-v6-player-roster-cards',
-              'ecl27-team-builds-v2.js?v=20260908-v7-all-roster-players'
-          )
+          html = html.replace('ecl27-team-builds-v2.js?v=20260908-v6-player-roster-cards','ecl27-team-builds-v2.js?v=20260908-v7-all-roster-players')
           index.write_text(html, encoding='utf-8')
           PY
       - name: Commit patch
