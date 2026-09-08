@@ -1,12 +1,14 @@
 /*
-  ECL 27 – ta bort Västerås Vipers ur lagbyggen.
-  Laget hade fyra kända spelare 24 aug, men samtliga lämnade 6 sep.
-  Vi visar därför inte laget som ett aktivt ECL 27-projekt.
+  ECL 27 – ta bort inaktiva/utgångna projekt ur lagbyggen.
+  Västerås Vipers: samtliga fyra kända spelare lämnade 6 sep.
+  Lila skeppet: de två kända spelarna Wilhelmsson90 och Bylle67 lämnade 11 respektive 17 aug,
+  och vi har ingen senare roster-/rekryteringsaktivitet som visar ett fortsatt ECL 27-bygge.
 */
 (function () {
   "use strict";
 
   const ROUTE_PREFIX = "#/sasong/ecl27winter";
+  const HIDDEN_TEAMS = new Set(["västerås vipers", "lila skeppet"]);
   let applying = false;
 
   function normalize(value) {
@@ -23,32 +25,32 @@
 
       for (const card of section.querySelectorAll("#ecl27BuildGrid .ecl27-card")) {
         const name = normalize(card.querySelector("h3")?.textContent);
-        if (name === "västerås vipers") card.remove();
+        if (HIDDEN_TEAMS.has(name)) card.remove();
       }
 
-      // 27 Spring-lag + 7 nya projekt = 34 lag/projekt.
+      // 27 Spring-lag + 6 nya projekt = 33 lag/projekt.
       const overviewCells = section.querySelectorAll(".ecl27-overview > div");
       if (overviewCells[1]) {
         const value = overviewCells[1].querySelector("strong");
-        if (value) value.textContent = "7";
+        if (value) value.textContent = "6";
       }
 
       const result = section.querySelector("#ecl27BuildResult");
       if (result) {
         const match = String(result.textContent || "").match(/^(\d+)\s+av\s+\d+\s+lag\/projekt$/i);
         if (match) {
-          const visible = Math.min(Number(match[1]) || 0, 34);
-          result.textContent = `${visible} av 34 lag/projekt`;
+          const visible = Math.min(Number(match[1]) || 0, 33);
+          result.textContent = `${visible} av 33 lag/projekt`;
         } else if (/lag\/projekt/i.test(String(result.textContent || ""))) {
-          result.textContent = "34 lag/projekt";
+          result.textContent = "33 lag/projekt";
         }
       }
 
-      // Källförstärkningens kandidattext hade tidigare totalsiffran 35.
+      // Källförstärkningens kandidattext ska följa aktuell totalsiffra.
       for (const node of section.querySelectorAll(".ecl27-candidate-team small")) {
-        if (String(node.textContent || "").includes("35 bekräftade lag/projekten")) {
-          node.textContent = String(node.textContent).replace("35 bekräftade lag/projekten", "34 bekräftade lag/projekten");
-        }
+        node.textContent = String(node.textContent || "")
+          .replace("35 bekräftade lag/projekten", "33 bekräftade lag/projekten")
+          .replace("34 bekräftade lag/projekten", "33 bekräftade lag/projekten");
       }
     } finally {
       applying = false;
