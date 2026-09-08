@@ -555,13 +555,24 @@
     const found = new Set(rows.map((row) => norm(row.display_gamertag)));
     const missing = names.filter((name) => !found.has(norm(name)));
 
+    // app_player_directory_cache is intentionally the Swedish player directory.
+    // A Swedish ECL team can still contain foreign players, so roster cards must
+    // fall back to the all-player Supabase summary instead of showing empty data.
     if (missing.length) {
-      const extras = await Promise.all(missing.map(async (name) => {
-        const result = await client.from("app_player_directory_cache").select(select).ilike("display_gamertag",name).limit(8);
-        if (result.error) return null;
-        return (result.data || []).find((row) => norm(row.display_gamertag) === norm(name)) || null;
-      }));
-      for (const row of extras) if (row) rows.push(row);
+      const {data:fallback,error:fallbackError} = await client.rpc(
+        "seh_ecl27_player_card_rows",
+        {p_names:missing}
+      );
+      if (fallbackError) {
+        console.warn("[ECL27] kunde inte hämta fallback-data för utländska/ej katalogförda spelare",fallbackError);
+      } else {
+        for (const row of fallback || []) {
+          if (row && !found.has(norm(row.display_gamertag))) {
+            rows.push(row);
+            found.add(norm(row.display_gamertag));
+          }
+        }
+      }
     }
 
     return rows;
