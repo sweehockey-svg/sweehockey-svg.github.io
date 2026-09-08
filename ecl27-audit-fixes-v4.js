@@ -1,6 +1,7 @@
 /*
   ECL 27 – auditfixar 2026-09-08
   Bekräftade alias + korrigeringar från Discord-underlaget.
+  Aktiva ECL-Free Agents räknas även som spelare UT från sitt senaste kända lag.
   Viktigt: ingen MutationObserver här. Vi använder bara begränsade retries för att
   inte skapa en ny render-loop på SPA-sidan.
 */
@@ -126,6 +127,33 @@
     }
   }
 
+  function updateOutMetricIncludingFa(teamCard) {
+    if (!teamCard) return;
+
+    const explicitOut = new Set();
+    for (const row of teamCard.querySelectorAll(".ecl27v2-move--out")) {
+      const name = canonical(row.querySelector("strong")?.textContent);
+      const key = norm(name);
+      if (key) explicitOut.add(key);
+    }
+
+    const activeFa = new Set();
+    for (const node of teamCard.querySelectorAll(".ecl27v2-fa span")) {
+      const name = canonical(node.textContent);
+      const key = norm(name);
+      if (key) activeFa.add(key);
+    }
+
+    const allOut = new Set(explicitOut);
+    for (const key of activeFa) allOut.add(key);
+
+    const outMetric = teamCard.querySelectorAll(".ecl27v2-metrics > div")?.[2]?.querySelector("strong");
+    if (outMetric) outMetric.textContent = String(allOut.size);
+
+    const faLabel = teamCard.querySelector(".ecl27v2-fa label");
+    if (faLabel) faLabel.textContent = "AKTIVA FREE AGENTS · RÄKNAS SOM UT";
+  }
+
   function ensureMove(teamName, type, player, date, note) {
     const teamCard = card(teamName);
     const host = teamCard?.querySelector(".ecl27v2-moves");
@@ -186,6 +214,12 @@
     ensureMove("Shadow Skulls", "out", "mr_gren-", "2026-05-11", "");
     ensureMove("Invasion Hockey", "out", "I-Sjogren-I", "2026-05-06", "");
     ensureMove("SSK Academy", "out", "HultNiklas", "2026-05-06", "");
+
+    // En aktiv ECL-Free Agent räknas som UT från sitt senaste kända lag.
+    // Samma spelare räknas bara en gång även om både UT-post och FA finns.
+    for (const teamCard of document.querySelectorAll("#ecl27v2Grid .ecl27v2-card")) {
+      updateOutMetricIncludingFa(teamCard);
+    }
   }
 
   function runRetries() {
