@@ -48,12 +48,20 @@
   async function loadSharedSource() {
     if (!url || !key) throw new Error("Supabase config missing");
 
-    const [baseline,teams,events,recruitmentRows] = await Promise.all([
+    const [baseline,teams,events,recruitmentRows,aliasRows] = await Promise.all([
       get("v_ecl27_spring_baseline","select=team_project_id,team_name,division,source_team_id,player_key,gamertag&order=team_name.asc,gamertag.asc"),
       get("v_ecl27_team_builds_public","select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"),
       get("v_ecl27_events_resolved","select=id,occurred_at,team_project_id,team_name,event_type,subject_key,display_gamertag,source_gamertag,from_team,to_team,source_note&order=occurred_at.asc,id.asc"),
-      get("ecl27_recruitment_posts","select=team_project_id,posted_at,text,is_active&is_active=eq.true&order=posted_at.asc,id.asc")
+      get("ecl27_recruitment_posts","select=team_project_id,posted_at,text,is_active&is_active=eq.true&order=posted_at.asc,id.asc"),
+      get("ecl27_player_aliases","select=alias_normalized,canonical_display&order=alias_normalized.asc")
     ]);
+
+    const aliases={};
+    for (const row of aliasRows || []) {
+      const alias=String(row.alias_normalized || "").trim().toLocaleLowerCase("sv-SE").replace(/\s+/g," ");
+      const canonical=String(row.canonical_display || "").trim();
+      if (alias && canonical) aliases[alias]=canonical;
+    }
 
     const byId = new Map(teams.map(t => [Number(t.id),t]));
     const springMap = new Map();
@@ -120,7 +128,7 @@
     const model={
       build:`supabase-${latest ? String(latest.id) : "0"}`,
       updated:latest ? `${dateOnly(latest.occurred_at)} · ${latest.team_name} ${latest.event_type === "in" ? "IN" : "UT"}: ${latest.display_gamertag || latest.source_gamertag}` : "Supabase",
-      aliases:{},springTeams,newTeams,moveEvents,posterMemberships,freeAgentEvents,
+      aliases,springTeams,newTeams,moveEvents,posterMemberships,freeAgentEvents,
       rosterSnapshots:[],recruitment,extraTeamIds
     };
 
