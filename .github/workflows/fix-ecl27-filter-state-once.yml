@@ -1,0 +1,51 @@
+name: Fix ECL27 filter state once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-ecl27-filter-state-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reset ECL27 filters whenever list view is mounted
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          js = Path('ecl27-team-builds-v2.js')
+          text = js.read_text(encoding='utf-8')
+          old = '''  function renderListSection(section) {\n    const springCount = DATA.springTeams.length;'''
+          new = '''  function renderListSection(section) {\n    // The SPA keeps this module alive when navigating between routes.\n    // A newly mounted list view must therefore start with clean filters,\n    // otherwise an old search can stay active behind an empty new input.\n    state.search = "";\n    state.division = "all";\n    state.status = "all";\n\n    const springCount = DATA.springTeams.length;'''
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected exactly one renderListSection anchor, found {text.count(old)}')
+          js.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          index = Path('index.html')
+          html = index.read_text(encoding='utf-8')
+          old_version = 'ecl27-team-builds-v2.js?v=20260909-v8-await-source'
+          new_version = 'ecl27-team-builds-v2.js?v=20260909-v9-reset-filters'
+          if old_version in html:
+              html = html.replace(old_version, new_version, 1)
+          elif new_version not in html:
+              raise SystemExit('Could not find expected ECL27 renderer cache version in index.html')
+          index.write_text(html, encoding='utf-8')
+          PY
+
+      - name: Remove one-time workflow and commit fix
+        shell: bash
+        run: |
+          rm -f .github/workflows/fix-ecl27-filter-state-once.yml
+          git config user.name "sweehockey-svg"
+          git config user.email "sweehockey@gmail.com"
+          git add ecl27-team-builds-v2.js index.html .github/workflows/fix-ecl27-filter-state-once.yml
+          git commit -m "Reset ECL27 filters when returning to list"
+          git push
