@@ -1,260 +1,278 @@
 /*
-  ECL 27 – källförstärkning 2026-09-08
-  Kompletterar lagbyggen-v2 med Discord-underlag:
-  - bekräftade in/ut-poster
-  - ECL-relaterade FA-poster
-  - lagens egna spelarannonser
+  ECL 27 canonical source model.
+  Data only: no DOM writes, no observers, no roster patching.
 */
 (function () {
   "use strict";
 
-  const ROUTE_PREFIX = "#/sasong/ecl27winter";
-  const BUILD = "2026-09-08-source-enrichment-v1";
+  const springTeams = [
+    ["AFTERLIFE","Elite",11,"","","borjee__|Bystrom33|bystromjr_|hajjeh37|Maxboeeee_|Rubituss_|Zuppe_29"],
+    ["Södertälje SK","Elite",340,"SSK ESPORTS","Södertälje SK","Axelzonee|Brokenrice2000|l-Furyan-l|LaxenHD|minokin-|SmAyK99|Wagge01"],
+    ["Unwanted","Elite",391,"","","Fin_S1su|Henka0009|NerazzuriSWE|oggezed|Snus97_|Suth98_|sveti-|XD_Jacke"],
+    ["vNexs","Elite",408,"vNexs I","vNexs I","antoniomannen_|AntonLxnd|Curheed|Dzouvi_|karlssonadam_|launonexx|pappeen-|Skumboo"],
+    ["Brynäs IF Esport","Pro",55,"","","Adaam-2|Bu-ffy|I-Bysse-I|Jonass1551|Stenborg431|stickovic|Vibholm_10|Wadde95|Zonkji v"],
+    ["SSK Prospects","Pro",344,"","","Bullbaz|Disctrasan-|el_cisne_loco|HambergD|Kaxen88|MightyJalt|nikuy92|therozz94"],
+    ["Sunne IK Esport","Pro",354,"","","Antites_|ePsych0-|Larzzon96|O3_DAFA|Patflex_|Svana_22|vPahlen"],
+    ["Västerås IK","Pro",393,"","","amadee_|BuffaViana|Dobby the Joker|I-alb1n-I|Mathiasgamer_07|MeKNoXEr|MrXbox79|r4mme-0|Sebbanejad|sneipthegunner"],
+    ["vNexs II","Pro",409,"","","Azzez_88|benjamint737|Gudinge|Hisens__|immuszn|iSvamp|JoakimOilers|Putteekiing|SeboLHD"],
+    ["Invasion Hockey","Lite",172,"","","Aker36|BigKaxen|Brobeck86|Edluund___|GD_Hampezzz|I-Sjogren-I|Mrclaper09|RookieLIAMOVIC|xlcelQx"],
+    ["Macho HC","Lite",228,"","","Andre_24x|D4nzk80|IIFaranII|Linx Mau5|MrWennerstrom|Prolane|Strandis96|xBerra_"],
+    ["Nordic Nosebleed","Lite",260,"","","cherrykicks|Eliekamel_|Feffe1och2|Jean-Claes|Lidaas_79|Pedaliv|Sayatu14|Thedisneytime"],
+    ["Refuse Too Lose","Lite",300,"","","IVIotti_-|JezuzKristuz|nigeltje1|octo--8|Sonnysprofil|suomiboe88|Vindows2608|x0RIXELIT3xD|xLeppix|Zeven1988"],
+    ["Sjukstugan","Lite",323,"","","Dirty86er|DUNZA|IbjonoI|Jaiken--|Nephenzy|Robbin974|softa_tofta|Supremski|xDisauttaja"],
+    ["SSK Academy","Lite",338,"","","Ejamannen|FaZe_lunkan07|fimpen_365|gtasir1|HultNiklas|Jungledonk|MakkMakk1980|Mesimaki94|SwedenFtW99|Tuupe12"],
+    ["SSK Adepts","Lite",339,"","","AG_Jarl|Allant03|Diizzylicious|jcarlton89|KaiserHanzo|kecke72|KFC Melker|Sloogan9498"],
+    ["TROJANS","Lite",383,"","","BeJutiFul|ElTorstenero|foxflyers|Hermelin999|imosi1|Janikka-|Rootmos|TiSuLiNo|xHampe29x"],
+    ["vNexs Vipers","Lite",410,"","","Dan9105|Dannu1237|DE BOHM|FrogNHL|Hescoores|Jaksii_|Jonsson03|Kungenanton02"],
+    ["BIK Karlskoga","Core",33,"BIK Karlskoga Esport","BIK Karlskoga Esport","casse 33 40|Elisx95|HyDraVenoM92|itsWalsy|Mackedavid|MarreMurre|Robin_86_6|Toivo4936|Westbergg1891"],
+    ["Carolus Icemen","Core",70,"","","I-Ashborn-I|Kvarneen|Mellerudspils|mj_slam|PaisleyJr|pepsicharlie|Skogspyssling|XxKotilainen17xX"],
+    ["Northern Ztars","Core",274,"Northern Ztars Hockey","Northern Ztars Hockey","Askewfungus|hodini90|Kassby83|Kxner__TTV|MelleMakrill|melwin71|MYTEN-LEGENDEN|Neowise-25|Philip_050505|Phyreon|Redhawk1765|wheelchair_88"],
+    ["PRIMA","Core",291,"","","Bdahlo05|Bulten_49|JNHL-_-|Liimp_92|Mmmgott|Pawlo_jr|Tobzzon|troublemakingswe|Twitch_wannika"],
+    ["Style","Core",351,"","","Ael-miK|Antonqs|Borjewiseman|FezH_88|jokkz-|LordOlii|Matth3ws34|mayX-swe|RHannu|Truesnap"],
+    ["vNexs Wisemen","Core",411,"","","Chrillzoork|Glamborg81|Gurliver|juhi1891|Ma-X-imilian|Malmenlid|Mctook1|Mrantonn--|skillfull85"],
+    ["BIK Karlskoga Academy","Neo",32,"","","Bersson_92|D24tic_BTW|KetchupBTW_|L-sk1y-L|MrBumban1|Olsson_lir89|Polisbilen|Raggsockar|Runhager96|Shn1pez|Yungs99"],
+    ["Free From Rodents","Neo",125,"","","barke_89|Fellywoop|fixarjocke|Pjoter79|Pralle-|Sir_Wasp|Swe_WASP|WILD_-AT-_HEART"],
+    ["N E O N X","Neo",249,"","","Drummerking83|FearlezZ_92|Gogulus87|Hampuzz105|HerrLarsson80|Lapilsner|weeman400_|Ztarsailor"]
+  ].map(([name,division,teamId,springName,logoName,players]) => ({
+    name, division, teamId,
+    springName: springName || undefined,
+    logoName: logoName || undefined,
+    players: players ? players.split("|") : []
+  }));
 
-  const RECRUITMENT = Object.freeze({
-    "Unwanted": { date:"2026-08-11", target:"Elite", seeks:"Startande RD", note:"Laget söker högerback inför kommande ECL-säsong." },
-    "Zero Ping": { date:"2026-07-26", target:"Pro-kval", seeks:"G + HB/VF", note:"Målet som anges är kval till Pro." },
-    "PRIMA": { date:"2026-07-29", target:"Lite", seeks:"C + back", note:"Söker center och back för ECL Lite." },
-    "BIK Karlskoga Academy": { date:"2026-08-20", target:"Core", seeks:"C + vinge + back + backup G", note:"Laget skriver att målet är Core." },
-    "vNexs Wisemen": { date:"2026-07-31", target:"Lite", seeks:"G", note:"Efter tredjeplatsen i Core vill laget prova Lite." },
-    "Lila skeppet": { date:"2026-08-03", target:"Ej angivet", seeks:"Back + G, ev. C", note:"Senaste rekryteringsposten kom före att Wilhelmsson90 och Bylle67 lämnade." },
-    "SSK Academy": { date:"2026-08-10", target:"Lite", seeks:"VF + C + back", note:"Annonsen gäller kommande SCL och ECL Lite." },
-    "vNexs Vipers": { date:"2026-08-18", target:"Pro", seeks:"2 forwards", note:"Laget uppger att avancemanget från Lite ger spel i Pro." },
-    "Burchurs HC": { date:"2026-09-03", target:"Ej angivet", seeks:"G + forward", note:"Den senaste annonsen innehåller även en uttrycklig trupp på sju spelare." },
-    "Västerås Vipers": { date:"2026-08-25", target:"Lite", seeks:"Start VB + backup F/back", note:"OBS: rekryteringsposten är äldre än massuttåget den 6 september." },
-    "Lilmix": { date:"2026-08-31", target:"Ej angivet", seeks:"LD", note:"Söker vänsterback inför kommande ECL." }
+  const newTeams = [
+    ["Monarchs HC","Nytt",null,""],
+    ["Zero Ping","Nytt",419,""],
+    ["Shadow Skulls","Nytt",317,"Shadow skulls"],
+    ["Lilmix","Nytt",null,""],
+    ["Burchurs HC","Nytt",null,""],
+    ["VBO Stars","Nytt",398,"VBO STARS"],
+    ["Lila skeppet","Nytt",null,""]
+  ].map(([name,division,teamId,logoName]) => ({
+    name, division, teamId,
+    logoName: logoName || undefined,
+    players: []
+  }));
+
+  const moveEvents = [
+    ["2026-04-23T23:41","Västerås IK","out","KaptenHavoc","",""],
+    ["2026-04-28T17:11","Lila skeppet","in","wilhelmsson90","",""],
+    ["2026-05-03T22:13","Lila skeppet","in","Bylle67","",""],
+    ["2026-05-06T05:31","VBO Stars","out","hodini90","",""],
+    ["2026-05-06T18:54","SSK Academy","out","hultniklas","",""],
+    ["2026-05-06T22:27","Invasion Hockey","out","Sjögren","",""],
+    ["2026-05-11T15:12","Monarchs HC","out","HulaDoome","",""],
+    ["2026-05-11T15:12","Monarchs HC","out","handsken111","",""],
+    ["2026-05-11T20:38","Shadow Skulls","out","mr_gren-","",""],
+    ["2026-05-12T12:28","vNexs II","out","Azzez_88","Gifu Hockey",""],
+    ["2026-05-15T01:50","N E O N X","in","FearlezZ_92","",""],
+    ["2026-05-15T01:50","N E O N X","in","weeman","",""],
+    ["2026-05-15T01:50","N E O N X","in","Lundin18","",""],
+    ["2026-05-15T01:50","N E O N X","in","FIFTY CHENG","",""],
+    ["2026-05-15T01:50","N E O N X","in","HerrLarsson80","",""],
+    ["2026-05-15T01:50","N E O N X","in","Poppen","",""],
+    ["2026-05-15T01:50","N E O N X","in","Simme96a","",""],
+    ["2026-05-15T01:50","N E O N X","in","handsken111","",""],
+    ["2026-05-21T11:05","Monarchs HC","out","Zeven","",""],
+    ["2026-05-23T20:55","Shadow Skulls","in","Rospiggen","",""],
+    ["2026-05-24T10:04","Shadow Skulls","in","benandRhian","",""],
+    ["2026-05-25T21:34","Södertälje SK","out","LaxenHD","Unwanted",""],
+    ["2026-05-25T21:34","Södertälje SK","out","Brokenrice2000","Lilmix",""],
+    ["2026-05-25T22:58","Unwanted","in","LaxenHD","Södertälje SK",""],
+    ["2026-05-26T09:51","Unwanted","out","NerazzuriSWE","",""],
+    ["2026-05-26T22:00","SSK Academy","out","fimpen_365","",""],
+    ["2026-05-29T12:07","Brynäs IF Esport","out","henk","BIK Karlskoga",""],
+    ["2026-05-29T20:12","Invasion Hockey","out","Kaxen21","",""],
+    ["2026-05-29T20:49","Invasion Hockey","out","Aker36","",""],
+    ["2026-05-30T01:01","SSK Academy","out","Jungledonk","Zero Ping",""],
+    ["2026-05-30T01:12","Invasion Hockey","out","Edlund","",""],
+    ["2026-05-30T16:04","Sjukstugan","out","DUNZA","SSK Adepts",""],
+    ["2026-05-30T16:43","SSK Adepts","in","DUNZA","Sjukstugan",""],
+    ["2026-05-31T13:41","SSK Academy","out","Makk Makk","SSK Adepts",""],
+    ["2026-05-31T13:41","SSK Academy","out","SwedenFtW99","SSK Adepts",""],
+    ["2026-05-31T13:42","SSK Adepts","in","Makk Makk","SSK Academy",""],
+    ["2026-05-31T13:42","SSK Adepts","in","SwedenFtW99","SSK Academy",""],
+    ["2026-05-31T13:43","SSK Adepts","out","KaiserHanzo","SSK Academy",""],
+    ["2026-05-31T13:43","SSK Adepts","out","Sloogan08","SSK Academy",""],
+    ["2026-05-31T13:44","SSK Academy","in","Sloogan08","SSK Adepts",""],
+    ["2026-05-31T13:44","SSK Academy","in","KaiserHanzo","SSK Adepts",""],
+    ["2026-05-31T18:45","SSK Academy","out","Lunkan_7","",""],
+    ["2026-05-31T18:46","SSK Adepts","out","KFC Melker","SSK Academy",""],
+    ["2026-05-31T18:47","SSK Academy","in","KFC Melker","SSK Adepts",""],
+    ["2026-06-03T18:25","Brynäs IF Esport","out","I-Bysse-I","",""],
+    ["2026-06-04T17:10","SSK Adepts","out","Diizzylicious","Zero Ping",""],
+    ["2026-06-04T17:10","SSK Adepts","out","AG_Jarl","Zero Ping",""],
+    ["2026-06-04T17:10","SSK Adepts","out","jcarlton89","Zero Ping",""],
+    ["2026-06-04T18:28","Zero Ping","in","jcarlton89","",""],
+    ["2026-06-04T18:28","Zero Ping","in","AG_Jarl","",""],
+    ["2026-06-04T18:28","Zero Ping","in","Jungledonk","",""],
+    ["2026-06-04T18:28","Zero Ping","in","Diizzylicious","",""],
+    ["2026-06-05T15:53","Shadow Skulls","in","Gurrolito1976","",""],
+    ["2026-06-10T13:21","PRIMA","out","JNHL-_-","",""],
+    ["2026-06-10T13:21","PRIMA","out","byrran_","",""],
+    ["2026-06-11T16:22","Shadow Skulls","out","Gurrolito1976","",""],
+    ["2026-06-11T19:36","Shadow Skulls","out","Rospiggen","N E O N X",""],
+    ["2026-06-14T21:55","BIK Karlskoga","out","Mackedavid","",""],
+    ["2026-06-14T21:55","BIK Karlskoga","out","HyDraVenoM92","",""],
+    ["2026-06-14T21:55","BIK Karlskoga","out","R.kokkonen","",""],
+    ["2026-06-14T21:55","BIK Karlskoga","out","westbergg1891","",""],
+    ["2026-06-14T22:06","BIK Karlskoga","in","henk","",""],
+    ["2026-06-14T22:06","BIK Karlskoga","in","Hoefi_24","",""],
+    ["2026-06-14T22:06","BIK Karlskoga","in","I Braxsiö I","",""],
+    ["2026-06-17T22:55","Macho HC","out","Prolane","Zero Ping",""],
+    ["2026-06-17T22:56","Zero Ping","in","Prolane","Macho HC",""],
+    ["2026-06-21T23:00","BIK Karlskoga Academy","out","L-sk1y-L","Monarchs HC",""],
+    ["2026-06-23T19:33","BIK Karlskoga Academy","out","Yungs","",""],
+    ["2026-06-24T21:59","Monarchs HC","in","Bergman_29","",""],
+    ["2026-06-25T09:03","Shadow Skulls","in","FERNA","",""],
+    ["2026-06-25T14:35","Gifu Hockey","in","Azzez_88","vNexs II",""],
+    ["2026-06-25T15:16","vNexs Wisemen","out","Mrantonn--","Västerås IK",""],
+    ["2026-06-27T15:39","vNexs Vipers","out","Jaksii_","",""],
+    ["2026-06-29T20:46","Northern Ztars","out","Kxner","",""],
+    ["2026-06-30T12:31","N E O N X","out","HerrLarsson80","",""],
+    ["2026-06-30T12:54","N E O N X","out","FIFTY CHENG","",""],
+    ["2026-06-30T21:01","BIK Karlskoga Academy","out","Shn1pez","",""],
+    ["2026-07-06T00:27","SSK Adepts","in","ePsycoShow","",""],
+    ["2026-07-08T16:14","Västerås IK","out","sneipthegunner","",""],
+    ["2026-07-09T20:29","Monarchs HC","out","xRedhawk93","",""],
+    ["2026-07-09T20:29","Monarchs HC","out","Mockingjayyz","",""],
+    ["2026-07-09T20:29","Monarchs HC","out","pastorn!","",""],
+    ["2026-07-09T20:29","Monarchs HC","out","HyDraVenoM92","",""],
+    ["2026-07-09T20:29","Monarchs HC","out","Phyreon","",""],
+    ["2026-07-09T20:29","Monarchs HC","out","deeliice","",""],
+    ["2026-07-09T20:29","Monarchs HC","out","Bergman_29","",""],
+    ["2026-07-09T20:29","Monarchs HC","out","Jompahell!","",""],
+    ["2026-07-09T20:30","Monarchs HC","in","xRedhawk93","",""],
+    ["2026-07-09T20:30","Monarchs HC","in","Mockingjayyz","",""],
+    ["2026-07-09T20:30","Monarchs HC","in","pastorn!","",""],
+    ["2026-07-09T20:30","Monarchs HC","in","HyDraVenoM92","",""],
+    ["2026-07-09T20:30","Monarchs HC","in","Phyreon","",""],
+    ["2026-07-09T20:30","Monarchs HC","in","deeliice","",""],
+    ["2026-07-09T20:30","Monarchs HC","in","Bergman_29","",""],
+    ["2026-07-09T20:30","Monarchs HC","in","Jompahell!","",""],
+    ["2026-07-21T12:56","Northern Ztars","in","Mackedavid","BIK Karlskoga",""],
+    ["2026-07-22T21:17","BIK Karlskoga","out","Elisx95","",""],
+    ["2026-07-23T17:47","Monarchs HC","in","Viiken","",""],
+    ["2026-07-23T19:00","Zero Ping","out","AG_Jarl","",""],
+    ["2026-07-26T20:56","Shadow Skulls","in","BeJutiFul","TROJANS",""],
+    ["2026-07-27T22:35","SSK Adepts","out","KFC Melker","VBO Stars",""],
+    ["2026-07-28T08:23","SSK Academy","out","Igelkottskonung","",""],
+    ["2026-07-31T13:10","Monarchs HC","in","R.kokkonen","BIK Karlskoga",""],
+    ["2026-08-03T17:29","SSK Adepts","out","Makk Makk","SSK Prospects",""],
+    ["2026-08-03T17:29","SSK Adepts","out","SwedenFtW99","SSK Prospects",""],
+    ["2026-08-03T17:29","SSK Academy","out","Tuupe12","SSK Prospects",""],
+    ["2026-08-03T17:29","SSK Academy","out","Mesimaki94","SSK Prospects",""],
+    ["2026-08-03T17:30","SSK Prospects","in","Makk Makk","",""],
+    ["2026-08-03T17:30","SSK Prospects","in","SwedenFtW99","",""],
+    ["2026-08-03T17:30","SSK Prospects","in","Tuupe12","",""],
+    ["2026-08-03T17:30","SSK Prospects","in","Mesimaki94","",""],
+    ["2026-08-03T22:31","SSK Prospects","out","kax jr","Lilmix",""],
+    ["2026-08-03T22:31","SSK Prospects","out","Disctrasan","Lilmix",""],
+    ["2026-08-06T20:23","BIK Karlskoga","out","MarreMurre","",""],
+    ["2026-08-06T20:24","BIK Karlskoga Academy","out","Shn1pez","",""],
+    ["2026-08-06T21:15","BIK Karlskoga Academy","out","Olsson_lir89","",""],
+    ["2026-08-07T12:39","BIK Karlskoga","in","meeskojr_","",""],
+    ["2026-08-07T16:55","Monarchs HC","in","L-sk1y-L","BIK Karlskoga Academy",""],
+    ["2026-08-10T15:35","N E O N X","in","Rospiggen","Shadow Skulls",""],
+    ["2026-08-11T14:18","Lila skeppet","out","wilhelmsson90","",""],
+    ["2026-08-12T00:00","Västerås IK","in","Bullbaz","SSK Prospects",""],
+    ["2026-08-12T21:25","SSK Prospects","in","patsukka","",""],
+    ["2026-08-13T21:57","SSK Prospects","out","therozz94","Södertälje SK",""],
+    ["2026-08-13T21:58","Södertälje SK","in","therozz94","SSK Prospects",""],
+    ["2026-08-17T13:33","SSK Prospects","in","KrissaNSE","",""],
+    ["2026-08-17T22:31","Lila skeppet","out","Bylle67","",""],
+    ["2026-08-18T16:21","vNexs Vipers","out","FrogNHL","",""],
+    ["2026-08-23T11:57","Sjukstugan","out","Dirty86er","",""],
+    ["2026-08-24T13:53","Västerås IK","in","Mrantonn--","vNexs Wisemen",""],
+    ["2026-08-24T15:04","Västerås Vipers","in","fimpen_365","",""],
+    ["2026-08-24T15:04","Västerås Vipers","in","JNHL-_-","",""],
+    ["2026-08-24T15:04","Västerås Vipers","in","Lunkan_7","",""],
+    ["2026-08-24T16:38","Västerås IK","out","Meknoxer","",""],
+    ["2026-08-24T20:05","Västerås Vipers","in","meeskojr_","BIK Karlskoga",""],
+    ["2026-08-25T13:23","VBO Stars","in","KFC Melker","SSK Academy",""],
+    ["2026-08-26T22:32","SSK Academy","in","Qben","",""],
+    ["2026-08-26T22:32","SSK Academy","in","softa_tofta","",""],
+    ["2026-08-31T16:56","vNexs","out","Curhed","Lilmix",""],
+    ["2026-08-31T17:52","Lilmix","in","Sallee42","",""],
+    ["2026-08-31T17:52","Lilmix","in","Curhed","",""],
+    ["2026-08-31T17:52","Lilmix","in","kax jr","",""],
+    ["2026-08-31T17:52","Lilmix","in","Disctrasan","",""],
+    ["2026-08-31T17:52","Lilmix","in","Brokenrice2000","",""],
+    ["2026-08-31T21:58","AFTERLIFE","out","Zuppe_29","Brynäs IF Esport",""],
+    ["2026-09-01T18:10","Brynäs IF Esport","in","Zuppe_29","AFTERLIFE",""],
+    ["2026-09-01T20:08","Brynäs IF Esport","out","Wadde","Burchurs HC",""],
+    ["2026-09-03T15:02","Burchurs HC","in","Wadde","",""],
+    ["2026-09-03T15:02","Burchurs HC","in","MrWennerstrom","",""],
+    ["2026-09-03T15:02","Burchurs HC","in","D4nzk80","",""],
+    ["2026-09-03T15:02","Burchurs HC","in","strandis96","",""],
+    ["2026-09-03T15:02","Burchurs HC","in","Andre_24x","",""],
+    ["2026-09-03T15:02","Burchurs HC","in","IIFaranII","",""],
+    ["2026-09-03T18:21","Brynäs IF Esport","in","Gremlingswe","",""],
+    ["2026-09-03T19:54","Monarchs HC","in","arfurins","",""],
+    ["2026-09-04T22:07","vNexs","out","karlssonadam_","",""],
+    ["2026-09-06T14:04","Shadow Skulls","out","BeJutiFul","",""],
+    ["2026-09-06T16:55","Monarchs HC","out","Viiken","",""],
+    ["2026-09-06T21:08","Västerås Vipers","out","meeskojr_","",""],
+    ["2026-09-06T21:08","Västerås Vipers","out","JNHL-_-","",""],
+    ["2026-09-06T21:08","Västerås Vipers","out","fimpen_365","",""],
+    ["2026-09-06T21:08","Västerås Vipers","out","Lunkan_7","",""],
+    ["2026-09-07T18:20","AFTERLIFE","out","Rubituss_","",""],
+    ["2026-09-07T23:12","Unwanted","in","benjamint737","",""],
+    ["2026-09-07T23:12","Unwanted","in","Dzouvi_","",""]
+  ].map(([at,team,type,player,otherTeam,note]) => ({at,team,type,player,otherTeam,note}));
+
+  const posterMemberships = [
+    ["2026-04-28T17:11","Lila skeppet","Gyldisen"],
+    ["2026-05-06T05:31","VBO Stars","Bulten_49"],
+    ["2026-05-23T20:55","Shadow Skulls","Erik"],
+    ["2026-05-24T10:04","Shadow Skulls","Love Engelkrans"],
+    ["2026-06-05T15:53","Shadow Skulls","mactheking."],
+    ["2026-06-14T21:55","BIK Karlskoga","strandh85"],
+    ["2026-06-24T21:59","Monarchs HC","HyDraVenoM92"],
+    ["2026-07-26T20:56","Shadow Skulls","Erik"],
+    ["2026-07-29T11:59","PRIMA","troublemakingswe"],
+    ["2026-07-31T15:02","vNexs Wisemen","Malmenlid"],
+    ["2026-08-03T08:08","Lila skeppet","Gyldisen"],
+    ["2026-08-10T19:42","SSK Academy","Sloogan08"],
+    ["2026-08-18T15:49","vNexs Vipers","KUNGENANTON02"],
+    ["2026-08-20T14:47","BIK Karlskoga Academy","MrBumban1"],
+    ["2026-08-25T10:52","Burchurs HC","D4nzk80"],
+    ["2026-08-25T13:23","VBO Stars","Bulten_49"],
+    ["2026-08-31T18:21","Lilmix","Sallee42"],
+    ["2026-09-03T18:07","Burchurs HC","D4nzk80"],
+    ["2026-09-06T14:04","Shadow Skulls","Love Engelkrans"],
+    ["2026-09-07T18:20","AFTERLIFE","bystromjr_"],
+    ["2026-09-07T23:12","Unwanted","Snus97_"]
+  ].map(([at,team,player]) => ({at,team,player}));
+
+  const freeAgentEvents = [
+    ["2026-06-25T11:15","ePsych0-"],
+    ["2026-08-11T14:52","wilhelmsson90"],
+    ["2026-08-17T22:03","HerrLarsson80"],
+    ["2026-08-24T08:50","hajjeh37"],
+    ["2026-08-25T20:28","Edlund"],
+    ["2026-08-26T17:22","Liimp_92"],
+    ["2026-09-02T18:47","Meknoxer"],
+    ["2026-09-06T21:36","JNHL-_-"],
+    ["2026-09-07T15:22","XD_Jacke"],
+    ["2026-09-07T16:52","BeJutiFul"]
+  ].map(([at,player]) => ({at,player}));
+
+  const rosterSnapshots = [
+    ["2026-09-03T18:07","Burchurs HC","Andre_24x|IIFaranII|Wadde95|Anan20|Strandis96|D4nzk80|Mrwennerstrom"]
+  ].map(([at,team,players]) => ({at,team,players:players.split("|")}));
+
+  window.SEH_ECL27_DATA = Object.freeze({
+    build:"2026-09-08-v3-deterministic",
+    updated:"8 sep 2026 · konsoliderad kronologi",
+    aliases:Object.freeze({"sloogan08":"Sloogan9498","sloogan9498":"Sloogan9498","erik":"Elonnholm","elonnholm":"Elonnholm","love engelkrans":"toretussan","toretussan":"toretussan","sjögren":"I-Sjogren-I","i-sjogren-i":"I-Sjogren-I","edlund":"Edluund___","edluund___":"Edluund___","wadde":"Wadde95","wadde95":"Wadde95","weeman":"weeman400_","weeman400_":"weeman400_","makk makk":"MakkMakk1980","makkmakk1980":"MakkMakk1980","sille":"sille_","sille_":"sille_","lunkan_7":"FaZe_lunkan07","faze_lunkan07":"FaZe_lunkan07","curhed":"Curheed","curheed":"Curheed","disctrasan":"Disctrasan-","disctrasan-":"Disctrasan-","kxner":"Kxner__TTV","kxner__ttv":"Kxner__TTV","yungs":"Yungs99","yungs99":"Yungs99"}),
+    springTeams:Object.freeze(springTeams),
+    newTeams:Object.freeze(newTeams),
+    moveEvents:Object.freeze(moveEvents),
+    posterMemberships:Object.freeze(posterMemberships),
+    freeAgentEvents:Object.freeze(freeAgentEvents),
+    rosterSnapshots:Object.freeze(rosterSnapshots),
+    recruitment:Object.freeze({"Unwanted":{"date":"2026-08-11","target":"Elite","seeks":"Startande RD"},"Zero Ping":{"date":"2026-07-26","target":"Pro-kval","seeks":"G + HB/VF"},"PRIMA":{"date":"2026-07-29","target":"Lite","seeks":"C + back"},"BIK Karlskoga Academy":{"date":"2026-08-20","target":"Core","seeks":"C + vinge + back + backup G"},"vNexs Wisemen":{"date":"2026-07-31","target":"Lite","seeks":"G"},"Lila skeppet":{"date":"2026-08-03","target":"","seeks":"Back + G, ev. C"},"SSK Academy":{"date":"2026-08-10","target":"Lite","seeks":"VF + C + back"},"vNexs Vipers":{"date":"2026-08-18","target":"Pro","seeks":"2 forwards"},"Burchurs HC":{"date":"2026-09-03","target":"","seeks":"G + forward"},"Lilmix":{"date":"2026-08-31","target":"","seeks":"LD"}}),
+    extraTeamIds:Object.freeze({"Shadow Skulls":317,"VBO Stars":398,"Zero Ping":419})
   });
-
-  const DISCORD_FA = Object.freeze([
-    { date:"2026-09-07", player:"BeJutiFul", text:"G · Neo/Core/Lite" },
-    { date:"2026-09-07", player:"XD_Jacke", text:"G · top Pro+" },
-    { date:"2026-09-07", player:"edv0n", text:"HB · hela NHL 27" },
-    { date:"2026-09-06", player:"JNHL-_-", text:"Backup · VF/VB" },
-    { date:"2026-09-05", player:"eSwahn", text:"Backup G · alla divisioner" },
-    { date:"2026-09-05", player:"DrHuhtinen77", text:"LW + C · Neo" },
-    { date:"2026-09-03", player:"J_Granberg", text:"C/LW/LD · Core/Neo" },
-    { date:"2026-09-02", player:"MeKNoXEr", text:"G · Lite/Pro" },
-    { date:"2026-08-26", player:"FrogNHL", text:"LW/C · top Lite/Pro" },
-    { date:"2026-08-26", player:"Liimp_92", text:"G" },
-    { date:"2026-08-25", player:"Edluund___", text:"HF/VF · Lite/Pro" },
-    { date:"2026-08-25", player:"Gangstakim", text:"VB" },
-    { date:"2026-08-24", player:"hajjeh37", text:"F/D · söker tillsammans med fler" },
-    { date:"2026-08-17", player:"HerrLarsson80", text:"HF/HB" },
-    { date:"2026-08-17", player:"Adooph", text:"VF/HF/C" },
-    { date:"2026-08-11", player:"Wilhelmsson90", text:"Back" }
-  ]);
-
-  /* Korrigeringar där källorna ger mer information än v2-underlaget. */
-  const ROSTER_OVERRIDES = Object.freeze({
-    "Burchurs HC": ["Andre_24x","IIFaranII","Wadde95","Anan20","Strandis96","D4nzk80","Mrwennerstrom"],
-    "SSK Academy": ["Ejamannen","gtasir1","KaiserHanzo","Qben","Sloogan9498","softa_tofta"],
-    "vNexs II": ["Gudinge","Hisens__","immuszn","iSvamp","Putteekiing","SeboLHD"],
-    "Invasion Hockey": ["BigKaxen","Brobeck86","GD_Hampezzz","Mrclaper09","RookieLIAMOVIC","xlcelQx"],
-    "Västerås Vipers": []
-  });
-
-  const MOVE_DATE_OVERRIDES = Object.freeze([
-    { team:"AFTERLIFE", player:"Rubituss_", date:"2026-09-07" },
-    { team:"Unwanted", player:"benjamint737", date:"2026-09-07" },
-    { team:"vNexs II", player:"benjamint737", date:"2026-09-07" },
-    { team:"vNexs II", player:"Azzez_88", date:"2026-05-12" }
-  ]);
-
-  function normalize(value) {
-    return String(value || "").trim().toLocaleLowerCase("sv-SE");
-  }
-
-  function formatDate(value) {
-    const [y,m,d] = String(value || "").split("-");
-    const months = {"01":"jan","02":"feb","03":"mar","04":"apr","05":"maj","06":"jun","07":"jul","08":"aug","09":"sep","10":"okt","11":"nov","12":"dec"};
-    return d && months[m] ? `${Number(d)} ${months[m]}` : value;
-  }
-
-  function cards() {
-    return Array.from(document.querySelectorAll("#ecl27BuildGrid .ecl27-card"));
-  }
-
-  function findCard(teamName) {
-    const wanted = normalize(teamName);
-    return cards().find((card) => normalize(card.querySelector("h3")?.textContent) === wanted) || null;
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
-  }
-
-  function setRoster(card, names) {
-    if (!card) return;
-    const chips = card.querySelector(".ecl27-roster__chips");
-    if (chips) {
-      chips.innerHTML = names.length
-        ? names.map((name) => `<span>${escapeHtml(name)}</span>`).join("")
-        : `<em>Ingen säker spelare kvar i vår sammanställning.</em>`;
-    }
-    const firstNumber = card.querySelector(".ecl27-card__numbers > div:first-child strong");
-    if (firstNumber) firstNumber.textContent = String(names.length);
-  }
-
-  function addRecruitment(card, teamName, data) {
-    if (!card || !data || card.querySelector(".ecl27-recruitment-source")) return;
-    const block = document.createElement("section");
-    block.className = "ecl27-recruitment-source";
-    block.innerHTML = `
-      <div class="ecl27-recruitment-source__top">
-        <span>LAGET SÖKER SPELARE</span>
-        <time datetime="${escapeHtml(data.date)}">${escapeHtml(formatDate(data.date))}</time>
-      </div>
-      <div class="ecl27-recruitment-source__main">
-        <strong>${escapeHtml(data.seeks)}</strong>
-        <span>${data.target && data.target !== "Ej angivet" ? `Plan: ${escapeHtml(data.target)}` : "Planerad nivå ej uttryckligen angiven"}</span>
-      </div>
-      <p>${escapeHtml(data.note)}</p>
-    `;
-    const moves = card.querySelector(".ecl27-moves");
-    if (moves) moves.insertAdjacentElement("beforebegin", block);
-    else card.appendChild(block);
-  }
-
-  function markVasterasVipers(card) {
-    if (!card) return;
-    setRoster(card, []);
-    const status = card.querySelector(".ecl27-status");
-    if (status) {
-      status.textContent = "Ingen känd trupp kvar";
-      status.className = "ecl27-status ecl27-status--red";
-    }
-    const faBox = card.querySelector(".ecl27-fa-box");
-    if (faBox) faBox.remove();
-    if (!card.querySelector(".ecl27-source-warning")) {
-      const warning = document.createElement("div");
-      warning.className = "ecl27-source-warning";
-      warning.innerHTML = `<strong>6 SEP</strong><span>meeskojr_, JNHL-_-, fimpen_365 och Lunkan_7 lämnade samtidigt. Därför räknar vi just nu 0 kända spelare.</span>`;
-      const roster = card.querySelector(".ecl27-roster");
-      if (roster) roster.insertAdjacentElement("afterend", warning);
-    }
-  }
-
-  function patchMoveDate(card, player, date) {
-    if (!card) return;
-    const wanted = normalize(player);
-    for (const row of card.querySelectorAll(".ecl27-move")) {
-      if (normalize(row.querySelector("strong")?.textContent) !== wanted) continue;
-      const time = row.querySelector("time");
-      if (time) {
-        time.dateTime = date;
-        time.textContent = formatDate(date);
-      }
-    }
-  }
-
-  function patchFeedDate(player, team, date) {
-    const wantedPlayer = normalize(player);
-    const wantedTeam = normalize(team);
-    for (const row of document.querySelectorAll(".ecl27-feed__row")) {
-      if (normalize(row.querySelector("strong")?.textContent) !== wantedPlayer) continue;
-      if (!normalize(row.textContent).includes(wantedTeam)) continue;
-      const dateNode = row.querySelector(".ecl27-feed__date");
-      if (dateNode) dateNode.textContent = formatDate(date);
-    }
-  }
-
-  function ensureExtraSourcesSection() {
-    const section = document.querySelector("#ecl27TeamBuilds");
-    if (!section || section.querySelector("#ecl27SourceSignals")) return;
-
-    const method = section.querySelector(".ecl27-method");
-    const extra = document.createElement("section");
-    extra.id = "ecl27SourceSignals";
-    extra.className = "ecl27-source-signals";
-    extra.innerHTML = `
-      <div class="ecl27-section-head">
-        <div><p class="directory-kicker">DISCORD-UNDERLAG</p><h3>FA & lag som söker spelare</h3></div>
-        <span>Kompletterar transferlistan</span>
-      </div>
-      <div class="ecl27-source-signals__grid">
-        <article class="ecl27-source-panel">
-          <div class="ecl27-source-panel__head"><strong>Senaste ECL-relaterade FA-poster</strong><span>${DISCORD_FA.length}</span></div>
-          <div class="ecl27-source-fa-list">
-            ${DISCORD_FA.map((row) => `
-              <div><time datetime="${row.date}">${formatDate(row.date)}</time><strong>${escapeHtml(row.player)}</strong><span>${escapeHtml(row.text)}</span></div>
-            `).join("")}
-          </div>
-          <p class="ecl27-source-note">Det här är Discord-poster. Live-listan på Svensk eHockey används fortfarande som primär markering för aktiva Free Agents.</p>
-        </article>
-        <article class="ecl27-source-panel ecl27-source-panel--candidate">
-          <div class="ecl27-source-panel__head"><strong>Möjligt nytt ECL-projekt</strong><span>1</span></div>
-          <div class="ecl27-candidate-team">
-            <span class="ecl27-candidate-team__tag">MÖJLIGT ECL-LAG</span>
-            <h4>Kingping</h4>
-            <p>Kingping meddelade 6 juni att laget startar upp igen och söker VF, VB och G. Inlägget säger att laget tillsammans ska avgöra om det blir ECL eller ITHL.</p>
-            <small>Därför räknas Kingping inte in bland de 35 bekräftade lag/projekten ovan ännu.</small>
-          </div>
-        </article>
-      </div>
-    `;
-
-    if (method) method.insertAdjacentElement("beforebegin", extra);
-    else section.appendChild(extra);
-  }
-
-  function injectStyles() {
-    if (document.querySelector("#ecl27SourceEnrichmentStyle")) return;
-    const style = document.createElement("style");
-    style.id = "ecl27SourceEnrichmentStyle";
-    style.textContent = `
-      .ecl27-recruitment-source{position:relative;z-index:1;margin:13px 0;padding:12px 13px;border:1px solid rgba(75,229,221,.22);border-radius:11px;background:rgba(10,44,50,.17)}
-      .ecl27-recruitment-source__top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:7px}.ecl27-recruitment-source__top span{color:#58e7df;font-size:8px;font-weight:950;letter-spacing:.13em}.ecl27-recruitment-source__top time{color:#6f879b;font-size:9px;text-transform:uppercase}.ecl27-recruitment-source__main{display:flex;flex-wrap:wrap;gap:5px 10px;align-items:baseline}.ecl27-recruitment-source__main strong{color:#fff;font-size:13px}.ecl27-recruitment-source__main span{color:#f0d58b;font-size:10px;font-weight:800}.ecl27-recruitment-source p{margin:6px 0 0;color:#879bad;font-size:10px;line-height:1.45}
-      .ecl27-source-warning{position:relative;z-index:1;display:grid;grid-template-columns:auto 1fr;gap:9px;margin:11px 0;padding:11px 12px;border:1px solid rgba(255,103,103,.28);border-radius:10px;background:rgba(107,20,28,.16)}.ecl27-source-warning strong{color:#ff7d7d;font-size:9px;letter-spacing:.12em}.ecl27-source-warning span{color:#d6b7b7;font-size:10px;line-height:1.45}
-      .ecl27-source-signals{margin-top:18px;border:1px solid #172635;border-radius:18px;background:rgba(2,8,14,.86);overflow:hidden}.ecl27-source-signals__grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:1px;background:#172635}.ecl27-source-panel{padding:18px 20px;background:#030a11}.ecl27-source-panel__head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.ecl27-source-panel__head strong{color:#f7f4ed;font-size:14px}.ecl27-source-panel__head span{display:grid;place-items:center;min-width:28px;height:24px;padding:0 7px;border-radius:7px;background:#081a27;color:#59e7de;font-size:10px;font-weight:900}
-      .ecl27-source-fa-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:#142433}.ecl27-source-fa-list>div{display:grid;grid-template-columns:45px minmax(90px,.65fr) minmax(0,1fr);gap:8px;align-items:center;min-height:39px;padding:7px 9px;background:#02080f}.ecl27-source-fa-list time{color:#6f879b;font-size:9px}.ecl27-source-fa-list strong{color:#fff;font-size:11px;overflow:hidden;text-overflow:ellipsis}.ecl27-source-fa-list span{color:#8fa4b5;font-size:9px}.ecl27-source-note{margin:12px 0 0;color:#6f8496;font-size:9px;line-height:1.5}
-      .ecl27-candidate-team{padding:16px;border:1px solid rgba(214,177,95,.26);border-radius:13px;background:linear-gradient(145deg,rgba(214,177,95,.07),rgba(5,14,23,.8))}.ecl27-candidate-team__tag{color:#f0d58b;font-size:8px;font-weight:950;letter-spacing:.14em}.ecl27-candidate-team h4{margin:5px 0 8px;color:#fff;font-size:25px}.ecl27-candidate-team p{margin:0;color:#9eb0bf;font-size:11px;line-height:1.55}.ecl27-candidate-team small{display:block;margin-top:10px;color:#6f8496;font-size:9px;line-height:1.45}
-      @media(max-width:900px){.ecl27-source-signals__grid{grid-template-columns:1fr}.ecl27-source-fa-list{grid-template-columns:1fr}}
-      @media(max-width:560px){.ecl27-source-fa-list>div{grid-template-columns:42px minmax(85px,.7fr) minmax(0,1fr)}}
-    `;
-    document.head.appendChild(style);
-  }
-
-  function applyPatches() {
-    if (!String(location.hash || "").startsWith(ROUTE_PREFIX)) return;
-    const section = document.querySelector("#ecl27TeamBuilds");
-    if (!section) return;
-
-    injectStyles();
-
-    for (const [teamName, roster] of Object.entries(ROSTER_OVERRIDES)) {
-      setRoster(findCard(teamName), roster);
-    }
-
-    for (const [teamName, data] of Object.entries(RECRUITMENT)) {
-      addRecruitment(findCard(teamName), teamName, data);
-    }
-
-    markVasterasVipers(findCard("Västerås Vipers"));
-
-    for (const move of MOVE_DATE_OVERRIDES) {
-      patchMoveDate(findCard(move.team), move.player, move.date);
-      patchFeedDate(move.player, move.team, move.date);
-    }
-
-    ensureExtraSourcesSection();
-    section.dataset.sourceEnrichment = BUILD;
-  }
-
-  let timer = 0;
-  function schedule() {
-    clearTimeout(timer);
-    timer = window.setTimeout(applyPatches, 40);
-  }
-
-  function observe() {
-    const bodyObserver = new MutationObserver(() => {
-      if (!String(location.hash || "").startsWith(ROUTE_PREFIX)) return;
-      if (document.querySelector("#ecl27TeamBuilds")) schedule();
-    });
-    bodyObserver.observe(document.body, { childList:true, subtree:true });
-  }
-
-  window.addEventListener("hashchange", () => window.setTimeout(schedule, 100));
-  window.addEventListener("DOMContentLoaded", () => { observe(); window.setTimeout(schedule, 250); });
-  if (document.readyState !== "loading") { observe(); window.setTimeout(schedule, 100); }
 })();
