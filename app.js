@@ -16671,7 +16671,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
 
           <a
             class="${route.active === "ecl" ? "is-active" : ""}"
-            href="#/sasong/secl27winter"
+            href="#/sasong/ecl27winter"
           >
             Tävlingar
           </a>
