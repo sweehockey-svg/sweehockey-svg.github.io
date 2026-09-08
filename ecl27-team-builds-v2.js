@@ -563,6 +563,8 @@
     section.className = "ecl27v2";
     section.dataset.build = DATA.build;
 
+    overview.insertAdjacentElement("afterend",section);
+
     const wantedSlug = requestedTeamSlug();
     const wantedTeam = wantedSlug ? model.teams.find((team) => slug(team.name) === wantedSlug) : null;
     if (wantedTeam) {
@@ -572,8 +574,6 @@
       if (wantedSlug) history.replaceState(null,"",seasonListUrl());
       renderListSection(section);
     }
-
-    overview.insertAdjacentElement("afterend",section);
 
     const actions = overview.querySelector(".season-upcoming-actions-v12840");
     if (actions) {
