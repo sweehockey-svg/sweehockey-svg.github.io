@@ -16663,13 +16663,6 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           </a>
 
           <a
-            class="${route.active === "freeAgents" ? "is-active" : ""}"
-            href="#/free-agents"
-          >
-            Free Agents
-          </a>
-
-          <a
             class="${route.active === "history" ? "is-active" : ""}"
             href="#/laghistoria"
           >
@@ -16678,18 +16671,24 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
 
           <a
             class="${route.active === "ecl" ? "is-active" : ""}"
-            href="#/sasong/ecl27winter"
+            href="#/sasong/secl27winter"
           >
-            ECL
+            Tävlingar
+          </a>
+
+          <a
+            class="${route.active === "freeAgents" ? "is-active" : ""}"
+            href="#/free-agents"
+          >
+            Free Agents
           </a>
 
           <a
             class="${route.active === "shop" ? "is-active" : ""}"
             href="#/shop"
           >
-            SHOP
+            Shop
           </a>
-
 
           <a
             class="seh-nav-sec"
