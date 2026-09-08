@@ -6,11 +6,57 @@
 (function () {
   "use strict";
 
-  const DATA = window.SEH_ECL27_DATA;
-  if (!DATA) {
-    console.error("[ECL27] source model missing");
-    return;
+  let ecl27RendererReady = false;
+
+  function mountSourceState(kind, title, message) {
+    if (!String(location.hash || "").startsWith("#/sasong/ecl27winter")) return false;
+    const overview = document.querySelector("#overview");
+    if (!overview) return false;
+
+    document.querySelector("#ecl27TeamBuilds")?.remove();
+    let section = document.querySelector("#ecl27TeamBuildsV2");
+    if (!section) {
+      section = document.createElement("section");
+      section.id = "ecl27TeamBuildsV2";
+      section.className = "ecl27v2";
+      overview.insertAdjacentElement("afterend", section);
+    }
+    section.dataset.ecl27Loading = kind;
+    section.innerHTML = `<div style="margin:28px 0 44px;padding:28px 30px;border:1px solid #172839;border-radius:18px;background:#02080e;color:#f5f1e8"><p style="margin:0 0 7px;color:#57e6dc;font-size:10px;font-weight:900;letter-spacing:.12em">${kind === "error" ? "KUNDE INTE HÄMTA DATA" : "HÄMTAR DATA"}</p><h3 style="margin:0 0 8px;font-size:28px">${title}</h3><p style="margin:0;color:#91a4b4">${message}</p></div>`;
+    return true;
   }
+
+  function scheduleLoadingState() {
+    [0,80,220,500,1000,1800,3000].forEach((delay) => {
+      window.setTimeout(() => {
+        if (ecl27RendererReady) return;
+        mountSourceState("loading", "Laddar svenska lagbyggen…", "Hämtar Spring-trupper och bekräftade ECL 27-rörelser från Svensk eHockey.");
+      }, delay);
+    });
+  }
+
+  scheduleLoadingState();
+
+  async function startEcl27Renderer() {
+    let DATA = window.SEH_ECL27_DATA;
+    if (window.SEH_ECL27_DATA_READY && typeof window.SEH_ECL27_DATA_READY.then === "function") {
+      try {
+        DATA = await window.SEH_ECL27_DATA_READY;
+      } catch (error) {
+        console.error("[ECL27] source model failed", error);
+      }
+    }
+
+    ecl27RendererReady = true;
+    document.querySelector('#ecl27TeamBuildsV2[data-ecl27-loading="loading"]')?.remove();
+
+    if (!DATA || DATA.build === "supabase-loading" || DATA.build === "supabase-error") {
+      console.error("[ECL27] source model unavailable");
+      [0,100,350,800].forEach((delay) => window.setTimeout(() => {
+        mountSourceState("error", "Kunde inte hämta lagbyggen", "Försök ladda om sidan. Ingen tom 0-lagsmodell visas som riktig data.");
+      }, delay));
+      return;
+    }
 
   const ROUTE_PREFIX = "#/sasong/ecl27winter";
   const TEAM_QUERY_PARAM = "ecl27lag";
@@ -782,4 +828,7 @@
   } else {
     scheduleMount();
   }
+  }
+
+  startEcl27Renderer();
 })();
