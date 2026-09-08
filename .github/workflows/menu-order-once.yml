@@ -1,0 +1,119 @@
+name: Main menu update once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/menu-order-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update main navigation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('app.js')
+          text = path.read_text(encoding='utf-8')
+
+          start_marker = '''          <a
+            class="${route.active === "home" ? "is-active" : ""}"
+            href="#/"
+          >'''
+          end_marker = '''          <a
+            class="seh-nav-auth seh-nav-auth--writer'''
+
+          start = text.find(start_marker)
+          end = text.find(end_marker, start)
+          if start < 0 or end < 0:
+              raise SystemExit('Main navigation block not found; refusing to patch')
+
+          new_links = '''          <a
+            class="${route.active === "home" ? "is-active" : ""}"
+            href="#/"
+          >
+            Hem
+          </a>
+
+          <a
+            class="${route.active === "news" ? "is-active" : ""}"
+            href="#/nyheter"
+          >
+            Nyheter
+          </a>
+
+          <a
+            class="${route.active === "players" ? "is-active" : ""}"
+            href="#/spelare"
+          >
+            Spelare
+          </a>
+
+          <a
+            class="${route.active === "history" ? "is-active" : ""}"
+            href="#/laghistoria"
+          >
+            Laghistoria
+          </a>
+
+          <a
+            class="${route.active === "ecl" ? "is-active" : ""}"
+            href="#/sasong/ecl27winter"
+          >
+            Tävlingar
+          </a>
+
+          <a
+            class="${route.active === "freeAgents" ? "is-active" : ""}"
+            href="#/free-agents"
+          >
+            Free Agents
+          </a>
+
+          <a
+            class="${route.active === "shop" ? "is-active" : ""}"
+            href="#/shop"
+          >
+            Shop
+          </a>
+
+          <a
+            class="seh-nav-sec"
+            href="SEC/"
+          >
+            SEC
+          </a>
+
+'''
+
+          text = text[:start] + new_links + text[end:]
+          path.write_text(text, encoding='utf-8')
+
+          index = Path('index.html')
+          html = index.read_text(encoding='utf-8')
+          old = 'app.js?v=20260908-v12995-foreign-player-profile'
+          new = 'app.js?v=20260908-v12996-competitions-menu'
+          if old not in html:
+              raise SystemExit('Expected app.js cache version not found; refusing to patch index')
+          html = html.replace(old, new, 1)
+          index.write_text(html, encoding='utf-8')
+          PY
+      - name: Commit menu update
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.js index.html
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git commit -m "Update main navigation to Tävlingar"
+          git push
