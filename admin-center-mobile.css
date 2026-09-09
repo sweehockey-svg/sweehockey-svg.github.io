@@ -1,0 +1,288 @@
+/* Svensk eHockey – Admincenter mobile hardening
+   Layout only. No admin content or behaviour is changed. */
+
+#spaRouteView[data-route="admin"] {
+  overflow-x: clip;
+}
+
+#spaRouteView[data-route="admin"] .admin-shell,
+#spaRouteView[data-route="admin"] #adminDashboard,
+#spaRouteView[data-route="admin"] .admin-grid,
+#spaRouteView[data-route="admin"] .admin-card,
+#spaRouteView[data-route="admin"] .admin-login,
+#spaRouteView[data-route="admin"] .admin-session,
+#spaRouteView[data-route="admin"] .admin-actions,
+#spaRouteView[data-route="admin"] .admin-status,
+#spaRouteView[data-route="admin"] .admin-player-hub-card,
+#spaRouteView[data-route="admin"] .fa-admin-card,
+#spaRouteView[data-route="admin"] .fa-admin-layout,
+#spaRouteView[data-route="admin"] .fa-admin-form,
+#spaRouteView[data-route="admin"] .fa-admin-current,
+#spaRouteView[data-route="admin"] .fa-admin-approval-panel,
+#spaRouteView[data-route="admin"] .fa-admin-request-row {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#spaRouteView[data-route="admin"] .admin-card,
+#spaRouteView[data-route="admin"] .admin-status,
+#spaRouteView[data-route="admin"] .admin-card p,
+#spaRouteView[data-route="admin"] .admin-card h2,
+#spaRouteView[data-route="admin"] .admin-card h3,
+#spaRouteView[data-route="admin"] .admin-session strong,
+#spaRouteView[data-route="admin"] .admin-session span,
+#spaRouteView[data-route="admin"] .writer-back,
+#spaRouteView[data-route="admin"] .fa-admin-request-row strong,
+#spaRouteView[data-route="admin"] .fa-admin-request-row small,
+#spaRouteView[data-route="admin"] .admin-status a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+#spaRouteView[data-route="admin"] input,
+#spaRouteView[data-route="admin"] textarea,
+#spaRouteView[data-route="admin"] select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#spaRouteView[data-route="admin"] button,
+#spaRouteView[data-route="admin"] a {
+  touch-action: manipulation;
+}
+
+#spaRouteView[data-route="admin"] .admin-actions > *,
+#spaRouteView[data-route="admin"] .fa-admin-heading__actions > * {
+  max-width: 100%;
+}
+
+@media (max-width: 900px) {
+  #spaRouteView[data-route="admin"] .admin-shell {
+    width: 100%;
+    max-width: 100%;
+    padding: 2rem 18px 4rem;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-card {
+    width: 100%;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-player-hub-card__top,
+  #spaRouteView[data-route="admin"] .fa-admin-heading,
+  #spaRouteView[data-route="admin"] .admin-player-section-head,
+  #spaRouteView[data-route="admin"] .admin-player-livebar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-hub-stats,
+  #spaRouteView[data-route="admin"] .fa-admin-approval-grid,
+  #spaRouteView[data-route="admin"] .fa-admin-layout,
+  #spaRouteView[data-route="admin"] .fa-admin-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  #spaRouteView[data-route="admin"] .fa-admin-heading__actions,
+  #spaRouteView[data-route="admin"] .admin-player-livebar__actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-player-fa-toggle {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  #spaRouteView[data-route="admin"] .admin-shell {
+    padding-top: 20px;
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: 48px;
+    padding-left: max(12px, env(safe-area-inset-left));
+  }
+
+  #spaRouteView[data-route="admin"] .writer-back {
+    display: inline-flex;
+    max-width: 100%;
+    line-height: 1.35;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-hero {
+    margin: 18px 0 22px;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-hero h1 {
+    font-size: clamp(2.35rem, 13vw, 4rem);
+    line-height: .93;
+    overflow-wrap: anywhere;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-hero > p:last-child {
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-card {
+    padding: 16px;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-card h2,
+  #spaRouteView[data-route="admin"] .admin-card h3 {
+    line-height: 1.15;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-card p {
+    line-height: 1.5;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-login {
+    width: 100%;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-login label,
+  #spaRouteView[data-route="admin"] .admin-card label {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #spaRouteView[data-route="admin"] input,
+  #spaRouteView[data-route="admin"] textarea,
+  #spaRouteView[data-route="admin"] select {
+    width: 100%;
+    font-size: 16px;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-session {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-session > div {
+    min-width: 0;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-session button {
+    align-self: flex-start;
+    min-height: 44px;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-actions button,
+  #spaRouteView[data-route="admin"] .admin-actions a,
+  #spaRouteView[data-route="admin"] .fa-admin-heading__actions button,
+  #spaRouteView[data-route="admin"] .fa-admin-heading__actions a {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-status {
+    min-height: 0;
+    line-height: 1.45;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-hub-stats {
+    gap: 7px;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-hub-stats > span {
+    padding: 10px 12px;
+  }
+
+  #spaRouteView[data-route="admin"] .fa-admin-form,
+  #spaRouteView[data-route="admin"] .fa-admin-current,
+  #spaRouteView[data-route="admin"] .fa-admin-approval-panel {
+    padding: 12px;
+  }
+
+  #spaRouteView[data-route="admin"] .fa-admin-current__head,
+  #spaRouteView[data-route="admin"] .fa-admin-request-row {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #spaRouteView[data-route="admin"] .fa-admin-current__head {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  #spaRouteView[data-route="admin"] .fa-admin-request-row {
+    align-items: stretch;
+  }
+
+  #spaRouteView[data-route="admin"] .fa-admin-request-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 7px;
+  }
+
+  #spaRouteView[data-route="admin"] .fa-admin-request-actions button {
+    min-width: 0;
+    min-height: 44px;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 420px) {
+  #spaRouteView[data-route="admin"] .admin-shell {
+    padding-top: 16px;
+    padding-bottom: 38px;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-hero {
+    margin-top: 14px;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-hero h1 {
+    font-size: clamp(2.15rem, 14vw, 3.25rem);
+  }
+
+  #spaRouteView[data-route="admin"] .admin-card {
+    padding: 13px;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-session button,
+  #spaRouteView[data-route="admin"] .admin-actions button,
+  #spaRouteView[data-route="admin"] .admin-actions a {
+    width: 100%;
+  }
+
+  #spaRouteView[data-route="admin"] .fa-admin-request-actions {
+    grid-template-columns: 1fr;
+  }
+
+  #spaRouteView[data-route="admin"] .fa-admin-heading__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  #spaRouteView[data-route="admin"] .admin-shell {
+    padding-top: 14px;
+    padding-bottom: 28px;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-hero {
+    margin: 12px 0 16px;
+  }
+
+  #spaRouteView[data-route="admin"] .admin-session {
+    margin-bottom: 14px;
+  }
+}
