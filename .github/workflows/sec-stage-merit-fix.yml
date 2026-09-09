@@ -1,104 +1,13 @@
 name: Apply SEC stage merit fix
-
 on:
   push:
     paths:
-      - '.github/workflows/sec-stage-merit-fix.yml'
-
+      - .github/workflows/sec-stage-merit-fix.yml
 permissions:
   contents: write
-
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - name: Patch SEC merit logic
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('SEC/app-modern.js')
-          text = path.read_text(encoding='utf-8')
-          old = '''  function getRankMerits(rows, statKey, makeItem, sorter) {
-            const output = [];
-            rows.forEach(function (row) {
-              if (!number(row[statKey])) return;
-              const cup = state.cups.find(function (entry) { return entry.id === row.cupId; });
-              if (!cup) return;
-              const peers = getCupStageRows(cup, row, row.sa !== undefined ? "goalie" : "player").slice().sort(sorter);
-              const index = peers.findIndex(function (candidate) {
-                return getPersonProfileKey(candidate.name) === getPersonProfileKey(row.name) && fold(candidate.team) === fold(row.team);
-              });
-              if (index >= 0 && index < 3) output.push(makeItem(row, index));
-            });
-            return output;
-          }
-
-          function getCupStageRows(cup, row, type) {
-            const rows = type === "goalie" ? cup.goalieRows : cup.playerRows;
-            return rows.filter(function (candidate) {
-              return normalizeStage(candidate.stage) === normalizeStage(row.stage);
-            });
-          }
-
-          function getStageCupLabel(row) {
-            const stage = normalizeStage(row.stage);
-            return row.cupCode + (stage === "playoffs" ? " S" : stage === "playin" ? " PI" : " G");
-          }
-'''
-          new = '''  function getRankMerits(rows, statKey, makeItem, sorter) {
-            const output = [];
-            rows.forEach(function (row) {
-              if (!number(row[statKey])) return;
-              const cup = state.cups.find(function (entry) { return entry.id === row.cupId; });
-              if (!cup) return;
-              const type = row.sa !== undefined ? "goalie" : "player";
-              let peers = getCupStageRows(cup, row, type);
-              if (type === "goalie") {
-                const stage = normalizeStage(row.stage);
-                const stageMatches = (cup.matches || []).filter(function (match) {
-                  return normalizeStage(match.stage) === stage;
-                });
-                peers = filterEligibleCupGoalies(peers, stageMatches);
-              }
-              peers = peers.slice().sort(sorter);
-              const index = peers.findIndex(function (candidate) {
-                return getPersonProfileKey(candidate.name) === getPersonProfileKey(row.name) && fold(candidate.team) === fold(row.team);
-              });
-              if (index >= 0 && index < 3) output.push(makeItem(row, index));
-            });
-            return output;
-          }
-
-          function getCupStageRows(cup, row, type) {
-            const stage = normalizeStage(row.stage);
-            const stageRows = type === "goalie" ? cup.goalieStageRows : cup.playerStageRows;
-            const direct = stageRows && Array.isArray(stageRows[stage]) ? stageRows[stage] : [];
-            if (direct.length) return direct;
-            const fallback = type === "goalie" ? cup.goalieRows : cup.playerRows;
-            return (fallback || []).filter(function (candidate) {
-              return normalizeStage(candidate.stage) === stage;
-            });
-          }
-
-          function getStageCupLabel(row) {
-            const stage = normalizeStage(row.stage);
-            const label = stage === "playoffs" ? "Slutspel" : stage === "playin" ? "Play-in" : "Gruppspel";
-            return row.cupCode + " – " + label;
-          }
-'''
-          if old not in text:
-              raise SystemExit('Expected SEC merit block not found; refusing partial patch')
-          path.write_text(text.replace(old, new, 1), encoding='utf-8')
-          PY
-      - name: Remove temporary workflow
-        run: rm .github/workflows/sec-stage-merit-fix.yml
-      - name: Commit change
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add SEC/app-modern.js .github/workflows/sec-stage-merit-fix.yml
-          git commit -m "Fix SEC personal merits by stage"
-          git push origin main
+      - name: Validate
+        run: echo ok
