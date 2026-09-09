@@ -37,6 +37,11 @@
       css.href = "./styles-modern.css?v=" + version;
       document.head.appendChild(css);
 
+      var mobileCss = document.createElement("link");
+      mobileCss.rel = "stylesheet";
+      mobileCss.href = "./mobile-hardening.css?v=20260909-v1";
+      document.head.appendChild(mobileCss);
+
       function loadScript(src) {
         return new Promise(function (resolve, reject) {
           var script = document.createElement("script");
