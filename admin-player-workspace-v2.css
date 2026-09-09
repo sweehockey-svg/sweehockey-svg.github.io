@@ -1,0 +1,76 @@
+/* Svensk eHockey – Spelarhantering Admin V2 */
+.admin-player-workspace-v2{--ap-cyan:#37e6e2;--ap-gold:#f0d05d;--ap-green:#54e5a8;--ap-red:#ff737b}
+.admin-player-workspace-v2 .player-admin-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0 24px;padding:8px;border:1px solid rgba(111,155,180,.2);background:rgba(2,11,17,.72)}
+.admin-player-workspace-v2 .player-admin-tabs button{min-height:78px;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;align-items:center;gap:3px 12px;padding:13px 16px;border:1px solid transparent;background:transparent;color:#a7b4bc;text-align:left;cursor:pointer}
+.admin-player-workspace-v2 .player-admin-tabs button span{font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.035em}
+.admin-player-workspace-v2 .player-admin-tabs button strong{grid-row:1/3;grid-column:2;font-size:28px;color:#65747d;font-variant-numeric:tabular-nums}
+.admin-player-workspace-v2 .player-admin-tabs button small{font-size:11px;color:#64727b}
+.admin-player-workspace-v2 .player-admin-tabs button.is-active{border-color:rgba(240,208,93,.55);background:linear-gradient(135deg,rgba(240,208,93,.12),rgba(24,230,226,.035));color:#fff}
+.admin-player-workspace-v2 .player-admin-tabs button.is-active strong{color:var(--ap-gold)}
+.admin-player-workspace-v2 .player-admin-view[hidden]{display:none!important}
+.admin-player-workspace-v2 .player-admin-view{animation:adminPlayerFade .18s ease both}
+@keyframes adminPlayerFade{from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:none}}
+.admin-player-workspace-v2 .player-admin-queue-tools,.admin-player-workspace-v2 .player-admin-links-tools{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:0 0 12px;padding:11px 12px;border:1px solid rgba(111,155,180,.16);background:rgba(3,13,20,.55)}
+.admin-player-workspace-v2 .player-admin-queue-tools>div{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.admin-player-workspace-v2 .player-admin-queue-tools span,.admin-player-workspace-v2 .player-admin-links-tools label>span{font-size:9px;font-weight:900;letter-spacing:.14em;color:#7f98a6}
+.admin-player-workspace-v2 .player-admin-queue-tools button{min-height:34px;padding:6px 11px;border:1px solid rgba(111,155,180,.2);background:#071018;color:#9eabb3;cursor:pointer}
+.admin-player-workspace-v2 .player-admin-queue-tools button b{margin-left:6px;color:#fff}
+.admin-player-workspace-v2 .player-admin-queue-tools button.is-active{border-color:rgba(55,230,226,.5);background:rgba(55,230,226,.08);color:var(--ap-cyan)}
+.admin-player-workspace-v2 .player-admin-links-tools label{display:grid;gap:6px;width:min(440px,100%)}
+.admin-player-workspace-v2 .player-admin-links-tools input{min-height:42px;border:1px solid rgba(111,155,180,.25);background:#050d13;color:#fff;padding:0 12px}
+.admin-player-workspace-v2 .fa-admin-approval-grid{display:grid!important;grid-template-columns:1fr!important;gap:14px!important}
+.admin-player-workspace-v2 .fa-admin-approval-panel{min-width:0}
+.admin-player-workspace-v2 .fa-admin-approval-panel[data-admin-queue="profiles"]{order:-1;border-color:rgba(55,230,226,.28)}
+.admin-player-workspace-v2 .fa-admin-request-list{display:grid;gap:10px}
+.admin-player-workspace-v2 .profile-admin-request-card{overflow:hidden;border:1px solid rgba(89,124,143,.3);background:linear-gradient(145deg,rgba(7,18,27,.98),rgba(3,9,14,.98));box-shadow:0 14px 38px rgba(0,0,0,.18)}
+.admin-player-workspace-v2 .profile-admin-request-card.is-report{border-left:3px solid var(--ap-red)}
+.admin-player-workspace-v2 .profile-admin-request-card__head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:17px 19px;border-bottom:1px solid rgba(111,155,180,.15);background:rgba(255,255,255,.012)}
+.admin-player-workspace-v2 .profile-admin-request-card__head>div:first-child{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.admin-player-workspace-v2 .profile-admin-type{padding:4px 7px;border:1px solid rgba(55,230,226,.28);color:var(--ap-cyan);font-size:9px;font-weight:950;letter-spacing:.12em}
+.admin-player-workspace-v2 .profile-admin-type.is-report{border-color:rgba(255,115,123,.38);color:var(--ap-red)}
+.admin-player-workspace-v2 .profile-admin-player-link{color:#fff;text-decoration:none;font-size:21px;font-weight:950}
+.admin-player-workspace-v2 .profile-admin-player-link:hover{color:var(--ap-gold)}
+.admin-player-workspace-v2 .profile-admin-request-card__head small{color:#71828c;font-size:10px}
+.admin-player-workspace-v2 .profile-admin-progress{display:flex!important;align-items:center!important;gap:7px!important;flex-wrap:wrap;justify-content:flex-end}
+.admin-player-workspace-v2 .profile-admin-progress span,.admin-player-workspace-v2 .profile-admin-progress strong,.admin-player-workspace-v2 .profile-admin-waiting{padding:5px 8px;border:1px solid rgba(111,155,180,.2);font-size:9px;text-transform:uppercase;letter-spacing:.08em}
+.admin-player-workspace-v2 .profile-admin-progress span:first-child{color:var(--ap-green);border-color:rgba(84,229,168,.25)}
+.admin-player-workspace-v2 .profile-admin-progress span:nth-child(2){color:var(--ap-red);border-color:rgba(255,115,123,.25)}
+.admin-player-workspace-v2 .profile-admin-progress strong,.admin-player-workspace-v2 .profile-admin-waiting{color:var(--ap-gold);border-color:rgba(240,208,93,.25)}
+.admin-player-workspace-v2 .profile-admin-changes-v2{display:grid;gap:0}
+.admin-player-workspace-v2 .profile-admin-field{padding:15px 19px;border-bottom:1px solid rgba(111,155,180,.13)}
+.admin-player-workspace-v2 .profile-admin-field:last-child{border-bottom:0}
+.admin-player-workspace-v2 .profile-admin-field.is-approved{background:linear-gradient(90deg,rgba(84,229,168,.055),transparent 45%)}
+.admin-player-workspace-v2 .profile-admin-field.is-rejected{background:linear-gradient(90deg,rgba(255,115,123,.045),transparent 45%)}
+.admin-player-workspace-v2 .profile-admin-field__head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px}
+.admin-player-workspace-v2 .profile-admin-field__head>span{font-size:10px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;color:#8bb5c8}
+.admin-player-workspace-v2 .profile-admin-field-status{padding:3px 7px;border:1px solid rgba(111,155,180,.2);font-size:8px;text-transform:uppercase;color:#7d8c94}
+.admin-player-workspace-v2 .profile-admin-field-status.is-approved{color:var(--ap-green);border-color:rgba(84,229,168,.28)}
+.admin-player-workspace-v2 .profile-admin-field-status.is-rejected{color:var(--ap-red);border-color:rgba(255,115,123,.28)}
+.admin-player-workspace-v2 .profile-admin-field__compare{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);gap:10px;align-items:stretch}
+.admin-player-workspace-v2 .profile-admin-field__compare>div{min-width:0;padding:10px 11px;border:1px solid rgba(111,155,180,.16);background:#050d13}
+.admin-player-workspace-v2 .profile-admin-field__compare>div:last-child{border-color:rgba(240,208,93,.26);background:rgba(240,208,93,.035)}
+.admin-player-workspace-v2 .profile-admin-field__compare small{display:block;margin-bottom:6px;color:#60737e;font-size:8px;font-weight:900;letter-spacing:.12em}
+.admin-player-workspace-v2 .profile-admin-field__compare>i{align-self:center;text-align:center;color:var(--ap-gold);font-style:normal;font-size:18px}
+.admin-player-workspace-v2 .profile-admin-value{overflow-wrap:anywhere;color:#d8e0e4;font-size:12px;line-height:1.45}
+.admin-player-workspace-v2 .profile-admin-value--long{white-space:normal;max-height:180px;overflow:auto}
+.admin-player-workspace-v2 .profile-admin-empty-value{color:#62737c;font-style:normal}
+.admin-player-workspace-v2 .profile-admin-value-link{color:#e9d77d;text-decoration:none;overflow-wrap:anywhere;font-size:11px}
+.admin-player-workspace-v2 .profile-admin-image-preview{display:flex;align-items:center;gap:10px;color:#e9d77d;text-decoration:none;font-size:10px}
+.admin-player-workspace-v2 .profile-admin-image-preview img{width:64px;height:64px;object-fit:cover;border:1px solid rgba(240,208,93,.28);background:#020609}
+.admin-player-workspace-v2 .profile-admin-field__actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.admin-player-workspace-v2 .profile-admin-field__actions button,.admin-player-workspace-v2 .profile-admin-request-card__footer button{min-height:35px;padding:7px 13px}
+.admin-player-workspace-v2 .profile-admin-request-card__footer{display:flex;justify-content:flex-end;gap:8px;padding:13px 19px;border-top:1px solid rgba(111,155,180,.15);background:#040b10}
+.admin-player-workspace-v2 .profile-admin-report-body{padding:18px 19px;color:#dce4e8;line-height:1.55;white-space:pre-wrap}
+.admin-player-workspace-v2 .profile-admin-finalizing{color:#7f8e96;font-size:11px}
+.admin-player-workspace-v2 .player-admin-empty-state{padding:28px!important;text-align:center;color:#6e8089}
+.admin-player-workspace-v2 .player-admin-view--links #faAdminApprovedLinks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.admin-player-workspace-v2 .player-admin-view--links #faAdminApprovedLinks .fa-admin-request-row{min-height:92px}
+.admin-player-workspace-v2 .fa-admin-player-link{color:#f0d58b;text-decoration:none;font-weight:900}
+.admin-player-workspace-v2 .fa-admin-player-link:hover{text-decoration:underline}
+.admin-player-workspace-v2 .admin-player-section-head--fa{align-items:center}
+.admin-player-workspace-v2 .player-admin-fa-toggle{margin-left:auto;white-space:nowrap}
+.admin-player-workspace-v2 .player-admin-view--fa .fa-admin-layout{grid-template-columns:1fr!important}
+.admin-player-workspace-v2 .player-admin-view--fa .fa-admin-layout.is-editor-open{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important}
+.admin-player-workspace-v2 .player-admin-view--fa .fa-admin-current{min-width:0}
+.admin-player-workspace-v2 .player-admin-view--fa .fa-admin-list{max-height:none}
+@media(max-width:900px){.admin-player-workspace-v2 .player-admin-tabs{grid-template-columns:1fr}.admin-player-workspace-v2 .player-admin-tabs button{min-height:60px}.admin-player-workspace-v2 .profile-admin-request-card__head{align-items:flex-start;flex-direction:column}.admin-player-workspace-v2 .profile-admin-progress{justify-content:flex-start}.admin-player-workspace-v2 .profile-admin-field__compare{grid-template-columns:1fr}.admin-player-workspace-v2 .profile-admin-field__compare>i{transform:rotate(90deg)}.admin-player-workspace-v2 .player-admin-view--links #faAdminApprovedLinks{grid-template-columns:1fr}.admin-player-workspace-v2 .player-admin-view--fa .fa-admin-layout.is-editor-open{grid-template-columns:1fr!important}}
