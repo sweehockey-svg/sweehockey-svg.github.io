@@ -4,6 +4,8 @@
   const STORAGE_KEY = "seh_current_player_stats_sync_request_id";
   let client = null;
   let pollTimer = null;
+  let adminBadgeTimer = null;
+  let adminBadgeRefreshBusy = false;
 
   function isAdminHome() {
     return location.hash === "#/admin" || location.hash === "#admin";
@@ -17,6 +19,145 @@
     if (!window.supabase?.createClient || !url || !key) return null;
     client = window.supabase.createClient(url, key);
     return client;
+  }
+
+  function adminNavLinks() {
+    return Array.from(document.querySelectorAll('a[data-seh-auth-link="admin"]'));
+  }
+
+  function ensureAdminBadgeStyles() {
+    if (document.getElementById("sehAdminPendingBadgeStyles")) return;
+    const style = document.createElement("style");
+    style.id = "sehAdminPendingBadgeStyles";
+    style.textContent = `
+      .seh-admin-pending-badge {
+        display: inline-grid;
+        place-items: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        margin-left: 6px;
+        border-radius: 999px;
+        box-sizing: border-box;
+        vertical-align: middle;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: 0;
+        font-variant-numeric: tabular-nums;
+        transform: translateY(-1px);
+        transition: background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+      }
+      .seh-admin-pending-badge[data-state="clear"] {
+        color: #62e59b;
+        background: rgba(40, 151, 92, .10);
+        border: 1px solid rgba(98, 229, 155, .62);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .18);
+      }
+      .seh-admin-pending-badge[data-state="pending"] {
+        color: #fff;
+        background: #e73535;
+        border: 1px solid #ff6767;
+        box-shadow: 0 0 0 2px rgba(231, 53, 53, .12), 0 0 12px rgba(231, 53, 53, .20);
+      }
+      @media (max-width: 760px) {
+        .seh-admin-pending-badge {
+          min-width: 17px;
+          height: 17px;
+          padding: 0 4px;
+          margin-left: 5px;
+          font-size: 9px;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensureAdminNavBadges() {
+    ensureAdminBadgeStyles();
+    adminNavLinks().forEach(function (link) {
+      let badge = link.querySelector(".seh-admin-pending-badge");
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "seh-admin-pending-badge";
+        badge.dataset.state = "clear";
+        badge.textContent = "0";
+        badge.setAttribute("aria-label", "Inga väntande adminärenden");
+        link.appendChild(badge);
+      }
+    });
+  }
+
+  function setAdminBadgeCount(count, breakdown) {
+    const safeCount = Math.max(0, Number(count) || 0);
+    const visibleText = safeCount > 99 ? "99+" : String(safeCount);
+    const details = breakdown || {};
+    const title = safeCount > 0
+      ? `${safeCount} väntande adminärenden · ${details.links || 0} kopplingar · ${details.fa || 0} Free Agent · ${details.profiles || 0} profilärenden`
+      : "Inga väntande adminärenden";
+
+    ensureAdminNavBadges();
+    adminNavLinks().forEach(function (link) {
+      const badge = link.querySelector(".seh-admin-pending-badge");
+      if (!badge) return;
+      badge.textContent = visibleText;
+      badge.dataset.state = safeCount > 0 ? "pending" : "clear";
+      badge.setAttribute("aria-label", title);
+      badge.title = title;
+    });
+  }
+
+  async function refreshAdminNavBadge() {
+    if (adminBadgeRefreshBusy) return;
+    ensureAdminNavBadges();
+    const links = adminNavLinks();
+    if (!links.length || !links.some(function (link) { return !link.hidden; })) return;
+
+    const supabase = getClient();
+    if (!supabase) return;
+
+    adminBadgeRefreshBusy = true;
+    try {
+      const sessionResult = await supabase.auth.getSession();
+      if (sessionResult.error || !sessionResult.data.session) return;
+
+      const [linkRequests, faRequests, profileRequests] = await Promise.all([
+        supabase.from("ehockey_discord_player_links").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("ehockey_free_agent_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("ehockey_player_profile_requests").select("id", { count: "exact", head: true }).eq("status", "pending")
+      ]);
+
+      const firstError = linkRequests.error || faRequests.error || profileRequests.error;
+      if (firstError) throw firstError;
+
+      const breakdown = {
+        links: Number(linkRequests.count) || 0,
+        fa: Number(faRequests.count) || 0,
+        profiles: Number(profileRequests.count) || 0
+      };
+      setAdminBadgeCount(breakdown.links + breakdown.fa + breakdown.profiles, breakdown);
+    } catch (error) {
+      console.warn("Kunde inte läsa väntande adminärenden till navigeringen", error);
+    } finally {
+      adminBadgeRefreshBusy = false;
+    }
+  }
+
+  function scheduleAdminBadgeWarmup() {
+    [0, 150, 450, 1000, 2200, 4500].forEach(function (delay) {
+      window.setTimeout(function () {
+        ensureAdminNavBadges();
+        refreshAdminNavBadge();
+      }, delay);
+    });
+  }
+
+  function startAdminBadgeRefresh() {
+    scheduleAdminBadgeWarmup();
+    window.clearInterval(adminBadgeTimer);
+    adminBadgeTimer = window.setInterval(function () {
+      if (!document.hidden) refreshAdminNavBadge();
+    }, 15000);
   }
 
   function requestId() {
@@ -163,12 +304,26 @@
     if (requestId()) refresh(true);
   }
 
-  new MutationObserver(mount).observe(document.documentElement, { childList: true, subtree: true });
+  new MutationObserver(function () {
+    mount();
+    ensureAdminNavBadges();
+  }).observe(document.documentElement, { childList: true, subtree: true });
+
   window.addEventListener("hashchange", function () {
     window.clearTimeout(pollTimer);
-    window.setTimeout(mount, 0);
+    window.setTimeout(function () {
+      mount();
+      ensureAdminNavBadges();
+      refreshAdminNavBadge();
+    }, 0);
   });
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) refreshAdminNavBadge();
+  });
+
   mount();
+  startAdminBadgeRefresh();
 
   /*
     ECL 27 emergency guard:
