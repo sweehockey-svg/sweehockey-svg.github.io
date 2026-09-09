@@ -1,0 +1,229 @@
+/* Svensk eHockey – site-wide mobile hardening
+   Layout/responsiveness only. No content or application logic changes. */
+
+@media (max-width: 900px) {
+  #spaRouteView,
+  #spaRouteView > *,
+  .directory-shell,
+  .directory-topbar__inner,
+  .directory-footer,
+  .page-shell,
+  .history-page-shell,
+  .team-page-shell,
+  .tournament-overview-shell,
+  .shop-page-shell,
+  .free-agents-shell,
+  .players-shell,
+  .players-shell-v122,
+  .player-profile-shell,
+  .support-shell,
+  .writer-shell {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #spaRouteView video,
+  #spaRouteView iframe,
+  #spaRouteView canvas {
+    max-width: 100%;
+  }
+
+  #spaRouteView pre {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #spaRouteView h1,
+  #spaRouteView h2,
+  #spaRouteView h3,
+  #spaRouteView p,
+  #spaRouteView a,
+  #spaRouteView strong,
+  #spaRouteView small,
+  #spaRouteView code {
+    overflow-wrap: anywhere;
+  }
+
+  #spaRouteView .page-nav,
+  #spaRouteView .portal-actions,
+  #spaRouteView .shop-info-actions,
+  #spaRouteView .support-actions,
+  #spaRouteView .writer-actions,
+  #spaRouteView .writer-editor-toolbar,
+  #spaRouteView .my-profile-actions,
+  #spaRouteView .news-article-actions {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+
+  #spaRouteView .directory-nav,
+  #spaRouteView .season-subnav,
+  #spaRouteView .tournament-overview-nav,
+  #spaRouteView .player-history-filters,
+  #spaRouteView .player-pagination {
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #spaRouteView .roster-table-wrapper,
+  #spaRouteView .history-table-wrap,
+  #spaRouteView .season-table-wrap,
+  #spaRouteView .tournament-table-wrap,
+  #spaRouteView .tournament-playoff-bracket {
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #spaRouteView[data-route="news"] .news-article-body img,
+  #spaRouteView[data-route="news"] .news-article-flow img,
+  #spaRouteView[data-route="writer"] .writer-preview-article img,
+  #spaRouteView[data-route="writer"] .writer-article-preview img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  #spaRouteView[data-route="news"] .news-article-body table,
+  #spaRouteView[data-route="news"] .news-article-flow table,
+  #spaRouteView[data-route="writer"] .writer-preview-article table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ECL 27 is injected by its renderer and therefore gets its mobile safety here. */
+  #ecl27TeamBuildsV2,
+  #ecl27TeamBuildsV2 * {
+    min-width: 0;
+  }
+
+  #ecl27TeamBuildsV2 .ecl27v2-player,
+  #ecl27TeamBuildsV2 .ecl27v2-inline-team,
+  #ecl27TeamBuildsV2 .ecl27v2-detail-title,
+  #ecl27TeamBuildsV2 .ecl27v2-roster-feature__latest strong {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 760px) {
+  /* Prevent iOS form-focus zoom on the site's actual form surfaces. */
+  #spaRouteView[data-route="players"] input,
+  #spaRouteView[data-route="players"] select,
+  #spaRouteView[data-route="freeAgents"] input,
+  #spaRouteView[data-route="freeAgents"] select,
+  #spaRouteView[data-route="myProfile"] input,
+  #spaRouteView[data-route="myProfile"] select,
+  #spaRouteView[data-route="myProfile"] textarea,
+  #spaRouteView[data-route="writer"] input,
+  #spaRouteView[data-route="writer"] select,
+  #spaRouteView[data-route="writer"] textarea,
+  #spaRouteView[data-route="support"] input,
+  #spaRouteView[data-route="support"] select,
+  #spaRouteView[data-route="support"] textarea {
+    font-size: 16px;
+  }
+
+  #spaRouteView button,
+  #spaRouteView input,
+  #spaRouteView select,
+  #spaRouteView textarea {
+    max-width: 100%;
+  }
+
+  #spaRouteView .page-nav {
+    align-items: flex-start;
+    gap: 10px 16px;
+  }
+
+  #spaRouteView[data-route="writer"] .writer-editor-toolbar button,
+  #spaRouteView[data-route="writer"] .writer-actions button,
+  #spaRouteView[data-route="myProfile"] .my-profile-actions button,
+  #spaRouteView[data-route="freeAgents"] .free-agents-toolbar button {
+    min-height: 44px;
+  }
+
+  #ecl27TeamBuildsV2 .ecl27v2-detail-panel-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #ecl27TeamBuildsV2 .ecl27v2-recruit {
+    padding-right: 10px;
+  }
+
+  #ecl27TeamBuildsV2 .ecl27v2-recruit time {
+    position: static;
+    display: block;
+    margin-top: 5px;
+  }
+}
+
+@media (max-width: 520px) {
+  #spaRouteView[data-route="myProfile"] .my-profile-image-submit {
+    grid-template-columns: 1fr;
+  }
+
+  #spaRouteView[data-route="myProfile"] #myProfileImagePreview {
+    grid-column: auto;
+  }
+
+  #spaRouteView[data-route="myProfile"] .my-profile-file,
+  #spaRouteView[data-route="myProfile"] .my-profile-actions button,
+  #spaRouteView[data-route="writer"] .writer-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  #ecl27TeamBuildsV2 .ecl27v2-detail-hero {
+    grid-template-columns: 1fr;
+  }
+
+  #ecl27TeamBuildsV2 .ecl27v2-detail-logo {
+    width: 82px;
+    height: 82px;
+  }
+
+  #ecl27TeamBuildsV2 .ecl27v2-detail-title h2 {
+    font-size: clamp(30px, 11vw, 40px);
+    overflow-wrap: anywhere;
+  }
+
+  #ecl27TeamBuildsV2 .ecl27v2-detail-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #ecl27TeamBuildsV2 .ecl27v2-roster-feature {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+
+  #ecl27TeamBuildsV2 .ecl27v2-roster-feature__portrait img {
+    min-height: 210px;
+  }
+}
+
+@media (max-width: 380px) {
+  #ecl27TeamBuildsV2 .ecl27v2-detail-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  #ecl27TeamBuildsV2 .ecl27v2-roster-feature {
+    grid-template-columns: 80px minmax(0, 1fr);
+  }
+
+  #spaRouteView[data-route="myProfile"] .my-profile-gate,
+  #spaRouteView[data-route="myProfile"] .my-profile-card,
+  #spaRouteView[data-route="freeAgents"] .free-agent-card,
+  #spaRouteView[data-route="writer"] .writer-panel {
+    max-width: 100%;
+  }
+}
+
+@media (max-height: 520px) and (orientation: landscape) and (max-width: 960px) {
+  #spaRouteView .directory-topbar,
+  #spaRouteView .seh-header,
+  #spaRouteView .season-subnav,
+  #spaRouteView .tournament-overview-nav {
+    position: static;
+  }
+}
