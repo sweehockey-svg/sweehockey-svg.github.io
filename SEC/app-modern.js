@@ -4685,7 +4685,16 @@
       if (!number(row[statKey])) return;
       const cup = state.cups.find(function (entry) { return entry.id === row.cupId; });
       if (!cup) return;
-      const peers = getCupStageRows(cup, row, row.sa !== undefined ? "goalie" : "player").slice().sort(sorter);
+      const type = row.sa !== undefined ? "goalie" : "player";
+      let peers = getCupStageRows(cup, row, type);
+      if (type === "goalie") {
+        const stage = normalizeStage(row.stage);
+        const stageMatches = (cup.matches || []).filter(function (match) {
+          return normalizeStage(match.stage) === stage;
+        });
+        peers = filterEligibleCupGoalies(peers, stageMatches);
+      }
+      peers = peers.slice().sort(sorter);
       const index = peers.findIndex(function (candidate) {
         return getPersonProfileKey(candidate.name) === getPersonProfileKey(row.name) && fold(candidate.team) === fold(row.team);
       });
@@ -4695,15 +4704,20 @@
   }
 
   function getCupStageRows(cup, row, type) {
-    const rows = type === "goalie" ? cup.goalieRows : cup.playerRows;
-    return rows.filter(function (candidate) {
-      return normalizeStage(candidate.stage) === normalizeStage(row.stage);
+    const stage = normalizeStage(row.stage);
+    const stageRows = type === "goalie" ? cup.goalieStageRows : cup.playerStageRows;
+    const direct = stageRows && Array.isArray(stageRows[stage]) ? stageRows[stage] : [];
+    if (direct.length) return direct;
+    const fallback = type === "goalie" ? cup.goalieRows : cup.playerRows;
+    return (fallback || []).filter(function (candidate) {
+      return normalizeStage(candidate.stage) === stage;
     });
   }
 
   function getStageCupLabel(row) {
     const stage = normalizeStage(row.stage);
-    return row.cupCode + (stage === "playoffs" ? " S" : stage === "playin" ? " PI" : " G");
+    const label = stage === "playoffs" ? "Slutspel" : stage === "playin" ? "Play-in" : "Gruppspel";
+    return row.cupCode + " – " + label;
   }
 
   function normalizeStage(value) {
