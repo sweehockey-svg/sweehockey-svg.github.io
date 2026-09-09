@@ -1,0 +1,107 @@
+/* SEC – mobile hardening safety layer.
+   Responsive layout only; no content or application logic changes. */
+
+@media (max-width: 760px) {
+  html,
+  body,
+  #app,
+  .shell,
+  .stage,
+  .view,
+  .top,
+  .detailHero,
+  .panel,
+  .manifest,
+  .dataTable,
+  .standing {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .stage > *,
+  .view > *,
+  .detailHero > *,
+  .panel > * {
+    min-width: 0;
+  }
+
+  video,
+  iframe,
+  canvas {
+    max-width: 100%;
+  }
+
+  h1,
+  h2,
+  h3,
+  p,
+  a,
+  strong,
+  small,
+  em {
+    overflow-wrap: anywhere;
+  }
+
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  .actions a,
+  .actions button,
+  .backLink {
+    min-height: 44px;
+  }
+
+  .dataTable,
+  .standing {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .siteFooter {
+    max-width: calc(100% - 16px);
+  }
+}
+
+@media (max-width: 480px) {
+  .top h1,
+  .detailHero h2,
+  .hero h2,
+  .matrixHead h2,
+  .manifest h2 {
+    overflow-wrap: anywhere;
+  }
+
+  .matchDetailTeam strong,
+  .matchPreviewRow > span:not(.teamLogoInline),
+  .previewLeader strong,
+  .previewLeader em {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .siteFooter,
+  .siteFooter div,
+  .siteFooter nav {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-height: 520px) and (orientation: landscape) and (max-width: 960px) {
+  .top,
+  .searchdrop {
+    position: static;
+  }
+}
