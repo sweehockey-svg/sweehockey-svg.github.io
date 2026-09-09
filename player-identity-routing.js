@@ -21,6 +21,9 @@
     "dobbythejoker_": "DobbyTheJoker_"
   });
 
+  let approvedProfilesPromise = null;
+  let selfProfileEnhancementGeneration = 0;
+
   function norm(value) {
     return String(value || "")
       .trim()
@@ -94,16 +97,69 @@
     return escapeHtml(value).replace(/`/g, "&#96;");
   }
 
+  function getSupabaseConfig() {
+    return {
+      url: String(window.EHOCKEY_CONFIG?.supabaseUrl || "").replace(/\/+$/, ""),
+      key: String(window.EHOCKEY_CONFIG?.supabasePublishableKey || "").trim()
+    };
+  }
+
+  async function loadApprovedProfiles() {
+    if (approvedProfilesPromise) return approvedProfilesPromise;
+
+    approvedProfilesPromise = (async () => {
+      const config = getSupabaseConfig();
+      if (!config.url || !config.key) return new Map();
+
+      const query = new URLSearchParams({
+        select: "player_key,display_gamertag,image_url,presentation,positions_text,contact,twitch_url,x_url,instagram_url,availability_status,team_status",
+        limit: "5000"
+      });
+      const response = await fetch(
+        `${config.url}/rest/v1/v_ehockey_player_self_profiles_public?${query.toString()}`,
+        {
+          cache: "no-store",
+          headers: {
+            apikey: config.key,
+            Accept: "application/json"
+          }
+        }
+      );
+      if (!response.ok) throw new Error(`Supabase svarade ${response.status}`);
+
+      const rows = await response.json();
+      const map = new Map();
+      (Array.isArray(rows) ? rows : []).forEach((row) => {
+        const key = compactPlayerSlug(row?.display_gamertag);
+        if (key && !map.has(key)) map.set(key, row);
+      });
+      return map;
+    })().catch((error) => {
+      console.warn("Svensk eHockey: kunde inte hämta godkända Min profil-uppgifter", error);
+      return new Map();
+    });
+
+    return approvedProfilesPromise;
+  }
+
+  function discordContact(value) {
+    const raw = String(value || "").trim();
+    const match = raw.match(/^discord\s*:\s*(.+)$/i);
+    return match ? match[1].trim() : "";
+  }
+
   function ensureSelfProfileStyles() {
     if (document.querySelector("#sehPlayerSelfProfileUiStyles")) return;
     const style = document.createElement("style");
     style.id = "sehPlayerSelfProfileUiStyles";
     style.textContent = `
       .player-self-profile-public{display:none!important}
-      .seh-player-socials{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
-      .seh-player-socials a{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:5px 9px;border:1px solid rgba(214,177,95,.32);border-radius:999px;background:rgba(4,12,18,.72);color:#f3eee1!important;font-size:9px;font-weight:900;letter-spacing:.04em;text-decoration:none!important;transition:border-color .15s ease,background .15s ease,color .15s ease}
+      .seh-player-socials{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:9px}
+      .seh-player-socials a,.seh-player-socials span{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:5px 9px;border:1px solid rgba(214,177,95,.32);border-radius:999px;background:rgba(4,12,18,.72);color:#f3eee1!important;font-size:9px;font-weight:900;letter-spacing:.04em;text-decoration:none!important}
       .seh-player-socials a:hover,.seh-player-socials a:focus-visible{border-color:#f0d58b;background:rgba(214,177,95,.1);color:#f0d58b!important;outline:none}
+      .seh-player-socials__x{min-width:30px!important;justify-content:center;padding-inline:8px!important;font-size:13px!important;color:#57e6dc!important}
       .seh-player-socials__mark{display:grid;place-items:center;min-width:15px;height:15px;color:#57e6dc;font-size:9px;font-weight:950}
+      .seh-player-socials__discord{border-color:rgba(87,230,220,.28)!important;color:#d8f7f4!important}
       .seh-player-self-overview{margin:0 0 18px;padding:18px 20px;border:1px solid rgba(214,177,95,.26);border-left:3px solid #d6b15f;border-radius:12px;background:linear-gradient(135deg,rgba(7,17,26,.92),rgba(2,7,12,.82))}
       .seh-player-self-overview__head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:11px}
       .seh-player-self-overview__head>div{display:grid;gap:3px}
@@ -115,7 +171,7 @@
       .seh-player-self-overview__facts>div{padding:9px 10px;border:1px solid rgba(35,57,72,.8);border-radius:8px;background:rgba(1,8,13,.6)}
       .seh-player-self-overview__facts span{display:block;margin-bottom:3px;color:#6f8ca0;font-size:7px;font-weight:950;letter-spacing:.11em}
       .seh-player-self-overview__facts strong{display:block;color:#f2eee5;font-size:10px;line-height:1.35;word-break:break-word}
-      @media(max-width:700px){.seh-player-self-overview{padding:15px}.seh-player-self-overview__head{align-items:flex-start}.seh-player-self-overview__facts{grid-template-columns:1fr}.seh-player-socials{gap:5px}.seh-player-socials a{padding:5px 8px}}
+      @media(max-width:700px){.seh-player-self-overview{padding:15px}.seh-player-self-overview__head{align-items:flex-start}.seh-player-self-overview__facts{grid-template-columns:1fr}.seh-player-socials{gap:5px}.seh-player-socials a,.seh-player-socials span{padding:5px 8px}}
     `;
     document.head.appendChild(style);
   }
@@ -125,82 +181,111 @@
     document.querySelector("#sehPlayerSelfOverview")?.remove();
   }
 
-  function enhanceApprovedSelfProfile() {
+  function profileFacts(row) {
+    const discord = discordContact(row?.contact);
+    return [
+      ["POSITIONER", row?.positions_text],
+      ["STATUS", row?.availability_status],
+      ["LAGSTATUS", row?.team_status],
+      ["KONTAKT", discord ? "" : row?.contact]
+    ].map(([label, value]) => ({ label, value: String(value || "").trim() }))
+      .filter((item) => item.value);
+  }
+
+  function socialMarkup(row) {
+    const items = [];
+    const xUrl = String(row?.x_url || "").trim();
+    const twitchUrl = String(row?.twitch_url || "").trim();
+    const instagramUrl = String(row?.instagram_url || "").trim();
+    const discord = discordContact(row?.contact);
+
+    if (/^https?:\/\//i.test(xUrl)) {
+      items.push(`<a class="seh-player-socials__x" href="${escapeAttribute(xUrl)}" target="_blank" rel="noopener noreferrer" aria-label="X" title="X">𝕏</a>`);
+    }
+    if (/^https?:\/\//i.test(twitchUrl)) {
+      items.push(`<a href="${escapeAttribute(twitchUrl)}" target="_blank" rel="noopener noreferrer"><span class="seh-player-socials__mark">TV</span>Twitch</a>`);
+    }
+    if (/^https?:\/\//i.test(instagramUrl)) {
+      items.push(`<a href="${escapeAttribute(instagramUrl)}" target="_blank" rel="noopener noreferrer"><span class="seh-player-socials__mark">IG</span>Instagram</a>`);
+    }
+    if (discord) {
+      items.push(`<span class="seh-player-socials__discord"><span class="seh-player-socials__mark">D</span>Discord: ${escapeHtml(discord)}</span>`);
+    }
+    return items.join("");
+  }
+
+  async function enhanceApprovedSelfProfile() {
     if (!String(window.location.hash || "").startsWith("#/spelare/")) {
       cleanupSelfProfileEnhancement();
       return false;
     }
 
-    const source = document.querySelector(".player-self-profile-public");
     const competitions = document.querySelector("#playerCompetitions");
     const bio = document.querySelector("#playerBio");
-    if (!source || !competitions || !bio) return false;
+    const playerName = String(document.querySelector("#playerName")?.textContent || "").trim();
+    if (!competitions || !bio || !playerName) return false;
+
+    const profiles = await loadApprovedProfiles();
+    const row = profiles.get(compactPlayerSlug(playerName));
+    if (!row) {
+      cleanupSelfProfileEnhancement();
+      return false;
+    }
 
     ensureSelfProfileStyles();
     cleanupSelfProfileEnhancement();
 
-    const playerName = String(document.querySelector("#playerName")?.textContent || "").trim() || "spelaren";
-    const sourcePresentation = Array.from(source.children).find((node) => node.tagName === "P");
-    const presentation = String(sourcePresentation?.textContent || "").trim();
+    const approvedImage = String(row.image_url || "").trim();
+    const avatar = document.querySelector("#playerAvatar");
+    if (/^https?:\/\//i.test(approvedImage) && avatar && avatar.src !== approvedImage) {
+      avatar.src = approvedImage;
+    }
 
-    const facts = [];
-    source.querySelectorAll(".player-self-profile-public__facts > div").forEach((item) => {
-      const label = String(item.querySelector("span")?.textContent || "").trim();
-      const value = String(item.querySelector("strong")?.textContent || "").trim();
-      if (label && value) facts.push({label,value});
-    });
-
-    const sourceLinks = Array.from(source.querySelectorAll(".player-self-profile-public__links a"))
-      .map((link) => ({
-        label:String(link.textContent || "").replace(/↗/g, "").trim(),
-        href:String(link.getAttribute("href") || "").trim()
-      }))
-      .filter((link) => /^https?:\/\//i.test(link.href));
-
-    if (sourceLinks.length) {
+    const socialsMarkup = socialMarkup(row);
+    if (socialsMarkup) {
       const socials = document.createElement("div");
       socials.id = "sehPlayerSocialLinks";
       socials.className = "seh-player-socials";
-      socials.setAttribute("aria-label", "Spelarens sociala länkar");
-      socials.innerHTML = sourceLinks.map((link) => {
-        const normalizedLabel = link.label.toLowerCase();
-        const mark = normalizedLabel === "x" ? "𝕏" : normalizedLabel.startsWith("twitch") ? "TV" : normalizedLabel.startsWith("instagram") ? "IG" : "↗";
-        return `<a href="${escapeAttribute(link.href)}" target="_blank" rel="noopener noreferrer"><span class="seh-player-socials__mark">${mark}</span>${escapeHtml(link.label)}</a>`;
-      }).join("");
+      socials.setAttribute("aria-label", "Spelarens sociala länkar och kontakt");
+      socials.innerHTML = socialsMarkup;
       competitions.insertAdjacentElement("afterend", socials);
     }
 
+    const presentation = String(row.presentation || "").trim();
+    const facts = profileFacts(row);
     if (presentation || facts.length) {
       const overview = document.createElement("section");
       overview.id = "sehPlayerSelfOverview";
       overview.className = "seh-player-self-overview";
       overview.setAttribute("aria-label", "Profiluppgifter från spelaren");
-
-      const presentationMarkup = presentation
-        ? `<p class="seh-player-self-overview__presentation">${escapeHtml(presentation)}</p>`
-        : "";
-      const factsMarkup = facts.length
-        ? `<div class="seh-player-self-overview__facts">${facts.map((fact) => `<div><span>${escapeHtml(fact.label)}</span><strong>${escapeHtml(fact.value)}</strong></div>`).join("")}</div>`
-        : "";
-
-      overview.innerHTML = `<div class="seh-player-self-overview__head"><div><span>FRÅN SPELAREN</span><strong>Om ${escapeHtml(playerName)}</strong></div><em class="seh-player-self-overview__approved">ADMIN GODKÄND</em></div>${presentationMarkup}${factsMarkup}`;
+      overview.innerHTML = `
+        <div class="seh-player-self-overview__head">
+          <div><span>FRÅN SPELAREN</span><strong>Om ${escapeHtml(playerName)}</strong></div>
+          <em class="seh-player-self-overview__approved">ADMIN GODKÄND</em>
+        </div>
+        ${presentation ? `<p class="seh-player-self-overview__presentation">${escapeHtml(presentation)}</p>` : ""}
+        ${facts.length ? `<div class="seh-player-self-overview__facts">${facts.map((fact) => `<div><span>${escapeHtml(fact.label)}</span><strong>${escapeHtml(fact.value)}</strong></div>`).join("")}</div>` : ""}
+      `;
       bio.parentNode?.insertBefore(overview, bio);
     }
 
-    source.hidden = true;
+    document.querySelector(".player-self-profile-public")?.setAttribute("hidden", "");
     return true;
   }
 
-  let selfProfileEnhancementGeneration = 0;
   function scheduleSelfProfileEnhancement() {
     const generation = ++selfProfileEnhancementGeneration;
     cleanupSelfProfileEnhancement();
     if (!String(window.location.hash || "").startsWith("#/spelare/")) return;
 
-    [0,80,180,350,650,1100,1800,2800].forEach((delay) => {
+    [0,100,250,500,900,1500,2500,4000,6500,9500].forEach((delay) => {
       window.setTimeout(() => {
         if (generation !== selfProfileEnhancementGeneration) return;
-        if (enhanceApprovedSelfProfile()) selfProfileEnhancementGeneration++;
+        void enhanceApprovedSelfProfile().then((done) => {
+          if (done && generation === selfProfileEnhancementGeneration) {
+            selfProfileEnhancementGeneration++;
+          }
+        });
       }, delay);
     });
   }
