@@ -74,3 +74,118 @@
 .admin-player-workspace-v2 .player-admin-view--fa .fa-admin-current{min-width:0}
 .admin-player-workspace-v2 .player-admin-view--fa .fa-admin-list{max-height:none}
 @media(max-width:900px){.admin-player-workspace-v2 .player-admin-tabs{grid-template-columns:1fr}.admin-player-workspace-v2 .player-admin-tabs button{min-height:60px}.admin-player-workspace-v2 .profile-admin-request-card__head{align-items:flex-start;flex-direction:column}.admin-player-workspace-v2 .profile-admin-progress{justify-content:flex-start}.admin-player-workspace-v2 .profile-admin-field__compare{grid-template-columns:1fr}.admin-player-workspace-v2 .profile-admin-field__compare>i{transform:rotate(90deg)}.admin-player-workspace-v2 .player-admin-view--links #faAdminApprovedLinks{grid-template-columns:1fr}.admin-player-workspace-v2 .player-admin-view--fa .fa-admin-layout.is-editor-open{grid-template-columns:1fr!important}}
+
+/* ============================================================
+   MOBILE HARDENING – content unchanged, layout only
+   ============================================================ */
+.admin-player-workspace-v2,
+.admin-player-workspace-v2 *{min-width:0}
+.admin-player-workspace-v2 .player-admin-view,
+.admin-player-workspace-v2 .fa-admin-layout,
+.admin-player-workspace-v2 .fa-admin-approval-panel,
+.admin-player-workspace-v2 .profile-admin-request-card,
+.admin-player-workspace-v2 .fa-admin-request-row{max-width:100%}
+.admin-player-workspace-v2 input,
+.admin-player-workspace-v2 textarea,
+.admin-player-workspace-v2 select{max-width:100%;width:100%}
+.admin-player-workspace-v2 button,
+.admin-player-workspace-v2 a{touch-action:manipulation}
+.admin-player-workspace-v2 .profile-admin-player-link,
+.admin-player-workspace-v2 .fa-admin-player-link,
+.admin-player-workspace-v2 .profile-admin-value-link,
+.admin-player-workspace-v2 .profile-admin-report-body,
+.admin-player-workspace-v2 .fa-admin-request-row strong,
+.admin-player-workspace-v2 .fa-admin-request-row small{overflow-wrap:anywhere;word-break:break-word}
+
+@media(max-width:900px){
+  .admin-player-workspace-v2 .fa-admin-heading,
+  .admin-player-workspace-v2 .admin-player-section-head,
+  .admin-player-workspace-v2 .admin-player-livebar,
+  .admin-player-workspace-v2 .player-admin-queue-tools,
+  .admin-player-workspace-v2 .player-admin-links-tools{align-items:stretch;flex-direction:column}
+  .admin-player-workspace-v2 .fa-admin-heading__actions,
+  .admin-player-workspace-v2 .admin-player-livebar__actions{width:100%;display:flex;flex-wrap:wrap;gap:8px}
+  .admin-player-workspace-v2 .fa-admin-heading__actions>*{flex:1 1 220px;justify-content:center}
+  .admin-player-workspace-v2 .admin-player-section-head>strong{align-self:flex-start}
+  .admin-player-workspace-v2 .player-admin-fa-toggle{margin-left:0}
+  .admin-player-workspace-v2 .player-admin-queue-tools>div{width:100%}
+  .admin-player-workspace-v2 .player-admin-links-tools label{width:100%}
+  .admin-player-workspace-v2 .profile-admin-field__actions button,
+  .admin-player-workspace-v2 .profile-admin-request-card__footer button,
+  .admin-player-workspace-v2 .fa-admin-request-actions button{min-height:44px}
+  .admin-player-workspace-v2 .fa-admin-grid{grid-template-columns:1fr!important}
+}
+
+@media(max-width:640px){
+  .admin-player-workspace-v2 .player-admin-tabs{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:12px 0 18px;padding:5px}
+  .admin-player-workspace-v2 .player-admin-tabs button{min-height:58px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;padding:8px 7px}
+  .admin-player-workspace-v2 .player-admin-tabs button span{font-size:10px;line-height:1.12;letter-spacing:.02em}
+  .admin-player-workspace-v2 .player-admin-tabs button strong{font-size:18px;line-height:1}
+  .admin-player-workspace-v2 .player-admin-tabs button small{display:none}
+
+  .admin-player-workspace-v2 .player-admin-queue-tools,
+  .admin-player-workspace-v2 .player-admin-links-tools{padding:10px;margin-bottom:10px}
+  .admin-player-workspace-v2 .player-admin-queue-tools>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .admin-player-workspace-v2 .player-admin-queue-tools>div>span{grid-column:1/-1}
+  .admin-player-workspace-v2 .player-admin-queue-tools button{min-height:42px;width:100%;padding:7px 8px;text-align:center}
+
+  .admin-player-workspace-v2 .profile-admin-request-card__head{gap:10px;padding:13px 12px}
+  .admin-player-workspace-v2 .profile-admin-request-card__head>div:first-child{display:grid;grid-template-columns:1fr;gap:6px;width:100%}
+  .admin-player-workspace-v2 .profile-admin-player-link{font-size:18px;line-height:1.2}
+  .admin-player-workspace-v2 .profile-admin-progress{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;gap:5px!important}
+  .admin-player-workspace-v2 .profile-admin-progress span,
+  .admin-player-workspace-v2 .profile-admin-progress strong,
+  .admin-player-workspace-v2 .profile-admin-waiting{text-align:center;white-space:normal}
+
+  .admin-player-workspace-v2 .profile-admin-field{padding:13px 12px}
+  .admin-player-workspace-v2 .profile-admin-field__head{align-items:flex-start}
+  .admin-player-workspace-v2 .profile-admin-field__compare{gap:6px}
+  .admin-player-workspace-v2 .profile-admin-field__compare>div{padding:10px}
+  .admin-player-workspace-v2 .profile-admin-field__compare>i{height:18px;line-height:18px}
+  .admin-player-workspace-v2 .profile-admin-value{font-size:13px;line-height:1.5}
+  .admin-player-workspace-v2 .profile-admin-value-link{display:block;font-size:12px}
+  .admin-player-workspace-v2 .profile-admin-value--long{max-height:none;overflow:visible}
+  .admin-player-workspace-v2 .profile-admin-image-preview{align-items:flex-start;flex-wrap:wrap}
+  .admin-player-workspace-v2 .profile-admin-image-preview img{width:72px;height:72px;flex:0 0 72px}
+
+  .admin-player-workspace-v2 .profile-admin-field__actions,
+  .admin-player-workspace-v2 .profile-admin-request-card__footer,
+  .admin-player-workspace-v2 .fa-admin-request-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;width:100%}
+  .admin-player-workspace-v2 .profile-admin-field__actions button,
+  .admin-player-workspace-v2 .profile-admin-request-card__footer button,
+  .admin-player-workspace-v2 .fa-admin-request-actions button{width:100%;margin:0;white-space:normal}
+  .admin-player-workspace-v2 .profile-admin-request-card__footer{padding:11px 12px}
+  .admin-player-workspace-v2 .profile-admin-report-body{padding:14px 12px;font-size:13px}
+
+  .admin-player-workspace-v2 .fa-admin-request-row{display:flex!important;align-items:stretch!important;flex-direction:column!important;gap:12px!important;padding:13px 12px!important}
+  .admin-player-workspace-v2 .fa-admin-request-row>div:first-child{width:100%}
+  .admin-player-workspace-v2 .player-admin-view--links #faAdminApprovedLinks .fa-admin-request-row{min-height:0}
+
+  .admin-player-workspace-v2 .admin-player-section-head--fa{gap:10px}
+  .admin-player-workspace-v2 .player-admin-fa-toggle{width:100%;min-height:44px}
+  .admin-player-workspace-v2 .player-admin-view--fa .fa-admin-layout,
+  .admin-player-workspace-v2 .player-admin-view--fa .fa-admin-layout.is-editor-open{display:grid!important;grid-template-columns:1fr!important;gap:12px!important}
+  .admin-player-workspace-v2 .player-admin-view--fa .fa-admin-form,
+  .admin-player-workspace-v2 .player-admin-view--fa .fa-admin-current{width:100%}
+  .admin-player-workspace-v2 .fa-admin-form label,
+  .admin-player-workspace-v2 .fa-admin-form textarea,
+  .admin-player-workspace-v2 .fa-admin-form input{width:100%}
+
+  .admin-player-workspace-v2 .admin-player-livebar__actions>*{width:100%}
+  .admin-player-workspace-v2 .admin-player-livebar__actions button{min-height:44px}
+}
+
+@media(max-width:420px){
+  .admin-player-workspace-v2 .player-admin-tabs button{padding:7px 5px}
+  .admin-player-workspace-v2 .player-admin-tabs button span{font-size:9px}
+  .admin-player-workspace-v2 .player-admin-tabs button strong{font-size:17px}
+  .admin-player-workspace-v2 .player-admin-queue-tools>div{grid-template-columns:1fr}
+  .admin-player-workspace-v2 .player-admin-queue-tools>div>span{grid-column:auto}
+  .admin-player-workspace-v2 .profile-admin-progress{grid-template-columns:1fr}
+  .admin-player-workspace-v2 .profile-admin-field__actions,
+  .admin-player-workspace-v2 .profile-admin-request-card__footer,
+  .admin-player-workspace-v2 .fa-admin-request-actions{grid-template-columns:1fr}
+  .admin-player-workspace-v2 .profile-admin-field__head{flex-direction:column;gap:6px}
+  .admin-player-workspace-v2 .profile-admin-field-status{align-self:flex-start}
+  .admin-player-workspace-v2 .fa-admin-heading__actions>*{flex-basis:100%;width:100%}
+}
