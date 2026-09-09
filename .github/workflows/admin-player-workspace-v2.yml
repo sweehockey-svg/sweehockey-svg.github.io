@@ -16,7 +16,8 @@ jobs:
         with:
           ref: main
       - name: Fix patch replacement escaping
-        run: sed -i 's/re.subn(pattern, replacement, text, count=1, flags=flags)/re.subn(pattern, lambda _m: replacement, text, count=1, flags=flags)/' .github/admin_player_patch.py
+        run: |
+          sed -i 's/re.subn(pattern, replacement, text, count=1, flags=flags)/re.subn(pattern, lambda _m: replacement, text, count=1, flags=flags)/' .github/admin_player_patch.py
       - name: Patch app
         run: python .github/admin_player_patch.py
       - name: Validate JavaScript
