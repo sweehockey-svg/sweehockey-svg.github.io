@@ -30,7 +30,7 @@
 
   <script>
     (function () {
-      var version = "site-20260906-root-links-v1";
+      var version = "site-20260909-self-profile-v1";
 
       var css = document.createElement("link");
       css.rel = "stylesheet";
@@ -53,6 +53,9 @@
         })
         .then(function () {
           return loadScript("./app-modern.js");
+        })
+        .then(function () {
+          return loadScript("./player-self-profile.js");
         })
         .catch(function () {
           var app = document.getElementById("app");
