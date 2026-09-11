@@ -15,6 +15,33 @@
     rosterSnapshots:[],recruitment:{},extraTeamIds:{}
   });
 
+  // Senaste verifierade Discord-poster som läggs ovanpå Supabase-källan.
+  // Dedupe gör att de inte dubbleras när samma händelser senare finns i databasen.
+  const MANUAL_MOVE_EVENTS = Object.freeze([
+    {at:"2026-09-11T20:45",team:"Zero Ping",type:"out",player:"Prolane",otherTeam:"SSK Prospects",note:"Discord"},
+    {at:"2026-09-11T21:05",team:"SSK Prospects",type:"in",player:"Prolane",otherTeam:"Zero Ping",note:"Discord"},
+    {at:"2026-09-11T21:44",team:"Zero Ping",type:"in",player:"CIumpyindiana",otherTeam:"",note:"Discord"},
+    {at:"2026-09-11T21:44",team:"Zero Ping",type:"in",player:"Larsto50",otherTeam:"",note:"Discord"},
+    {at:"2026-09-11T21:44",team:"Zero Ping",type:"in",player:"patflex_",otherTeam:"",note:"Discord"}
+  ]);
+
+  const MANUAL_RECRUITMENT = Object.freeze({
+    "TROJANS":{
+      date:"2026-09-11",
+      target:"",
+      seeks:"Söker lite spelare till säsongen · Gärna erfarenhet från högre divisioner · Aktivt lag som värdesätter god energi i partyt · Spelar i Lite"
+    }
+  });
+
+  function manualEventKey(event) {
+    return [
+      String(event.at || "").slice(0,16),
+      String(event.team || "").trim().toLocaleLowerCase("sv-SE"),
+      String(event.type || "").trim().toLocaleLowerCase("sv-SE"),
+      String(event.player || "").trim().toLocaleLowerCase("sv-SE")
+    ].join("|");
+  }
+
   function readCache() {
     try {
       const parsed = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
@@ -108,6 +135,15 @@
       }
     }
 
+    const existingMoveKeys = new Set(moveEvents.map(manualEventKey));
+    for (const event of MANUAL_MOVE_EVENTS) {
+      const key = manualEventKey(event);
+      if (existingMoveKeys.has(key)) continue;
+      moveEvents.push({...event});
+      existingMoveKeys.add(key);
+    }
+    moveEvents.sort((a,b) => String(a.at).localeCompare(String(b.at)));
+
     const latestRecruitment = new Map();
     for (const row of recruitmentRows) latestRecruitment.set(Number(row.team_project_id),row);
     const recruitment={};
@@ -122,12 +158,28 @@
       };
     }
 
+    for (const [teamName,item] of Object.entries(MANUAL_RECRUITMENT)) {
+      const current = recruitment[teamName];
+      if (!current || String(item.date).localeCompare(String(current.date || "")) >= 0) {
+        recruitment[teamName]={...item};
+      }
+    }
+
     const extraTeamIds={};
     for (const t of teams) if (t.is_new_project && Number(t.source_team_id)>0) extraTeamIds[t.name]=Number(t.source_team_id);
     const latest = events.length ? events[events.length-1] : null;
+    const latestManual = MANUAL_MOVE_EVENTS.length
+      ? MANUAL_MOVE_EVENTS[MANUAL_MOVE_EVENTS.length - 1]
+      : null;
+    const latestDbAt = latest ? atLocal(latest.occurred_at) : "";
+    const manualIsLatest = latestManual && String(latestManual.at).localeCompare(latestDbAt) >= 0;
     const model={
-      build:`supabase-${latest ? String(latest.id) : "0"}`,
-      updated:latest ? `${dateOnly(latest.occurred_at)} · ${latest.team_name} ${latest.event_type === "in" ? "IN" : "UT"}: ${latest.display_gamertag || latest.source_gamertag}` : "Supabase",
+      build:`supabase-${latest ? String(latest.id) : "0"}-manual-20260911`,
+      updated:manualIsLatest
+        ? `${dateOnly(latestManual.at)} · ${latestManual.team} ${latestManual.type === "in" ? "IN" : "UT"}: ${latestManual.player}`
+        : latest
+          ? `${dateOnly(latest.occurred_at)} · ${latest.team_name} ${latest.event_type === "in" ? "IN" : "UT"}: ${latest.display_gamertag || latest.source_gamertag}`
+          : "Supabase",
       aliases,springTeams,newTeams,moveEvents,posterMemberships,freeAgentEvents,
       rosterSnapshots:[],recruitment,extraTeamIds
     };
