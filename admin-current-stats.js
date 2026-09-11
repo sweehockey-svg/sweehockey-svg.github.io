@@ -107,6 +107,15 @@
     });
   }
 
+  window.SEH_setAdminPendingBadge = function SEH_setAdminPendingBadge(count, breakdown) {
+    setAdminBadgeCount(count, breakdown || {});
+  };
+
+  window.addEventListener("seh:admin-pending-count", function (event) {
+    const detail = event?.detail || {};
+    setAdminBadgeCount(detail.total, detail.breakdown || {});
+  });
+
   async function refreshAdminNavBadge() {
     if (adminBadgeRefreshBusy) return;
     ensureAdminNavBadges();
