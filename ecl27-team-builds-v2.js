@@ -65,6 +65,8 @@
   const $ = (selector, root=document) => root.querySelector(selector);
   const numberFormat = new Intl.NumberFormat("sv-SE");
   let directoryClient = null;
+  let teamPowerPromise = null;
+  const teamPowerByName = new Map();
 
   function norm(value) {
     return String(value || "").trim().toLocaleLowerCase("sv-SE").replace(/\s+/g, " ");
@@ -398,6 +400,203 @@
     return `<header>${logoMarkup}<div><p>${esc(source)}</p>${nameMarkup}<div class="ecl27v2-badges"><span>${team.kind === "new" ? "NYTT" : esc(team.division)}</span><b class="is-${status.tone}">${esc(status.label)}</b></div></div></header>`;
   }
 
+  function numeric(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function divisionStrength(value) {
+    const key = String(value || "").trim().toLocaleLowerCase("sv-SE");
+    if (key.includes("elite")) return 1.25;
+    if (key.includes("pro")) return 1.15;
+    if (key.includes("lite")) return 1.05;
+    if (key.includes("core")) return 0.95;
+    if (key.includes("neo")) return 0.85;
+    return 1;
+  }
+
+  function rowRecency(row) {
+    const raw = String(row?.chronology_date || row?.display_end_date || row?.end_date || row?.sort_date || "").slice(0,10);
+    if (!raw) return 0.55;
+    const when = Date.parse(raw + "T12:00:00Z");
+    if (!Number.isFinite(when)) return 0.55;
+    const ageYears = Math.max(0,(Date.now() - when) / 31557600000);
+    return Math.max(0.18,Math.exp(-ageYears / 3.25));
+  }
+
+  function rankingForName(lookup,name) {
+    if (!lookup) return null;
+    if (typeof SEH_findPlayerRanking === "function") {
+      try { return SEH_findPlayerRanking(lookup,"",canonical(name)); } catch (_) {}
+    }
+    const wanted = norm(canonical(name));
+    return (lookup.rows || []).find((row) => norm(row.display_gamertag) === wanted) || null;
+  }
+
+  function rosterPowerRaw(team,lookup) {
+    const rows = team.playersNow.map((name) => {
+      const ranking = rankingForName(lookup,name);
+      const rp = numeric(ranking?.ranking_points);
+      const position = String(ranking?.position_group || ranking?.primary_position || "").trim().toUpperCase();
+      return {name,ranking,rp,isGoalie:position === "G"};
+    }).filter((row) => row.rp > 0);
+
+    const goalies = rows.filter((row) => row.isGoalie).sort((a,b) => b.rp - a.rp);
+    const skaters = rows.filter((row) => !row.isGoalie).sort((a,b) => b.rp - a.rp);
+    const selected = [...skaters.slice(0,5),...goalies.slice(0,1)];
+    return {
+      raw:selected.reduce((sum,row) => sum + row.rp,0),
+      selected,
+      skaters:Math.min(5,skaters.length),
+      goalies:Math.min(1,goalies.length),
+      complete:skaters.length >= 5 && goalies.length >= 1
+    };
+  }
+
+  function historyPowerRaw(rows) {
+    let weightedWins = 0;
+    let weightedGames = 0;
+    let allWins = 0;
+    let allGames = 0;
+    let podiums = 0;
+    let titles = 0;
+    let meritRaw = 0;
+
+    for (const row of rows || []) {
+      const games = numeric(row.games_played);
+      const wins = numeric(row.wins);
+      if (games <= 0) continue;
+      const factor = rowRecency(row) * divisionStrength(row.division);
+      weightedWins += wins * factor;
+      weightedGames += games * factor;
+      allWins += wins;
+      allGames += games;
+      const placement = numeric(row.division_rank);
+      if (placement >= 1 && placement <= 3) {
+        podiums += 1;
+        if (placement === 1) titles += 1;
+        const placePoints = placement === 1 ? 100 : placement === 2 ? 55 : 30;
+        meritRaw += placePoints * factor;
+      }
+    }
+
+    const winRate = weightedGames > 0 ? weightedWins / weightedGames : 0;
+    return {
+      raw:(weightedWins * 7) + (winRate * 260),
+      meritRaw,allWins,allGames,
+      winPct:allGames > 0 ? (allWins / allGames) : 0,
+      podiums,titles
+    };
+  }
+
+  function percentile(values,value) {
+    const usable = values.filter((item) => Number.isFinite(item) && item > 0).sort((a,b) => a-b);
+    if (!usable.length || !(value > 0)) return 0;
+    if (usable.length === 1) return 1;
+    let below = 0;
+    let equal = 0;
+    for (const item of usable) {
+      if (item < value) below++;
+      else if (item === value) equal++;
+    }
+    return Math.max(0,Math.min(1,(below + Math.max(0,equal - 1) / 2) / (usable.length - 1)));
+  }
+
+  async function fetchTeamHistoryRows() {
+    const client = getDirectoryClient();
+    const ids = [...new Set(model.teams.map((team) => teamId(team.name)).filter((id) => Number.isInteger(id) && id > 0))];
+    if (!client || !ids.length) return [];
+    const select = "team_id,division,division_rank,games_played,wins,losses,overtime_wins,overtime_losses,playoff_games,chronology_date,display_end_date,end_date,sort_date,season_label,competition_code";
+    const {data,error} = await client.from("v_ehockey_team_tournaments_web_v14").select(select).in("team_id",ids).gt("games_played",0);
+    if (error) throw error;
+    return Array.isArray(data) ? data : [];
+  }
+
+  async function loadTeamPower() {
+    if (teamPowerPromise) return teamPowerPromise;
+    teamPowerPromise = (async () => {
+      const rankingLookup = typeof SEH_loadPlayerRanking === "function" ? await SEH_loadPlayerRanking() : {rows:[],byName:new Map(),byKey:new Map()};
+      const historyRows = await fetchTeamHistoryRows();
+      const historyByTeam = new Map();
+      for (const row of historyRows) {
+        const id = Number(row.team_id);
+        if (!historyByTeam.has(id)) historyByTeam.set(id,[]);
+        historyByTeam.get(id).push(row);
+      }
+      const raw = model.teams.map((team) => ({
+        team,
+        roster:rosterPowerRaw(team,rankingLookup),
+        history:historyPowerRaw(historyByTeam.get(teamId(team.name)) || [])
+      }));
+      const rosterValues = raw.map((item) => item.roster.raw);
+      const resultValues = raw.map((item) => item.history.raw);
+      const meritValues = raw.map((item) => item.history.meritRaw);
+      const calculated = raw.map((item) => {
+        const rosterIndex = percentile(rosterValues,item.roster.raw);
+        const resultIndex = percentile(resultValues,item.history.raw);
+        const meritIndex = percentile(meritValues,item.history.meritRaw);
+        const weighted = (rosterIndex * .70) + (resultIndex * .25) + (meritIndex * .05);
+        const teamRp = item.roster.raw > 0 ? Math.round(500 + (4500 * weighted)) : 0;
+        return {...item,rosterIndex,resultIndex,meritIndex,weighted,teamRp,swedenRank:null};
+      });
+      const ranked = calculated.filter((item) => item.teamRp > 0).sort((a,b) => b.teamRp - a.teamRp || b.roster.raw - a.roster.raw || a.team.name.localeCompare(b.team.name,"sv"));
+      ranked.forEach((item,index) => { item.swedenRank = index + 1; });
+      teamPowerByName.clear();
+      for (const item of calculated) teamPowerByName.set(norm(item.team.name),item);
+      return calculated;
+    })().catch((error) => { teamPowerPromise = null; throw error; });
+    return teamPowerPromise;
+  }
+
+  function formatPct(value) {
+    return Number.isFinite(Number(value)) ? new Intl.NumberFormat("sv-SE",{style:"percent",maximumFractionDigits:0}).format(Number(value)) : "–";
+  }
+
+  function renderTeamPowerStrip(team) {
+    return `<div class="ecl27v2-teamrp" data-team-rp="${esc(team.name)}">
+      <div><span>TEAM RP <em>BETA</em></span><strong data-team-rp-score>–</strong></div>
+      <div><span>SVERIGE</span><strong data-team-rp-rank>–</strong></div>
+      <div><span>VINSTER</span><strong data-team-rp-wins>–</strong></div>
+      <div><span>MERITER</span><strong data-team-rp-merits>–</strong></div>
+    </div>`;
+  }
+
+  function applyTeamPowerToDom(root=document) {
+    root.querySelectorAll?.("[data-team-rp]").forEach((node) => {
+      const item = teamPowerByName.get(norm(node.dataset.teamRp));
+      if (!item) return;
+      const set = (selector,value) => { const el = node.querySelector(selector); if (el) el.textContent = value; };
+      set("[data-team-rp-score]",item.teamRp > 0 ? numberFormat.format(item.teamRp) : "–");
+      set("[data-team-rp-rank]",item.swedenRank ? `#${item.swedenRank}` : "–");
+      set("[data-team-rp-wins]",numberFormat.format(item.history.allWins));
+      set("[data-team-rp-merits]",item.history.podiums ? `${item.history.podiums} topp 3` : "0");
+      node.dataset.loaded = "true";
+    });
+    root.querySelectorAll?.("[data-team-rp-detail]").forEach((node) => {
+      const item = teamPowerByName.get(norm(node.dataset.teamRpDetail));
+      if (!item) return;
+      const values = {
+        score:item.teamRp > 0 ? numberFormat.format(item.teamRp) : "–",
+        rank:item.swedenRank ? `#${item.swedenRank} Sverige` : "–",
+        lineup:item.roster.complete ? "5+1" : `${item.roster.skaters}+${item.roster.goalies}G`,
+        lineuprp:item.roster.raw > 0 ? numberFormat.format(Math.round(item.roster.raw)) : "–",
+        wins:numberFormat.format(item.history.allWins),
+        winpct:item.history.allGames > 0 ? formatPct(item.history.winPct) : "–",
+        merits:numberFormat.format(item.history.podiums),
+        titles:numberFormat.format(item.history.titles)
+      };
+      for (const [key,value] of Object.entries(values)) {
+        const el = node.querySelector(`[data-team-rp-value="${key}"]`);
+        if (el) el.textContent = value;
+      }
+      node.dataset.loaded = "true";
+    });
+  }
+
+  async function hydrateTeamPower(root=document) {
+    try { await loadTeamPower(); applyTeamPowerToDom(root); }
+    catch (error) { console.warn("[ECL27] kunde inte beräkna Team RP",error); }
+  }
   function renderTeamCard(team) {
     const status = statusFor(team);
     const logo = logoUrl(team);
@@ -412,6 +611,7 @@
         <div><span>IN</span><strong class="in">${team.inCount}</strong></div>
         <div><span>UT</span><strong class="out">${team.outCount}</strong></div>
       </div>
+      ${renderTeamPowerStrip(team)}
       <section class="ecl27v2-roster"><label>KÄND TRUPP JUST NU</label><div>${team.playersNow.length ? team.playersNow.map((name) => playerLink(name,"ecl27v2-roster-player")).join("") : `<em>Ingen säker spelare kvar i sammanställningen.</em>`}</div></section>
       ${renderRecruitment(team)}
       <section class="ecl27v2-moves"><label>SENASTE BEKRÄFTADE RÖRELSER</label>${recent.length ? recent.map(renderMove).join("") : `<p>Inga in/ut-poster i underlaget.</p>`}</section>
@@ -464,6 +664,7 @@
     if (!host) return;
     const teams = filteredTeams();
     host.innerHTML = teams.map(renderTeamCard).join("");
+    applyTeamPowerToDom(host);
     const result = $("#ecl27v2Result");
     if (result) result.textContent = `${teams.length} av ${model.teams.length} lag/projekt`;
   }
@@ -666,6 +867,17 @@
         <div><span>STATUS</span><strong class="status-text">${esc(status.label)}</strong></div>
       </div>
 
+      <section class="ecl27v2-detail-panel ecl27v2-power-detail" data-team-rp-detail="${esc(team.name)}">
+        <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">LAGSTYRKA · BETA</p><h3>Team RP</h3></div><span>70% trupp · 25% resultat · 5% meriter</span></div>
+        <div class="ecl27v2-power-detail-grid">
+          <div class="is-primary"><span>TEAM RP</span><strong data-team-rp-value="score">–</strong><small data-team-rp-value="rank">–</small></div>
+          <div><span>FÖRSTASEXA</span><strong data-team-rp-value="lineuprp">–</strong><small><b data-team-rp-value="lineup">–</b> räknas</small></div>
+          <div><span>VINSTER</span><strong data-team-rp-value="wins">–</strong><small><b data-team-rp-value="winpct">–</b> historisk vinst%</small></div>
+          <div><span>MERITER</span><strong data-team-rp-value="merits">–</strong><small><b data-team-rp-value="titles">–</b> förstaplatser</small></div>
+        </div>
+        <p class="ecl27v2-power-note">Team RP jämför de svenska ECL 27-lagen. Truppdelen räknar de fem högst rankade utespelarna plus bästa målvakten i den kända aktuella truppen. Resultat och historiska topp 3-placeringar viktas efter nivå och hur nyligen de gjordes.</p>
+      </section>
+
       <section class="ecl27v2-detail-panel ecl27v2-detail-roster-featured">
         <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">JUST NU</p><h3>Känd trupp</h3></div><span>${team.playersNow.length} spelare</span></div>
         <div id="ecl27v2DetailRosterCards" class="ecl27v2-roster-feature-grid">${team.playersNow.length
@@ -736,8 +948,10 @@
       .ecl27v2-method{margin-top:15px;padding:18px 20px;border-left:3px solid #d6b15f;background:#060d14;color:#91a4b4;font-size:11px;line-height:1.55}.ecl27v2-method strong{display:block;margin-bottom:4px;color:#f0d58b}
       .ecl27v2-detail{display:grid;gap:16px}.ecl27v2-back{width:max-content;padding:8px 12px;border:1px solid #203549;border-radius:999px;background:#030a11;color:#b8c7d2!important;font-size:10px;font-weight:850}.ecl27v2-detail-hero{display:grid;grid-template-columns:150px minmax(0,1fr);gap:26px;align-items:center;padding:28px;border:1px solid rgba(214,177,95,.32);border-radius:20px;background:linear-gradient(145deg,#04111d,#02080e);box-shadow:0 24px 54px rgba(0,0,0,.24)}.ecl27v2-detail-logo{display:grid;place-items:center;width:150px;height:150px;border:1px solid #203549;border-radius:24px;background:#061522;overflow:hidden}.ecl27v2-detail-logo img{width:88%;height:88%;object-fit:contain}.ecl27v2-detail-logo span{color:#e4c56f;font-size:32px;font-weight:950}.ecl27v2-detail-title h2{margin:3px 0 10px;font-size:clamp(40px,5vw,72px);line-height:.92;letter-spacing:-.045em}.ecl27v2-detail-title>p:last-of-type{max-width:850px;color:#91a4b4;line-height:1.6}.ecl27v2-team-profile{display:inline-flex;margin-top:10px;padding:9px 12px;border:1px solid rgba(214,177,95,.35);border-radius:9px;color:#f0d58b!important;font-size:10px;font-weight:900}.ecl27v2-detail-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.ecl27v2-detail-metrics>div{padding:16px;border:1px solid #172839;border-radius:12px;background:#030a11}.ecl27v2-detail-metrics span{display:block;color:#6b879a;font-size:8px;font-weight:950;letter-spacing:.1em}.ecl27v2-detail-metrics strong{display:block;margin-top:6px;font-size:28px}.ecl27v2-detail-metrics .status-text{font-size:15px;color:#f0d58b;line-height:1.25}.ecl27v2-detail-panel{padding:20px;border:1px solid #172839;border-radius:16px;background:#02080e}.ecl27v2-detail-panel-head{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:14px}.ecl27v2-detail-panel-head h3{margin:2px 0 0;font-size:24px}.ecl27v2-detail-panel-head>span{color:#70869a;font-size:9px}.ecl27v2-detail-base-list{display:flex;flex-wrap:wrap;gap:8px}.ecl27v2-detail-base-player{padding:9px 11px;border:1px solid #1c3447;border-radius:8px;background:#05121c;font-size:11px;font-weight:850}.ecl27v2-detail-recruit{margin:0}.ecl27v2-detail-empty{margin:0;color:#71879a;font-size:11px;line-height:1.5}.ecl27v2-detail-timeline .ecl27v2-move{grid-template-columns:42px minmax(140px,.8fr) minmax(160px,1.2fr) 62px;padding:10px 0}.ecl27v2-detail-timeline .ecl27v2-player{font-size:12px}.ecl27v2-detail-timeline .ecl27v2-move small,.ecl27v2-detail-timeline .ecl27v2-move time{font-size:10px}
       .ecl27v2-detail-roster-featured{padding:22px}.ecl27v2-roster-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ecl27v2-roster-feature{position:relative;display:grid;grid-template-columns:150px minmax(0,1fr);min-height:248px;overflow:hidden;border:1px solid rgba(214,177,95,.42);border-radius:16px;background:linear-gradient(135deg,#04111d 0%,#02070d 75%);color:#fff!important;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}.ecl27v2-roster-feature:hover,.ecl27v2-roster-feature:focus-visible{transform:translateY(-2px);border-color:#f0d58b;box-shadow:0 18px 34px rgba(0,0,0,.3);text-decoration:none!important;outline:none}.ecl27v2-roster-feature:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:#f0d000;z-index:3}.ecl27v2-roster-feature__portrait{position:relative;z-index:2;overflow:hidden;background:linear-gradient(155deg,#0a2a48,#06101b)}.ecl27v2-roster-feature__portrait:after{content:"";position:absolute;inset:0;border-right:1px solid rgba(240,208,0,.5);pointer-events:none}.ecl27v2-roster-feature__portrait img{display:block;width:100%;height:100%;min-height:248px;object-fit:cover;object-position:center top}.ecl27v2-roster-feature__watermark{position:absolute;right:-22px;top:-12px;width:145px;height:145px;object-fit:contain;opacity:.07;filter:grayscale(1);pointer-events:none}.ecl27v2-roster-feature__body{position:relative;z-index:2;display:flex;flex-direction:column;padding:16px}.ecl27v2-roster-feature__top{display:flex;align-items:center;justify-content:space-between;gap:12px}.ecl27v2-roster-feature__top span{color:#48e4dc;font-size:8px;font-weight:950;letter-spacing:.12em}.ecl27v2-roster-feature__top b{display:grid;place-items:center;min-width:34px;height:28px;padding:0 8px;border:1px solid #e6cb36;border-radius:8px;color:#ffe52b;font-size:13px}.ecl27v2-roster-feature h4{margin:8px 0 10px;font-size:clamp(22px,2vw,32px);line-height:.95;letter-spacing:-.035em}.ecl27v2-roster-feature__evidence{display:flex;align-items:center;gap:8px;min-height:34px;padding:7px 9px;border:1px solid rgba(214,177,95,.24);border-radius:8px;background:rgba(214,177,95,.045)}.ecl27v2-roster-feature__evidence strong{color:#f0d58b;font-size:9px;letter-spacing:.04em}.ecl27v2-roster-feature__evidence small{color:#8ca1b2;font-size:8px}.ecl27v2-roster-feature__evidence.is-in strong{color:#49e7cb}.ecl27v2-roster-feature__evidence.is-poster strong,.ecl27v2-roster-feature__evidence.is-snapshot strong{color:#ffe257}.ecl27v2-roster-feature__stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:11px;border:1px solid #193247;border-radius:9px;overflow:hidden;background:#020a12}.ecl27v2-roster-feature__stats>div{padding:8px 7px;border-right:1px solid #193247}.ecl27v2-roster-feature__stats>div:last-child{border-right:0}.ecl27v2-roster-feature__stats span,.ecl27v2-roster-feature__latest span{display:block;color:#5be5dc;font-size:6px;font-weight:950;letter-spacing:.1em}.ecl27v2-roster-feature__stats strong{display:block;margin-top:3px;font-size:17px}.ecl27v2-roster-feature__latest{margin-top:auto;padding-top:9px}.ecl27v2-roster-feature__latest strong{display:block;margin-top:3px;color:#aebdca;font-size:8px;line-height:1.35}.ecl27v2-roster-feature.is-loading{opacity:.78}.ecl27v2-roster-feature.is-loading .ecl27v2-roster-feature__portrait img{filter:grayscale(.25)}
-      @media(max-width:1180px){.ecl27v2-grid{grid-template-columns:repeat(2,1fr)}.ecl27v2-feed{grid-template-columns:1fr}.ecl27v2-roster-feature-grid{grid-template-columns:1fr}}
-      @media(max-width:780px){.ecl27v2-hero{grid-template-columns:1fr;padding:23px}.ecl27v2-overview{grid-template-columns:repeat(2,1fr)}.ecl27v2-toolbar{grid-template-columns:1fr}.ecl27v2-grid{grid-template-columns:1fr}.ecl27v2-feed-row{grid-template-columns:42px 30px 1fr}.ecl27v2-feed-row>.ecl27v2-feed-team,.ecl27v2-feed-row>small{grid-column:3}.ecl27v2-move{grid-template-columns:28px minmax(90px,1fr) 46px}.ecl27v2-move small{grid-column:2}.ecl27v2-move time{grid-column:3;grid-row:1}.ecl27v2-detail-hero{grid-template-columns:92px 1fr;padding:18px;gap:16px}.ecl27v2-detail-logo{width:92px;height:92px;border-radius:16px}.ecl27v2-detail-title h2{font-size:36px}.ecl27v2-detail-metrics{grid-template-columns:repeat(2,1fr)}.ecl27v2-detail-timeline .ecl27v2-move{grid-template-columns:28px minmax(90px,1fr) 46px}.ecl27v2-detail-timeline .ecl27v2-move small{grid-column:2}.ecl27v2-detail-timeline .ecl27v2-move time{grid-column:3;grid-row:1}.ecl27v2-roster-feature{grid-template-columns:112px minmax(0,1fr);min-height:218px}.ecl27v2-roster-feature__portrait img{min-height:218px}.ecl27v2-roster-feature__body{padding:12px}.ecl27v2-roster-feature__stats strong{font-size:14px}.ecl27v2-roster-feature__evidence{align-items:flex-start;flex-direction:column;gap:2px}}
+      .ecl27v2-teamrp{display:grid;grid-template-columns:1.2fr .8fr .8fr .9fr;margin:0 18px 15px;border:1px solid rgba(214,177,95,.28);border-radius:11px;overflow:hidden;background:linear-gradient(135deg,rgba(214,177,95,.08),rgba(4,15,25,.7))}.ecl27v2-teamrp>div{padding:10px 11px;border-right:1px solid rgba(214,177,95,.18)}.ecl27v2-teamrp>div:last-child{border-right:0}.ecl27v2-teamrp span{display:block;color:#6fe7df;font-size:7px;font-weight:950;letter-spacing:.11em}.ecl27v2-teamrp span em{margin-left:4px;color:#f0d58b;font-style:normal}.ecl27v2-teamrp strong{display:block;margin-top:4px;color:#f5f1e8;font-size:16px}.ecl27v2-teamrp>div:first-child strong{color:#ffe257;font-size:20px}.ecl27v2-teamrp:not([data-loaded="true"]){opacity:.7}
+      .ecl27v2-power-detail{border-color:rgba(214,177,95,.36);background:linear-gradient(135deg,#071522,#02080e)}.ecl27v2-power-detail-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid rgba(214,177,95,.22);border-radius:13px;overflow:hidden;background:#02080e}.ecl27v2-power-detail-grid>div{padding:17px 16px;border-right:1px solid rgba(214,177,95,.16)}.ecl27v2-power-detail-grid>div:last-child{border-right:0}.ecl27v2-power-detail-grid span{display:block;color:#59e5dc;font-size:8px;font-weight:950;letter-spacing:.11em}.ecl27v2-power-detail-grid strong{display:block;margin:5px 0 3px;font-size:28px}.ecl27v2-power-detail-grid small{color:#8297a9;font-size:9px}.ecl27v2-power-detail-grid small b{color:#f0d58b}.ecl27v2-power-detail-grid .is-primary strong{color:#ffe257;font-size:34px}.ecl27v2-power-detail-grid .is-primary small{color:#f0d58b;font-weight:900}.ecl27v2-power-note{margin:13px 0 0;color:#71879a;font-size:10px;line-height:1.55}
+      @media(max-width:1180px){.ecl27v2-grid{grid-template-columns:repeat(2,1fr)}.ecl27v2-feed{grid-template-columns:1fr}.ecl27v2-roster-feature-grid{grid-template-columns:1fr}.ecl27v2-power-detail-grid{grid-template-columns:repeat(2,1fr)}.ecl27v2-power-detail-grid>div:nth-child(2){border-right:0}.ecl27v2-power-detail-grid>div:nth-child(-n+2){border-bottom:1px solid rgba(214,177,95,.16)}}
+      @media(max-width:780px){.ecl27v2-hero{grid-template-columns:1fr;padding:23px}.ecl27v2-overview{grid-template-columns:repeat(2,1fr)}.ecl27v2-toolbar{grid-template-columns:1fr}.ecl27v2-grid{grid-template-columns:1fr}.ecl27v2-teamrp{grid-template-columns:repeat(2,1fr)}.ecl27v2-teamrp>div:nth-child(2){border-right:0}.ecl27v2-teamrp>div:nth-child(-n+2){border-bottom:1px solid rgba(214,177,95,.18)}.ecl27v2-feed-row{grid-template-columns:42px 30px 1fr}.ecl27v2-feed-row>.ecl27v2-feed-team,.ecl27v2-feed-row>small{grid-column:3}.ecl27v2-move{grid-template-columns:28px minmax(90px,1fr) 46px}.ecl27v2-move small{grid-column:2}.ecl27v2-move time{grid-column:3;grid-row:1}.ecl27v2-detail-hero{grid-template-columns:92px 1fr;padding:18px;gap:16px}.ecl27v2-detail-logo{width:92px;height:92px;border-radius:16px}.ecl27v2-detail-title h2{font-size:36px}.ecl27v2-detail-metrics{grid-template-columns:repeat(2,1fr)}.ecl27v2-detail-timeline .ecl27v2-move{grid-template-columns:28px minmax(90px,1fr) 46px}.ecl27v2-detail-timeline .ecl27v2-move small{grid-column:2}.ecl27v2-detail-timeline .ecl27v2-move time{grid-column:3;grid-row:1}.ecl27v2-roster-feature{grid-template-columns:112px minmax(0,1fr);min-height:218px}.ecl27v2-roster-feature__portrait img{min-height:218px}.ecl27v2-roster-feature__body{padding:12px}.ecl27v2-roster-feature__stats strong{font-size:14px}.ecl27v2-roster-feature__evidence{align-items:flex-start;flex-direction:column;gap:2px}}
     `;
     document.head.appendChild(style);
   }
@@ -791,10 +1005,12 @@
     if (wantedTeam) {
       section.innerHTML = renderTeamDetail(wantedTeam);
       hydrateDetailRoster(wantedTeam,section);
+      hydrateTeamPower(section);
       document.title = `${wantedTeam.name} – ECL 27 lagbygge | Svensk eHockey`;
     } else {
       if (wantedSlug) history.replaceState(null,"",seasonListUrl());
       renderListSection(section);
+      hydrateTeamPower(section);
     }
 
     const actions = overview.querySelector(".season-upcoming-actions-v12840");
