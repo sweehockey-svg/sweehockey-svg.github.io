@@ -42,7 +42,7 @@ jobs:
 
       - name: Commit optimized assets
         run: |
-          if git diff --quiet -- web-images; then
+          if [ -z "$(git status --porcelain -- web-images)" ]; then
             echo "No image changes."
             exit 0
           fi
