@@ -405,146 +405,306 @@
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
-  function divisionStrength(value) {
-    const key = String(value || "").trim().toLocaleLowerCase("sv-SE");
-    if (key.includes("elite")) return 1.25;
-    if (key.includes("pro")) return 1.15;
-    if (key.includes("lite")) return 1.05;
-    if (key.includes("core")) return 0.95;
-    if (key.includes("neo")) return 0.85;
-    return 1;
+  function teamRpClamp(value,min,max) {
+    return Math.max(min,Math.min(max,value));
   }
 
-  function rowRecency(row) {
-    const raw = String(row?.chronology_date || row?.display_end_date || row?.end_date || row?.sort_date || "").slice(0,10);
-    if (!raw) return 0.55;
-    const when = Date.parse(raw + "T12:00:00Z");
-    if (!Number.isFinite(when)) return 0.55;
-    const ageYears = Math.max(0,(Date.now() - when) / 31557600000);
-    return Math.max(0.18,Math.exp(-ageYears / 3.25));
-  }
-
-  function rankingForName(lookup,name) {
-    if (!lookup) return null;
-    if (typeof SEH_findPlayerRanking === "function") {
-      try { return SEH_findPlayerRanking(lookup,"",canonical(name)); } catch (_) {}
-    }
-    const wanted = norm(canonical(name));
-    return (lookup.rows || []).find((row) => norm(row.display_gamertag) === wanted) || null;
-  }
-
-  function rosterPowerRaw(team,lookup) {
-    const rows = team.playersNow.map((name) => {
-      const ranking = rankingForName(lookup,name);
-      const rp = numeric(ranking?.ranking_points);
-      const position = String(ranking?.position_group || ranking?.primary_position || "").trim().toUpperCase();
-      return {name,ranking,rp,isGoalie:position === "G"};
-    }).filter((row) => row.rp > 0);
-
-    const goalies = rows.filter((row) => row.isGoalie).sort((a,b) => b.rp - a.rp);
-    const skaters = rows.filter((row) => !row.isGoalie).sort((a,b) => b.rp - a.rp);
-    const selected = [...skaters.slice(0,5),...goalies.slice(0,1)];
-    return {
-      raw:selected.reduce((sum,row) => sum + row.rp,0),
-      selected,
-      skaters:Math.min(5,skaters.length),
-      goalies:Math.min(1,goalies.length),
-      complete:skaters.length >= 5 && goalies.length >= 1
-    };
-  }
-
-  function historyPowerRaw(rows) {
-    let weightedWins = 0;
-    let weightedGames = 0;
-    let allWins = 0;
-    let allGames = 0;
-    let podiums = 0;
-    let titles = 0;
-    let meritRaw = 0;
-
-    for (const row of rows || []) {
-      const games = numeric(row.games_played);
-      const wins = numeric(row.wins);
-      if (games <= 0) continue;
-      const factor = rowRecency(row) * divisionStrength(row.division);
-      weightedWins += wins * factor;
-      weightedGames += games * factor;
-      allWins += wins;
-      allGames += games;
-      const placement = numeric(row.division_rank);
-      if (placement >= 1 && placement <= 3) {
-        podiums += 1;
-        if (placement === 1) titles += 1;
-        const placePoints = placement === 1 ? 100 : placement === 2 ? 55 : 30;
-        meritRaw += placePoints * factor;
-      }
-    }
-
-    const winRate = weightedGames > 0 ? weightedWins / weightedGames : 0;
-    return {
-      raw:(weightedWins * 7) + (winRate * 260),
-      meritRaw,allWins,allGames,
-      winPct:allGames > 0 ? (allWins / allGames) : 0,
-      podiums,titles
-    };
-  }
-
-  function percentile(values,value) {
-    const usable = values.filter((item) => Number.isFinite(item) && item > 0).sort((a,b) => a-b);
-    if (!usable.length || !(value > 0)) return 0;
-    if (usable.length === 1) return 1;
+  function teamRpPercentile(values,value) {
+    const sorted = values
+      .filter((item) => Number.isFinite(item))
+      .sort((a,b) => a-b);
+    if (!sorted.length || !Number.isFinite(value)) return 50;
+    if (sorted.length === 1) return 50;
     let below = 0;
     let equal = 0;
-    for (const item of usable) {
+    for (const item of sorted) {
       if (item < value) below++;
       else if (item === value) equal++;
     }
-    return Math.max(0,Math.min(1,(below + Math.max(0,equal - 1) / 2) / (usable.length - 1)));
+    return teamRpClamp(
+      ((below + Math.max(0,equal - 1) / 2) / (sorted.length - 1)) * 100,
+      0,
+      100
+    );
+  }
+
+  function teamRpDraws(row) {
+    return Math.max(
+      0,
+      numeric(row.games_played) -
+        numeric(row.wins) -
+        numeric(row.losses)
+    );
+  }
+
+  function teamRpScopeKey(row) {
+    const leagueId = Number(row.league_id);
+    if (Number.isInteger(leagueId) && leagueId > 0) {
+      return `${String(row.competition_code || "OTHER").toUpperCase()}::league:${leagueId}`;
+    }
+    return `${String(row.competition_code || "OTHER").toUpperCase()}::${String(row.season_label || row.external_league_id || "unknown")}`;
+  }
+
+  function teamRpDetectPointsModel(rows) {
+    const played = rows.filter((row) => numeric(row.games_played) > 0);
+    if (!played.length || !played.some((row) => numeric(row.table_points) > 0)) {
+      return null;
+    }
+
+    const candidates = [
+      {
+        maxPointsPerGame:2,
+        expected:(row) => numeric(row.wins) * 2 + numeric(row.overtime_losses)
+      },
+      {
+        maxPointsPerGame:3,
+        expected:(row) => {
+          const otWins = Math.min(numeric(row.wins),numeric(row.overtime_wins));
+          const regulationWins = Math.max(0,numeric(row.wins) - otWins);
+          return regulationWins * 3 + otWins * 2 + numeric(row.overtime_losses);
+        }
+      },
+      {
+        maxPointsPerGame:3,
+        expected:(row) => numeric(row.wins) * 3 + teamRpDraws(row)
+      },
+      {
+        maxPointsPerGame:2,
+        expected:(row) => numeric(row.wins) * 2 + teamRpDraws(row)
+      },
+      {
+        maxPointsPerGame:2,
+        expected:(row) => numeric(row.wins) * 2
+      },
+      {
+        maxPointsPerGame:3,
+        expected:(row) => numeric(row.wins) * 3
+      }
+    ];
+
+    return candidates.find((candidate) =>
+      played.every((row) =>
+        Math.abs(numeric(row.table_points) - candidate.expected(row)) < 0.001
+      )
+    ) || null;
+  }
+
+  function teamRpRowTimestamp(row) {
+    const raw = String(
+      row?.chronology_date ||
+      row?.display_end_date ||
+      row?.end_date ||
+      row?.sort_date ||
+      ""
+    ).slice(0,10);
+    const timestamp = raw ? Date.parse(raw + "T12:00:00Z") : NaN;
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  }
+
+  function teamRpRecencyWeight(row,latestTimestamp) {
+    const when = teamRpRowTimestamp(row);
+    if (!when || !latestTimestamp) return 0.35;
+    const ageYears = Math.max(0,(latestTimestamp - when) / 31557600000);
+    return Math.max(0.18,Math.exp(-ageYears / 3.25));
+  }
+
+  function teamRpScoreRow(row,context) {
+    const gp = numeric(row.games_played);
+    if (gp <= 0) return null;
+
+    const wins = teamRpClamp(numeric(row.wins),0,gp);
+    const losses = teamRpClamp(numeric(row.losses),0,gp);
+    const draws = teamRpDraws(row);
+    const goalsFor = Math.max(0,numeric(row.goals_for));
+    const goalsAgainst = Math.max(0,numeric(row.goals_against));
+    const goalDifference = goalsFor - goalsAgainst;
+    const gfpg = goalsFor / gp;
+    const gapg = goalsAgainst / gp;
+    const gdpg = goalDifference / gp;
+    const winRate = wins / gp;
+
+    const pointsPercentage = context.pointsModel
+      ? teamRpClamp(
+          numeric(row.table_points) / (gp * context.pointsModel.maxPointsPerGame),
+          0,
+          1
+        )
+      : null;
+
+    const resultScore = pointsPercentage !== null
+      ? pointsPercentage * 100
+      : winRate * 100;
+    const goalDifferenceScore =
+      ((teamRpClamp(gdpg,-5,5) + 5) / 10) * 100;
+    const offenseScore = teamRpPercentile(context.gfpgValues,gfpg);
+    const defenseScore = 100 - teamRpPercentile(context.gapgValues,gapg);
+    const rawTeamRp =
+      resultScore * .50 +
+      goalDifferenceScore * .25 +
+      offenseScore * .15 +
+      defenseScore * .10;
+
+    return {
+      gp,wins,draws,losses,
+      goalsFor,goalsAgainst,goalDifference,
+      gfpg,gapg,gdpg,winRate,
+      resultScore,goalDifferenceScore,offenseScore,defenseScore,rawTeamRp
+    };
+  }
+
+  function teamRpDedupeScopeRows(rows) {
+    const byTeam = new Map();
+    for (const row of rows) {
+      const id = Number(row.team_id);
+      if (!(id > 0)) continue;
+      const current = byTeam.get(id);
+      if (!current) {
+        byTeam.set(id,row);
+        continue;
+      }
+      const currentScore = numeric(current.games_played) * 100 + numeric(current.playoff_games);
+      const rowScore = numeric(row.games_played) * 100 + numeric(row.playoff_games);
+      if (rowScore > currentScore) byTeam.set(id,row);
+    }
+    return [...byTeam.values()];
   }
 
   async function fetchTeamHistoryRows() {
     const client = getDirectoryClient();
-    const ids = [...new Set(model.teams.map((team) => teamId(team.name)).filter((id) => Number.isInteger(id) && id > 0))];
-    if (!client || !ids.length) return [];
-    const select = "team_id,division,division_rank,games_played,wins,losses,overtime_wins,overtime_losses,playoff_games,chronology_date,display_end_date,end_date,sort_date,season_label,competition_code";
-    const {data,error} = await client.from("v_ehockey_team_tournaments_web_v14").select(select).in("team_id",ids).gt("games_played",0);
-    if (error) throw error;
-    return Array.isArray(data) ? data : [];
+    if (!client) return [];
+
+    const select = [
+      "team_id","league_id","external_league_id","competition_code","season_label",
+      "games_played","wins","losses","overtime_wins","overtime_losses",
+      "goals_for","goals_against","table_points","playoff_games",
+      "chronology_date","display_end_date","end_date","sort_date"
+    ].join(",");
+
+    const rows = [];
+    const pageSize = 1000;
+    for (let from = 0; ; from += pageSize) {
+      const {data,error} = await client
+        .from("v_ehockey_team_tournaments_web_v14")
+        .select(select)
+        .gt("games_played",0)
+        .order("team_id",{ascending:true})
+        .range(from,from + pageSize - 1);
+      if (error) throw error;
+      const page = Array.isArray(data) ? data : [];
+      rows.push(...page);
+      if (page.length < pageSize) break;
+    }
+    return rows;
   }
 
   async function loadTeamPower() {
     if (teamPowerPromise) return teamPowerPromise;
     teamPowerPromise = (async () => {
-      const rankingLookup = typeof SEH_loadPlayerRanking === "function" ? await SEH_loadPlayerRanking() : {rows:[],byName:new Map(),byKey:new Map()};
       const historyRows = await fetchTeamHistoryRows();
-      const historyByTeam = new Map();
+      const rowsByScope = new Map();
+
       for (const row of historyRows) {
-        const id = Number(row.team_id);
-        if (!historyByTeam.has(id)) historyByTeam.set(id,[]);
-        historyByTeam.get(id).push(row);
+        const key = teamRpScopeKey(row);
+        if (!rowsByScope.has(key)) rowsByScope.set(key,[]);
+        rowsByScope.get(key).push(row);
       }
-      const raw = model.teams.map((team) => ({
-        team,
-        roster:rosterPowerRaw(team,rankingLookup),
-        history:historyPowerRaw(historyByTeam.get(teamId(team.name)) || [])
-      }));
-      const rosterValues = raw.map((item) => item.roster.raw);
-      const resultValues = raw.map((item) => item.history.raw);
-      const meritValues = raw.map((item) => item.history.meritRaw);
-      const calculated = raw.map((item) => {
-        const rosterIndex = percentile(rosterValues,item.roster.raw);
-        const resultIndex = percentile(resultValues,item.history.raw);
-        const meritIndex = percentile(meritValues,item.history.meritRaw);
-        const weighted = (rosterIndex * .70) + (resultIndex * .25) + (meritIndex * .05);
-        const teamRp = item.roster.raw > 0 ? Math.round(500 + (4500 * weighted)) : 0;
-        return {...item,rosterIndex,resultIndex,meritIndex,weighted,teamRp,swedenRank:null};
+
+      const scoredByTeam = new Map();
+      for (const rows of rowsByScope.values()) {
+        const deduped = teamRpDedupeScopeRows(rows);
+        const played = deduped.filter((row) => numeric(row.games_played) > 0);
+        const context = {
+          pointsModel:teamRpDetectPointsModel(played),
+          gfpgValues:played.map((row) => numeric(row.goals_for) / numeric(row.games_played)),
+          gapgValues:played.map((row) => numeric(row.goals_against) / numeric(row.games_played))
+        };
+
+        for (const row of played) {
+          const score = teamRpScoreRow(row,context);
+          if (!score) continue;
+          const id = Number(row.team_id);
+          if (!scoredByTeam.has(id)) scoredByTeam.set(id,[]);
+          scoredByTeam.get(id).push({row,score});
+        }
+      }
+
+      const latestTimestamp = Math.max(0,...historyRows.map(teamRpRowTimestamp));
+
+      const calculated = model.teams.map((team) => {
+        const id = teamId(team.name);
+        const entries = id ? (scoredByTeam.get(id) || []) : [];
+        let weightedRp = 0;
+        let totalWeight = 0;
+        let effectiveGp = 0;
+        let allGames = 0;
+        let allWins = 0;
+        let allDraws = 0;
+        let allLosses = 0;
+        let goalsFor = 0;
+        let goalsAgainst = 0;
+
+        for (const entry of entries) {
+          const recency = teamRpRecencyWeight(entry.row,latestTimestamp);
+          const sampleWeight = Math.min(entry.score.gp,20);
+          const weight = sampleWeight * recency;
+          weightedRp += entry.score.rawTeamRp * weight;
+          totalWeight += weight;
+          effectiveGp += entry.score.gp * recency;
+          allGames += entry.score.gp;
+          allWins += entry.score.wins;
+          allDraws += entry.score.draws;
+          allLosses += entry.score.losses;
+          goalsFor += entry.score.goalsFor;
+          goalsAgainst += entry.score.goalsAgainst;
+        }
+
+        const rawTeamRp = totalWeight > 0 ? weightedRp / totalWeight : 50;
+        const reliability = effectiveGp > 0
+          ? effectiveGp / (effectiveGp + 12)
+          : 0;
+        const adjustedRp = 50 + (rawTeamRp - 50) * reliability;
+        const teamRp = Math.round(teamRpClamp(adjustedRp,0,100));
+        const goalDifference = goalsFor - goalsAgainst;
+
+        return {
+          team,
+          teamRp,
+          swedenRank:null,
+          history:{
+            tournamentCount:entries.length,
+            allGames,
+            allWins,
+            allDraws,
+            allLosses,
+            goalsFor,
+            goalsAgainst,
+            goalDifference,
+            gdpg:allGames > 0 ? goalDifference / allGames : 0,
+            winPct:allGames > 0 ? allWins / allGames : 0,
+            effectiveGp,
+            reliability,
+            rawTeamRp
+          }
+        };
       });
-      const ranked = calculated.filter((item) => item.teamRp > 0).sort((a,b) => b.teamRp - a.teamRp || b.roster.raw - a.roster.raw || a.team.name.localeCompare(b.team.name,"sv"));
+
+      const ranked = calculated
+        .filter((item) => item.history.allGames > 0)
+        .sort((a,b) =>
+          b.teamRp - a.teamRp ||
+          b.history.rawTeamRp - a.history.rawTeamRp ||
+          b.history.effectiveGp - a.history.effectiveGp ||
+          a.team.name.localeCompare(b.team.name,"sv")
+        );
       ranked.forEach((item,index) => { item.swedenRank = index + 1; });
+
       teamPowerByName.clear();
       for (const item of calculated) teamPowerByName.set(norm(item.team.name),item);
       return calculated;
-    })().catch((error) => { teamPowerPromise = null; throw error; });
+    })().catch((error) => {
+      teamPowerPromise = null;
+      throw error;
+    });
     return teamPowerPromise;
   }
 
@@ -555,9 +715,9 @@
   function renderTeamPowerStrip(team) {
     return `<div class="ecl27v2-teamrp" data-team-rp="${esc(team.name)}">
       <div><span>TEAM RP <em>BETA</em></span><strong data-team-rp-score>–</strong></div>
-      <div><span>SVERIGE</span><strong data-team-rp-rank>–</strong></div>
+      <div><span>ECL 27</span><strong data-team-rp-rank>–</strong></div>
+      <div><span>MATCHER</span><strong data-team-rp-games>–</strong></div>
       <div><span>VINSTER</span><strong data-team-rp-wins>–</strong></div>
-      <div><span>MERITER</span><strong data-team-rp-merits>–</strong></div>
     </div>`;
   }
 
@@ -565,25 +725,33 @@
     root.querySelectorAll?.("[data-team-rp]").forEach((node) => {
       const item = teamPowerByName.get(norm(node.dataset.teamRp));
       if (!item) return;
-      const set = (selector,value) => { const el = node.querySelector(selector); if (el) el.textContent = value; };
-      set("[data-team-rp-score]",item.teamRp > 0 ? numberFormat.format(item.teamRp) : "–");
-      set("[data-team-rp-rank]",item.swedenRank ? `#${item.swedenRank}` : "–");
+      const set = (selector,value) => {
+        const el = node.querySelector(selector);
+        if (el) el.textContent = value;
+      };
+      set("[data-team-rp-score]",numberFormat.format(item.teamRp));
+      set("[data-team-rp-rank]",item.swedenRank ? `#${item.swedenRank}` : "NY");
+      set("[data-team-rp-games]",numberFormat.format(item.history.allGames));
       set("[data-team-rp-wins]",numberFormat.format(item.history.allWins));
-      set("[data-team-rp-merits]",item.history.podiums ? `${item.history.podiums} topp 3` : "0");
       node.dataset.loaded = "true";
     });
+
     root.querySelectorAll?.("[data-team-rp-detail]").forEach((node) => {
       const item = teamPowerByName.get(norm(node.dataset.teamRpDetail));
       if (!item) return;
       const values = {
-        score:item.teamRp > 0 ? numberFormat.format(item.teamRp) : "–",
-        rank:item.swedenRank ? `#${item.swedenRank} Sverige` : "–",
-        lineup:item.roster.complete ? "5+1" : `${item.roster.skaters}+${item.roster.goalies}G`,
-        lineuprp:item.roster.raw > 0 ? numberFormat.format(Math.round(item.roster.raw)) : "–",
+        score:numberFormat.format(item.teamRp),
+        rank:item.swedenRank ? `#${item.swedenRank} av ECL 27-lagen` : "Nytt lag",
+        games:numberFormat.format(item.history.allGames),
+        tournaments:numberFormat.format(item.history.tournamentCount),
         wins:numberFormat.format(item.history.allWins),
         winpct:item.history.allGames > 0 ? formatPct(item.history.winPct) : "–",
-        merits:numberFormat.format(item.history.podiums),
-        titles:numberFormat.format(item.history.titles)
+        goaldiff:item.history.allGames > 0
+          ? `${item.history.goalDifference > 0 ? "+" : ""}${numberFormat.format(item.history.goalDifference)}`
+          : "0",
+        gdpg:item.history.allGames > 0
+          ? `${item.history.gdpg > 0 ? "+" : ""}${new Intl.NumberFormat("sv-SE",{maximumFractionDigits:2}).format(item.history.gdpg)} / match`
+          : "–"
       };
       for (const [key,value] of Object.entries(values)) {
         const el = node.querySelector(`[data-team-rp-value="${key}"]`);
@@ -868,14 +1036,14 @@
       </div>
 
       <section class="ecl27v2-detail-panel ecl27v2-power-detail" data-team-rp-detail="${esc(team.name)}">
-        <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">LAGSTYRKA · BETA</p><h3>Team RP</h3></div><span>70% trupp · 25% resultat · 5% meriter</span></div>
+        <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">LAGSTYRKA · BETA</p><h3>Team RP</h3></div><span>50% resultat · 25% målskillnad · 15% offensiv · 10% defensiv</span></div>
         <div class="ecl27v2-power-detail-grid">
           <div class="is-primary"><span>TEAM RP</span><strong data-team-rp-value="score">–</strong><small data-team-rp-value="rank">–</small></div>
-          <div><span>FÖRSTASEXA</span><strong data-team-rp-value="lineuprp">–</strong><small><b data-team-rp-value="lineup">–</b> räknas</small></div>
+          <div><span>MATCHER</span><strong data-team-rp-value="games">–</strong><small><b data-team-rp-value="tournaments">–</b> turneringar</small></div>
           <div><span>VINSTER</span><strong data-team-rp-value="wins">–</strong><small><b data-team-rp-value="winpct">–</b> historisk vinst%</small></div>
-          <div><span>MERITER</span><strong data-team-rp-value="merits">–</strong><small><b data-team-rp-value="titles">–</b> förstaplatser</small></div>
+          <div><span>MÅLSKILLNAD</span><strong data-team-rp-value="goaldiff">–</strong><small><b data-team-rp-value="gdpg">–</b></small></div>
         </div>
-        <p class="ecl27v2-power-note">Team RP jämför de svenska ECL 27-lagen. Truppdelen räknar de fem högst rankade utespelarna plus bästa målvakten i den kända aktuella truppen. Resultat och historiska topp 3-placeringar viktas efter nivå och hur nyligen de gjordes.</p>
+        <p class="ecl27v2-power-note">Team RP bygger enbart på lagets egna historiska prestationer. Nyare säsonger väger mer och lag med få matcher dras mot neutrala 50. Spelar-RP, aktuell trupp och spelarnas tidigare lag påverkar inte Team RP.</p>
       </section>
 
       <section class="ecl27v2-detail-panel ecl27v2-detail-roster-featured">
