@@ -51,7 +51,7 @@ async function optimize(job) {
 
     const rel = path.relative(job.source, file);
     const parsed = path.parse(rel);
-    const output = path.join(job.output, parsed.dir, parsed.name + ".webp");
+    const output = path.join(job.output, parsed.dir, parsed.base + ".webp");
     await ensureDir(path.dirname(output));
 
     const stat = await fs.stat(file);
