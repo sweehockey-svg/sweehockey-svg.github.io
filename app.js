@@ -1369,9 +1369,15 @@ function SEH_initHistory() {
         const rawTeamRp = totalWeight > 0
           ? weightedRp / totalWeight
           : 50;
-        const reliability = effectiveGp > 0
-          ? effectiveGp / (effectiveGp + 12)
+        const matchReliability = effectiveGp > 0
+          ? effectiveGp / (effectiveGp + 30)
           : 0;
+        const historyReliability = tournamentCount > 0
+          ? tournamentCount / (tournamentCount + 2)
+          : 0;
+        const reliability = Math.sqrt(
+          matchReliability * historyReliability
+        );
         const adjustedRp =
           50 + (rawTeamRp - 50) * reliability;
 
@@ -1390,6 +1396,8 @@ function SEH_initHistory() {
           tournamentCount,
           effectiveGp,
           reliability,
+          matchReliability,
+          historyReliability,
           rawTeamRp,
           adjustedRp,
           resultScore: totalWeight > 0 ? weightedResult / totalWeight : 50,
