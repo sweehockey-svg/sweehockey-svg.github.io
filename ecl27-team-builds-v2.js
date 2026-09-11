@@ -635,6 +635,7 @@
         const entries = id ? (scoredByTeam.get(id) || []) : [];
         let weightedRp = 0;
         let totalWeight = 0;
+        let totalRp = 0;
         let effectiveGp = 0;
         let allGames = 0;
         let allWins = 0;
@@ -647,7 +648,9 @@
           const recency = teamRpRecencyWeight(entry.row,latestTimestamp);
           const sampleWeight = Math.min(entry.score.gp,20);
           const weight = sampleWeight * recency;
+          const tournamentCompleteness = Math.min(entry.score.gp / 20,1);
           weightedRp += entry.score.rawTeamRp * weight;
+          totalRp += entry.score.rawTeamRp * recency * tournamentCompleteness;
           totalWeight += weight;
           effectiveGp += entry.score.gp * recency;
           allGames += entry.score.gp;
@@ -669,12 +672,15 @@
           matchReliability * historyReliability
         );
         const adjustedRp = 50 + (rawTeamRp - 50) * reliability;
-        const teamRp = Math.round(teamRpClamp(adjustedRp,0,100));
+        const averageRp = Math.round(teamRpClamp(adjustedRp,0,100));
+        const teamRp = Math.round(Math.max(0,totalRp));
         const goalDifference = goalsFor - goalsAgainst;
 
         return {
           team,
           teamRp,
+          averageRp,
+          totalRp,
           swedenRank:null,
           history:{
             tournamentCount:entries.length,
@@ -700,6 +706,7 @@
         .filter((item) => item.history.allGames > 0)
         .sort((a,b) =>
           b.teamRp - a.teamRp ||
+          b.averageRp - a.averageRp ||
           b.history.rawTeamRp - a.history.rawTeamRp ||
           b.history.effectiveGp - a.history.effectiveGp ||
           a.team.name.localeCompare(b.team.name,"sv")
@@ -722,8 +729,8 @@
 
   function renderTeamPowerStrip(team) {
     return `<div class="ecl27v2-teamrp" data-team-rp="${esc(team.name)}">
-      <div><span>TEAM RP <em>BETA</em></span><strong data-team-rp-score>–</strong></div>
-      <div><span>ECL 27</span><strong data-team-rp-rank>–</strong></div>
+      <div><span>TOTAL RP <em>BETA</em></span><strong data-team-rp-score>–</strong></div>
+      <div><span>SNITT RP</span><strong data-team-rp-average>–</strong></div>
       <div><span>MATCHER</span><strong data-team-rp-games>–</strong></div>
       <div><span>VINSTER</span><strong data-team-rp-wins>–</strong></div>
     </div>`;
@@ -738,7 +745,7 @@
         if (el) el.textContent = value;
       };
       set("[data-team-rp-score]",numberFormat.format(item.teamRp));
-      set("[data-team-rp-rank]",item.swedenRank ? `#${item.swedenRank}` : "NY");
+      set("[data-team-rp-average]",numberFormat.format(item.averageRp));
       set("[data-team-rp-games]",numberFormat.format(item.history.allGames));
       set("[data-team-rp-wins]",numberFormat.format(item.history.allWins));
       node.dataset.loaded = "true";
@@ -749,6 +756,7 @@
       if (!item) return;
       const values = {
         score:numberFormat.format(item.teamRp),
+        average:numberFormat.format(item.averageRp),
         rank:item.swedenRank ? `#${item.swedenRank} av ECL 27-lagen` : "Nytt lag",
         games:numberFormat.format(item.history.allGames),
         tournaments:numberFormat.format(item.history.tournamentCount),
@@ -1046,12 +1054,12 @@
       <section class="ecl27v2-detail-panel ecl27v2-power-detail" data-team-rp-detail="${esc(team.name)}">
         <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">LAGSTYRKA · BETA</p><h3>Team RP</h3></div><span>50% resultat · 25% målskillnad · 15% offensiv · 10% defensiv</span></div>
         <div class="ecl27v2-power-detail-grid">
-          <div class="is-primary"><span>TEAM RP</span><strong data-team-rp-value="score">–</strong><small data-team-rp-value="rank">–</small></div>
-          <div><span>MATCHER</span><strong data-team-rp-value="games">–</strong><small><b data-team-rp-value="tournaments">–</b> turneringar</small></div>
+          <div class="is-primary"><span>TOTAL RP</span><strong data-team-rp-value="score">–</strong><small data-team-rp-value="rank">–</small></div>
+          <div><span>SNITT RP</span><strong data-team-rp-value="average">–</strong><small><b data-team-rp-value="tournaments">–</b> turneringar</small></div>
           <div><span>VINSTER</span><strong data-team-rp-value="wins">–</strong><small><b data-team-rp-value="winpct">–</b> historisk vinst%</small></div>
           <div><span>MÅLSKILLNAD</span><strong data-team-rp-value="goaldiff">–</strong><small><b data-team-rp-value="gdpg">–</b></small></div>
         </div>
-        <p class="ecl27v2-power-note">Team RP bygger enbart på lagets egna historiska prestationer. Nyare säsonger väger mer och lag med få matcher dras mot neutrala 50. Spelar-RP, aktuell trupp och spelarnas tidigare lag påverkar inte Team RP.</p>
+        <p class="ecl27v2-power-note">Total RP summerar lagets historiska prestationer medan Snitt RP visar den genomsnittliga styrkan över historiken. Nyare säsonger väger mer och lag med få matcher dras mot neutrala 50. Spelar-RP, aktuell trupp och spelarnas tidigare lag påverkar inte Team RP.</p>
       </section>
 
       <section class="ecl27v2-detail-panel ecl27v2-detail-roster-featured">
