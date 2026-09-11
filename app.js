@@ -15838,6 +15838,15 @@ function SEH_initShop() {
   }
   function updatePlayerAdminCounters(){
     const total=faLinkRequests.length+faApprovalRequests.length+profileApprovalRequests.length;
+    const pendingBreakdown={
+      links:faLinkRequests.length,
+      fa:faApprovalRequests.length,
+      profiles:profileApprovalRequests.length
+    };
+    window.dispatchEvent(new CustomEvent('seh:admin-pending-count',{
+      detail:{total,breakdown:pendingBreakdown}
+    }));
+    window.SEH_setAdminPendingBadge?.(total,pendingBreakdown);
     if($('adminPlayerPendingTotal'))$('adminPlayerPendingTotal').textContent=String(total);
     if($('adminPlayerApprovedTotal'))$('adminPlayerApprovedTotal').textContent=String(faApprovedLinks.length);
     if($('playerAdminTabQueueCount'))$('playerAdminTabQueueCount').textContent=String(total);
