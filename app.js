@@ -212,7 +212,7 @@ function SEH_initHistory() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-09-11-v13015-total-and-average-team-rp";
+    const APP_BUILD = "2026-09-11-v13018-swedish-player-profiles-only";
     const PAGE_SIZE = 1000;
   
     const state = {
@@ -2445,6 +2445,7 @@ function SEH_initPlayers() {
         key: clean(row.player_key),
         sportsGamerId,
         name: clean(row.display_gamertag) || "Okänd spelare",
+        country: clean(row.player_country).toUpperCase(),
         image: SEH_playerImageUrl(sportsGamerId, clean(row.player_image)),
         role,
         games: number(row.career_games),
@@ -2712,7 +2713,9 @@ function SEH_initPlayers() {
         const rows = await fetchDirectory();
         state.players = rows
           .map(normalizePlayer)
-          .filter((player) => player.key);
+          .filter((player) =>
+            player.key && ["SE", "SWE"].includes(player.country)
+          );
         buildDivisionFilter();
         updateOverview();
         render();
@@ -6441,6 +6444,15 @@ function SEH_initPlayer() {
         }
   
         const directoryRow = chooseBestDirectoryRow(directoryRows);
+        const playerCountry = String(
+          directoryRow?.player_country || ""
+        ).trim().toUpperCase();
+
+        if (!["SE", "SWE"].includes(playerCountry)) {
+          throw new Error(
+            "Spelarprofiler på Svensk eHockey visas endast för svenska spelare."
+          );
+        }
 
         const friendlySlug = SEH_playerSlug(
           directoryRow?.display_gamertag || playerRouteValue
