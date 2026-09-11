@@ -659,9 +659,15 @@
         }
 
         const rawTeamRp = totalWeight > 0 ? weightedRp / totalWeight : 50;
-        const reliability = effectiveGp > 0
-          ? effectiveGp / (effectiveGp + 12)
+        const matchReliability = effectiveGp > 0
+          ? effectiveGp / (effectiveGp + 30)
           : 0;
+        const historyReliability = entries.length > 0
+          ? entries.length / (entries.length + 2)
+          : 0;
+        const reliability = Math.sqrt(
+          matchReliability * historyReliability
+        );
         const adjustedRp = 50 + (rawTeamRp - 50) * reliability;
         const teamRp = Math.round(teamRpClamp(adjustedRp,0,100));
         const goalDifference = goalsFor - goalsAgainst;
@@ -683,6 +689,8 @@
             winPct:allGames > 0 ? allWins / allGames : 0,
             effectiveGp,
             reliability,
+            matchReliability,
+            historyReliability,
             rawTeamRp
           }
         };
