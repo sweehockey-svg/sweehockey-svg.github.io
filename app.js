@@ -6506,7 +6506,16 @@ function SEH_initPlayer() {
             );
           } else {
             const namedHistoryRows = await addLeagueDisplayNames(historyRows);
-            const rows = dedupeHistoryRows(namedHistoryRows.map(normalize));
+            const canonicalDisplayName = String(directoryRow.display_gamertag || "").trim();
+            const rows = dedupeHistoryRows(
+              namedHistoryRows.map((row) => {
+                const normalizedRow = normalize(row);
+                if (canonicalDisplayName) {
+                  normalizedRow.canonicalName = canonicalDisplayName;
+                }
+                return normalizedRow;
+              })
+            );
             console.info(
               `Svensk eHockey ${APP_BUILD}: ${uniqueTournamentCount(rows)} turneringar och ${rows.length} historikrader laddades.`
             );
