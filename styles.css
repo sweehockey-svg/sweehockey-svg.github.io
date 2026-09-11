@@ -2951,7 +2951,7 @@ body.directory-page {
 
 .directory-team-card__header {
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
+  grid-template-columns: 84px minmax(0, 1fr) auto;
   align-items: center;
   gap: 17px;
   min-height: 98px;
@@ -3008,6 +3008,49 @@ body.directory-page {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+}
+
+.directory-team-card__rp {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  align-content: center;
+  justify-items: end;
+  min-width: 94px;
+  padding: 10px 0 10px 12px;
+  border-left: 1px solid rgba(255, 208, 0, 0.2);
+  text-align: right;
+}
+
+.directory-team-card__rp span {
+  color: #6fe7df;
+  font-size: 0.52rem;
+  font-weight: 950;
+  letter-spacing: 0.11em;
+  white-space: nowrap;
+}
+
+.directory-team-card__rp span em {
+  margin-left: 4px;
+  color: #f0d58b;
+  font-style: normal;
+}
+
+.directory-team-card__rp strong {
+  margin-top: 4px;
+  color: var(--dir-yellow);
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 1.8rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.directory-team-card__rp small {
+  margin-top: 4px;
+  color: #8f9a96;
+  font-size: 0.56rem;
+  font-weight: 850;
+  white-space: nowrap;
 }
 
 .directory-badge {
@@ -3245,8 +3288,21 @@ body.directory-page[data-card-view="compact"] .directory-team-card {
 }
 
 body.directory-page[data-card-view="compact"] .directory-team-card__header {
-  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-columns: 64px minmax(0, 1fr) auto;
   min-height: 74px;
+}
+
+body.directory-page[data-card-view="compact"] .directory-team-card__rp {
+  min-width: 78px;
+  padding-left: 9px;
+}
+
+body.directory-page[data-card-view="compact"] .directory-team-card__rp strong {
+  font-size: 1.45rem;
+}
+
+body.directory-page[data-card-view="compact"] .directory-team-card__rp small {
+  font-size: 0.5rem;
 }
 
 body.directory-page[data-card-view="compact"] .directory-team-card__logo {
@@ -3601,6 +3657,24 @@ body.directory-page[data-card-view="compact"] .directory-team-card__summary {
   .directory-team-card__header,
   body.directory-page[data-card-view="compact"] .directory-team-card__header {
     grid-template-columns: 70px minmax(0, 1fr);
+  }
+
+  .directory-team-card__rp,
+  body.directory-page[data-card-view="compact"] .directory-team-card__rp {
+    grid-column: 2;
+    justify-items: start;
+    width: 100%;
+    min-width: 0;
+    margin-top: 8px;
+    padding: 9px 0 0;
+    border-top: 1px solid rgba(255, 208, 0, 0.18);
+    border-left: 0;
+    text-align: left;
+  }
+
+  .directory-team-card__rp strong,
+  body.directory-page[data-card-view="compact"] .directory-team-card__rp strong {
+    font-size: 1.5rem;
   }
 
   .directory-team-card__logo,
