@@ -31,10 +31,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install image optimizer
-        run: npm install --no-save --ignore-scripts=false sharp@0.34.3
+        run: |
+          test -f package.json || npm init -y >/dev/null 2>&1
+          npm install --no-save --ignore-scripts=false sharp@0.34.3
 
       - name: Build optimized WebP copies
         run: node scripts/build-web-images.mjs
