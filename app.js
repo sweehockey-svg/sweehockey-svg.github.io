@@ -12318,8 +12318,31 @@ const SEH_PLAYER_IMAGE_FILES = new Set(
     : []
 );
 
+function SEH_optimizedPlayerImagePath(fileName) {
+  const file = String(fileName || "").trim();
+  return file ? `web-images/players/${encodeURIComponent(file)}.webp` : "";
+}
+
+function SEH_originalPlayerImagePathFromOptimized(value) {
+  const raw = String(value || "");
+  const match = raw.match(/(?:^|\/)web-images\/players\/([^/?#]+\.webp)(?:[?#].*)?$/i);
+  if (!match) return "";
+  let file = match[1].replace(/\.webp$/i, "");
+  try { file = decodeURIComponent(file); } catch (_) {}
+  return file ? `players/${encodeURIComponent(file)}` : "";
+}
+
+document.addEventListener("error", (event) => {
+  const image = event.target;
+  if (!(image instanceof HTMLImageElement)) return;
+  const fallback = SEH_originalPlayerImagePathFromOptimized(image.getAttribute("src") || image.src);
+  if (!fallback || image.dataset.sehOptimizedFallbackUsed === "1") return;
+  image.dataset.sehOptimizedFallbackUsed = "1";
+  image.src = fallback;
+}, true);
+
 function SEH_playerImageUrl(value, fallbackCandidate = "") {
-  const fallback = "players/1DEFAULTBILDID.png";
+  const fallback = SEH_optimizedPlayerImagePath("1DEFAULTBILDID.png");
 
   for (const candidate of [value, fallbackCandidate]) {
     const raw = String(candidate || "").trim();
@@ -12330,7 +12353,7 @@ function SEH_playerImageUrl(value, fallbackCandidate = "") {
     const fileName = numericId ? `${numericId}.png` : localFile;
 
     if (fileName && SEH_PLAYER_IMAGE_FILES.has(fileName)) {
-      return `players/${encodeURIComponent(fileName)}`;
+      return SEH_optimizedPlayerImagePath(fileName);
     }
 
     if (/^https?:\/\//i.test(raw) && !/\/players\/\d+(?:[/?#]|$)/i.test(raw)) {
@@ -12339,6 +12362,15 @@ function SEH_playerImageUrl(value, fallbackCandidate = "") {
   }
 
   return fallback;
+}
+
+function SEH_optimizedTeamLogoPath(localUrl) {
+  const raw = String(localUrl || "").trim();
+  const match = raw.match(/^(?:\.\/)?teamlogos\/([^?#]+\.(?:png|jpe?g|webp))(?:[?#].*)?$/i);
+  if (!match) return "";
+  let file = match[1];
+  try { file = decodeURIComponent(file); } catch (_) {}
+  return file ? `web-images/teamlogos/${encodeURIComponent(file)}.webp` : "";
 }
 
 const SEH_TEAM_LOGO_FILES = (
@@ -12418,9 +12450,18 @@ function SEH_teamLogoCandidates(primaryUrls, teamName) {
 
   const add = (value) => {
     const url = SEH_resolveLocalTeamLogo(value);
-    if (!url || seen.has(url)) return;
-    seen.add(url);
-    result.push(url);
+    if (!url) return;
+
+    const optimized = SEH_optimizedTeamLogoPath(url);
+    if (optimized && !seen.has(optimized)) {
+      seen.add(optimized);
+      result.push(optimized);
+    }
+
+    if (!seen.has(url)) {
+      seen.add(url);
+      result.push(url);
+    }
   };
 
   (Array.isArray(primaryUrls) ? primaryUrls : [primaryUrls]).forEach(add);
@@ -12481,6 +12522,7 @@ function SEH_renderTeamLogo(container, primaryUrls, teamName, altText = "") {
   const image = document.createElement("img");
   image.alt = altText;
   image.loading = "lazy";
+  image.decoding = "async";
   container.append(image);
 
   SEH_applyTeamLogo(image, primaryUrls, teamName, container);
