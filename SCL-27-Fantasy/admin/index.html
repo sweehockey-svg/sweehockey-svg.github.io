@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#050a10">
+  <meta name="robots" content="noindex,nofollow">
+  <title>SCL 27 Fantasy Admin</title>
+  <link rel="stylesheet" href="admin.css?v=20260912-v1">
+</head>
+<body>
+  <header class="fa-header">
+    <a class="fa-brand" href="../">
+      <img src="https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2021_08/large.SCL_logo_shading.png.eb94cae29f362f6a451128a25ebfa3ae.png" alt="SCL">
+      <span><small>SCL 27 FANTASY</small><strong>ADMIN</strong></span>
+    </a>
+    <div class="fa-header__right">
+      <a href="../">Öppna Fantasy ↗</a>
+      <a href="../../#/admin">Svensk eHockey Admin ↗</a>
+      <span id="adminIdentity">Kontrollerar admin…</span>
+    </div>
+  </header>
+
+  <main class="fa-shell">
+    <section id="authGate" class="fa-gate">
+      <span>ADMIN ACCESS</span>
+      <h1>Fantasy Admin</h1>
+      <p id="authGateText">Kontrollerar din Svensk eHockey-adminsession.</p>
+      <div class="fa-gate__actions">
+        <a class="fa-primary" href="../../#/admin">Öppna Svensk eHockey Admin</a>
+        <button id="retryAuth" class="fa-secondary" type="button">Försök igen</button>
+      </div>
+    </section>
+
+    <div id="adminApp" hidden>
+      <section class="fa-hero">
+        <div>
+          <span class="fa-kicker">SCL 27 FANTASY / CONTROL ROOM</span>
+          <h1>Fantasy Admin</h1>
+          <p>Hantera betan, priserna, Fantasy-lagen och simuleringarna utan att röra vanliga Svensk eHockey-sidan.</p>
+        </div>
+        <div class="fa-hero__status">
+          <span>COMPETITION</span>
+          <strong>SCL 27</strong>
+          <em id="heroStatus">–</em>
+        </div>
+      </section>
+
+      <nav class="fa-tabs">
+        <button class="is-active" data-tab="dashboard">Dashboard</button>
+        <button data-tab="competition">Competition</button>
+        <button data-tab="pool">Spelarpool</button>
+        <button data-tab="entries">Fantasy-lag</button>
+        <button data-tab="simulation">Simulation</button>
+      </nav>
+
+      <section class="fa-panel" data-panel="dashboard">
+        <div id="dashboardCards" class="fa-cards"></div>
+
+        <div class="fa-grid-two">
+          <article class="fa-box">
+            <div class="fa-box__head">
+              <div><span>RECENT</span><h2>Senaste Fantasy-lagen</h2></div>
+              <button class="fa-link-button" type="button" data-open-tab="entries">Visa alla</button>
+            </div>
+            <div id="recentEntries" class="fa-list"></div>
+          </article>
+
+          <article class="fa-box">
+            <div class="fa-box__head">
+              <div><span>RULESET</span><h2>Aktiva regler</h2></div>
+            </div>
+            <div id="ruleSummary" class="fa-rule-summary"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="fa-panel" data-panel="competition" hidden>
+        <div class="fa-section-head">
+          <div><span>COMPETITION CONTROL</span><h2>SCL 27 Fantasy</h2><p>Ändringar här påverkar Fantasy-motorn direkt.</p></div>
+        </div>
+
+        <form id="competitionForm" class="fa-form-grid">
+          <label>
+            <span>Status</span>
+            <select id="compStatus">
+              <option value="setup">SETUP</option>
+              <option value="open">OPEN</option>
+              <option value="locked">LOCKED</option>
+              <option value="live">LIVE</option>
+              <option value="finished">FINISHED</option>
+              <option value="archived">ARCHIVED</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Budget</span>
+            <input id="compBudget" type="number" min="1" max="500" step="0.1">
+          </label>
+
+          <label>
+            <span>Max spelare / riktigt lag</span>
+            <input id="compMaxTeam" type="number" min="1" max="6" step="1">
+          </label>
+
+          <label>
+            <span>Kaptenmultiplikator</span>
+            <input id="compCaptainMultiplier" type="number" min="1" max="3" step="0.1">
+          </label>
+
+          <label>
+            <span>Lock deadline</span>
+            <input id="compLockAt" type="datetime-local">
+          </label>
+
+          <label class="fa-checkbox">
+            <input id="compTransfers" type="checkbox">
+            <span>Transfers aktiverade</span>
+          </label>
+
+          <div class="fa-form-actions">
+            <p id="competitionStatus" class="fa-status"></p>
+            <button class="fa-primary" type="submit">Spara inställningar</button>
+          </div>
+        </form>
+
+        <article class="fa-box fa-danger-box">
+          <div class="fa-box__head">
+            <div><span>POINT ENGINE</span><h2>Räkna om Fantasy-poäng</h2></div>
+          </div>
+          <p>Räknar om samtliga skapade Fantasy-lag med den aktuella kaptenmultiplikatorn och spelarpoängen.</p>
+          <button id="recalculateEntries" class="fa-secondary" type="button">Räkna om alla lag</button>
+          <p id="recalcStatus" class="fa-status"></p>
+        </article>
+      </section>
+
+      <section class="fa-panel" data-panel="pool" hidden>
+        <div class="fa-section-head">
+          <div><span>PLAYER POOL</span><h2>SCL 25 Replay Pool</h2><p>Priserna är pre-SCL25-priser. Ändringar sparas direkt.</p></div>
+          <div class="fa-head-actions">
+            <input id="poolSearch" type="search" placeholder="Sök spelare eller lag…">
+            <select id="poolPosition">
+              <option value="all">Alla positioner</option>
+              <option>LW</option><option>C</option><option>RW</option><option>LD</option><option>RD</option><option>G</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fa-table-wrap">
+          <table class="fa-table">
+            <thead>
+              <tr><th>Spelare</th><th>Lag</th><th>Pos</th><th>Pris</th><th>Replay-P</th><th>Tillgänglig</th><th></th></tr>
+            </thead>
+            <tbody id="poolTableBody"></tbody>
+          </table>
+        </div>
+        <p id="poolStatus" class="fa-status"></p>
+      </section>
+
+      <section class="fa-panel" data-panel="entries" hidden>
+        <div class="fa-section-head">
+          <div><span>FANTASY TEAMS</span><h2>Skapade lag</h2><p>Klicka på ett lag för att se hela lineupen.</p></div>
+        </div>
+
+        <div class="fa-table-wrap">
+          <table class="fa-table">
+            <thead>
+              <tr><th>#</th><th>Fantasy-lag</th><th>Ägare</th><th>Kapten</th><th>Spelare</th><th>Poäng</th><th>Status</th></tr>
+            </thead>
+            <tbody id="entriesTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="fa-panel" data-panel="simulation" hidden>
+        <div class="fa-section-head">
+          <div><span>SIMULATION LAB</span><h2>Testa balansen</h2><p>Kör samma typ av maskintest vi använde för att hitta 90-budgeten och målvaktsbalansen.</p></div>
+          <div class="fa-sim-actions">
+            <select id="simulationRuns">
+              <option value="5000">5 000 lag</option>
+              <option value="10000">10 000 lag</option>
+              <option value="20000">20 000 lag</option>
+            </select>
+            <button id="runSimulation" class="fa-primary" type="button">Kör simulation</button>
+          </div>
+        </div>
+
+        <p id="simulationStatus" class="fa-status"></p>
+        <div id="simulationSummary" class="fa-cards fa-cards--simulation"></div>
+
+        <div class="fa-grid-three">
+          <article class="fa-box">
+            <div class="fa-box__head"><div><span>BALANCE</span><h2>Positioner</h2></div></div>
+            <div id="positionBalance" class="fa-list"></div>
+          </article>
+          <article class="fa-box">
+            <div class="fa-box__head"><div><span>VALUE</span><h2>Bästa fynd</h2></div></div>
+            <div id="valuePicks" class="fa-list"></div>
+          </article>
+          <article class="fa-box">
+            <div class="fa-box__head"><div><span>MISS</span><h2>Dyra floppar</h2></div></div>
+            <div id="expensiveFlops" class="fa-list"></div>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="entryDialog" class="fa-dialog">
+    <button id="closeEntryDialog" class="fa-dialog__close" type="button">×</button>
+    <div id="entryDialogContent"></div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
+  <script src="../../config.js?v=20260812-filter-source-styles1"></script>
+  <script src="admin.js?v=20260912-v1"></script>
+</body>
+</html>
