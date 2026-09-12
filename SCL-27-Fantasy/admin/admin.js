@@ -171,12 +171,12 @@
   function renderDashboard() {
     const comp = state.competition || {};
     const counts = state.counts || {};
-    $("heroStatus").textContent = clean(comp.status || "–").toUpperCase();
+    $("heroStatus").textContent = competitionStatusLabel(comp.status || "–");
 
     const cards = [
       ["SPELARPOOL", counts.pool_players || 0, (counts.available_players || 0) + " tillgängliga", "is-accent"],
       ["FANTASY-LAG", counts.entries || 0, (counts.locked_entries || 0) + " låsta", ""],
-      ["BUDGET", fmt(comp.budget || 0, num(comp.budget) % 1 ? 1 : 0), "Credits", "is-accent"],
+      ["BUDGET", fmt(comp.budget || 0, num(comp.budget) % 1 ? 1 : 0), "CR", "is-accent"],
       ["MAX / LAG", comp.max_players_per_real_team || "–", "riktigt lag", ""],
       ["ÖVER BUDGET", counts.entries_over_budget || 0, "lag just nu", counts.entries_over_budget ? "is-warning" : ""]
     ];
@@ -206,12 +206,12 @@
     const scoring = comp.scoring_rules || {};
     const goalie = scoring.goalies || {};
     $("ruleSummary").innerHTML = [
-      ["STATUS", clean(comp.status || "–").toUpperCase()],
+      ["STATUS", competitionStatusLabel(comp.status || "–")],
       ["BUDGET", fmt(comp.budget || 0)],
       ["KAPTEN", fmt(comp.captain_multiplier || 1, 1) + "×"],
       ["MAX / LAG", comp.max_players_per_real_team || "–"],
-      ["G WIN", "+" + fmt(goalie.win || 0, 2).replace(",00", "")],
-      ["G SAVE", "+" + fmt(goalie.save || 0, 2).replace(",00", "")]
+      ["MV VINST", "+" + fmt(goalie.win || 0, 2).replace(",00", "")],
+      ["MV RÄDD", "+" + fmt(goalie.save || 0, 2).replace(",00", "")]
     ].map(([label, value]) => `
       <div><span>${esc(label)}</span><strong>${esc(value)}</strong></div>
     `).join("");
@@ -466,9 +466,9 @@
   function renderSimulation(data) {
     const summary = data?.summary || {};
     const summaryCards = [
-      ["RUNS", summary.runs || 0, "simulerade lag"],
+      ["KÖRNINGAR", summary.runs || 0, "simulerade lag"],
       ["GILTIGA", summary.valid_teams || 0, (summary.valid_pct || 0) + "%"],
-      ["AVG SPEND", summary.avg_spend || 0, "Credits"],
+      ["SNITTÅTGÅNG", summary.avg_spend || 0, "CR"],
       ["MEDIAN", summary.points_median || 0, "Fantasy-P"],
       ["P90", summary.points_p90 || 0, "Fantasy-P"],
       ["MAX", summary.max_points || 0, "Fantasy-P"]
@@ -627,7 +627,7 @@
   async function runSimulation() {
     const button = $("runSimulation");
     button.disabled = true;
-    setStatus("simulationStatus", "Kör simulation…", "working");
+    setStatus("simulationStatus", "Kör simulering…", "working");
 
     try {
       const { data, error } = await sb.rpc("seh_fantasy_admin_simulate", {
@@ -637,7 +637,7 @@
 
       if (error) throw error;
       renderSimulation(data);
-      setStatus("simulationStatus", "Simulation klar.", "success");
+      setStatus("simulationStatus", "Simuleringen är klar.", "success");
     } catch (error) {
       setStatus("simulationStatus", "Fel: " + (error?.message || error), "error");
     } finally {
