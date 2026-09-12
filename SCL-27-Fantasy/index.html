@@ -9,7 +9,7 @@
   <title>SCL 27 Fantasy Beta</title>
 
   <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20260912-v31-roster-history">
+  <link rel="stylesheet" href="style.css?v=20260912-v32-public-rosters">
 </head>
 <body>
   <div class="beta-ribbon">
@@ -415,6 +415,11 @@
     </section>
   </main>
 
+  <dialog id="publicEntryDialog" class="fantasy-public-entry-dialog">
+    <button id="closePublicEntryDialog" class="fantasy-public-entry-dialog__close" type="button" aria-label="Stäng">×</button>
+    <div id="publicEntryContent" class="fantasy-public-entry__content"></div>
+  </dialog>
+
   <dialog id="playerPickerDialog" class="fantasy-player-picker-dialog">
     <button id="closePlayerPickerDialog" class="fantasy-player-picker-dialog__close" type="button" aria-label="Stäng">×</button>
     <p class="fantasy-kicker">SPELARMARKNAD</p>
@@ -447,6 +452,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="app.js?v=20260912-v33-roster-history"></script>
+  <script src="app.js?v=20260912-v34-public-rosters"></script>
 </body>
 </html>
