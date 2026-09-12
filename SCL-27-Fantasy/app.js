@@ -448,7 +448,7 @@
     $("linkedPlayer").textContent = clean(state.account?.player_name) || "Kopplad spelare";
 
     if (!hasPool) {
-      setStatus("saveStatus", "Spelarpoolen öppnas när SCL 27-rostrarna och priserna är klara.");
+      setStatus("saveStatus", "SCL 27-betapoolen är tillgänglig. Den ersätts med ECL 27 Winter-rostrarna när de finns.");
     } else if (!open) {
       setStatus("saveStatus", "Lagbygget är inte öppet ännu.");
     } else {
@@ -479,8 +479,8 @@
     }
     if ($("teamPointsLabel")) {
       $("teamPointsLabel").textContent = state.entry && !savedRosterIsCurrent
-        ? "SPARADE SCL25-POÄNG"
-        : "SCL25-POÄNG";
+        ? "SPARADE SCL27-POÄNG"
+        : "SCL27-POÄNG";
     }
 
     if (saveButton) {
@@ -539,10 +539,10 @@
       const invalidSlot = invalidSlots.has(slot);
       const flag = countryFlagMarkup(player.country_code);
       const savedScore = savedScoreBreakdown(slot, pick);
-      const scoreMarkup = savedScore
+      const scoreMarkup = savedScore && savedScore.games > 0
         ? `<div class="fantasy-slot__score">
             <div class="fantasy-slot__score-head">
-              <span>SCL 25</span>
+              <span>SCL 27</span>
               <strong>${formatPoints(savedScore.total)} P</strong>
             </div>
             <small>${pick.isCaptain
@@ -551,7 +551,7 @@
           </div>
           <div class="fantasy-slot__details">${savedStatMarkup(savedScore)}</div>`
         : (state.entry
-          ? '<div class="fantasy-slot__score fantasy-slot__score--pending"><span>ÄNDRAT</span><small>Spara laget för replaypoäng</small></div>'
+          ? '<div class="fantasy-slot__score fantasy-slot__score--pending"><span>SCL 27</span><small>Inväntar riktiga matcher</small></div>'
           : "");
 
       slotEl.classList.add("is-filled");
@@ -659,7 +659,7 @@
     if (!host) return;
 
     if (!state.pool.length) {
-      host.innerHTML = '<div class="fantasy-empty">SCL 25-testpoolen kunde inte laddas.</div>';
+      host.innerHTML = '<div class="fantasy-empty">SCL 27-betapoolen kunde inte laddas.</div>';
       return;
     }
 
@@ -682,7 +682,7 @@
           </div>
         </div>
         <footer>
-          <span>Pris satt före SCL 25</span>
+          <span>Pris baserat på historik t.o.m. ECL 26 Spring</span>
           <span>${escapeHtml(eligibleSlots(player).join(" / "))}</span>
         </footer>
       </article>
