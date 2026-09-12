@@ -2556,3 +2556,64 @@ a{color:inherit}
     min-height:60px;
   }
 }
+
+
+/* Real country flags + cleaner identity row */
+.fantasy-player-name-line{
+  display:flex!important;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+
+.fantasy-player-name{
+  min-width:0;
+}
+
+.fantasy-country-flag{
+  display:inline-block;
+  width:24px;
+  height:18px;
+  flex:0 0 24px;
+  object-fit:cover;
+  border-radius:2px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12);
+  vertical-align:middle;
+}
+
+.fantasy-country-flag--text,
+.fantasy-country-flag--fallback{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;
+  height:18px;
+  flex:0 0 24px;
+  border:1px solid rgba(91,154,190,.35);
+  border-radius:3px;
+  background:#081a27;
+  color:#b9d9ea;
+  font-size:.52rem;
+  font-weight:900;
+  letter-spacing:.03em;
+}
+
+@media(min-width:721px){
+  .fantasy-slot__visual{
+    gap:18px;
+  }
+
+  .fantasy-slot__identity{
+    padding-left:2px;
+  }
+
+  .fantasy-slot__identity .fantasy-player-name-line{
+    margin-bottom:6px;
+  }
+
+  .fantasy-slot__identity .fantasy-player-name{
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+  }
+}
