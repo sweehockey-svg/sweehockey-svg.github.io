@@ -9,7 +9,7 @@
   <title>SCL 27 Fantasy Beta</title>
 
   <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20260912-v30-club-identity">
+  <link rel="stylesheet" href="style.css?v=20260912-v31-roster-history">
 </head>
 <body>
   <div class="beta-ribbon">
@@ -235,6 +235,17 @@
               <article class="fantasy-slot" data-slot="RD"></article>
               <article class="fantasy-slot" data-slot="G"></article>
             </div>
+
+            <section id="formerPlayersSection" class="fantasy-former-players" hidden>
+              <div class="fantasy-former-players__head">
+                <div>
+                  <span>LAGHISTORIK</span>
+                  <h4>Tidigare spelare</h4>
+                </div>
+                <small>Poängen de tjänade in medan de fanns i laget ligger kvar i lagets total.</small>
+              </div>
+              <div id="formerPlayersList" class="fantasy-former-players__list"></div>
+            </section>
           </section>
 
           <section class="fantasy-market">
@@ -436,6 +447,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="app.js?v=20260912-v32-hybrid-position-info"></script>
+  <script src="app.js?v=20260912-v33-roster-history"></script>
 </body>
 </html>
