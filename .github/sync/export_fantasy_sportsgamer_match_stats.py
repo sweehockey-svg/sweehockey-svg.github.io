@@ -123,9 +123,6 @@ def candidate_score(table: str, columns: list[str], role: str) -> int:
     names = {c.lower() for c in columns}
     if not {"matchid", "playerid"}.issubset(names):
         return -1
-    if table.lower() == "nhlgamer_participants":
-        return -1
-
     score = 0
     if "teamid" in names:
         score += 3
@@ -148,6 +145,8 @@ def candidate_score(table: str, columns: list[str], role: str) -> int:
             return -1
 
     lname = table.lower()
+    if lname == "nhlgamer_participants":
+        score += 20
     if "match" in lname or "game" in lname:
         score += 5
     if role == "goalie" and "goalie" in lname:
@@ -324,6 +323,20 @@ def main() -> int:
         )
         match_table, raw_matches = match_table_source(connection, inventory, match_ids)
 
+        goal_rows: list[dict[str, Any]] = []
+        if "nhlgamer_goals" in inventory:
+            try:
+                goal_rows = fetch_for_matches(connection, "nhlgamer_goals", match_ids)
+            except Exception as exc:
+                print(f"Goal-event source unavailable: {exc}")
+
+        winning_goals: dict[tuple[int, int], int] = defaultdict(int)
+        for goal in goal_rows:
+            if integer(first(goal, "winningGoal")) > 0:
+                winning_goals[
+                    (integer(first(goal, "matchID")), integer(first(goal, "goalPlayerID")))
+                ] += 1
+
         print("=== MATCH-LEVEL SOURCE DISCOVERY ===")
         print(f"League: {LEAGUE_ID}")
         print(f"Participants: {len(participants)} rows / {len(match_ids)} matches")
@@ -332,36 +345,6 @@ def main() -> int:
         print(f"Match source: {match_table or 'participant fallback'}")
         print("Skater candidates:", json.dumps(skater_diag[:15], ensure_ascii=False))
         print("Goalie candidates:", json.dumps(goalie_diag[:15], ensure_ascii=False))
-
-        if not skater_table or not skater_rows:
-            print("=== TARGETED MATCH SCHEMA DIAGNOSTICS ===")
-            interesting_words = ("match", "participant", "stat", "game", "club", "ea")
-            for table in sorted(inventory):
-                if any(word in table.lower() for word in interesting_words):
-                    columns = inventory[table]
-                    if any(
-                        key in {name.lower() for name in columns}
-                        for key in ("matchid", "gametype", "positionid", "eashlmatchid", "eamatchid", "clubid")
-                    ):
-                        print(f"SCHEMA {table}: {','.join(columns)}")
-
-            if match_ids:
-                sample_id = match_ids[0]
-                if "nhlgamer_matches" in inventory:
-                    sample_match = select(
-                        connection,
-                        "select * from nhlgamer_matches where matchID=%s limit 1",
-                        (sample_id,),
-                    )
-                    if sample_match:
-                        print("SAMPLE nhlgamer_matches:", json.dumps(sample_match[0], ensure_ascii=False, default=str))
-                sample_participant = select(
-                    connection,
-                    "select * from nhlgamer_participants where matchID=%s limit 1",
-                    (sample_id,),
-                )
-                if sample_participant:
-                    print("SAMPLE nhlgamer_participants:", json.dumps(sample_participant[0], ensure_ascii=False, default=str))
 
         if not skater_table or not skater_rows:
             raise RuntimeError(
@@ -383,6 +366,18 @@ def main() -> int:
 
         player_rows: list[dict[str, Any]] = []
         used_pairs: set[tuple[int, int, int]] = set()
+
+        def team_won_match(match_id: int, team_id: int) -> int:
+            raw = raw_matches.get(match_id, {})
+            home_id = integer(first(raw, "homeTeamID", "team1ID", "teamHomeID"))
+            away_id = integer(first(raw, "awayTeamID", "team2ID", "teamAwayID"))
+            home_goals = integer(first(raw, "goalsHome", "homeScore", "team1Score", "score1"))
+            away_goals = integer(first(raw, "goalsAway", "awayScore", "team2Score", "score2"))
+            if team_id == home_id:
+                return 1 if home_goals > away_goals else 0
+            if team_id == away_id:
+                return 1 if away_goals > home_goals else 0
+            return 0
 
         for participant in participants:
             match_id = integer(participant["matchID"])
@@ -429,13 +424,13 @@ def main() -> int:
                 "skater_games": 0 if role == "G" else 1,
                 "goals": integer(first(skater, "goals")) if role != "G" else 0,
                 "assists": integer(first(skater, "assists")) if role != "G" else 0,
-                "game_winning_goals": integer(first(skater, "gameWinningGoals", "gameWinningGoal")) if role != "G" else 0,
+                "game_winning_goals": winning_goals.get((match_id, player_id), 0) if role != "G" else 0,
                 "blocked_shots": integer(first(skater, "blockedShots")) if role != "G" else 0,
                 "goalie_games": 1 if role == "G" else 0,
-                "goalie_wins": integer(first(goalie, "wins", "win")) if role == "G" else 0,
+                "goalie_wins": team_won_match(match_id, team_id) if role == "G" else 0,
                 "goalie_saves": integer(first(goalie, "saves")) if role == "G" else 0,
                 "goalie_goals_allowed": integer(first(goalie, "goalsAllowed", "goalsAgainst")) if role == "G" else 0,
-                "goalie_shutouts": integer(first(goalie, "shutouts", "shutout")) if role == "G" else 0,
+                "goalie_shutouts": (1 if integer(first(goalie, "goalsAllowed", "goalsAgainst")) == 0 else 0) if role == "G" else 0,
                 "goalie_goals": integer(first(goalie, "goals")) if role == "G" else 0,
                 "goalie_assists": integer(first(goalie, "assists")) if role == "G" else 0,
                 "fantasy_points": 0.0,
@@ -480,8 +475,8 @@ def main() -> int:
                 "started_at": started or "",
                 "team1_id": integer(first(raw, "team1ID", "homeTeamID", "teamHomeID")) or (teams[0] if teams else ""),
                 "team2_id": integer(first(raw, "team2ID", "awayTeamID", "teamAwayID")) or (teams[1] if len(teams) > 1 else ""),
-                "team1_score": first(raw, "team1Score", "homeScore", "score1") or "",
-                "team2_score": first(raw, "team2Score", "awayScore", "score2") or "",
+                "team1_score": first(raw, "team1Score", "homeScore", "score1", "goalsHome") if raw else "",
+                "team2_score": first(raw, "team2Score", "awayScore", "score2", "goalsAway") if raw else "",
                 "raw_match": json_safe({
                     "source_table": match_table,
                     "row": raw or None,
