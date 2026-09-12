@@ -800,9 +800,24 @@
 
     state.pendingPlacementPlayerId = Number(player.id);
     $("positionDialogPlayer").textContent = player.display_gamertag;
-    $("positionDialogText").textContent =
-      player.display_gamertag + " kan användas på " + eligibleSlots(player).join(" / ") +
-      ". Välj vilken ledig plats spelaren ska ta.";
+
+    const positionDialogText = $("positionDialogText");
+    const playerSlots = eligibleSlots(player);
+    const goalieHybrid = playerSlots.includes("G") && playerSlots.some((slot) => slot !== "G");
+
+    if (goalieHybrid) {
+      const outfieldSlots = playerSlots.filter((slot) => slot !== "G");
+      positionDialogText.innerHTML =
+        "<strong>" + escapeHtml(player.display_gamertag) + " kan användas på " +
+        escapeHtml(playerSlots.join(" / ")) + ".</strong><br>" +
+        "Välj vilken ledig plats spelaren ska ta.<br>" +
+        "<strong>G:</strong> endast målvaktsmatcher räknas<br>" +
+        "<strong>" + escapeHtml(outfieldSlots.join(" / ")) + ":</strong> endast utespelarmatcher räknas";
+    } else {
+      positionDialogText.textContent =
+        player.display_gamertag + " kan användas på " + playerSlots.join(" / ") +
+        ". Välj vilken ledig plats spelaren ska ta.";
+    }
 
     choices.innerHTML = slots.map((slot) =>
       '<button type="button" data-place-slot="' + slot + '">' + slot + '</button>'
