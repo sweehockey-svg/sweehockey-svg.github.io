@@ -265,7 +265,7 @@
     }
 
     $("poolTableBody").innerHTML = rows.map((player) => {
-      const score = state.scores.get(Number(player.id)) || 0;
+      const rating = num(player.ranking_points);
       return `
         <tr data-pool-row="${player.id}">
           <td class="fa-player-main">
@@ -279,7 +279,7 @@
             </select>
           </td>
           <td><input data-player-price type="number" min="1" max="100" step="0.1" value="${num(player.price)}"></td>
-          <td><strong>${fmt(score, num(score) % 1 ? 1 : 0)} P</strong></td>
+          <td><strong>${fmt(rating, 2)}</strong></td>
           <td>
             <label class="fa-toggle">
               <input data-player-available type="checkbox" ${player.is_available ? "checked" : ""}>
