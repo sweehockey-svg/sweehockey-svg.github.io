@@ -9,7 +9,7 @@
   <title>SCL 27 Fantasy Beta</title>
 
   <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20260912-v20-wide-card">
+  <link rel="stylesheet" href="style.css?v=20260912-v21-swedish">
 </head>
 <body>
   <div class="beta-ribbon">
@@ -28,16 +28,16 @@
     </a>
 
     <nav class="fantasy-site-header__center" aria-label="Fantasy">
-      <span>BUILD</span>
+      <span>BYGG</span>
       <i></i>
-      <span>COMPETE</span>
+      <span>TÄVLA</span>
       <i></i>
-      <span>CLIMB</span>
+      <span>KLÄTTRA</span>
     </nav>
 
     <div class="fantasy-site-header__actions">
       <a class="powered-link" href="../">
-        <small>POWERED BY</small>
+        <small>DRIVS AV</small>
         <strong>SVENSK eHOCKEY</strong>
       </a>
       <button id="accountButton" class="fantasy-account-button" type="button">Logga in med Discord</button>
@@ -53,8 +53,8 @@
       </div>
 
       <div class="fantasy-hero__copy">
-        <div class="fantasy-live-label"><span></span>SCL FANTASY LAB</div>
-        <h1>BUILD YOUR<br><em>SCL SIX.</em></h1>
+        <div class="fantasy-live-label"><span></span>SCL FANTASYLABB</div>
+        <h1>BYGG DIN<br><em>SCL-SEXA.</em></h1>
         <p class="fantasy-hero__lead">
           Välj sex spelare, håll dig under budget och utse din kapten.
           I betan använder vi den riktiga SCL 25-rosten och de faktiska resultaten
@@ -86,7 +86,7 @@
           </article>
           <article>
             <span>STATUS</span>
-            <strong id="heroStatus" class="is-live">OPEN</strong>
+            <strong id="heroStatus" class="is-live">ÖPPEN</strong>
           </article>
           <article>
             <span>BUDGET</span>
@@ -106,19 +106,19 @@
 
     <section class="fantasy-commandbar">
       <div>
-        <span>MODE</span>
-        <strong>SCL 27 BETA / SCL 25 REPLAY</strong>
+        <span>LÄGE</span>
+        <strong>SCL 27 BETA / SCL 25-ÅTERSPELNING</strong>
       </div>
       <div>
-        <span>PLAYER POOL</span>
+        <span>SPELARPOOL</span>
         <strong>108 SPELARE</strong>
       </div>
       <div>
-        <span>PRICE RANGE</span>
+        <span>PRISINTERVALL</span>
         <strong>8–30 CR</strong>
       </div>
       <div>
-        <span>ACCESS</span>
+        <span>ÅTKOMST</span>
         <strong>DISCORD + KOPPLAD PROFIL</strong>
       </div>
     </section>
@@ -134,7 +134,7 @@
       <section id="accountGate" class="fantasy-gate">
         <div class="fantasy-gate__icon">↗</div>
         <div class="fantasy-gate__copy">
-          <p class="fantasy-kicker">ACCOUNT REQUIRED</p>
+          <p class="fantasy-kicker">KONTO KRÄVS</p>
           <h2 id="gateTitle">Kontrollerar ditt konto…</h2>
           <p id="gateText">
             Du måste vara inloggad med Discord och ha en godkänd spelarprofil kopplad
@@ -159,18 +159,18 @@
 
         <div class="fantasy-account-state">
           <div>
-            <span>COACH / GM</span>
+            <span>LAGANSVARIG</span>
             <strong id="linkedPlayer">–</strong>
           </div>
           <div class="fantasy-account-state__right">
-            <span>ACCOUNT</span>
+            <span>KONTO</span>
             <button id="logoutButton" class="fantasy-link-button" type="button">Logga ut</button>
           </div>
         </div>
 
         <div class="fantasy-builder-top">
           <div class="fantasy-team-name fantasy-team-name--locked">
-            <span>FANTASY TEAM</span>
+            <span>FANTASY-LAG</span>
             <div class="fantasy-team-name__locked">
               <strong id="teamNameDisplay">–</strong>
               <small>Namnet följer din kopplade spelarprofil</small>
@@ -178,40 +178,40 @@
           </div>
 
           <div class="fantasy-mini-stat">
-            <span>ROSTER</span>
+            <span>TRUPP</span>
             <strong id="selectedCount">0 / 6</strong>
           </div>
           <div class="fantasy-mini-stat fantasy-mini-stat--points">
-            <span id="teamPointsLabel">SCL25 POINTS</span>
+            <span id="teamPointsLabel">SCL25-POÄNG</span>
             <strong id="teamPoints">–</strong>
           </div>
           <div class="fantasy-mini-stat">
-            <span>SPENT</span>
+            <span>ANVÄNT</span>
             <strong id="budgetUsed">0</strong>
           </div>
           <div class="fantasy-mini-stat fantasy-mini-stat--accent">
-            <span>REMAINING</span>
+            <span>KVAR</span>
             <strong id="budgetLeft">90</strong>
           </div>
         </div>
 
         <section id="transferPanel" class="fantasy-transfer-panel">
           <div class="fantasy-transfer-panel__copy">
-            <span>TRANSFERS</span>
-            <strong id="transferMode">PRESEASON · OBEGRÄNSADE BYTEN</strong>
+            <span>BYTEN</span>
+            <strong id="transferMode">INFÖR SÄSONGEN · OBEGRÄNSADE BYTEN</strong>
             <small id="transferDetail">Bygg om fritt fram till första riktiga runddeadlinen.</small>
           </div>
           <div class="fantasy-transfer-panel__stats">
             <div>
-              <span>FREE</span>
+              <span>GRATIS</span>
               <strong id="transferFree">∞</strong>
             </div>
             <div>
-              <span>NEXT</span>
+              <span>NÄSTA</span>
               <strong id="transferNext">0 P</strong>
             </div>
             <div>
-              <span>DEADLINE</span>
+              <span>SISTA TID</span>
               <strong id="transferDeadline">Ej satt</strong>
             </div>
           </div>
@@ -221,7 +221,7 @@
           <section class="fantasy-rink">
             <div class="fantasy-section-title">
               <div>
-                <span>LINEUP</span>
+                <span>STARTSEXA</span>
                 <h3>Din startsexa</h3>
               </div>
               <small>LW · C · RW · LD · RD · G</small>
@@ -240,15 +240,15 @@
           <section class="fantasy-market">
             <div class="fantasy-section-title">
               <div>
-                <span>PLAYER MARKET</span>
-                <h3>Draft board</h3>
+                <span>SPELARMARKNAD</span>
+                <h3>Spelarlista</h3>
               </div>
-              <small>SCL 25 TESTPOOL</small>
+              <small>SCL 25 TESTSPELARE</small>
             </div>
 
             <div class="fantasy-market__filters">
               <label class="fantasy-filter">
-                <span>SEARCH PLAYER / TEAM</span>
+                <span>SÖK SPELARE / LAG</span>
                 <input id="marketSearch" type="search" placeholder="Gamertag eller lag…">
               </label>
 
@@ -272,10 +272,10 @@
 
         <div class="fantasy-builder-actions">
           <div>
-            <span class="fantasy-builder-actions__label">TEAM STATUS</span>
+            <span class="fantasy-builder-actions__label">LAGSTATUS</span>
             <p id="saveStatus" class="fantasy-status" role="status"></p>
           </div>
-          <button id="saveTeam" class="fantasy-primary fantasy-primary--save" type="button">Lock in test team</button>
+          <button id="saveTeam" class="fantasy-primary fantasy-primary--save" type="button">Spara testlag</button>
         </div>
       </section>
     </section>
@@ -283,7 +283,7 @@
     <section class="fantasy-panel" data-panel="players" hidden>
       <div class="fantasy-section-head">
         <div>
-          <p class="fantasy-kicker">SCL 25 / BETA POOL</p>
+          <p class="fantasy-kicker">SCL 25 / BETASPELARE</p>
           <h2>Fantasy-spelare</h2>
           <p>Priserna är beta-priser beräknade från data före SCL 25. SCL 25-resultatet används först efter att testlaget har sparats.</p>
         </div>
@@ -291,7 +291,7 @@
 
       <div class="fantasy-players-filters">
         <label class="fantasy-filter">
-          <span>SEARCH PLAYER / TEAM</span>
+          <span>SÖK SPELARE / LAG</span>
           <input id="playersSearch" type="search" placeholder="Gamertag eller lag…">
         </label>
 
@@ -315,7 +315,7 @@
     <section class="fantasy-panel" data-panel="leaderboard" hidden>
       <div class="fantasy-section-head">
         <div>
-          <p class="fantasy-kicker">BETA LEADERBOARD</p>
+          <p class="fantasy-kicker">BETA-TOPPLISTA</p>
           <h2>SCL 27 Fantasy</h2>
           <p>Testlagen får direkt poäng från spelarnas faktiska SCL 25-resultat, inklusive kaptenens 1,5×-bonus.</p>
         </div>
@@ -327,9 +327,9 @@
     <section class="fantasy-panel" data-panel="rules" hidden id="rulesPanel">
       <div class="fantasy-section-head">
         <div>
-          <p class="fantasy-kicker">RULEBOOK / BETA V1</p>
+          <p class="fantasy-kicker">REGLER / BETA V1</p>
           <h2>Så fungerar SCL Fantasy</h2>
-          <p>Vi använder SCL 25 som replay-data för att hitta rätt balans innan SCL 27 börjar.</p>
+          <p>Vi använder SCL 25 som återspelningsdata för att hitta rätt balans innan SCL 27 börjar.</p>
         </div>
       </div>
 
@@ -342,8 +342,8 @@
 
         <article class="fantasy-rule-card">
           <span>02</span>
-          <h3>90 Credits</h3>
-          <p>Spelarna kostar 8–30 Credits i betan. Hela startsexan måste rymmas inom 90 Credits.</p>
+          <h3>90 CR</h3>
+          <p>Spelarna kostar 8–30 CR i betan. Hela startsexan måste rymmas inom 90 CR.</p>
         </article>
 
         <article class="fantasy-rule-card">
@@ -372,7 +372,7 @@
               <tr><td>Spelad match</td><td>+1</td><td>+1</td><td>+1</td></tr>
               <tr><td>Mål</td><td>+5</td><td>+6</td><td>+10</td></tr>
               <tr><td>Assist</td><td>+3</td><td>+4</td><td>+5</td></tr>
-              <tr><td>GWG</td><td>+2</td><td>+2</td><td>–</td></tr>
+              <tr><td>Avgörande mål</td><td>+2</td><td>+2</td><td>–</td></tr>
               <tr><td>Block</td><td>–</td><td>+0,25</td><td>–</td></tr>
               <tr><td>Vinst</td><td>–</td><td>–</td><td>+6</td></tr>
               <tr><td>Räddning</td><td>–</td><td>–</td><td>+0,35</td></tr>
@@ -406,7 +406,7 @@
 
   <dialog id="playerPickerDialog" class="fantasy-player-picker-dialog">
     <button id="closePlayerPickerDialog" class="fantasy-player-picker-dialog__close" type="button" aria-label="Stäng">×</button>
-    <p class="fantasy-kicker">PLAYER MARKET</p>
+    <p class="fantasy-kicker">SPELARMARKNAD</p>
     <h2 id="playerPickerTitle">Välj spelare</h2>
     <p id="playerPickerCount">Valbara spelare för positionen.</p>
     <label class="fantasy-player-picker-dialog__search">
@@ -431,11 +431,11 @@
       <img src="https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2021_08/large.SCL_logo_shading.png.eb94cae29f362f6a451128a25ebfa3ae.png" alt="SCL">
       <span>SCL 27 Fantasy Beta</span>
     </div>
-    <a href="../">Powered by Svensk eHockey →</a>
+    <a href="../">Drivs av Svensk eHockey →</a>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="app.js?v=20260912-v18-swap-action"></script>
+  <script src="app.js?v=20260912-v21-swedish"></script>
 </body>
 </html>
