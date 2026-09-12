@@ -1754,3 +1754,14 @@ a{color:inherit}
     bottom:14px
   }
 }
+
+
+/* Saved Fantasy team button state */
+.fantasy-primary--save.is-saved:disabled{
+  opacity:1;
+  cursor:default;
+  border-color:#246b65;
+  background:linear-gradient(180deg,#0b4e47,#083a36);
+  color:#c9fff2;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08)
+}
