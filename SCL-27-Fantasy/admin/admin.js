@@ -304,6 +304,7 @@
     const counts = sync.counts || {};
     const runs = Array.isArray(sync.runs) ? sync.runs : [];
 
+    if ($("syncLeagueId")) $("syncLeagueId").value = settings.source_league_id || "";
     if ($("syncAutoEnabled")) $("syncAutoEnabled").checked = Boolean(settings.auto_sync_enabled);
     if ($("syncTimes")) $("syncTimes").value = Array.isArray(settings.schedule_times)
       ? settings.schedule_times.join(", ")
@@ -518,6 +519,17 @@
     setStatus("syncSettingsStatus", "Sparar schema…", "working");
 
     try {
+      const leagueId = Number($("syncLeagueId")?.value);
+      if (!Number.isInteger(leagueId) || leagueId <= 0) {
+        throw new Error("Ange ett giltigt SportsGamer League ID.");
+      }
+
+      const sourceResult = await sb.rpc("seh_fantasy_admin_update_sync_source", {
+        p_code: "SCL27",
+        p_source_league_id: leagueId
+      });
+      if (sourceResult.error) throw sourceResult.error;
+
       const { error } = await sb.rpc("seh_fantasy_admin_update_sync_settings", {
         p_code: "SCL27",
         p_enabled: Boolean($("syncAutoEnabled")?.checked),
