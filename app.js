@@ -204,12 +204,22 @@ function SEH_tableSeasonLabel(value) {
   return raw;
 }
 
-function SEH_initHistory() {
+let SEH_teamRankingPromise = null;
+function SEH_getTeamRanking() {
+  if (!SEH_teamRankingPromise) {
+    SEH_teamRankingPromise = SEH_initHistory({rankingOnly:true}).catch(error => {
+      SEH_teamRankingPromise = null;
+      throw error;
+    });
+  }
+  return SEH_teamRankingPromise;
+}
+function SEH_initHistory(options = {}) {
   /* ======================================================
      ROUTE CONTROLLER: history
      Ursprungligen separat fil, nu inbyggd i app.js.
      ====================================================== */
-  (() => {
+  return (() => {
     "use strict";
   
     const APP_BUILD = "2026-09-12-v13021-ithl-lgel-competitions";
@@ -2047,6 +2057,21 @@ function SEH_initHistory() {
       }
     }
   
+    if (options.rankingOnly) {
+      return (async () => {
+        const [teams, tournaments, names] = await Promise.all([fetchTeams(), fetchTournaments(), fetchLeagueDisplayNames()]);
+        state.teams = teams;
+        state.tournaments = resolveTournamentTeamLinks(tournaments.map(tournament => ({
+          ...tournament, catalogDisplayName: names.get(Number(tournament.leagueId)) || tournament.catalogDisplayName || ""
+        })), teams).filter(tournament => !["SPORTSGAMER", "ÖVRIGT"].includes(tournament.competitionCode));
+        attachData();
+        calculateTeamRp();
+        return state.teams.map(team => ({
+          team_id: team.teamId, total: team.stats.teamRpTotal, average: team.stats.teamRpAverage,
+          rank: team.stats.teamRpRank, games: team.stats.teamRpGames, scope: team.stats.teamRpScopeTeamCount
+        }));
+      })();
+    }
     elements.searchInput.addEventListener("input", applyFilters);
     elements.nameModeSelect.addEventListener("change", applyFilters);
     elements.tournamentFilter.addEventListener("change", applyFilters);
@@ -15796,6 +15821,25 @@ function SEH_initShop() {
     host.replaceChildren();
     if(!profileApprovalRequests.length){const p=document.createElement('p');p.className='fa-admin-empty player-admin-empty-state';p.textContent='Inga profilärenden väntar.';host.append(p);return;}
     for(const row of profileApprovalRequests){
+      if(['find_player','new_player'].includes(row.request_type)){
+        const p=row.payload||{};
+        const item=document.createElement('article');item.className='fa-admin-request-row profile-admin-request-row';item.dataset.adminRequestKey=`profile:${row.id}`;
+        item.innerHTML=`<div><span>${row.request_type==='find_player'?'HJÄLP ATT HITTA SPELARKORT':'ANSÖKAN OM SPELARKORT'}</span><strong>${escapeHtml(p.gamertag||'')}</strong>${[['Discord',p.discord_username],['Discord-ID',p.discord_user_id],['Plattform',p.platform],['Profillänk',p.profile_url],['Senaste lag',p.last_team],['Kommentar',p.comment]].map(([label,value])=>`<p><b>${label}:</b> ${escapeHtml(value||'–')}</p>`).join('')}<p>Skapa eventuell saknad spelare i ordinarie spelarhantering först. Välj sedan rätt befintligt kort för godkänd koppling.</p><label>Sök spelarkort <input data-application-search placeholder="Gamertag" maxlength="100"></label><select data-application-player aria-label="Spelarkort att koppla"><option value="">Välj spelarkort</option></select><label>Kommentar till spelaren <input data-application-note maxlength="1000"></label><p data-application-status role="status"></p></div><div class="fa-admin-request-actions"><button type="button" data-profile-request-approve="${row.id}">Godkänn och koppla</button><button type="button" class="writer-secondary" data-profile-request-reject="${row.id}">Avslå</button></div>`;
+        let timer=0,sequence=0;
+        item.querySelector('[data-application-search]').oninput=event=>{
+          clearTimeout(timer);const query=event.target.value.trim(),version=++sequence;
+          const select=item.querySelector('[data-application-player]');select.replaceChildren(new Option('Välj spelarkort',''));
+          if(query.length<2)return;
+          timer=setTimeout(async()=>{
+            const result=await sb.from('app_player_directory_cache').select('player_key,display_gamertag').ilike('display_gamertag',`%${query.replace(/[%_\\]/g,'')}%`).limit(30);
+            if(version!==sequence||!item.isConnected)return;
+            if(result.error){item.querySelector('[data-application-status]').textContent=result.error.message;return;}
+            for(const player of result.data||[])select.add(new Option(`${player.display_gamertag} (${player.player_key})`,player.player_key));
+            item.querySelector('[data-application-status]').textContent=result.data?.length?'Välj rätt kort i listan.':'Inga spelarkort hittades.';
+          },250);
+        };
+        host.append(item);continue;
+      }
       const label=row.request_type==='report'?'FELRAPPORT':'PROFILÄNDRING',detail=profileRequestDetail(row)||'Ingen extra information',playerName=faApprovalPlayerName(row.player_key);
       const item=document.createElement('article');item.className=`profile-admin-request-card${row.request_type==='report'?' is-report':''}`;item.dataset.adminRequestKey=`profile:${row.id}`;
       if(row.request_type==='report'){
@@ -16007,6 +16051,21 @@ function SEH_initShop() {
     await loadProfileApprovals();updatePlayerAdminCounters();
   }
   async function reviewProfileRequest(id,decision){
+    const application=profileApprovalRequests.find(row=>Number(row.id)===Number(id)&&['find_player','new_player'].includes(row.request_type));
+    if(application){
+      const item=document.querySelector(`[data-admin-request-key="profile:${Number(id)}"]`);
+      const key=item?.querySelector('[data-application-player]')?.value||null;
+      if(decision==='approved'&&!key){faSetStatus('Välj ett befintligt spelarkort först.','error');return;}
+      if(decision==='approved'&&!confirm(`Godkänn Discord-kopplingen till spelarkort ${key}?`))return;
+      const buttons=item?.querySelectorAll('button')||[];buttons.forEach(button=>button.disabled=true);
+      try{
+        const result=await sb.rpc('seh_review_player_application',{p_id:Number(id),p_decision:decision,p_player_key:key,p_note:item?.querySelector('[data-application-note]')?.value||null});
+        if(result.error)throw result.error;
+        faSetStatus(decision==='approved'?'Ansökan godkänd och spelarkortet kopplat.':'Ansökan avslagen.','success');
+        await loadFreeAgentApprovals();await flushDiscordNotifications();
+      }catch(error){faSetStatus('Fel: '+error.message,'error');buttons.forEach(button=>button.disabled=false);}
+      return;
+    }
     faSetStatus(decision==='approved'?'Behandlar profilärendet…':'Avslår profilärendet…','working');
     const{error}=await sb.rpc('seh_review_player_profile_request',{p_request_id:Number(id),p_decision:decision,p_admin_note:null});
     if(error){faSetStatus('Fel: '+error.message,'error');return;}
