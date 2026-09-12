@@ -571,7 +571,7 @@
                 ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--slot")}
                 <span>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</span>
               </small>
-              <small>${escapeHtml(eligibleSlots(player).join(" / "))} · ${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</small>
+              <small class="fantasy-slot__meta">${escapeHtml(eligibleSlots(player).join(" / "))} · ${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</small>
               ${invalidSlot ? '<small class="fantasy-slot__invalid-note">Ej giltig som ' + escapeHtml(slot) + ' · välj Byt</small>' : ""}
             </div>
           </div>
