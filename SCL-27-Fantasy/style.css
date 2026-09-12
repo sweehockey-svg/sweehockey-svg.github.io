@@ -2751,3 +2751,41 @@ a{color:inherit}
   font-weight:900;
   white-space:normal!important;
 }
+
+
+/* Portrait framing v26: top pinned + closer crop */
+@media(min-width:721px){
+  .fantasy-slot__portrait{
+    object-fit:cover!important;
+    object-position:center top!important;
+    transform:scale(1.08);
+    transform-origin:center top;
+  }
+
+  .fantasy-slot__portrait-wrap{
+    overflow:hidden;
+    border-radius:12px;
+  }
+
+  .fantasy-player-card__portrait,
+  .fantasy-player-row__portrait,
+  .fantasy-picker-player__portrait{
+    object-fit:cover!important;
+    object-position:center top!important;
+  }
+
+  .fantasy-player-card__portrait{
+    transform:scale(1.06);
+    transform-origin:center top;
+  }
+}
+
+@media(max-width:720px){
+  .fantasy-slot__portrait,
+  .fantasy-player-card__portrait,
+  .fantasy-player-row__portrait,
+  .fantasy-picker-player__portrait{
+    object-fit:cover!important;
+    object-position:center top!important;
+  }
+}
