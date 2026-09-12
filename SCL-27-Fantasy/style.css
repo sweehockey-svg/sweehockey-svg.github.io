@@ -3188,3 +3188,174 @@ a{color:inherit}
     display:none!important;
   }
 }
+
+
+/* Club identity v30 */
+.fantasy-slot__player--club{
+  position:relative;
+  min-height:100%;
+  isolation:isolate;
+}
+
+.fantasy-slot__club-stripe{
+  position:absolute;
+  z-index:-1;
+  top:-16px;
+  bottom:-14px;
+  left:-16px;
+  width:5px;
+  background:
+    linear-gradient(180deg,
+      rgba(100,215,255,.96) 0%,
+      rgba(35,151,202,.62) 45%,
+      rgba(35,151,202,.10) 82%,
+      transparent 100%);
+  box-shadow:0 0 18px rgba(57,183,232,.18);
+  pointer-events:none;
+}
+
+.fantasy-slot__club-watermark{
+  position:absolute;
+  z-index:-1;
+  right:-22px;
+  bottom:28px;
+  width:132px;
+  height:132px;
+  object-fit:contain;
+  opacity:.075;
+  filter:saturate(.85) brightness(1.18);
+  transform:rotate(-7deg);
+  pointer-events:none;
+  user-select:none;
+}
+
+.fantasy-slot__portrait-wrap--club{
+  background:
+    linear-gradient(135deg,
+      rgba(95,205,250,.12) 0 22%,
+      transparent 22% 54%,
+      rgba(95,205,250,.06) 54% 100%),
+    linear-gradient(180deg,#12364f,#071924);
+  box-shadow:
+    0 13px 28px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,.055);
+}
+
+.fantasy-slot__club-row{
+  display:grid!important;
+  grid-template-columns:30px minmax(0,1fr);
+  align-items:center;
+  width:100%;
+  gap:8px!important;
+  margin:1px 0 8px!important;
+}
+
+.fantasy-slot__club-logo{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:30px;
+  height:30px;
+  flex:0 0 30px;
+  border:1px solid rgba(63,145,188,.40);
+  border-radius:8px;
+  background:
+    linear-gradient(180deg,rgba(9,34,49,.94),rgba(5,20,30,.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 6px 14px rgba(0,0,0,.15);
+}
+
+.fantasy-slot__club-logo .fantasy-team-logo--slot{
+  width:21px;
+  height:21px;
+}
+
+.fantasy-slot__club-copy{
+  display:flex!important;
+  flex-direction:column;
+  align-items:flex-start;
+  min-width:0;
+  gap:2px;
+}
+
+.fantasy-slot__club-copy b{
+  display:block;
+  width:100%;
+  min-width:0;
+  color:#c2d9e6;
+  font-size:.68rem;
+  font-weight:900;
+  line-height:1.16;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+
+.fantasy-slot__club-copy em{
+  color:#52788f;
+  font-size:.45rem;
+  font-style:normal;
+  font-weight:1000;
+  letter-spacing:.14em;
+}
+
+.fantasy-slot.is-captain-card .fantasy-slot__club-stripe{
+  width:6px;
+  background:
+    linear-gradient(180deg,
+      #9be8ff 0%,
+      #3fcaff 38%,
+      rgba(63,202,255,.18) 84%,
+      transparent 100%);
+  box-shadow:0 0 24px rgba(69,201,255,.26);
+}
+
+.fantasy-slot.is-captain-card .fantasy-slot__club-watermark{
+  opacity:.10;
+}
+
+@media(min-width:1251px){
+  .fantasy-slot__club-watermark{
+    width:148px;
+    height:148px;
+    right:-28px;
+    bottom:24px;
+  }
+
+  .fantasy-slot__club-row{
+    grid-template-columns:32px minmax(0,1fr);
+  }
+
+  .fantasy-slot__club-logo{
+    width:32px;
+    height:32px;
+  }
+
+  .fantasy-slot__club-logo .fantasy-team-logo--slot{
+    width:23px;
+    height:23px;
+  }
+}
+
+@media(max-width:720px){
+  .fantasy-slot__club-stripe{
+    left:-10px;
+  }
+
+  .fantasy-slot__club-watermark{
+    width:100px;
+    height:100px;
+    right:-18px;
+    bottom:22px;
+  }
+
+  .fantasy-slot__club-row{
+    justify-content:center;
+    grid-template-columns:28px minmax(0,auto);
+  }
+
+  .fantasy-slot__club-copy{
+    align-items:center;
+  }
+}
