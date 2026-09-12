@@ -734,7 +734,7 @@
       return;
     }
 
-    const accountResult = await sb.rpc("seh_get_my_player_account");
+    const accountResult = await sb.rpc("seh_fantasy_get_my_account");
     if (accountResult.error) throw accountResult.error;
 
     state.account = Array.isArray(accountResult.data)
