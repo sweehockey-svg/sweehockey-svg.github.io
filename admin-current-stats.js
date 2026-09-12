@@ -2,6 +2,9 @@
   "use strict";
 
   const STORAGE_KEY = "seh_current_player_stats_sync_request_id";
+  const ADMIN_BADGE_STORAGE_KEY = "seh_admin_pending_badge_v1";
+  const ADMIN_BADGE_CHANNEL = "seh_admin_pending_badge";
+  let adminBadgeChannel = null;
   let client = null;
   let pollTimer = null;
   let adminBadgeTimer = null;
@@ -107,13 +110,81 @@
     });
   }
 
+  function normalizeAdminBadgePayload(count, breakdown) {
+    const details = breakdown || {};
+    return {
+      total: Math.max(0, Number(count) || 0),
+      breakdown: {
+        links: Math.max(0, Number(details.links) || 0),
+        fa: Math.max(0, Number(details.fa) || 0),
+        profiles: Math.max(0, Number(details.profiles) || 0)
+      },
+      updatedAt: Date.now()
+    };
+  }
+
+  function publishAdminBadgeCount(count, breakdown) {
+    const payload = normalizeAdminBadgePayload(count, breakdown);
+    setAdminBadgeCount(payload.total, payload.breakdown);
+
+    try {
+      localStorage.setItem(ADMIN_BADGE_STORAGE_KEY, JSON.stringify(payload));
+    } catch (_) {}
+
+    try {
+      adminBadgeChannel?.postMessage(payload);
+    } catch (_) {}
+  }
+
+  function applyStoredAdminBadge() {
+    try {
+      const raw = localStorage.getItem(ADMIN_BADGE_STORAGE_KEY);
+      if (!raw) return false;
+      const payload = JSON.parse(raw);
+      if (!payload || !Number.isFinite(Number(payload.total))) return false;
+      setAdminBadgeCount(payload.total, payload.breakdown || {});
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function startAdminBadgeCrossTabSync() {
+    applyStoredAdminBadge();
+
+    window.addEventListener("storage", function (event) {
+      if (event.key !== ADMIN_BADGE_STORAGE_KEY || !event.newValue) return;
+      try {
+        const payload = JSON.parse(event.newValue);
+        setAdminBadgeCount(payload.total, payload.breakdown || {});
+      } catch (_) {}
+    });
+
+    if ("BroadcastChannel" in window) {
+      try {
+        adminBadgeChannel = new BroadcastChannel(ADMIN_BADGE_CHANNEL);
+        adminBadgeChannel.addEventListener("message", function (event) {
+          const payload = event?.data || {};
+          setAdminBadgeCount(payload.total, payload.breakdown || {});
+        });
+      } catch (_) {
+        adminBadgeChannel = null;
+      }
+    }
+
+    window.addEventListener("focus", function () {
+      applyStoredAdminBadge();
+      refreshAdminNavBadge();
+    });
+  }
+
   window.SEH_setAdminPendingBadge = function SEH_setAdminPendingBadge(count, breakdown) {
-    setAdminBadgeCount(count, breakdown || {});
+    publishAdminBadgeCount(count, breakdown || {});
   };
 
   window.addEventListener("seh:admin-pending-count", function (event) {
     const detail = event?.detail || {};
-    setAdminBadgeCount(detail.total, detail.breakdown || {});
+    publishAdminBadgeCount(detail.total, detail.breakdown || {});
   });
 
   async function refreshAdminNavBadge() {
@@ -144,7 +215,7 @@
         fa: Number(faRequests.count) || 0,
         profiles: Number(profileRequests.count) || 0
       };
-      setAdminBadgeCount(breakdown.links + breakdown.fa + breakdown.profiles, breakdown);
+      publishAdminBadgeCount(breakdown.links + breakdown.fa + breakdown.profiles, breakdown);
     } catch (error) {
       console.warn("Kunde inte läsa väntande adminärenden till navigeringen", error);
     } finally {
@@ -328,10 +399,14 @@
   });
 
   document.addEventListener("visibilitychange", function () {
-    if (!document.hidden) refreshAdminNavBadge();
+    if (!document.hidden) {
+      applyStoredAdminBadge();
+      refreshAdminNavBadge();
+    }
   });
 
   mount();
+  startAdminBadgeCrossTabSync();
   startAdminBadgeRefresh();
 
   /*
