@@ -2020,3 +2020,103 @@ a{color:inherit}
     font-size:.58rem;
   }
 }
+
+
+/* Builder proportions v6: lineup dominant */
+@media(min-width:1251px){
+  .fantasy-layout{
+    grid-template-columns:minmax(820px,1.48fr) minmax(320px,.52fr);
+    gap:12px;
+  }
+
+  .fantasy-lineup{
+    grid-template-columns:repeat(12,minmax(0,1fr));
+    grid-template-areas:
+      ". lw lw lw c c c rw rw rw . ."
+      ". . ld ld ld . rd rd rd . . ."
+      ". . . . g g g g . . . .";
+    min-height:680px;
+    padding:28px 18px 36px;
+    column-gap:10px;
+    row-gap:16px;
+  }
+
+  .fantasy-slot{
+    width:100%;
+    max-width:252px;
+    min-height:216px;
+    padding:12px;
+  }
+
+  .fantasy-slot[data-slot=G]{
+    max-width:262px;
+  }
+
+  .fantasy-slot__portrait-wrap{
+    width:112px;
+  }
+
+  .fantasy-slot__portrait{
+    width:106px;
+    height:128px;
+    flex:0 0 128px;
+  }
+
+  .fantasy-slot__identity strong{
+    font-size:.92rem;
+  }
+
+  .fantasy-slot__player small{
+    font-size:.65rem;
+  }
+
+  .fantasy-slot__score{
+    padding:8px 10px;
+  }
+
+  .fantasy-slot__score>strong{
+    font-size:.82rem;
+  }
+
+  .fantasy-slot__actions button{
+    min-width:82px;
+    min-height:32px;
+  }
+
+  .fantasy-market__filters{
+    grid-template-columns:minmax(0,1fr) 110px;
+  }
+
+  .fantasy-player-row{
+    grid-template-columns:36px minmax(0,1fr) 48px 76px;
+    gap:7px;
+    padding:8px 9px;
+  }
+
+  .fantasy-player-row__portrait-wrap{
+    width:34px;
+    height:42px;
+  }
+
+  .fantasy-player-row__portrait{
+    width:34px;
+    height:42px;
+  }
+
+  .fantasy-player-row strong{
+    font-size:.76rem;
+  }
+
+  .fantasy-player-row small{
+    font-size:.59rem;
+  }
+
+  .fantasy-player-row__price b{
+    font-size:.80rem;
+  }
+
+  .fantasy-player-row button{
+    padding:7px 6px;
+    font-size:.56rem;
+  }
+}
