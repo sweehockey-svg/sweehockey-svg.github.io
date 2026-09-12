@@ -576,10 +576,16 @@
     const requestId = "fantasy_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
 
     try {
+      const leagueId = Number(state.syncState?.settings?.source_league_id);
+      if (!Number.isInteger(leagueId) || leagueId <= 0) {
+        throw new Error("SportsGamer League ID saknas. Spara synkinställningarna först.");
+      }
+
       await callAdminSync({
         action: "start",
         job: "fantasy_sportsgamer",
-        request_id: requestId
+        request_id: requestId,
+        league_id: leagueId
       });
 
       setStatus("syncActionStatus", "Synken är startad. Väntar på GitHub Actions…", "working");
