@@ -1845,3 +1845,51 @@ a{color:inherit}
     text-align:left
   }
 }
+
+
+/* Draft board fills the full rink height */
+@media(min-width:1251px){
+  .fantasy-layout{
+    align-items:stretch
+  }
+
+  .fantasy-market{
+    display:flex;
+    flex-direction:column;
+    min-height:0
+  }
+
+  .fantasy-market .fantasy-section-title,
+  .fantasy-market .fantasy-market__filters{
+    flex:0 0 auto
+  }
+
+  .fantasy-market .fantasy-player-list{
+    flex:1 1 0;
+    min-height:0;
+    max-height:none;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:auto;
+    scrollbar-color:#2d698d #06111a
+  }
+
+  .fantasy-market .fantasy-player-list::-webkit-scrollbar{
+    width:10px
+  }
+
+  .fantasy-market .fantasy-player-list::-webkit-scrollbar-track{
+    background:#06111a;
+    border-left:1px solid #10283a
+  }
+
+  .fantasy-market .fantasy-player-list::-webkit-scrollbar-thumb{
+    border:2px solid #06111a;
+    border-radius:999px;
+    background:#2d698d
+  }
+
+  .fantasy-market .fantasy-player-list::-webkit-scrollbar-thumb:hover{
+    background:#3f87b2
+  }
+}
