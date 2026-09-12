@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#02030a">
+  <meta name="description" content="SCL 27 Fantasy – bygg ditt lag av riktiga SCL-spelare och samla poäng från deras prestationer.">
+  <title>SCL 27 Fantasy – Svensk eHockey</title>
+
+  <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
+  <link rel="stylesheet" href="style.css?v=20260912-v1">
+</head>
+<body>
+  <header class="fantasy-site-header">
+    <a class="fantasy-brand" href="../" aria-label="Svensk eHockey">
+      <img src="../assets/SeHlogga.png" alt="Svensk eHockey">
+    </a>
+
+    <div class="fantasy-site-header__title">
+      <span>SCL 27</span>
+      <strong>FANTASY</strong>
+    </div>
+
+    <div class="fantasy-site-header__actions">
+      <a class="fantasy-back-link" href="../">← Svensk eHockey</a>
+      <button id="accountButton" class="fantasy-account-button" type="button">Logga in med Discord</button>
+    </div>
+  </header>
+
+  <main class="fantasy-shell">
+    <section class="fantasy-hero">
+      <div class="fantasy-hero__copy">
+        <p class="fantasy-kicker">SVENSK eHOCKEY FANTASY / PILOT</p>
+        <h1>SCL 27 <em>Fantasy</em></h1>
+        <p class="fantasy-hero__lead">
+          Bygg ett lag med riktiga SCL-spelare och samla poäng från deras prestationer.
+          SCL 27 blir första testet för Svensk eHockey Fantasy.
+        </p>
+        <div class="fantasy-hero__badges">
+          <span>6 SPELARE</span>
+          <span>100 BUDGET</span>
+          <span>MAX 2 / RIKTIGT LAG</span>
+          <span>KAPTEN 1,5×</span>
+        </div>
+      </div>
+
+      <aside class="fantasy-hero__side" aria-label="Fantasyöversikt">
+        <article class="fantasy-hero-stat"><span>START</span><strong id="heroStart">1 OKT</strong></article>
+        <article class="fantasy-hero-stat"><span>STATUS</span><strong id="heroStatus" class="is-cyan">SETUP</strong></article>
+        <article class="fantasy-hero-stat"><span>BUDGET</span><strong id="heroBudget" class="is-gold">100</strong></article>
+        <article class="fantasy-hero-stat"><span>FANTASY-LAG</span><strong id="heroEntries">0</strong></article>
+      </aside>
+    </section>
+
+    <nav class="fantasy-tabs" aria-label="Fantasy">
+      <button type="button" class="is-active" data-tab="team">Mitt lag</button>
+      <button type="button" data-tab="players">Spelare</button>
+      <button type="button" data-tab="leaderboard">Topplista</button>
+      <button type="button" data-tab="rules">Regler</button>
+    </nav>
+
+    <section class="fantasy-panel" data-panel="team">
+      <section id="accountGate" class="fantasy-gate">
+        <div>
+          <p class="fantasy-kicker">MITT FANTASY-LAG</p>
+          <h2 id="gateTitle">Kontrollerar ditt konto…</h2>
+          <p id="gateText">
+            Du måste vara inloggad med Discord och ha en godkänd spelarprofil kopplad
+            för att skapa ett lag.
+          </p>
+          <p id="gateStatus" class="fantasy-status" role="status"></p>
+        </div>
+
+        <div class="fantasy-gate__actions">
+          <button id="discordLogin" class="fantasy-primary" type="button">Logga in med Discord</button>
+          <a id="connectProfile" class="fantasy-secondary" href="../#/free-agents" hidden>Koppla spelarprofil</a>
+        </div>
+      </section>
+
+      <section id="builder" class="fantasy-builder" hidden>
+        <div id="setupBanner" class="fantasy-setup-banner" hidden>
+          <div>
+            <strong>SCL 27 är under uppbyggnad</strong>
+            <span>Spelarpool och priser publiceras när SCL 27-rostrarna finns i databasen.</span>
+          </div>
+        </div>
+
+        <div class="fantasy-account-state">
+          <div>
+            <span>INLOGGAD SPELARE</span>
+            <strong id="linkedPlayer">–</strong>
+          </div>
+          <button id="logoutButton" class="fantasy-link-button" type="button">Logga ut</button>
+        </div>
+
+        <div class="fantasy-builder-top">
+          <label class="fantasy-team-name">
+            <span>FANTASY-LAGETS NAMN</span>
+            <input id="teamName" maxlength="40" placeholder="T.ex. eSwahns Dream Team">
+          </label>
+          <div class="fantasy-mini-stat"><span>VALDA</span><strong id="selectedCount">0 / 6</strong></div>
+          <div class="fantasy-mini-stat"><span>ANVÄNT</span><strong id="budgetUsed">0</strong></div>
+          <div class="fantasy-mini-stat"><span>KVAR</span><strong id="budgetLeft">100</strong></div>
+        </div>
+
+        <div class="fantasy-layout">
+          <section class="fantasy-rink">
+            <div class="fantasy-section-title">
+              <span>STARTSEXA</span>
+              <h3>Din laguppställning</h3>
+            </div>
+
+            <div id="lineup" class="fantasy-lineup">
+              <article class="fantasy-slot" data-slot="LW"></article>
+              <article class="fantasy-slot" data-slot="C"></article>
+              <article class="fantasy-slot" data-slot="RW"></article>
+              <article class="fantasy-slot" data-slot="LD"></article>
+              <article class="fantasy-slot" data-slot="RD"></article>
+              <article class="fantasy-slot" data-slot="G"></article>
+            </div>
+          </section>
+
+          <section class="fantasy-market">
+            <div class="fantasy-section-title">
+              <span>SPELARMARKNAD</span>
+              <h3>Välj spelare</h3>
+            </div>
+
+            <div class="fantasy-market__filters">
+              <label class="fantasy-filter">
+                <span>SÖK</span>
+                <input id="marketSearch" type="search" placeholder="Gamertag eller lag…">
+              </label>
+              <label class="fantasy-filter">
+                <span>POSITION</span>
+                <select id="marketPosition">
+                  <option value="all">Alla</option>
+                  <option>LW</option>
+                  <option>C</option>
+                  <option>RW</option>
+                  <option>LD</option>
+                  <option>RD</option>
+                  <option>G</option>
+                </select>
+              </label>
+            </div>
+
+            <div id="marketList" class="fantasy-player-list"></div>
+          </section>
+        </div>
+
+        <div class="fantasy-builder-actions">
+          <p id="saveStatus" class="fantasy-status" role="status"></p>
+          <button id="saveTeam" class="fantasy-primary" type="button">Spara mitt lag</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="fantasy-panel" data-panel="players" hidden>
+      <div class="fantasy-section-head">
+        <div>
+          <p class="fantasy-kicker">SCL 27 / SPELARPOOL</p>
+          <h2>Fantasy-spelare</h2>
+          <p>Pris, position, riktigt lag och aktuell ranking.</p>
+        </div>
+      </div>
+
+      <div class="fantasy-players-filters">
+        <label class="fantasy-filter">
+          <span>SÖK</span>
+          <input id="playersSearch" type="search" placeholder="Gamertag eller lag…">
+        </label>
+        <label class="fantasy-filter">
+          <span>POSITION</span>
+          <select id="playersPosition">
+            <option value="all">Alla</option>
+            <option>LW</option>
+            <option>C</option>
+            <option>RW</option>
+            <option>LD</option>
+            <option>RD</option>
+            <option>G</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="playersGrid" class="fantasy-players-grid"></div>
+    </section>
+
+    <section class="fantasy-panel" data-panel="leaderboard" hidden>
+      <div class="fantasy-section-head">
+        <div>
+          <p class="fantasy-kicker">GLOBAL TOPPLISTA</p>
+          <h2>SCL 27 Fantasy</h2>
+          <p>Alla Fantasy-lag rankas på verkliga SCL 27-resultat.</p>
+        </div>
+      </div>
+
+      <div id="leaderboard" class="fantasy-leaderboard"></div>
+    </section>
+
+    <section class="fantasy-panel" data-panel="rules" hidden>
+      <div class="fantasy-section-head">
+        <div>
+          <p class="fantasy-kicker">PILOTREGLER</p>
+          <h2>Så fungerar SCL 27 Fantasy</h2>
+          <p>Poängsystemet är version 1 och kan finjusteras innan tävlingen öppnar.</p>
+        </div>
+      </div>
+
+      <div class="fantasy-rules-grid">
+        <article class="fantasy-rule-card">
+          <span>01 / LAGET</span><h3>Sex spelare</h3>
+          <p>LW, C, RW, LD, RD och G. Samma spelare kan bara väljas en gång.</p>
+        </article>
+        <article class="fantasy-rule-card">
+          <span>02 / BUDGET</span><h3>100 Fantasy Credits</h3>
+          <p>Varje spelare får ett pris. Hela startsexan måste rymmas inom budgeten.</p>
+        </article>
+        <article class="fantasy-rule-card">
+          <span>03 / LAGGRÄNS</span><h3>Max två från samma SCL-lag</h3>
+          <p>Du måste sprida valen mellan flera verkliga lag.</p>
+        </article>
+        <article class="fantasy-rule-card">
+          <span>04 / KAPTEN</span><h3>1,5× poäng</h3>
+          <p>Exakt en spelare utses till kapten och får 50 procent extra Fantasy-poäng.</p>
+        </article>
+        <article class="fantasy-rule-card fantasy-rule-card--wide">
+          <span>05 / POÄNG</span><h3>Första poängmodellen</h3>
+          <table class="fantasy-scoring">
+            <thead><tr><th>Händelse</th><th>F</th><th>D</th><th>G</th></tr></thead>
+            <tbody>
+              <tr><td>Spelad match</td><td>+1</td><td>+1</td><td>+1</td></tr>
+              <tr><td>Mål</td><td>+5</td><td>+6</td><td>+10</td></tr>
+              <tr><td>Assist</td><td>+3</td><td>+4</td><td>+5</td></tr>
+              <tr><td>GWG</td><td>+2</td><td>+2</td><td>–</td></tr>
+              <tr><td>Block</td><td>–</td><td>+0,25</td><td>–</td></tr>
+              <tr><td>Vinst</td><td>–</td><td>–</td><td>+4</td></tr>
+              <tr><td>Räddning</td><td>–</td><td>–</td><td>+0,20</td></tr>
+              <tr><td>Hållen nolla</td><td>–</td><td>–</td><td>+5</td></tr>
+              <tr><td>Insläppt mål</td><td>–</td><td>–</td><td>−0,50</td></tr>
+            </tbody>
+          </table>
+        </article>
+        <article class="fantasy-rule-card">
+          <span>06 / ÅTKOMST</span><h3>Discord + kopplad spelarprofil</h3>
+          <p>
+            Fantasy går att läsa utan konto. För att skapa och spara ett lag måste du vara
+            inloggad med Discord och ha en godkänd koppling till ditt Svensk eHockey-spelarkort.
+          </p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="fantasy-footer">
+    <a href="../">Svensk eHockey</a>
+    <span>SCL 27 Fantasy · Pilot 2026</span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
+  <script src="../config.js?v=20260812-filter-source-styles1"></script>
+  <script src="app.js?v=20260912-v1"></script>
+</body>
+</html>
