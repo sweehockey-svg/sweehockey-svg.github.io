@@ -347,16 +347,22 @@
       const complete = state.picks.size === 6;
       const hasCaptain = Boolean(captainId);
       const withinBudget = used <= budget;
-      const canSave = competitionOpen() && complete && hasCaptain && withinBudget;
+      const savedAndUnchanged = Boolean(state.entry) && savedRosterIsCurrent;
+      const canSave = competitionOpen() && complete && hasCaptain && withinBudget && !savedAndUnchanged;
 
       saveButton.disabled = !canSave;
+      saveButton.classList.toggle("is-saved", savedAndUnchanged);
       saveButton.textContent = !complete
         ? "VÄLJ 6 SPELARE"
         : !hasCaptain
           ? "VÄLJ KAPTEN"
           : !withinBudget
             ? "ÖVER BUDGET"
-            : "LOCK IN TEST TEAM";
+            : savedAndUnchanged
+              ? "TESTLAG SPARAT"
+              : state.entry
+                ? "UPPDATERA TESTLAG"
+                : "LOCK IN TEST TEAM";
     }
 
     $$(".fantasy-slot").forEach((slotEl) => {
