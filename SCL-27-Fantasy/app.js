@@ -559,16 +559,23 @@
       slotEl.classList.toggle("is-invalid-slot", invalidSlot);
 
       slotEl.innerHTML = `
-        <div class="fantasy-slot__player">
+        <div class="fantasy-slot__player fantasy-slot__player--club">
+          <div class="fantasy-slot__club-stripe" aria-hidden="true"></div>
+          ${teamLogoMarkup(player, "fantasy-slot__club-watermark")}
           <div class="fantasy-slot__visual">
-            <div class="fantasy-slot__portrait-wrap">
+            <div class="fantasy-slot__portrait-wrap fantasy-slot__portrait-wrap--club">
               ${portraitMarkup(player, "fantasy-slot__portrait")}
             </div>
             <div class="fantasy-slot__identity">
               <strong class="fantasy-player-name-line">${flag}<span class="fantasy-player-name">${escapeHtml(clean(player.display_gamertag) || "Okänd")}</span></strong>
-              <small class="fantasy-slot__team">
-                ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--slot")}
-                <span>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</span>
+              <small class="fantasy-slot__team fantasy-slot__club-row">
+                <span class="fantasy-slot__club-logo">
+                  ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--slot")}
+                </span>
+                <span class="fantasy-slot__club-copy">
+                  <b>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</b>
+                  <em>KLUBB</em>
+                </span>
               </small>
               <small class="fantasy-slot__meta">${escapeHtml(eligibleSlots(player).join(" / "))} · ${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</small>
               ${invalidSlot ? '<small class="fantasy-slot__invalid-note">Ej giltig som ' + escapeHtml(slot) + ' · välj Byt</small>' : ""}
