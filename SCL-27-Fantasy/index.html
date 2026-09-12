@@ -9,7 +9,7 @@
   <title>SCL 27 Fantasy Beta</title>
 
   <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20260912-v12-saved-button">
+  <link rel="stylesheet" href="style.css?v=20260912-v13-transfers">
 </head>
 <body>
   <div class="beta-ribbon">
@@ -194,6 +194,28 @@
             <strong id="budgetLeft">90</strong>
           </div>
         </div>
+
+        <section id="transferPanel" class="fantasy-transfer-panel">
+          <div class="fantasy-transfer-panel__copy">
+            <span>TRANSFERS</span>
+            <strong id="transferMode">PRESEASON · OBEGRÄNSADE BYTEN</strong>
+            <small id="transferDetail">Bygg om fritt fram till första riktiga runddeadlinen.</small>
+          </div>
+          <div class="fantasy-transfer-panel__stats">
+            <div>
+              <span>FREE</span>
+              <strong id="transferFree">∞</strong>
+            </div>
+            <div>
+              <span>NEXT</span>
+              <strong id="transferNext">0 P</strong>
+            </div>
+            <div>
+              <span>DEADLINE</span>
+              <strong id="transferDeadline">Ej satt</strong>
+            </div>
+          </div>
+        </section>
 
         <div class="fantasy-layout">
           <section class="fantasy-rink">
@@ -404,6 +426,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="app.js?v=20260912-v14-saved-button"></script>
+  <script src="app.js?v=20260912-v15-transfers"></script>
 </body>
 </html>
