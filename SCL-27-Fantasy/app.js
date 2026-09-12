@@ -43,6 +43,7 @@
     picks: new Map(),
     savedPicks: new Map(),
     savedScores: new Map(),
+    savedBreakdowns: new Map(),
     transferState: null,
     activeTab: "team",
     pendingPlacementPlayerId: null,
@@ -197,6 +198,7 @@
     if (!savedPickMatches(slot, pick)) return null;
 
     const row = state.savedScores.get(Number(pick.player.id));
+    const detail = state.savedBreakdowns.get(Number(pick.player.id)) || null;
     const base = number(row?.fantasy_points);
     const multiplier = pick.isCaptain ? number(state.competition?.captain_multiplier || 1) : 1;
 
@@ -204,8 +206,55 @@
       base,
       multiplier,
       total: base * multiplier,
-      games: number(row?.games)
+      games: number(row?.games),
+      detail
     };
+  }
+
+  function scorePill(label, value, points, tone = "") {
+    const pointValue = number(points);
+    const pointText = pointValue === 0
+      ? "0 P"
+      : (pointValue > 0 ? "+" : "") + formatPoints(pointValue) + " P";
+
+    return `
+      <div class="fantasy-slot__detail-pill${tone ? " fantasy-slot__detail-pill--" + tone : ""}">
+        <span>${escapeHtml(label)}</span>
+        <strong>${format(value, number(value) % 1 ? 1 : 0)}</strong>
+        <em>${pointText}</em>
+      </div>
+    `;
+  }
+
+  function savedStatMarkup(savedScore) {
+    const d = savedScore?.detail;
+    if (!d) return "";
+
+    const forwardGames = number(d.forward_games);
+    const defenseGames = number(d.defense_games);
+    const goalieGames = number(d.goalie_games);
+
+    if (goalieGames >= forwardGames && goalieGames >= defenseGames && goalieGames > 0) {
+      return [
+        scorePill("Vinster", d.goalie_wins, d.win_points, "success"),
+        scorePill("Räddn", d.goalie_saves, d.save_points, "ice"),
+        scorePill("Nollor", d.goalie_shutouts, d.shutout_points, "ice")
+      ].join("");
+    }
+
+    if (defenseGames > forwardGames) {
+      return [
+        scorePill("Mål", d.goals, d.goal_points, "goal"),
+        scorePill("Assist", d.assists, d.assist_points, "assist"),
+        scorePill("Blocks", d.blocked_shots, d.block_points, "ice")
+      ].join("");
+    }
+
+    return [
+      scorePill("Mål", d.goals, d.goal_points, "goal"),
+      scorePill("Assist", d.assists, d.assist_points, "assist"),
+      scorePill("GWG", d.game_winning_goals, d.gwg_points, "success")
+    ].join("");
   }
 
   function draftMatchesSavedRoster() {
@@ -447,12 +496,15 @@
       const savedScore = savedScoreBreakdown(slot, pick);
       const scoreMarkup = savedScore
         ? `<div class="fantasy-slot__score">
-            <span>SCL 25</span>
-            <strong>${formatPoints(savedScore.total)} P</strong>
+            <div class="fantasy-slot__score-head">
+              <span>SCL 25</span>
+              <strong>${formatPoints(savedScore.total)} P</strong>
+            </div>
             <small>${pick.isCaptain
               ? formatPoints(savedScore.base) + " × " + format(savedScore.multiplier, savedScore.multiplier % 1 ? 1 : 0)
               : savedScore.games + " matcher"}</small>
-          </div>`
+          </div>
+          <div class="fantasy-slot__details">${savedStatMarkup(savedScore)}</div>`
         : (state.entry
           ? '<div class="fantasy-slot__score fantasy-slot__score--pending"><span>ÄNDRAT</span><small>Spara laget för replaypoäng</small></div>'
           : "");
@@ -461,10 +513,12 @@
       slotEl.classList.toggle("is-captain-card", captain);
 
       slotEl.innerHTML = `
-        <span class="fantasy-slot__position">${slot}</span>
         <div class="fantasy-slot__player">
           <div class="fantasy-slot__visual">
-            ${portraitMarkup(player, "fantasy-slot__portrait")}
+            <div class="fantasy-slot__portrait-wrap">
+              ${portraitMarkup(player, "fantasy-slot__portrait")}
+              <span class="fantasy-slot__position fantasy-slot__position--overlay">${slot}</span>
+            </div>
             <div class="fantasy-slot__identity">
               <strong><span class="fantasy-flag">${flag}</span>${escapeHtml(clean(player.display_gamertag) || "Okänd")}</strong>
               <small class="fantasy-slot__team">
@@ -898,6 +952,7 @@
     if (!state.entry) {
       state.savedPicks.clear();
       state.savedScores.clear();
+      state.savedBreakdowns.clear();
       // Keep any unsaved draft intact. Auth refreshes must never wipe the user's picks.
       renderAll();
       return;
@@ -906,6 +961,7 @@
     state.picks.clear();
     state.savedPicks.clear();
     state.savedScores.clear();
+    state.savedBreakdowns.clear();
 
     const picksResult = await sb
       .from("ehockey_fantasy_entry_players")
@@ -929,6 +985,20 @@
 
       for (const row of scoreResult.data || []) {
         state.savedScores.set(Number(row.pool_player_id), row);
+      }
+
+      const breakdownResult = await sb.rpc("seh_fantasy_my_saved_score_breakdown", {
+        p_code: "SCL27"
+      });
+
+      if (breakdownResult.error) throw breakdownResult.error;
+
+      const breakdownRows = Array.isArray(breakdownResult.data)
+        ? breakdownResult.data
+        : [];
+
+      for (const row of breakdownRows) {
+        state.savedBreakdowns.set(Number(row.pool_player_id), row);
       }
     }
 
@@ -1030,6 +1100,7 @@
       state.picks.clear();
       state.savedPicks.clear();
       state.savedScores.clear();
+      state.savedBreakdowns.clear();
       state.transferState = null;
       renderAll();
       showGate("logged-out");
