@@ -42,7 +42,8 @@
     entry: null,
     picks: new Map(),
     activeTab: "team",
-    pendingPlacementPlayerId: null
+    pendingPlacementPlayerId: null,
+    pickerSlot: null
   };
 
   function format(value, digits = 0) {
@@ -103,6 +104,70 @@
   function betaPoints(player) {
     return number(player?.source_snapshot?.fantasy_points_v1);
   }
+
+  function countryFlag(code) {
+    const normalized = clean(code).toUpperCase();
+    if (!/^[A-Z]{2}$/.test(normalized)) return "🌐";
+    return String.fromCodePoint(
+      ...[...normalized].map((letter) => 127397 + letter.charCodeAt(0))
+    );
+  }
+
+  function playerPortraitUrls(player) {
+    const id = clean(player?.sports_gamer_player_id).replace(/\D/g, "");
+    const fallback = "../players/1DEFAULTBILDID.png";
+    if (!id) return { src: fallback, original: "", fallback };
+    return {
+      src: "../web-images/players/" + encodeURIComponent(id + ".png") + ".webp",
+      original: "../players/" + encodeURIComponent(id + ".png"),
+      fallback
+    };
+  }
+
+  function portraitMarkup(player, className = "") {
+    const urls = playerPortraitUrls(player);
+    return '<img class="' + escapeHtml(className) + '" src="' + escapeHtml(urls.src) +
+      '" data-fantasy-portrait data-original="' + escapeHtml(urls.original) +
+      '" data-default="' + escapeHtml(urls.fallback) +
+      '" data-fallback-step="0" alt="' + escapeHtml(player?.display_gamertag || "") + '" loading="lazy">';
+  }
+
+  function teamLogoMarkup(player, className = "") {
+    const url = clean(player?.team_logo_url);
+    if (!url) return "";
+    return '<img class="' + escapeHtml(className) + '" src="' + escapeHtml(url) +
+      '" data-fantasy-team-logo alt="" loading="lazy">';
+  }
+
+  document.addEventListener("error", (event) => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement)) return;
+
+    if (image.hasAttribute("data-fantasy-portrait")) {
+      const step = number(image.dataset.fallbackStep);
+      const original = clean(image.dataset.original);
+      const fallback = clean(image.dataset.default) || "../players/1DEFAULTBILDID.png";
+
+      if (step === 0 && original) {
+        image.dataset.fallbackStep = "1";
+        image.src = original;
+        return;
+      }
+
+      if (step <= 1 && image.src !== new URL(fallback, window.location.href).href) {
+        image.dataset.fallbackStep = "2";
+        image.src = fallback;
+        return;
+      }
+
+      image.classList.add("is-default");
+      return;
+    }
+
+    if (image.hasAttribute("data-fantasy-team-logo")) {
+      image.hidden = true;
+    }
+  }, true);
 
   function selectedIds() {
     return new Set([...state.picks.values()].map((pick) => Number(pick.player.id)));
@@ -230,20 +295,39 @@
       const pick = state.picks.get(slot);
 
       if (!pick) {
+        const count = state.pool.filter((player) =>
+          player.is_available !== false &&
+          !selectedIds().has(Number(player.id)) &&
+          eligibleSlots(player).includes(slot)
+        ).length;
+
         slotEl.innerHTML =
           '<span class="fantasy-slot__position">' + slot + '</span>' +
-          '<div class="fantasy-slot__empty">Välj ' + slot + "</div>";
+          '<button type="button" class="fantasy-slot__empty" data-open-slot="' + slot + '">' +
+            '<strong>Välj ' + slot + '</strong>' +
+            '<small>' + count + ' valbara</small>' +
+          '</button>';
         return;
       }
 
       const player = pick.player;
       const captain = Number(captainId) === Number(player.id);
+      const flag = countryFlag(player.country_code);
 
       slotEl.innerHTML = `
         <span class="fantasy-slot__position">${slot}</span>
         <div class="fantasy-slot__player">
-          <strong>${escapeHtml(clean(player.display_gamertag) || "Okänd")}</strong>
-          <small>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")} · ${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</small>
+          <div class="fantasy-slot__visual">
+            ${portraitMarkup(player, "fantasy-slot__portrait")}
+            <div class="fantasy-slot__identity">
+              <strong><span class="fantasy-flag">${flag}</span>${escapeHtml(clean(player.display_gamertag) || "Okänd")}</strong>
+              <small class="fantasy-slot__team">
+                ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--slot")}
+                <span>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</span>
+              </small>
+              <small>${escapeHtml(eligibleSlots(player).join(" / "))} · ${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</small>
+            </div>
+          </div>
           <div class="fantasy-slot__actions">
             <button type="button" data-captain="${player.id}" class="${captain ? "is-captain" : ""}">
               ${captain ? "KAPTEN" : "Gör kapten"}
@@ -295,8 +379,12 @@
 
       return `
         <article class="fantasy-player-row">
+          <div class="fantasy-player-row__portrait-wrap">
+            ${portraitMarkup(player, "fantasy-player-row__portrait")}
+            ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--market")}
+          </div>
           <div class="fantasy-player-row__main">
-            <strong>${escapeHtml(player.display_gamertag)}</strong>
+            <strong><span class="fantasy-flag">${countryFlag(player.country_code)}</span>${escapeHtml(player.display_gamertag)}</strong>
             <small>
               ${escapeHtml(clean(player.real_team_name) || "Lag ej klart")} ·
               ${escapeHtml(slots)}
@@ -327,15 +415,23 @@
 
     host.innerHTML = rows.map((player) => `
       <article class="fantasy-player-card">
-        <div class="fantasy-player-card__top">
-          <span>${escapeHtml(eligibleSlots(player).join("/") || clean(player.primary_position) || "–")}</span>
-          <b>${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</b>
+        <div class="fantasy-player-card__visual">
+          ${portraitMarkup(player, "fantasy-player-card__portrait")}
+          <div class="fantasy-player-card__identity">
+            <div class="fantasy-player-card__top">
+              <span>${escapeHtml(eligibleSlots(player).join("/") || clean(player.primary_position) || "–")}</span>
+              <b>${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</b>
+            </div>
+            <h3><span class="fantasy-flag">${countryFlag(player.country_code)}</span>${escapeHtml(player.display_gamertag)}</h3>
+            <p>
+              ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--card")}
+              <span>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</span>
+            </p>
+          </div>
         </div>
-        <h3>${escapeHtml(player.display_gamertag)}</h3>
-        <p>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</p>
         <footer>
           <span>Pris satt före SCL 25</span>
-          <span>${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</span>
+          <span>${escapeHtml(eligibleSlots(player).join(" / "))}</span>
         </footer>
       </article>
     `).join("") || '<div class="fantasy-empty">Inga spelare matchar filtret.</div>';
@@ -376,11 +472,20 @@
   function placePlayer(player, slot) {
     if (!player || !slot || state.picks.has(slot)) return;
     if (!eligibleSlots(player).includes(slot)) return;
+    if (selectedIds().has(Number(player.id))) return;
+
+    const teamLimit = number(state.competition?.max_players_per_real_team || 2);
+    if (realTeamCount(player) >= teamLimit) {
+      setStatus("saveStatus", "Du får välja högst " + teamLimit + " spelare från samma riktiga lag.", "error");
+      return;
+    }
 
     state.picks.set(slot, { player, isCaptain: false });
     state.pendingPlacementPlayerId = null;
+    state.pickerSlot = null;
     setStatus("saveStatus", "");
     $("positionDialog")?.close();
+    $("playerPickerDialog")?.close();
     renderAll();
   }
 
@@ -403,6 +508,74 @@
     ).join("");
 
     dialog.showModal();
+  }
+
+  function pickerPlayers(slot, query = "") {
+    const selected = selectedIds();
+    const normalizedQuery = clean(query).toLocaleLowerCase("sv-SE");
+
+    return state.pool
+      .filter((player) => player.is_available !== false)
+      .filter((player) => !selected.has(Number(player.id)))
+      .filter((player) => eligibleSlots(player).includes(slot))
+      .filter((player) => {
+        if (!normalizedQuery) return true;
+        return [player.display_gamertag, player.real_team_name, eligibleSlots(player).join(" ")]
+          .join(" ")
+          .toLocaleLowerCase("sv-SE")
+          .includes(normalizedQuery);
+      })
+      .sort((a, b) =>
+        number(b.price) - number(a.price) ||
+        clean(a.display_gamertag).localeCompare(clean(b.display_gamertag), "sv")
+      );
+  }
+
+  function renderPlayerPicker() {
+    const slot = state.pickerSlot;
+    const host = $("playerPickerList");
+    if (!slot || !host) return;
+
+    const query = clean($("playerPickerSearch")?.value);
+    const teamLimit = number(state.competition?.max_players_per_real_team || 2);
+    const rows = pickerPlayers(slot, query);
+
+    $("playerPickerTitle").textContent = "Välj " + slot;
+    $("playerPickerCount").textContent = rows.length + " spelare kan användas som " + slot;
+
+    host.innerHTML = rows.map((player) => {
+      const teamBlocked = realTeamCount(player) >= teamLimit;
+      return `
+        <article class="fantasy-picker-player ${teamBlocked ? "is-blocked" : ""}">
+          <div class="fantasy-picker-player__portrait-wrap">
+            ${portraitMarkup(player, "fantasy-picker-player__portrait")}
+            ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--picker")}
+          </div>
+          <div class="fantasy-picker-player__info">
+            <strong><span class="fantasy-flag">${countryFlag(player.country_code)}</span>${escapeHtml(player.display_gamertag)}</strong>
+            <small>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</small>
+            <span>${escapeHtml(eligibleSlots(player).join(" / "))}</span>
+          </div>
+          <div class="fantasy-picker-player__price">
+            <strong>${format(player.price, number(player.price) % 1 ? 1 : 0)}</strong>
+            <small>CR</small>
+          </div>
+          <button type="button" data-pick-player="${player.id}" ${teamBlocked || !competitionOpen() ? "disabled" : ""}>
+            ${teamBlocked ? "2/2 FRÅN LAGET" : "VÄLJ " + slot}
+          </button>
+        </article>
+      `;
+    }).join("") || '<div class="fantasy-empty">Inga valbara spelare för ' + escapeHtml(slot) + '.</div>';
+  }
+
+  function openPlayerPicker(slot) {
+    if (!["LW","C","RW","LD","RD","G"].includes(slot)) return;
+    if (state.picks.has(slot)) return;
+
+    state.pickerSlot = slot;
+    if ($("playerPickerSearch")) $("playerPickerSearch").value = "";
+    renderPlayerPicker();
+    $("playerPickerDialog")?.showModal();
   }
 
   function addPlayer(id) {
@@ -702,6 +875,19 @@
       return;
     }
 
+    const openSlot = event.target.closest("[data-open-slot]");
+    if (openSlot) {
+      openPlayerPicker(openSlot.dataset.openSlot);
+      return;
+    }
+
+    const pickPlayer = event.target.closest("[data-pick-player]");
+    if (pickPlayer) {
+      const player = playerById(pickPlayer.dataset.pickPlayer);
+      if (player && state.pickerSlot) placePlayer(player, state.pickerSlot);
+      return;
+    }
+
     const add = event.target.closest("[data-add]");
     if (add) {
       addPlayer(add.dataset.add);
@@ -728,6 +914,14 @@
   });
 
   $("discordLogin")?.addEventListener("click", loginWithDiscord);
+  $("closePlayerPickerDialog")?.addEventListener("click", () => {
+    state.pickerSlot = null;
+    $("playerPickerDialog")?.close();
+  });
+  $("playerPickerDialog")?.addEventListener("cancel", () => {
+    state.pickerSlot = null;
+  });
+  $("playerPickerSearch")?.addEventListener("input", renderPlayerPicker);
   $("closePositionDialog")?.addEventListener("click", () => {
     state.pendingPlacementPlayerId = null;
     $("positionDialog")?.close();
