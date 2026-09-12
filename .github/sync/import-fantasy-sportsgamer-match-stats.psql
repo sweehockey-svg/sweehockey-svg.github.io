@@ -214,6 +214,10 @@ where s.competition_id=m.competition_id;
 commit;
 
 select
-  (select count(*) from fantasy_matches_stage) as matches_imported,
-  (select count(*) from fantasy_match_player_stats_stage) as player_rows_imported,
-  (select result from fantasy_refresh_result) as score_refresh;
+  matches_upserted as matches_imported,
+  player_rows_upserted as player_rows_imported,
+  details->'score_refresh' as score_refresh
+from public.ehockey_fantasy_sync_runs
+where request_id=:'request_id'
+order by id desc
+limit 1;
