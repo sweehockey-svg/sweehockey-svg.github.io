@@ -444,7 +444,7 @@
       const spend = players.reduce((sum, p) => sum + num(p.locked_price), 0);
 
       $("entryDialogContent").innerHTML = `
-        <span class="fa-kicker">FANTASY TEAM</span>
+        <span class="fa-kicker">FANTASY-LAG</span>
         <h2>${esc(entry.team_name || "Namnlöst lag")}</h2>
         <p>${esc(entry.owner_name || "Okänd")} · #${esc(entry.current_rank || "–")} · ${fmt(entry.total_points, num(entry.total_points) % 1 ? 1 : 0)} P · ${fmt(spend, spend % 1 ? 1 : 0)} CR</p>
         <div class="fa-roster">
