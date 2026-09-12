@@ -15,7 +15,7 @@
 
     const heroText = section.querySelector(".ecl27v2-hero p:not(.directory-kicker)");
     if (heroText) {
-      heroText.textContent = "Arbetsbilden börjar i den registrerade ECL ’26 Spring-truppen och följer därefter bekräftade svenska IN/UT, lagposter och Free Agents kronologiskt. Lagbyggena kan gälla ECL, SCL, ITHL eller andra kommande turneringar.";
+      heroText.textContent = "Arbetsbilden börjar i den registrerade ECL ’26 Spring-truppen och följer därefter bekräftade svenska IN/UT, lagposter och Free Agents kronologiskt. Lagbyggena kan gälla SCL, ECL, ITHL eller andra kommande turneringar.";
     }
 
     const method = section.querySelector(".ecl27v2-method");
@@ -45,28 +45,43 @@
     });
   }
 
+  function applyTeamBuildsOnlyView() {
+    if (!String(location.hash || "").startsWith(ROUTE_PREFIX)) return;
+
+    const hero = document.querySelector(".season-hero-v12840");
+    const subnav = document.querySelector(".season-subnav-v12840");
+    const overview = document.querySelector("#overview");
+    const builds = document.querySelector("#ecl27TeamBuildsV2");
+
+    if (hero) hero.style.display = "none";
+    if (subnav) subnav.style.display = "none";
+    if (overview) overview.style.display = "none";
+
+    if (builds) {
+      builds.style.marginTop = "0";
+      builds.setAttribute("aria-label", "Svenska lagbyggen");
+    }
+
+    document.title = "Svenska lagbyggen – Svensk eHockey";
+  }
+
   function applyCompetitionHub() {
     const card = document.querySelector(".ecl-hub-current-v12840");
     if (!card) return;
 
-    const currentTitle = card.querySelector("strong")?.textContent?.trim() || "";
-    if (card.dataset.sehTeamBuildsHub === "1") return;
-    if (currentTitle !== "ECL ’27: Winter") return;
+    if (card.dataset.sehTeamBuildsHub === "2") return;
 
-    card.dataset.sehTeamBuildsHub = "1";
-    card.setAttribute("aria-label", "Lagbyggen och kommande ECL-säsong");
+    const currentTitle = card.querySelector("strong")?.textContent?.trim() || "";
+    if (currentTitle !== "ECL ’27: Winter" && currentTitle !== "Lagbyggen") return;
+
+    card.dataset.sehTeamBuildsHub = "2";
+    card.setAttribute("aria-label", "Svenska lagbyggen");
     card.innerHTML = `
       <span>AKTUELLT</span>
       <strong>Lagbyggen</strong>
       <p>Följ svenska lagbyggen, värvningar och Free Agents inför kommande tävlingar som SCL, ECL, ITHL och andra turneringar.</p>
       <div>
         <a class="ecl-hub-button-v12840" href="?lagbyggen=1#/sasong/ecl27winter">Öppna lagbyggen</a>
-      </div>
-      <div style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.10)">
-        <span style="display:block;margin-bottom:7px">KOMMANDE ECL-SÄSONG</span>
-        <strong style="display:block;font-size:22px;line-height:1.05;margin-bottom:8px">ECL ’27: Winter</strong>
-        <p style="margin:0 0 14px">ECL ’27 Winter är nästa ECL-säsong. Tävlingssidan får full svensk bevakning när säsongsdata finns.</p>
-        <a class="ecl-hub-button-v12840 ecl-hub-button-v12840--ghost" href="#/sasong/ecl27winter">Öppna ECL ’27 Winter</a>
       </div>
     `;
   }
@@ -93,11 +108,12 @@
   function applyAll() {
     applyCompetitionHub();
     applyNeutralLabels();
+    applyTeamBuildsOnlyView();
     scrollToTeamBuildsIfRequested();
   }
 
   function schedule() {
-    [0, 80, 200, 500, 1000, 1800, 3000].forEach((delay) => {
+    [0, 50, 120, 250, 500, 900, 1500, 2500, 4000].forEach((delay) => {
       window.setTimeout(applyAll, delay);
     });
   }
