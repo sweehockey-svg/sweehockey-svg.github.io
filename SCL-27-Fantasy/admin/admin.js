@@ -22,6 +22,19 @@
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[char]);
 
+  function competitionStatusLabel(status) {
+    const key = clean(status).toLowerCase();
+    const labels = {
+      setup: "UPPSTART",
+      open: "ÖPPEN",
+      locked: "LÅST",
+      live: "PÅGÅR",
+      finished: "AVSLUTAD",
+      archived: "ARKIVERAD"
+    };
+    return labels[key] || clean(status || "–").toUpperCase();
+  }
+
   if (!window.supabase?.createClient || !supabaseUrl || !supabaseKey) {
     $("authGateText").textContent = "Supabase-konfigurationen kunde inte laddas.";
     return;
