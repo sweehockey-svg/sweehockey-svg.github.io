@@ -87,7 +87,8 @@
       day: "numeric",
       month: "short",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
+      timeZone: "Europe/Stockholm"
     }).format(date);
   }
 
@@ -118,7 +119,7 @@
     $("transferDeadline").textContent = target?.lock_at ? formatDeadline(target.lock_at) : "Ej satt";
 
     $("transferDetail").textContent = unlimited
-      ? "Bygg om fritt fram till första Fantasy-periodens deadline. Därefter: 1 gratis byte per period, max 2 sparade."
+      ? "Bygg om fritt fram till första Fantasy-periodens deadline kl. 18:00 svensk tid. Därefter: 1 gratis byte per period, max 2 sparade."
       : mode === "round"
         ? "1 gratis byte per period · max 2 sparade · extra byte kostar −" + format(extraCost) + " P. Kaptensbyte är gratis."
         : mode === "closed"
