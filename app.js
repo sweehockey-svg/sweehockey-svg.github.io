@@ -212,7 +212,7 @@ function SEH_initHistory() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-09-11-v13018-swedish-player-profiles-only";
+    const APP_BUILD = "2026-09-12-v13021-ithl-lgel-competitions";
     const PAGE_SIZE = 1000;
   
     const state = {
@@ -13535,11 +13535,11 @@ function SEH_initShop() {
     <main class="directory-shell ecl-hub-shell-v12840">
       <section class="ecl-hub-hero-v12840" aria-labelledby="eclHubTitle">
         <div class="ecl-hub-hero-v12840__copy">
-          <p class="directory-kicker">ECL / SVENSK BEVAKNING</p>
-          <h1 id="eclHubTitle">ECL</h1>
-          <p>Följ svenska lag och spelare i European Championship League. Här samlas matcher, spelarbyten, lagstatus och svensk spelarstatistik – säsong för säsong.</p>
-          <div class="ecl-hub-tags-v12840" aria-label="ECL-innehåll">
-            <span>MATCHER</span><span>BYTEN</span><span>LAG</span><span>STATISTIK</span>
+          <p class="directory-kicker">TÄVLINGAR / SVENSK BEVAKNING</p>
+          <h1 id="eclHubTitle">Tävlingar</h1>
+          <p>Följ svenska spelare och lag i ECL, ITHL och LGEL. Varje säsong visar bara de delar där vi faktiskt har tillräckligt bra data.</p>
+          <div class="ecl-hub-tags-v12840" aria-label="Tävlingsinnehåll">
+            <span>ECL</span><span>ITHL</span><span>LGEL</span><span>SVENSK STATISTIK</span>
           </div>
         </div>
         <aside class="ecl-hub-current-v12840" aria-label="Kommande ECL-säsong">
@@ -13574,12 +13574,12 @@ function SEH_initShop() {
         <div class="ecl-section-heading-v12840">
           <div>
             <p class="directory-kicker">ARKIV</p>
-            <h2 id="eclArchiveTitle">Tidigare ECL-säsonger</h2>
-            <p>ECL-historiken går tillbaka till Season 1 från 2015. Varje säsong visar bara de vyer där vi faktiskt har tillräcklig historisk data.</p>
+            <h2 id="eclArchiveTitle">Tävlingsarkiv</h2>
+            <p>ECL, ITHL och LGEL samlat säsong för säsong. Varje säsong visar bara de vyer där vi faktiskt har tillräcklig historisk data.</p>
           </div>
         </div>
         <div class="ecl-archive-groups-v12852" id="eclArchiveGroups">
-          <p class="season-data-status">Laddar ECL-historik…</p>
+          <p class="season-data-status">Laddar tävlingshistorik…</p>
         </div>
       </section>
     </main>
@@ -13590,15 +13590,15 @@ function SEH_initShop() {
     <main class="directory-shell season-shell-v12840">
       <section class="season-hero-v12840" aria-labelledby="seasonTitle">
         <div class="season-hero-v12840__copy">
-          <p class="directory-kicker">ECL-SÄSONG</p>
+          <p class="directory-kicker">TÄVLINGSSÄSONG</p>
           <h1 id="seasonTitle">ECL ’26: Spring</h1>
-          <p id="seasonText">Svenska lag, matcher, spelarbyten och statistik samlat för säsongen.</p>
+          <p id="seasonText">Svenska lag och spelare samlat säsong för säsong.</p>
         </div>
-        <aside class="season-hero-v12840__side" aria-label="ECL-säsongsnavigation">
-          <span id="seasonHeroEyebrow">SVENSK ECL-BEVAKNING</span>
+        <aside class="season-hero-v12840__side" aria-label="Tävlingssäsongsnavigation">
+          <span id="seasonHeroEyebrow">SVENSK TÄVLINGSBEVAKNING</span>
           <strong id="seasonHeroLabel">ECL</strong>
           <p id="seasonHeroStatus">Välj en vy nedan för att följa säsongens svenska lag och spelare.</p>
-          <a href="#/ecl?view=archive">ECL-arkiv →</a>
+          <a href="#/ecl">Tävlingsarkiv →</a>
         </aside>
       </section>
 
@@ -13608,7 +13608,7 @@ function SEH_initShop() {
         <a href="#transfers">Byten</a>
         <a href="#teams">Lag</a>
         <a href="#statistics">Statistik</a>
-        <a href="#/ecl?view=archive" data-season-archive="true">Arkiv</a>
+        <a href="#/ecl" data-season-archive="true">Arkiv</a>
       </nav>
 
       <section class="season-overview season-overview-v12840" id="overview">
@@ -16862,6 +16862,47 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
       sections: ["overview", "matches", "transfers", "teams", "statistics"], completed: true
     },
+    ithl10: {
+      id: "ithl10", title: "ITHL S10", archiveLabel: "S10", archiveEra: "ithl",
+      competition: "ITHL", databaseLabel: "ITHL S10",
+      leagueIds: [800000001, 800000003, 800000013], countryCode: "SE",
+      divisions: [
+        { id: "elite", label: "Elite" },
+        { id: "sweat", label: "Sweat" },
+        { id: "core", label: "Core" }
+      ],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ithl11: {
+      id: "ithl11", title: "ITHL S11", archiveLabel: "S11", archiveEra: "ithl",
+      competition: "ITHL", databaseLabel: "ITHL S11",
+      leagueIds: [800000447, 800000405, 800000404, 800000407], countryCode: "SE",
+      divisions: [
+        { id: "elite", label: "Elite" },
+        { id: "sweat", label: "Sweat" },
+        { id: "rammer", label: "Rammer" },
+        { id: "core", label: "Core" }
+      ],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    ithl12: {
+      id: "ithl12", title: "ITHL S12", archiveLabel: "S12", archiveEra: "ithl",
+      competition: "ITHL", databaseLabel: "ITHL S12",
+      leagueIds: [800001285, 800001282, 800001279], countryCode: "SE",
+      divisions: [
+        { id: "sweat", label: "Sweat" },
+        { id: "rammer", label: "Rammer" },
+        { id: "core", label: "Core" }
+      ],
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
+    lgel1: {
+      id: "lgel1", title: "LGEL S1", archiveLabel: "S1", archiveEra: "lgel",
+      competition: "LGEL", databaseLabel: "LGEL S1",
+      leagueIds: [700000001], countryCode: "SE",
+      divisions: [{ id: "lgel", label: "LGEL" }], divisionFallback: "LGEL",
+      sections: ["overview", "teams", "statistics"], completed: true
+    },
     ecl27winter: {
       id: "ecl27winter", title: "ECL ’27: Winter", archiveLabel: "2026/27", archiveEra: "current",
       databaseLabel: "ECL 27 Winter", countryCode: "SE",
@@ -16870,6 +16911,10 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     }
   };
 
+
+  function seasonCompetitionName(season) {
+    return String(season?.competition || "ECL").trim().toUpperCase() || "ECL";
+  }
 
   function seasonSectionLabels(season) {
     const labels = { matches: "Matcher", transfers: "Byten", teams: "Lag", statistics: "Statistik" };
@@ -16900,18 +16945,38 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     const classic = Object.values(seasons)
       .filter((season) => season.archiveEra === "classic")
       .reverse();
+    const ithl = Object.values(seasons)
+      .filter((season) => season.archiveEra === "ithl")
+      .sort((a,b) => b.id.localeCompare(a.id, "sv", {numeric:true}));
+    const lgel = Object.values(seasons)
+      .filter((season) => season.archiveEra === "lgel")
+      .sort((a,b) => b.id.localeCompare(a.id, "sv", {numeric:true}));
 
     host.innerHTML = `
       <section class="ecl-archive-era-v12852">
         <div class="ecl-archive-era-v12852__heading">
-          <div><span>2022–2026</span><h3>Winter / Spring</h3></div>
+          <div><span>EUROPEISK LIGA</span><h3>ITHL</h3></div>
+          <small>${ithl.length} säsonger</small>
+        </div>
+        <div class="ecl-archive-grid-v12840">${ithl.map(ECL_archiveCard).join("")}</div>
+      </section>
+      <section class="ecl-archive-era-v12852">
+        <div class="ecl-archive-era-v12852__heading">
+          <div><span>LEAGUE GAMING</span><h3>LGEL</h3></div>
+          <small>${lgel.length} säsong</small>
+        </div>
+        <div class="ecl-archive-grid-v12840">${lgel.map(ECL_archiveCard).join("")}</div>
+      </section>
+      <section class="ecl-archive-era-v12852">
+        <div class="ecl-archive-era-v12852__heading">
+          <div><span>ECL · 2022–2026</span><h3>Winter / Spring</h3></div>
           <small>${modern.length} säsonger</small>
         </div>
         <div class="ecl-archive-grid-v12840">${modern.map(ECL_archiveCard).join("")}</div>
       </section>
       <section class="ecl-archive-era-v12852">
         <div class="ecl-archive-era-v12852__heading">
-          <div><span>2015–2021</span><h3>ECL 1–12</h3></div>
+          <div><span>ECL · 2015–2021</span><h3>ECL 1–12</h3></div>
           <small>${classic.length} säsonger</small>
         </div>
         <div class="ecl-archive-grid-v12840">${classic.map(ECL_archiveCard).join("")}</div>
@@ -17056,7 +17121,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       return {
         ...route,
         key: "ecl",
-        label: "ECL",
+        label: "Tävlingar",
         active: "ecl"
       };
     }
@@ -17228,7 +17293,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
 
           <a
             class="${route.active === "ecl" ? "is-active" : ""}"
-            href="#/sasong/ecl27winter"
+            href="#/ecl"
           >
             Tävlingar
           </a>
@@ -17286,9 +17351,13 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
               aria-label="Välj säsong"
             >
               <option value="">Välj säsong</option>
+              <option value="ecl27winter">ECL ’27: Winter</option>
               <option value="ecl26spring">ECL ’26: Spring</option>
               <option value="ecl26winter">ECL ’26: Winter</option>
-              <option value="ecl27winter">ECL ’27: Winter</option>
+              <option value="ithl12">ITHL S12</option>
+              <option value="ithl11">ITHL S11</option>
+              <option value="ithl10">ITHL S10</option>
+              <option value="lgel1">LGEL S1</option>
             </select>
           </label>
 
@@ -18826,6 +18895,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       normalizeSeasonId(route.params.seasonId);
 
     const season = seasons[seasonId];
+    const competitionName = seasonCompetitionName(season);
 
     const sections = ["overview", "matches", "transfers", "teams", "statistics"];
     const availableSections = new Set(season.sections || ["overview"]);
@@ -18862,8 +18932,8 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     if (seasonHeroStatus) {
       const availableLabels = seasonSectionLabels(season);
       seasonHeroStatus.textContent = season.leagueIds?.length
-        ? `${availableLabels.join(", ")} finns tillgängligt för den här säsongen.`
-        : "Säsongen är ännu inte igång. När ECL-data finns aktiveras matcher, byten, lag och statistik här.";
+        ? `${availableLabels.join(", ")} finns tillgängligt för ${competitionName} den här säsongen.`
+        : `Säsongen är ännu inte igång. När ${competitionName}-data finns aktiveras tillgängliga vyer här.`;
     }
 
     if (teamsLink) {
@@ -18899,11 +18969,11 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
         ].filter(([section]) => availableSections.has(section));
 
         overview.innerHTML = `
-          <p class="directory-kicker">SVENSK ECL-BEVAKNING</p>
+          <p class="directory-kicker">SVENSK ${escapeHtml(competitionName)}-BEVAKNING</p>
           <h2>${escapeHtml(season.title)}</h2>
-          <p>${season.archiveEra === "classic"
+          <p>${competitionName === "ECL" && season.archiveEra === "classic"
             ? "Historisk ECL-data från SportsGamer och Supabase. De vyer som visas nedan är de delar vi har tillräckligt bra data för från säsongen."
-            : "Välj vilken del av den svenska ECL-bevakningen du vill öppna."}</p>
+            : `Svensk bevakning av ${competitionName}. De vyer som visas är de delar där vi har tillräckligt bra historisk data.`}</p>
           <div class="season-landing-grid" style="--season-landing-count:${Math.max(1, landingCards.length)}">
             ${landingCards.map(([section, label, text], index) => `
               <a class="season-landing-card" href="${seasonSectionRoute(seasonId, section)}">
@@ -18990,7 +19060,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       .querySelectorAll(".season-subnav a")
       .forEach((anchor) => {
         if (anchor.dataset.seasonArchive === "true") {
-          anchor.href = "#/ecl?view=archive";
+          anchor.href = "#/ecl";
           anchor.classList.remove("is-active");
           return;
         }
