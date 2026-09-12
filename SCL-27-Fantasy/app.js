@@ -41,7 +41,8 @@
     account: null,
     entry: null,
     picks: new Map(),
-    activeTab: "team"
+    activeTab: "team",
+    pendingPlacementPlayerId: null
   };
 
   function format(value, digits = 0) {
@@ -372,6 +373,38 @@
     updateHeaderAccount();
   }
 
+  function placePlayer(player, slot) {
+    if (!player || !slot || state.picks.has(slot)) return;
+    if (!eligibleSlots(player).includes(slot)) return;
+
+    state.picks.set(slot, { player, isCaptain: false });
+    state.pendingPlacementPlayerId = null;
+    setStatus("saveStatus", "");
+    $("positionDialog")?.close();
+    renderAll();
+  }
+
+  function openPositionChooser(player, slots) {
+    const dialog = $("positionDialog");
+    const choices = $("positionDialogChoices");
+    if (!dialog || !choices) {
+      placePlayer(player, slots[0]);
+      return;
+    }
+
+    state.pendingPlacementPlayerId = Number(player.id);
+    $("positionDialogPlayer").textContent = player.display_gamertag;
+    $("positionDialogText").textContent =
+      player.display_gamertag + " kan användas på " + eligibleSlots(player).join(" / ") +
+      ". Välj vilken ledig plats spelaren ska ta.";
+
+    choices.innerHTML = slots.map((slot) =>
+      '<button type="button" data-place-slot="' + slot + '">' + slot + '</button>'
+    ).join("");
+
+    dialog.showModal();
+  }
+
   function addPlayer(id) {
     const player = playerById(id);
     if (!player || state.picks.size >= 6) return;
@@ -382,15 +415,23 @@
       return;
     }
 
-    const slot = eligibleSlots(player).find((candidate) => !state.picks.has(candidate));
-    if (!slot) {
-      setStatus("saveStatus", "Det finns ingen ledig position för " + player.display_gamertag + ".", "error");
+    const openSlots = eligibleSlots(player).filter((candidate) => !state.picks.has(candidate));
+    if (!openSlots.length) {
+      setStatus(
+        "saveStatus",
+        "Det finns ingen ledig position för " + player.display_gamertag +
+        " (" + eligibleSlots(player).join(" / ") + ").",
+        "error"
+      );
       return;
     }
 
-    state.picks.set(slot, { player, isCaptain: false });
-    setStatus("saveStatus", "");
-    renderAll();
+    if (openSlots.length === 1) {
+      placePlayer(player, openSlots[0]);
+      return;
+    }
+
+    openPositionChooser(player, openSlots);
   }
 
   function removePlayer(slot) {
@@ -676,10 +717,24 @@
     const captain = event.target.closest("[data-captain]");
     if (captain) {
       setCaptain(captain.dataset.captain);
+      return;
+    }
+
+    const placement = event.target.closest("[data-place-slot]");
+    if (placement) {
+      const player = playerById(state.pendingPlacementPlayerId);
+      if (player) placePlayer(player, placement.dataset.placeSlot);
     }
   });
 
   $("discordLogin")?.addEventListener("click", loginWithDiscord);
+  $("closePositionDialog")?.addEventListener("click", () => {
+    state.pendingPlacementPlayerId = null;
+    $("positionDialog")?.close();
+  });
+  $("positionDialog")?.addEventListener("cancel", () => {
+    state.pendingPlacementPlayerId = null;
+  });
   $("saveTeam")?.addEventListener("click", saveTeam);
   $("logoutButton")?.addEventListener("click", logout);
 
