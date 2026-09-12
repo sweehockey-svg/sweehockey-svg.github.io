@@ -138,7 +138,7 @@
 
       <section class="fa-panel" data-panel="pool" hidden>
         <div class="fa-section-head">
-          <div><span>SPELARPOOL</span><h2>SCL 25-återspelning</h2><p>Priserna är pre-SCL25-priser. Ändringar sparas direkt.</p></div>
+          <div><span>SPELARPOOL</span><h2>SCL 27 betapool</h2><p>237 svenska spelare. Priser och positioner är omräknade med historik genom ECL 26 Spring.</p></div>
           <div class="fa-head-actions">
             <input id="poolSearch" type="search" placeholder="Sök spelare eller lag…">
             <select id="poolPosition">
@@ -195,8 +195,8 @@
             <form id="syncSettingsForm" class="fa-sync-settings">
               <label>
                 <span>SportsGamer liga-ID</span>
-                <input id="syncLeagueId" type="number" min="1" step="1" placeholder="447">
-                <small>Betan använder 447. Byt till SCL 27:s riktiga liga-ID när tävlingen skapas i SportsGamer.</small>
+                <input id="syncLeagueId" type="number" min="1" step="1" placeholder="Riktigt SCL27 liga-ID">
+                <small>Ingen riktig SCL 27-liga är kopplad ännu. Ange rätt SportsGamer liga-ID här när SCL 27 skapas. Autosynk ska vara av tills dess.</small>
               </label>
               <label class="fa-checkbox fa-checkbox--sync">
                 <input id="syncAutoEnabled" type="checkbox">
@@ -265,6 +265,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="admin.js?v=20260912-v5-swedish"></script>
+  <script src="admin.js?v=20260912-v6-scl27-beta"></script>
 </body>
 </html>
