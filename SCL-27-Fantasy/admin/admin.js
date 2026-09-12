@@ -517,7 +517,7 @@
     const flops = Array.isArray(data?.expensive_flops) ? data.expensive_flops : [];
     $("expensiveFlops").innerHTML = flops.map((row) => `
       <div class="fa-list-row">
-        <span><strong>${esc(row.display_gamertag)}</strong><small>${esc(row.real_team_name)} · ${fmt(row.price,1)} CR</small></span>
+        <span><strong>${esc(row.display_gamertag)}</strong><small>${esc(row.real_team_name)} · ${fmt(row.price)} CR</small></span>
         <b>${fmt(row.fantasy_points,1)} P</b>
       </div>
     `).join("");
