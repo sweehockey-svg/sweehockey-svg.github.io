@@ -92,6 +92,10 @@
     return [];
   }
 
+  function betaPoints(player) {
+    return number(player?.source_snapshot?.fantasy_points_v1);
+  }
+
   function selectedIds() {
     return new Set([...state.picks.values()].map((pick) => Number(pick.player.id)));
   }
@@ -270,8 +274,8 @@
             <strong>${escapeHtml(player.display_gamertag)}</strong>
             <small>
               ${escapeHtml(clean(player.real_team_name) || "Lag ej klart")} ·
-              ${escapeHtml(slots)}
-              ${player.ranking_position ? " · #" + player.ranking_position : ""}
+              ${escapeHtml(slots)} ·
+              ${format(betaPoints(player), betaPoints(player) % 1 ? 1 : 0)} beta-P
             </small>
           </div>
           <div class="fantasy-player-row__price">
@@ -291,7 +295,7 @@
     if (!host) return;
 
     if (!state.pool.length) {
-      host.innerHTML = '<div class="fantasy-empty">SCL 27-spelarpoolen publiceras när rostrarna är klara.</div>';
+      host.innerHTML = '<div class="fantasy-empty">SCL 25-testpoolen kunde inte laddas.</div>';
       return;
     }
 
@@ -306,8 +310,8 @@
         <h3>${escapeHtml(player.display_gamertag)}</h3>
         <p>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</p>
         <footer>
-          <span>${player.ranking_position ? "#" + player.ranking_position + " RP" : "Ej rankad"}</span>
-          <span>${player.ranking_points ? format(player.ranking_points) + " RP" : ""}</span>
+          <span>SCL 25 replay</span>
+          <span>${format(betaPoints(player), betaPoints(player) % 1 ? 1 : 0)} P</span>
         </footer>
       </article>
     `).join("") || '<div class="fantasy-empty">Inga spelare matchar filtret.</div>';
@@ -381,6 +385,19 @@
     renderLineup();
   }
 
+  async function loadLeaderboard() {
+    if (!state.competition) return;
+    const result = await sb
+      .from("v_ehockey_fantasy_leaderboard")
+      .select("*")
+      .eq("competition_id", state.competition.id)
+      .order("total_points", { ascending: false })
+      .limit(100);
+
+    if (result.error) throw result.error;
+    state.leaderboard = result.data || [];
+  }
+
   async function loadPublic() {
     const competitionResult = await sb
       .from("ehockey_fantasy_competitions")
@@ -392,26 +409,17 @@
     state.competition = competitionResult.data || null;
     if (!state.competition) throw new Error("SCL 27 Fantasy är inte konfigurerad.");
 
-    const [poolResult, leaderboardResult] = await Promise.all([
-      sb
-        .from("ehockey_fantasy_player_pool")
-        .select("*")
-        .eq("competition_id", state.competition.id)
-        .order("price", { ascending: false })
-        .order("display_gamertag", { ascending: true }),
-      sb
-        .from("v_ehockey_fantasy_leaderboard")
-        .select("*")
-        .eq("competition_id", state.competition.id)
-        .order("total_points", { ascending: false })
-        .limit(100)
-    ]);
+    const poolResult = await sb
+      .from("ehockey_fantasy_player_pool")
+      .select("*")
+      .eq("competition_id", state.competition.id)
+      .order("price", { ascending: false })
+      .order("display_gamertag", { ascending: true });
 
     if (poolResult.error) throw poolResult.error;
-    if (leaderboardResult.error) throw leaderboardResult.error;
 
     state.pool = poolResult.data || [];
-    state.leaderboard = leaderboardResult.data || [];
+    await loadLeaderboard();
   }
 
   async function loadMyEntry() {
@@ -597,8 +605,11 @@
 
       if (error) throw error;
 
-      setStatus("saveStatus", "Laget är sparat.", "success");
+      setStatus("saveStatus", "Laget är sparat. Beta-poängen är räknade från SCL 25.", "success");
       await loadMyEntry();
+      await loadLeaderboard();
+      renderHero();
+      renderLeaderboard();
     } catch (error) {
       setStatus("saveStatus", "Fel: " + (error?.message || error), "error");
     } finally {
@@ -657,6 +668,16 @@
   $("marketPosition")?.addEventListener("change", renderMarket);
   $("playersSearch")?.addEventListener("input", renderPlayers);
   $("playersPosition")?.addEventListener("change", renderPlayers);
+
+  document.querySelector("[data-jump-team]")?.addEventListener("click", () => {
+    switchTab("team");
+    $("teamPanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  document.querySelector("[data-jump-rules]")?.addEventListener("click", () => {
+    switchTab("rules");
+    $("rulesPanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   sb.auth.onAuthStateChange(() => {
     window.setTimeout(() => {
