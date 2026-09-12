@@ -24,7 +24,14 @@
     return;
   }
 
-  const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+  const sb = window.supabase.createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      storageKey: "seh-scl27-fantasy-auth",
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  });
 
   const state = {
     competition: null,
