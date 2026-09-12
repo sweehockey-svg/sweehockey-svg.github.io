@@ -15581,14 +15581,20 @@ function SEH_initShop() {
   async function loadAdminHubSummary(){
     if(!sb||writer?.role!=='admin')return;
     try{
-      const [links,fa,profiles]=await Promise.all([
-        sb.from('ehockey_discord_player_links').select('*',{count:'exact',head:true}).eq('status','pending'),
-        sb.from('ehockey_free_agent_requests').select('*',{count:'exact',head:true}).eq('status','pending'),
-        sb.from('ehockey_player_profile_requests').select('*',{count:'exact',head:true}).eq('status','pending')
-      ]);
-      if($('adminHubLinks'))$('adminHubLinks').textContent=String(links.count??0);
-      if($('adminHubFa'))$('adminHubFa').textContent=String(fa.count??0);
-      if($('adminHubProfiles'))$('adminHubProfiles').textContent=String(profiles.count??0);
+      const {data,error}=await sb.rpc('seh_admin_pending_counts');
+      if(error)throw error;
+      const row=Array.isArray(data)?data[0]:data;
+      const breakdown={
+        links:Number(row?.links)||0,
+        fa:Number(row?.fa)||0,
+        profiles:Number(row?.profiles)||0
+      };
+      if($('adminHubLinks'))$('adminHubLinks').textContent=String(breakdown.links);
+      if($('adminHubFa'))$('adminHubFa').textContent=String(breakdown.fa);
+      if($('adminHubProfiles'))$('adminHubProfiles').textContent=String(breakdown.profiles);
+      window.dispatchEvent(new CustomEvent('seh:admin-pending-count',{
+        detail:{total:Number(row?.total)||0,breakdown}
+      }));
     }catch(error){
       console.warn('Kunde inte läsa spelarärenden till Admincenter',error);
     }
