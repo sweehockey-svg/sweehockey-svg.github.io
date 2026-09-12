@@ -281,12 +281,19 @@
     return true;
   }
 
-  function countryFlag(code) {
+  function countryFlagMarkup(code) {
     const normalized = clean(code).toUpperCase();
-    if (!/^[A-Z]{2}$/.test(normalized)) return "🌐";
-    return String.fromCodePoint(
-      ...[...normalized].map((letter) => 127397 + letter.charCodeAt(0))
-    );
+    if (!/^[A-Z]{2}$/.test(normalized)) {
+      return '<span class="fantasy-country-flag fantasy-country-flag--fallback" aria-label="Okänt land">🌐</span>';
+    }
+
+    return '<img class="fantasy-country-flag" src="https://flagcdn.com/24x18/' +
+      encodeURIComponent(normalized.toLowerCase()) +
+      '.png" data-fantasy-country-flag data-country-code="' +
+      escapeHtml(normalized) +
+      '" alt="' + escapeHtml(normalized) +
+      '" title="' + escapeHtml(normalized) +
+      '" width="24" height="18" loading="lazy">';
   }
 
   function playerPortraitUrls(player) {
@@ -337,6 +344,16 @@
       }
 
       image.classList.add("is-default");
+      return;
+    }
+
+    if (image.hasAttribute("data-fantasy-country-flag")) {
+      const code = clean(image.dataset.countryCode).toUpperCase();
+      const fallback = document.createElement("span");
+      fallback.className = "fantasy-country-flag fantasy-country-flag--text";
+      fallback.textContent = code || "🌐";
+      fallback.setAttribute("aria-label", code || "Okänt land");
+      image.replaceWith(fallback);
       return;
     }
 
@@ -506,7 +523,7 @@
 
       const player = pick.player;
       const captain = Number(captainId) === Number(player.id);
-      const flag = countryFlag(player.country_code);
+      const flag = countryFlagMarkup(player.country_code);
       const savedScore = savedScoreBreakdown(slot, pick);
       const scoreMarkup = savedScore
         ? `<div class="fantasy-slot__score">
@@ -534,7 +551,7 @@
               <span class="fantasy-slot__position fantasy-slot__position--overlay">${slot}</span>
             </div>
             <div class="fantasy-slot__identity">
-              <strong><span class="fantasy-flag">${flag}</span>${escapeHtml(clean(player.display_gamertag) || "Okänd")}</strong>
+              <strong class="fantasy-player-name-line">${flag}<span class="fantasy-player-name">${escapeHtml(clean(player.display_gamertag) || "Okänd")}</span></strong>
               <small class="fantasy-slot__team">
                 ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--slot")}
                 <span>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</span>
@@ -599,7 +616,7 @@
             ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--market")}
           </div>
           <div class="fantasy-player-row__main">
-            <strong><span class="fantasy-flag">${countryFlag(player.country_code)}</span>${escapeHtml(player.display_gamertag)}</strong>
+            <strong class="fantasy-player-name-line">${countryFlagMarkup(player.country_code)}<span class="fantasy-player-name">${escapeHtml(player.display_gamertag)}</span></strong>
             <small>
               ${escapeHtml(clean(player.real_team_name) || "Lag ej klart")} ·
               ${escapeHtml(slots)}
@@ -641,7 +658,7 @@
               <span>${escapeHtml(eligibleSlots(player).join("/") || clean(player.primary_position) || "–")}</span>
               <b>${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</b>
             </div>
-            <h3><span class="fantasy-flag">${countryFlag(player.country_code)}</span>${escapeHtml(player.display_gamertag)}</h3>
+            <h3 class="fantasy-player-name-line">${countryFlagMarkup(player.country_code)}<span class="fantasy-player-name">${escapeHtml(player.display_gamertag)}</span></h3>
             <p>
               ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--card")}
               <span>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</span>
@@ -826,7 +843,7 @@
             ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--picker")}
           </div>
           <div class="fantasy-picker-player__info">
-            <strong><span class="fantasy-flag">${countryFlag(player.country_code)}</span>${escapeHtml(player.display_gamertag)}</strong>
+            <strong class="fantasy-player-name-line">${countryFlagMarkup(player.country_code)}<span class="fantasy-player-name">${escapeHtml(player.display_gamertag)}</span></strong>
             <small>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</small>
             <span>${escapeHtml(eligibleSlots(player).join(" / "))}</span>
           </div>
