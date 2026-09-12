@@ -1893,3 +1893,130 @@ a{color:inherit}
     background:#3f87b2
   }
 }
+
+
+/* Builder proportions v4: lineup first */
+@media(min-width:1251px){
+  .fantasy-layout{
+    grid-template-columns:minmax(690px,1.32fr) minmax(390px,.68fr);
+    gap:14px;
+  }
+
+  .fantasy-rink{
+    border-color:#1c4059;
+    background:
+      linear-gradient(180deg,rgba(5,17,27,.98),rgba(3,12,19,.99));
+  }
+
+  .fantasy-lineup{
+    min-height:660px;
+    column-gap:18px;
+    row-gap:16px;
+    padding:34px 42px 36px;
+  }
+
+  .fantasy-slot{
+    width:100%;
+    max-width:218px;
+    min-height:204px;
+    justify-self:center;
+    padding:11px;
+    border-radius:13px;
+  }
+
+  .fantasy-slot[data-slot=G]{
+    width:100%;
+    max-width:226px;
+  }
+
+  .fantasy-slot.is-filled{
+    background:
+      radial-gradient(circle at 50% 0,rgba(42,132,177,.11),transparent 42%),
+      linear-gradient(180deg,rgba(11,35,50,.98),rgba(3,14,22,.99));
+    border-color:#2b6687;
+    box-shadow:
+      0 16px 36px rgba(0,0,0,.25),
+      inset 0 1px 0 rgba(255,255,255,.05);
+  }
+
+  .fantasy-slot.is-captain-card{
+    border-color:#44b9ea;
+    box-shadow:
+      0 18px 42px rgba(0,0,0,.28),
+      0 0 0 1px rgba(76,200,255,.10),
+      inset 0 1px 0 rgba(150,231,255,.10);
+  }
+
+  .fantasy-slot__portrait{
+    width:88px;
+    height:112px;
+    flex:0 0 112px;
+    border-radius:10px;
+    border-color:#2b6687;
+  }
+
+  .fantasy-slot__identity strong{
+    font-size:.86rem;
+  }
+
+  .fantasy-slot__player small{
+    font-size:.64rem;
+  }
+
+  .fantasy-slot__score{
+    margin-top:9px;
+    padding:7px 9px;
+    border-radius:8px;
+  }
+
+  .fantasy-slot__score>strong{
+    font-size:.78rem;
+  }
+
+  .fantasy-slot__actions{
+    margin-top:9px;
+    gap:7px;
+  }
+
+  .fantasy-slot__actions button{
+    min-height:31px;
+    font-size:.56rem;
+  }
+
+  .fantasy-market__filters{
+    grid-template-columns:minmax(0,1fr) 130px;
+  }
+
+  .fantasy-player-row{
+    grid-template-columns:40px minmax(0,1fr) 52px 82px;
+    gap:8px;
+    padding:9px 10px;
+  }
+
+  .fantasy-player-row__portrait-wrap{
+    width:36px;
+    height:44px;
+  }
+
+  .fantasy-player-row__portrait{
+    width:36px;
+    height:44px;
+  }
+
+  .fantasy-player-row strong{
+    font-size:.78rem;
+  }
+
+  .fantasy-player-row small{
+    font-size:.61rem;
+  }
+
+  .fantasy-player-row__price b{
+    font-size:.82rem;
+  }
+
+  .fantasy-player-row button{
+    padding:7px 7px;
+    font-size:.58rem;
+  }
+}
