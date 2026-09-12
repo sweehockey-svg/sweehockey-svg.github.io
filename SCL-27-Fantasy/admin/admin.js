@@ -278,7 +278,7 @@
               ${["LW","C","RW","LD","RD","G"].map((pos) => `<option value="${pos}" ${pos === player.primary_position ? "selected" : ""}>${pos}</option>`).join("")}
             </select>
           </td>
-          <td><input data-player-price type="number" min="1" max="100" step="0.1" value="${num(player.price)}"></td>
+          <td><input data-player-price type="number" min="1" max="100" step="1" value="${Math.round(num(player.price))}"></td>
           <td><strong>${fmt(rating, 2)}</strong></td>
           <td>
             <label class="fa-toggle">
@@ -411,7 +411,7 @@
     try {
       const { error } = await sb.rpc("seh_fantasy_admin_update_player", {
         p_pool_player_id: Number(id),
-        p_price: Number(row.querySelector("[data-player-price]").value),
+        p_price: Math.round(Number(row.querySelector("[data-player-price]").value)),
         p_is_available: row.querySelector("[data-player-available]").checked,
         p_primary_position: row.querySelector("[data-player-pos]").value
       });
@@ -468,7 +468,7 @@
             <article class="fa-roster-player">
               <span>${esc(p.slot)}${p.is_captain ? " · KAPTEN" : ""}</span>
               <strong>${esc(p.display_gamertag)}</strong>
-              <small>${esc(p.real_team_name || "–")} · ${fmt(p.locked_price, num(p.locked_price) % 1 ? 1 : 0)} CR</small>
+              <small>${esc(p.real_team_name || "–")} · ${fmt(p.locked_price)} CR</small>
               <b>${fmt(p.fantasy_points, num(p.fantasy_points) % 1 ? 1 : 0)} P</b>
             </article>
           `).join("")}
@@ -509,7 +509,7 @@
     const value = Array.isArray(data?.value_picks) ? data.value_picks : [];
     $("valuePicks").innerHTML = value.map((row) => `
       <div class="fa-list-row">
-        <span><strong>${esc(row.display_gamertag)}</strong><small>${esc(row.real_team_name)} · ${fmt(row.price,1)} CR</small></span>
+        <span><strong>${esc(row.display_gamertag)}</strong><small>${esc(row.real_team_name)} · ${fmt(row.price)} CR</small></span>
         <b>${fmt(row.points_per_credit,2)}</b>
       </div>
     `).join("");
