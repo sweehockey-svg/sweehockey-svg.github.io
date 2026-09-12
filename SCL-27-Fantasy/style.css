@@ -2378,3 +2378,90 @@ a{color:inherit}
   background:linear-gradient(180deg,#0b2b3f,#082033);
   color:#e2f8ff;
 }
+
+
+/* Lineup identity to the right of portrait */
+@media(min-width:721px){
+  .fantasy-flag{
+    margin-right:7px;
+    transform:none;
+    font-size:1.05rem;
+    line-height:1;
+    vertical-align:-.06em;
+  }
+
+  .fantasy-slot__visual{
+    flex-direction:row;
+    align-items:center;
+    justify-content:flex-start;
+    gap:14px;
+  }
+
+  .fantasy-slot__portrait-wrap{
+    width:118px;
+    flex:0 0 118px;
+    justify-content:flex-start;
+  }
+
+  .fantasy-slot__portrait{
+    width:108px;
+    height:134px;
+    flex:0 0 134px;
+  }
+
+  .fantasy-slot__identity{
+    flex:1 1 auto;
+    width:auto;
+    min-width:0;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:flex-start;
+  }
+
+  .fantasy-slot__identity strong{
+    width:100%;
+    margin:0 0 5px;
+    font-size:1rem;
+    line-height:1.1;
+  }
+
+  .fantasy-slot__team{
+    justify-content:flex-start;
+    width:100%;
+    margin-bottom:3px;
+  }
+
+  .fantasy-slot__team span{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .fantasy-slot__meta{
+    text-align:left;
+    font-size:.66rem;
+    letter-spacing:.02em;
+  }
+}
+
+@media(max-width:720px){
+  .fantasy-slot__visual{
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+
+  .fantasy-slot__identity{
+    width:100%;
+    text-align:center;
+    align-items:center;
+  }
+
+  .fantasy-slot__team,
+  .fantasy-slot__meta{
+    justify-content:center;
+    text-align:center;
+  }
+}
