@@ -304,8 +304,11 @@
     const counts = sync.counts || {};
     const runs = Array.isArray(sync.runs) ? sync.runs : [];
 
-    if ($("syncLeagueId")) $("syncLeagueId").value = settings.source_league_id || "";
-    if ($("syncAutoEnabled")) $("syncAutoEnabled").checked = Boolean(settings.auto_sync_enabled);
+    const sourceLeagueId = Number(settings.source_league_id || 0);
+    const sourceIsPlaceholder = sourceLeagueId === 999999;
+    if ($("syncLeagueId")) $("syncLeagueId").value = sourceIsPlaceholder ? "" : (sourceLeagueId || "");
+    if ($("syncAutoEnabled")) $("syncAutoEnabled").checked = sourceIsPlaceholder ? false : Boolean(settings.auto_sync_enabled);
+    if ($("runSportsGamerSync")) $("runSportsGamerSync").disabled = sourceIsPlaceholder;
     if ($("syncTimes")) $("syncTimes").value = Array.isArray(settings.schedule_times)
       ? settings.schedule_times.join(", ")
       : "";
@@ -315,7 +318,7 @@
       : "Aldrig";
 
     const cards = [
-      ["SPORTSGAMER LIGA", settings.source_league_id || "–", "källa"],
+      ["SPORTSGAMER LIGA", sourceIsPlaceholder ? "EJ SATT" : (sourceLeagueId || "–"), sourceIsPlaceholder ? "väntar på SCL 27" : "källa"],
       ["MATCHER", counts.matches || 0, "importerade"],
       ["MATCHRADER", counts.match_player_rows || 0, "spelare/match"],
       ["SPELARE", counts.players_with_match_rows || 0, "med matchdata"],
@@ -520,8 +523,8 @@
 
     try {
       const leagueId = Number($("syncLeagueId")?.value);
-      if (!Number.isInteger(leagueId) || leagueId <= 0) {
-        throw new Error("Ange ett giltigt SportsGamer League ID.");
+      if (!Number.isInteger(leagueId) || leagueId <= 0 || leagueId === 999999) {
+        throw new Error("Ange SCL 27:s riktiga SportsGamer liga-ID.");
       }
 
       const sourceResult = await sb.rpc("seh_fantasy_admin_update_sync_source", {
@@ -577,8 +580,8 @@
 
     try {
       const leagueId = Number(state.syncState?.settings?.source_league_id);
-      if (!Number.isInteger(leagueId) || leagueId <= 0) {
-        throw new Error("SportsGamer League ID saknas. Spara synkinställningarna först.");
+      if (!Number.isInteger(leagueId) || leagueId <= 0 || leagueId === 999999) {
+        throw new Error("SCL 27:s riktiga SportsGamer liga-ID är inte satt ännu.");
       }
 
       await callAdminSync({
