@@ -103,13 +103,13 @@
 
     $("transferMode").textContent =
       mode === "preseason"
-        ? "PRESEASON · OBEGRÄNSADE BYTEN"
+        ? "INFÖR SÄSONGEN · OBEGRÄNSADE BYTEN"
         : mode === "unlimited"
-          ? (clean(target?.name) || "FRI TRANSFERRUNDA")
+          ? (clean(target?.name) || "FRI BYTESRUNDA")
           : mode === "round"
             ? (clean(target?.name) || "KOMMANDE RUNDA")
             : mode === "closed"
-              ? "TRANSFERFÖNSTRET STÄNGT"
+              ? "BYTESFÖNSTRET STÄNGT"
               : "BYTEN AVSTÄNGDA";
 
     $("transferFree").textContent = unlimited ? "∞" : String(free);
@@ -122,7 +122,7 @@
         ? "1 gratis byte per runda · max 2 sparade · extra byte kostar −" + format(extraCost) + " P. Kaptensbyte är gratis."
         : mode === "closed"
           ? "Inga fler rundor är öppna för byten."
-          : "Transferreglerna är inte aktiva just nu.";
+          : "Bytesreglerna är inte aktiva just nu.";
   }
 
   let rosterToastTimer = null;
@@ -163,6 +163,19 @@
 
     if (!comp.lock_at) return true;
     return new Date(comp.lock_at).getTime() > Date.now();
+  }
+
+  function competitionStatusLabel(status) {
+    const key = clean(status).toLowerCase();
+    const labels = {
+      setup: "UPPSTART",
+      open: "ÖPPEN",
+      locked: "LÅST",
+      live: "PÅGÅR",
+      finished: "AVSLUTAD",
+      archived: "ARKIVERAD"
+    };
+    return labels[key] || clean(status || "UPPSTART").toUpperCase();
   }
 
   function eligibleSlots(player) {
@@ -254,7 +267,7 @@
     return [
       scorePill("Mål", d.goals, d.goal_points, "goal"),
       scorePill("Assist", d.assists, d.assist_points, "assist"),
-      scorePill("GWG", d.game_winning_goals, d.gwg_points, "success")
+      scorePill("Avg. mål", d.game_winning_goals, d.gwg_points, "success")
     ].join("");
   }
 
@@ -369,7 +382,7 @@
   function renderHero() {
     const comp = state.competition;
     $("heroStart").textContent = comp?.starts_on ? formatDate(comp.starts_on).toUpperCase() : "1 OKT";
-    $("heroStatus").textContent = clean(comp?.status || "setup").toUpperCase();
+    $("heroStatus").textContent = competitionStatusLabel(comp?.status || "setup");
     $("heroBudget").textContent = format(comp?.budget || 100);
     $("heroEntries").textContent = String(state.leaderboard.length || 0);
   }
@@ -444,8 +457,8 @@
     }
     if ($("teamPointsLabel")) {
       $("teamPointsLabel").textContent = state.entry && !savedRosterIsCurrent
-        ? "SAVED SCL25 PTS"
-        : "SCL25 POINTS";
+        ? "SPARADE SCL25-POÄNG"
+        : "SCL25-POÄNG";
     }
 
     if (saveButton) {
@@ -467,7 +480,7 @@
               ? "TESTLAG SPARAT"
               : state.entry
                 ? "UPPDATERA TESTLAG"
-                : "LOCK IN TEST TEAM";
+                : "SPARA TESTLAG";
     }
 
     $$(".fantasy-slot").forEach((slotEl) => {
@@ -1216,7 +1229,7 @@
 
       if (transferCount > 0) {
         successText += unlimited
-          ? " " + transferCount + " byte är gratis i preseason/fri transferrunda."
+          ? " " + transferCount + " byte är gratis inför säsongen/i fri bytesrunda."
           : paidCount > 0
             ? " " + transferCount + " byte · straff −" + format(penalty) + " P."
             : " " + transferCount + " gratis byte använt.";
