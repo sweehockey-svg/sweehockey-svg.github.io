@@ -46,7 +46,7 @@ a{color:inherit}
 .fa-hero__status span{color:#55788e;font-size:.55rem;font-weight:950;letter-spacing:.12em}
 .fa-hero__status strong{margin-top:4px;font-size:1.15rem}
 .fa-hero__status em{margin-top:9px;color:var(--green);font-style:normal;font-size:.78rem;font-weight:950}
-.fa-tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:14px 0;padding:6px;border:1px solid #153047;border-radius:11px;background:#050d14}
+.fa-tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:14px 0;padding:6px;border:1px solid #153047;border-radius:11px;background:#050d14}
 .fa-tabs button{border:1px solid transparent;border-radius:7px;background:transparent;color:#637f93;padding:10px;font-size:.68rem;font-weight:950;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
 .fa-tabs button.is-active{border-color:#285d7e;background:#0a1d2a;color:#eaf7ff}
 .fa-panel{padding:18px;border:1px solid #153149;border-radius:14px;background:linear-gradient(180deg,#07121b,#040b11)}
@@ -140,3 +140,45 @@ a{color:inherit}
   .fa-head-actions input{min-width:0}
   .fa-roster{grid-template-columns:1fr}
 }
+
+.fa-sync-settings{
+  display:flex;
+  flex-direction:column;
+  gap:10px
+}
+.fa-sync-settings>label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding:12px;
+  border:1px solid #15344b;
+  border-radius:9px;
+  background:#050f17
+}
+.fa-sync-settings label>span{
+  color:#5b7c92;
+  font-size:.7rem;
+  font-weight:900
+}
+.fa-sync-settings input[type=text]{
+  width:100%;
+  border:1px solid #1d425b;
+  border-radius:7px;
+  background:#030a10;
+  color:#fff;
+  padding:9px 10px;
+  outline:none
+}
+.fa-sync-settings input[type=text]:focus{border-color:#2d7da9}
+.fa-sync-settings small{
+  color:#5f7d91;
+  font-size:.62rem;
+  line-height:1.45
+}
+.fa-checkbox--sync{
+  flex-direction:row!important;
+  align-items:center
+}
+.fa-checkbox--sync input{width:auto}
+.fa-sync-error{color:var(--red)!important}
+#syncCards .fa-card strong{font-size:1.35rem}
