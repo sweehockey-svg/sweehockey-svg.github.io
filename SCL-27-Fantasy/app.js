@@ -201,11 +201,28 @@
     const budget = number(state.competition?.budget || 100);
     const used = usedBudget();
     const captainId = [...state.picks.values()].find((pick) => pick.isCaptain)?.player?.id || null;
+    const saveButton = $("saveTeam");
 
     $("selectedCount").textContent = state.picks.size + " / 6";
     $("budgetUsed").textContent = format(used, used % 1 ? 1 : 0);
     $("budgetLeft").textContent = format(budget - used, (budget - used) % 1 ? 1 : 0);
     $("budgetLeft").classList.toggle("over-budget", used > budget);
+
+    if (saveButton) {
+      const complete = state.picks.size === 6;
+      const hasCaptain = Boolean(captainId);
+      const withinBudget = used <= budget;
+      const canSave = competitionOpen() && complete && hasCaptain && withinBudget;
+
+      saveButton.disabled = !canSave;
+      saveButton.textContent = !complete
+        ? "VÄLJ 6 SPELARE"
+        : !hasCaptain
+          ? "VÄLJ KAPTEN"
+          : !withinBudget
+            ? "ÖVER BUDGET"
+            : "LOCK IN TEST TEAM";
+    }
 
     $$(".fantasy-slot").forEach((slotEl) => {
       const slot = slotEl.dataset.slot;
@@ -441,18 +458,19 @@
     if (entryResult.error) throw entryResult.error;
 
     state.entry = entryResult.data || null;
-    state.picks.clear();
 
     if (!state.entry) {
       if (!clean($("teamName").value)) {
         const playerName = clean(state.account?.player_name);
         $("teamName").value = playerName ? playerName + " Fantasy" : "";
       }
+      // Keep any unsaved draft intact. Auth refreshes must never wipe the user's picks.
       renderAll();
       return;
     }
 
     $("teamName").value = state.entry.team_name || "";
+    state.picks.clear();
 
     const picksResult = await sb
       .from("ehockey_fantasy_entry_players")
@@ -619,7 +637,7 @@
     } catch (error) {
       setStatus("saveStatus", "Fel: " + (error?.message || error), "error");
     } finally {
-      $("saveTeam").disabled = !competitionOpen();
+      renderLineup();
     }
   }
 
@@ -685,12 +703,29 @@
     $("rulesPanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
-  sb.auth.onAuthStateChange(() => {
-    window.setTimeout(() => {
-      resolveAccount().catch((error) => {
-        console.warn("Fantasy auth refresh failed", error);
-      });
-    }, 0);
+  sb.auth.onAuthStateChange((event, session) => {
+    // Do not reload the builder on token refresh / duplicate SIGNED_IN events:
+    // that could wipe a draft before it is saved.
+    if (event === "SIGNED_OUT") {
+      state.session = null;
+      state.account = null;
+      state.entry = null;
+      state.picks.clear();
+      renderAll();
+      showGate("logged-out");
+      return;
+    }
+
+    const currentUserId = state.session?.user?.id || "";
+    const nextUserId = session?.user?.id || "";
+
+    if (event === "SIGNED_IN" && nextUserId && nextUserId !== currentUserId) {
+      window.setTimeout(() => {
+        resolveAccount().catch((error) => {
+          console.warn("Fantasy auth sign-in refresh failed", error);
+        });
+      }, 0);
+    }
   });
 
   switchTab("team");
