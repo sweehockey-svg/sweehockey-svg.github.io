@@ -2120,3 +2120,248 @@ a{color:inherit}
     font-size:.56rem;
   }
 }
+
+
+/* Premium lineup v7: centered defense + stat breakdown */
+@media(min-width:721px){
+  .fantasy-lineup{
+    grid-template-columns:repeat(14,minmax(0,1fr));
+    grid-template-areas:
+      ". lw lw lw lw c c c c rw rw rw rw ."
+      ". . . ld ld ld . . rd rd rd . . ."
+      ". . . . . g g g g . . . . .";
+    min-height:700px;
+    column-gap:14px;
+    row-gap:18px;
+    padding:34px 26px 40px;
+  }
+
+  .fantasy-lineup:before{
+    top:46%;
+    width:150px;
+    height:150px;
+    border-color:rgba(130,214,255,.13);
+  }
+
+  .fantasy-slot{
+    width:100%;
+    max-width:264px;
+    min-height:320px;
+    justify-self:center;
+    padding:14px 14px 12px;
+    border:1px solid rgba(64,155,205,.55);
+    border-radius:16px;
+    background:
+      radial-gradient(circle at 50% 0,rgba(58,158,210,.12),transparent 44%),
+      linear-gradient(180deg,rgba(10,34,49,.98),rgba(5,18,28,.99));
+    box-shadow:
+      0 18px 40px rgba(0,0,0,.24),
+      inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
+  .fantasy-slot.is-filled{
+    border-style:solid;
+  }
+
+  .fantasy-slot.is-captain-card{
+    border-color:#50c3fb;
+    box-shadow:
+      0 22px 44px rgba(0,0,0,.28),
+      0 0 0 1px rgba(80,195,251,.12),
+      inset 0 1px 0 rgba(170,235,255,.08);
+  }
+
+  .fantasy-slot[data-slot=G]{
+    max-width:272px;
+  }
+
+  .fantasy-slot__visual{
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    margin-top:0;
+  }
+
+  .fantasy-slot__portrait-wrap{
+    position:relative;
+    width:114px;
+    display:flex;
+    justify-content:center;
+  }
+
+  .fantasy-slot__portrait{
+    width:108px;
+    height:134px;
+    flex:0 0 134px;
+    border-radius:12px;
+    border-color:#3382b1;
+    background:linear-gradient(180deg,#12324a,#081723);
+    box-shadow:0 10px 24px rgba(0,0,0,.20);
+  }
+
+  .fantasy-slot__position--overlay{
+    position:absolute;
+    top:-7px;
+    right:-9px;
+    z-index:3;
+    padding:5px 8px;
+    border:1px solid rgba(91,197,248,.52);
+    border-radius:7px;
+    background:linear-gradient(180deg,#11425f,#0a2a3f);
+    box-shadow:0 6px 18px rgba(0,0,0,.24);
+  }
+
+  .fantasy-slot__identity{
+    width:100%;
+    padding:0 2px;
+    text-align:center;
+  }
+
+  .fantasy-slot__identity strong{
+    display:block;
+    margin:2px 0 4px;
+    color:#f4fbff;
+    font-size:.96rem;
+    line-height:1.15;
+    letter-spacing:-.01em;
+  }
+
+  .fantasy-slot__team{
+    justify-content:center;
+    min-height:18px;
+    gap:6px;
+  }
+
+  .fantasy-slot__player small{
+    font-size:.64rem;
+    line-height:1.35;
+  }
+
+  .fantasy-slot__score{
+    display:block;
+    margin-top:10px;
+    padding:9px 11px;
+    border:1px solid rgba(39,122,166,.5);
+    border-radius:10px;
+    background:linear-gradient(180deg,rgba(5,26,39,.96),rgba(4,17,28,.98));
+    text-align:left;
+  }
+
+  .fantasy-slot__score-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+  }
+
+  .fantasy-slot__score-head span{
+    color:#65d6ff;
+    font-size:.56rem;
+    font-weight:1000;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+
+  .fantasy-slot__score-head strong{
+    color:#e8fbff;
+    font-size:1.05rem;
+    line-height:1;
+  }
+
+  .fantasy-slot__score>small{
+    display:block;
+    margin-top:5px;
+    color:#89aabd;
+    font-size:.62rem;
+  }
+
+  .fantasy-slot__details{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;
+    margin-top:10px;
+  }
+
+  .fantasy-slot__detail-pill{
+    min-height:58px;
+    padding:7px 6px 6px;
+    border:1px solid rgba(28,93,130,.52);
+    border-radius:10px;
+    background:linear-gradient(180deg,rgba(7,23,36,.95),rgba(4,16,25,.98));
+    text-align:center;
+  }
+
+  .fantasy-slot__detail-pill span{
+    display:block;
+    color:#5e89a4;
+    font-size:.49rem;
+    font-weight:900;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+  }
+
+  .fantasy-slot__detail-pill strong{
+    display:block;
+    margin-top:4px;
+    color:#f0fbff;
+    font-size:.82rem;
+    line-height:1.05;
+  }
+
+  .fantasy-slot__detail-pill em{
+    display:block;
+    margin-top:3px;
+    color:#7ddaff;
+    font-style:normal;
+    font-size:.53rem;
+    white-space:nowrap;
+  }
+
+  .fantasy-slot__detail-pill--goal strong,
+  .fantasy-slot__detail-pill--goal em{
+    color:#ffd76d;
+  }
+
+  .fantasy-slot__detail-pill--assist strong,
+  .fantasy-slot__detail-pill--assist em{
+    color:#8bd8ff;
+  }
+
+  .fantasy-slot__detail-pill--success strong,
+  .fantasy-slot__detail-pill--success em{
+    color:#8dffbe;
+  }
+
+  .fantasy-slot__detail-pill--ice strong,
+  .fantasy-slot__detail-pill--ice em{
+    color:#b5ebff;
+  }
+
+  .fantasy-slot__actions{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,.78fr);
+    gap:7px;
+    margin-top:11px;
+  }
+
+  .fantasy-slot__actions button{
+    min-width:0;
+    min-height:32px;
+  }
+}
+
+@media(min-width:1251px){
+  .fantasy-layout{
+    grid-template-columns:minmax(820px,1.48fr) minmax(320px,.52fr);
+  }
+}
+
+@media(max-width:720px){
+  .fantasy-slot{
+    min-height:0;
+  }
+
+  .fantasy-slot__details{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
