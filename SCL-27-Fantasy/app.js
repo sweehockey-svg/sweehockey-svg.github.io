@@ -47,7 +47,8 @@
     transferState: null,
     activeTab: "team",
     pendingPlacementPlayerId: null,
-    pickerSlot: null
+    pickerSlot: null,
+    swapSlot: null
   };
 
   function format(value, digits = 0) {
@@ -533,7 +534,7 @@
             <button type="button" data-captain="${player.id}" class="${captain ? "is-captain" : ""}">
               ${captain ? "KAPTEN" : "Gör kapten"}
             </button>
-            <button type="button" data-remove="${slot}">Ta bort</button>
+            <button type="button" data-swap="${slot}">Byt</button>
           </div>
         </div>
       `;
@@ -687,11 +688,12 @@
     if (!player || !slot) return;
 
     const occupied = state.picks.get(slot);
-    if (occupied) {
+    const isSwap = state.swapSlot === slot && Boolean(occupied);
+    if (occupied && !isSwap) {
       showRosterError(
         slot + " är redan upptagen av " +
         (clean(occupied.player?.display_gamertag) || "en annan spelare") +
-        ". Ta bort spelaren på " + slot + " först."
+        ". Använd Byt på spelarkortet."
       );
       return;
     }
@@ -704,20 +706,32 @@
       return;
     }
 
-    if (selectedIds().has(Number(player.id))) {
+    const selected = selectedIds();
+    if (isSwap && occupied?.player?.id) selected.delete(Number(occupied.player.id));
+    if (selected.has(Number(player.id))) {
       showRosterError((clean(player.display_gamertag) || "Spelaren") + " finns redan i laget.");
       return;
     }
 
     const teamLimit = number(state.competition?.max_players_per_real_team || 2);
-    if (realTeamCount(player) >= teamLimit) {
+    const teamCount = [...state.picks.entries()].filter(([pickSlot, pick]) =>
+      pickSlot !== (isSwap ? slot : "") &&
+      pick.player?.real_team_id != null &&
+      player.real_team_id != null &&
+      Number(pick.player.real_team_id) === Number(player.real_team_id)
+    ).length;
+    if (teamCount >= teamLimit) {
       showRosterError("Du får välja högst " + teamLimit + " spelare från samma riktiga lag.");
       return;
     }
 
-    state.picks.set(slot, { player, isCaptain: false });
+    state.picks.set(slot, {
+      player,
+      isCaptain: isSwap ? Boolean(occupied.isCaptain) : false
+    });
     state.pendingPlacementPlayerId = null;
     state.pickerSlot = null;
+    state.swapSlot = null;
     setStatus("saveStatus", "");
     $("positionDialog")?.close();
     $("playerPickerDialog")?.close();
@@ -747,6 +761,8 @@
 
   function pickerPlayers(slot, query = "") {
     const selected = selectedIds();
+    const currentPick = state.swapSlot === slot ? state.picks.get(slot) : null;
+    if (currentPick?.player?.id) selected.delete(Number(currentPick.player.id));
     const normalizedQuery = clean(query).toLocaleLowerCase("sv-SE");
 
     return state.pool
@@ -774,12 +790,21 @@
     const query = clean($("playerPickerSearch")?.value);
     const teamLimit = number(state.competition?.max_players_per_real_team || 2);
     const rows = pickerPlayers(slot, query);
+    const swapPick = state.swapSlot === slot ? state.picks.get(slot) : null;
 
-    $("playerPickerTitle").textContent = "Välj " + slot;
+    $("playerPickerTitle").textContent = swapPick
+      ? "Byt " + (clean(swapPick.player?.display_gamertag) || slot)
+      : "Välj " + slot;
     $("playerPickerCount").textContent = rows.length + " spelare kan användas som " + slot;
 
     host.innerHTML = rows.map((player) => {
-      const teamBlocked = realTeamCount(player) >= teamLimit;
+      const teamCount = [...state.picks.entries()].filter(([pickSlot, pick]) =>
+        pickSlot !== state.swapSlot &&
+        pick.player?.real_team_id != null &&
+        player.real_team_id != null &&
+        Number(pick.player.real_team_id) === Number(player.real_team_id)
+      ).length;
+      const teamBlocked = teamCount >= teamLimit;
       return `
         <article class="fantasy-picker-player ${teamBlocked ? "is-blocked" : ""}">
           <div class="fantasy-picker-player__portrait-wrap">
@@ -811,11 +836,28 @@
       showRosterError(
         slot + " är redan upptagen av " +
         (clean(occupied.player?.display_gamertag) || "en annan spelare") +
-        ". Ta bort spelaren på " + slot + " först."
+        ". Använd Byt på spelarkortet."
       );
       return;
     }
 
+    state.swapSlot = null;
+    state.pickerSlot = slot;
+    if ($("playerPickerSearch")) $("playerPickerSearch").value = "";
+    renderPlayerPicker();
+    $("playerPickerDialog")?.showModal();
+  }
+
+  function openSwapPlayerPicker(slot) {
+    if (!["LW","C","RW","LD","RD","G"].includes(slot)) return;
+
+    const occupied = state.picks.get(slot);
+    if (!occupied) {
+      openPlayerPicker(slot);
+      return;
+    }
+
+    state.swapSlot = slot;
     state.pickerSlot = slot;
     if ($("playerPickerSearch")) $("playerPickerSearch").value = "";
     renderPlayerPicker();
@@ -1228,9 +1270,9 @@
       return;
     }
 
-    const remove = event.target.closest("[data-remove]");
-    if (remove) {
-      removePlayer(remove.dataset.remove);
+    const swap = event.target.closest("[data-swap]");
+    if (swap) {
+      openSwapPlayerPicker(swap.dataset.swap);
       return;
     }
 
@@ -1250,10 +1292,12 @@
   $("discordLogin")?.addEventListener("click", loginWithDiscord);
   $("closePlayerPickerDialog")?.addEventListener("click", () => {
     state.pickerSlot = null;
+    state.swapSlot = null;
     $("playerPickerDialog")?.close();
   });
   $("playerPickerDialog")?.addEventListener("cancel", () => {
     state.pickerSlot = null;
+    state.swapSlot = null;
   });
   $("playerPickerSearch")?.addEventListener("input", renderPlayerPicker);
   $("closePositionDialog")?.addEventListener("click", () => {
