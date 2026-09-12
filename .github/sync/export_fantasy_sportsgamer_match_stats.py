@@ -104,7 +104,9 @@ def table_inventory(connection: Any) -> dict[str, list[str]]:
     rows = select(
         connection,
         """
-        select table_name, column_name
+        select
+          table_name as detected_table_name,
+          column_name as detected_column_name
         from information_schema.columns
         where table_schema=%s
         order by table_name, ordinal_position
@@ -113,7 +115,7 @@ def table_inventory(connection: Any) -> dict[str, list[str]]:
     )
     result: dict[str, list[str]] = defaultdict(list)
     for row in rows:
-        result[str(row["table_name"])].append(str(row["column_name"]))
+        result[str(row["detected_table_name"])].append(str(row["detected_column_name"]))
     return dict(result)
 
 
