@@ -43,6 +43,7 @@
     picks: new Map(),
     savedPicks: new Map(),
     savedScores: new Map(),
+    transferState: null,
     activeTab: "team",
     pendingPlacementPlayerId: null,
     pickerSlot: null
@@ -72,6 +73,54 @@
     el.textContent = text || "";
     if (tone) el.dataset.tone = tone;
     else el.removeAttribute("data-tone");
+  }
+
+  function formatDeadline(value) {
+    const raw = clean(value);
+    if (!raw) return "Ej satt";
+    const date = new Date(raw);
+    if (Number.isNaN(date.valueOf())) return raw;
+    return new Intl.DateTimeFormat("sv-SE", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(date);
+  }
+
+  function renderTransferStatus() {
+    const panel = $("transferPanel");
+    if (!panel) return;
+
+    const info = state.transferState;
+    const mode = clean(info?.mode || "preseason");
+    const unlimited = Boolean(info?.unlimited);
+    const target = info?.target_round || null;
+    const extraCost = number(info?.extra_transfer_cost || 10);
+    const free = number(info?.free_transfers || 0);
+
+    $("transferMode").textContent =
+      mode === "preseason"
+        ? "PRESEASON · OBEGRÄNSADE BYTEN"
+        : mode === "unlimited"
+          ? (clean(target?.name) || "FRI TRANSFERRUNDA")
+          : mode === "round"
+            ? (clean(target?.name) || "KOMMANDE RUNDA")
+            : mode === "closed"
+              ? "TRANSFERFÖNSTRET STÄNGT"
+              : "BYTEN AVSTÄNGDA";
+
+    $("transferFree").textContent = unlimited ? "∞" : String(free);
+    $("transferNext").textContent = unlimited || free > 0 ? "0 P" : "−" + format(extraCost) + " P";
+    $("transferDeadline").textContent = target?.lock_at ? formatDeadline(target.lock_at) : "Ej satt";
+
+    $("transferDetail").textContent = unlimited
+      ? "Bygg om fritt fram till första riktiga runddeadlinen. Därefter: 1 gratis byte per runda, max 2 sparade."
+      : mode === "round"
+        ? "1 gratis byte per runda · max 2 sparade · extra byte kostar −" + format(extraCost) + " P. Kaptensbyte är gratis."
+        : mode === "closed"
+          ? "Inga fler rundor är öppna för byten."
+          : "Transferreglerna är inte aktiva just nu.";
   }
 
   let rosterToastTimer = null;
@@ -570,6 +619,7 @@
     renderPlayers();
     renderLeaderboard();
     renderTeamName();
+    renderTransferStatus();
     updateHeaderAccount();
   }
 
@@ -805,6 +855,26 @@
     await loadLeaderboard();
   }
 
+  async function loadTransferState() {
+    if (!state.session?.user || !state.competition) {
+      state.transferState = null;
+      renderTransferStatus();
+      return;
+    }
+
+    const result = await sb.rpc("seh_fantasy_my_transfer_state", {
+      p_code: "SCL27"
+    });
+
+    if (result.error) throw result.error;
+
+    state.transferState = Array.isArray(result.data)
+      ? (result.data[0] || null)
+      : (result.data || null);
+
+    renderTransferStatus();
+  }
+
   async function loadMyEntry() {
     if (!state.session?.user || !state.competition) return;
 
@@ -916,6 +986,7 @@
     showBuilder();
     updateHeaderAccount();
     await loadMyEntry();
+    await loadTransferState();
   }
 
   async function loginWithDiscord() {
@@ -953,6 +1024,7 @@
       state.picks.clear();
       state.savedPicks.clear();
       state.savedScores.clear();
+      state.transferState = null;
       renderAll();
       showGate("logged-out");
     }
@@ -991,13 +1063,14 @@
     setStatus("saveStatus", "Sparar laget…", "working");
 
     try {
+      const hadEntry = Boolean(state.entry);
       const picks = [...state.picks.entries()].map(([slot, pick]) => ({
         pool_player_id: pick.player.id,
         slot,
         is_captain: Boolean(pick.isCaptain)
       }));
 
-      const { error } = await sb.rpc("seh_fantasy_save_my_team", {
+      const { data, error } = await sb.rpc("seh_fantasy_save_my_team", {
         p_competition_code: "SCL27",
         p_team_name: "",
         p_picks: picks
@@ -1005,11 +1078,33 @@
 
       if (error) throw error;
 
-      setStatus("saveStatus", "Laget är sparat. Beta-poängen är räknade från SCL 25.", "success");
+      const transfer = data?.transfer || {};
+      const transferCount = number(transfer.count);
+      const paidCount = number(transfer.paid_count);
+      const penalty = number(transfer.penalty_points);
+      const unlimited = Boolean(transfer.unlimited);
+
       await loadMyEntry();
+      await loadTransferState();
       await loadLeaderboard();
       renderHero();
       renderLeaderboard();
+
+      let successText = hadEntry
+        ? "Testlaget är uppdaterat."
+        : "Testlaget är sparat.";
+
+      if (transferCount > 0) {
+        successText += unlimited
+          ? " " + transferCount + " byte är gratis i preseason/fri transferrunda."
+          : paidCount > 0
+            ? " " + transferCount + " byte · straff −" + format(penalty) + " P."
+            : " " + transferCount + " gratis byte använt.";
+      } else if (hadEntry) {
+        successText += " Kaptensbyte/positionsändring kostar inget.";
+      }
+
+      setStatus("saveStatus", successText, "success");
     } catch (error) {
       setStatus("saveStatus", "Fel: " + (error?.message || error), "error");
     } finally {
