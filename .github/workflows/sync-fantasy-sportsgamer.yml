@@ -1,0 +1,217 @@
+name: Sync SCL Fantasy SportsGamer match data
+run-name: Fantasy SportsGamer · ${{ inputs.request_id || github.event_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: Request id from Fantasy Admin
+        required: false
+        default: manual
+        type: string
+      league_id:
+        description: SportsGamer league ID
+        required: false
+        default: '447'
+        type: string
+  schedule:
+    - cron: '*/5 * * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/sync-fantasy-sportsgamer.yml'
+      - '.github/sync/export_fantasy_sportsgamer_match_stats.py'
+      - '.github/sync/import-fantasy-sportsgamer-match-stats.psql'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-scl-fantasy-sportsgamer
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PGCONNECT_TIMEOUT: 20
+      PGTCP_USER_TIMEOUT: 30000
+      PGKEEPALIVES: 1
+      PGKEEPALIVES_IDLE: 30
+      PGKEEPALIVES_INTERVAL: 10
+      PGKEEPALIVES_COUNT: 3
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install database clients
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client openssh-client
+          python -m pip install --disable-pip-version-check --no-cache-dir pymysql==1.1.2
+
+      - name: Resolve request and schedule
+        id: gate
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_REQUEST_ID: ${{ inputs.request_id || '' }}
+          INPUT_LEAGUE_ID: ${{ inputs.league_id || '447' }}
+        run: |
+          set -euo pipefail
+          : "${PGURL:?Missing SUPABASE_DB_URL secret}"
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_REQUEST_ID" ]; then
+            request_id="$INPUT_REQUEST_ID"
+          else
+            request_id="${EVENT_NAME}-${GITHUB_RUN_ID}"
+          fi
+
+          if [ "$EVENT_NAME" = "schedule" ]; then
+            trigger_type="schedule"
+            should_run=$(psql "$PGURL" -At -v ON_ERROR_STOP=1 -c "
+              with s as (
+                select
+                  fs.auto_sync_enabled,
+                  fs.timezone,
+                  fs.schedule_times,
+                  fs.last_auto_sync_at,
+                  now() at time zone fs.timezone as local_now
+                from public.ehockey_fantasy_sync_settings fs
+                join public.ehockey_fantasy_competitions c on c.id=fs.competition_id
+                where c.code='SCL27'
+              ),
+              slots as (
+                select
+                  s.*,
+                  (s.local_now::date + slot_text::time) as local_slot
+                from s
+                cross join lateral unnest(s.schedule_times) slot_text
+              )
+              select case when exists (
+                select 1
+                from slots
+                where auto_sync_enabled
+                  and local_slot <= local_now
+                  and local_slot >= local_now - interval '12 minutes'
+                  and (
+                    last_auto_sync_at is null
+                    or last_auto_sync_at < (local_slot at time zone timezone)
+                  )
+              ) then 'true' else 'false' end;
+            ")
+          elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            trigger_type="manual"
+            should_run="true"
+          else
+            trigger_type="push"
+            should_run="true"
+          fi
+
+          echo "request_id=$request_id" >> "$GITHUB_OUTPUT"
+          echo "trigger_type=$trigger_type" >> "$GITHUB_OUTPUT"
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+          echo "league_id=${INPUT_LEAGUE_ID:-447}" >> "$GITHUB_OUTPUT"
+          echo "REQUEST_ID=$request_id" >> "$GITHUB_ENV"
+          echo "TRIGGER_TYPE=$trigger_type" >> "$GITHUB_ENV"
+          echo "LEAGUE_ID=${INPUT_LEAGUE_ID:-447}" >> "$GITHUB_ENV"
+
+          echo "Event: $EVENT_NAME"
+          echo "Trigger: $trigger_type"
+          echo "Request: $request_id"
+          echo "Should run: $should_run"
+
+      - name: Mark sync start
+        if: steps.gate.outputs.should_run == 'true'
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          psql "$PGURL" -v ON_ERROR_STOP=1             -v request_id="$REQUEST_ID"             -v trigger_type="$TRIGGER_TYPE"             -v league_id="$LEAGUE_ID"             -c "
+              insert into public.ehockey_fantasy_sync_runs(
+                competition_id,request_id,trigger_type,status,source_league_id,started_at
+              )
+              select id, :'request_id', :'trigger_type', 'running', :'league_id'::bigint, now()
+              from public.ehockey_fantasy_competitions
+              where code='SCL27';
+            "
+
+      - name: Open read-only SSH tunnel to SportsGamer
+        if: steps.gate.outputs.should_run == 'true'
+        env:
+          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+          SSH_PORT: ${{ secrets.SVENSK_SSH_PORT }}
+          SSH_USER: ${{ secrets.SVENSK_SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SVENSK_SSH_PRIVATE_KEY }}
+          SSH_REMOTE_DB_HOST: ${{ secrets.SVENSK_SSH_REMOTE_DB_HOST }}
+          SSH_REMOTE_DB_PORT: ${{ secrets.SVENSK_SSH_REMOTE_DB_PORT }}
+          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+        run: |
+          set -euo pipefail
+          : "${SSH_HOST:?Missing SVENSK_SSH_HOST secret}"
+          : "${SSH_USER:?Missing SVENSK_SSH_USER secret}"
+          : "${SSH_PRIVATE_KEY:?Missing SVENSK_SSH_PRIVATE_KEY secret}"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/svensk_db_tunnel_key
+          chmod 600 ~/.ssh/svensk_db_tunnel_key
+          ssh-keyscan -p "${SSH_PORT:-22}" "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh -fN -i ~/.ssh/svensk_db_tunnel_key -p "${SSH_PORT:-22}"             -L "${SSH_LOCAL_DB_PORT:-3307}:${SSH_REMOTE_DB_HOST:-127.0.0.1}:${SSH_REMOTE_DB_PORT:-3306}"             "$SSH_USER@$SSH_HOST"
+
+      - name: Read match-level data from SportsGamer
+        if: steps.gate.outputs.should_run == 'true'
+        id: export
+        env:
+          DB_HOST: ${{ secrets.SVENSK_DB_HOST }}
+          DB_PORT: ${{ secrets.SVENSK_DB_PORT }}
+          DB_NAME: ${{ secrets.SVENSK_DB_NAME }}
+          DB_USER: ${{ secrets.SVENSK_DB_USER }}
+          DB_PASSWORD: ${{ secrets.SVENSK_DB_PASSWORD }}
+          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+          LEAGUE_ID: ${{ steps.gate.outputs.league_id }}
+        run: python .github/sync/export_fantasy_sportsgamer_match_stats.py
+
+      - name: Import match-level Fantasy data
+        if: steps.gate.outputs.should_run == 'true'
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          timeout --foreground --kill-after=30s 12m             psql "$PGURL" -v ON_ERROR_STOP=1               -v request_id="$REQUEST_ID"               -v trigger_type="$TRIGGER_TYPE"               -v source_table="${{ steps.export.outputs.skater_source }}"               -v skater_source="${{ steps.export.outputs.skater_source }}"               -v goalie_source="${{ steps.export.outputs.goalie_source }}"               -v match_source="${{ steps.export.outputs.match_source }}"               -f .github/sync/import-fantasy-sportsgamer-match-stats.psql
+
+      - name: Mark failed sync
+        if: failure() && steps.gate.outputs.should_run == 'true'
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set +e
+          psql "$PGURL" -v ON_ERROR_STOP=1 -v request_id="$REQUEST_ID" -c "
+            update public.ehockey_fantasy_sync_runs
+            set status='failed',
+                error_message='GitHub Actions import failed. See workflow log.',
+                finished_at=now()
+            where request_id=:'request_id'
+              and status in ('queued','running');
+          "
+
+      - name: Write summary
+        if: always()
+        run: |
+          {
+            echo "## SCL Fantasy SportsGamer sync"
+            echo ""
+            echo "- Trigger: **${{ steps.gate.outputs.trigger_type }}**"
+            echo "- Scheduled run due: **${{ steps.gate.outputs.should_run }}**"
+            echo "- SportsGamer league: **${{ steps.gate.outputs.league_id }}**"
+            echo "- Matches exported: **${{ steps.export.outputs.match_count || 0 }}**"
+            echo "- Player-match rows: **${{ steps.export.outputs.player_row_count || 0 }}**"
+            echo "- Skater source: **${{ steps.export.outputs.skater_source || '–' }}**"
+            echo "- Goalie source: **${{ steps.export.outputs.goalie_source || '–' }}**"
+            echo "- Match source: **${{ steps.export.outputs.match_source || 'participant fallback' }}**"
+            echo ""
+            echo "SportsGamer access is READ ONLY."
+            echo "Result: **${{ job.status }}**"
+          } >> "$GITHUB_STEP_SUMMARY"
