@@ -295,6 +295,7 @@
       const pick = state.picks.get(slot);
 
       if (!pick) {
+        slotEl.classList.remove("is-filled", "is-captain-card");
         const count = state.pool.filter((player) =>
           player.is_available !== false &&
           !selectedIds().has(Number(player.id)) &&
@@ -313,6 +314,9 @@
       const player = pick.player;
       const captain = Number(captainId) === Number(player.id);
       const flag = countryFlag(player.country_code);
+
+      slotEl.classList.add("is-filled");
+      slotEl.classList.toggle("is-captain-card", captain);
 
       slotEl.innerHTML = `
         <span class="fantasy-slot__position">${slot}</span>
