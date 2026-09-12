@@ -563,7 +563,6 @@
           <div class="fantasy-slot__visual">
             <div class="fantasy-slot__portrait-wrap">
               ${portraitMarkup(player, "fantasy-slot__portrait")}
-              <span class="fantasy-slot__position fantasy-slot__position--overlay">${slot}</span>
             </div>
             <div class="fantasy-slot__identity">
               <strong class="fantasy-player-name-line">${flag}<span class="fantasy-player-name">${escapeHtml(clean(player.display_gamertag) || "Okänd")}</span></strong>
