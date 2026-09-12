@@ -637,11 +637,11 @@ a{color:inherit}
 .fantasy-lineup{
   position:relative;
   display:grid;
-  grid-template-columns:repeat(6,1fr);
+  grid-template-columns:repeat(12,1fr);
   grid-template-areas:
-    ". lw c rw . ."
-    ". . ld rd . ."
-    ". . g g . .";
+    ". . . lw lw c c rw rw . . ."
+    ". . . . ld ld rd rd . . . ."
+    ". . . . . g g . . . . .";
   gap:9px;
   min-height:520px;
   padding:28px;
