@@ -14,6 +14,11 @@ on:
         required: false
         default: '447'
         type: string
+      trigger_type:
+        description: manual or schedule
+        required: false
+        default: 'manual'
+        type: string
   schedule:
     - cron: '*/5 * * * *'
   push:
@@ -60,6 +65,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_REQUEST_ID: ${{ inputs.request_id || '' }}
           INPUT_LEAGUE_ID: ${{ inputs.league_id || '447' }}
+          INPUT_TRIGGER_TYPE: ${{ inputs.trigger_type || 'manual' }}
         run: |
           set -euo pipefail
           : "${PGURL:?Missing SUPABASE_DB_URL secret}"
@@ -70,42 +76,13 @@ jobs:
             request_id="${EVENT_NAME}-${GITHUB_RUN_ID}"
           fi
 
-          if [ "$EVENT_NAME" = "schedule" ]; then
-            trigger_type="schedule"
-            should_run=$(psql "$PGURL" -At -v ON_ERROR_STOP=1 -c "
-              with s as (
-                select
-                  fs.auto_sync_enabled,
-                  fs.timezone,
-                  fs.schedule_times,
-                  fs.last_auto_sync_at,
-                  now() at time zone fs.timezone as local_now
-                from public.ehockey_fantasy_sync_settings fs
-                join public.ehockey_fantasy_competitions c on c.id=fs.competition_id
-                where c.code='SCL27'
-              ),
-              slots as (
-                select
-                  s.*,
-                  (s.local_now::date + slot_text::time) as local_slot
-                from s
-                cross join lateral unnest(s.schedule_times) slot_text
-              )
-              select case when exists (
-                select 1
-                from slots
-                where auto_sync_enabled
-                  and local_slot <= local_now
-                  and local_slot >= local_now - interval '12 minutes'
-                  and (
-                    last_auto_sync_at is null
-                    or last_auto_sync_at < (local_slot at time zone timezone)
-                  )
-              ) then 'true' else 'false' end;
-            ")
-          elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            trigger_type="manual"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            trigger_type="$INPUT_TRIGGER_TYPE"
+            [[ "$trigger_type" =~ ^(manual|schedule)$ ]] || { echo "Invalid trigger_type"; exit 1; }
             should_run="true"
+          elif [ "$EVENT_NAME" = "schedule" ]; then
+            trigger_type="schedule"
+            should_run="false"
           else
             trigger_type="push"
             should_run="true"
@@ -139,7 +116,15 @@ jobs:
           )
           select id, '$REQUEST_ID', '$TRIGGER_TYPE', 'running', $LEAGUE_ID::bigint, now()
           from public.ehockey_fantasy_competitions
-          where code='SCL27';
+          where code='SCL27'
+          on conflict (competition_id,request_id) where request_id is not null
+          do update set
+            trigger_type=excluded.trigger_type,
+            status='running',
+            source_league_id=excluded.source_league_id,
+            error_message=null,
+            started_at=now(),
+            finished_at=null;
           SQL
 
       - name: Open read-only SSH tunnel to SportsGamer
