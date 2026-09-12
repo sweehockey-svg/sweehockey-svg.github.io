@@ -9,7 +9,7 @@
   <title>SCL 27 Fantasy Beta</title>
 
   <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20260912-v10-lineup-polish">
+  <link rel="stylesheet" href="style.css?v=20260912-v11-score-errors">
 </head>
 <body>
   <div class="beta-ribbon">
@@ -181,6 +181,10 @@
             <span>ROSTER</span>
             <strong id="selectedCount">0 / 6</strong>
           </div>
+          <div class="fantasy-mini-stat fantasy-mini-stat--points">
+            <span id="teamPointsLabel">SCL25 POINTS</span>
+            <strong id="teamPoints">–</strong>
+          </div>
           <div class="fantasy-mini-stat">
             <span>SPENT</span>
             <strong id="budgetUsed">0</strong>
@@ -259,7 +263,7 @@
         <div>
           <p class="fantasy-kicker">SCL 25 / BETA POOL</p>
           <h2>Fantasy-spelare</h2>
-          <p>Priserna är beta-priser baserade på utfallet i SCL 25. De används endast för att testa systemet inför SCL 27.</p>
+          <p>Priserna är beta-priser beräknade från data före SCL 25. SCL 25-resultatet används först efter att testlaget har sparats.</p>
         </div>
       </div>
 
@@ -388,6 +392,8 @@
     <div id="positionDialogChoices" class="fantasy-position-dialog__choices"></div>
   </dialog>
 
+  <div id="fantasyToast" class="fantasy-toast" role="status" aria-live="polite"></div>
+
   <footer class="fantasy-footer">
     <div>
       <img src="https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2021_08/large.SCL_logo_shading.png.eb94cae29f362f6a451128a25ebfa3ae.png" alt="SCL">
@@ -398,6 +404,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="app.js?v=20260912-v12-lineup-polish-exceptions"></script>
+  <script src="app.js?v=20260912-v13-score-errors"></script>
 </body>
 </html>
