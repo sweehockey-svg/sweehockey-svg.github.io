@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#050a10">
   <meta name="robots" content="noindex,nofollow">
   <title>SCL 27 Fantasy Admin</title>
-  <link rel="stylesheet" href="admin.css?v=20260912-v2">
+  <link rel="stylesheet" href="admin.css?v=20260912-v3-sync">
 </head>
 <body>
   <header class="fa-header">
@@ -52,6 +52,7 @@
         <button data-tab="competition">Competition</button>
         <button data-tab="pool">Spelarpool</button>
         <button data-tab="entries">Fantasy-lag</button>
+        <button data-tab="sync">SportsGamer Sync</button>
         <button data-tab="simulation">Simulation</button>
       </nav>
 
@@ -173,6 +174,51 @@
         </div>
       </section>
 
+      <section class="fa-panel" data-panel="sync" hidden>
+        <div class="fa-section-head">
+          <div>
+            <span>SPORTSGAMER DATA</span>
+            <h2>Matchdata & automatisk synk</h2>
+            <p>Hämtar verklig matchposition och statistik read-only från SportsGamer. Fantasy-poängen räknas om automatiskt efter en lyckad import.</p>
+          </div>
+          <button id="runSportsGamerSync" class="fa-primary" type="button">Hämta nu</button>
+        </div>
+
+        <p id="syncActionStatus" class="fa-status"></p>
+        <div id="syncCards" class="fa-cards"></div>
+
+        <div class="fa-grid-two">
+          <article class="fa-box">
+            <div class="fa-box__head">
+              <div><span>AUTO SYNC</span><h2>Automatisk hämtning</h2></div>
+            </div>
+            <form id="syncSettingsForm" class="fa-sync-settings">
+              <label class="fa-checkbox fa-checkbox--sync">
+                <input id="syncAutoEnabled" type="checkbox">
+                <span>Aktivera automatisk SportsGamer-synk</span>
+              </label>
+              <label>
+                <span>Klockslag · Europe/Stockholm</span>
+                <input id="syncTimes" type="text" placeholder="18:00, 21:00, 23:30">
+                <small>Max åtta tider. Workflown kontrollerar schemat var femte minut.</small>
+              </label>
+              <div class="fa-form-actions">
+                <p id="syncSettingsStatus" class="fa-status"></p>
+                <button class="fa-secondary" type="submit">Spara schema</button>
+              </div>
+            </form>
+          </article>
+
+          <article class="fa-box">
+            <div class="fa-box__head">
+              <div><span>IMPORT HISTORY</span><h2>Senaste körningar</h2></div>
+              <button id="refreshSyncState" class="fa-link-button" type="button">Uppdatera</button>
+            </div>
+            <div id="syncRuns" class="fa-list"></div>
+          </article>
+        </div>
+      </section>
+
       <section class="fa-panel" data-panel="simulation" hidden>
         <div class="fa-section-head">
           <div><span>SIMULATION LAB</span><h2>Testa balansen</h2><p>Kör samma typ av maskintest vi använde för att hitta 90-budgeten och målvaktsbalansen.</p></div>
@@ -214,6 +260,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="admin.js?v=20260912-v2"></script>
+  <script src="admin.js?v=20260912-v3-sync"></script>
 </body>
 </html>
