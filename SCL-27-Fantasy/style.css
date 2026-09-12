@@ -2789,3 +2789,362 @@ a{color:inherit}
     object-position:center top!important;
   }
 }
+
+
+/* Premium Fantasy cards v27 */
+@media(min-width:1251px){
+  .fantasy-layout{
+    grid-template-columns:minmax(900px,1.34fr) minmax(370px,.66fr);
+    gap:14px;
+  }
+
+  .fantasy-lineup{
+    grid-template-columns:repeat(12,minmax(0,1fr));
+    grid-template-areas:
+      "lw lw lw lw c c c c rw rw rw rw"
+      ". ld ld ld ld . . rd rd rd rd ."
+      ". . . . g g g g . . . .";
+    column-gap:18px;
+    row-gap:22px;
+    padding:34px 22px 42px;
+  }
+
+  .fantasy-slot{
+    position:relative;
+    width:100%;
+    max-width:332px;
+    min-height:278px;
+    padding:15px 16px 14px;
+    overflow:hidden;
+    border:1px solid rgba(59,153,203,.62);
+    border-radius:17px;
+    background:
+      radial-gradient(circle at 12% 0,rgba(47,157,215,.15),transparent 37%),
+      linear-gradient(145deg,rgba(12,38,54,.99),rgba(4,16,25,.995) 62%);
+    box-shadow:
+      0 18px 42px rgba(0,0,0,.27),
+      inset 0 1px 0 rgba(255,255,255,.055);
+  }
+
+  .fantasy-slot::before{
+    content:"";
+    position:absolute;
+    left:0;
+    right:0;
+    top:0;
+    height:3px;
+    background:linear-gradient(90deg,transparent,#35b9f2 24%,#7bddff 50%,#35b9f2 76%,transparent);
+    opacity:.62;
+    pointer-events:none;
+  }
+
+  .fantasy-slot::after{
+    content:"";
+    position:absolute;
+    width:170px;
+    height:170px;
+    left:-90px;
+    top:-95px;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(55,177,232,.14),transparent 68%);
+    pointer-events:none;
+  }
+
+  .fantasy-slot[data-slot=G]{
+    max-width:340px;
+  }
+
+  .fantasy-slot.is-captain-card{
+    border-color:#61d0ff!important;
+    box-shadow:
+      0 22px 50px rgba(0,0,0,.30),
+      0 0 0 1px rgba(97,208,255,.16),
+      0 0 32px rgba(39,165,220,.08),
+      inset 0 1px 0 rgba(255,255,255,.08);
+  }
+
+  .fantasy-slot.is-captain-card::before{
+    height:4px;
+    opacity:1;
+    background:linear-gradient(90deg,transparent,#39c9ff 18%,#b9efff 50%,#39c9ff 82%,transparent);
+  }
+
+  .fantasy-slot__visual{
+    position:relative;
+    z-index:2;
+    display:grid;
+    grid-template-columns:94px minmax(0,1fr);
+    align-items:start;
+    gap:17px;
+    width:100%;
+    min-width:0;
+    margin:0;
+  }
+
+  .fantasy-slot__portrait-wrap{
+    position:relative;
+    width:94px;
+    height:142px;
+    flex:none;
+    overflow:hidden;
+    justify-content:flex-start;
+    border:1px solid rgba(57,150,199,.58);
+    border-radius:12px;
+    background:
+      linear-gradient(180deg,rgba(19,52,73,.98),rgba(5,19,29,.99));
+    box-shadow:
+      0 13px 28px rgba(0,0,0,.24),
+      inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
+  .fantasy-slot__portrait{
+    display:block;
+    width:94px!important;
+    height:142px!important;
+    max-width:none;
+    flex:none!important;
+    object-fit:cover!important;
+    object-position:center top!important;
+    transform:scale(1.07)!important;
+    transform-origin:center top!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+
+  .fantasy-slot__position--overlay{
+    top:7px;
+    right:7px;
+    z-index:4;
+    min-width:25px;
+    justify-content:center;
+    padding:5px 7px;
+    border:1px solid rgba(87,203,250,.55);
+    border-radius:7px;
+    background:rgba(5,43,63,.94);
+    color:#8de4ff;
+    box-shadow:0 5px 14px rgba(0,0,0,.24);
+    backdrop-filter:blur(5px);
+  }
+
+  .fantasy-slot__identity{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    align-self:stretch;
+    width:100%;
+    min-width:0;
+    padding:9px 0 8px;
+    text-align:left;
+  }
+
+  .fantasy-slot__identity .fantasy-player-name-line{
+    display:flex!important;
+    align-items:center;
+    width:100%;
+    min-width:0;
+    gap:8px;
+    margin:0 0 10px;
+  }
+
+  .fantasy-slot__identity .fantasy-player-name{
+    min-width:0;
+    color:#f4fbff;
+    font-size:1.07rem;
+    font-weight:1000;
+    line-height:1.08;
+    letter-spacing:-.018em;
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+  }
+
+  .fantasy-country-flag{
+    width:24px;
+    height:18px;
+    flex:0 0 24px;
+    border-radius:3px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.14),
+      0 3px 8px rgba(0,0,0,.22);
+  }
+
+  .fantasy-slot__team{
+    display:flex!important;
+    align-items:center;
+    justify-content:flex-start;
+    width:100%;
+    min-width:0;
+    gap:7px;
+    margin:0 0 7px;
+    color:#8cacc0!important;
+  }
+
+  .fantasy-team-logo--slot{
+    width:20px;
+    height:20px;
+    flex:0 0 20px;
+  }
+
+  .fantasy-slot__team span{
+    min-width:0;
+    font-size:.67rem;
+    line-height:1.2;
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+  }
+
+  .fantasy-slot__meta{
+    display:inline-flex!important;
+    width:auto!important;
+    margin-top:1px!important;
+    padding:5px 7px;
+    border:1px solid rgba(47,111,145,.45);
+    border-radius:6px;
+    background:rgba(5,22,33,.72);
+    color:#86b3ca!important;
+    font-size:.60rem!important;
+    font-weight:850;
+    letter-spacing:.02em;
+    white-space:nowrap!important;
+  }
+
+  .fantasy-slot__score{
+    position:relative;
+    z-index:2;
+    margin-top:13px;
+    padding:10px 12px;
+    border:1px solid rgba(43,125,166,.55);
+    border-radius:11px;
+    background:
+      linear-gradient(180deg,rgba(6,28,41,.98),rgba(4,18,28,.98));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+  }
+
+  .fantasy-slot__score-head span{
+    color:#64ccef;
+    font-size:.54rem;
+    letter-spacing:.14em;
+  }
+
+  .fantasy-slot__score-head strong{
+    color:#effcff;
+    font-size:1.12rem;
+    letter-spacing:-.02em;
+  }
+
+  .fantasy-slot__score>small{
+    margin-top:6px;
+    color:#789aae;
+    font-size:.60rem;
+  }
+
+  .fantasy-slot__details{
+    position:relative;
+    z-index:2;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+    margin-top:9px;
+  }
+
+  .fantasy-slot__detail-pill{
+    min-height:61px;
+    padding:8px 6px 7px;
+    border:1px solid rgba(35,100,136,.58);
+    border-radius:10px;
+    background:
+      linear-gradient(180deg,rgba(7,26,39,.96),rgba(4,16,25,.99));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+  }
+
+  .fantasy-slot__detail-pill span{
+    color:#60869c;
+    font-size:.48rem;
+    letter-spacing:.085em;
+  }
+
+  .fantasy-slot__detail-pill strong{
+    margin-top:5px;
+    font-size:.88rem;
+  }
+
+  .fantasy-slot__detail-pill em{
+    margin-top:4px;
+    font-size:.53rem;
+  }
+
+  .fantasy-slot__actions{
+    position:relative;
+    z-index:2;
+    display:grid;
+    grid-template-columns:1.25fr .82fr;
+    gap:8px;
+    margin-top:11px;
+  }
+
+  .fantasy-slot__actions button{
+    min-height:34px;
+    border-radius:8px;
+    font-size:.56rem;
+    font-weight:950;
+    letter-spacing:.01em;
+  }
+
+  .fantasy-slot__actions button.is-captain{
+    border-color:#4cc9f6;
+    background:linear-gradient(180deg,#08729c,#075779);
+    color:#e9fbff;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.13);
+  }
+
+  .fantasy-slot__actions button[data-swap]{
+    border-color:#285d7c;
+    background:linear-gradient(180deg,#092436,#071922);
+    color:#a7c9da;
+  }
+
+  .fantasy-slot__actions button[data-swap]:hover{
+    border-color:#4ab2e3;
+    background:linear-gradient(180deg,#0b3046,#082337);
+    color:#eefbff;
+  }
+}
+
+@media(min-width:721px) and (max-width:1250px){
+  .fantasy-slot{
+    max-width:340px;
+  }
+
+  .fantasy-slot__visual{
+    display:grid;
+    grid-template-columns:92px minmax(0,1fr);
+    align-items:start;
+    gap:15px;
+  }
+
+  .fantasy-slot__portrait-wrap{
+    width:92px;
+    height:136px;
+  }
+
+  .fantasy-slot__portrait{
+    width:92px!important;
+    height:136px!important;
+    object-fit:cover!important;
+    object-position:center top!important;
+  }
+
+  .fantasy-slot__identity{
+    text-align:left;
+    align-items:flex-start;
+  }
+
+  .fantasy-slot__team,
+  .fantasy-slot__meta{
+    justify-content:flex-start;
+    text-align:left;
+  }
+}
