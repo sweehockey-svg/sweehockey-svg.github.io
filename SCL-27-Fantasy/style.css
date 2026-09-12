@@ -1460,3 +1460,45 @@ a{color:inherit}
     font-size:.54rem
   }
 }
+
+
+/* Locked Fantasy team identity */
+.fantasy-team-name--locked{
+  display:flex;
+  flex-direction:column;
+  gap:5px
+}
+.fantasy-team-name__locked{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  border:1px solid #19384f;
+  border-radius:8px;
+  background:linear-gradient(180deg,#07141e,#040b11);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)
+}
+.fantasy-team-name__locked strong{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#f5fbff;
+  font-size:.82rem
+}
+.fantasy-team-name__locked small{
+  color:#4f7188;
+  font-size:.58rem;
+  font-weight:800;
+  letter-spacing:.03em;
+  text-align:right
+}
+@media(max-width:720px){
+  .fantasy-team-name__locked{
+    align-items:flex-start;
+    flex-direction:column
+  }
+  .fantasy-team-name__locked small{text-align:left}
+}
