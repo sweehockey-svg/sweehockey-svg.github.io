@@ -9,7 +9,7 @@
   <title>SCL 27 Fantasy Beta</title>
 
   <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20260912-v7-large-lineup">
+  <link rel="stylesheet" href="style.css?v=20260912-v8-locked-team-name">
 </head>
 <body>
   <div class="beta-ribbon">
@@ -169,10 +169,13 @@
         </div>
 
         <div class="fantasy-builder-top">
-          <label class="fantasy-team-name">
-            <span>FANTASY TEAM NAME</span>
-            <input id="teamName" maxlength="40" placeholder="T.ex. eSwahns Dream Team">
-          </label>
+          <div class="fantasy-team-name fantasy-team-name--locked">
+            <span>FANTASY TEAM</span>
+            <div class="fantasy-team-name__locked">
+              <strong id="teamNameDisplay">–</strong>
+              <small>Namnet följer din kopplade spelarprofil</small>
+            </div>
+          </div>
 
           <div class="fantasy-mini-stat">
             <span>ROSTER</span>
@@ -393,6 +396,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="app.js?v=20260912-v9-position-label"></script>
+  <script src="app.js?v=20260912-v10-locked-team-name"></script>
 </body>
 </html>
