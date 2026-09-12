@@ -130,14 +130,17 @@ jobs:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
-          psql "$PGURL" -v ON_ERROR_STOP=1             -v request_id="$REQUEST_ID"             -v trigger_type="$TRIGGER_TYPE"             -v league_id="$LEAGUE_ID"             -c "
-              insert into public.ehockey_fantasy_sync_runs(
-                competition_id,request_id,trigger_type,status,source_league_id,started_at
-              )
-              select id, :'request_id', :'trigger_type', 'running', :'league_id'::bigint, now()
-              from public.ehockey_fantasy_competitions
-              where code='SCL27';
-            "
+          [[ "$REQUEST_ID" =~ ^[A-Za-z0-9_-]{8,100}$ ]] || { echo "Invalid request id"; exit 1; }
+          [[ "$TRIGGER_TYPE" =~ ^(manual|schedule|push)$ ]] || { echo "Invalid trigger"; exit 1; }
+          [[ "$LEAGUE_ID" =~ ^[0-9]+$ ]] || { echo "Invalid league id"; exit 1; }
+          psql "$PGURL" -v ON_ERROR_STOP=1 <<SQL
+          insert into public.ehockey_fantasy_sync_runs(
+            competition_id,request_id,trigger_type,status,source_league_id,started_at
+          )
+          select id, '$REQUEST_ID', '$TRIGGER_TYPE', 'running', $LEAGUE_ID::bigint, now()
+          from public.ehockey_fantasy_competitions
+          where code='SCL27';
+          SQL
 
       - name: Open read-only SSH tunnel to SportsGamer
         if: steps.gate.outputs.should_run == 'true'
@@ -188,14 +191,15 @@ jobs:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set +e
-          psql "$PGURL" -v ON_ERROR_STOP=1 -v request_id="$REQUEST_ID" -c "
-            update public.ehockey_fantasy_sync_runs
-            set status='failed',
-                error_message='GitHub Actions import failed. See workflow log.',
-                finished_at=now()
-            where request_id=:'request_id'
-              and status in ('queued','running');
-          "
+          [[ "$REQUEST_ID" =~ ^[A-Za-z0-9_-]{8,100}$ ]] || exit 0
+          psql "$PGURL" -v ON_ERROR_STOP=1 <<SQL
+          update public.ehockey_fantasy_sync_runs
+          set status='failed',
+              error_message='GitHub Actions import failed. See workflow log.',
+              finished_at=now()
+          where request_id='$REQUEST_ID'
+            and status in ('queued','running');
+          SQL
 
       - name: Write summary
         if: always()
