@@ -2617,3 +2617,122 @@ a{color:inherit}
     text-overflow:clip;
   }
 }
+
+
+/* Layout correction v23: no portrait/text overlap */
+@media(min-width:1251px){
+  .fantasy-layout{
+    grid-template-columns:minmax(0,1.26fr) minmax(360px,.74fr);
+    gap:14px;
+  }
+
+  .fantasy-lineup{
+    grid-template-columns:repeat(12,minmax(0,1fr));
+    grid-template-areas:
+      "lw lw lw lw c c c c rw rw rw rw"
+      ". ld ld ld ld . . rd rd rd rd ."
+      ". . . . g g g g . . . .";
+    column-gap:14px;
+    padding:30px 18px 40px;
+  }
+
+  .fantasy-slot{
+    width:100%;
+    max-width:278px;
+    min-width:0;
+    padding:14px;
+  }
+
+  .fantasy-slot[data-slot=G]{
+    max-width:286px;
+  }
+
+  .fantasy-slot__visual{
+    display:grid;
+    grid-template-columns:82px minmax(0,1fr);
+    align-items:center;
+    gap:14px;
+    width:100%;
+    min-width:0;
+  }
+
+  .fantasy-slot__portrait-wrap{
+    width:82px;
+    flex:none;
+    justify-content:flex-start;
+  }
+
+  .fantasy-slot__portrait{
+    width:78px;
+    height:126px;
+    flex:none;
+    object-fit:contain;
+    object-position:center bottom;
+  }
+
+  .fantasy-slot__identity{
+    width:100%;
+    min-width:0;
+    padding:0;
+    overflow:visible;
+  }
+
+  .fantasy-slot__identity .fantasy-player-name-line{
+    width:100%;
+    min-width:0;
+    margin:0 0 7px;
+    gap:7px;
+  }
+
+  .fantasy-slot__identity .fantasy-player-name{
+    min-width:0;
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+    line-height:1.08;
+  }
+
+  .fantasy-slot__team{
+    width:100%;
+    min-width:0;
+    margin-bottom:4px;
+  }
+
+  .fantasy-slot__team span{
+    min-width:0;
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+    line-height:1.2;
+  }
+
+  .fantasy-slot__meta{
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+  }
+
+  .fantasy-country-flag{
+    width:22px;
+    height:16px;
+    flex-basis:22px;
+  }
+
+  .fantasy-market__filters{
+    grid-template-columns:minmax(0,1fr) 118px;
+  }
+
+  .fantasy-player-row{
+    grid-template-columns:36px minmax(0,1fr) 48px 76px;
+  }
+}
+
+@media(min-width:721px) and (max-width:1250px){
+  .fantasy-layout{
+    grid-template-columns:1fr;
+  }
+
+  .fantasy-market{
+    min-height:520px;
+  }
+}
