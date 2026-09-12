@@ -3172,3 +3172,19 @@ a{color:inherit}
     min-height:220px;
   }
 }
+
+
+/* SCL27 card reserve space + no face overlay */
+@media(min-width:721px){
+  .fantasy-slot{
+    min-height:278px;
+  }
+
+  .fantasy-slot:not(:has(.fantasy-slot__score)){
+    min-height:278px!important;
+  }
+
+  .fantasy-slot__position--overlay{
+    display:none!important;
+  }
+}
