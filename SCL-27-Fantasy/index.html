@@ -9,7 +9,7 @@
   <title>SCL 27 Fantasy Beta</title>
 
   <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20260912-v32-public-rosters">
+  <link rel="stylesheet" href="style.css?v=20260912-v33-period-model">
 </head>
 <body>
   <div class="beta-ribbon">
@@ -199,7 +199,7 @@
           <div class="fantasy-transfer-panel__copy">
             <span>BYTEN</span>
             <strong id="transferMode">INFÖR SÄSONGEN · OBEGRÄNSADE BYTEN</strong>
-            <small id="transferDetail">Bygg om fritt fram till första riktiga runddeadlinen.</small>
+            <small id="transferDetail">Bygg om fritt fram till första Fantasy-periodens deadline.</small>
           </div>
           <div class="fantasy-transfer-panel__stats">
             <div>
@@ -404,11 +404,14 @@
 
         <article class="fantasy-rule-card">
           <span>07</span>
-          <h3>Byten mellan rundor</h3>
+          <h3>Fantasy-perioder och byten</h3>
           <p>
-            Före första rundan är byten obegränsade. Därefter får du 1 gratis byte per runda och
-            kan spara upp till 2. Extra byten kostar −10 Fantasy-poäng. Kaptensbyte är gratis.
-            Inför slutspelet kan en markerad reset-runda ge obegränsade fria byten.
+            SCL spelas inte i fasta omgångar, så Fantasy delas i stället in i tidsbestämda perioder.
+            Alla riktiga SCL-matcher som startar inom perioden räknas på laget som var låst inför den perioden,
+            oavsett om ett lag spelar många matcher på en kväll eller inga alls på flera dagar.
+            Före första perioden är byten obegränsade. Därefter får du 1 gratis byte per period och
+            kan spara upp till 2. Extra byten kostar −10 Fantasy-poäng och kaptensbyte är gratis.
+            Inför slutspelet kan en markerad period återställa bytena och ge obegränsade fria byten.
           </p>
         </article>
       </div>
@@ -452,6 +455,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="app.js?v=20260912-v34-public-rosters"></script>
+  <script src="app.js?v=20260912-v35-period-model"></script>
 </body>
 </html>
