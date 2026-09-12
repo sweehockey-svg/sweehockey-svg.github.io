@@ -39,6 +39,7 @@
     recentEntries: [],
     pool: [],
     scores: new Map(),
+    syncState: { settings: {}, counts: {}, runs: [] },
     activeTab: "dashboard"
   };
 
@@ -69,7 +70,7 @@
   }
 
   function switchTab(tab) {
-    const allowed = new Set(["dashboard", "competition", "pool", "entries", "simulation"]);
+    const allowed = new Set(["dashboard", "competition", "pool", "entries", "sync", "simulation"]);
     state.activeTab = allowed.has(tab) ? tab : "dashboard";
 
     $$("[data-tab]").forEach((button) => {
@@ -144,6 +145,12 @@
     );
   }
 
+  async function loadSyncState() {
+    const { data, error } = await sb.rpc("seh_fantasy_admin_sync_state", { p_code: "SCL27" });
+    if (error) throw error;
+    state.syncState = data || { settings: {}, counts: {}, runs: [] };
+  }
+
   async function refreshAdminState() {
     const { data, error } = await sb.rpc("seh_fantasy_admin_state", { p_code: "SCL27" });
     if (error) throw error;
@@ -157,7 +164,7 @@
 
   async function loadAll() {
     await refreshAdminState();
-    await loadPool();
+    await Promise.all([loadPool(), loadSyncState()]);
     renderAll();
   }
 
@@ -291,11 +298,64 @@
     `).join("");
   }
 
+  function renderSync() {
+    const sync = state.syncState || {};
+    const settings = sync.settings || {};
+    const counts = sync.counts || {};
+    const runs = Array.isArray(sync.runs) ? sync.runs : [];
+
+    if ($("syncAutoEnabled")) $("syncAutoEnabled").checked = Boolean(settings.auto_sync_enabled);
+    if ($("syncTimes")) $("syncTimes").value = Array.isArray(settings.schedule_times)
+      ? settings.schedule_times.join(", ")
+      : "";
+
+    const lastImport = counts.last_import_at
+      ? new Date(counts.last_import_at).toLocaleString("sv-SE")
+      : "Aldrig";
+
+    const cards = [
+      ["SPORTSGAMER LIGA", settings.source_league_id || "–", "källa"],
+      ["MATCHER", counts.matches || 0, "importerade"],
+      ["MATCHRADER", counts.match_player_rows || 0, "spelare/match"],
+      ["SPELARE", counts.players_with_match_rows || 0, "med matchdata"],
+      ["SENAST", lastImport, settings.auto_sync_enabled ? "auto aktiv" : "auto av"]
+    ];
+
+    if ($("syncCards")) {
+      $("syncCards").innerHTML = cards.map(([label, value, sub]) => `
+        <article class="fa-card ${label === "MATCHRADER" ? "is-accent" : ""}">
+          <span>${esc(label)}</span>
+          <strong>${esc(value)}</strong>
+          <small>${esc(sub)}</small>
+        </article>
+      `).join("");
+    }
+
+    if ($("syncRuns")) {
+      $("syncRuns").innerHTML = runs.length ? runs.map((run) => {
+        const started = run.started_at ? new Date(run.started_at).toLocaleString("sv-SE") : "–";
+        const status = clean(run.status || "–").toUpperCase();
+        const source = clean(run.source_table || run.details?.skater_source || "");
+        return `
+          <div class="fa-list-row">
+            <span>
+              <strong>${esc(status)} · ${esc(run.trigger_type || "manual")}</strong>
+              <small>${esc(started)} · ${esc(run.player_rows_upserted || 0)} matchrader${source ? " · " + esc(source) : ""}</small>
+              ${run.error_message ? '<small class="fa-sync-error">' + esc(run.error_message) + '</small>' : ""}
+            </span>
+            <b>${esc(run.matches_upserted || 0)} M</b>
+          </div>
+        `;
+      }).join("") : '<div class="fa-empty">Inga synkkörningar ännu.</div>';
+    }
+  }
+
   function renderAll() {
     renderDashboard();
     renderCompetition();
     renderPool();
     renderEntries();
+    renderSync();
   }
 
   async function saveCompetition(event) {
@@ -446,6 +506,106 @@
     `).join("");
   }
 
+  function parseSyncTimes() {
+    return clean($("syncTimes")?.value)
+      .split(/[\s,;]+/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+  }
+
+  async function saveSyncSettings(event) {
+    event.preventDefault();
+    setStatus("syncSettingsStatus", "Sparar schema…", "working");
+
+    try {
+      const { error } = await sb.rpc("seh_fantasy_admin_update_sync_settings", {
+        p_code: "SCL27",
+        p_enabled: Boolean($("syncAutoEnabled")?.checked),
+        p_times: parseSyncTimes()
+      });
+      if (error) throw error;
+      await loadSyncState();
+      renderSync();
+      setStatus("syncSettingsStatus", "Schemat är sparat.", "success");
+    } catch (error) {
+      setStatus("syncSettingsStatus", "Fel: " + (error?.message || error), "error");
+    }
+  }
+
+  function sleep(ms) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+  }
+
+  async function callAdminSync(body) {
+    const { data } = await sb.auth.getSession();
+    const token = data?.session?.access_token;
+    if (!token) throw new Error("Adminsessionen saknas.");
+
+    const response = await fetch(supabaseUrl + "/functions/v1/seh-admin-sync", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token,
+        "apikey": supabaseKey
+      },
+      body: JSON.stringify(body)
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload?.error || "Synktjänsten svarade med " + response.status + ".");
+    return payload;
+  }
+
+  async function runSportsGamerSync() {
+    const button = $("runSportsGamerSync");
+    if (!button) return;
+    button.disabled = true;
+    setStatus("syncActionStatus", "Startar SportsGamer-synk…", "working");
+
+    const requestId = "fantasy_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+
+    try {
+      await callAdminSync({
+        action: "start",
+        job: "fantasy_sportsgamer",
+        request_id: requestId
+      });
+
+      setStatus("syncActionStatus", "Synken är startad. Väntar på GitHub Actions…", "working");
+
+      for (let attempt = 0; attempt < 72; attempt += 1) {
+        await sleep(5000);
+        const status = await callAdminSync({
+          action: "status",
+          job: "fantasy_sportsgamer",
+          request_id: requestId
+        });
+
+        if (status.state === "completed") {
+          if (status.conclusion === "success") {
+            await loadAll();
+            setStatus("syncActionStatus", "SportsGamer-synken är klar och Fantasy-poängen är uppdaterade.", "success");
+          } else {
+            await loadSyncState();
+            renderSync();
+            throw new Error("GitHub-körningen avslutades med " + (status.conclusion || "fel") + ".");
+          }
+          return;
+        }
+
+        const label = status.state === "in_progress" ? "Hämtar SportsGamer-data…" : "Synken väntar i kön…";
+        setStatus("syncActionStatus", label, "working");
+      }
+
+      await loadSyncState();
+      renderSync();
+      setStatus("syncActionStatus", "Synken kör fortfarande. Klicka Uppdatera för aktuell status.", "working");
+    } catch (error) {
+      setStatus("syncActionStatus", "Fel: " + (error?.message || error), "error");
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   async function runSimulation() {
     const button = $("runSimulation");
     button.disabled = true;
@@ -493,6 +653,18 @@
   });
 
   $("competitionForm")?.addEventListener("submit", saveCompetition);
+  $("syncSettingsForm")?.addEventListener("submit", saveSyncSettings);
+  $("runSportsGamerSync")?.addEventListener("click", runSportsGamerSync);
+  $("refreshSyncState")?.addEventListener("click", async () => {
+    setStatus("syncActionStatus", "Uppdaterar status…", "working");
+    try {
+      await loadSyncState();
+      renderSync();
+      setStatus("syncActionStatus", "Status uppdaterad.", "success");
+    } catch (error) {
+      setStatus("syncActionStatus", "Fel: " + (error?.message || error), "error");
+    }
+  });
   $("recalculateEntries")?.addEventListener("click", recalculateEntries);
   $("runSimulation")?.addEventListener("click", runSimulation);
   $("retryAuth")?.addEventListener("click", init);
@@ -504,7 +676,7 @@
     try {
       const ok = await ensureAdmin();
       if (!ok) return;
-      await loadPool();
+      await Promise.all([loadPool(), loadSyncState()]);
       renderAll();
       switchTab("dashboard");
     } catch (error) {
