@@ -160,7 +160,7 @@ a{color:inherit}
   font-size:.7rem;
   font-weight:900
 }
-.fa-sync-settings input[type=text]{
+.fa-sync-settings input[type=text],.fa-sync-settings input[type=number]{
   width:100%;
   border:1px solid #1d425b;
   border-radius:7px;
@@ -169,7 +169,7 @@ a{color:inherit}
   padding:9px 10px;
   outline:none
 }
-.fa-sync-settings input[type=text]:focus{border-color:#2d7da9}
+.fa-sync-settings input[type=text]:focus,.fa-sync-settings input[type=number]:focus{border-color:#2d7da9}
 .fa-sync-settings small{
   color:#5f7d91;
   font-size:.62rem;
