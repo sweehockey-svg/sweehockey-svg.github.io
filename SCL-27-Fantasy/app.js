@@ -469,8 +469,8 @@
     const savedRosterIsCurrent = draftMatchesSavedRoster() && invalidSlots.size === 0;
 
     $("selectedCount").textContent = state.picks.size + " / 6";
-    $("budgetUsed").textContent = format(used, used % 1 ? 1 : 0);
-    $("budgetLeft").textContent = format(budget - used, (budget - used) % 1 ? 1 : 0);
+    $("budgetUsed").textContent = format(used);
+    $("budgetLeft").textContent = format(budget - used);
     $("budgetLeft").classList.toggle("over-budget", used > budget);
 
     if ($("teamPoints")) {
@@ -577,7 +577,7 @@
                   <em>KLUBB</em>
                 </span>
               </small>
-              <small class="fantasy-slot__meta">${escapeHtml(eligibleSlots(player).join(" / "))} · ${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</small>
+              <small class="fantasy-slot__meta">${escapeHtml(eligibleSlots(player).join(" / "))} · ${format(player.price)} CR</small>
               ${invalidSlot ? '<small class="fantasy-slot__invalid-note">Ej giltig som ' + escapeHtml(slot) + ' · välj Byt</small>' : ""}
             </div>
           </div>
@@ -645,7 +645,7 @@
             </small>
           </div>
           <div class="fantasy-player-row__price">
-            <b>${format(player.price, number(player.price) % 1 ? 1 : 0)}</b>
+            <b>${format(player.price)}</b>
             <span>CR</span>
           </div>
           <button type="button" data-add="${player.id}" ${alreadySelected || !competitionOpen() ? "disabled" : ""}>
@@ -678,7 +678,7 @@
           <div class="fantasy-player-card__identity">
             <div class="fantasy-player-card__top">
               <span>${escapeHtml(eligibleSlots(player).join("/") || clean(player.primary_position) || "–")}</span>
-              <b>${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</b>
+              <b>${format(player.price)} CR</b>
             </div>
             <h3 class="fantasy-player-name-line">${countryFlagMarkup(player.country_code)}<span class="fantasy-player-name">${escapeHtml(player.display_gamertag)}</span></h3>
             <p>
@@ -870,7 +870,7 @@
             <span>${escapeHtml(eligibleSlots(player).join(" / "))}</span>
           </div>
           <div class="fantasy-picker-player__price">
-            <strong>${format(player.price, number(player.price) % 1 ? 1 : 0)}</strong>
+            <strong>${format(player.price)}</strong>
             <small>CR</small>
           </div>
           <button type="button" data-pick-player="${player.id}" ${teamBlocked || !competitionOpen() ? "disabled" : ""}>
