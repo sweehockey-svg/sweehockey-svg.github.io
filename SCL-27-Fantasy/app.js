@@ -44,6 +44,7 @@
     savedPicks: new Map(),
     savedScores: new Map(),
     savedBreakdowns: new Map(),
+    formerPlayers: [],
     transferState: null,
     activeTab: "team",
     pendingPlacementPlayerId: null,
@@ -198,6 +199,10 @@
     return format(rounded, digits);
   }
 
+  function breakdownKey(playerId, slot) {
+    return Number(playerId) + ":" + clean(slot).toUpperCase();
+  }
+
   function savedPickMatches(slot, pick) {
     const saved = state.savedPicks.get(slot);
     return Boolean(
@@ -212,17 +217,40 @@
     if (!savedPickMatches(slot, pick)) return null;
 
     const row = state.savedScores.get(Number(pick.player.id));
-    const detail = state.savedBreakdowns.get(Number(pick.player.id)) || null;
+    const detail = state.savedBreakdowns.get(breakdownKey(pick.player.id, slot)) || null;
     const base = detail ? number(detail.total_points) : number(row?.fantasy_points);
     const multiplier = pick.isCaptain ? number(state.competition?.captain_multiplier || 1) : 1;
+    const historyMode = Boolean(detail?.history_mode);
+    const total = detail && detail.team_points != null
+      ? number(detail.team_points)
+      : base * multiplier;
 
     return {
       base,
       multiplier,
-      total: base * multiplier,
+      total,
       games: detail ? number(detail.games) : number(row?.games),
+      roundCount: detail ? number(detail.round_count) : 0,
+      captainBonus: detail ? number(detail.captain_bonus_points) : Math.max(0, total - base),
+      historyMode,
       detail
     };
+  }
+
+  function savedScoreMeta(savedScore, pick) {
+    if (!savedScore) return "";
+
+    if (savedScore.historyMode) {
+      const parts = [];
+      parts.push(savedScore.games + " matcher");
+      if (savedScore.roundCount > 0) parts.push(savedScore.roundCount + (savedScore.roundCount === 1 ? " runda" : " rundor"));
+      if (savedScore.captainBonus > 0) parts.push("+" + formatPoints(savedScore.captainBonus) + " kaptensbonus");
+      return parts.join(" · ");
+    }
+
+    return pick.isCaptain
+      ? formatPoints(savedScore.base) + " × " + format(savedScore.multiplier, savedScore.multiplier % 1 ? 1 : 0)
+      : savedScore.games + " matcher";
   }
 
   function scorePill(label, value, points, tone = "") {
@@ -545,9 +573,7 @@
               <span>SCL 27</span>
               <strong>${formatPoints(savedScore.total)} P</strong>
             </div>
-            <small>${pick.isCaptain
-              ? formatPoints(savedScore.base) + " × " + format(savedScore.multiplier, savedScore.multiplier % 1 ? 1 : 0)
-              : savedScore.games + " matcher"}</small>
+            <small>${escapeHtml(savedScoreMeta(savedScore, pick))}</small>
           </div>
           <div class="fantasy-slot__details">${savedStatMarkup(savedScore)}</div>`
         : (state.entry
@@ -613,6 +639,67 @@
         number(b.price) - number(a.price) ||
         clean(a.display_gamertag).localeCompare(clean(b.display_gamertag), "sv")
       );
+  }
+
+  function renderFormerPlayers() {
+    const section = $("formerPlayersSection");
+    const host = $("formerPlayersList");
+    if (!section || !host) return;
+
+    const rows = Array.isArray(state.formerPlayers)
+      ? [...state.formerPlayers].sort((a, b) =>
+          number(b.last_round_no) - number(a.last_round_no) ||
+          clean(a.slot).localeCompare(clean(b.slot), "sv")
+        )
+      : [];
+
+    if (!state.entry || !rows.length) {
+      section.hidden = true;
+      host.innerHTML = "";
+      return;
+    }
+
+    section.hidden = false;
+    host.innerHTML = rows.map((row) => {
+      const player = playerById(row.pool_player_id);
+      const name = clean(player?.display_gamertag) || "Okänd spelare";
+      const team = clean(player?.real_team_name) || "Lag ej klart";
+      const slot = clean(row.slot).toUpperCase() || "–";
+      const rounds = Array.isArray(row.round_breakdown) ? row.round_breakdown : [];
+      const roundMarkup = rounds.map((round) => {
+        const label = clean(round.round_name) || ("Runda " + (round.round_no || "–"));
+        return '<span class="fantasy-former-player__round">' +
+          escapeHtml(label) + ': <strong>' + formatPoints(round.team_points) + ' P</strong>' +
+          (round.is_captain ? '<em>K</em>' : '') +
+        '</span>';
+      }).join("");
+
+      return [
+        '<article class="fantasy-former-player">',
+          '<div class="fantasy-former-player__portrait-wrap">',
+            player ? portraitMarkup(player, "fantasy-former-player__portrait") : "",
+            player ? teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--former") : "",
+          '</div>',
+          '<div class="fantasy-former-player__main">',
+            '<strong class="fantasy-player-name-line">',
+              player ? countryFlagMarkup(player.country_code) : "",
+              '<span class="fantasy-player-name">' + escapeHtml(name) + '</span>',
+            '</strong>',
+            '<small>' + escapeHtml(team) + ' · ' + escapeHtml(slot) + ' · ' + number(row.games) + ' matcher</small>',
+            '<div class="fantasy-former-player__rounds">',
+              roundMarkup || '<span class="fantasy-former-player__round">Ingen matchpoäng registrerad</span>',
+            '</div>',
+          '</div>',
+          '<div class="fantasy-former-player__points">',
+            '<span>BIDRAG TILL LAGET</span>',
+            '<strong>' + formatPoints(row.team_points) + ' P</strong>',
+            '<small>' + (number(row.captain_bonus_points) > 0
+              ? "+" + formatPoints(row.captain_bonus_points) + " P kaptensbonus"
+              : "Poängen ligger kvar i totalen") + '</small>',
+          '</div>',
+        '</article>'
+      ].join("");
+    }).join("");
   }
 
   function renderMarket() {
@@ -728,6 +815,7 @@
   function renderAll() {
     renderHero();
     renderLineup();
+    renderFormerPlayers();
     renderMarket();
     renderPlayers();
     renderLeaderboard();
@@ -1063,6 +1151,7 @@
       state.savedPicks.clear();
       state.savedScores.clear();
       state.savedBreakdowns.clear();
+      state.formerPlayers = [];
       // Keep any unsaved draft intact. Auth refreshes must never wipe the user's picks.
       renderAll();
       return;
@@ -1072,6 +1161,7 @@
     state.savedPicks.clear();
     state.savedScores.clear();
     state.savedBreakdowns.clear();
+    state.formerPlayers = [];
 
     const picksResult = await sb
       .from("ehockey_fantasy_entry_players")
@@ -1097,19 +1187,24 @@
         state.savedScores.set(Number(row.pool_player_id), row);
       }
 
-      const breakdownResult = await sb.rpc("seh_fantasy_my_saved_score_breakdown", {
-        p_code: "SCL27"
-      });
+    }
 
-      if (breakdownResult.error) throw breakdownResult.error;
+    const breakdownResult = await sb.rpc("seh_fantasy_my_saved_score_breakdown", {
+      p_code: "SCL27"
+    });
 
-      const breakdownRows = Array.isArray(breakdownResult.data)
-        ? breakdownResult.data
-        : [];
+    if (breakdownResult.error) throw breakdownResult.error;
 
-      for (const row of breakdownRows) {
-        state.savedBreakdowns.set(Number(row.pool_player_id), row);
+    const breakdownRows = Array.isArray(breakdownResult.data)
+      ? breakdownResult.data
+      : [];
+
+    for (const row of breakdownRows) {
+      if (row?.is_current === false) {
+        state.formerPlayers.push(row);
+        continue;
       }
+      state.savedBreakdowns.set(breakdownKey(row.pool_player_id, row.slot), row);
     }
 
     for (const row of savedRows) {
