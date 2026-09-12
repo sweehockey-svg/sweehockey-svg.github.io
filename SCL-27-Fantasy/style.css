@@ -1054,3 +1054,60 @@ a{color:inherit}
   .fantasy-leaderboard-row{grid-template-columns:50px minmax(0,1fr) 78px;padding:11px}
   .fantasy-footer{width:min(100% - 18px,1540px);align-items:flex-start;flex-direction:column}
 }
+
+.fantasy-position-dialog{
+  width:min(430px,calc(100% - 24px));
+  border:1px solid #285d7d;
+  border-radius:14px;
+  background:linear-gradient(155deg,#0a1d2b,#050d14);
+  color:#fff;
+  padding:22px;
+  box-shadow:0 30px 90px rgba(0,0,0,.58)
+}
+.fantasy-position-dialog::backdrop{
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(5px)
+}
+.fantasy-position-dialog__close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:34px;
+  height:34px;
+  border:1px solid #28506b;
+  border-radius:8px;
+  background:#071824;
+  color:#fff;
+  font-size:1.25rem;
+  cursor:pointer
+}
+.fantasy-position-dialog h2{
+  margin:5px 40px 7px 0;
+  font-size:1.6rem;
+  letter-spacing:-.03em
+}
+.fantasy-position-dialog p{
+  color:#7895a9;
+  line-height:1.5
+}
+.fantasy-position-dialog__choices{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:16px
+}
+.fantasy-position-dialog__choices button{
+  min-height:62px;
+  border:1px solid #2d6385;
+  border-radius:9px;
+  background:linear-gradient(180deg,#0b2638,#071722);
+  color:#dff8ff;
+  font-size:.95rem;
+  font-weight:1000;
+  cursor:pointer
+}
+.fantasy-position-dialog__choices button:hover{
+  border-color:#68def4;
+  background:linear-gradient(180deg,#0d3046,#0a2030);
+  color:#fff
+}
