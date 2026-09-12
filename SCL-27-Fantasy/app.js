@@ -274,8 +274,7 @@
             <strong>${escapeHtml(player.display_gamertag)}</strong>
             <small>
               ${escapeHtml(clean(player.real_team_name) || "Lag ej klart")} ·
-              ${escapeHtml(slots)} ·
-              ${format(betaPoints(player), betaPoints(player) % 1 ? 1 : 0)} beta-P
+              ${escapeHtml(slots)}
             </small>
           </div>
           <div class="fantasy-player-row__price">
@@ -310,8 +309,8 @@
         <h3>${escapeHtml(player.display_gamertag)}</h3>
         <p>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</p>
         <footer>
-          <span>SCL 25 replay</span>
-          <span>${format(betaPoints(player), betaPoints(player) % 1 ? 1 : 0)} P</span>
+          <span>Pris satt före SCL 25</span>
+          <span>${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</span>
         </footer>
       </article>
     `).join("") || '<div class="fantasy-empty">Inga spelare matchar filtret.</div>';
