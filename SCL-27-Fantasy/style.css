@@ -1413,3 +1413,50 @@ a{color:inherit}
   .fantasy-picker-player__price{display:none}
   .fantasy-picker-player>button{grid-column:2/-1}
 }
+
+
+/* Larger lineup player cards */
+@media(min-width:721px){
+  .fantasy-lineup{
+    min-height:610px
+  }
+  .fantasy-slot{
+    min-height:176px;
+    padding:9px 8px
+  }
+  .fantasy-slot__visual{
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    margin-top:5px
+  }
+  .fantasy-slot__portrait{
+    width:72px;
+    height:92px;
+    flex:0 0 92px;
+    object-position:center bottom
+  }
+  .fantasy-slot__identity{
+    width:100%;
+    text-align:center
+  }
+  .fantasy-slot__identity strong{
+    margin:3px 0;
+    font-size:.78rem
+  }
+  .fantasy-slot__team{
+    justify-content:center
+  }
+  .fantasy-slot__player small{
+    font-size:.6rem
+  }
+  .fantasy-slot__actions{
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-top:6px
+  }
+  .fantasy-slot__actions button{
+    padding:5px 6px;
+    font-size:.54rem
+  }
+}
