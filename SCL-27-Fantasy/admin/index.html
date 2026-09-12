@@ -138,7 +138,7 @@
 
       <section class="fa-panel" data-panel="pool" hidden>
         <div class="fa-section-head">
-          <div><span>SPELARPOOL</span><h2>SCL 27 betapool</h2><p>237 svenska spelare. Priser och positioner är omräknade med historik genom ECL 26 Spring.</p></div>
+          <div><span>SPELARPOOL</span><h2>SCL 27 betapool</h2><p>237 svenska spelare. Priser och positioner är omräknade med historik genom ECL 26 Spring. När ECL 27 Winter-rostrarna finns byggs poolen om från hela den svenska rosterlistan. Återvändande spelare får historik-fallback ända till ECL 24 Winter; helt nya spelare får rosterposition och 12 CR som startpris.</p></div>
           <div class="fa-head-actions">
             <input id="poolSearch" type="search" placeholder="Sök spelare eller lag…">
             <select id="poolPosition">
@@ -151,7 +151,7 @@
         <div class="fa-table-wrap">
           <table class="fa-table">
             <thead>
-              <tr><th>Spelare</th><th>Lag</th><th>Pos</th><th>Pris</th><th>SCL25-P</th><th>Tillgänglig</th><th></th></tr>
+              <tr><th>Spelare</th><th>Lag</th><th>Pos</th><th>Pris</th><th>Rating</th><th>Tillgänglig</th><th></th></tr>
             </thead>
             <tbody id="poolTableBody"></tbody>
           </table>
@@ -265,6 +265,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="admin.js?v=20260912-v7-admin-status-fix"></script>
+  <script src="admin.js?v=20260912-v8-history-fallback"></script>
 </body>
 </html>
