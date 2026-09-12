@@ -395,7 +395,11 @@
             <span>CR</span>
           </div>
           <button type="button" data-add="${player.id}" ${alreadySelected || !competitionOpen() ? "disabled" : ""}>
-            ${alreadySelected ? "Vald" : "Lägg till"}
+            ${alreadySelected
+              ? "Vald"
+              : eligibleSlots(player).length > 1
+                ? "Välj position"
+                : "Lägg till"}
           </button>
         </article>
       `;
