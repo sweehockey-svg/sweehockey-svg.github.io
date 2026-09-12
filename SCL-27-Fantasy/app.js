@@ -153,6 +153,12 @@
   function competitionOpen() {
     const comp = state.competition;
     if (!comp || comp.status !== "open") return false;
+
+    if (comp.transfers_enabled) {
+      const mode = clean(state.transferState?.mode);
+      return mode !== "closed" && mode !== "disabled";
+    }
+
     if (!comp.lock_at) return true;
     return new Date(comp.lock_at).getTime() > Date.now();
   }
