@@ -9,7 +9,7 @@
   <title>SCL 27 Fantasy Beta</title>
 
   <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20260912-v5-multiposition">
+  <link rel="stylesheet" href="style.css?v=20260912-v6-visual-picker">
 </head>
 <body>
   <div class="beta-ribbon">
@@ -308,7 +308,7 @@
         <article class="fantasy-rule-card">
           <span>01</span>
           <h3>Sex spelare</h3>
-          <p>LW, C, RW, LD, RD och G. Samma spelare kan bara väljas en gång.</p>
+          <p>LW, C, RW, LD, RD och G. Samma spelare kan bara väljas en gång. Spelare med dokumenterad positionshistorik kan vara valbara på flera platser.</p>
         </article>
 
         <article class="fantasy-rule-card">
@@ -363,6 +363,18 @@
     </section>
   </main>
 
+  <dialog id="playerPickerDialog" class="fantasy-player-picker-dialog">
+    <button id="closePlayerPickerDialog" class="fantasy-player-picker-dialog__close" type="button" aria-label="Stäng">×</button>
+    <p class="fantasy-kicker">PLAYER MARKET</p>
+    <h2 id="playerPickerTitle">Välj spelare</h2>
+    <p id="playerPickerCount">Valbara spelare för positionen.</p>
+    <label class="fantasy-player-picker-dialog__search">
+      <span>SÖK SPELARE / LAG</span>
+      <input id="playerPickerSearch" type="search" placeholder="Gamertag eller lag…">
+    </label>
+    <div id="playerPickerList" class="fantasy-player-picker-list"></div>
+  </dialog>
+
   <dialog id="positionDialog" class="fantasy-position-dialog">
     <button id="closePositionDialog" class="fantasy-position-dialog__close" type="button" aria-label="Stäng">×</button>
     <p class="fantasy-kicker">VÄLJ POSITION</p>
@@ -381,6 +393,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="app.js?v=20260912-v7-multiposition"></script>
+  <script src="app.js?v=20260912-v8-visual-picker"></script>
 </body>
 </html>
