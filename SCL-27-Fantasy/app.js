@@ -767,6 +767,7 @@
 
     return state.pool
       .filter((player) => player.is_available !== false)
+      .filter((player) => !currentPick || Number(player.id) !== Number(currentPick.player?.id))
       .filter((player) => !selected.has(Number(player.id)))
       .filter((player) => eligibleSlots(player).includes(slot))
       .filter((player) => {
