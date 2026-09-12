@@ -18507,7 +18507,10 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     const divisionButtons = [...view.querySelectorAll("[data-season-stats-division]")];
     if (!stage || !role || !division || !search || !summary || !top3 || !table || !title) return;
 
-    const divisionLabels = { ecl: "ECL", elite: "Elite", pro: "Pro", lite: "Lite", core: "Core", neo: "Neo" };
+    const divisionLabels = {
+      ecl: "ECL", elite: "Elite", pro: "Pro", lite: "Lite", core: "Core", neo: "Neo",
+      sweat: "Sweat", rammer: "Rammer", lgel: "LGEL"
+    };
     const normalKey = (value) => String(value || "")
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
