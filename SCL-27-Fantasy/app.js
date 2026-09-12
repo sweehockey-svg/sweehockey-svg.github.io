@@ -260,7 +260,7 @@
       return [
         scorePill("Mål", d.goals, d.goal_points, "goal"),
         scorePill("Assist", d.assists, d.assist_points, "assist"),
-        scorePill("Blocks", d.blocked_shots, d.block_points, "ice")
+        scorePill("Block", d.blocked_shots, d.block_points, "ice")
       ].join("");
     }
 
