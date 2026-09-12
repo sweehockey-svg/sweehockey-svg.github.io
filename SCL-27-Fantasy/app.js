@@ -106,9 +106,9 @@
       mode === "preseason"
         ? "INFÖR SÄSONGEN · OBEGRÄNSADE BYTEN"
         : mode === "unlimited"
-          ? (clean(target?.name) || "FRI BYTESRUNDA")
+          ? (clean(target?.name) || "FRI BYTESPERIOD")
           : mode === "round"
-            ? (clean(target?.name) || "KOMMANDE RUNDA")
+            ? (clean(target?.name) || "KOMMANDE PERIOD")
             : mode === "closed"
               ? "BYTESFÖNSTRET STÄNGT"
               : "BYTEN AVSTÄNGDA";
@@ -118,11 +118,11 @@
     $("transferDeadline").textContent = target?.lock_at ? formatDeadline(target.lock_at) : "Ej satt";
 
     $("transferDetail").textContent = unlimited
-      ? "Bygg om fritt fram till första riktiga runddeadlinen. Därefter: 1 gratis byte per runda, max 2 sparade."
+      ? "Bygg om fritt fram till första Fantasy-periodens deadline. Därefter: 1 gratis byte per period, max 2 sparade."
       : mode === "round"
-        ? "1 gratis byte per runda · max 2 sparade · extra byte kostar −" + format(extraCost) + " P. Kaptensbyte är gratis."
+        ? "1 gratis byte per period · max 2 sparade · extra byte kostar −" + format(extraCost) + " P. Kaptensbyte är gratis."
         : mode === "closed"
-          ? "Inga fler rundor är öppna för byten."
+          ? "Inga fler Fantasy-perioder är öppna för byten."
           : "Bytesreglerna är inte aktiva just nu.";
   }
 
@@ -243,7 +243,7 @@
     if (savedScore.historyMode) {
       const parts = [];
       parts.push(savedScore.games + " matcher");
-      if (savedScore.roundCount > 0) parts.push(savedScore.roundCount + (savedScore.roundCount === 1 ? " runda" : " rundor"));
+      if (savedScore.roundCount > 0) parts.push(savedScore.roundCount + (savedScore.roundCount === 1 ? " period" : " perioder"));
       if (savedScore.captainBonus > 0) parts.push("+" + formatPoints(savedScore.captainBonus) + " kaptensbonus");
       return parts.join(" · ");
     }
@@ -667,7 +667,7 @@
       const slot = clean(row.slot).toUpperCase() || "–";
       const rounds = Array.isArray(row.round_breakdown) ? row.round_breakdown : [];
       const roundMarkup = rounds.map((round) => {
-        const label = clean(round.round_name) || ("Runda " + (round.round_no || "–"));
+        const label = clean(round.round_name) || ("Period " + (round.round_no || "–"));
         return '<span class="fantasy-former-player__round">' +
           escapeHtml(label) + ': <strong>' + formatPoints(round.team_points) + ' P</strong>' +
           (round.is_captain ? '<em>K</em>' : '') +
@@ -863,7 +863,7 @@
     const former = Array.isArray(data.former_players) ? data.former_players : [];
     const penalty = number(data.transfer_penalty_points);
     const roundLabel = round
-      ? (clean(round.name) || ("Runda " + (round.round_no || "–")))
+      ? (clean(round.name) || ("Period " + (round.round_no || "–")))
       : "Låst lag";
 
     content.innerHTML = `
@@ -906,7 +906,7 @@
                   <small>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")} · ${escapeHtml((player.used_slots || []).join(" / ") || "–")} · ${number(player.games)} matcher</small>
                   <div class="fantasy-public-former-player__rounds">
                     ${rounds.map((r) =>
-                      '<span>' + escapeHtml(clean(r.round_name) || ("Runda " + (r.round_no || "–"))) +
+                      '<span>' + escapeHtml(clean(r.round_name) || ("Period " + (r.round_no || "–"))) +
                       ' · ' + escapeHtml(clean(r.slot) || "–") +
                       ' · <strong>' + formatPoints(r.team_points) + ' P</strong>' +
                       (r.is_captain ? ' <em>K</em>' : '') +
@@ -1519,7 +1519,7 @@
 
       if (transferCount > 0) {
         successText += unlimited
-          ? " " + transferCount + " byte är gratis inför säsongen/i fri bytesrunda."
+          ? " " + transferCount + " byte är gratis inför säsongen/i fri bytesperiod."
           : paidCount > 0
             ? " " + transferCount + " byte · straff −" + format(penalty) + " P."
             : " " + transferCount + " gratis byte använt.";
