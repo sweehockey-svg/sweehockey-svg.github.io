@@ -213,14 +213,14 @@
 
     const row = state.savedScores.get(Number(pick.player.id));
     const detail = state.savedBreakdowns.get(Number(pick.player.id)) || null;
-    const base = number(row?.fantasy_points);
+    const base = detail ? number(detail.total_points) : number(row?.fantasy_points);
     const multiplier = pick.isCaptain ? number(state.competition?.captain_multiplier || 1) : 1;
 
     return {
       base,
       multiplier,
       total: base * multiplier,
-      games: number(row?.games),
+      games: detail ? number(detail.games) : number(row?.games),
       detail
     };
   }
@@ -461,7 +461,12 @@
     const used = usedBudget();
     const captainId = [...state.picks.values()].find((pick) => pick.isCaptain)?.player?.id || null;
     const saveButton = $("saveTeam");
-    const savedRosterIsCurrent = draftMatchesSavedRoster();
+    const invalidSlots = new Set(
+      [...state.picks.entries()]
+        .filter(([slot, pick]) => !eligibleSlots(pick.player).includes(slot))
+        .map(([slot]) => slot)
+    );
+    const savedRosterIsCurrent = draftMatchesSavedRoster() && invalidSlots.size === 0;
 
     $("selectedCount").textContent = state.picks.size + " / 6";
     $("budgetUsed").textContent = format(used, used % 1 ? 1 : 0);
@@ -483,21 +488,29 @@
       const hasCaptain = Boolean(captainId);
       const withinBudget = used <= budget;
       const savedAndUnchanged = Boolean(state.entry) && savedRosterIsCurrent;
-      const canSave = competitionOpen() && complete && hasCaptain && withinBudget && !savedAndUnchanged;
+      const canSave =
+        competitionOpen() &&
+        complete &&
+        hasCaptain &&
+        withinBudget &&
+        invalidSlots.size === 0 &&
+        !savedAndUnchanged;
 
       saveButton.disabled = !canSave;
       saveButton.classList.toggle("is-saved", savedAndUnchanged);
-      saveButton.textContent = !complete
-        ? "VÄLJ 6 SPELARE"
-        : !hasCaptain
-          ? "VÄLJ KAPTEN"
-          : !withinBudget
-            ? "ÖVER BUDGET"
-            : savedAndUnchanged
-              ? "TESTLAG SPARAT"
-              : state.entry
-                ? "UPPDATERA TESTLAG"
-                : "SPARA TESTLAG";
+      saveButton.textContent = invalidSlots.size > 0
+        ? "BYT OGILTIG SPELARE"
+        : !complete
+          ? "VÄLJ 6 SPELARE"
+          : !hasCaptain
+            ? "VÄLJ KAPTEN"
+            : !withinBudget
+              ? "ÖVER BUDGET"
+              : savedAndUnchanged
+                ? "TESTLAG SPARAT"
+                : state.entry
+                  ? "UPPDATERA TESTLAG"
+                  : "SPARA TESTLAG";
     }
 
     $$(".fantasy-slot").forEach((slotEl) => {
@@ -505,7 +518,7 @@
       const pick = state.picks.get(slot);
 
       if (!pick) {
-        slotEl.classList.remove("is-filled", "is-captain-card");
+        slotEl.classList.remove("is-filled", "is-captain-card", "is-invalid-slot");
         const count = state.pool.filter((player) =>
           player.is_available !== false &&
           !selectedIds().has(Number(player.id)) &&
@@ -523,6 +536,7 @@
 
       const player = pick.player;
       const captain = Number(captainId) === Number(player.id);
+      const invalidSlot = invalidSlots.has(slot);
       const flag = countryFlagMarkup(player.country_code);
       const savedScore = savedScoreBreakdown(slot, pick);
       const scoreMarkup = savedScore
@@ -542,6 +556,7 @@
 
       slotEl.classList.add("is-filled");
       slotEl.classList.toggle("is-captain-card", captain);
+      slotEl.classList.toggle("is-invalid-slot", invalidSlot);
 
       slotEl.innerHTML = `
         <div class="fantasy-slot__player">
@@ -557,6 +572,7 @@
                 <span>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</span>
               </small>
               <small>${escapeHtml(eligibleSlots(player).join(" / "))} · ${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</small>
+              ${invalidSlot ? '<small class="fantasy-slot__invalid-note">Ej giltig som ' + escapeHtml(slot) + ' · välj Byt</small>' : ""}
             </div>
           </div>
           ${scoreMarkup}
