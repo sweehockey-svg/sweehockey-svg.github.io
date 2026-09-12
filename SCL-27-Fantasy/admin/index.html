@@ -24,7 +24,7 @@
 
   <main class="fa-shell">
     <section id="authGate" class="fa-gate">
-      <span>ADMIN ACCESS</span>
+      <span>ADMINÅTKOMST</span>
       <h1>Fantasy Admin</h1>
       <p id="authGateText">Kontrollerar din Svensk eHockey-adminsession.</p>
       <div class="fa-gate__actions">
@@ -36,24 +36,24 @@
     <div id="adminApp" hidden>
       <section class="fa-hero">
         <div>
-          <span class="fa-kicker">SCL 27 FANTASY / CONTROL ROOM</span>
+          <span class="fa-kicker">SCL 27 FANTASY / KONTROLLRUM</span>
           <h1>Fantasy Admin</h1>
           <p>Hantera betan, priserna, Fantasy-lagen och simuleringarna utan att röra vanliga Svensk eHockey-sidan.</p>
         </div>
         <div class="fa-hero__status">
-          <span>COMPETITION</span>
+          <span>TÄVLING</span>
           <strong>SCL 27</strong>
           <em id="heroStatus">–</em>
         </div>
       </section>
 
       <nav class="fa-tabs">
-        <button class="is-active" data-tab="dashboard">Dashboard</button>
-        <button data-tab="competition">Competition</button>
+        <button class="is-active" data-tab="dashboard">Översikt</button>
+        <button data-tab="competition">Tävling</button>
         <button data-tab="pool">Spelarpool</button>
         <button data-tab="entries">Fantasy-lag</button>
-        <button data-tab="sync">SportsGamer Sync</button>
-        <button data-tab="simulation">Simulation</button>
+        <button data-tab="sync">SportsGamer-synk</button>
+        <button data-tab="simulation">Simulering</button>
       </nav>
 
       <section class="fa-panel" data-panel="dashboard">
@@ -62,7 +62,7 @@
         <div class="fa-grid-two">
           <article class="fa-box">
             <div class="fa-box__head">
-              <div><span>RECENT</span><h2>Senaste Fantasy-lagen</h2></div>
+              <div><span>SENASTE</span><h2>Senaste Fantasy-lagen</h2></div>
               <button class="fa-link-button" type="button" data-open-tab="entries">Visa alla</button>
             </div>
             <div id="recentEntries" class="fa-list"></div>
@@ -70,7 +70,7 @@
 
           <article class="fa-box">
             <div class="fa-box__head">
-              <div><span>RULESET</span><h2>Aktiva regler</h2></div>
+              <div><span>REGELVERK</span><h2>Aktiva regler</h2></div>
             </div>
             <div id="ruleSummary" class="fa-rule-summary"></div>
           </article>
@@ -79,19 +79,19 @@
 
       <section class="fa-panel" data-panel="competition" hidden>
         <div class="fa-section-head">
-          <div><span>COMPETITION CONTROL</span><h2>SCL 27 Fantasy</h2><p>Ändringar här påverkar Fantasy-motorn direkt.</p></div>
+          <div><span>TÄVLINGSKONTROLL</span><h2>SCL 27 Fantasy</h2><p>Ändringar här påverkar Fantasy-motorn direkt.</p></div>
         </div>
 
         <form id="competitionForm" class="fa-form-grid">
           <label>
             <span>Status</span>
             <select id="compStatus">
-              <option value="setup">SETUP</option>
-              <option value="open">OPEN</option>
-              <option value="locked">LOCKED</option>
-              <option value="live">LIVE</option>
-              <option value="finished">FINISHED</option>
-              <option value="archived">ARCHIVED</option>
+              <option value="setup">UPPSTART</option>
+              <option value="open">ÖPPEN</option>
+              <option value="locked">LÅST</option>
+              <option value="live">PÅGÅR</option>
+              <option value="finished">AVSLUTAD</option>
+              <option value="archived">ARKIVERAD</option>
             </select>
           </label>
 
@@ -111,13 +111,13 @@
           </label>
 
           <label>
-            <span>Lock deadline</span>
+            <span>Låsdeadline</span>
             <input id="compLockAt" type="datetime-local">
           </label>
 
           <label class="fa-checkbox">
             <input id="compTransfers" type="checkbox">
-            <span>Transfers aktiverade</span>
+            <span>Byten aktiverade</span>
           </label>
 
           <div class="fa-form-actions">
@@ -128,7 +128,7 @@
 
         <article class="fa-box fa-danger-box">
           <div class="fa-box__head">
-            <div><span>POINT ENGINE</span><h2>Räkna om Fantasy-poäng</h2></div>
+            <div><span>POÄNGMOTOR</span><h2>Räkna om Fantasy-poäng</h2></div>
           </div>
           <p>Räknar om samtliga skapade Fantasy-lag med den aktuella kaptenmultiplikatorn och spelarpoängen.</p>
           <button id="recalculateEntries" class="fa-secondary" type="button">Räkna om alla lag</button>
@@ -138,7 +138,7 @@
 
       <section class="fa-panel" data-panel="pool" hidden>
         <div class="fa-section-head">
-          <div><span>PLAYER POOL</span><h2>SCL 25 Replay Pool</h2><p>Priserna är pre-SCL25-priser. Ändringar sparas direkt.</p></div>
+          <div><span>SPELARPOOL</span><h2>SCL 25-återspelning</h2><p>Priserna är pre-SCL25-priser. Ändringar sparas direkt.</p></div>
           <div class="fa-head-actions">
             <input id="poolSearch" type="search" placeholder="Sök spelare eller lag…">
             <select id="poolPosition">
@@ -151,7 +151,7 @@
         <div class="fa-table-wrap">
           <table class="fa-table">
             <thead>
-              <tr><th>Spelare</th><th>Lag</th><th>Pos</th><th>Pris</th><th>Replay-P</th><th>Tillgänglig</th><th></th></tr>
+              <tr><th>Spelare</th><th>Lag</th><th>Pos</th><th>Pris</th><th>SCL25-P</th><th>Tillgänglig</th><th></th></tr>
             </thead>
             <tbody id="poolTableBody"></tbody>
           </table>
@@ -161,7 +161,7 @@
 
       <section class="fa-panel" data-panel="entries" hidden>
         <div class="fa-section-head">
-          <div><span>FANTASY TEAMS</span><h2>Skapade lag</h2><p>Klicka på ett lag för att se hela lineupen.</p></div>
+          <div><span>FANTASY-LAG</span><h2>Skapade lag</h2><p>Klicka på ett lag för att se hela startsexan.</p></div>
         </div>
 
         <div class="fa-table-wrap">
@@ -177,9 +177,9 @@
       <section class="fa-panel" data-panel="sync" hidden>
         <div class="fa-section-head">
           <div>
-            <span>SPORTSGAMER DATA</span>
+            <span>SPORTSGAMER-DATA</span>
             <h2>Matchdata & automatisk synk</h2>
-            <p>Hämtar verklig matchposition och statistik read-only från SportsGamer. Fantasy-poängen räknas om automatiskt efter en lyckad import.</p>
+            <p>Hämtar verklig matchposition och statistik skrivskyddat från SportsGamer. Fantasy-poängen räknas om automatiskt efter en lyckad import.</p>
           </div>
           <button id="runSportsGamerSync" class="fa-primary" type="button">Hämta nu</button>
         </div>
@@ -190,13 +190,13 @@
         <div class="fa-grid-two">
           <article class="fa-box">
             <div class="fa-box__head">
-              <div><span>AUTO SYNC</span><h2>Automatisk hämtning</h2></div>
+              <div><span>AUTOMATISK SYNK</span><h2>Automatisk hämtning</h2></div>
             </div>
             <form id="syncSettingsForm" class="fa-sync-settings">
               <label>
-                <span>SportsGamer League ID</span>
+                <span>SportsGamer liga-ID</span>
                 <input id="syncLeagueId" type="number" min="1" step="1" placeholder="447">
-                <small>Betan använder 447. Byt till SCL 27:s riktiga leagueID när tävlingen skapas i SportsGamer.</small>
+                <small>Betan använder 447. Byt till SCL 27:s riktiga liga-ID när tävlingen skapas i SportsGamer.</small>
               </label>
               <label class="fa-checkbox fa-checkbox--sync">
                 <input id="syncAutoEnabled" type="checkbox">
@@ -205,7 +205,7 @@
               <label>
                 <span>Klockslag · Europe/Stockholm</span>
                 <input id="syncTimes" type="text" placeholder="18:00, 21:00, 23:30">
-                <small>Max åtta tider. Workflown kontrollerar schemat var femte minut.</small>
+                <small>Max åtta tider. Arbetsflödet kontrollerar schemat var femte minut.</small>
               </label>
               <div class="fa-form-actions">
                 <p id="syncSettingsStatus" class="fa-status"></p>
@@ -216,7 +216,7 @@
 
           <article class="fa-box">
             <div class="fa-box__head">
-              <div><span>IMPORT HISTORY</span><h2>Senaste körningar</h2></div>
+              <div><span>IMPORTHISTORIK</span><h2>Senaste körningar</h2></div>
               <button id="refreshSyncState" class="fa-link-button" type="button">Uppdatera</button>
             </div>
             <div id="syncRuns" class="fa-list"></div>
@@ -226,14 +226,14 @@
 
       <section class="fa-panel" data-panel="simulation" hidden>
         <div class="fa-section-head">
-          <div><span>SIMULATION LAB</span><h2>Testa balansen</h2><p>Kör samma typ av maskintest vi använde för att hitta 90-budgeten och målvaktsbalansen.</p></div>
+          <div><span>SIMULERINGSLABB</span><h2>Testa balansen</h2><p>Kör samma typ av maskintest vi använde för att hitta 90-budgeten och målvaktsbalansen.</p></div>
           <div class="fa-sim-actions">
             <select id="simulationRuns">
               <option value="5000">5 000 lag</option>
               <option value="10000">10 000 lag</option>
               <option value="20000">20 000 lag</option>
             </select>
-            <button id="runSimulation" class="fa-primary" type="button">Kör simulation</button>
+            <button id="runSimulation" class="fa-primary" type="button">Kör simulering</button>
           </div>
         </div>
 
@@ -242,15 +242,15 @@
 
         <div class="fa-grid-three">
           <article class="fa-box">
-            <div class="fa-box__head"><div><span>BALANCE</span><h2>Positioner</h2></div></div>
+            <div class="fa-box__head"><div><span>BALANS</span><h2>Positioner</h2></div></div>
             <div id="positionBalance" class="fa-list"></div>
           </article>
           <article class="fa-box">
-            <div class="fa-box__head"><div><span>VALUE</span><h2>Bästa fynd</h2></div></div>
+            <div class="fa-box__head"><div><span>VÄRDE</span><h2>Bästa fynd</h2></div></div>
             <div id="valuePicks" class="fa-list"></div>
           </article>
           <article class="fa-box">
-            <div class="fa-box__head"><div><span>MISS</span><h2>Dyra floppar</h2></div></div>
+            <div class="fa-box__head"><div><span>MISSAR</span><h2>Dyra floppar</h2></div></div>
             <div id="expensiveFlops" class="fa-list"></div>
           </article>
         </div>
@@ -265,6 +265,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="admin.js?v=20260912-v4-sync-source"></script>
+  <script src="admin.js?v=20260912-v5-swedish"></script>
 </body>
 </html>
