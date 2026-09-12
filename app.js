@@ -17329,13 +17329,6 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           </a>
 
           <a
-            class="${route.active === "fantasy" ? "is-active" : ""}"
-            href="#/fantasy"
-          >
-            Fantasy
-          </a>
-
-          <a
             class="${route.active === "freeAgents" ? "is-active" : ""}"
             href="#/free-agents"
           >
