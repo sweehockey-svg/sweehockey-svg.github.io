@@ -1,0 +1,219 @@
+\set ON_ERROR_STOP on
+
+begin;
+set local statement_timeout = '15min';
+set local lock_timeout = '30s';
+
+create temporary table fantasy_matches_stage (
+  source_league_id bigint,
+  source_match_id bigint,
+  match_type text,
+  started_at timestamptz,
+  team1_id bigint,
+  team2_id bigint,
+  team1_score integer,
+  team2_score integer,
+  raw_match jsonb
+) on commit drop;
+
+create temporary table fantasy_match_player_stats_stage (
+  source_league_id bigint,
+  source_match_id bigint,
+  source_team_id bigint,
+  source_player_id bigint,
+  match_type text,
+  played_position text,
+  scoring_role text,
+  skater_games integer,
+  goals integer,
+  assists integer,
+  game_winning_goals integer,
+  blocked_shots integer,
+  goalie_games integer,
+  goalie_wins integer,
+  goalie_saves integer,
+  goalie_goals_allowed integer,
+  goalie_shutouts integer,
+  goalie_goals integer,
+  goalie_assists integer,
+  fantasy_points numeric(12,2),
+  raw_stats jsonb
+) on commit drop;
+
+\copy fantasy_matches_stage from '/tmp/fantasy_matches.csv' with (format csv, header true, null '');
+\copy fantasy_match_player_stats_stage from '/tmp/fantasy_match_player_stats.csv' with (format csv, header true, null '');
+
+select 1 / case when count(*) >= 1 then 1 else 0 end as matches_must_exist
+from fantasy_matches_stage;
+
+select 1 / case when count(*) >= 6 then 1 else 0 end as player_rows_must_exist
+from fantasy_match_player_stats_stage;
+
+select 1 / case
+  when count(*) = count(distinct (source_match_id,source_team_id,source_player_id))
+  then 1 else 0 end as player_rows_must_be_unique
+from fantasy_match_player_stats_stage;
+
+create temporary table fantasy_import_meta on commit preserve rows as
+select
+  c.id as competition_id,
+  s.source_league_id
+from public.ehockey_fantasy_competitions c
+join public.ehockey_fantasy_sync_settings s on s.competition_id=c.id
+where c.code='SCL27'
+limit 1;
+
+select 1 / case when count(*)=1 then 1 else 0 end as competition_settings_must_exist
+from fantasy_import_meta;
+
+insert into public.ehockey_fantasy_matches (
+  competition_id,source_league_id,source_match_id,match_type,started_at,
+  team1_id,team2_id,team1_score,team2_score,raw_match,source_updated_at,imported_at
+)
+select
+  m.competition_id,
+  s.source_league_id,
+  s.source_match_id,
+  nullif(s.match_type,''),
+  s.started_at,
+  s.team1_id,
+  s.team2_id,
+  s.team1_score,
+  s.team2_score,
+  coalesce(s.raw_match,'{}'::jsonb),
+  now(),
+  now()
+from fantasy_matches_stage s
+cross join fantasy_import_meta m
+on conflict (competition_id,source_match_id)
+do update set
+  source_league_id=excluded.source_league_id,
+  match_type=excluded.match_type,
+  started_at=coalesce(excluded.started_at,public.ehockey_fantasy_matches.started_at),
+  team1_id=coalesce(excluded.team1_id,public.ehockey_fantasy_matches.team1_id),
+  team2_id=coalesce(excluded.team2_id,public.ehockey_fantasy_matches.team2_id),
+  team1_score=coalesce(excluded.team1_score,public.ehockey_fantasy_matches.team1_score),
+  team2_score=coalesce(excluded.team2_score,public.ehockey_fantasy_matches.team2_score),
+  raw_match=excluded.raw_match,
+  source_updated_at=now(),
+  imported_at=now();
+
+delete from public.ehockey_fantasy_matches t
+using fantasy_import_meta m
+where t.competition_id=m.competition_id
+  and t.source_league_id=m.source_league_id
+  and not exists (
+    select 1 from fantasy_matches_stage s
+    where s.source_match_id=t.source_match_id
+  );
+
+insert into public.ehockey_fantasy_match_player_stats (
+  competition_id,source_league_id,source_match_id,source_team_id,source_player_id,
+  pool_player_id,match_type,played_position,scoring_role,skater_games,
+  goals,assists,game_winning_goals,blocked_shots,goalie_games,goalie_wins,
+  goalie_saves,goalie_goals_allowed,goalie_shutouts,goalie_goals,goalie_assists,
+  fantasy_points,raw_stats,source_updated_at,imported_at
+)
+select
+  m.competition_id,
+  s.source_league_id,
+  s.source_match_id,
+  s.source_team_id,
+  s.source_player_id,
+  p.id,
+  nullif(s.match_type,''),
+  nullif(s.played_position,''),
+  nullif(s.scoring_role,''),
+  coalesce(s.skater_games,0),
+  coalesce(s.goals,0),
+  coalesce(s.assists,0),
+  coalesce(s.game_winning_goals,0),
+  coalesce(s.blocked_shots,0),
+  coalesce(s.goalie_games,0),
+  coalesce(s.goalie_wins,0),
+  coalesce(s.goalie_saves,0),
+  coalesce(s.goalie_goals_allowed,0),
+  coalesce(s.goalie_shutouts,0),
+  coalesce(s.goalie_goals,0),
+  coalesce(s.goalie_assists,0),
+  coalesce(s.fantasy_points,0),
+  coalesce(s.raw_stats,'{}'::jsonb),
+  now(),
+  now()
+from fantasy_match_player_stats_stage s
+cross join fantasy_import_meta m
+left join public.ehockey_fantasy_player_pool p
+  on p.competition_id=m.competition_id
+ and p.sports_gamer_player_id=s.source_player_id
+on conflict (competition_id,source_match_id,source_team_id,source_player_id)
+do update set
+  pool_player_id=excluded.pool_player_id,
+  match_type=excluded.match_type,
+  played_position=excluded.played_position,
+  scoring_role=excluded.scoring_role,
+  skater_games=excluded.skater_games,
+  goals=excluded.goals,
+  assists=excluded.assists,
+  game_winning_goals=excluded.game_winning_goals,
+  blocked_shots=excluded.blocked_shots,
+  goalie_games=excluded.goalie_games,
+  goalie_wins=excluded.goalie_wins,
+  goalie_saves=excluded.goalie_saves,
+  goalie_goals_allowed=excluded.goalie_goals_allowed,
+  goalie_shutouts=excluded.goalie_shutouts,
+  goalie_goals=excluded.goalie_goals,
+  goalie_assists=excluded.goalie_assists,
+  fantasy_points=excluded.fantasy_points,
+  raw_stats=excluded.raw_stats,
+  source_updated_at=now(),
+  imported_at=now();
+
+delete from public.ehockey_fantasy_match_player_stats t
+using fantasy_import_meta m
+where t.competition_id=m.competition_id
+  and t.source_league_id=m.source_league_id
+  and not exists (
+    select 1
+    from fantasy_match_player_stats_stage s
+    where s.source_match_id=t.source_match_id
+      and s.source_team_id=t.source_team_id
+      and s.source_player_id=t.source_player_id
+  );
+
+create temporary table fantasy_refresh_result on commit preserve rows as
+select public.seh_fantasy_refresh_match_scores('SCL27') as result;
+
+update public.ehockey_fantasy_sync_runs r
+set
+  status='success',
+  source_league_id=m.source_league_id,
+  source_table=:'source_table',
+  matches_upserted=(select count(*) from fantasy_matches_stage),
+  player_rows_upserted=(select count(*) from fantasy_match_player_stats_stage),
+  match_rows_scored=coalesce((select (result->>'match_rows')::integer from fantasy_refresh_result),0),
+  details=jsonb_build_object(
+    'skater_source',:'skater_source',
+    'goalie_source',:'goalie_source',
+    'match_source',:'match_source',
+    'score_refresh',(select result from fantasy_refresh_result)
+  ),
+  finished_at=now()
+from fantasy_import_meta m
+where r.competition_id=m.competition_id
+  and r.request_id=:'request_id'
+  and r.status in ('queued','running');
+
+update public.ehockey_fantasy_sync_settings s
+set
+  last_auto_sync_at=case when :'trigger_type'='schedule' then now() else s.last_auto_sync_at end,
+  last_manual_sync_at=case when :'trigger_type'<>'schedule' then now() else s.last_manual_sync_at end,
+  updated_at=now()
+from fantasy_import_meta m
+where s.competition_id=m.competition_id;
+
+commit;
+
+select
+  (select count(*) from fantasy_matches_stage) as matches_imported,
+  (select count(*) from fantasy_match_player_stats_stage) as player_rows_imported,
+  (select result from fantasy_refresh_result) as score_refresh;
