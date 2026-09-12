@@ -3148,3 +3148,27 @@ a{color:inherit}
     text-align:left;
   }
 }
+
+
+/* Compact pre-season cards until SCL27 scoring exists */
+@media(min-width:721px){
+  .fantasy-slot:not(:has(.fantasy-slot__score)){
+    min-height:218px;
+  }
+
+  .fantasy-slot:not(:has(.fantasy-slot__score)) .fantasy-slot__player{
+    display:flex;
+    flex-direction:column;
+    min-height:100%;
+  }
+
+  .fantasy-slot:not(:has(.fantasy-slot__score)) .fantasy-slot__actions{
+    margin-top:14px;
+  }
+}
+
+@media(min-width:1251px){
+  .fantasy-slot:not(:has(.fantasy-slot__score)){
+    min-height:220px;
+  }
+}
