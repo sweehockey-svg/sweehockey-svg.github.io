@@ -2365,3 +2365,16 @@ a{color:inherit}
     grid-template-columns:repeat(3,minmax(0,1fr));
   }
 }
+
+
+/* Player swap action */
+.fantasy-slot__actions button[data-swap]{
+  border-color:#285d7c;
+  background:linear-gradient(180deg,#0a2231,#071722);
+  color:#9dc5da;
+}
+.fantasy-slot__actions button[data-swap]:hover{
+  border-color:#46a7d7;
+  background:linear-gradient(180deg,#0b2b3f,#082033);
+  color:#e2f8ff;
+}
