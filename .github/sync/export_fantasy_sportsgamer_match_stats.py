@@ -334,6 +334,36 @@ def main() -> int:
         print("Goalie candidates:", json.dumps(goalie_diag[:15], ensure_ascii=False))
 
         if not skater_table or not skater_rows:
+            print("=== TARGETED MATCH SCHEMA DIAGNOSTICS ===")
+            interesting_words = ("match", "participant", "stat", "game", "club", "ea")
+            for table in sorted(inventory):
+                if any(word in table.lower() for word in interesting_words):
+                    columns = inventory[table]
+                    if any(
+                        key in {name.lower() for name in columns}
+                        for key in ("matchid", "gametype", "positionid", "eashlmatchid", "eamatchid", "clubid")
+                    ):
+                        print(f"SCHEMA {table}: {','.join(columns)}")
+
+            if match_ids:
+                sample_id = match_ids[0]
+                if "nhlgamer_matches" in inventory:
+                    sample_match = select(
+                        connection,
+                        "select * from nhlgamer_matches where matchID=%s limit 1",
+                        (sample_id,),
+                    )
+                    if sample_match:
+                        print("SAMPLE nhlgamer_matches:", json.dumps(sample_match[0], ensure_ascii=False, default=str))
+                sample_participant = select(
+                    connection,
+                    "select * from nhlgamer_participants where matchID=%s limit 1",
+                    (sample_id,),
+                )
+                if sample_participant:
+                    print("SAMPLE nhlgamer_participants:", json.dumps(sample_participant[0], ensure_ascii=False, default=str))
+
+        if not skater_table or not skater_rows:
             raise RuntimeError(
                 "Could not find a SportsGamer table containing per-match skater position/statistics. "
                 "Discovery diagnostics are printed above."
