@@ -464,12 +464,20 @@
     `).join("");
   }
 
+  function renderTeamName() {
+    const host = $("teamNameDisplay");
+    if (!host) return;
+    const linkedName = clean(state.account?.player_name);
+    host.textContent = clean(state.entry?.team_name) || (linkedName ? linkedName + " Fantasy" : "–");
+  }
+
   function renderAll() {
     renderHero();
     renderLineup();
     renderMarket();
     renderPlayers();
     renderLeaderboard();
+    renderTeamName();
     updateHeaderAccount();
   }
 
@@ -678,16 +686,11 @@
     state.entry = entryResult.data || null;
 
     if (!state.entry) {
-      if (!clean($("teamName").value)) {
-        const playerName = clean(state.account?.player_name);
-        $("teamName").value = playerName ? playerName + " Fantasy" : "";
-      }
       // Keep any unsaved draft intact. Auth refreshes must never wipe the user's picks.
       renderAll();
       return;
     }
 
-    $("teamName").value = state.entry.team_name || "";
     state.picks.clear();
 
     const picksResult = await sb
@@ -794,7 +797,6 @@
   }
 
   async function saveTeam() {
-    const teamName = clean($("teamName").value);
     const budget = number(state.competition?.budget || 100);
 
     if (!state.session?.user || state.account?.status !== "approved") {
@@ -823,12 +825,6 @@
       return;
     }
 
-    if (teamName.length < 2) {
-      setStatus("saveStatus", "Ge Fantasy-laget ett namn.", "error");
-      $("teamName").focus();
-      return;
-    }
-
     $("saveTeam").disabled = true;
     setStatus("saveStatus", "Sparar laget…", "working");
 
@@ -841,7 +837,7 @@
 
       const { error } = await sb.rpc("seh_fantasy_save_my_team", {
         p_competition_code: "SCL27",
-        p_team_name: teamName,
+        p_team_name: "",
         p_picks: picks
       });
 
