@@ -201,21 +201,16 @@
       const sessionResult = await supabase.auth.getSession();
       if (sessionResult.error || !sessionResult.data.session) return;
 
-      const [linkRequests, faRequests, profileRequests] = await Promise.all([
-        supabase.from("ehockey_discord_player_links").select("id", { count: "exact", head: true }).eq("status", "pending"),
-        supabase.from("ehockey_free_agent_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
-        supabase.from("ehockey_player_profile_requests").select("id", { count: "exact", head: true }).eq("status", "pending")
-      ]);
+      const { data, error } = await supabase.rpc("seh_admin_pending_counts");
+      if (error) throw error;
 
-      const firstError = linkRequests.error || faRequests.error || profileRequests.error;
-      if (firstError) throw firstError;
-
+      const row = Array.isArray(data) ? data[0] : data;
       const breakdown = {
-        links: Number(linkRequests.count) || 0,
-        fa: Number(faRequests.count) || 0,
-        profiles: Number(profileRequests.count) || 0
+        links: Number(row?.links) || 0,
+        fa: Number(row?.fa) || 0,
+        profiles: Number(row?.profiles) || 0
       };
-      publishAdminBadgeCount(breakdown.links + breakdown.fa + breakdown.profiles, breakdown);
+      publishAdminBadgeCount(Number(row?.total) || 0, breakdown);
     } catch (error) {
       console.warn("Kunde inte läsa väntande adminärenden till navigeringen", error);
     } finally {
