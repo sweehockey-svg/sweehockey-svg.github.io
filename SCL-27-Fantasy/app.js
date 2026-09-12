@@ -797,12 +797,153 @@
     );
 
     host.innerHTML = rows.map((row, index) => `
-      <article class="fantasy-leaderboard-row">
+      <button class="fantasy-leaderboard-row fantasy-leaderboard-row--clickable" type="button" data-view-entry="${row.entry_id}">
         <span>#${row.current_rank || index + 1}</span>
         <strong>${escapeHtml(row.team_name || "Namnlöst lag")}</strong>
         <b>${format(row.total_points, number(row.total_points) % 1 ? 1 : 0)} P</b>
-      </article>
+        <em>Visa lag →</em>
+      </button>
     `).join("");
+  }
+
+  function publicRosterPlayerMarkup(player) {
+    const captain = Boolean(player?.is_captain);
+    const usedSlots = Array.isArray(player?.used_slots) && player.used_slots.length
+      ? player.used_slots.join(" / ")
+      : clean(player?.slot || "–");
+    const contribution = number(player?.team_points);
+    const captainBonus = number(player?.captain_bonus_points);
+
+    return `
+      <article class="fantasy-public-roster-player${captain ? " is-captain" : ""}">
+        <div class="fantasy-public-roster-player__portrait-wrap">
+          ${portraitMarkup(player, "fantasy-public-roster-player__portrait")}
+          ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--public-roster")}
+        </div>
+        <div class="fantasy-public-roster-player__main">
+          <div class="fantasy-public-roster-player__name">
+            <span class="fantasy-public-roster-player__slot">${escapeHtml(clean(player?.slot || "–"))}</span>
+            <strong class="fantasy-player-name-line">
+              ${countryFlagMarkup(player?.country_code)}
+              <span class="fantasy-player-name">${escapeHtml(clean(player?.display_gamertag) || "Okänd")}</span>
+            </strong>
+            ${captain ? '<span class="fantasy-public-roster-player__captain">KAPTEN</span>' : ""}
+          </div>
+          <small>${escapeHtml(clean(player?.real_team_name) || "Lag ej klart")} · använd som ${escapeHtml(usedSlots)} · ${number(player?.games)} matcher</small>
+          ${captainBonus > 0
+            ? '<small class="fantasy-public-roster-player__bonus">+' + formatPoints(captainBonus) + ' P kaptensbonus</small>'
+            : ""}
+        </div>
+        <div class="fantasy-public-roster-player__points">
+          <span>BIDRAG</span>
+          <strong>${formatPoints(contribution)} P</strong>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderPublicEntry(data) {
+    const content = $("publicEntryContent");
+    if (!content) return;
+
+    if (!data?.visible) {
+      content.innerHTML = `
+        <div class="fantasy-public-entry__locked">
+          <span>🔒</span>
+          <h3>Laget är dolt</h3>
+          <p>${escapeHtml(clean(data?.message) || "Laget blir synligt efter deadline.")}</p>
+        </div>
+      `;
+      return;
+    }
+
+    const entry = data.entry || {};
+    const round = data.round || null;
+    const roster = Array.isArray(data.roster) ? data.roster : [];
+    const former = Array.isArray(data.former_players) ? data.former_players : [];
+    const penalty = number(data.transfer_penalty_points);
+    const roundLabel = round
+      ? (clean(round.name) || ("Runda " + (round.round_no || "–")))
+      : "Låst lag";
+
+    content.innerHTML = `
+      <div class="fantasy-public-entry__hero">
+        <div>
+          <span>LÅST FANTASY-LAG · ${escapeHtml(roundLabel.toUpperCase())}</span>
+          <h2>${escapeHtml(clean(entry.team_name) || "Namnlöst lag")}</h2>
+          <small>Det här är den senast låsta uppställningen. Kommande byten visas inte före nästa deadline.</small>
+        </div>
+        <div class="fantasy-public-entry__total">
+          <span>TOTALT</span>
+          <strong>${formatPoints(entry.total_points)} P</strong>
+          ${penalty > 0 ? '<small>−' + formatPoints(penalty) + ' P bytesavdrag</small>' : ""}
+        </div>
+      </div>
+
+      <div class="fantasy-public-entry__section-head">
+        <span>STARTSEXA</span>
+        <strong>LW · C · RW · LD · RD · G</strong>
+      </div>
+      <div class="fantasy-public-entry__roster">
+        ${roster.map(publicRosterPlayerMarkup).join("") || '<div class="fantasy-empty">Ingen låst uppställning hittades.</div>'}
+      </div>
+
+      ${former.length ? `
+        <div class="fantasy-public-entry__section-head fantasy-public-entry__section-head--history">
+          <span>TIDIGARE SPELARE</span>
+          <strong>Poängen ligger kvar i lagets total</strong>
+        </div>
+        <div class="fantasy-public-entry__former">
+          ${former.map((player) => {
+            const rounds = Array.isArray(player.round_breakdown) ? player.round_breakdown : [];
+            return `
+              <article class="fantasy-public-former-player">
+                <div>
+                  <strong class="fantasy-player-name-line">
+                    ${countryFlagMarkup(player.country_code)}
+                    <span class="fantasy-player-name">${escapeHtml(clean(player.display_gamertag) || "Okänd")}</span>
+                  </strong>
+                  <small>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")} · ${escapeHtml((player.used_slots || []).join(" / ") || "–")} · ${number(player.games)} matcher</small>
+                  <div class="fantasy-public-former-player__rounds">
+                    ${rounds.map((r) =>
+                      '<span>' + escapeHtml(clean(r.round_name) || ("Runda " + (r.round_no || "–"))) +
+                      ' · ' + escapeHtml(clean(r.slot) || "–") +
+                      ' · <strong>' + formatPoints(r.team_points) + ' P</strong>' +
+                      (r.is_captain ? ' <em>K</em>' : '') +
+                      '</span>'
+                    ).join("")}
+                  </div>
+                </div>
+                <b>${formatPoints(player.team_points)} P</b>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      ` : ""}
+    `;
+  }
+
+  async function openPublicEntry(entryId) {
+    const dialog = $("publicEntryDialog");
+    const content = $("publicEntryContent");
+    if (!dialog || !content) return;
+
+    content.innerHTML = '<div class="fantasy-public-entry__loading">Hämtar låst lag…</div>';
+    dialog.showModal();
+
+    try {
+      const result = await sb.rpc("seh_fantasy_public_entry_roster", {
+        p_entry_id: Number(entryId),
+        p_code: "SCL27"
+      });
+      if (result.error) throw result.error;
+      renderPublicEntry(Array.isArray(result.data) ? result.data[0] : result.data);
+    } catch (error) {
+      content.innerHTML =
+        '<div class="fantasy-public-entry__locked"><h3>Kunde inte hämta laget</h3><p>' +
+        escapeHtml(error?.message || String(error)) +
+        '</p></div>';
+    }
   }
 
   function renderTeamName() {
@@ -1414,6 +1555,12 @@
       return;
     }
 
+    const viewEntry = event.target.closest("[data-view-entry]");
+    if (viewEntry) {
+      openPublicEntry(viewEntry.dataset.viewEntry);
+      return;
+    }
+
     const openSlot = event.target.closest("[data-open-slot]");
     if (openSlot) {
       openPlayerPicker(openSlot.dataset.openSlot);
@@ -1463,6 +1610,11 @@
     state.swapSlot = null;
   });
   $("playerPickerSearch")?.addEventListener("input", renderPlayerPicker);
+  $("closePublicEntryDialog")?.addEventListener("click", () => {
+    $("publicEntryDialog")?.close();
+  });
+  $("publicEntryDialog")?.addEventListener("cancel", () => {});
+
   $("closePositionDialog")?.addEventListener("click", () => {
     state.pendingPlacementPlayerId = null;
     $("positionDialog")?.close();
