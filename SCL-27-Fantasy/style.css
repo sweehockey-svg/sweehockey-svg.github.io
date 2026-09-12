@@ -2465,3 +2465,94 @@ a{color:inherit}
     text-align:center;
   }
 }
+
+
+/* Premium lineup v8: wider cards, slimmer portraits */
+@media(min-width:1251px){
+  .fantasy-lineup{
+    grid-template-columns:repeat(12,minmax(0,1fr));
+    grid-template-areas:
+      "lw lw lw lw c c c c rw rw rw rw"
+      ". ld ld ld ld . . rd rd rd rd ."
+      ". . . . g g g g . . . .";
+    column-gap:16px;
+    row-gap:18px;
+    padding:30px 22px 40px;
+  }
+
+  .fantasy-slot{
+    width:100%;
+    max-width:314px;
+    min-height:320px;
+    padding:14px 16px 13px;
+  }
+
+  .fantasy-slot[data-slot=G]{
+    max-width:320px;
+  }
+
+  .fantasy-slot__visual{
+    gap:16px;
+  }
+
+  .fantasy-slot__portrait-wrap{
+    width:98px;
+    flex:0 0 98px;
+  }
+
+  .fantasy-slot__portrait{
+    width:90px;
+    height:132px;
+    flex:0 0 132px;
+    object-fit:contain;
+    object-position:center bottom;
+    border-radius:11px;
+  }
+
+  .fantasy-slot__position--overlay{
+    top:-6px;
+    right:-5px;
+  }
+
+  .fantasy-slot__identity{
+    min-width:0;
+    flex:1 1 auto;
+  }
+
+  .fantasy-slot__identity strong{
+    width:100%;
+    font-size:1.02rem;
+    line-height:1.08;
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+  }
+
+  .fantasy-slot__team{
+    width:100%;
+  }
+
+  .fantasy-slot__team span{
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+    line-height:1.2;
+  }
+
+  .fantasy-slot__meta{
+    margin-top:2px;
+    font-size:.68rem;
+  }
+
+  .fantasy-slot__score{
+    margin-top:12px;
+  }
+
+  .fantasy-slot__details{
+    gap:8px;
+  }
+
+  .fantasy-slot__detail-pill{
+    min-height:60px;
+  }
+}
