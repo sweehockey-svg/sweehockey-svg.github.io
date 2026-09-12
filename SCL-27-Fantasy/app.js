@@ -41,6 +41,8 @@
     account: null,
     entry: null,
     picks: new Map(),
+    savedPicks: new Map(),
+    savedScores: new Map(),
     activeTab: "team",
     pendingPlacementPlayerId: null,
     pickerSlot: null
@@ -72,6 +74,25 @@
     else el.removeAttribute("data-tone");
   }
 
+  let rosterToastTimer = null;
+
+  function showRosterError(message) {
+    const text = clean(message) || "Det gick inte att göra det valet.";
+    setStatus("saveStatus", text, "error");
+
+    const toast = $("fantasyToast");
+    if (!toast) return;
+
+    toast.textContent = text;
+    toast.dataset.tone = "error";
+    toast.classList.add("is-visible");
+
+    if (rosterToastTimer) clearTimeout(rosterToastTimer);
+    rosterToastTimer = setTimeout(() => {
+      toast.classList.remove("is-visible");
+    }, 4200);
+  }
+
   function isDiscordUser(user) {
     if (!user) return false;
     const provider = String(user.app_metadata?.provider || "").toLowerCase();
@@ -101,8 +122,45 @@
     return [];
   }
 
-  function betaPoints(player) {
-    return number(player?.source_snapshot?.fantasy_points_v1);
+  function formatPoints(value) {
+    const rounded = Math.round(number(value) * 100) / 100;
+    const digits = Number.isInteger(rounded) ? 0 : (Number.isInteger(rounded * 10) ? 1 : 2);
+    return format(rounded, digits);
+  }
+
+  function savedPickMatches(slot, pick) {
+    const saved = state.savedPicks.get(slot);
+    return Boolean(
+      saved &&
+      pick &&
+      Number(saved.player?.id) === Number(pick.player?.id) &&
+      Boolean(saved.isCaptain) === Boolean(pick.isCaptain)
+    );
+  }
+
+  function savedScoreBreakdown(slot, pick) {
+    if (!savedPickMatches(slot, pick)) return null;
+
+    const row = state.savedScores.get(Number(pick.player.id));
+    const base = number(row?.fantasy_points);
+    const multiplier = pick.isCaptain ? number(state.competition?.captain_multiplier || 1) : 1;
+
+    return {
+      base,
+      multiplier,
+      total: base * multiplier,
+      games: number(row?.games)
+    };
+  }
+
+  function draftMatchesSavedRoster() {
+    if (!state.entry || state.picks.size !== state.savedPicks.size) return false;
+
+    for (const [slot, pick] of state.picks.entries()) {
+      if (!savedPickMatches(slot, pick)) return false;
+    }
+
+    return true;
   }
 
   function countryFlag(code) {
@@ -268,11 +326,22 @@
     const used = usedBudget();
     const captainId = [...state.picks.values()].find((pick) => pick.isCaptain)?.player?.id || null;
     const saveButton = $("saveTeam");
+    const savedRosterIsCurrent = draftMatchesSavedRoster();
 
     $("selectedCount").textContent = state.picks.size + " / 6";
     $("budgetUsed").textContent = format(used, used % 1 ? 1 : 0);
     $("budgetLeft").textContent = format(budget - used, (budget - used) % 1 ? 1 : 0);
     $("budgetLeft").classList.toggle("over-budget", used > budget);
+
+    if ($("teamPoints")) {
+      $("teamPoints").textContent = state.entry ? formatPoints(state.entry.total_points) + " P" : "–";
+      $("teamPoints").classList.toggle("is-stale", Boolean(state.entry) && !savedRosterIsCurrent);
+    }
+    if ($("teamPointsLabel")) {
+      $("teamPointsLabel").textContent = state.entry && !savedRosterIsCurrent
+        ? "SAVED SCL25 PTS"
+        : "SCL25 POINTS";
+    }
 
     if (saveButton) {
       const complete = state.picks.size === 6;
@@ -314,6 +383,18 @@
       const player = pick.player;
       const captain = Number(captainId) === Number(player.id);
       const flag = countryFlag(player.country_code);
+      const savedScore = savedScoreBreakdown(slot, pick);
+      const scoreMarkup = savedScore
+        ? `<div class="fantasy-slot__score">
+            <span>SCL 25</span>
+            <strong>${formatPoints(savedScore.total)} P</strong>
+            <small>${pick.isCaptain
+              ? formatPoints(savedScore.base) + " × " + format(savedScore.multiplier, savedScore.multiplier % 1 ? 1 : 0)
+              : savedScore.games + " matcher"}</small>
+          </div>`
+        : (state.entry
+          ? '<div class="fantasy-slot__score fantasy-slot__score--pending"><span>ÄNDRAT</span><small>Spara laget för replaypoäng</small></div>'
+          : "");
 
       slotEl.classList.add("is-filled");
       slotEl.classList.toggle("is-captain-card", captain);
@@ -332,6 +413,7 @@
               <small>${escapeHtml(eligibleSlots(player).join(" / "))} · ${format(player.price, number(player.price) % 1 ? 1 : 0)} CR</small>
             </div>
           </div>
+          ${scoreMarkup}
           <div class="fantasy-slot__actions">
             <button type="button" data-captain="${player.id}" class="${captain ? "is-captain" : ""}">
               ${captain ? "KAPTEN" : "Gör kapten"}
@@ -486,13 +568,34 @@
   }
 
   function placePlayer(player, slot) {
-    if (!player || !slot || state.picks.has(slot)) return;
-    if (!eligibleSlots(player).includes(slot)) return;
-    if (selectedIds().has(Number(player.id))) return;
+    if (!player || !slot) return;
+
+    const occupied = state.picks.get(slot);
+    if (occupied) {
+      showRosterError(
+        slot + " är redan upptagen av " +
+        (clean(occupied.player?.display_gamertag) || "en annan spelare") +
+        ". Ta bort spelaren på " + slot + " först."
+      );
+      return;
+    }
+
+    if (!eligibleSlots(player).includes(slot)) {
+      showRosterError(
+        (clean(player.display_gamertag) || "Spelaren") +
+        " kan inte användas som " + slot + "."
+      );
+      return;
+    }
+
+    if (selectedIds().has(Number(player.id))) {
+      showRosterError((clean(player.display_gamertag) || "Spelaren") + " finns redan i laget.");
+      return;
+    }
 
     const teamLimit = number(state.competition?.max_players_per_real_team || 2);
     if (realTeamCount(player) >= teamLimit) {
-      setStatus("saveStatus", "Du får välja högst " + teamLimit + " spelare från samma riktiga lag.", "error");
+      showRosterError("Du får välja högst " + teamLimit + " spelare från samma riktiga lag.");
       return;
     }
 
@@ -586,7 +689,16 @@
 
   function openPlayerPicker(slot) {
     if (!["LW","C","RW","LD","RD","G"].includes(slot)) return;
-    if (state.picks.has(slot)) return;
+
+    const occupied = state.picks.get(slot);
+    if (occupied) {
+      showRosterError(
+        slot + " är redan upptagen av " +
+        (clean(occupied.player?.display_gamertag) || "en annan spelare") +
+        ". Ta bort spelaren på " + slot + " först."
+      );
+      return;
+    }
 
     state.pickerSlot = slot;
     if ($("playerPickerSearch")) $("playerPickerSearch").value = "";
@@ -596,22 +708,34 @@
 
   function addPlayer(id) {
     const player = playerById(id);
-    if (!player || state.picks.size >= 6) return;
+    if (!player) return;
 
     const teamLimit = number(state.competition?.max_players_per_real_team || 2);
     if (realTeamCount(player) >= teamLimit) {
-      setStatus("saveStatus", "Du får välja högst " + teamLimit + " spelare från samma riktiga lag.", "error");
+      showRosterError("Du får välja högst " + teamLimit + " spelare från samma riktiga lag.");
       return;
     }
 
-    const openSlots = eligibleSlots(player).filter((candidate) => !state.picks.has(candidate));
+    const eligible = eligibleSlots(player);
+    const openSlots = eligible.filter((candidate) => !state.picks.has(candidate));
     if (!openSlots.length) {
-      setStatus(
-        "saveStatus",
-        "Det finns ingen ledig position för " + player.display_gamertag +
-        " (" + eligibleSlots(player).join(" / ") + ").",
-        "error"
-      );
+      const occupied = eligible
+        .map((slot) => ({ slot, pick: state.picks.get(slot) }))
+        .filter((item) => item.pick);
+
+      if (occupied.length === 1 && eligible.length === 1) {
+        showRosterError(
+          occupied[0].slot + " är redan upptagen av " +
+          (clean(occupied[0].pick.player?.display_gamertag) || "en annan spelare") +
+          ". " + (clean(player.display_gamertag) || "Spelaren") +
+          " kan bara användas som " + occupied[0].slot + "."
+        );
+      } else {
+        showRosterError(
+          "Ingen ledig position för " + (clean(player.display_gamertag) || "spelaren") +
+          " (" + eligible.join(" / ") + ")."
+        );
+      }
       return;
     }
 
@@ -690,12 +814,16 @@
     state.entry = entryResult.data || null;
 
     if (!state.entry) {
+      state.savedPicks.clear();
+      state.savedScores.clear();
       // Keep any unsaved draft intact. Auth refreshes must never wipe the user's picks.
       renderAll();
       return;
     }
 
     state.picks.clear();
+    state.savedPicks.clear();
+    state.savedScores.clear();
 
     const picksResult = await sb
       .from("ehockey_fantasy_entry_players")
@@ -704,14 +832,36 @@
 
     if (picksResult.error) throw picksResult.error;
 
-    for (const row of picksResult.data || []) {
+    const savedRows = picksResult.data || [];
+    const scoreIds = [...new Set(savedRows.map((row) => Number(row.pool_player_id)).filter(Boolean))];
+
+    if (scoreIds.length) {
+      const scoreResult = await sb
+        .from("ehockey_fantasy_player_scores")
+        .select("pool_player_id,fantasy_points,games")
+        .eq("competition_id", state.competition.id)
+        .eq("phase", "total")
+        .in("pool_player_id", scoreIds);
+
+      if (scoreResult.error) throw scoreResult.error;
+
+      for (const row of scoreResult.data || []) {
+        state.savedScores.set(Number(row.pool_player_id), row);
+      }
+    }
+
+    for (const row of savedRows) {
       const player = playerById(row.pool_player_id);
       if (!player) continue;
-      state.picks.set(row.slot, {
+
+      const savedPick = {
         player,
         isCaptain: Boolean(row.is_captain),
         lockedPrice: row.locked_price
-      });
+      };
+
+      state.picks.set(row.slot, { ...savedPick });
+      state.savedPicks.set(row.slot, { ...savedPick });
     }
 
     renderAll();
@@ -795,6 +945,8 @@
       state.account = null;
       state.entry = null;
       state.picks.clear();
+      state.savedPicks.clear();
+      state.savedScores.clear();
       renderAll();
       showGate("logged-out");
     }
