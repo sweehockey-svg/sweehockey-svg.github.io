@@ -111,6 +111,16 @@
           </label>
 
           <label>
+            <span>Spelarurval efter nationalitet</span>
+            <select id="compNationalityScope">
+              <option value="all">Alla nationaliteter</option>
+              <option value="sweden">Endast svenskar</option>
+              <option value="scandinavia">Endast skandinaver (SE / DK / NO)</option>
+            </select>
+            <small>Styr vilka spelare som går att välja i Fantasy. Skandinavien betyder här Sverige, Danmark och Norge.</small>
+          </label>
+
+          <label>
             <span>Låsdeadline</span>
             <input id="compLockAt" type="datetime-local">
           </label>
@@ -138,7 +148,7 @@
 
       <section class="fa-panel" data-panel="pool" hidden>
         <div class="fa-section-head">
-          <div><span>SPELARPOOL</span><h2>SCL 27 betapool</h2><p>237 svenska spelare. Priser och positioner är omräknade med historik genom ECL 26 Spring. När ECL 27 Winter-rostrarna finns byggs poolen om från hela den svenska rosterlistan. Återvändande spelare får historik-fallback ända till ECL 24 Winter; helt nya spelare får rosterposition och 12 CR som startpris.</p></div>
+          <div><span>SPELARPOOL</span><h2>SCL 27 betapool</h2><p>Här ligger den fulla importerade spelarbasen. Vilka spelare som faktiskt går att välja i Fantasy styrs av inställningen för nationalitet under Tävling. Priser och positioner bygger på historiken fram till tävlingsstart.</p></div>
           <div class="fa-head-actions">
             <input id="poolSearch" type="search" placeholder="Sök spelare eller lag…">
             <select id="poolPosition">
@@ -345,6 +355,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="admin.js?v=20260914-v13-division-factors"></script>
+  <script src="admin.js?v=20260914-v14-nationality-scope"></script>
 </body>
 </html>
