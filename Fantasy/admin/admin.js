@@ -940,6 +940,50 @@
     }
   }
 
+  function renderNewCompetitionSourceFields() {
+    const league = clean($("newCompetitionLeague")?.value).toUpperCase();
+    if ($("newGenericLeagueSource")) $("newGenericLeagueSource").hidden = league === "ECL";
+    if ($("newEclLeagueSources")) $("newEclLeagueSources").hidden = league !== "ECL";
+  }
+
+  function parseNewGenericLeagueIds() {
+    return [...new Set(
+      clean($("newCompetitionLeagueIds")?.value)
+        .split(/[\s,;]+/)
+        .map((value) => Number(value))
+        .filter((value) => Number.isInteger(value) && value > 0 && value !== 999999)
+    )].slice(0, 10);
+  }
+
+  function parseNewEclWeights() {
+    const fields = [
+      ["Elite","newEclEliteId","newEclEliteFactor",1.10],
+      ["Pro","newEclProId","newEclProFactor",1.05],
+      ["Lite","newEclLiteId","newEclLiteFactor",1.00],
+      ["Core","newEclCoreId","newEclCoreFactor",0.95],
+      ["Neo","newEclNeoId","newEclNeoFactor",0.90]
+    ];
+
+    return fields.map(([division,idField,factorField,defaultFactor]) => {
+      const rawId = clean($(idField)?.value);
+      const leagueId = rawId ? Number(rawId) : null;
+      const multiplier = Number($(factorField)?.value || defaultFactor);
+
+      if (leagueId != null && (!Number.isInteger(leagueId) || leagueId <= 0)) {
+        throw new Error("Ogiltigt liga-ID för " + division + ".");
+      }
+      if (!Number.isFinite(multiplier) || multiplier < 0.5 || multiplier > 1.5) {
+        throw new Error("Ogiltig poängfaktor för " + division + ".");
+      }
+
+      return {
+        division,
+        league_id: leagueId,
+        multiplier:Number(multiplier.toFixed(2))
+      };
+    });
+  }
+
   async function createCompetition(event) {
     event.preventDefault();
     const button = $("createCompetitionSubmit");
@@ -971,7 +1015,29 @@
       const code = clean(data?.code);
       if (!code) throw new Error("Fantasy-ligan skapades men koden kunde inte läsas.");
 
-      setStatus("createCompetitionStatus", "Fantasy-ligan är skapad.", "success");
+      if (league === "ECL") {
+        const weights = parseNewEclWeights();
+        const hasAnyLeagueId = weights.some((item) => item.league_id);
+
+        if (hasAnyLeagueId) {
+          const weightResult = await sb.rpc("seh_fantasy_admin_update_league_weights", {
+            p_code: code,
+            p_weights: weights
+          });
+          if (weightResult.error) throw weightResult.error;
+        }
+      } else {
+        const leagueIds = parseNewGenericLeagueIds();
+        if (leagueIds.length) {
+          const sourceResult = await sb.rpc("seh_fantasy_admin_update_sync_sources", {
+            p_code: code,
+            p_source_league_ids: leagueIds
+          });
+          if (sourceResult.error) throw sourceResult.error;
+        }
+      }
+
+      setStatus("createCompetitionStatus", "Fantasy-ligan är skapad och SportsGamer-källan är kopplad.", "success");
       const url = new URL(window.location.href);
       url.searchParams.set("competition", code);
       window.location.href = url.toString();
@@ -1060,7 +1126,9 @@
     if ($("newCompetitionScope")) $("newCompetitionScope").value = "default";
     if ($("newCompetitionCode")) $("newCompetitionCode").placeholder =
       league === "ECL" ? "t.ex. ECL26S" : league + "27";
+    renderNewCompetitionSourceFields();
   });
+  renderNewCompetitionSourceFields();
 
   $("retryAuth")?.addEventListener("click", init);
   $("poolSearch")?.addEventListener("input", renderPool);
