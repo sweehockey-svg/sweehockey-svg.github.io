@@ -50,6 +50,11 @@ POOL_FIELDS = [
     "country_code",
     "primary_position",
     "eligible_slots",
+    "suggested_price",
+    "suggested_ranking_points",
+    "history_games",
+    "history_fantasy_points",
+    "history_ppg",
     "team_logo_url",
     "raw_player",
 ]
@@ -76,6 +81,13 @@ def integer(value: Any) -> int:
         return int(value or 0)
     except (TypeError, ValueError):
         return 0
+
+
+def number(value: Any) -> float:
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 def chunks(values: list[int], size: int = 300) -> Iterable[list[int]]:
@@ -363,6 +375,169 @@ def json_safe(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, default=str, separators=(",", ":"))
 
 
+def history_role(position: str) -> str:
+    if position == "G":
+        return "G"
+    if position in {"LD", "RD", "D"}:
+        return "D"
+    return "F"
+
+
+def fetch_historical_performance(
+    connection: Any,
+    inventory: dict[str, list[str]],
+    player_ids: list[int],
+) -> dict[int, dict[str, float]]:
+    columns = inventory.get("nhlgamer_participants", [])
+    player_col = column_name(columns, "playerID", "player_id")
+    match_col = column_name(columns, "matchID", "match_id")
+    pos_col = column_name(columns, "positionID", "position", "position_id")
+    if not player_col or not match_col or not pos_col:
+        return {}
+
+    def optional(*names: str) -> str | None:
+        return column_name(columns, *names)
+
+    field_map = {
+        "goals": optional("goals"),
+        "assists": optional("assists"),
+        "blocked": optional("blockedShots", "blocked_shots"),
+        "saves": optional("saves"),
+        "goals_allowed": optional("goalsAllowed", "goals_allowed"),
+    }
+
+    selected = [
+        f"{safe_identifier(player_col)} as playerID",
+        f"{safe_identifier(match_col)} as matchID",
+        f"{safe_identifier(pos_col)} as positionID",
+    ]
+    for alias, source in field_map.items():
+        selected.append(f"{safe_identifier(source)} as {safe_identifier(alias)}" if source else f"0 as {safe_identifier(alias)}")
+
+    rows: list[dict[str, Any]] = []
+    for part in chunks(player_ids, 250):
+        placeholders = ",".join(["%s"] * len(part))
+        rows.extend(select(
+            connection,
+            "select " + ",".join(selected) +
+            f" from `nhlgamer_participants` where {safe_identifier(player_col)} in ({placeholders}) "
+            f"and {safe_identifier(match_col)}>0 and {safe_identifier(pos_col)} between 1 and 6",
+            tuple(part),
+        ))
+
+    totals: dict[int, dict[str, Any]] = defaultdict(lambda: {
+        "games": 0,
+        "points": 0.0,
+        "seen": set(),
+    })
+
+    for row in rows:
+        player_id = integer(row.get("playerID"))
+        match_id = integer(row.get("matchID"))
+        position = normalize_position(row.get("positionID"))
+        if not player_id or not match_id or not position:
+            continue
+
+        key = (player_id, match_id)
+        if key in totals[player_id]["seen"]:
+            continue
+        totals[player_id]["seen"].add(key)
+
+        goals = number(row.get("goals"))
+        assists = number(row.get("assists"))
+        blocked = number(row.get("blocked"))
+        saves = number(row.get("saves"))
+        goals_allowed = number(row.get("goals_allowed"))
+
+        if position == "G":
+            points = 1.0 + saves * 0.35 - goals_allowed * 0.50
+        elif position in {"LD", "RD"}:
+            points = 1.0 + goals * 6.0 + assists * 4.0 + blocked * 0.25
+        else:
+            points = 1.0 + goals * 5.0 + assists * 3.0
+
+        totals[player_id]["games"] += 1
+        totals[player_id]["points"] += points
+
+    result: dict[int, dict[str, float]] = {}
+    for player_id, values in totals.items():
+        games = integer(values["games"])
+        points = float(values["points"])
+        result[player_id] = {
+            "games": games,
+            "points": round(points, 2),
+            "ppg": round(points / games, 4) if games else 0.0,
+        }
+    return result
+
+
+def assign_history_prices(rows: list[dict[str, Any]], history: dict[int, dict[str, float]]) -> None:
+    by_role: dict[str, list[tuple[int, float]]] = defaultdict(list)
+    centers: dict[str, float] = {}
+
+    for index, row in enumerate(rows):
+        player_id = integer(row["source_player_id"])
+        perf = history.get(player_id, {"games": 0, "points": 0.0, "ppg": 0.0})
+        row["_history_games"] = integer(perf.get("games"))
+        row["_history_points"] = number(perf.get("points"))
+        row["_history_ppg"] = number(perf.get("ppg"))
+        row["_pricing_role"] = history_role(str(row.get("primary_position") or ""))
+
+    for role in ("F", "D", "G"):
+        values = sorted(
+            row["_history_ppg"]
+            for row in rows
+            if row["_pricing_role"] == role and row["_history_games"] >= 3
+        )
+        if not values:
+            centers[role] = 0.0
+        elif len(values) % 2:
+            centers[role] = values[len(values) // 2]
+        else:
+            mid = len(values) // 2
+            centers[role] = (values[mid - 1] + values[mid]) / 2.0
+
+    for index, row in enumerate(rows):
+        games = row["_history_games"]
+        role = row["_pricing_role"]
+        center = centers.get(role, 0.0)
+        if games >= 3:
+            confidence = games / (games + 12.0)
+            adjusted = center + (row["_history_ppg"] - center) * confidence
+            by_role[role].append((index, adjusted))
+            row["_adjusted_score"] = adjusted
+        else:
+            row["_adjusted_score"] = center
+
+    percentiles: dict[int, float] = {}
+    for role, items in by_role.items():
+        ordered = sorted(items, key=lambda item: (item[1], item[0]))
+        total = len(ordered)
+        if total == 1:
+            percentiles[ordered[0][0]] = 0.5
+            continue
+        for rank, (index, _) in enumerate(ordered):
+            percentiles[index] = rank / (total - 1)
+
+    for index, row in enumerate(rows):
+        games = row["_history_games"]
+        if games < 3:
+            price = 15
+        else:
+            pct = percentiles.get(index, 0.5)
+            price = int(round(8 + 22 * (pct ** 1.8)))
+            price = max(8, min(30, price))
+
+        row["suggested_price"] = price
+        row["suggested_ranking_points"] = round(number(row["_adjusted_score"]), 4)
+        row["history_games"] = games
+        row["history_fantasy_points"] = round(row["_history_points"], 2)
+        row["history_ppg"] = round(row["_history_ppg"], 4)
+
+        for key in ("_history_games", "_history_points", "_history_ppg", "_pricing_role", "_adjusted_score"):
+            row.pop(key, None)
+
+
 def main() -> int:
     via_ssh = bool((os.environ.get("SSH_HOST") or "").strip())
     connection = pymysql.connect(
@@ -422,6 +597,11 @@ def main() -> int:
                 tid = integer(first(row, "teamID", "team_id", "id"))
                 if tid:
                     team_meta[tid] = row
+
+        # Build prices from each current roster player's SportsGamer match history
+        # through the present day. This intentionally also works for older leagues:
+        # the roster comes from that league, while valuation uses everything known now.
+        historical_performance = fetch_historical_performance(connection, inventory, player_ids)
 
         # If games already exist, use observed current-league positions as another hint.
         observed_positions: dict[int, Counter[str]] = defaultdict(Counter)
@@ -512,6 +692,11 @@ def main() -> int:
                 "country_code": country,
                 "primary_position": primary,
                 "eligible_slots": "|".join(slots),
+                "suggested_price": 15,
+                "suggested_ranking_points": 0,
+                "history_games": 0,
+                "history_fantasy_points": 0,
+                "history_ppg": 0,
                 "team_logo_url": logo,
                 "raw_player": json_safe({
                     "roster_source": roster_table,
@@ -522,6 +707,21 @@ def main() -> int:
                     "team": team or None,
                 }),
             })
+
+        assign_history_prices(output_rows, historical_performance)
+
+        for row in output_rows:
+            raw = json.loads(row["raw_player"])
+            raw["fantasy_pricing"] = {
+                "model": "sports_gamer_history_v1",
+                "history_through": "current_sync",
+                "games": row["history_games"],
+                "fantasy_points": row["history_fantasy_points"],
+                "ppg": row["history_ppg"],
+                "ranking_points": row["suggested_ranking_points"],
+                "price": row["suggested_price"],
+            }
+            row["raw_player"] = json_safe(raw)
 
     finally:
         connection.close()
