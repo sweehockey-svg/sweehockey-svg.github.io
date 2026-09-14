@@ -231,13 +231,19 @@
     const season = activeSeasonLabel();
     const league = activeLeagueCode();
 
+    const competitionOptions = state.competitions.map((row) =>
+      '<option value="' + esc(row.code) + '">' +
+        esc(clean(row.season_label || row.name || row.code)) +
+      '</option>'
+    ).join("");
+
     if ($("adminCompetitionSelect")) {
-      $("adminCompetitionSelect").innerHTML = state.competitions.map((row) =>
-        '<option value="' + esc(row.code) + '">' +
-          esc(clean(row.season_label || row.name || row.code)) +
-        '</option>'
-      ).join("");
+      $("adminCompetitionSelect").innerHTML = competitionOptions;
       $("adminCompetitionSelect").value = activeCompetitionCode();
+    }
+    if ($("heroCompetitionSelect")) {
+      $("heroCompetitionSelect").innerHTML = competitionOptions;
+      $("heroCompetitionSelect").value = activeCompetitionCode();
     }
 
     if ($("adminBrandSeason")) $("adminBrandSeason").textContent = "eHOCKEY FANTASY LIGA";
@@ -1039,6 +1045,10 @@
     }
   });
   $("adminCompetitionSelect")?.addEventListener("change", (event) => switchCompetition(event.target.value));
+  $("heroCompetitionSelect")?.addEventListener("change", (event) => switchCompetition(event.target.value));
+  $("heroCreateCompetition")?.addEventListener("click", () => {
+    $("createCompetitionDialog")?.showModal();
+  });
   $("openCreateCompetition")?.addEventListener("click", () => {
     $("createCompetitionDialog")?.showModal();
   });
