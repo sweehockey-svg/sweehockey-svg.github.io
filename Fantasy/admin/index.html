@@ -10,7 +10,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>eHockey Fantasy Liga Admin</title>
-  <link rel="stylesheet" href="admin.css?v=20260914-v9-create-with-league-id">
+  <link rel="stylesheet" href="admin.css?v=20260914-v10-gcl-two-divisions">
 </head>
 <body>
   <header class="fa-header">
@@ -247,11 +247,25 @@
                 </div>
               </div>
 
+              <div id="gclSyncSettings" class="fa-sync-generic" hidden>
+                <div class="fa-sync-gcl-grid">
+                  <label>
+                    <span>GCL Division 1 · SportsGamer liga-ID</span>
+                    <input id="syncGclDivision1" type="number" min="1" step="1" placeholder="Liga-ID">
+                  </label>
+                  <label>
+                    <span>GCL Division 2 · SportsGamer liga-ID</span>
+                    <input id="syncGclDivision2" type="number" min="1" step="1" placeholder="Liga-ID">
+                  </label>
+                </div>
+                <small>GCL använder två divisioner. Båda hämtas i samma synkkörning.</small>
+              </div>
+
               <div id="genericSyncSettings" class="fa-sync-generic" hidden>
                 <label>
-                  <span>SportsGamer liga-ID:n</span>
-                  <input id="syncGenericLeagueIds" type="text" inputmode="numeric" placeholder="Exempel: 447 eller 447, 448">
-                  <small>För SCL/FCL/WEL/GCL räcker normalt ett liga-ID. Flera ID:n kan anges med komma om tävlingen använder flera SportsGamer-ligor.</small>
+                  <span>SportsGamer liga-ID</span>
+                  <input id="syncGenericLeagueIds" type="text" inputmode="numeric" placeholder="Exempel: 447">
+                  <small>För SCL/FCL/WEL räcker normalt ett liga-ID. Flera ID:n kan fortfarande anges med komma vid behov.</small>
                 </label>
               </div>
 
@@ -431,6 +445,17 @@
           </label>
         </div>
 
+        <div id="newGclLeagueSources" class="fa-new-source__ecl" hidden>
+          <div class="fa-new-source__row fa-new-source__row--two">
+            <strong>Division 1</strong>
+            <input id="newGclDivision1Id" type="number" min="1" step="1" placeholder="Liga-ID">
+          </div>
+          <div class="fa-new-source__row fa-new-source__row--two">
+            <strong>Division 2</strong>
+            <input id="newGclDivision2Id" type="number" min="1" step="1" placeholder="Liga-ID">
+          </div>
+        </div>
+
         <div id="newEclLeagueSources" class="fa-new-source__ecl" hidden>
           <div class="fa-new-source__row">
             <strong>Elite</strong>
@@ -474,6 +499,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="admin.js?v=20260914-v17-create-with-league-id"></script>
+  <script src="admin.js?v=20260914-v18-gcl-two-divisions"></script>
 </body>
 </html>
