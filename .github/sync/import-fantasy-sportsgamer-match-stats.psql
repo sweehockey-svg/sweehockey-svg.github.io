@@ -188,7 +188,7 @@ where t.competition_id=m.competition_id
   );
 
 create temporary table fantasy_refresh_result on commit preserve rows as
-select public.seh_fantasy_refresh_match_scores('SCL27') as result;
+select public.seh_fantasy_refresh_match_scores(:'competition_code') as result;
 
 update public.ehockey_fantasy_sync_runs r
 set
