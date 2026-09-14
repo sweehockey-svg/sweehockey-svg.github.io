@@ -46,6 +46,8 @@
     savedBreakdowns: new Map(),
     formerPlayers: [],
     transferState: null,
+    insights: null,
+    ownership: new Map(),
     activeTab: "team",
     pendingPlacementPlayerId: null,
     pickerSlot: null,
@@ -110,6 +112,62 @@
       minute: "2-digit",
       timeZone: "Europe/Stockholm"
     }).format(date);
+  }
+
+  function ownershipFor(playerId) {
+    return state.ownership.get(Number(playerId)) || null;
+  }
+
+  function ownershipText(playerId) {
+    const row = ownershipFor(playerId);
+    if (!state.insights?.ownership_visible) return "Ägarinfo efter deadline";
+    if (!row) return "Ägs av 0 % · Kapten 0 %";
+    return "Ägs av " + format(row.ownership_pct, number(row.ownership_pct) % 1 ? 1 : 0) +
+      " % · Kapten " + format(row.captain_pct, number(row.captain_pct) % 1 ? 1 : 0) + " %";
+  }
+
+  function differentialMarkup(playerId) {
+    const row = ownershipFor(playerId);
+    const entries = number(state.insights?.ownership_period?.entries);
+    if (!state.insights?.ownership_visible || !row || entries < 10 || number(row.ownership_pct) >= 5) return "";
+    return '<span class="fantasy-differential">DIFFERENTIAL</span>';
+  }
+
+  function renderPeriodHub() {
+    const host = $("periodHub");
+    if (!host) return;
+
+    const insights = state.insights || {};
+    const period = insights.period || null;
+    const entries = number(insights.entries || state.leaderboard.length);
+    const ownershipVisible = Boolean(insights.ownership_visible);
+
+    if (!period) {
+      $("periodHubEyebrow").textContent = "FÖRSÄSONG";
+      $("periodHubName").textContent = "Fantasy-perioderna är inte klara";
+      $("periodHubWindow").textContent = "Periodinformationen visas när tävlingen har konfigurerats.";
+      $("periodHubMatches").textContent = "0";
+      $("periodHubEntries").textContent = String(entries);
+      $("periodHubOwnership").textContent = "Efter deadline";
+      $("periodHubDeadline").textContent = "Ej satt";
+      return;
+    }
+
+    const status = clean(period.status);
+    $("periodHubEyebrow").textContent =
+      status === "live" ? "PÅGÅR NU" :
+      status === "finished" ? "SENASTE FANTASY-PERIOD" :
+      "NÄSTA FANTASY-PERIOD";
+    $("periodHubName").textContent = clean(period.name) || ("Period " + (period.round_no || "–"));
+    $("periodHubWindow").textContent =
+      formatDate(period.starts_at) + " – " + formatDate(period.ends_at) +
+      " · " + (clean(period.phase) || "SCL");
+    $("periodHubMatches").textContent = String(number(period.matches_played));
+    $("periodHubEntries").textContent = String(entries);
+    $("periodHubOwnership").textContent = ownershipVisible
+      ? (clean(insights.ownership_period?.name) || "Publicerad")
+      : "Efter deadline";
+    $("periodHubDeadline").textContent = formatDeadline(period.lock_at);
   }
 
   function renderTransferStatus() {
@@ -751,6 +809,8 @@
               ${escapeHtml(clean(player.real_team_name) || "Lag ej klart")} ·
               ${escapeHtml(slots)}
             </small>
+            <small class="fantasy-player-row__ownership">${escapeHtml(ownershipText(player.id))}</small>
+            <button class="fantasy-inline-player-link" type="button" data-player-detail="${player.id}">Form & info →</button>
           </div>
           <div class="fantasy-player-row__price">
             <b>${format(player.price)}</b>
@@ -793,14 +853,151 @@
               ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--card")}
               <span>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</span>
             </p>
+            ${differentialMarkup(player.id)}
           </div>
         </div>
         <footer>
-          <span>Pris baserat på historik t.o.m. ECL 26 Spring</span>
+          <span>${escapeHtml(ownershipText(player.id))}</span>
           <span>${escapeHtml(eligibleSlots(player).join(" / "))}</span>
         </footer>
+        <button class="fantasy-player-card__detail" type="button" data-player-detail="${player.id}">Visa form & statistik →</button>
       </article>
     `).join("") || '<div class="fantasy-empty">Inga spelare matchar filtret.</div>';
+  }
+
+  function playerDetailStat(label, value, suffix = "") {
+    return '<div class="fantasy-player-detail__stat"><span>' + escapeHtml(label) +
+      '</span><strong>' + escapeHtml(value) + escapeHtml(suffix) + '</strong></div>';
+  }
+
+  function renderPlayerDetail(data) {
+    const host = $("playerDetailContent");
+    if (!host) return;
+
+    if (!data?.ok) {
+      host.innerHTML = '<div class="fantasy-empty">Spelarinformationen kunde inte hämtas.</div>';
+      return;
+    }
+
+    const player = data.player || {};
+    const totals = data.totals || {};
+    const ownership = data.ownership || null;
+    const recent = Array.isArray(data.recent_matches) ? data.recent_matches : [];
+    const games = number(totals.games);
+    const totalPoints = number(totals.fantasy_points);
+    const slots = Array.isArray(player.eligible_slots) ? player.eligible_slots.join(" / ") : clean(player.primary_position);
+
+    const ownershipValue = data.ownership_visible
+      ? format(ownership?.ownership_pct || 0, number(ownership?.ownership_pct) % 1 ? 1 : 0) + " %"
+      : "Efter deadline";
+    const captainValue = data.ownership_visible
+      ? format(ownership?.captain_pct || 0, number(ownership?.captain_pct) % 1 ? 1 : 0) + " %"
+      : "–";
+
+    const recentMarkup = recent.length
+      ? recent.map((match) => {
+          const factor = number(match.league_multiplier || 1);
+          const factorText = Math.abs(factor - 1) > 0.001
+            ? '<em>×' + escapeHtml(format(factor, 2)) + '</em>'
+            : "";
+          const date = match.started_at ? formatDate(match.started_at) : "Match";
+          return '<div class="fantasy-player-form-row">' +
+            '<span><b>' + escapeHtml(date) + '</b><small>' +
+              escapeHtml(clean(match.played_position || match.scoring_role) || "–") +
+              ' · liga ' + escapeHtml(match.source_league_id || "–") +
+            '</small></span>' +
+            '<span class="fantasy-player-form-row__factor">' + factorText + '</span>' +
+            '<strong>' + formatPoints(match.fantasy_points) + ' P</strong>' +
+          '</div>';
+        }).join("")
+      : '<div class="fantasy-player-detail__empty">Inga SCL-matcher registrerade ännu.</div>';
+
+    const hasGoalieGames = number(totals.goalie_games) > 0;
+    const hasSkaterGames = number(totals.forward_games) + number(totals.defense_games) > 0;
+    const statPieces = [];
+    if (hasSkaterGames || !games) {
+      statPieces.push(playerDetailStat("Mål", format(totals.goals || 0)));
+      statPieces.push(playerDetailStat("Assist", format(totals.assists || 0)));
+      statPieces.push(playerDetailStat("Block", format(totals.blocked_shots || 0)));
+    }
+    if (hasGoalieGames) {
+      statPieces.push(playerDetailStat("MV-vinster", format(totals.goalie_wins || 0)));
+      statPieces.push(playerDetailStat("Räddningar", format(totals.goalie_saves || 0)));
+      statPieces.push(playerDetailStat("Nollor", format(totals.goalie_shutouts || 0)));
+    }
+
+    host.innerHTML = `
+      <div class="fantasy-player-detail__hero">
+        <div class="fantasy-player-detail__portrait-wrap">
+          ${portraitMarkup(player, "fantasy-player-detail__portrait")}
+          ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--detail")}
+        </div>
+        <div class="fantasy-player-detail__identity">
+          <p class="fantasy-kicker">SPELARPROFIL / FANTASY</p>
+          <h2 class="fantasy-player-name-line">${countryFlagMarkup(player.country_code)}<span class="fantasy-player-name">${escapeHtml(clean(player.display_gamertag) || "Okänd")}</span></h2>
+          <p>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")} · ${escapeHtml(slots || "–")}</p>
+          <div class="fantasy-player-detail__tags">
+            <span>${format(player.price)} CR</span>
+            ${data.ownership_visible && number(ownership?.ownership_pct) < 5 && number(ownership?.entries) >= 10
+              ? '<span class="is-differential">DIFFERENTIAL</span>'
+              : ""}
+          </div>
+        </div>
+      </div>
+
+      <div class="fantasy-player-detail__metrics">
+        ${playerDetailStat("Fantasy-poäng", formatPoints(totalPoints) + " P")}
+        ${playerDetailStat("Matcher", format(games))}
+        ${playerDetailStat("Poäng / match", format(totals.points_per_game || 0, 2))}
+        ${playerDetailStat("Ägd", ownershipValue)}
+        ${playerDetailStat("Kapten", captainValue)}
+      </div>
+
+      <section class="fantasy-player-detail__section">
+        <div class="fantasy-player-detail__section-head">
+          <span>FORM</span>
+          <h3>Senaste 5 matcher</h3>
+        </div>
+        <div class="fantasy-player-form">${recentMarkup}</div>
+      </section>
+
+      <section class="fantasy-player-detail__section">
+        <div class="fantasy-player-detail__section-head">
+          <span>UTFALL</span>
+          <h3>Registrerad statistik</h3>
+        </div>
+        <div class="fantasy-player-detail__stats">${statPieces.join("")}</div>
+        ${data.ownership_visible
+          ? '<p class="fantasy-player-detail__note">Ägarandel från ' +
+              escapeHtml(clean(ownership?.period_name) || "senast låsta Fantasy-period") +
+              ' · ' + format(ownership?.entries || 0) + ' låsta Fantasy-lag.</p>'
+          : '<p class="fantasy-player-detail__note">Ägar- och kaptenandel visas först efter Fantasy-periodens deadline.</p>'}
+      </section>
+    `;
+  }
+
+  async function openPlayerDetail(playerId) {
+    const dialog = $("playerDetailDialog");
+    const host = $("playerDetailContent");
+    if (!dialog || !host) return;
+
+    const player = playerById(playerId);
+    host.innerHTML = '<div class="fantasy-player-detail__loading">' +
+      (player ? escapeHtml(player.display_gamertag) + ' · ' : '') +
+      'hämtar form och statistik…</div>';
+    dialog.showModal();
+
+    try {
+      const { data, error } = await sb.rpc("seh_fantasy_public_player_detail", {
+        p_pool_player_id: Number(playerId),
+        p_code: "SCL27"
+      });
+      if (error) throw error;
+      renderPlayerDetail(Array.isArray(data) ? data[0] : data);
+    } catch (error) {
+      host.innerHTML = '<div class="fantasy-empty">Kunde inte hämta spelaren: ' +
+        escapeHtml(error?.message || String(error)) + '</div>';
+    }
   }
 
   function renderLeaderboard() {
@@ -1001,6 +1198,7 @@
     renderMarket();
     renderPlayers();
     renderLeaderboard();
+    renderPeriodHub();
     renderTeamName();
     renderTransferStatus();
     updateHeaderAccount();
@@ -1271,6 +1469,21 @@
     state.leaderboard = result.data || [];
   }
 
+  async function loadInsights() {
+    const result = await sb.rpc("seh_fantasy_public_insights", { p_code: "SCL27" });
+    if (result.error) throw result.error;
+
+    state.insights = Array.isArray(result.data)
+      ? (result.data[0] || null)
+      : (result.data || null);
+    state.ownership.clear();
+
+    const rows = Array.isArray(state.insights?.ownership) ? state.insights.ownership : [];
+    for (const row of rows) {
+      state.ownership.set(Number(row.pool_player_id), row);
+    }
+  }
+
   async function loadPublic() {
     const competitionResult = await sb
       .from("ehockey_fantasy_competitions")
@@ -1292,7 +1505,7 @@
     if (poolResult.error) throw poolResult.error;
 
     state.pool = (poolResult.data || []).filter((player) => fantasyCountryAllowed(player.country_code));
-    await loadLeaderboard();
+    await Promise.all([loadLeaderboard(), loadInsights()]);
   }
 
   async function loadTransferState() {
@@ -1550,9 +1763,12 @@
 
       await loadMyEntry();
       await loadTransferState();
-      await loadLeaderboard();
+      await Promise.all([loadLeaderboard(), loadInsights()]);
       renderHero();
       renderLeaderboard();
+      renderPeriodHub();
+      renderMarket();
+      renderPlayers();
 
       let successText = hadEntry
         ? "Testlaget är uppdaterat."
@@ -1599,6 +1815,12 @@
     const viewEntry = event.target.closest("[data-view-entry]");
     if (viewEntry) {
       openPublicEntry(viewEntry.dataset.viewEntry);
+      return;
+    }
+
+    const playerDetail = event.target.closest("[data-player-detail]");
+    if (playerDetail) {
+      openPlayerDetail(playerDetail.dataset.playerDetail);
       return;
     }
 
@@ -1655,6 +1877,10 @@
     $("publicEntryDialog")?.close();
   });
   $("publicEntryDialog")?.addEventListener("cancel", () => {});
+  $("closePlayerDetailDialog")?.addEventListener("click", () => {
+    $("playerDetailDialog")?.close();
+  });
+  $("playerDetailDialog")?.addEventListener("cancel", () => {});
 
   $("closePositionDialog")?.addEventListener("click", () => {
     state.pendingPlacementPlayerId = null;
