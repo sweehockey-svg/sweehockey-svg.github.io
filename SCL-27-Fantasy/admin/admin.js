@@ -53,6 +53,7 @@
     pool: [],
     scores: new Map(),
     syncState: { settings: {}, counts: {}, runs: [] },
+    sclSimState: null,
     activeTab: "dashboard"
   };
 
@@ -164,6 +165,12 @@
     state.syncState = data || { settings: {}, counts: {}, runs: [] };
   }
 
+  async function loadSclSimulationStatus() {
+    const { data, error } = await sb.rpc("seh_fantasy_admin_scl_sim_status", { p_code: "SCL27" });
+    if (error) throw error;
+    state.sclSimState = data || null;
+  }
+
   async function refreshAdminState() {
     const { data, error } = await sb.rpc("seh_fantasy_admin_state", { p_code: "SCL27" });
     if (error) throw error;
@@ -177,7 +184,7 @@
 
   async function loadAll() {
     await refreshAdminState();
-    await Promise.all([loadPool(), loadSyncState()]);
+    await Promise.all([loadPool(), loadSyncState(), loadSclSimulationStatus()]);
     renderAll();
   }
 
@@ -373,6 +380,7 @@
     renderPool();
     renderEntries();
     renderSync();
+    renderSclSimulationStatus();
   }
 
   async function saveCompetition(event) {
@@ -521,6 +529,113 @@
         <b>${fmt(row.fantasy_points,1)} P</b>
       </div>
     `).join("");
+  }
+
+  function renderSclSimulationStatus() {
+    const data = state.sclSimState || {};
+    const cardsHost = $("sclSimCards");
+    const groupsHost = $("sclSimGroups");
+    const excludedHost = $("sclSimExcluded");
+    if (!cardsHost) return;
+
+    const nextMatch = data.next_match_date
+      ? new Date(data.next_match_date).toLocaleString("sv-SE", {
+          day: "numeric",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Europe/Stockholm"
+        })
+      : "–";
+
+    const cards = [
+      ["LAG", data.teams || 0, "minst 6 + målvakt"],
+      ["MATCHER", data.scheduled_matches || 0, "schemalagda"],
+      ["SPELADE", data.played_matches || 0, "simulerade"],
+      ["ROTATION", data.bench_appearances || 0, "inhopp utanför bästa sexan"],
+      ["NÄSTA", nextMatch, data.active ? "simulering aktiv" : "inte byggd"]
+    ];
+
+    cardsHost.innerHTML = cards.map(([label,value,sub]) => `
+      <article class="fa-card ${label === "SPELADE" ? "is-accent" : ""}">
+        <span>${esc(label)}</span>
+        <strong>${esc(value)}</strong>
+        <small>${esc(sub)}</small>
+      </article>
+    `).join("");
+
+    const groups = Array.isArray(data.groups) ? data.groups : [];
+    if (groupsHost) {
+      groupsHost.innerHTML = groups.length ? groups.map((group) => `
+        <div class="fa-list-row">
+          <span>
+            <strong>Grupp ${group.group_no === 1 ? "A" : "B"}</strong>
+            <small>${group.teams} lag · snittstyrka ${fmt(group.avg_strength,2)}</small>
+          </span>
+          <b>${group.teams}</b>
+        </div>
+      `).join("") : '<div class="fa-empty">Bygg testsäsongen för att skapa grupper.</div>';
+    }
+
+    const excluded = Array.isArray(data.excluded_no_goalie) ? data.excluded_no_goalie : [];
+    if (excludedHost) {
+      excludedHost.innerHTML = excluded.length
+        ? excluded.map((name) => '<span class="fa-sim-excluded">' + esc(name) + '</span>').join("")
+        : '<span class="fa-sim-ok">Inga lag med 6+ spelare saknar målvakt.</span>';
+    }
+
+    const built = num(data.teams) > 0;
+    if ($("playNextSimNight")) $("playNextSimNight").disabled = !built;
+    if ($("playSimPeriod")) $("playSimPeriod").disabled = !built;
+    if ($("playWholeSimSeason")) $("playWholeSimSeason").disabled = !built;
+    if ($("resetSclSimulation")) $("resetSclSimulation").disabled = !built;
+  }
+
+  async function runSclSimulationAction(action) {
+    const buttons = [
+      $("buildSclSimulation"), $("playNextSimNight"), $("playSimPeriod"),
+      $("playWholeSimSeason"), $("resetSclSimulation")
+    ].filter(Boolean);
+
+    buttons.forEach((button) => { button.disabled = true; });
+    setStatus("sclSimulationStatus", "Arbetar med SCL-testsäsongen…", "working");
+
+    try {
+      let rpcName = "";
+      let args = { p_code: "SCL27" };
+
+      if (action === "build") rpcName = "seh_fantasy_admin_scl_sim_build";
+      else if (action === "next") rpcName = "seh_fantasy_admin_scl_sim_play_next_night";
+      else if (action === "period") {
+        rpcName = "seh_fantasy_admin_scl_sim_play_period";
+        args.p_period_no = Number($("sclSimPeriod")?.value || 1);
+      } else if (action === "all") rpcName = "seh_fantasy_admin_scl_sim_play_all";
+      else if (action === "reset") rpcName = "seh_fantasy_admin_scl_sim_reset";
+      else throw new Error("Okänd simuleringsåtgärd.");
+
+      const { data, error } = await sb.rpc(rpcName, args);
+      if (error) throw error;
+
+      await Promise.all([refreshAdminState(), loadPool(), loadSclSimulationStatus()]);
+      renderAll();
+
+      const played = num(data?.played_matches);
+      const teams = num(data?.teams);
+      const message = action === "build"
+        ? "Testsäsongen är byggd med " + teams + " lag."
+        : action === "reset"
+          ? "Simuleringen är återställd. Testmatcherna och testpoängen är borttagna."
+          : played
+            ? played + " matcher simulerades."
+            : "Klart.";
+
+      setStatus("sclSimulationStatus", message, "success");
+    } catch (error) {
+      setStatus("sclSimulationStatus", "Fel: " + (error?.message || error), "error");
+    } finally {
+      await loadSclSimulationStatus().catch(() => {});
+      renderSclSimulationStatus();
+    }
   }
 
   function parseSyncTimes() {
@@ -701,6 +816,21 @@
   });
   $("recalculateEntries")?.addEventListener("click", recalculateEntries);
   $("runSimulation")?.addEventListener("click", runSimulation);
+  $("buildSclSimulation")?.addEventListener("click", () => runSclSimulationAction("build"));
+  $("playNextSimNight")?.addEventListener("click", () => runSclSimulationAction("next"));
+  $("playSimPeriod")?.addEventListener("click", () => runSclSimulationAction("period"));
+  $("playWholeSimSeason")?.addEventListener("click", () => runSclSimulationAction("all"));
+  $("resetSclSimulation")?.addEventListener("click", () => runSclSimulationAction("reset"));
+  $("refreshSclSimulation")?.addEventListener("click", async () => {
+    setStatus("sclSimulationStatus", "Uppdaterar simuleringsstatus…", "working");
+    try {
+      await loadSclSimulationStatus();
+      renderSclSimulationStatus();
+      setStatus("sclSimulationStatus", "Status uppdaterad.", "success");
+    } catch (error) {
+      setStatus("sclSimulationStatus", "Fel: " + (error?.message || error), "error");
+    }
+  });
   $("retryAuth")?.addEventListener("click", init);
   $("poolSearch")?.addEventListener("input", renderPool);
   $("poolPosition")?.addEventListener("change", renderPool);
@@ -710,7 +840,7 @@
     try {
       const ok = await ensureAdmin();
       if (!ok) return;
-      await Promise.all([loadPool(), loadSyncState()]);
+      await Promise.all([loadPool(), loadSyncState(), loadSclSimulationStatus()]);
       renderAll();
       switchTab("dashboard");
     } catch (error) {
