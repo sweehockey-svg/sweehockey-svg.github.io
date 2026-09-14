@@ -338,8 +338,12 @@
   };
 
   function initialLanguage() {
-    const urlLang = clean(new URLSearchParams(window.location.search).get("lang")).toLowerCase();
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = clean(params.get("lang")).toLowerCase();
     if (SUPPORTED_LANGUAGES.includes(urlLang)) return urlLang;
+    const competition = clean(params.get("competition") || "default").toUpperCase();
+    const storedForCompetition = clean(localStorage.getItem("ehockey-fantasy-language:" + competition)).toLowerCase();
+    if (SUPPORTED_LANGUAGES.includes(storedForCompetition)) return storedForCompetition;
     const stored = clean(localStorage.getItem("ehockey-fantasy-language")).toLowerCase();
     if (SUPPORTED_LANGUAGES.includes(stored)) return stored;
     const browser = clean(navigator.language).slice(0,2).toLowerCase();
@@ -376,10 +380,19 @@
     if (!SUPPORTED_LANGUAGES.includes(lang)) return;
     state.language = lang;
     localStorage.setItem("ehockey-fantasy-language", lang);
+    localStorage.setItem("ehockey-fantasy-language:" + competitionCode(), lang);
     const url = new URL(window.location.href);
     url.searchParams.set("lang", lang);
     history.replaceState({}, "", url);
     renderAll();
+
+    if (!$("accountGate")?.hidden) {
+      if (!state.session?.user) showGate("logged-out");
+      else if (!isDiscordUser(state.session.user)) showGate("wrong-account");
+      else if (state.account?.status === "pending") showGate("pending");
+      else if (state.account?.status !== "approved" || !clean(state.account?.player_key)) showGate("unlinked");
+    }
+
     applyStaticTranslations();
   }
 
@@ -932,13 +945,13 @@
     if (!button) return;
 
     if (!state.session?.user) {
-      button.textContent = "Logga in med Discord";
+      button.textContent = t("login_discord");
       button.dataset.action = "login";
       return;
     }
 
     const playerName = clean(state.account?.player_name || state.account?.playerName);
-    button.textContent = playerName ? playerName : "Logga ut";
+    button.textContent = playerName ? playerName : t("logout");
     button.dataset.action = "logout";
   }
 
@@ -2263,7 +2276,7 @@
 
       const redirectTo = window.location.origin === "null"
         ? window.location.href
-        : window.location.origin + window.location.pathname;
+        : window.location.origin + window.location.pathname + window.location.search;
 
       const { error } = await sb.auth.signInWithOAuth({
         provider: "discord",
