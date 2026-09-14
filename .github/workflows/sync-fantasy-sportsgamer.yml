@@ -1,5 +1,5 @@
-name: Sync SCL Fantasy SportsGamer match data
-run-name: Fantasy SportsGamer · ${{ inputs.request_id || github.event_name }}
+name: Sync eHockey Fantasy SportsGamer match data
+run-name: ${{ inputs.competition_code || 'Fantasy' }} · SportsGamer · ${{ inputs.request_id || github.event_name }}
 
 on:
   workflow_dispatch:
@@ -8,6 +8,11 @@ on:
         description: Request id from Fantasy Admin
         required: false
         default: manual
+        type: string
+      competition_code:
+        description: Fantasy competition code
+        required: false
+        default: 'SCL27'
         type: string
       league_ids:
         description: SportsGamer league IDs, comma separated
@@ -23,7 +28,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: sync-scl-fantasy-sportsgamer
+  group: sync-ehockey-fantasy-${{ inputs.competition_code || 'SCL27' }}
   cancel-in-progress: false
 
 jobs:
@@ -54,6 +59,7 @@ jobs:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
           EVENT_NAME: ${{ github.event_name }}
           INPUT_REQUEST_ID: ${{ inputs.request_id || '' }}
+          INPUT_COMPETITION_CODE: ${{ inputs.competition_code || 'SCL27' }}
           INPUT_LEAGUE_IDS: ${{ inputs.league_ids || '447' }}
           INPUT_TRIGGER_TYPE: ${{ inputs.trigger_type || 'manual' }}
         run: |
@@ -78,7 +84,11 @@ jobs:
             should_run="true"
           fi
 
+          competition_code="${INPUT_COMPETITION_CODE:-SCL27}"
+          [[ "$competition_code" =~ ^[A-Za-z0-9_-]{3,40}$ ]] || { echo "Invalid competition code"; exit 1; }
+
           echo "request_id=$request_id" >> "$GITHUB_OUTPUT"
+          echo "competition_code=$competition_code" >> "$GITHUB_OUTPUT"
           echo "trigger_type=$trigger_type" >> "$GITHUB_OUTPUT"
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
           league_ids="${INPUT_LEAGUE_IDS:-447}"
@@ -88,11 +98,13 @@ jobs:
           echo "league_ids=$league_ids" >> "$GITHUB_OUTPUT"
           echo "primary_league_id=$primary_league_id" >> "$GITHUB_OUTPUT"
           echo "REQUEST_ID=$request_id" >> "$GITHUB_ENV"
+          echo "COMPETITION_CODE=$competition_code" >> "$GITHUB_ENV"
           echo "TRIGGER_TYPE=$trigger_type" >> "$GITHUB_ENV"
           echo "LEAGUE_IDS=$league_ids" >> "$GITHUB_ENV"
           echo "PRIMARY_LEAGUE_ID=$primary_league_id" >> "$GITHUB_ENV"
 
           echo "Event: $EVENT_NAME"
+          echo "Competition: $competition_code"
           echo "Trigger: $trigger_type"
           echo "Request: $request_id"
           echo "Should run: $should_run"
@@ -106,13 +118,14 @@ jobs:
           [[ "$REQUEST_ID" =~ ^[A-Za-z0-9_-]{8,100}$ ]] || { echo "Invalid request id"; exit 1; }
           [[ "$TRIGGER_TYPE" =~ ^(manual|schedule|push)$ ]] || { echo "Invalid trigger"; exit 1; }
           [[ "$PRIMARY_LEAGUE_ID" =~ ^[0-9]+$ ]] || { echo "Invalid primary league id"; exit 1; }
+          [[ "$COMPETITION_CODE" =~ ^[A-Za-z0-9_-]{3,40}$ ]] || { echo "Invalid competition code"; exit 1; }
           psql "$PGURL" -v ON_ERROR_STOP=1 <<SQL
           insert into public.ehockey_fantasy_sync_runs(
             competition_id,request_id,trigger_type,status,source_league_id,started_at
           )
           select id, '$REQUEST_ID', '$TRIGGER_TYPE', 'running', $PRIMARY_LEAGUE_ID::bigint, now()
           from public.ehockey_fantasy_competitions
-          where code='SCL27'
+          where upper(code)=upper('$COMPETITION_CODE')
           on conflict (competition_id,request_id) where request_id is not null
           do update set
             trigger_type=excluded.trigger_type,
@@ -165,7 +178,7 @@ jobs:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
-          timeout --foreground --kill-after=30s 12m             psql "$PGURL" -v ON_ERROR_STOP=1               -v request_id="$REQUEST_ID"               -v trigger_type="$TRIGGER_TYPE"               -v league_ids="$LEAGUE_IDS"               -v source_table="${{ steps.export.outputs.skater_source }}"               -v skater_source="${{ steps.export.outputs.skater_source }}"               -v goalie_source="${{ steps.export.outputs.goalie_source }}"               -v match_source="${{ steps.export.outputs.match_source }}"               -f .github/sync/import-fantasy-sportsgamer-match-stats.psql
+          timeout --foreground --kill-after=30s 12m             psql "$PGURL" -v ON_ERROR_STOP=1               -v request_id="$REQUEST_ID"               -v competition_code="$COMPETITION_CODE"               -v trigger_type="$TRIGGER_TYPE"               -v league_ids="$LEAGUE_IDS"               -v source_table="${{ steps.export.outputs.skater_source }}"               -v skater_source="${{ steps.export.outputs.skater_source }}"               -v goalie_source="${{ steps.export.outputs.goalie_source }}"               -v match_source="${{ steps.export.outputs.match_source }}"               -f .github/sync/import-fantasy-sportsgamer-match-stats.psql
 
       - name: Mark failed sync
         if: failure() && steps.gate.outputs.should_run == 'true'
@@ -187,8 +200,9 @@ jobs:
         if: always()
         run: |
           {
-            echo "## SCL Fantasy SportsGamer sync"
+            echo "## eHockey Fantasy SportsGamer sync"
             echo ""
+            echo "- Fantasy competition: **${{ steps.gate.outputs.competition_code }}**"
             echo "- Trigger: **${{ steps.gate.outputs.trigger_type }}**"
             echo "- Scheduled run due: **${{ steps.gate.outputs.should_run }}**"
             echo "- SportsGamer leagues: **${{ steps.gate.outputs.league_ids }}**"
