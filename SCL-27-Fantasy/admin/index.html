@@ -194,9 +194,9 @@
             </div>
             <form id="syncSettingsForm" class="fa-sync-settings">
               <label>
-                <span>SportsGamer liga-ID</span>
-                <input id="syncLeagueId" type="number" min="1" step="1" placeholder="Riktigt SCL27 liga-ID">
-                <small>Ingen riktig SCL 27-liga är kopplad ännu. Ange rätt SportsGamer liga-ID här när SCL 27 skapas. Autosynk ska vara av tills dess.</small>
+                <span>SportsGamer liga-ID:n</span>
+                <input id="syncLeagueId" type="text" inputmode="numeric" placeholder="Exempel: 507, 508, 509, 510, 511">
+                <small>Ange ett eller flera liga-ID samtidigt, separerade med komma. Det gör att t.ex. Elite, Pro, Lite, Core och Neo kan hämtas i samma synk.</small>
               </label>
               <label class="fa-checkbox fa-checkbox--sync">
                 <input id="syncAutoEnabled" type="checkbox">
@@ -319,6 +319,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="admin.js?v=20260914-v11-scl-simulation"></script>
+  <script src="admin.js?v=20260914-v12-multi-league-sync"></script>
 </body>
 </html>
