@@ -506,10 +506,10 @@
 
   function ownershipText(playerId) {
     const row = ownershipFor(playerId);
-    if (!state.insights?.ownership_visible) return "Ägarinfo efter deadline";
-    if (!row) return "Ägs av 0 % · Kapten 0 %";
-    return "Ägs av " + format(row.ownership_pct, number(row.ownership_pct) % 1 ? 1 : 0) +
-      " % · Kapten " + format(row.captain_pct, number(row.captain_pct) % 1 ? 1 : 0) + " %";
+    if (!state.insights?.ownership_visible) return t("owner_after_deadline");
+    const owned = row ? format(row.ownership_pct, number(row.ownership_pct) % 1 ? 1 : 0) : "0";
+    const captain = row ? format(row.captain_pct, number(row.captain_pct) % 1 ? 1 : 0) : "0";
+    return t("owned_by",{owned,captain});
   }
 
   function differentialMarkup(playerId) {
@@ -529,22 +529,22 @@
     const ownershipVisible = Boolean(insights.ownership_visible);
 
     if (!period) {
-      $("periodHubEyebrow").textContent = "FÖRSÄSONG";
-      $("periodHubName").textContent = "Fantasy-perioderna är inte klara";
-      $("periodHubWindow").textContent = "Periodinformationen visas när tävlingen har konfigurerats.";
+      $("periodHubEyebrow").textContent = t("preseason");
+      $("periodHubName").textContent = t("periods_not_ready");
+      $("periodHubWindow").textContent = t("period_info_when_configured");
       $("periodHubMatches").textContent = "0";
       $("periodHubEntries").textContent = String(entries);
-      $("periodHubOwnership").textContent = "Efter deadline";
-      $("periodHubDeadline").textContent = "Ej satt";
+      $("periodHubOwnership").textContent = t("after_deadline");
+      $("periodHubDeadline").textContent = t("not_set");
       return;
     }
 
     const status = clean(period.status);
     $("periodHubEyebrow").textContent =
-      status === "simulation" ? "TESTSÄSONG / AKTUELL PERIOD" :
-      status === "live" ? "PÅGÅR NU" :
-      status === "finished" ? "SENASTE FANTASY-PERIOD" :
-      "NÄSTA FANTASY-PERIOD";
+      status === "simulation" ? t("test_season_current_period") :
+      status === "live" ? t("live_now") :
+      status === "finished" ? t("latest_period") :
+      t("next_period");
     $("periodHubName").textContent = clean(period.name) || ("Period " + (period.round_no || "–"));
     $("periodHubWindow").textContent =
       formatDate(period.starts_at) + " – " + formatDate(period.ends_at) +
@@ -552,8 +552,8 @@
     $("periodHubMatches").textContent = String(number(period.matches_played));
     $("periodHubEntries").textContent = String(entries);
     $("periodHubOwnership").textContent = ownershipVisible
-      ? (clean(insights.ownership_period?.name) || "Publicerad")
-      : "Efter deadline";
+      ? (clean(insights.ownership_period?.name) || t("published"))
+      : t("after_deadline");
     $("periodHubDeadline").textContent = formatDeadline(period.lock_at);
   }
 
@@ -570,26 +570,26 @@
 
     $("transferMode").textContent =
       mode === "preseason"
-        ? "INFÖR SÄSONGEN · OBEGRÄNSADE BYTEN"
+        ? t("preseason_unlimited")
         : mode === "unlimited"
-          ? (clean(target?.name) || "FRI BYTESPERIOD")
+          ? (clean(target?.name) || t("free_transfer_period"))
           : mode === "round"
-            ? (clean(target?.name) || "KOMMANDE PERIOD")
+            ? (clean(target?.name) || t("upcoming_period"))
             : mode === "closed"
-              ? "BYTESFÖNSTRET STÄNGT"
-              : "BYTEN AVSTÄNGDA";
+              ? t("transfer_window_closed")
+              : t("transfers_disabled");
 
     $("transferFree").textContent = unlimited ? "∞" : String(free);
     $("transferNext").textContent = unlimited || free > 0 ? "0 P" : "−" + format(extraCost) + " P";
-    $("transferDeadline").textContent = target?.lock_at ? formatDeadline(target.lock_at) : "Ej satt";
+    $("transferDeadline").textContent = target?.lock_at ? formatDeadline(target.lock_at) : t("not_set");
 
     $("transferDetail").textContent = unlimited
-      ? "Bygg om fritt fram till första Fantasy-periodens deadline kl. 18:00 svensk tid. Därefter: 1 gratis byte per period, max 2 sparade."
+      ? t("preseason_transfer_detail")
       : mode === "round"
-        ? "1 gratis byte per period · max 2 sparade · extra byte kostar −" + format(extraCost) + " P. Kaptensbyte är gratis."
+        ? t("period_transfer_detail",{cost:format(extraCost)})
         : mode === "closed"
-          ? "Inga fler Fantasy-perioder är öppna för byten."
-          : "Bytesreglerna är inte aktiva just nu.";
+          ? t("no_more_transfer_periods")
+          : t("transfer_rules_inactive");
   }
 
   let rosterToastTimer = null;
@@ -635,12 +635,12 @@
   function competitionStatusLabel(status) {
     const key = clean(status).toLowerCase();
     const labels = {
-      setup: "UPPSTART",
-      open: "ÖPPEN",
-      locked: "LÅST",
-      live: "PÅGÅR",
-      finished: "AVSLUTAD",
-      archived: "ARKIVERAD"
+      setup: t("setup"),
+      open: t("open"),
+      locked: t("locked"),
+      live: t("live"),
+      finished: t("finished"),
+      archived: t("archived")
     };
     return labels[key] || clean(status || "UPPSTART").toUpperCase();
   }
