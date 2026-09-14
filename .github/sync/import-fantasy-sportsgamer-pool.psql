@@ -77,6 +77,7 @@ prepared as (
   ) prior on true
 )
 insert into public.ehockey_fantasy_player_pool (
+  id,
   competition_id,
   player_key,
   sports_gamer_player_id,
@@ -96,6 +97,7 @@ insert into public.ehockey_fantasy_player_pool (
   team_logo_url
 )
 select
+  nextval('public.ehockey_fantasy_player_pool_id_seq'::regclass),
   p.competition_id,
   'SG:' || p.source_player_id::text,
   p.source_player_id,
