@@ -105,7 +105,11 @@
       team_saved_success:"{league}-laget är sparat.", captain_position_free:"Kaptensbyte/positionsändring kostar inget.",
       choose_league_option:"Välj Fantasy-liga…", neutral_hero_kicker:"eHOCKEY FANTASY", neutral_hero_first:"eHOCKEY",
       neutral_hero_second:"FANTASY LIGA.", neutral_hero_lead:"Välj en Fantasy-liga i menyn ovan för att öppna tävlingen.",
-      neutral_choose_league:"VÄLJ FANTASY-LIGA"
+      neutral_choose_league:"VÄLJ FANTASY-LIGA",
+      swap_player:"Byt {name}", picker_count:"{count} spelare tillgängliga för {slot}", pick_slot_upper:"VÄLJ {slot}",
+      team_limit_reached:"{limit}/{limit} FRÅN LAGET", no_eligible_for_slot:"Inga valbara spelare för {slot}.",
+      player_can_use_on:"{name} kan användas på {slots}.", choose_open_slot:"Välj vilken ledig plats spelaren ska ta.",
+      goalie_games_only:"endast målvaktsmatcher räknas", skater_games_only:"endast utespelarmatcher räknas"
     },
     en: {
       nav_build:"BUILD", nav_compete:"COMPETE", nav_climb:"CLIMB", league:"LEAGUE", language:"LANGUAGE",
@@ -193,7 +197,11 @@
       team_saved_success:"{league} team saved.", captain_position_free:"Captain changes and position changes are free.",
       choose_league_option:"Choose Fantasy league…", neutral_hero_kicker:"eHOCKEY FANTASY", neutral_hero_first:"eHOCKEY",
       neutral_hero_second:"FANTASY LEAGUE.", neutral_hero_lead:"Choose a Fantasy league from the menu above to open the competition.",
-      neutral_choose_league:"CHOOSE FANTASY LEAGUE"
+      neutral_choose_league:"CHOOSE FANTASY LEAGUE",
+      swap_player:"Swap {name}", picker_count:"{count} players available for {slot}", pick_slot_upper:"CHOOSE {slot}",
+      team_limit_reached:"{limit}/{limit} FROM TEAM", no_eligible_for_slot:"No eligible players for {slot}.",
+      player_can_use_on:"{name} can be used at {slots}.", choose_open_slot:"Choose which open slot the player should take.",
+      goalie_games_only:"only goalie games count", skater_games_only:"only skater games count"
     },
     fi: {
       nav_build:"RAKENNA", nav_compete:"KILPAILE", nav_climb:"NOUSE", league:"LIIGA", language:"KIELI",
@@ -281,7 +289,11 @@
       team_saved_success:"{league}-joukkue tallennettu.", captain_position_free:"Kapteenin vaihto ja pelipaikan muutos ovat ilmaisia.",
       choose_league_option:"Valitse Fantasy-liiga…", neutral_hero_kicker:"eHOCKEY FANTASY", neutral_hero_first:"eHOCKEY",
       neutral_hero_second:"FANTASY-LIIGA.", neutral_hero_lead:"Valitse Fantasy-liiga yllä olevasta valikosta avataksesi kilpailun.",
-      neutral_choose_league:"VALITSE FANTASY-LIIGA"
+      neutral_choose_league:"VALITSE FANTASY-LIIGA",
+      swap_player:"Vaihda {name}", picker_count:"{count} pelaajaa käytettävissä paikalle {slot}", pick_slot_upper:"VALITSE {slot}",
+      team_limit_reached:"{limit}/{limit} SAMASTA JOUKKUEESTA", no_eligible_for_slot:"Ei valittavia pelaajia paikalle {slot}.",
+      player_can_use_on:"{name} voidaan käyttää paikoilla {slots}.", choose_open_slot:"Valitse vapaa paikka pelaajalle.",
+      goalie_games_only:"vain maalivahtina pelatut ottelut lasketaan", skater_games_only:"vain kenttäpelaajana pelatut ottelut lasketaan"
     },
     de: {
       nav_build:"BAUEN", nav_compete:"SPIELEN", nav_climb:"STEIGEN", league:"LIGA", language:"SPRACHE",
@@ -369,7 +381,11 @@
       team_saved_success:"{league}-Team gespeichert.", captain_position_free:"Kapitäns- und Positionswechsel sind kostenlos.",
       choose_league_option:"Fantasy-Liga wählen…", neutral_hero_kicker:"eHOCKEY FANTASY", neutral_hero_first:"eHOCKEY",
       neutral_hero_second:"FANTASY-LIGA.", neutral_hero_lead:"Wähle oben eine Fantasy-Liga aus, um den Wettbewerb zu öffnen.",
-      neutral_choose_league:"FANTASY-LIGA WÄHLEN"
+      neutral_choose_league:"FANTASY-LIGA WÄHLEN",
+      swap_player:"{name} wechseln", picker_count:"{count} Spieler für {slot} verfügbar", pick_slot_upper:"{slot} WÄHLEN",
+      team_limit_reached:"{limit}/{limit} AUS DEM TEAM", no_eligible_for_slot:"Keine verfügbaren Spieler für {slot}.",
+      player_can_use_on:"{name} kann auf {slots} eingesetzt werden.", choose_open_slot:"Wähle einen freien Platz für den Spieler.",
+      goalie_games_only:"nur Torhüter-Spiele zählen", skater_games_only:"nur Feldspieler-Spiele zählen"
     }
   };
 
@@ -1992,15 +2008,20 @@
     if (goalieHybrid) {
       const outfieldSlots = playerSlots.filter((slot) => slot !== "G");
       positionDialogText.innerHTML =
-        "<strong>" + escapeHtml(player.display_gamertag) + " kan användas på " +
-        escapeHtml(playerSlots.join(" / ")) + ".</strong><br>" +
-        "Välj vilken ledig plats spelaren ska ta.<br>" +
-        "<strong>G:</strong> endast målvaktsmatcher räknas<br>" +
-        "<strong>" + escapeHtml(outfieldSlots.join(" / ")) + ":</strong> endast utespelarmatcher räknas";
+        "<strong>" + escapeHtml(t("player_can_use_on", {
+          name: player.display_gamertag,
+          slots: playerSlots.join(" / ")
+        })) + "</strong><br>" +
+        escapeHtml(t("choose_open_slot")) + "<br>" +
+        "<strong>G:</strong> " + escapeHtml(t("goalie_games_only")) + "<br>" +
+        "<strong>" + escapeHtml(outfieldSlots.join(" / ")) + ":</strong> " +
+        escapeHtml(t("skater_games_only"));
     } else {
       positionDialogText.textContent =
-        player.display_gamertag + " kan användas på " + playerSlots.join(" / ") +
-        ". Välj vilken ledig plats spelaren ska ta.";
+        t("player_can_use_on", {
+          name: player.display_gamertag,
+          slots: playerSlots.join(" / ")
+        }) + " " + t("choose_open_slot");
     }
 
     choices.innerHTML = slots.map((slot) =>
@@ -2045,9 +2066,9 @@
     const swapPick = state.swapSlot === slot ? state.picks.get(slot) : null;
 
     $("playerPickerTitle").textContent = swapPick
-      ? "Byt " + (clean(swapPick.player?.display_gamertag) || slot)
-      : "Välj " + slot;
-    $("playerPickerCount").textContent = rows.length + " spelare kan användas som " + slot;
+      ? t("swap_player", { name: clean(swapPick.player?.display_gamertag) || slot })
+      : t("choose_slot", { slot });
+    $("playerPickerCount").textContent = t("picker_count", { count: rows.length, slot });
 
     host.innerHTML = rows.map((player) => {
       const teamCount = [...state.picks.entries()].filter(([pickSlot, pick]) =>
@@ -2073,11 +2094,13 @@
             <small>CR</small>
           </div>
           <button type="button" data-pick-player="${player.id}" ${teamBlocked || !competitionOpen() ? "disabled" : ""}>
-            ${teamBlocked ? "2/2 FRÅN LAGET" : "VÄLJ " + slot}
+            ${teamBlocked
+              ? t("team_limit_reached", { limit: teamLimit })
+              : t("pick_slot_upper", { slot })}
           </button>
         </article>
       `;
-    }).join("") || '<div class="fantasy-empty">Inga valbara spelare för ' + escapeHtml(slot) + '.</div>';
+    }).join("") || '<div class="fantasy-empty">' + escapeHtml(t("no_eligible_for_slot", { slot })) + '</div>';
   }
 
   function openPlayerPicker(slot) {
