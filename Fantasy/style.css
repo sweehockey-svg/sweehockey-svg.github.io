@@ -4305,7 +4305,8 @@ body[data-fantasy-league="ecl"] .fantasy-hero__identity img{
   display:flex;
   flex-direction:column;
   gap:3px;
-  min-width:112px
+  width:78px;
+  min-width:78px
 }
 .fantasy-language-switcher>span{
   color:#54758b;
@@ -4315,14 +4316,16 @@ body[data-fantasy-league="ecl"] .fantasy-hero__identity img{
 }
 .fantasy-language-switcher select{
   width:100%;
-  min-height:34px;
+  min-height:42px;
   border:1px solid rgba(var(--league-accent-rgb),.36);
   border-radius:7px;
   background:#06121b;
   color:#e9f8ff;
-  padding:6px 28px 6px 9px;
-  font-size:.68rem;
+  padding:4px 24px 4px 10px;
+  font-size:1.35rem;
   font-weight:900;
+  line-height:1;
+  text-align:center;
   outline:none;
   cursor:pointer
 }
@@ -4331,12 +4334,15 @@ body[data-fantasy-league="ecl"] .fantasy-hero__identity img{
   box-shadow:0 0 0 2px rgba(var(--league-accent-rgb),.1)
 }
 @media(max-width:820px){
-  .fantasy-language-switcher{min-width:102px}
+  .fantasy-language-switcher{
+    width:74px;
+    min-width:74px
+  }
 }
 @media(max-width:650px){
   .fantasy-language-switcher{
-    width:100%;
-    min-width:0
+    width:74px;
+    min-width:74px
   }
 }
 
