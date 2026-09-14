@@ -2539,7 +2539,7 @@
       button.classList.toggle("is-active", button.dataset.tab === state.activeTab);
     });
 
-    $$$("[data-panel]").forEach((panel) => {
+    $$("[data-panel]").forEach((panel) => {
       panel.hidden = panel.dataset.panel !== state.activeTab;
     });
   }
