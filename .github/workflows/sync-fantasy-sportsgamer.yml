@@ -24,11 +24,18 @@ on:
         required: false
         default: 'manual'
         type: string
+  schedule:
+    - cron: '*/5 * * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/sync/fantasy-sync-bootstrap.trigger'
 permissions:
   contents: read
 
 concurrency:
-  group: sync-ehockey-fantasy-${{ inputs.competition_code || 'SCL27' }}
+  group: sync-ehockey-fantasy-${{ inputs.competition_code || github.event_name }}
   cancel-in-progress: false
 
 jobs:
@@ -76,25 +83,70 @@ jobs:
             trigger_type="$INPUT_TRIGGER_TYPE"
             [[ "$trigger_type" =~ ^(manual|schedule)$ ]] || { echo "Invalid trigger_type"; exit 1; }
             should_run="true"
-          elif [ "$EVENT_NAME" = "schedule" ]; then
-            trigger_type="schedule"
-            should_run="false"
+            competition_code="${INPUT_COMPETITION_CODE:-SCL27}"
+            league_ids="${INPUT_LEAGUE_IDS:-447}"
           else
-            trigger_type="push"
-            should_run="true"
+            trigger_type="$EVENT_NAME"
+            should_run="false"
+            competition_code=""
+            league_ids=""
+
+            # Self-heal a newly created Fantasy league that has SportsGamer IDs
+            # but whose player pool has not been built yet. This also covers
+            # leagues created before automatic bootstrap was added.
+            bootstrap_row="$(
+              psql "$PGURL" -At -F '|' -v ON_ERROR_STOP=1 <<'SQL'
+              select
+                c.code,
+                array_to_string(
+                  array_remove(
+                    coalesce(s.source_league_ids,'{}'::bigint[]),
+                    999999::bigint
+                  ),
+                  ','
+                )
+              from public.ehockey_fantasy_competitions c
+              join public.ehockey_fantasy_sync_settings s
+                on s.competition_id=c.id
+              where cardinality(
+                      array_remove(
+                        coalesce(s.source_league_ids,'{}'::bigint[]),
+                        999999::bigint
+                      )
+                    ) > 0
+                and not exists (
+                  select 1
+                  from public.ehockey_fantasy_player_pool p
+                  where p.competition_id=c.id
+                    and p.is_available
+                )
+              order by c.id
+              limit 1;
+SQL
+            )"
+
+            if [ -n "$bootstrap_row" ]; then
+              competition_code="${bootstrap_row%%|*}"
+              league_ids="${bootstrap_row#*|}"
+              should_run="true"
+            fi
           fi
 
-          competition_code="${INPUT_COMPETITION_CODE:-SCL27}"
-          [[ "$competition_code" =~ ^[A-Za-z0-9_-]{3,40}$ ]] || { echo "Invalid competition code"; exit 1; }
+          if [ "$should_run" = "true" ]; then
+            [[ "$competition_code" =~ ^[A-Za-z0-9_-]{3,40}$ ]] || { echo "Invalid competition code"; exit 1; }
+            [[ "$league_ids" =~ ^[0-9]+([,[:space:];]+[0-9]+)*$ ]] || { echo "Invalid league ids"; exit 1; }
+            league_ids="$(echo "$league_ids" | tr '; ' ',' | sed 's/,,*/,/g; s/^,//; s/,$//')"
+            primary_league_id="${league_ids%%,*}"
+          else
+            competition_code="NONE"
+            league_ids="999999"
+            primary_league_id="999999"
+          fi
 
           echo "request_id=$request_id" >> "$GITHUB_OUTPUT"
           echo "competition_code=$competition_code" >> "$GITHUB_OUTPUT"
           echo "trigger_type=$trigger_type" >> "$GITHUB_OUTPUT"
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
-          league_ids="${INPUT_LEAGUE_IDS:-447}"
-          [[ "$league_ids" =~ ^[0-9]+([,[:space:];]+[0-9]+)*$ ]] || { echo "Invalid league ids"; exit 1; }
-          league_ids="$(echo "$league_ids" | tr '; ' ',' | sed 's/,,*/,/g; s/^,//; s/,$//')"
-          primary_league_id="${league_ids%%,*}"
           echo "league_ids=$league_ids" >> "$GITHUB_OUTPUT"
           echo "primary_league_id=$primary_league_id" >> "$GITHUB_OUTPUT"
           echo "REQUEST_ID=$request_id" >> "$GITHUB_ENV"
