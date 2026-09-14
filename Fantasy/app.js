@@ -507,8 +507,8 @@
       accent: "#e7edf4",
       accentRgb: "231,237,244"
     },
-    WEL: {
-      label: "WEL",
+    WECL: {
+      label: "WECL",
       accent: "#00aeea",
       accentRgb: "0,174,234"
     },
