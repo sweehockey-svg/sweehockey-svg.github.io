@@ -3872,3 +3872,362 @@ a{color:inherit}
     gap:3px;
   }
 }
+
+
+/* Fantasy live period hub + ownership + player form */
+.fantasy-period-hub{
+  display:grid;
+  grid-template-columns:minmax(250px,1.05fr) minmax(0,2fr);
+  gap:1px;
+  margin:0 0 14px;
+  border:1px solid #17394f;
+  border-radius:12px;
+  overflow:hidden;
+  background:#17394f;
+  box-shadow:0 16px 42px rgba(0,0,0,.18)
+}
+.fantasy-period-hub__identity{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-height:104px;
+  padding:18px 20px;
+  background:
+    radial-gradient(circle at 0 100%,rgba(47,181,255,.14),transparent 44%),
+    linear-gradient(135deg,#071824,#05111a)
+}
+.fantasy-period-hub__identity:after{
+  content:"";
+  position:absolute;
+  right:0;
+  top:18px;
+  bottom:18px;
+  width:2px;
+  background:linear-gradient(180deg,transparent,#d6b15f,transparent);
+  opacity:.7
+}
+.fantasy-period-hub__identity>span{
+  color:#5ad9ff;
+  font-size:.56rem;
+  font-weight:950;
+  letter-spacing:.13em
+}
+.fantasy-period-hub__identity>strong{
+  margin-top:5px;
+  color:#fff;
+  font-size:1.08rem;
+  line-height:1.15
+}
+.fantasy-period-hub__identity>small{
+  margin-top:5px;
+  color:#66889e;
+  font-size:.66rem
+}
+.fantasy-period-hub__stats{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  background:#06121b
+}
+.fantasy-period-hub__stats>div{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-width:0;
+  padding:14px 15px;
+  border-right:1px solid #142f41
+}
+.fantasy-period-hub__stats>div:last-child{border-right:0}
+.fantasy-period-hub__stats span{
+  color:#4d7187;
+  font-size:.51rem;
+  font-weight:950;
+  letter-spacing:.1em
+}
+.fantasy-period-hub__stats strong{
+  margin-top:5px;
+  color:#e8f7ff;
+  font-size:.9rem;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap
+}
+.fantasy-period-hub__stats small{
+  margin-top:2px;
+  color:#4f6f82;
+  font-size:.55rem
+}
+
+.fantasy-player-row__ownership{color:#6f9db7!important}
+.fantasy-player-row .fantasy-inline-player-link{
+  display:inline-block;
+  margin-top:4px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#5acaf2;
+  font-size:.58rem;
+  font-weight:900;
+  text-align:left
+}
+.fantasy-player-row .fantasy-inline-player-link:hover{color:#baf4ff}
+
+.fantasy-player-card__detail{
+  position:relative;
+  z-index:2;
+  width:100%;
+  margin-top:10px;
+  padding:7px 9px;
+  border:1px solid #1f4e69;
+  border-radius:7px;
+  background:#061722;
+  color:#8eddf7;
+  font-size:.6rem;
+  font-weight:950;
+  cursor:pointer;
+  transition:.15s ease
+}
+.fantasy-player-card__detail:hover{
+  border-color:#2e789e;
+  background:#092131;
+  color:#d8f8ff
+}
+.fantasy-differential{
+  position:relative;
+  z-index:1;
+  display:inline-flex;
+  margin-top:7px;
+  padding:3px 6px;
+  border:1px solid rgba(214,177,95,.42);
+  border-radius:999px;
+  background:rgba(214,177,95,.09);
+  color:#f0d58b;
+  font-size:.5rem;
+  font-weight:950;
+  letter-spacing:.08em
+}
+
+.fantasy-player-detail-dialog{
+  width:min(760px,calc(100vw - 24px));
+  max-height:min(850px,calc(100vh - 24px));
+  padding:0;
+  border:1px solid #24506a;
+  border-radius:14px;
+  background:#040d14;
+  color:#eefaff;
+  box-shadow:0 30px 90px rgba(0,0,0,.62);
+  overflow:auto
+}
+.fantasy-player-detail-dialog::backdrop{background:rgba(0,4,8,.78);backdrop-filter:blur(5px)}
+.fantasy-player-detail-dialog__close{
+  position:sticky;
+  float:right;
+  z-index:10;
+  top:10px;
+  right:10px;
+  width:34px;
+  height:34px;
+  margin:10px 10px -44px 0;
+  border:1px solid #244d67;
+  border-radius:50%;
+  background:#071722;
+  color:#dff8ff;
+  font-size:1.15rem;
+  cursor:pointer
+}
+.fantasy-player-detail__content{padding:20px}
+.fantasy-player-detail__loading{
+  padding:52px 18px;
+  text-align:center;
+  color:#7797aa
+}
+.fantasy-player-detail__hero{
+  display:flex;
+  align-items:flex-end;
+  gap:18px;
+  min-height:180px;
+  margin:-20px -20px 0;
+  padding:24px 54px 0 24px;
+  border-bottom:1px solid #17374b;
+  background:
+    radial-gradient(circle at 18% 100%,rgba(35,160,224,.19),transparent 34%),
+    radial-gradient(circle at 92% 0,rgba(214,177,95,.1),transparent 30%),
+    linear-gradient(145deg,#071824,#050e16)
+}
+.fantasy-player-detail__portrait-wrap{
+  position:relative;
+  width:138px;
+  height:176px;
+  flex:0 0 138px
+}
+.fantasy-player-detail__portrait{
+  width:138px;
+  height:176px;
+  object-fit:contain;
+  object-position:center bottom
+}
+.fantasy-player-detail__portrait.is-default{opacity:.55}
+.fantasy-team-logo--detail{
+  position:absolute;
+  right:-5px;
+  bottom:10px;
+  width:34px;
+  height:34px;
+  padding:4px;
+  border:1px solid #2b5b79;
+  border-radius:9px;
+  background:#07131c
+}
+.fantasy-player-detail__identity{
+  min-width:0;
+  padding-bottom:24px
+}
+.fantasy-player-detail__identity h2{
+  margin:5px 0 4px;
+  font-size:1.65rem
+}
+.fantasy-player-detail__identity>p:not(.fantasy-kicker){
+  margin:0;
+  color:#7392a6;
+  font-size:.78rem
+}
+.fantasy-player-detail__tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:10px
+}
+.fantasy-player-detail__tags span{
+  padding:4px 7px;
+  border:1px solid #234b63;
+  border-radius:999px;
+  background:#061520;
+  color:#9adff5;
+  font-size:.56rem;
+  font-weight:950
+}
+.fantasy-player-detail__tags .is-differential{
+  border-color:rgba(214,177,95,.45);
+  color:#f0d58b
+}
+.fantasy-player-detail__metrics{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+  margin-top:14px
+}
+.fantasy-player-detail__stat{
+  min-width:0;
+  padding:10px;
+  border:1px solid #17364a;
+  border-radius:9px;
+  background:#06121b
+}
+.fantasy-player-detail__stat span{
+  display:block;
+  color:#4f7389;
+  font-size:.49rem;
+  font-weight:950;
+  letter-spacing:.08em
+}
+.fantasy-player-detail__stat strong{
+  display:block;
+  margin-top:4px;
+  color:#e8f8ff;
+  font-size:.86rem;
+  overflow:hidden;
+  text-overflow:ellipsis
+}
+.fantasy-player-detail__section{
+  margin-top:14px;
+  padding:14px;
+  border:1px solid #17364a;
+  border-radius:10px;
+  background:#050f17
+}
+.fantasy-player-detail__section-head span{
+  color:#5ad9ff;
+  font-size:.5rem;
+  font-weight:950;
+  letter-spacing:.1em
+}
+.fantasy-player-detail__section-head h3{
+  margin:3px 0 10px;
+  font-size:.92rem
+}
+.fantasy-player-form{display:flex;flex-direction:column}
+.fantasy-player-form-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 70px 74px;
+  gap:8px;
+  align-items:center;
+  padding:8px 0;
+  border-bottom:1px solid #102b3d
+}
+.fantasy-player-form-row:last-child{border-bottom:0}
+.fantasy-player-form-row>span:first-child{min-width:0}
+.fantasy-player-form-row b{
+  display:block;
+  color:#d8ecf6;
+  font-size:.72rem
+}
+.fantasy-player-form-row small{
+  display:block;
+  margin-top:2px;
+  color:#587b90;
+  font-size:.57rem
+}
+.fantasy-player-form-row__factor{text-align:right}
+.fantasy-player-form-row__factor em{
+  display:inline-flex;
+  padding:3px 5px;
+  border-radius:5px;
+  background:rgba(214,177,95,.1);
+  color:#f0d58b;
+  font-size:.55rem;
+  font-style:normal;
+  font-weight:950
+}
+.fantasy-player-form-row>strong{
+  text-align:right;
+  color:#bdeeff;
+  font-size:.8rem
+}
+.fantasy-player-detail__stats{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px
+}
+.fantasy-player-detail__note{
+  margin:10px 0 0;
+  color:#58788c;
+  font-size:.6rem;
+  line-height:1.45
+}
+.fantasy-player-detail__empty{
+  padding:18px 8px;
+  color:#66899d;
+  text-align:center;
+  font-size:.7rem
+}
+@media(max-width:760px){
+  .fantasy-period-hub{grid-template-columns:1fr}
+  .fantasy-period-hub__identity{min-height:auto}
+  .fantasy-period-hub__identity:after{display:none}
+  .fantasy-period-hub__stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fantasy-period-hub__stats>div:nth-child(2){border-right:0}
+  .fantasy-period-hub__stats>div:nth-child(-n+2){border-bottom:1px solid #142f41}
+  .fantasy-player-detail__hero{align-items:center;min-height:150px;padding-left:16px}
+  .fantasy-player-detail__portrait-wrap,
+  .fantasy-player-detail__portrait{width:96px;height:132px}
+  .fantasy-player-detail__portrait-wrap{flex-basis:96px}
+  .fantasy-player-detail__metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fantasy-player-detail__stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:460px){
+  .fantasy-period-hub__stats{grid-template-columns:1fr 1fr}
+  .fantasy-player-detail__content{padding:14px}
+  .fantasy-player-detail__hero{margin:-14px -14px 0;padding:20px 44px 0 10px;gap:10px}
+  .fantasy-player-detail__identity h2{font-size:1.15rem}
+  .fantasy-player-form-row{grid-template-columns:minmax(0,1fr) 52px 58px}
+}
