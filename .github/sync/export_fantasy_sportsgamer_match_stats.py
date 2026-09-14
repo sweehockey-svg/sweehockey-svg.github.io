@@ -329,7 +329,25 @@ def main() -> int:
             if integer(row.get("matchID")) > 0 and integer(row.get("playerID")) > 0
         ]
         if not participants:
-            raise RuntimeError(f"No participant rows found for SportsGamer leagues {LEAGUE_IDS}")
+            MATCH_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+            with MATCH_OUTPUT.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=MATCH_FIELDS)
+                writer.writeheader()
+            with PLAYER_OUTPUT.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=PLAYER_FIELDS)
+                writer.writeheader()
+
+            print(f"No played-match participant rows yet for SportsGamer leagues {LEAGUE_IDS}. Roster sync can still succeed.")
+            output = os.environ.get("GITHUB_OUTPUT")
+            if output:
+                with open(output, "a", encoding="utf-8") as handle:
+                    handle.write("has_match_data=false\n")
+                    handle.write("match_count=0\n")
+                    handle.write("player_row_count=0\n")
+                    handle.write("skater_source=\n")
+                    handle.write("goalie_source=\n")
+                    handle.write("match_source=\n")
+            return 0
 
         match_ids = sorted({integer(row["matchID"]) for row in participants})
         inventory = table_inventory(connection)
@@ -522,6 +540,7 @@ def main() -> int:
     output = os.environ.get("GITHUB_OUTPUT")
     if output:
         with open(output, "a", encoding="utf-8") as handle:
+            handle.write("has_match_data=true\n")
             handle.write(f"match_count={len(match_rows)}\n")
             handle.write(f"player_row_count={len(player_rows)}\n")
             handle.write(f"skater_source={skater_table or ''}\n")
