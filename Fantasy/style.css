@@ -4298,3 +4298,44 @@ body[data-fantasy-league="ecl"] .fantasy-hero__identity img{
     min-width:0
   }
 }
+
+
+/* Fantasy language selector */
+.fantasy-language-switcher{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  min-width:112px
+}
+.fantasy-language-switcher>span{
+  color:#54758b;
+  font-size:.48rem;
+  font-weight:950;
+  letter-spacing:.12em
+}
+.fantasy-language-switcher select{
+  width:100%;
+  min-height:34px;
+  border:1px solid rgba(var(--league-accent-rgb),.36);
+  border-radius:7px;
+  background:#06121b;
+  color:#e9f8ff;
+  padding:6px 28px 6px 9px;
+  font-size:.68rem;
+  font-weight:900;
+  outline:none;
+  cursor:pointer
+}
+.fantasy-language-switcher select:focus{
+  border-color:var(--league-accent);
+  box-shadow:0 0 0 2px rgba(var(--league-accent-rgb),.1)
+}
+@media(max-width:820px){
+  .fantasy-language-switcher{min-width:102px}
+}
+@media(max-width:650px){
+  .fantasy-language-switcher{
+    width:100%;
+    min-width:0
+  }
+}
