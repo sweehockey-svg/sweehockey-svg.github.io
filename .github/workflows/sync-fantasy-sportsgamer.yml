@@ -31,6 +31,9 @@ on:
       - main
     paths:
       - '.github/sync/fantasy-sync-bootstrap.trigger'
+  issues:
+    types:
+      - opened
 permissions:
   contents: read
 
@@ -69,6 +72,7 @@ jobs:
           INPUT_COMPETITION_CODE: ${{ inputs.competition_code || 'SCL27' }}
           INPUT_LEAGUE_IDS: ${{ inputs.league_ids || '447' }}
           INPUT_TRIGGER_TYPE: ${{ inputs.trigger_type || 'manual' }}
+          ISSUE_TITLE: ${{ github.event.issue.title || '' }}
         run: |
           set -euo pipefail
           : "${PGURL:?Missing SUPABASE_DB_URL secret}"
@@ -91,7 +95,10 @@ jobs:
             competition_code=""
             league_ids=""
 
-            # Self-heal a newly created Fantasy league that has SportsGamer IDs
+            if [ "$EVENT_NAME" = "issues" ] && [[ "$ISSUE_TITLE" != "[fantasy-sync-bootstrap]"* ]]; then
+              echo "Ignoring unrelated issue event."
+            else
+              # Self-heal a newly created Fantasy league that has SportsGamer IDs
             # but whose player pool has not been built yet. This also covers
             # leagues created before automatic bootstrap was added.
             bootstrap_row="$(
@@ -125,10 +132,11 @@ jobs:
 SQL
             )"
 
-            if [ -n "$bootstrap_row" ]; then
-              competition_code="${bootstrap_row%%|*}"
-              league_ids="${bootstrap_row#*|}"
-              should_run="true"
+              if [ -n "$bootstrap_row" ]; then
+                competition_code="${bootstrap_row%%|*}"
+                league_ids="${bootstrap_row#*|}"
+                should_run="true"
+              fi
             fi
           fi
 
