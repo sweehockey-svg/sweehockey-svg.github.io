@@ -426,3 +426,50 @@ a{color:inherit}
     width:100%
   }
 }
+
+
+/* Prominent active Fantasy league switch */
+.fa-hero__competition-switch{
+  min-width:280px;
+  gap:8px
+}
+.fa-hero__competition-switch>select{
+  width:100%;
+  margin-top:4px;
+  border:1px solid #2b678a;
+  border-radius:8px;
+  background:#03101a;
+  color:#f3fbff;
+  padding:10px 34px 10px 11px;
+  font-size:.88rem;
+  font-weight:950;
+  outline:none;
+  cursor:pointer
+}
+.fa-hero__competition-switch>select:focus{
+  border-color:var(--cyan);
+  box-shadow:0 0 0 2px rgba(89,231,255,.08)
+}
+.fa-hero__competition-meta{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding-top:2px
+}
+.fa-hero__competition-meta strong{
+  margin:0;
+  color:#dff5ff;
+  font-size:.78rem
+}
+.fa-hero__competition-meta em{
+  margin:0;
+  white-space:nowrap
+}
+.fa-hero__competition-switch .fa-link-button{
+  width:100%;
+  margin-top:2px
+}
+@media(max-width:760px){
+  .fa-hero__competition-switch{min-width:0}
+}
