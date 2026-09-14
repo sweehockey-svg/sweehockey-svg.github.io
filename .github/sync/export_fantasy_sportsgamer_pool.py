@@ -160,6 +160,40 @@ def choose_roster_source(
     connection: Any,
     inventory: dict[str, list[str]],
 ) -> tuple[str, list[dict[str, Any]], str]:
+    # Common SportsGamer layout: leagueRosters points at leagueTeams through
+    # leagueTeamID, while leagueTeams carries the actual leagueID/teamID.
+    roster_columns = inventory.get("nhlgamer_leagueRosters", [])
+    league_team_columns = inventory.get("nhlgamer_leagueTeams", [])
+    roster_link = column_name(roster_columns, "leagueTeamID", "league_team_id")
+    league_team_link = column_name(league_team_columns, "leagueTeamID", "league_team_id", "id")
+    joined_league = column_name(league_team_columns, "leagueID", "league_id")
+    joined_team = column_name(league_team_columns, "teamID", "team_id")
+    roster_player = column_name(roster_columns, "playerID", "player_id")
+
+    if roster_link and league_team_link and joined_league and joined_team and roster_player:
+        placeholders = ",".join(["%s"] * len(LEAGUE_IDS))
+        try:
+            rows = select(
+                connection,
+                "select r.*, "
+                f"lt.{safe_identifier(joined_league)} as __leagueID, "
+                f"lt.{safe_identifier(joined_team)} as __teamID "
+                "from `nhlgamer_leagueRosters` r "
+                "join `nhlgamer_leagueTeams` lt "
+                f"on lt.{safe_identifier(league_team_link)}=r.{safe_identifier(roster_link)} "
+                f"where lt.{safe_identifier(joined_league)} in ({placeholders})",
+                tuple(LEAGUE_IDS),
+            )
+            usable = [
+                row for row in rows
+                if integer(first(row, "playerID", "player_id")) > 0
+                and integer(first(row, "__teamID", "teamID", "team_id")) > 0
+            ]
+            if usable:
+                return "nhlgamer_leagueRosters + nhlgamer_leagueTeams", usable, joined_league
+        except Exception:
+            pass
+
     candidates: list[tuple[int, str, str]] = []
     for table, columns in inventory.items():
         league_column = column_name(columns, "leagueID", "league_id")
@@ -198,8 +232,19 @@ def choose_roster_source(
         usable = [
             row for row in rows
             if integer(first(row, "playerID", "player_id")) > 0
-            and integer(first(row, "teamID", "team_id")) > 0
+            and integer(first(row, "__teamID", "teamID", "team_id")) > 0
         ]
+
+        # Accepted SportsGamer team invites are a reliable preseason roster
+        # fallback when the dedicated league-roster table cannot be joined.
+        if "invite" in table.lower():
+            accepted = [
+                row for row in usable
+                if integer(first(row, "inviteStatus", "invite_status", "status")) == 2
+            ]
+            if accepted:
+                usable = accepted
+
         if usable:
             return table, usable, league_column
 
@@ -325,7 +370,7 @@ def main() -> int:
         league_rank = {league_id: index for index, league_id in enumerate(LEAGUE_IDS)}
         roster_rows.sort(
             key=lambda row: (
-                league_rank.get(integer(first(row, "leagueID", "league_id")), 999),
+                league_rank.get(integer(first(row, "__leagueID", "leagueID", "league_id")), 999),
                 -integer(first(row, "id", "rosterID", "leagueRosterID")),
             )
         )
@@ -338,9 +383,9 @@ def main() -> int:
 
         player_ids = sorted(deduped)
         team_ids = sorted({
-            integer(first(row, "teamID", "team_id"))
+            integer(first(row, "__teamID", "teamID", "team_id"))
             for row in deduped.values()
-            if integer(first(row, "teamID", "team_id")) > 0
+            if integer(first(row, "__teamID", "teamID", "team_id")) > 0
         })
 
         player_table, player_id_column = choose_entity_table(inventory, "player")
@@ -382,8 +427,8 @@ def main() -> int:
 
         output_rows: list[dict[str, Any]] = []
         for player_id, roster in deduped.items():
-            team_id = integer(first(roster, "teamID", "team_id"))
-            league_id = integer(first(roster, "leagueID", "league_id"))
+            team_id = integer(first(roster, "__teamID", "teamID", "team_id"))
+            league_id = integer(first(roster, "__leagueID", "leagueID", "league_id"))
             player = player_meta.get(player_id, {})
             team = team_meta.get(team_id, {})
 
