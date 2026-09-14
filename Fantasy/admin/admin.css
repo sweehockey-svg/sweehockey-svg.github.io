@@ -473,3 +473,88 @@ a{color:inherit}
 @media(max-width:760px){
   .fa-hero__competition-switch{min-width:0}
 }
+
+
+/* League source fields when creating a Fantasy competition */
+.fa-new-source{
+  margin-top:14px;
+  border:1px solid #1b4058;
+  border-radius:10px;
+  overflow:hidden;
+  background:#050f17
+}
+.fa-new-source__head{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  padding:12px 14px;
+  border-bottom:1px solid #18384f
+}
+.fa-new-source__head>span{
+  color:var(--cyan);
+  font-size:.58rem;
+  font-weight:950;
+  letter-spacing:.11em
+}
+.fa-new-source__head>strong{
+  font-size:.92rem
+}
+.fa-new-source__head small{
+  color:#637f92;
+  font-size:.62rem
+}
+.fa-new-source__generic{
+  padding:12px 14px
+}
+.fa-new-source__generic label{
+  display:flex;
+  flex-direction:column;
+  gap:6px
+}
+.fa-new-source__generic label>span{
+  color:#6f8fa3;
+  font-size:.68rem;
+  font-weight:900
+}
+.fa-new-source__generic input,
+.fa-new-source__row input{
+  width:100%;
+  border:1px solid #1d425b;
+  border-radius:7px;
+  background:#030a10;
+  color:#fff;
+  padding:9px 10px;
+  outline:none
+}
+.fa-new-source__generic input:focus,
+.fa-new-source__row input:focus{
+  border-color:#2d7da9
+}
+.fa-new-source__generic small{
+  color:#607d90;
+  font-size:.61rem;
+  line-height:1.45
+}
+.fa-new-source__ecl{
+  display:flex;
+  flex-direction:column
+}
+.fa-new-source__row{
+  display:grid;
+  grid-template-columns:72px minmax(120px,1fr) 88px;
+  gap:8px;
+  align-items:center;
+  padding:9px 14px;
+  border-bottom:1px solid #122f43
+}
+.fa-new-source__row:last-child{border-bottom:0}
+.fa-new-source__row strong{
+  color:#ddecf5;
+  font-size:.7rem
+}
+@media(max-width:560px){
+  .fa-new-source__row{
+    grid-template-columns:58px minmax(90px,1fr) 74px;
+    padding:8px
+  }
+}
