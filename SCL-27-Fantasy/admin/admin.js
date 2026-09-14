@@ -46,6 +46,7 @@
 
   const state = {
     admin: null,
+    competitions: [],
     competition: null,
     counts: {},
     entries: [],
@@ -56,6 +57,37 @@
     sclSimState: null,
     activeTab: "dashboard"
   };
+
+  function activeCompetitionCode() {
+    return clean(state.competition?.code || "SCL27").toUpperCase();
+  }
+
+  function activeLeagueCode() {
+    return clean(state.competition?.competition_code || "SCL").toUpperCase();
+  }
+
+  function activeSeasonLabel() {
+    return clean(state.competition?.season_label || state.competition?.name || activeCompetitionCode());
+  }
+
+  async function loadCompetitionList() {
+    const { data, error } = await sb.rpc("seh_fantasy_admin_competitions");
+    if (error) throw error;
+    state.competitions = Array.isArray(data) ? data : [];
+  }
+
+  function requestedCompetitionCode() {
+    return clean(new URLSearchParams(window.location.search).get("competition")).toUpperCase();
+  }
+
+  function chooseCompetitionCode() {
+    const requested = requestedCompetitionCode();
+    if (requested && state.competitions.some((row) => clean(row.code).toUpperCase() === requested)) {
+      return requested;
+    }
+    if (state.competitions.some((row) => clean(row.code).toUpperCase() === "SCL27")) return "SCL27";
+    return clean(state.competitions[0]?.code || "SCL27").toUpperCase();
+  }
 
   function setStatus(id, text, tone = "") {
     const el = $(id);
@@ -110,7 +142,9 @@
       return false;
     }
 
-    const { data, error } = await sb.rpc("seh_fantasy_admin_state", { p_code: "SCL27" });
+    await loadCompetitionList();
+    const selectedCode = chooseCompetitionCode();
+    const { data, error } = await sb.rpc("seh_fantasy_admin_state", { p_code: selectedCode });
 
     if (error) {
       $("authGateText").textContent = error.message?.includes("adminbehörighet")
@@ -160,19 +194,23 @@
   }
 
   async function loadSyncState() {
-    const { data, error } = await sb.rpc("seh_fantasy_admin_sync_state", { p_code: "SCL27" });
+    const { data, error } = await sb.rpc("seh_fantasy_admin_sync_state", { p_code: activeCompetitionCode() });
     if (error) throw error;
     state.syncState = data || { settings: {}, counts: {}, runs: [] };
   }
 
   async function loadSclSimulationStatus() {
+    if (activeCompetitionCode() !== "SCL27") {
+      state.sclSimState = null;
+      return;
+    }
     const { data, error } = await sb.rpc("seh_fantasy_admin_scl_sim_status", { p_code: "SCL27" });
     if (error) throw error;
     state.sclSimState = data || null;
   }
 
   async function refreshAdminState() {
-    const { data, error } = await sb.rpc("seh_fantasy_admin_state", { p_code: "SCL27" });
+    const { data, error } = await sb.rpc("seh_fantasy_admin_state", { p_code: activeCompetitionCode() });
     if (error) throw error;
 
     state.admin = data?.writer || state.admin;
@@ -183,9 +221,39 @@
   }
 
   async function loadAll() {
-    await refreshAdminState();
+    await Promise.all([loadCompetitionList(), refreshAdminState()]);
     await Promise.all([loadPool(), loadSyncState(), loadSclSimulationStatus()]);
     renderAll();
+  }
+
+  function renderAdminChrome() {
+    const comp = state.competition || {};
+    const season = activeSeasonLabel();
+    const league = activeLeagueCode();
+
+    if ($("adminCompetitionSelect")) {
+      $("adminCompetitionSelect").innerHTML = state.competitions.map((row) =>
+        '<option value="' + esc(row.code) + '">' +
+          esc(clean(row.season_label || row.name || row.code)) +
+        '</option>'
+      ).join("");
+      $("adminCompetitionSelect").value = activeCompetitionCode();
+    }
+
+    if ($("adminBrandSeason")) $("adminBrandSeason").textContent = "eHOCKEY FANTASY LIGA";
+    if ($("heroKicker")) $("heroKicker").textContent = "eHOCKEY FANTASY LIGA / KONTROLLRUM";
+    if ($("heroCompetitionName")) $("heroCompetitionName").textContent = season;
+    if ($("competitionSectionTitle")) $("competitionSectionTitle").textContent = season + " Fantasy";
+    if ($("poolSectionTitle")) $("poolSectionTitle").textContent = season + " spelarpool";
+    if ($("openFantasyLink")) {
+      $("openFantasyLink").href = "../?competition=" + encodeURIComponent(activeCompetitionCode());
+    }
+
+    document.title = "eHockey Fantasy Liga · " + season + " · Admin";
+    document.body.dataset.fantasyLeague = league.toLowerCase();
+
+    const sclBox = document.querySelector(".fa-scl-sim-box");
+    if (sclBox) sclBox.hidden = activeCompetitionCode() !== "SCL27";
   }
 
   function renderDashboard() {
@@ -402,6 +470,7 @@
   }
 
   function renderAll() {
+    renderAdminChrome();
     renderDashboard();
     renderCompetition();
     renderPool();
@@ -419,7 +488,7 @@
       const lockAt = localLock ? new Date(localLock).toISOString() : null;
 
       const { error } = await sb.rpc("seh_fantasy_admin_update_competition", {
-        p_code: "SCL27",
+        p_code: activeCompetitionCode(),
         p_status: $("compStatus").value,
         p_budget: Number($("compBudget").value),
         p_max_players_per_real_team: Number($("compMaxTeam").value),
@@ -431,7 +500,7 @@
       if (error) throw error;
 
       const scopeResult = await sb.rpc("seh_fantasy_admin_update_nationality_scope", {
-        p_code: "SCL27",
+        p_code: activeCompetitionCode(),
         p_scope: $("compNationalityScope")?.value || "all"
       });
       if (scopeResult.error) throw scopeResult.error;
@@ -475,7 +544,7 @@
     setStatus("recalcStatus", "Räknar om Fantasy-lagen…", "working");
 
     try {
-      const { data, error } = await sb.rpc("seh_fantasy_admin_recalculate", { p_code: "SCL27" });
+      const { data, error } = await sb.rpc("seh_fantasy_admin_recalculate", { p_code: activeCompetitionCode() });
       if (error) throw error;
       await loadAll();
       setStatus("recalcStatus", (data?.updated_entries || 0) + " lag omräknade.", "success");
@@ -712,13 +781,13 @@
       }
 
       const weightResult = await sb.rpc("seh_fantasy_admin_update_league_weights", {
-        p_code: "SCL27",
+        p_code: activeCompetitionCode(),
         p_weights: weights
       });
       if (weightResult.error) throw weightResult.error;
 
       const { error } = await sb.rpc("seh_fantasy_admin_update_sync_settings", {
-        p_code: "SCL27",
+        p_code: activeCompetitionCode(),
         p_enabled: Boolean($("syncAutoEnabled")?.checked),
         p_times: parseSyncTimes()
       });
@@ -776,6 +845,7 @@
         action: "start",
         job: "fantasy_sportsgamer",
         request_id: requestId,
+        competition_code: activeCompetitionCode(),
         league_ids: leagueIds
       });
 
@@ -822,7 +892,7 @@
 
     try {
       const { data, error } = await sb.rpc("seh_fantasy_admin_simulate", {
-        p_code: "SCL27",
+        p_code: activeCompetitionCode(),
         p_runs: Number($("simulationRuns").value)
       });
 
@@ -834,6 +904,55 @@
     } finally {
       button.disabled = false;
     }
+  }
+
+  async function createCompetition(event) {
+    event.preventDefault();
+    const button = $("createCompetitionSubmit");
+    if (button) button.disabled = true;
+    setStatus("createCompetitionStatus", "Skapar Fantasy-liga…", "working");
+
+    try {
+      const league = clean($("newCompetitionLeague")?.value).toUpperCase();
+      const season = clean($("newCompetitionSeason")?.value);
+      const customCode = clean($("newCompetitionCode")?.value);
+      const startsOn = clean($("newCompetitionStartsOn")?.value) || null;
+      const scopeValue = clean($("newCompetitionScope")?.value);
+      const scope = scopeValue === "default"
+        ? (league === "ECL" ? "sweden" : "all")
+        : scopeValue;
+
+      if (!season) throw new Error("Ange säsongsnamn, till exempel ECL 26 Spring.");
+
+      const { data, error } = await sb.rpc("seh_fantasy_admin_create_competition", {
+        p_competition_code: league,
+        p_season_label: season,
+        p_name: season + " Fantasy",
+        p_code: customCode || null,
+        p_starts_on: startsOn,
+        p_nationality_scope: scope
+      });
+      if (error) throw error;
+
+      const code = clean(data?.code);
+      if (!code) throw new Error("Fantasy-ligan skapades men koden kunde inte läsas.");
+
+      setStatus("createCompetitionStatus", "Fantasy-ligan är skapad.", "success");
+      const url = new URL(window.location.href);
+      url.searchParams.set("competition", code);
+      window.location.href = url.toString();
+    } catch (error) {
+      setStatus("createCompetitionStatus", "Fel: " + (error?.message || error), "error");
+      if (button) button.disabled = false;
+    }
+  }
+
+  function switchCompetition(code) {
+    const next = clean(code).toUpperCase();
+    if (!next || next === activeCompetitionCode()) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("competition", next);
+    window.location.href = url.toString();
   }
 
   document.addEventListener("click", (event) => {
@@ -891,6 +1010,20 @@
       setStatus("sclSimulationStatus", "Fel: " + (error?.message || error), "error");
     }
   });
+  $("adminCompetitionSelect")?.addEventListener("change", (event) => switchCompetition(event.target.value));
+  $("openCreateCompetition")?.addEventListener("click", () => {
+    $("createCompetitionDialog")?.showModal();
+  });
+  $("closeCreateCompetitionDialog")?.addEventListener("click", () => $("createCompetitionDialog")?.close());
+  $("createCompetitionDialog")?.addEventListener("cancel", () => {});
+  $("createCompetitionForm")?.addEventListener("submit", createCompetition);
+  $("newCompetitionLeague")?.addEventListener("change", () => {
+    const league = clean($("newCompetitionLeague")?.value).toUpperCase();
+    if ($("newCompetitionScope")) $("newCompetitionScope").value = "default";
+    if ($("newCompetitionCode")) $("newCompetitionCode").placeholder =
+      league === "ECL" ? "t.ex. ECL26S" : league + "27";
+  });
+
   $("retryAuth")?.addEventListener("click", init);
   $("poolSearch")?.addEventListener("input", renderPool);
   $("poolPosition")?.addEventListener("change", renderPool);
