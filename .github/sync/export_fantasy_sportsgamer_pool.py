@@ -341,6 +341,24 @@ def slots_for_position(position: str) -> list[str]:
     return ["LW", "C", "RW", "LD", "RD", "G"]
 
 
+def explicit_roster_slots(roster: dict[str, Any], player: dict[str, Any]) -> list[str]:
+    result: list[str] = []
+    for slot, field in (
+        ("LW", "positionLW"),
+        ("C", "positionC"),
+        ("RW", "positionRW"),
+        ("LD", "positionLD"),
+        ("RD", "positionRD"),
+        ("G", "positionG"),
+    ):
+        value = first(roster, field)
+        if value is None:
+            value = first(player, field)
+        if integer(value) > 0:
+            result.append(slot)
+    return result
+
+
 def json_safe(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, default=str, separators=(",", ":"))
 
@@ -450,14 +468,34 @@ def main() -> int:
             )
 
             position = normalize_position(
-                first(roster, "positionID", "position", "primaryPosition", "mainPosition", "preferredPosition")
-                or first(player, "positionID", "position", "primaryPosition", "mainPosition", "preferredPosition")
+                first(
+                    roster,
+                    "preferredPositionID",
+                    "positionID",
+                    "position",
+                    "primaryPosition",
+                    "mainPosition",
+                    "preferredPosition",
+                )
+                or first(
+                    player,
+                    "preferredPositionID",
+                    "positionID",
+                    "position",
+                    "primaryPosition",
+                    "mainPosition",
+                    "preferredPosition",
+                )
             )
             if not position and observed_positions.get(player_id):
                 position = observed_positions[player_id].most_common(1)[0][0]
 
-            slots = slots_for_position(position)
+            explicit_slots = explicit_roster_slots(roster, player)
+            slots = explicit_slots or slots_for_position(position)
+
             primary = position if position in {"LW", "C", "RW", "LD", "RD", "G"} else ""
+            if not primary and slots:
+                primary = slots[0]
 
             logo = str(
                 first(team, "teamLogo", "teamLogoUrl", "logo", "logoUrl", "image", "imageUrl")
