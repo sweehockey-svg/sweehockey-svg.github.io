@@ -6,17 +6,22 @@
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#050a10">
   <meta name="robots" content="noindex,nofollow">
-  <title>SCL 27 Fantasy Admin</title>
-  <link rel="stylesheet" href="admin.css?v=20260914-v6-division-factors">
+  <title>eHockey Fantasy Liga Admin</title>
+  <link rel="stylesheet" href="admin.css?v=20260914-v7-multileague-admin">
 </head>
 <body>
   <header class="fa-header">
     <a class="fa-brand" href="../">
-      <img src="https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2021_08/large.SCL_logo_shading.png.eb94cae29f362f6a451128a25ebfa3ae.png" alt="SCL">
-      <span><small>SCL 27 FANTASY</small><strong>ADMIN</strong></span>
+      <img src="../../assets/icons/seh-icon-192.png" alt="Svensk eHockey">
+      <span><small id="adminBrandSeason">eHOCKEY FANTASY LIGA</small><strong>ADMIN</strong></span>
     </a>
     <div class="fa-header__right">
-      <a href="../">Öppna Fantasy ↗</a>
+      <label class="fa-competition-picker">
+        <span>FANTASY-LIGA</span>
+        <select id="adminCompetitionSelect" aria-label="Välj Fantasy-liga"></select>
+      </label>
+      <button id="openCreateCompetition" class="fa-secondary fa-new-competition" type="button">+ Ny Fantasy-liga</button>
+      <a id="openFantasyLink" href="../">Öppna Fantasy ↗</a>
       <a href="../../#/admin">Svensk eHockey Admin ↗</a>
       <span id="adminIdentity">Kontrollerar admin…</span>
     </div>
@@ -36,13 +41,13 @@
     <div id="adminApp" hidden>
       <section class="fa-hero">
         <div>
-          <span class="fa-kicker">SCL 27 FANTASY / KONTROLLRUM</span>
+          <span id="heroKicker" class="fa-kicker">eHOCKEY FANTASY LIGA / KONTROLLRUM</span>
           <h1>Fantasy Admin</h1>
-          <p>Hantera betan, priserna, Fantasy-lagen och simuleringarna utan att röra vanliga Svensk eHockey-sidan.</p>
+          <p>Skapa och hantera Fantasy-ligor, spelarpooler, SportsGamer-källor, regler och poäng.</p>
         </div>
         <div class="fa-hero__status">
           <span>TÄVLING</span>
-          <strong>SCL 27</strong>
+          <strong id="heroCompetitionName">Fantasy-liga</strong>
           <em id="heroStatus">–</em>
         </div>
       </section>
@@ -79,7 +84,7 @@
 
       <section class="fa-panel" data-panel="competition" hidden>
         <div class="fa-section-head">
-          <div><span>TÄVLINGSKONTROLL</span><h2>SCL 27 Fantasy</h2><p>Ändringar här påverkar Fantasy-motorn direkt.</p></div>
+          <div><span>TÄVLINGSKONTROLL</span><h2 id="competitionSectionTitle">Fantasy-liga</h2><p>Ändringar här påverkar den valda Fantasy-ligan direkt.</p></div>
         </div>
 
         <form id="competitionForm" class="fa-form-grid">
@@ -148,7 +153,7 @@
 
       <section class="fa-panel" data-panel="pool" hidden>
         <div class="fa-section-head">
-          <div><span>SPELARPOOL</span><h2>SCL 27 betapool</h2><p>Här ligger den fulla importerade spelarbasen. Vilka spelare som faktiskt går att välja i Fantasy styrs av inställningen för nationalitet under Tävling. Priser och positioner bygger på historiken fram till tävlingsstart.</p></div>
+          <div><span>SPELARPOOL</span><h2 id="poolSectionTitle">Fantasy-spelarpool</h2><p>Här ligger spelarbasen för den valda Fantasy-ligan. Vilka spelare som faktiskt går att välja styrs av inställningen för nationalitet under Tävling.</p></div>
           <div class="fa-head-actions">
             <input id="poolSearch" type="search" placeholder="Sök spelare eller lag…">
             <select id="poolPosition">
@@ -203,7 +208,7 @@
               <div><span>AUTOMATISK SYNK</span><h2>Automatisk hämtning</h2></div>
             </div>
             <form id="syncSettingsForm" class="fa-sync-settings">
-              <div class="fa-sync-divisions">
+              <div id="divisionSyncSettings" class="fa-sync-divisions">
                 <div class="fa-sync-divisions__head">
                   <span>DIVISIONER · SPORTSGAMER LIGA-ID · POÄNGFAKTOR</span>
                   <small>Lagbyte inom samma division påverkar inget. Byter spelaren division får varje ny match den faktor som hör till matchens liga-ID.</small>
@@ -234,6 +239,15 @@
                   <input id="syncFactorNeo" type="number" min="0.5" max="1.5" step="0.01" value="0.90" aria-label="Neo poängfaktor">
                 </div>
               </div>
+
+              <div id="genericSyncSettings" class="fa-sync-generic" hidden>
+                <label>
+                  <span>SportsGamer liga-ID:n</span>
+                  <input id="syncGenericLeagueIds" type="text" inputmode="numeric" placeholder="Exempel: 447 eller 447, 448">
+                  <small>För SCL/FCL/WEL/GCL räcker normalt ett liga-ID. Flera ID:n kan anges med komma om tävlingen använder flera SportsGamer-ligor.</small>
+                </label>
+              </div>
+
               <label class="fa-checkbox fa-checkbox--sync">
                 <input id="syncAutoEnabled" type="checkbox">
                 <span>Aktivera automatisk SportsGamer-synk</span>
@@ -245,7 +259,7 @@
               </label>
               <div class="fa-form-actions">
                 <p id="syncSettingsStatus" class="fa-status"></p>
-                <button class="fa-secondary" type="submit">Spara schema</button>
+                <button class="fa-secondary" type="submit">Spara synkinställningar</button>
               </div>
             </form>
           </article>
@@ -348,6 +362,60 @@
     </div>
   </main>
 
+  <dialog id="createCompetitionDialog" class="fa-dialog fa-create-competition-dialog">
+    <button id="closeCreateCompetitionDialog" class="fa-dialog__close" type="button">×</button>
+    <form id="createCompetitionForm" class="fa-create-competition-form">
+      <span class="fa-kicker">eHOCKEY FANTASY LIGA</span>
+      <h2>Skapa ny Fantasy-liga</h2>
+      <p>Skapa själva Fantasy-tävlingen först. Spelarpool, SportsGamer liga-ID:n och Fantasy-perioder kopplas sedan till den.</p>
+
+      <div class="fa-form-grid">
+        <label>
+          <span>Liga</span>
+          <select id="newCompetitionLeague">
+            <option value="SCL">SCL</option>
+            <option value="ECL">ECL</option>
+            <option value="FCL">FCL</option>
+            <option value="WEL">WEL</option>
+            <option value="GCL">GCL</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Säsongsnamn</span>
+          <input id="newCompetitionSeason" type="text" placeholder="t.ex. ECL 26 Spring" required>
+        </label>
+
+        <label>
+          <span>Intern kod</span>
+          <input id="newCompetitionCode" type="text" placeholder="t.ex. ECL26S">
+          <small>Kan lämnas tom. Då skapas koden automatiskt från säsongsnamnet.</small>
+        </label>
+
+        <label>
+          <span>Startdatum</span>
+          <input id="newCompetitionStartsOn" type="date">
+        </label>
+
+        <label>
+          <span>Spelarurval</span>
+          <select id="newCompetitionScope">
+            <option value="default">Standard för ligan</option>
+            <option value="all">Alla nationaliteter</option>
+            <option value="sweden">Endast svenskar</option>
+            <option value="scandinavia">Endast skandinaver (SE / DK / NO)</option>
+          </select>
+          <small>Standard: ECL = endast svenskar. Övriga ligor = alla.</small>
+        </label>
+      </div>
+
+      <div class="fa-form-actions">
+        <p id="createCompetitionStatus" class="fa-status"></p>
+        <button id="createCompetitionSubmit" class="fa-primary" type="submit">Skapa Fantasy-liga</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="entryDialog" class="fa-dialog">
     <button id="closeEntryDialog" class="fa-dialog__close" type="button">×</button>
     <div id="entryDialogContent"></div>
@@ -355,6 +423,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="admin.js?v=20260914-v14-nationality-scope"></script>
+  <script src="admin.js?v=20260914-v15-create-fantasy-league"></script>
 </body>
 </html>
