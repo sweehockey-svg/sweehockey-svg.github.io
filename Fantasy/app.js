@@ -1161,8 +1161,8 @@
     }
     if ($("teamPointsLabel")) {
       $("teamPointsLabel").textContent = state.entry && !savedRosterIsCurrent
-        ? "SPARADE " + leagueCode() + "-POÄNG"
-        : leagueCode() + "-POÄNG";
+        ? t("saved_points",{league:leagueCode()})
+        : t("league_points",{league:leagueCode()});
     }
 
     if (saveButton) {
@@ -1181,18 +1181,18 @@
       saveButton.disabled = !canSave;
       saveButton.classList.toggle("is-saved", savedAndUnchanged);
       saveButton.textContent = invalidSlots.size > 0
-        ? "BYT OGILTIG SPELARE"
+        ? t("replace_invalid")
         : !complete
-          ? "VÄLJ 6 SPELARE"
+          ? t("choose_six")
           : !hasCaptain
-            ? "VÄLJ KAPTEN"
+            ? t("choose_captain")
             : !withinBudget
-              ? "ÖVER BUDGET"
+              ? t("over_budget")
               : savedAndUnchanged
-                ? leagueCode() + "-LAG SPARAT"
+                ? t("team_saved",{league:leagueCode()})
                 : state.entry
-                  ? "UPPDATERA " + leagueCode() + "-LAG"
-                  : "SPARA " + leagueCode() + "-LAG";
+                  ? t("update_team",{league:leagueCode()})
+                  : t("save_league_team",{league:leagueCode()});
     }
 
     $$(".fantasy-slot").forEach((slotEl) => {
@@ -1210,8 +1210,8 @@
         slotEl.innerHTML =
           '<span class="fantasy-slot__position">' + slot + '</span>' +
           '<button type="button" class="fantasy-slot__empty" data-open-slot="' + slot + '">' +
-            '<strong>Välj ' + slot + '</strong>' +
-            '<small>' + count + ' valbara</small>' +
+            '<strong>' + escapeHtml(t("choose_slot",{slot})) + '</strong>' +
+            '<small>' + escapeHtml(t("eligible_count",{count})) + '</small>' +
           '</button>';
         return;
       }
@@ -1231,7 +1231,7 @@
           </div>
           <div class="fantasy-slot__details">${savedStatMarkup(savedScore)}</div>`
         : (state.entry
-          ? '<div class="fantasy-slot__score fantasy-slot__score--pending"><span>' + escapeHtml(seasonLabel()) + '</span><small>Inväntar riktiga matcher</small></div>'
+          ? '<div class="fantasy-slot__score fantasy-slot__score--pending"><span>' + escapeHtml(seasonLabel()) + '</span><small>${escapeHtml(t("awaiting_real_matches"))}</small></div>'
           : "");
 
       slotEl.classList.add("is-filled");
@@ -1254,19 +1254,19 @@
                 </span>
                 <span class="fantasy-slot__club-copy">
                   <b>${escapeHtml(clean(player.real_team_name) || t("team_not_ready"))}</b>
-                  <em>KLUBB</em>
+                  <em>${escapeHtml(t("club_upper"))}</em>
                 </span>
               </small>
               <small class="fantasy-slot__meta">${escapeHtml(eligibleSlots(player).join(" / "))} · ${format(player.price)} CR</small>
-              ${invalidSlot ? '<small class="fantasy-slot__invalid-note">Ej giltig som ' + escapeHtml(slot) + ' · välj Byt</small>' : ""}
+              ${invalidSlot ? '<small class="fantasy-slot__invalid-note">' + escapeHtml(t("invalid_slot",{slot})) + '</small>' : ""}
             </div>
           </div>
           ${scoreMarkup}
           <div class="fantasy-slot__actions">
             <button type="button" data-captain="${player.id}" class="${captain ? "is-captain" : ""}">
-              ${captain ? "KAPTEN" : "Gör kapten"}
+              ${captain ? escapeHtml(t("captain_upper_action")) : escapeHtml(t("make_captain"))}
             </button>
-            <button type="button" data-swap="${slot}">Byt</button>
+            <button type="button" data-swap="${slot}">${escapeHtml(t("swap"))}</button>
           </div>
         </div>
       `;
