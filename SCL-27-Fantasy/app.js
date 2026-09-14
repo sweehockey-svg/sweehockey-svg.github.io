@@ -34,6 +34,7 @@
   });
 
   const state = {
+    competitions: [],
     competition: null,
     pool: [],
     leaderboard: [],
@@ -53,6 +54,66 @@
     pickerSlot: null,
     swapSlot: null
   };
+
+  const DEFAULT_SCL_LOGO = "https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2021_08/large.SCL_logo_shading.png.eb94cae29f362f6a451128a25ebfa3ae.png";
+  const LEAGUE_BRANDS = {
+    SCL: {
+      label: "SCL",
+      logo: DEFAULT_SCL_LOGO,
+      accent: "#21b8ff",
+      accentRgb: "33,184,255"
+    },
+    ECL: {
+      label: "ECL",
+      logo: "assets/leagues/ecl.png",
+      accent: "#d72b2b",
+      accentRgb: "215,43,43"
+    },
+    FCL: {
+      label: "FCL",
+      accent: "#e7edf4",
+      accentRgb: "231,237,244"
+    },
+    WEL: {
+      label: "WEL",
+      accent: "#00aeea",
+      accentRgb: "0,174,234"
+    },
+    GCL: {
+      label: "GCL",
+      accent: "#d62828",
+      accentRgb: "214,40,40"
+    }
+  };
+
+  function competitionCode() {
+    return clean(state.competition?.code || "SCL27");
+  }
+
+  function leagueCode() {
+    return clean(state.competition?.competition_code || "SCL").toUpperCase();
+  }
+
+  function seasonLabel() {
+    return clean(state.competition?.season_label || state.competition?.name || leagueCode());
+  }
+
+  function leagueBrand() {
+    const key = leagueCode();
+    const fallback = LEAGUE_BRANDS.SCL;
+    const base = LEAGUE_BRANDS[key] || {
+      label: key || "FANTASY",
+      accent: fallback.accent,
+      accentRgb: fallback.accentRgb
+    };
+    const settings = state.competition?.settings || {};
+    return {
+      ...base,
+      logo: clean(settings.brand_logo) || base.logo || fallback.logo,
+      accent: clean(settings.brand_accent) || base.accent || fallback.accent,
+      accentRgb: base.accentRgb || fallback.accentRgb
+    };
+  }
 
   function nationalityScope() {
     return clean(state.competition?.settings?.nationality_scope || "all").toLowerCase();
@@ -504,9 +565,116 @@
     button.dataset.action = "logout";
   }
 
+  function renderCompetitionBranding() {
+    const comp = state.competition;
+    if (!comp) return;
+
+    const brand = leagueBrand();
+    const league = brand.label || leagueCode();
+    const season = seasonLabel();
+    const settings = comp.settings || {};
+    const betaSource = clean(settings.beta_source);
+    const setupMessage = clean(settings.setup_message);
+    const scope = nationalityScope();
+    const scopeText =
+      scope === "sweden" ? "svenska spelare" :
+      scope === "scandinavia" ? "skandinaviska spelare" :
+      "alla spelare";
+
+    document.body.dataset.fantasyLeague = league.toLowerCase();
+    document.documentElement.style.setProperty("--league-accent", brand.accent);
+    document.documentElement.style.setProperty("--league-accent-rgb", brand.accentRgb);
+    document.title = season + " Fantasy" + (settings.beta_mode ? " Beta" : "");
+
+    const selector = $("competitionSelect");
+    if (selector) {
+      selector.innerHTML = state.competitions.map((row) =>
+        '<option value="' + escapeHtml(row.code) + '">' +
+          escapeHtml(clean(row.season_label || row.name || row.code)) +
+        '</option>'
+      ).join("");
+      selector.value = comp.code;
+    }
+
+    const logoNodes = [$("leagueBrandLogo"), $("heroLeagueLogo")].filter(Boolean);
+    logoNodes.forEach((node) => {
+      node.src = brand.logo;
+      node.alt = league;
+    });
+
+    if ($("leagueBrandSeason")) $("leagueBrandSeason").textContent = season;
+    if ($("heroLeagueLab")) $("heroLeagueLab").innerHTML = '<span></span>' + escapeHtml(league + " FANTASY");
+    if ($("heroLeagueSix")) $("heroLeagueSix").textContent = league + "-SEXA.";
+    if ($("heroBuildButton")) $("heroBuildButton").textContent = "Bygg din " + league + "-sexa";
+    if ($("scoreboardLeagueTitle")) $("scoreboardLeagueTitle").textContent = season + " FANTASY";
+    if ($("footerCompetitionLabel")) $("footerCompetitionLabel").textContent = season + " Fantasy";
+
+    const intro = comp.status === "setup"
+      ? (setupMessage || season + " Fantasy är under uppbyggnad.")
+      : betaSource
+        ? "Välj sex spelare, håll dig under budget och utse din kapten. Spelarpoolen bygger just nu på " + betaSource + "."
+        : "Välj sex spelare, håll dig under budget och utse din kapten. Fantasy följer spelarnas riktiga matcher och resultat.";
+    if ($("heroLead")) $("heroLead").textContent = intro;
+
+    if ($("betaRibbonTitle")) {
+      $("betaRibbonTitle").textContent = betaSource ? "BETAPOOL: " + betaSource.toUpperCase() : season.toUpperCase() + " FANTASY";
+    }
+    if ($("betaRibbonText")) {
+      $("betaRibbonText").textContent = comp.status === "setup"
+        ? (setupMessage || "Fantasy-ligan förbereds.")
+        : "Spelarurval: " + scopeText + ".";
+    }
+    if ($("scoreboardSource")) {
+      $("scoreboardSource").textContent = betaSource
+        ? betaSource.toUpperCase()
+        : (comp.status === "setup" ? "SPELARPOOL EJ PUBLICERAD" : scopeText.toUpperCase());
+    }
+    if ($("commandMode")) {
+      $("commandMode").textContent =
+        season.toUpperCase() + " / " +
+        (comp.status === "setup" ? "UNDER UPPBYGGNAD" :
+          comp.status === "open" ? "LAGBYGGE ÖPPET" :
+          competitionStatusLabel(comp.status));
+    }
+    if ($("commandPoolCount")) $("commandPoolCount").textContent = state.pool.length + " SPELARE";
+
+    if ($("setupBannerTitle")) $("setupBannerTitle").textContent = season + " är under uppbyggnad";
+    if ($("setupBannerText")) {
+      $("setupBannerText").textContent = setupMessage ||
+        (state.pool.length ? "Fantasy-poolen är tillgänglig." : "Spelarpoolen är inte publicerad ännu.");
+    }
+    if ($("marketSourceLabel")) {
+      $("marketSourceLabel").textContent = betaSource
+        ? betaSource.toUpperCase()
+        : (comp.status === "setup" ? "VÄNTAR PÅ SPELARPOOL" : season.toUpperCase());
+    }
+    if ($("playersKicker")) $("playersKicker").textContent = season.toUpperCase() + " / FANTASYSPELARE";
+    if ($("playersIntro")) {
+      $("playersIntro").textContent = comp.status === "setup"
+        ? (setupMessage || "Spelarpoolen publiceras senare.")
+        : "Här ser du de spelare som är valbara i " + season + " Fantasy.";
+    }
+    if ($("leaderboardTitle")) $("leaderboardTitle").textContent = season + " Fantasy";
+    if ($("leaderboardIntro")) {
+      $("leaderboardIntro").textContent = comp.status === "setup"
+        ? "Topplistan öppnar när " + season + " Fantasy är igång."
+        : "Topplistan uppdateras med riktiga Fantasy-poäng efter matcherna.";
+    }
+    if ($("rulesTitle")) $("rulesTitle").textContent = "Så fungerar " + league + " Fantasy";
+    if ($("rulesIntro")) {
+      $("rulesIntro").textContent = comp.status === "setup"
+        ? season + " Fantasy är förberedd och reglerna kan finjusteras inför öppning."
+        : "Bygg din " + league + "-sexa, håll budgeten och följ poängen period för period.";
+    }
+
+    const brandLink = $("leagueBrandLink");
+    if (brandLink) brandLink.setAttribute("aria-label", season + " Fantasy");
+  }
+
   function renderHero() {
     const comp = state.competition;
-    $("heroStart").textContent = comp?.starts_on ? formatDate(comp.starts_on).toUpperCase() : "1 OKT";
+    renderCompetitionBranding();
+    $("heroStart").textContent = comp?.starts_on ? formatDate(comp.starts_on).toUpperCase() : "EJ SATT";
     $("heroStatus").textContent = competitionStatusLabel(comp?.status || "setup");
     $("heroBudget").textContent = format(comp?.budget || 100);
     $("heroEntries").textContent = String(state.leaderboard.length || 0);
@@ -556,7 +724,7 @@
     $("linkedPlayer").textContent = clean(state.account?.player_name) || "Kopplad spelare";
 
     if (!hasPool) {
-      setStatus("saveStatus", "SCL 27-betapoolen är tillgänglig. Den ersätts med ECL 27 Winter-rostrarna när de finns.");
+      setStatus("saveStatus", seasonLabel() + " har ingen publicerad spelarpool ännu.");
     } else if (!open) {
       setStatus("saveStatus", "Lagbygget är inte öppet ännu.");
     } else {
@@ -587,8 +755,8 @@
     }
     if ($("teamPointsLabel")) {
       $("teamPointsLabel").textContent = state.entry && !savedRosterIsCurrent
-        ? "SPARADE SCL27-POÄNG"
-        : "SCL27-POÄNG";
+        ? "SPARADE " + leagueCode() + "-POÄNG"
+        : leagueCode() + "-POÄNG";
     }
 
     if (saveButton) {
@@ -615,10 +783,10 @@
             : !withinBudget
               ? "ÖVER BUDGET"
               : savedAndUnchanged
-                ? "TESTLAG SPARAT"
+                ? leagueCode() + "-LAG SPARAT"
                 : state.entry
-                  ? "UPPDATERA TESTLAG"
-                  : "SPARA TESTLAG";
+                  ? "UPPDATERA " + leagueCode() + "-LAG"
+                  : "SPARA " + leagueCode() + "-LAG";
     }
 
     $$(".fantasy-slot").forEach((slotEl) => {
@@ -650,14 +818,14 @@
       const scoreMarkup = savedScore && savedScore.games > 0
         ? `<div class="fantasy-slot__score">
             <div class="fantasy-slot__score-head">
-              <span>SCL 27</span>
+              <span>${escapeHtml(seasonLabel())}</span>
               <strong>${formatPoints(savedScore.total)} P</strong>
             </div>
             <small>${escapeHtml(savedScoreMeta(savedScore, pick))}</small>
           </div>
           <div class="fantasy-slot__details">${savedStatMarkup(savedScore)}</div>`
         : (state.entry
-          ? '<div class="fantasy-slot__score fantasy-slot__score--pending"><span>SCL 27</span><small>Inväntar riktiga matcher</small></div>'
+          ? '<div class="fantasy-slot__score fantasy-slot__score--pending"><span>' + escapeHtml(seasonLabel()) + '</span><small>Inväntar riktiga matcher</small></div>'
           : "");
 
       slotEl.classList.add("is-filled");
@@ -834,7 +1002,7 @@
     if (!host) return;
 
     if (!state.pool.length) {
-      host.innerHTML = '<div class="fantasy-empty">SCL 27-betapoolen kunde inte laddas.</div>';
+      host.innerHTML = '<div class="fantasy-empty">' + escapeHtml(seasonLabel()) + ' har ingen publicerad spelarpool ännu.</div>';
       return;
     }
 
@@ -991,7 +1159,7 @@
     try {
       const { data, error } = await sb.rpc("seh_fantasy_public_player_detail", {
         p_pool_player_id: Number(playerId),
-        p_code: "SCL27"
+        p_code: competitionCode()
       });
       if (error) throw error;
       renderPlayerDetail(Array.isArray(data) ? data[0] : data);
@@ -1173,7 +1341,7 @@
     try {
       const result = await sb.rpc("seh_fantasy_public_entry_roster", {
         p_entry_id: Number(entryId),
-        p_code: "SCL27"
+        p_code: competitionCode()
       });
       if (result.error) throw result.error;
       renderPublicEntry(Array.isArray(result.data) ? result.data[0] : result.data);
@@ -1471,7 +1639,7 @@
   }
 
   async function loadInsights() {
-    const result = await sb.rpc("seh_fantasy_public_insights", { p_code: "SCL27" });
+    const result = await sb.rpc("seh_fantasy_public_insights", { p_code: competitionCode() });
     if (result.error) throw result.error;
 
     state.insights = Array.isArray(result.data)
@@ -1489,12 +1657,22 @@
     const competitionResult = await sb
       .from("ehockey_fantasy_competitions")
       .select("*")
-      .eq("code", "SCL27")
-      .maybeSingle();
+      .order("id", { ascending: true });
 
     if (competitionResult.error) throw competitionResult.error;
-    state.competition = competitionResult.data || null;
-    if (!state.competition) throw new Error("SCL 27 Fantasy är inte konfigurerad.");
+
+    state.competitions = (competitionResult.data || []).filter((row) =>
+      !row?.settings?.archive_role
+    );
+
+    const requested = clean(new URLSearchParams(window.location.search).get("competition")).toUpperCase();
+    state.competition =
+      state.competitions.find((row) => clean(row.code).toUpperCase() === requested) ||
+      state.competitions.find((row) => clean(row.code).toUpperCase() === "SCL27") ||
+      state.competitions[0] ||
+      null;
+
+    if (!state.competition) throw new Error("Ingen Fantasy-tävling är konfigurerad.");
 
     const poolResult = await sb
       .from("ehockey_fantasy_player_pool")
@@ -1517,7 +1695,7 @@
     }
 
     const result = await sb.rpc("seh_fantasy_my_transfer_state", {
-      p_code: "SCL27"
+      p_code: competitionCode()
     });
 
     if (result.error) throw result.error;
@@ -1586,7 +1764,7 @@
     }
 
     const breakdownResult = await sb.rpc("seh_fantasy_my_saved_score_breakdown", {
-      p_code: "SCL27"
+      p_code: competitionCode()
     });
 
     if (breakdownResult.error) throw breakdownResult.error;
@@ -1749,7 +1927,7 @@
       }));
 
       const { data, error } = await sb.rpc("seh_fantasy_save_my_team", {
-        p_competition_code: "SCL27",
+        p_competition_code: competitionCode(),
         p_team_name: "",
         p_picks: picks
       });
@@ -1772,8 +1950,8 @@
       renderPlayers();
 
       let successText = hadEntry
-        ? "Testlaget är uppdaterat."
-        : "Testlaget är sparat.";
+        ? leagueCode() + "-laget är uppdaterat."
+        : leagueCode() + "-laget är sparat.";
 
       if (transferCount > 0) {
         successText += unlimited
@@ -1902,6 +2080,13 @@
   $("marketPosition")?.addEventListener("change", renderMarket);
   $("playersSearch")?.addEventListener("input", renderPlayers);
   $("playersPosition")?.addEventListener("change", renderPlayers);
+  $("competitionSelect")?.addEventListener("change", (event) => {
+    const code = clean(event.target?.value);
+    if (!code || code === competitionCode()) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("competition", code);
+    window.location.href = url.toString();
+  });
 
   document.querySelector("[data-jump-team]")?.addEventListener("click", () => {
     switchTab("team");
@@ -1946,7 +2131,7 @@
       renderAll();
       await resolveAccount();
     } catch (error) {
-      console.error("SCL 27 Fantasy kunde inte laddas", error);
+      console.error(seasonLabel() + " Fantasy kunde inte laddas", error);
       showGate("logged-out", "Fantasy-data kunde inte hämtas just nu.");
       setStatus("gateStatus", "Fel: " + (error?.message || error), "error");
 
