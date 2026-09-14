@@ -471,6 +471,7 @@
     swapSlot: null
   };
 
+  const DEFAULT_FANTASY_LOGO = "/assets/icons/seh-icon-192.png";
   const DEFAULT_SCL_LOGO = "https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2021_08/large.SCL_logo_shading.png.eb94cae29f362f6a451128a25ebfa3ae.png";
   const LEAGUE_BRANDS = {
     SCL: {
@@ -531,7 +532,7 @@
           return "/Fantasy/assets/leagues/ecl.webp";
         }
         if (configured.startsWith("assets/")) return "/Fantasy/" + configured;
-        return configured || base.logo || fallback.logo;
+        return configured || base.logo || DEFAULT_FANTASY_LOGO;
       })(),
       accent: clean(settings.brand_accent) || base.accent || fallback.accent,
       accentRgb: base.accentRgb || fallback.accentRgb
@@ -1015,9 +1016,9 @@
     document.documentElement.style.setProperty("--league-accent-rgb", "53,199,255");
     document.title = "eHockey Fantasy Liga";
 
-    const logoNodes = [$("leagueBrandLogo"), $("heroLeagueLogo")].filter(Boolean);
+    const logoNodes = [$("leagueBrandLogo"), $("heroLeagueLogo"), $("footerLeagueLogo")].filter(Boolean);
     logoNodes.forEach((node) => {
-      node.src = "../assets/icons/seh-icon-192.png";
+      node.src = DEFAULT_FANTASY_LOGO;
       node.alt = "eHockey Fantasy Liga";
     });
 
@@ -1092,7 +1093,7 @@
       state.language === "de" ? "BAUE DEINE" :
       "BYGG DIN";
 
-    const logoNodes = [$("leagueBrandLogo"), $("heroLeagueLogo")].filter(Boolean);
+    const logoNodes = [$("leagueBrandLogo"), $("heroLeagueLogo"), $("footerLeagueLogo")].filter(Boolean);
     logoNodes.forEach((node) => {
       node.src = brand.logo;
       node.alt = league;
