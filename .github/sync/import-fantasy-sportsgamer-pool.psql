@@ -13,6 +13,11 @@ create temporary table fantasy_pool_stage (
   country_code text,
   primary_position text,
   eligible_slots text,
+  suggested_price numeric,
+  suggested_ranking_points numeric,
+  history_games integer,
+  history_fantasy_points numeric,
+  history_ppg numeric,
   team_logo_url text,
   raw_player jsonb
 ) on commit drop;
@@ -30,7 +35,8 @@ from fantasy_pool_stage;
 create temporary table fantasy_pool_meta on commit preserve rows as
 select
   c.id as competition_id,
-  string_to_array(:'league_ids',',')::bigint[] as source_league_ids
+  string_to_array(:'league_ids',',')::bigint[] as source_league_ids,
+  coalesce(nullif(c.settings->>'pricing_model',''),'legacy') as pricing_model
 from public.ehockey_fantasy_competitions c
 where upper(c.code)=upper(:'competition_code')
 limit 1;
@@ -42,6 +48,7 @@ with source_rows as (
   select
     m.competition_id,
     s.*,
+    m.pricing_model,
     nullif(trim(s.primary_position),'') as detected_primary,
     case
       when nullif(trim(s.eligible_slots),'') is null then '{}'::text[]
@@ -125,10 +132,22 @@ select
       then p.detected_slots
     else array['LW','C','RW','LD','RD','G']::text[]
   end,
-  coalesce(p.prior_price,15)::numeric,
+  case
+    when p.pricing_model='sports_gamer_history_v1'
+      then coalesce(p.suggested_price,15)::numeric
+    else coalesce(p.prior_price,15)::numeric
+  end,
   p.prior_player_image,
-  p.prior_ranking_position,
-  p.prior_ranking_points,
+  case
+    when p.pricing_model='sports_gamer_history_v1'
+      then null
+    else p.prior_ranking_position
+  end,
+  case
+    when p.pricing_model='sports_gamer_history_v1'
+      then coalesce(p.suggested_ranking_points,0)::numeric
+    else p.prior_ranking_points
+  end,
   true,
   jsonb_build_object(
     'pool_source','sportsgamer_current_roster',
@@ -138,6 +157,10 @@ select
     'detected_primary_position',p.detected_primary,
     'detected_slots',to_jsonb(p.detected_slots),
     'inherited_fantasy_metadata',p.prior_price is not null,
+    'pricing_model',p.pricing_model,
+    'history_games',coalesce(p.history_games,0),
+    'history_fantasy_points',coalesce(p.history_fantasy_points,0),
+    'history_ppg',coalesce(p.history_ppg,0),
     'raw_player',coalesce(p.raw_player,'{}'::jsonb)
   ),
   now(),
@@ -159,9 +182,22 @@ do update set
       then excluded.eligible_slots
     else public.ehockey_fantasy_player_pool.eligible_slots
   end,
+  price=case
+    when coalesce(excluded.source_snapshot->>'pricing_model','')='sports_gamer_history_v1'
+      then excluded.price
+    else public.ehockey_fantasy_player_pool.price
+  end,
   player_image=coalesce(public.ehockey_fantasy_player_pool.player_image,excluded.player_image),
-  ranking_position=coalesce(public.ehockey_fantasy_player_pool.ranking_position,excluded.ranking_position),
-  ranking_points=coalesce(public.ehockey_fantasy_player_pool.ranking_points,excluded.ranking_points),
+  ranking_position=case
+    when coalesce(excluded.source_snapshot->>'pricing_model','')='sports_gamer_history_v1'
+      then null
+    else coalesce(public.ehockey_fantasy_player_pool.ranking_position,excluded.ranking_position)
+  end,
+  ranking_points=case
+    when coalesce(excluded.source_snapshot->>'pricing_model','')='sports_gamer_history_v1'
+      then excluded.ranking_points
+    else coalesce(public.ehockey_fantasy_player_pool.ranking_points,excluded.ranking_points)
+  end,
   is_available=true,
   source_snapshot=excluded.source_snapshot,
   source_updated_at=now(),
