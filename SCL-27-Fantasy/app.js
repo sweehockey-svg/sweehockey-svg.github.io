@@ -155,6 +155,7 @@
 
     const status = clean(period.status);
     $("periodHubEyebrow").textContent =
+      status === "simulation" ? "TESTSÄSONG / AKTUELL PERIOD" :
       status === "live" ? "PÅGÅR NU" :
       status === "finished" ? "SENASTE FANTASY-PERIOD" :
       "NÄSTA FANTASY-PERIOD";
