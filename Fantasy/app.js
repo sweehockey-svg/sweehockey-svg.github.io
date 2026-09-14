@@ -398,15 +398,15 @@
   function applyStaticTranslations() {
     const lang = (typeof state !== "undefined" && state?.language) || initialLanguage();
     document.documentElement.lang = lang;
-    $("[data-i18n]").forEach((node) => {
+    $$("[data-i18n]").forEach((node) => {
       const value = t(node.dataset.i18n);
       if (value.includes("<")) node.innerHTML = value;
       else node.textContent = value;
     });
-    $("[data-i18n-placeholder]").forEach((node) => {
+    $$("[data-i18n-placeholder]").forEach((node) => {
       node.placeholder = t(node.dataset.i18nPlaceholder);
     });
-    $("[data-i18n-aria-label]").forEach((node) => {
+    $$("[data-i18n-aria-label]").forEach((node) => {
       node.setAttribute("aria-label", t(node.dataset.i18nAriaLabel));
     });
     if ($("languageSelect")) $("languageSelect").value = lang;
@@ -1039,7 +1039,7 @@
     if ($("periodHub")) $("periodHub").hidden = true;
     const tabs = document.querySelector(".fantasy-tabs");
     if (tabs) tabs.hidden = true;
-    $("[data-panel]").forEach((panel) => { panel.hidden = true; });
+    $$("[data-panel]").forEach((panel) => { panel.hidden = true; });
 
     const betaRibbon = document.querySelector(".beta-ribbon");
     if (betaRibbon) betaRibbon.hidden = true;
@@ -1082,7 +1082,7 @@
     if ($("periodHub")) $("periodHub").hidden = false;
     const tabs = document.querySelector(".fantasy-tabs");
     if (tabs) tabs.hidden = false;
-    $("[data-panel]").forEach((panel) => {
+    $$("[data-panel]").forEach((panel) => {
       panel.hidden = panel.dataset.panel !== state.activeTab;
     });
 
@@ -2539,7 +2539,7 @@
       button.classList.toggle("is-active", button.dataset.tab === state.activeTab);
     });
 
-    $$("[data-panel]").forEach((panel) => {
+    $$$("[data-panel]").forEach((panel) => {
       panel.hidden = panel.dataset.panel !== state.activeTab;
     });
   }
