@@ -9,8 +9,8 @@ on:
         required: false
         default: manual
         type: string
-      league_id:
-        description: SportsGamer league ID
+      league_ids:
+        description: SportsGamer league IDs, comma separated
         required: false
         default: '447'
         type: string
@@ -54,7 +54,7 @@ jobs:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
           EVENT_NAME: ${{ github.event_name }}
           INPUT_REQUEST_ID: ${{ inputs.request_id || '' }}
-          INPUT_LEAGUE_ID: ${{ inputs.league_id || '447' }}
+          INPUT_LEAGUE_IDS: ${{ inputs.league_ids || '447' }}
           INPUT_TRIGGER_TYPE: ${{ inputs.trigger_type || 'manual' }}
         run: |
           set -euo pipefail
@@ -81,10 +81,16 @@ jobs:
           echo "request_id=$request_id" >> "$GITHUB_OUTPUT"
           echo "trigger_type=$trigger_type" >> "$GITHUB_OUTPUT"
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
-          echo "league_id=${INPUT_LEAGUE_ID:-447}" >> "$GITHUB_OUTPUT"
+          league_ids="${INPUT_LEAGUE_IDS:-447}"
+          [[ "$league_ids" =~ ^[0-9]+([,[:space:];]+[0-9]+)*$ ]] || { echo "Invalid league ids"; exit 1; }
+          league_ids="$(echo "$league_ids" | tr '; ' ',' | sed 's/,,*/,/g; s/^,//; s/,$//')"
+          primary_league_id="${league_ids%%,*}"
+          echo "league_ids=$league_ids" >> "$GITHUB_OUTPUT"
+          echo "primary_league_id=$primary_league_id" >> "$GITHUB_OUTPUT"
           echo "REQUEST_ID=$request_id" >> "$GITHUB_ENV"
           echo "TRIGGER_TYPE=$trigger_type" >> "$GITHUB_ENV"
-          echo "LEAGUE_ID=${INPUT_LEAGUE_ID:-447}" >> "$GITHUB_ENV"
+          echo "LEAGUE_IDS=$league_ids" >> "$GITHUB_ENV"
+          echo "PRIMARY_LEAGUE_ID=$primary_league_id" >> "$GITHUB_ENV"
 
           echo "Event: $EVENT_NAME"
           echo "Trigger: $trigger_type"
@@ -99,12 +105,12 @@ jobs:
           set -euo pipefail
           [[ "$REQUEST_ID" =~ ^[A-Za-z0-9_-]{8,100}$ ]] || { echo "Invalid request id"; exit 1; }
           [[ "$TRIGGER_TYPE" =~ ^(manual|schedule|push)$ ]] || { echo "Invalid trigger"; exit 1; }
-          [[ "$LEAGUE_ID" =~ ^[0-9]+$ ]] || { echo "Invalid league id"; exit 1; }
+          [[ "$PRIMARY_LEAGUE_ID" =~ ^[0-9]+$ ]] || { echo "Invalid primary league id"; exit 1; }
           psql "$PGURL" -v ON_ERROR_STOP=1 <<SQL
           insert into public.ehockey_fantasy_sync_runs(
             competition_id,request_id,trigger_type,status,source_league_id,started_at
           )
-          select id, '$REQUEST_ID', '$TRIGGER_TYPE', 'running', $LEAGUE_ID::bigint, now()
+          select id, '$REQUEST_ID', '$TRIGGER_TYPE', 'running', $PRIMARY_LEAGUE_ID::bigint, now()
           from public.ehockey_fantasy_competitions
           where code='SCL27'
           on conflict (competition_id,request_id) where request_id is not null
@@ -112,6 +118,7 @@ jobs:
             trigger_type=excluded.trigger_type,
             status='running',
             source_league_id=excluded.source_league_id,
+            details=jsonb_build_object('source_league_ids',string_to_array('$LEAGUE_IDS',',')::bigint[]),
             error_message=null,
             started_at=now(),
             finished_at=null;
@@ -149,7 +156,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.SVENSK_DB_PASSWORD }}
           SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
           SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
-          LEAGUE_ID: ${{ steps.gate.outputs.league_id }}
+          LEAGUE_IDS: ${{ steps.gate.outputs.league_ids }}
         run: python .github/sync/export_fantasy_sportsgamer_match_stats.py
 
       - name: Import match-level Fantasy data
@@ -184,7 +191,7 @@ jobs:
             echo ""
             echo "- Trigger: **${{ steps.gate.outputs.trigger_type }}**"
             echo "- Scheduled run due: **${{ steps.gate.outputs.should_run }}**"
-            echo "- SportsGamer league: **${{ steps.gate.outputs.league_id }}**"
+            echo "- SportsGamer leagues: **${{ steps.gate.outputs.league_ids }}**"
             echo "- Matches exported: **${{ steps.export.outputs.match_count || 0 }}**"
             echo "- Player-match rows: **${{ steps.export.outputs.player_row_count || 0 }}**"
             echo "- Skater source: **${{ steps.export.outputs.skater_source || '–' }}**"
