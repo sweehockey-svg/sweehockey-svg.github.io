@@ -1,0 +1,212 @@
+\set ON_ERROR_STOP on
+
+begin;
+set local statement_timeout = '15min';
+set local lock_timeout = '30s';
+
+create temporary table fantasy_pool_stage (
+  source_league_id bigint,
+  source_team_id bigint,
+  source_player_id bigint,
+  display_gamertag text,
+  team_name text,
+  country_code text,
+  primary_position text,
+  eligible_slots text,
+  team_logo_url text,
+  raw_player jsonb
+) on commit drop;
+
+\copy fantasy_pool_stage from '/tmp/fantasy_player_pool.csv' with (format csv, header true, null '');
+
+select 1 / case when count(*) >= 1 then 1 else 0 end as pool_players_must_exist
+from fantasy_pool_stage;
+
+select 1 / case
+  when count(*) = count(distinct source_player_id)
+  then 1 else 0 end as pool_players_must_be_unique
+from fantasy_pool_stage;
+
+create temporary table fantasy_pool_meta on commit preserve rows as
+select
+  c.id as competition_id,
+  string_to_array(:'league_ids',',')::bigint[] as source_league_ids
+from public.ehockey_fantasy_competitions c
+where upper(c.code)=upper(:'competition_code')
+limit 1;
+
+select 1 / case when count(*)=1 then 1 else 0 end as competition_must_exist
+from fantasy_pool_meta;
+
+with source_rows as (
+  select
+    m.competition_id,
+    s.*,
+    nullif(trim(s.primary_position),'') as detected_primary,
+    case
+      when nullif(trim(s.eligible_slots),'') is null then '{}'::text[]
+      else regexp_split_to_array(trim(s.eligible_slots),'\\|')
+    end as detected_slots
+  from fantasy_pool_stage s
+  cross join fantasy_pool_meta m
+),
+prepared as (
+  select
+    s.*,
+    prior.primary_position as prior_primary_position,
+    prior.eligible_slots as prior_eligible_slots,
+    prior.price as prior_price,
+    prior.player_image as prior_player_image,
+    prior.ranking_position as prior_ranking_position,
+    prior.ranking_points as prior_ranking_points,
+    prior.country_code as prior_country_code,
+    prior.source_snapshot as prior_source_snapshot
+  from source_rows s
+  left join lateral (
+    select p.*
+    from public.ehockey_fantasy_player_pool p
+    join public.ehockey_fantasy_competitions pc on pc.id=p.competition_id
+    where p.sports_gamer_player_id=s.source_player_id
+      and p.competition_id<>s.competition_id
+    order by
+      case when upper(pc.code)='SCL27' then 0 else 1 end,
+      p.source_updated_at desc nulls last,
+      p.updated_at desc,
+      p.id desc
+    limit 1
+  ) prior on true
+)
+insert into public.ehockey_fantasy_player_pool (
+  competition_id,
+  player_key,
+  sports_gamer_player_id,
+  display_gamertag,
+  real_team_id,
+  real_team_name,
+  primary_position,
+  eligible_slots,
+  price,
+  player_image,
+  ranking_position,
+  ranking_points,
+  is_available,
+  source_snapshot,
+  source_updated_at,
+  country_code,
+  team_logo_url
+)
+select
+  p.competition_id,
+  'SG:' || p.source_player_id::text,
+  p.source_player_id,
+  coalesce(nullif(trim(p.display_gamertag),''),'Player ' || p.source_player_id::text),
+  nullif(p.source_team_id,0),
+  nullif(trim(p.team_name),''),
+  coalesce(
+    p.detected_primary,
+    p.prior_primary_position,
+    case
+      when 'G'=any(p.detected_slots) and cardinality(p.detected_slots)=1 then 'G'
+      else 'C'
+    end
+  ),
+  case
+    when cardinality(p.detected_slots)>0
+      and not (
+        cardinality(p.detected_slots)=6
+        and p.detected_primary is null
+      )
+      then p.detected_slots
+    when cardinality(coalesce(p.prior_eligible_slots,'{}'::text[]))>0
+      then p.prior_eligible_slots
+    when cardinality(p.detected_slots)>0
+      then p.detected_slots
+    else array['LW','C','RW','LD','RD','G']::text[]
+  end,
+  coalesce(p.prior_price,15)::numeric,
+  p.prior_player_image,
+  p.prior_ranking_position,
+  p.prior_ranking_points,
+  true,
+  jsonb_build_object(
+    'pool_source','sportsgamer_current_roster',
+    'source_league_id',p.source_league_id,
+    'source_team_id',p.source_team_id,
+    'roster_imported_at',now(),
+    'detected_primary_position',p.detected_primary,
+    'detected_slots',to_jsonb(p.detected_slots),
+    'inherited_fantasy_metadata',p.prior_price is not null,
+    'raw_player',coalesce(p.raw_player,'{}'::jsonb)
+  ),
+  now(),
+  coalesce(nullif(upper(trim(p.country_code)),''),p.prior_country_code),
+  nullif(trim(p.team_logo_url),'')
+from prepared p
+on conflict (competition_id,sports_gamer_player_id)
+do update set
+  display_gamertag=excluded.display_gamertag,
+  real_team_id=excluded.real_team_id,
+  real_team_name=excluded.real_team_name,
+  primary_position=case
+    when public.ehockey_fantasy_player_pool.primary_position is null
+      then excluded.primary_position
+    else public.ehockey_fantasy_player_pool.primary_position
+  end,
+  eligible_slots=case
+    when cardinality(public.ehockey_fantasy_player_pool.eligible_slots)=0
+      then excluded.eligible_slots
+    else public.ehockey_fantasy_player_pool.eligible_slots
+  end,
+  player_image=coalesce(public.ehockey_fantasy_player_pool.player_image,excluded.player_image),
+  ranking_position=coalesce(public.ehockey_fantasy_player_pool.ranking_position,excluded.ranking_position),
+  ranking_points=coalesce(public.ehockey_fantasy_player_pool.ranking_points,excluded.ranking_points),
+  is_available=true,
+  source_snapshot=excluded.source_snapshot,
+  source_updated_at=now(),
+  country_code=coalesce(excluded.country_code,public.ehockey_fantasy_player_pool.country_code),
+  team_logo_url=coalesce(excluded.team_logo_url,public.ehockey_fantasy_player_pool.team_logo_url),
+  updated_at=now();
+
+update public.ehockey_fantasy_player_pool p
+set is_available=false,
+    source_updated_at=now(),
+    updated_at=now()
+from fantasy_pool_meta m
+where p.competition_id=m.competition_id
+  and p.sports_gamer_player_id is not null
+  and not exists (
+    select 1
+    from fantasy_pool_stage s
+    where s.source_player_id=p.sports_gamer_player_id
+  );
+
+update public.ehockey_fantasy_match_player_stats ms
+set pool_player_id=p.id
+from fantasy_pool_meta m,
+     public.ehockey_fantasy_player_pool p
+where ms.competition_id=m.competition_id
+  and p.competition_id=m.competition_id
+  and p.sports_gamer_player_id=ms.source_player_id
+  and ms.pool_player_id is distinct from p.id;
+
+update public.ehockey_fantasy_sync_runs r
+set details=coalesce(r.details,'{}'::jsonb) || jsonb_build_object(
+      'source_league_ids',to_jsonb(m.source_league_ids),
+      'pool_players_upserted',(select count(*) from fantasy_pool_stage),
+      'roster_source',:'roster_source',
+      'player_source',:'player_source',
+      'team_source',:'team_source'
+    )
+from fantasy_pool_meta m
+where r.competition_id=m.competition_id
+  and r.request_id=:'request_id'
+  and r.status in ('queued','running');
+
+commit;
+
+select
+  count(*) as pool_players_imported
+from public.ehockey_fantasy_player_pool p
+join public.ehockey_fantasy_competitions c on c.id=p.competition_id
+where upper(c.code)=upper(:'competition_code')
+  and p.is_available;
