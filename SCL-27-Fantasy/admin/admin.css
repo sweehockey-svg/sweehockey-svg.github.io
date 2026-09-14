@@ -325,3 +325,104 @@ a{color:inherit}
 @media(max-width:560px){
   .fa-sync-division-row{grid-template-columns:60px 1fr 76px;padding:8px}
 }
+
+
+/* Multi-league Fantasy Admin */
+.fa-competition-picker{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  min-width:170px
+}
+.fa-competition-picker>span{
+  color:#57788d;
+  font-size:.48rem;
+  font-weight:950;
+  letter-spacing:.1em
+}
+.fa-competition-picker select{
+  min-height:35px;
+  border:1px solid #214a63;
+  border-radius:7px;
+  background:#06121b;
+  color:#eefaff;
+  padding:6px 30px 6px 9px;
+  font-size:.68rem;
+  font-weight:900
+}
+.fa-new-competition{
+  white-space:nowrap
+}
+.fa-sync-generic{
+  padding:11px 12px;
+  border:1px solid #15344b;
+  border-radius:9px;
+  background:#050f17
+}
+.fa-sync-generic label{
+  display:flex;
+  flex-direction:column;
+  gap:6px
+}
+.fa-sync-generic label>span{
+  color:#59d8ff;
+  font-size:.64rem;
+  font-weight:950;
+  letter-spacing:.08em
+}
+.fa-sync-generic input{
+  width:100%;
+  border:1px solid #1d425b;
+  border-radius:7px;
+  background:#030a10;
+  color:#fff;
+  padding:10px 11px;
+  outline:none
+}
+.fa-sync-generic small{
+  color:#5f7d91;
+  font-size:.61rem;
+  line-height:1.45
+}
+.fa-create-competition-dialog{
+  width:min(720px,calc(100vw - 24px))
+}
+.fa-create-competition-form{
+  padding:24px
+}
+.fa-create-competition-form h2{
+  margin:4px 0 6px;
+  font-size:1.3rem
+}
+.fa-create-competition-form>p{
+  margin:0 0 18px;
+  color:#6f8ea1;
+  line-height:1.5;
+  font-size:.76rem
+}
+.fa-create-competition-form .fa-form-grid{
+  margin-top:8px
+}
+@media(max-width:900px){
+  .fa-header__right{
+    flex-wrap:wrap;
+    justify-content:flex-end
+  }
+  .fa-competition-picker{
+    min-width:150px
+  }
+}
+@media(max-width:650px){
+  .fa-header{
+    align-items:flex-start
+  }
+  .fa-header__right{
+    width:100%
+  }
+  .fa-competition-picker{
+    width:100%
+  }
+  .fa-new-competition{
+    width:100%
+  }
+}
