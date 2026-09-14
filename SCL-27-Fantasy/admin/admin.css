@@ -182,3 +182,93 @@ a{color:inherit}
 .fa-checkbox--sync input{width:auto}
 .fa-sync-error{color:var(--red)!important}
 #syncCards .fa-card strong{font-size:1.35rem}
+
+
+/* SCL full-season simulator */
+.fa-scl-sim-box{
+  margin-top:18px;
+  border-color:#28506a;
+  background:
+    radial-gradient(circle at 95% 0,rgba(22,143,255,.11),transparent 32%),
+    #050f17
+}
+.fa-scl-sim-head p{
+  max-width:880px;
+  margin:5px 0 0;
+  color:#7894a7;
+  font-size:.72rem;
+  line-height:1.55
+}
+.fa-scl-sim-cards{margin:14px 0}
+.fa-scl-sim-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  margin:4px 0 10px
+}
+.fa-scl-period-action{
+  display:flex;
+  gap:6px;
+  align-items:center
+}
+.fa-scl-period-action select{
+  min-width:190px;
+  border:1px solid #1d425b;
+  border-radius:7px;
+  background:#030a10;
+  color:#fff;
+  padding:9px 10px
+}
+.fa-link-button--danger{
+  border-color:#5b2d3a;
+  color:#ff8296;
+  background:#16080c
+}
+.fa-scl-sim-details{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid #15344b
+}
+.fa-sim-excluded-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:10px
+}
+.fa-sim-excluded,.fa-sim-ok{
+  display:inline-flex;
+  padding:6px 8px;
+  border:1px solid #4a3840;
+  border-radius:999px;
+  background:#140b0e;
+  color:#d99aa6;
+  font-size:.62rem;
+  font-weight:850
+}
+.fa-sim-ok{
+  border-color:#24583e;
+  background:#07150e;
+  color:#7de8a4
+}
+.fa-scl-sim-note{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:14px;
+  padding:10px 12px;
+  border:1px solid #23455d;
+  border-radius:8px;
+  background:#06131c;
+  font-size:.64rem
+}
+.fa-scl-sim-note strong{color:var(--cyan)}
+.fa-scl-sim-note span{color:#69879b}
+@media(max-width:760px){
+  .fa-scl-sim-actions,.fa-scl-period-action{
+    align-items:stretch;
+    flex-direction:column
+  }
+  .fa-scl-period-action select{min-width:0;width:100%}
+  .fa-scl-sim-actions>button,.fa-scl-period-action button{width:100%}
+}
