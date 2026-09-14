@@ -17,6 +17,320 @@
     "'": "&#39;"
   })[char]);
 
+  const SUPPORTED_LANGUAGES = ["sv","en","fi","de"];
+  const I18N = {
+    sv: {
+      nav_build:"BYGG", nav_compete:"TÄVLA", nav_climb:"KLÄTTRA", league:"LIGA", language:"SPRÅK",
+      choose_fantasy_league:"Välj Fantasy-liga", choose_language:"Välj språk", powered_by:"DRIVS AV",
+      login_discord:"Logga in med Discord", see_rules:"Se regler", players_upper:"SPELARE", budget_upper:"BUDGET",
+      max_per_team_upper:"MAX / LAG", captain_upper:"KAPTEN", start_upper:"START", status_upper:"STATUS",
+      fantasy_teams_upper:"FANTASY-LAG", beta_source_upper:"BETAKÄLLA", mode_upper:"LÄGE", player_pool_upper:"SPELARPOOL",
+      price_range_upper:"PRISINTERVALL", access_upper:"ÅTKOMST", access_value:"DISCORD + KOPPLAD PROFIL",
+      matches_upper:"MATCHER", registered:"registrerade", created:"skapade", ownership_info_upper:"ÄGARINFO",
+      locked_period:"låst period", deadline_upper:"DEADLINE", swedish_time:"svensk tid", my_team:"Mitt lag",
+      players:"Spelare", leaderboard:"Topplista", rules:"Regler", account_required_upper:"KONTO KRÄVS",
+      checking_account:"Kontrollerar ditt konto…", account_required_text:"Du måste vara inloggad med Discord och ha en godkänd spelarprofil kopplad för att skapa ett lag.",
+      connect_profile:"Koppla spelarprofil", team_manager_upper:"LAGANSVARIG", account_upper:"KONTO", logout:"Logga ut",
+      fantasy_team_upper:"FANTASY-LAG", team_name_follows_profile:"Namnet följer din kopplade spelarprofil",
+      squad_upper:"TRUPP", used_upper:"ANVÄNT", remaining_upper:"KVAR", transfers_upper:"BYTEN", free_upper:"GRATIS",
+      next_upper:"NÄSTA", starting_six_upper:"STARTSEXA", your_starting_six:"Din startsexa", team_history_upper:"LAGHISTORIK",
+      former_players:"Tidigare spelare", former_players_note:"Poängen de tjänade in medan de fanns i laget ligger kvar i lagets total.",
+      player_market_upper:"SPELARMARKNAD", player_list:"Spelarlista", search_player_team_upper:"SÖK SPELARE / LAG",
+      search_placeholder:"Gamertag eller lag…", position_upper:"POSITION", all:"Alla", team_status_upper:"LAGSTATUS",
+      save_team:"Spara lag", fantasy_players:"Fantasy-spelare", leaderboard_upper:"TOPPLISTA", rules_upper:"REGLER",
+      six_players:"Sex spelare", six_players_text:"LW, C, RW, LD, RD och G. Samma spelare kan bara väljas en gång. Spelare med dokumenterad positionshistorik kan vara valbara på flera platser.",
+      fantasy_points:"Fantasy-poäng", position_per_match_text:"<strong>Position per match:</strong> På utespelarplatser räknas bara matcher som spelaren faktiskt spelar som forward eller back, och poängformeln följer den verkliga positionen i varje match. På G-platsen räknas bara matcher som spelaren faktiskt spelar målvakt. Tydliga målvakter och utespelare separeras med historik före tävlingen; verkliga hybrider kan vara valbara i båda rollerna.",
+      event:"Händelse", played_match:"Spelad match", goal:"Mål", assist:"Assist", game_winning_goal:"Avgörande mål",
+      block:"Block", win:"Vinst", save:"Räddning", shutout:"Hållen nolla", goal_allowed:"Insläppt mål",
+      ecl_divisions_text:"<strong>ECL-divisioner:</strong> Matchens SportsGamer liga-ID avgör poängfaktorn. Ett vanligt lagbyte inom samma division påverkar inte Fantasy alls. Om en spelare byter division får bara de nya matcherna den nya divisionens faktor.",
+      gcl_divisions_text:"<strong>GCL-divisioner:</strong> Div 1 ger en liten bonus eftersom motståndet är starkare. Div 2 ligger på normal faktor.",
+      division:"Division", factor:"Faktor", example_40_raw:"Exempel: 40 råpoäng", verified_account:"Verifierat konto",
+      verified_account_text:"Alla kan se sidan och spelarpoolen. För att skapa ett lag krävs Discord-inloggning och godkänd Fantasy-access, normalt genom en kopplad Svensk eHockey-spelarprofil.",
+      periods_and_transfers:"Fantasy-perioder och byten", close:"Stäng", choose_player:"Välj spelare", eligible_players_for_position:"Valbara spelare för positionen.",
+      choose_position_upper:"VÄLJ POSITION", place_player:"Placera spelaren", place_player_text:"Spelaren kan användas på flera positioner. Välj var spelaren ska placeras i ditt Fantasy-lag.",
+      powered_by_full:"Drivs av Svensk eHockey →", preseason:"FÖRSÄSONG", periods_not_ready:"Fantasy-perioderna är inte klara",
+      period_info_when_configured:"Periodinformationen visas när tävlingen har konfigurerats.", after_deadline:"Efter deadline", not_set:"Ej satt",
+      test_season_current_period:"TESTSÄSONG / AKTUELL PERIOD", live_now:"PÅGÅR NU", latest_period:"SENASTE FANTASY-PERIOD", next_period:"NÄSTA FANTASY-PERIOD",
+      published:"Publicerad", preseason_unlimited:"INFÖR SÄSONGEN · OBEGRÄNSADE BYTEN", free_transfer_period:"FRI BYTESPERIOD", upcoming_period:"KOMMANDE PERIOD",
+      transfer_window_closed:"BYTESFÖNSTRET STÄNGT", transfers_disabled:"BYTEN AVSTÄNGDA",
+      preseason_transfer_detail:"Bygg om fritt fram till första Fantasy-periodens deadline kl. 18:00 svensk tid. Därefter: 1 gratis byte per period, max 2 sparade.",
+      period_transfer_detail:"1 gratis byte per period · max 2 sparade · extra byte kostar −{cost} P. Kaptensbyte är gratis.",
+      no_more_transfer_periods:"Inga fler Fantasy-perioder är öppna för byten.", transfer_rules_inactive:"Bytesreglerna är inte aktiva just nu.",
+      setup:"UPPSTART", open:"ÖPPEN", locked:"LÅST", live:"PÅGÅR", finished:"AVSLUTAD", archived:"ARKIVERAD",
+      build_your_six:"Bygg din {league}-sexa", build_six_short:"{league}-SEXA.", setup_intro:"{season} Fantasy är under uppbyggnad.",
+      beta_intro:"Välj sex spelare, håll dig under budget och utse din kapten. Spelarpoolen bygger just nu på {source}.",
+      normal_intro:"Välj sex spelare, håll dig under budget och utse din kapten. Fantasy följer spelarnas riktiga matcher och resultat.",
+      fantasy_preparing:"Fantasy-ligan förbereds.", player_selection:"Spelarurval: {scope}.", pool_not_published_upper:"SPELARPOOL EJ PUBLICERAD",
+      under_construction_upper:"UNDER UPPBYGGNAD", team_building_open_upper:"LAGBYGGE ÖPPET", players_count:"{count} SPELARE",
+      season_under_construction:"{season} är under uppbyggnad", pool_available:"Fantasy-poolen är tillgänglig.", pool_not_published:"Spelarpoolen är inte publicerad ännu.",
+      waiting_for_pool_upper:"VÄNTAR PÅ SPELARPOOL", fantasy_players_kicker:"{season} / FANTASYSPELARE", pool_published_later:"Spelarpoolen publiceras senare.",
+      eligible_players_intro:"Här ser du de spelare som är valbara i {season} Fantasy.", leaderboard_opens:"Topplistan öppnar när {season} Fantasy är igång.",
+      leaderboard_updates:"Topplistan uppdateras med riktiga Fantasy-poäng efter matcherna.", how_it_works:"Så fungerar {league} Fantasy",
+      rules_setup_intro:"{season} Fantasy är förberedd och reglerna kan finjusteras inför öppning.", rules_live_intro:"Bygg din {league}-sexa, håll budgeten och följ poängen period för period.",
+      budget_rule:"Hela startsexan måste rymmas inom {budget} CR.", max_team_rule_title:"Max {max} från samma lag",
+      max_team_rule:"Du får välja högst {max} spelare från samma riktiga lag.", captain_rule_title:"Kapten {multiplier}×",
+      captain_rule:"En spelare utses till kapten och får {percent} procent extra Fantasy-poäng.",
+      setup_period_rules:"{season} kommer att använda Fantasy-perioder. Deadlines, fria byten och eventuellt slutspelsreset publiceras innan ligan öppnar.",
+      scl_period_rules:"SCL spelas inte i fasta omgångar, så Fantasy delas i tidsbestämda perioder. Varje ny Fantasy-period låses kl. 18:00 svensk tid och matcherna räknas efter sin faktiska starttid. Före första perioden är byten obegränsade. Därefter får du 1 gratis byte per period och kan spara upp till 2. Extra byten kostar −10 Fantasy-poäng och kaptensbyte är gratis.",
+      generic_period_rules:"Fantasy delas i tidsbestämda perioder. Matcherna räknas efter sin faktiska starttid och byten gäller från nästa låsta period.",
+      login_to_build:"Logga in för att bygga ditt lag", checking_discord:"Kontrollerar Discord-inloggning och kopplad spelarprofil.",
+      link_pending:"Spelarkopplingen väntar på godkännande", link_pending_text:"Din valda spelarprofil måste godkännas innan du kan skapa ett Fantasy-lag.",
+      link_profile_first:"Koppla din spelarprofil först", link_profile_text:"Discord-kontot är inloggat men saknar en godkänd koppling till ett spelarkort.",
+      discord_only:"Fantasy använder Discord-inloggning", discord_only_text:"Logga ut från admin-/skribentkontot och logga sedan in med Discord.",
+      linked_player:"Kopplad spelare", team_building_not_open:"Lagbygget är inte öppet ännu.", owner_after_deadline:"Ägarinfo efter deadline",
+      owned_by:"Ägs av {owned} % · Kapten {captain} %", unknown:"Okänd", team_not_ready:"Lag ej klart",
+      form_info:"Form & info →", show_form_stats:"Visa form & statistik →", no_player_info:"Spelarinformationen kunde inte hämtas.",
+      no_matches:"Inga matcher registrerade ännu.", fantasy_points_label:"Fantasy-poäng", matches:"Matcher", points_per_match:"Poäng / match",
+      owned:"Ägd", captain:"Kapten", form:"FORM", last_5_matches:"Senaste 5 matcher", outcome:"UTFALL", registered_stats:"Registrerad statistik",
+      goals:"Mål", assists:"Assist", blocks:"Block", goalie_wins:"MV-vinster", saves:"Räddningar", shutouts:"Nollor",
+      leaderboard_empty:"Topplistan är tom. Den fylls när Fantasy-lag börjar skapas.", show_team:"Visa lag →"
+    },
+    en: {
+      nav_build:"BUILD", nav_compete:"COMPETE", nav_climb:"CLIMB", league:"LEAGUE", language:"LANGUAGE",
+      choose_fantasy_league:"Choose Fantasy league", choose_language:"Choose language", powered_by:"POWERED BY",
+      login_discord:"Log in with Discord", see_rules:"View rules", players_upper:"PLAYERS", budget_upper:"BUDGET",
+      max_per_team_upper:"MAX / TEAM", captain_upper:"CAPTAIN", start_upper:"START", status_upper:"STATUS",
+      fantasy_teams_upper:"FANTASY TEAMS", beta_source_upper:"BETA SOURCE", mode_upper:"MODE", player_pool_upper:"PLAYER POOL",
+      price_range_upper:"PRICE RANGE", access_upper:"ACCESS", access_value:"DISCORD + LINKED PROFILE", matches_upper:"MATCHES",
+      registered:"registered", created:"created", ownership_info_upper:"OWNERSHIP", locked_period:"locked period", deadline_upper:"DEADLINE",
+      swedish_time:"Swedish time", my_team:"My team", players:"Players", leaderboard:"Leaderboard", rules:"Rules",
+      account_required_upper:"ACCOUNT REQUIRED", checking_account:"Checking your account…",
+      account_required_text:"You must be logged in with Discord and have an approved linked player profile to create a team.",
+      connect_profile:"Link player profile", team_manager_upper:"TEAM MANAGER", account_upper:"ACCOUNT", logout:"Log out",
+      fantasy_team_upper:"FANTASY TEAM", team_name_follows_profile:"The name follows your linked player profile", squad_upper:"SQUAD",
+      used_upper:"USED", remaining_upper:"LEFT", transfers_upper:"TRANSFERS", free_upper:"FREE", next_upper:"NEXT",
+      starting_six_upper:"STARTING SIX", your_starting_six:"Your starting six", team_history_upper:"TEAM HISTORY",
+      former_players:"Former players", former_players_note:"Points earned while they were on your team remain in the team total.",
+      player_market_upper:"PLAYER MARKET", player_list:"Player list", search_player_team_upper:"SEARCH PLAYER / TEAM", search_placeholder:"Gamertag or team…",
+      position_upper:"POSITION", all:"All", team_status_upper:"TEAM STATUS", save_team:"Save team", fantasy_players:"Fantasy players",
+      leaderboard_upper:"LEADERBOARD", rules_upper:"RULES", six_players:"Six players",
+      six_players_text:"LW, C, RW, LD, RD and G. The same player can only be selected once. Players with documented position history may be eligible in multiple slots.",
+      fantasy_points:"Fantasy points", position_per_match_text:"<strong>Position per match:</strong> In skater slots, only games actually played as a forward or defenseman count, and the scoring formula follows the real position in each game. In the G slot, only games actually played as goalie count. Clear goalies and skaters are separated using pre-tournament history; true hybrids can be eligible in both roles.",
+      event:"Event", played_match:"Game played", goal:"Goal", assist:"Assist", game_winning_goal:"Game-winning goal", block:"Block", win:"Win", save:"Save",
+      shutout:"Shutout", goal_allowed:"Goal allowed",
+      ecl_divisions_text:"<strong>ECL divisions:</strong> The SportsGamer league ID of each game determines the points multiplier. A team change within the same division does not affect Fantasy. If a player changes division, only new games use the new division multiplier.",
+      gcl_divisions_text:"<strong>GCL divisions:</strong> Div 1 gets a small bonus because the opposition is stronger. Div 2 uses the normal multiplier.",
+      division:"Division", factor:"Multiplier", example_40_raw:"Example: 40 raw points", verified_account:"Verified account",
+      verified_account_text:"Anyone can view the page and player pool. Creating a team requires Discord login and approved Fantasy access, normally through a linked Svensk eHockey player profile.",
+      periods_and_transfers:"Fantasy periods and transfers", close:"Close", choose_player:"Choose player", eligible_players_for_position:"Eligible players for this position.",
+      choose_position_upper:"CHOOSE POSITION", place_player:"Place player", place_player_text:"This player can be used in multiple positions. Choose where to place the player in your Fantasy team.",
+      powered_by_full:"Powered by Svensk eHockey →", preseason:"PRESEASON", periods_not_ready:"Fantasy periods are not ready",
+      period_info_when_configured:"Period information appears once the competition is configured.", after_deadline:"After deadline", not_set:"Not set",
+      test_season_current_period:"TEST SEASON / CURRENT PERIOD", live_now:"LIVE NOW", latest_period:"LATEST FANTASY PERIOD", next_period:"NEXT FANTASY PERIOD",
+      published:"Published", preseason_unlimited:"PRESEASON · UNLIMITED TRANSFERS", free_transfer_period:"FREE TRANSFER PERIOD", upcoming_period:"UPCOMING PERIOD",
+      transfer_window_closed:"TRANSFER WINDOW CLOSED", transfers_disabled:"TRANSFERS DISABLED",
+      preseason_transfer_detail:"Rebuild freely until the first Fantasy period deadline at 18:00 Swedish time. After that: 1 free transfer per period, max 2 banked.",
+      period_transfer_detail:"1 free transfer per period · max 2 banked · extra transfer costs −{cost} P. Captain changes are free.",
+      no_more_transfer_periods:"No more Fantasy periods are open for transfers.", transfer_rules_inactive:"Transfer rules are not active right now.",
+      setup:"SETUP", open:"OPEN", locked:"LOCKED", live:"LIVE", finished:"FINISHED", archived:"ARCHIVED",
+      build_your_six:"Build your {league} six", build_six_short:"{league} SIX.", setup_intro:"{season} Fantasy is under construction.",
+      beta_intro:"Pick six players, stay under budget and choose your captain. The player pool currently uses {source}.",
+      normal_intro:"Pick six players, stay under budget and choose your captain. Fantasy follows the players' real games and results.",
+      fantasy_preparing:"The Fantasy league is being prepared.", player_selection:"Player selection: {scope}.", pool_not_published_upper:"PLAYER POOL NOT PUBLISHED",
+      under_construction_upper:"UNDER CONSTRUCTION", team_building_open_upper:"TEAM BUILDING OPEN", players_count:"{count} PLAYERS",
+      season_under_construction:"{season} is under construction", pool_available:"The Fantasy pool is available.", pool_not_published:"The player pool has not been published yet.",
+      waiting_for_pool_upper:"WAITING FOR PLAYER POOL", fantasy_players_kicker:"{season} / FANTASY PLAYERS", pool_published_later:"The player pool will be published later.",
+      eligible_players_intro:"These are the players available in {season} Fantasy.", leaderboard_opens:"The leaderboard opens when {season} Fantasy is live.",
+      leaderboard_updates:"The leaderboard updates with real Fantasy points after the games.", how_it_works:"How {league} Fantasy works",
+      rules_setup_intro:"{season} Fantasy is prepared and the rules can be fine-tuned before opening.", rules_live_intro:"Build your {league} six, stay under budget and follow the points period by period.",
+      budget_rule:"Your full starting six must fit within {budget} CR.", max_team_rule_title:"Max {max} from one team",
+      max_team_rule:"You may select at most {max} players from the same real team.", captain_rule_title:"Captain {multiplier}×",
+      captain_rule:"One player is captain and receives {percent} percent extra Fantasy points.",
+      setup_period_rules:"{season} will use Fantasy periods. Deadlines, free transfers and any playoff reset will be published before the league opens.",
+      scl_period_rules:"SCL is not played in fixed rounds, so Fantasy uses timed periods. Each new Fantasy period locks at 18:00 Swedish time and games are assigned by their actual start time. Transfers are unlimited before the first period. After that you get 1 free transfer per period and can bank up to 2. Extra transfers cost −10 Fantasy points and captain changes are free.",
+      generic_period_rules:"Fantasy uses timed periods. Games are assigned by actual start time and transfers take effect from the next locked period.",
+      login_to_build:"Log in to build your team", checking_discord:"Checking Discord login and linked player profile.",
+      link_pending:"Player link awaiting approval", link_pending_text:"Your selected player profile must be approved before you can create a Fantasy team.",
+      link_profile_first:"Link your player profile first", link_profile_text:"Your Discord account is logged in but does not have an approved link to a player card.",
+      discord_only:"Fantasy uses Discord login", discord_only_text:"Log out from the admin/writer account and then log in with Discord.",
+      linked_player:"Linked player", team_building_not_open:"Team building is not open yet.", owner_after_deadline:"Ownership after deadline",
+      owned_by:"Owned by {owned} % · Captain {captain} %", unknown:"Unknown", team_not_ready:"Team not set",
+      form_info:"Form & info →", show_form_stats:"View form & stats →", no_player_info:"Player information could not be loaded.",
+      no_matches:"No games have been registered yet.", fantasy_points_label:"Fantasy points", matches:"Matches", points_per_match:"Points / game",
+      owned:"Owned", captain:"Captain", form:"FORM", last_5_matches:"Last 5 games", outcome:"OUTPUT", registered_stats:"Registered stats",
+      goals:"Goals", assists:"Assists", blocks:"Blocks", goalie_wins:"Goalie wins", saves:"Saves", shutouts:"Shutouts",
+      leaderboard_empty:"The leaderboard is empty. It fills when Fantasy teams are created.", show_team:"View team →"
+    },
+    fi: {
+      nav_build:"RAKENNA", nav_compete:"KILPAILE", nav_climb:"NOUSE", league:"LIIGA", language:"KIELI",
+      choose_fantasy_league:"Valitse Fantasy-liiga", choose_language:"Valitse kieli", powered_by:"PALVELUN TARJOAA",
+      login_discord:"Kirjaudu Discordilla", see_rules:"Katso säännöt", players_upper:"PELAAJAT", budget_upper:"BUDJETTI",
+      max_per_team_upper:"MAX / JOUKKUE", captain_upper:"KAPTEENI", start_upper:"ALKU", status_upper:"TILA",
+      fantasy_teams_upper:"FANTASY-JOUKKUEET", beta_source_upper:"BETA-LÄHDE", mode_upper:"TILA", player_pool_upper:"PELAAJAPOOLI",
+      price_range_upper:"HINTAHAARUKKA", access_upper:"PÄÄSY", access_value:"DISCORD + LINKITETTY PROFIILI", matches_upper:"OTTELUT",
+      registered:"rekisteröity", created:"luotu", ownership_info_upper:"OMISTUS", locked_period:"lukittu jakso", deadline_upper:"DEADLINE",
+      swedish_time:"Ruotsin aika", my_team:"Joukkueeni", players:"Pelaajat", leaderboard:"Sarjataulukko", rules:"Säännöt",
+      account_required_upper:"TILI VAADITAAN", checking_account:"Tarkistetaan tiliäsi…",
+      account_required_text:"Sinun on kirjauduttava Discordilla ja sinulla on oltava hyväksytty linkitetty pelaajaprofiili joukkueen luomiseksi.",
+      connect_profile:"Linkitä pelaajaprofiili", team_manager_upper:"JOUKKUEEN OMISTAJA", account_upper:"TILI", logout:"Kirjaudu ulos",
+      fantasy_team_upper:"FANTASY-JOUKKUE", team_name_follows_profile:"Nimi seuraa linkitettyä pelaajaprofiiliasi", squad_upper:"KOKOONPANO",
+      used_upper:"KÄYTETTY", remaining_upper:"JÄLJELLÄ", transfers_upper:"VAIHDOT", free_upper:"ILMAISET", next_upper:"SEURAAVA",
+      starting_six_upper:"AVAUSKUUSIKKO", your_starting_six:"Avauskuusikkosi", team_history_upper:"JOUKKUEHISTORIA",
+      former_players:"Entiset pelaajat", former_players_note:"Pelaajien keräämät pisteet säilyvät joukkueen kokonaispisteissä heidän poistumisensa jälkeenkin.",
+      player_market_upper:"PELAAJAMARKKINA", player_list:"Pelaajalista", search_player_team_upper:"HAE PELAAJAA / JOUKKUETTA", search_placeholder:"Gamertag tai joukkue…",
+      position_upper:"PELIPAIKKA", all:"Kaikki", team_status_upper:"JOUKKUEEN TILA", save_team:"Tallenna joukkue", fantasy_players:"Fantasy-pelaajat",
+      leaderboard_upper:"SARJATAULUKKO", rules_upper:"SÄÄNNÖT", six_players:"Kuusi pelaajaa",
+      six_players_text:"LW, C, RW, LD, RD ja G. Sama pelaaja voidaan valita vain kerran. Dokumentoidun pelipaikkahistorian perusteella pelaaja voi olla valittavissa usealle paikalle.",
+      fantasy_points:"Fantasy-pisteet", position_per_match_text:"<strong>Pelipaikka ottelukohtaisesti:</strong> Kenttäpelaajien paikoilla lasketaan vain ottelut, joissa pelaaja todella pelaa hyökkääjänä tai puolustajana, ja pistekaava määräytyy todellisen pelipaikan mukaan. G-paikalla lasketaan vain maalivahtina pelatut ottelut. Selkeät maalivahdit ja kenttäpelaajat erotellaan ennen turnausta historian perusteella; aidot hybridit voivat olla valittavissa molempiin rooleihin.",
+      event:"Tapahtuma", played_match:"Pelattu ottelu", goal:"Maali", assist:"Syöttö", game_winning_goal:"Voittomaali", block:"Blokki", win:"Voitto",
+      save:"Torjunta", shutout:"Nollapeli", goal_allowed:"Päästetty maali",
+      ecl_divisions_text:"<strong>ECL-divisioonat:</strong> Ottelun SportsGamer-liiga-ID määrittää pistekertoimen. Joukkueen vaihto saman divisioonan sisällä ei vaikuta Fantasyyn. Jos pelaaja vaihtaa divisioonaa, vain uudet ottelut käyttävät uutta kerrointa.",
+      gcl_divisions_text:"<strong>GCL-divisioonat:</strong> Div 1 saa pienen bonuksen kovemman vastuksen vuoksi. Div 2 käyttää normaalia kerrointa.",
+      division:"Divisioona", factor:"Kerroin", example_40_raw:"Esimerkki: 40 raakapistettä", verified_account:"Vahvistettu tili",
+      verified_account_text:"Kaikki voivat nähdä sivun ja pelaajapoolin. Joukkueen luominen vaatii Discord-kirjautumisen ja hyväksytyn Fantasy-oikeuden, tavallisesti linkitetyn Svensk eHockey -pelaajaprofiilin kautta.",
+      periods_and_transfers:"Fantasy-jaksot ja vaihdot", close:"Sulje", choose_player:"Valitse pelaaja", eligible_players_for_position:"Tälle pelipaikalle sopivat pelaajat.",
+      choose_position_upper:"VALITSE PELIPAIKKA", place_player:"Sijoita pelaaja", place_player_text:"Pelaaja voidaan käyttää usealla pelipaikalla. Valitse paikka Fantasy-joukkueessasi.",
+      powered_by_full:"Palvelun tarjoaa Svensk eHockey →", preseason:"ENNEN KAUTTA", periods_not_ready:"Fantasy-jaksot eivät ole vielä valmiit",
+      period_info_when_configured:"Jakson tiedot näkyvät, kun kilpailu on määritetty.", after_deadline:"Deadlinen jälkeen", not_set:"Ei asetettu",
+      test_season_current_period:"TESTIKAUSI / NYKYINEN JAKSO", live_now:"KÄYNNISSÄ", latest_period:"VIIMEISIN FANTASY-JAKSO", next_period:"SEURAAVA FANTASY-JAKSO",
+      published:"Julkaistu", preseason_unlimited:"ENNEN KAUTTA · RAJATTOMAT VAIHDOT", free_transfer_period:"ILMAINEN VAIHTOJAKSO", upcoming_period:"TULEVA JAKSO",
+      transfer_window_closed:"VAIHTOIKKUNA SULJETTU", transfers_disabled:"VAIHDOT POIS KÄYTÖSTÄ",
+      preseason_transfer_detail:"Muokkaa joukkuetta vapaasti ensimmäisen Fantasy-jakson deadlineen klo 18.00 Ruotsin aikaa asti. Sen jälkeen: 1 ilmainen vaihto per jakso, enintään 2 säästöön.",
+      period_transfer_detail:"1 ilmainen vaihto per jakso · enintään 2 säästöön · ylimääräinen vaihto maksaa −{cost} P. Kapteenin vaihto on ilmainen.",
+      no_more_transfer_periods:"Yhtään Fantasy-jaksoa ei ole enää avoinna vaihdoille.", transfer_rules_inactive:"Vaihtosäännöt eivät ole juuri nyt aktiivisia.",
+      setup:"VALMISTELU", open:"AVOINNA", locked:"LUKITTU", live:"KÄYNNISSÄ", finished:"PÄÄTTYNYT", archived:"ARKISTOITU",
+      build_your_six:"Rakenna {league}-kuusikkosi", build_six_short:"{league}-KUUSIKKO.", setup_intro:"{season} Fantasy on rakenteilla.",
+      beta_intro:"Valitse kuusi pelaajaa, pysy budjetissa ja nimeä kapteeni. Pelaajapooli perustuu tällä hetkellä lähteeseen {source}.",
+      normal_intro:"Valitse kuusi pelaajaa, pysy budjetissa ja nimeä kapteeni. Fantasy seuraa pelaajien oikeita otteluita ja tuloksia.",
+      fantasy_preparing:"Fantasy-liigaa valmistellaan.", player_selection:"Pelaajavalinta: {scope}.", pool_not_published_upper:"PELAAJAPOOLIA EI OLE JULKAISTU",
+      under_construction_upper:"RAKENTEILLA", team_building_open_upper:"JOUKKUEEN RAKENNUS AUKI", players_count:"{count} PELAAJAA",
+      season_under_construction:"{season} on rakenteilla", pool_available:"Fantasy-pooli on käytettävissä.", pool_not_published:"Pelaajapoolia ei ole vielä julkaistu.",
+      waiting_for_pool_upper:"ODOTTAA PELAAJAPOOLIA", fantasy_players_kicker:"{season} / FANTASY-PELAAJAT", pool_published_later:"Pelaajapooli julkaistaan myöhemmin.",
+      eligible_players_intro:"Tässä ovat pelaajat, jotka ovat valittavissa {season} Fantasyssa.", leaderboard_opens:"Sarjataulukko avautuu, kun {season} Fantasy käynnistyy.",
+      leaderboard_updates:"Sarjataulukko päivittyy oikeilla Fantasy-pisteillä otteluiden jälkeen.", how_it_works:"Näin {league} Fantasy toimii",
+      rules_setup_intro:"{season} Fantasy on valmisteltu ja sääntöjä voidaan vielä hienosäätää ennen avaamista.", rules_live_intro:"Rakenna {league}-kuusikkosi, pysy budjetissa ja seuraa pisteitä jaksoittain.",
+      budget_rule:"Koko avauskuusikon on mahduttava {budget} CR:n budjettiin.", max_team_rule_title:"Enintään {max} samasta joukkueesta",
+      max_team_rule:"Voit valita enintään {max} pelaajaa samasta oikeasta joukkueesta.", captain_rule_title:"Kapteeni {multiplier}×",
+      captain_rule:"Yksi pelaaja nimetään kapteeniksi ja saa {percent} prosenttia ylimääräisiä Fantasy-pisteitä.",
+      setup_period_rules:"{season} käyttää Fantasy-jaksoja. Deadlinet, ilmaiset vaihdot ja mahdollinen pudotuspelien nollaus julkaistaan ennen liigan avaamista.",
+      scl_period_rules:"SCL:ää ei pelata kiinteissä kierroksissa, joten Fantasy käyttää aikajaksoja. Jokainen uusi jakso lukitaan klo 18.00 Ruotsin aikaa ja ottelut sijoitetaan todellisen alkamisajan mukaan. Ennen ensimmäistä jaksoa vaihdot ovat rajattomia. Sen jälkeen saat 1 ilmaisen vaihdon per jakso ja voit säästää enintään 2. Ylimääräiset vaihdot maksavat −10 Fantasy-pistettä ja kapteenin vaihto on ilmainen.",
+      generic_period_rules:"Fantasy käyttää aikajaksoja. Ottelut sijoitetaan todellisen alkamisajan mukaan ja vaihdot astuvat voimaan seuraavasta lukitusta jaksosta.",
+      login_to_build:"Kirjaudu rakentaaksesi joukkueesi", checking_discord:"Tarkistetaan Discord-kirjautuminen ja linkitetty pelaajaprofiili.",
+      link_pending:"Pelaajalinkitys odottaa hyväksyntää", link_pending_text:"Valittu pelaajaprofiili on hyväksyttävä ennen Fantasy-joukkueen luomista.",
+      link_profile_first:"Linkitä pelaajaprofiilisi ensin", link_profile_text:"Discord-tili on kirjautunut sisään, mutta sillä ei ole hyväksyttyä linkitystä pelaajakorttiin.",
+      discord_only:"Fantasy käyttää Discord-kirjautumista", discord_only_text:"Kirjaudu ulos admin-/kirjoittajatililtä ja kirjaudu sitten Discordilla.",
+      linked_player:"Linkitetty pelaaja", team_building_not_open:"Joukkueen rakentaminen ei ole vielä avoinna.", owner_after_deadline:"Omistus deadlinen jälkeen",
+      owned_by:"Omistus {owned} % · Kapteeni {captain} %", unknown:"Tuntematon", team_not_ready:"Joukkue ei valmis",
+      form_info:"Vire & tiedot →", show_form_stats:"Näytä vire & tilastot →", no_player_info:"Pelaajatietoja ei voitu ladata.",
+      no_matches:"Otteluita ei ole vielä rekisteröity.", fantasy_points_label:"Fantasy-pisteet", matches:"Ottelut", points_per_match:"Pistettä / ottelu",
+      owned:"Omistus", captain:"Kapteeni", form:"VIRE", last_5_matches:"Viimeiset 5 ottelua", outcome:"TULOS", registered_stats:"Rekisteröidyt tilastot",
+      goals:"Maalit", assists:"Syötöt", blocks:"Blokit", goalie_wins:"MV-voitot", saves:"Torjunnat", shutouts:"Nollapelit",
+      leaderboard_empty:"Sarjataulukko on tyhjä. Se täyttyy, kun Fantasy-joukkueita luodaan.", show_team:"Näytä joukkue →"
+    },
+    de: {
+      nav_build:"BAUEN", nav_compete:"SPIELEN", nav_climb:"STEIGEN", league:"LIGA", language:"SPRACHE",
+      choose_fantasy_league:"Fantasy-Liga wählen", choose_language:"Sprache wählen", powered_by:"BETRIEBEN VON",
+      login_discord:"Mit Discord anmelden", see_rules:"Regeln ansehen", players_upper:"SPIELER", budget_upper:"BUDGET",
+      max_per_team_upper:"MAX / TEAM", captain_upper:"KAPITÄN", start_upper:"START", status_upper:"STATUS",
+      fantasy_teams_upper:"FANTASY-TEAMS", beta_source_upper:"BETA-QUELLE", mode_upper:"MODUS", player_pool_upper:"SPIELERPOOL",
+      price_range_upper:"PREISSPANNE", access_upper:"ZUGANG", access_value:"DISCORD + VERKNÜPFTES PROFIL", matches_upper:"SPIELE",
+      registered:"erfasst", created:"erstellt", ownership_info_upper:"BESITZ", locked_period:"gesperrte Periode", deadline_upper:"DEADLINE",
+      swedish_time:"schwedische Zeit", my_team:"Mein Team", players:"Spieler", leaderboard:"Rangliste", rules:"Regeln",
+      account_required_upper:"KONTO ERFORDERLICH", checking_account:"Konto wird geprüft…",
+      account_required_text:"Du musst mit Discord angemeldet sein und ein genehmigtes verknüpftes Spielerprofil haben, um ein Team zu erstellen.",
+      connect_profile:"Spielerprofil verknüpfen", team_manager_upper:"TEAMVERANTWORTLICHER", account_upper:"KONTO", logout:"Abmelden",
+      fantasy_team_upper:"FANTASY-TEAM", team_name_follows_profile:"Der Name folgt deinem verknüpften Spielerprofil", squad_upper:"KADER",
+      used_upper:"VERBRAUCHT", remaining_upper:"ÜBRIG", transfers_upper:"TRANSFERS", free_upper:"GRATIS", next_upper:"NÄCHSTER",
+      starting_six_upper:"STARTSECHS", your_starting_six:"Deine Startsechs", team_history_upper:"TEAMHISTORIE",
+      former_players:"Ehemalige Spieler", former_players_note:"Die Punkte, die sie in deinem Team gesammelt haben, bleiben in der Gesamtsumme.",
+      player_market_upper:"SPIELERMARKT", player_list:"Spielerliste", search_player_team_upper:"SPIELER / TEAM SUCHEN", search_placeholder:"Gamertag oder Team…",
+      position_upper:"POSITION", all:"Alle", team_status_upper:"TEAMSTATUS", save_team:"Team speichern", fantasy_players:"Fantasy-Spieler",
+      leaderboard_upper:"RANGLISTE", rules_upper:"REGELN", six_players:"Sechs Spieler",
+      six_players_text:"LW, C, RW, LD, RD und G. Derselbe Spieler kann nur einmal gewählt werden. Spieler mit dokumentierter Positionshistorie können auf mehreren Plätzen verfügbar sein.",
+      fantasy_points:"Fantasy-Punkte", position_per_match_text:"<strong>Position pro Spiel:</strong> Auf Feldspielerplätzen zählen nur Spiele, in denen der Spieler tatsächlich als Stürmer oder Verteidiger spielt; die Punkteformel folgt der echten Position in jedem Spiel. Auf dem G-Platz zählen nur Spiele als Torhüter. Eindeutige Torhüter und Feldspieler werden anhand der Historie vor dem Turnier getrennt; echte Hybride können für beide Rollen verfügbar sein.",
+      event:"Ereignis", played_match:"Gespieltes Spiel", goal:"Tor", assist:"Assist", game_winning_goal:"Siegtreffer", block:"Block", win:"Sieg",
+      save:"Parade", shutout:"Shutout", goal_allowed:"Gegentor",
+      ecl_divisions_text:"<strong>ECL-Divisionen:</strong> Die SportsGamer-Liga-ID des Spiels bestimmt den Punktefaktor. Ein Teamwechsel innerhalb derselben Division beeinflusst Fantasy nicht. Wechselt ein Spieler die Division, gilt der neue Faktor nur für neue Spiele.",
+      gcl_divisions_text:"<strong>GCL-Divisionen:</strong> Div 1 erhält einen kleinen Bonus, weil die Gegner stärker sind. Div 2 nutzt den normalen Faktor.",
+      division:"Division", factor:"Faktor", example_40_raw:"Beispiel: 40 Rohpunkte", verified_account:"Verifiziertes Konto",
+      verified_account_text:"Jeder kann die Seite und den Spielerpool sehen. Für ein Team sind Discord-Anmeldung und genehmigter Fantasy-Zugang nötig, normalerweise über ein verknüpftes Svensk eHockey-Spielerprofil.",
+      periods_and_transfers:"Fantasy-Perioden und Transfers", close:"Schließen", choose_player:"Spieler wählen", eligible_players_for_position:"Verfügbare Spieler für diese Position.",
+      choose_position_upper:"POSITION WÄHLEN", place_player:"Spieler platzieren", place_player_text:"Der Spieler kann auf mehreren Positionen eingesetzt werden. Wähle seinen Platz in deinem Fantasy-Team.",
+      powered_by_full:"Betrieben von Svensk eHockey →", preseason:"VORSAISON", periods_not_ready:"Fantasy-Perioden sind noch nicht bereit",
+      period_info_when_configured:"Periodeninformationen erscheinen, sobald der Wettbewerb konfiguriert ist.", after_deadline:"Nach Deadline", not_set:"Nicht gesetzt",
+      test_season_current_period:"TESTSAISON / AKTUELLE PERIODE", live_now:"JETZT LIVE", latest_period:"LETZTE FANTASY-PERIODE", next_period:"NÄCHSTE FANTASY-PERIODE",
+      published:"Veröffentlicht", preseason_unlimited:"VORSAISON · UNBEGRENZTE TRANSFERS", free_transfer_period:"FREIE TRANSFERPERIODE", upcoming_period:"KOMMENDE PERIODE",
+      transfer_window_closed:"TRANSFERFENSTER GESCHLOSSEN", transfers_disabled:"TRANSFERS DEAKTIVIERT",
+      preseason_transfer_detail:"Bis zur Deadline der ersten Fantasy-Periode um 18:00 Uhr schwedischer Zeit kannst du frei umbauen. Danach: 1 Gratis-Transfer pro Periode, maximal 2 ansparbar.",
+      period_transfer_detail:"1 Gratis-Transfer pro Periode · max. 2 ansparbar · zusätzlicher Transfer kostet −{cost} P. Kapitänswechsel sind gratis.",
+      no_more_transfer_periods:"Keine weiteren Fantasy-Perioden sind für Transfers geöffnet.", transfer_rules_inactive:"Die Transferregeln sind aktuell nicht aktiv.",
+      setup:"EINRICHTUNG", open:"OFFEN", locked:"GESPERRT", live:"LIVE", finished:"BEENDET", archived:"ARCHIVIERT",
+      build_your_six:"Baue deine {league}-Sechs", build_six_short:"{league}-SECHS.", setup_intro:"{season} Fantasy wird vorbereitet.",
+      beta_intro:"Wähle sechs Spieler, bleibe im Budget und bestimme deinen Kapitän. Der Spielerpool basiert derzeit auf {source}.",
+      normal_intro:"Wähle sechs Spieler, bleibe im Budget und bestimme deinen Kapitän. Fantasy folgt den echten Spielen und Ergebnissen der Spieler.",
+      fantasy_preparing:"Die Fantasy-Liga wird vorbereitet.", player_selection:"Spielerauswahl: {scope}.", pool_not_published_upper:"SPIELERPOOL NICHT VERÖFFENTLICHT",
+      under_construction_upper:"IN VORBEREITUNG", team_building_open_upper:"TEAMBAU OFFEN", players_count:"{count} SPIELER",
+      season_under_construction:"{season} wird vorbereitet", pool_available:"Der Fantasy-Pool ist verfügbar.", pool_not_published:"Der Spielerpool ist noch nicht veröffentlicht.",
+      waiting_for_pool_upper:"WARTET AUF SPIELERPOOL", fantasy_players_kicker:"{season} / FANTASY-SPIELER", pool_published_later:"Der Spielerpool wird später veröffentlicht.",
+      eligible_players_intro:"Hier siehst du die in {season} Fantasy verfügbaren Spieler.", leaderboard_opens:"Die Rangliste öffnet, wenn {season} Fantasy startet.",
+      leaderboard_updates:"Die Rangliste wird nach den Spielen mit echten Fantasy-Punkten aktualisiert.", how_it_works:"So funktioniert {league} Fantasy",
+      rules_setup_intro:"{season} Fantasy ist vorbereitet und die Regeln können vor dem Start noch angepasst werden.", rules_live_intro:"Baue deine {league}-Sechs, bleibe im Budget und verfolge die Punkte Periode für Periode.",
+      budget_rule:"Deine gesamte Startsechs muss in {budget} CR passen.", max_team_rule_title:"Max. {max} aus einem Team",
+      max_team_rule:"Du darfst höchstens {max} Spieler aus demselben echten Team wählen.", captain_rule_title:"Kapitän {multiplier}×",
+      captain_rule:"Ein Spieler wird zum Kapitän und erhält {percent} Prozent zusätzliche Fantasy-Punkte.",
+      setup_period_rules:"{season} wird Fantasy-Perioden verwenden. Deadlines, Gratis-Transfers und ein möglicher Playoff-Reset werden vor dem Start veröffentlicht.",
+      scl_period_rules:"SCL wird nicht in festen Runden gespielt, daher nutzt Fantasy Zeitperioden. Jede neue Periode wird um 18:00 Uhr schwedischer Zeit gesperrt; Spiele werden nach ihrer tatsächlichen Startzeit zugeordnet. Vor der ersten Periode sind Transfers unbegrenzt. Danach gibt es 1 Gratis-Transfer pro Periode, maximal 2 ansparbar. Zusätzliche Transfers kosten −10 Fantasy-Punkte, Kapitänswechsel sind gratis.",
+      generic_period_rules:"Fantasy nutzt Zeitperioden. Spiele werden nach ihrer tatsächlichen Startzeit zugeordnet; Transfers gelten ab der nächsten gesperrten Periode.",
+      login_to_build:"Anmelden, um dein Team zu bauen", checking_discord:"Discord-Anmeldung und verknüpftes Spielerprofil werden geprüft.",
+      link_pending:"Spielerverknüpfung wartet auf Freigabe", link_pending_text:"Dein ausgewähltes Spielerprofil muss genehmigt werden, bevor du ein Fantasy-Team erstellen kannst.",
+      link_profile_first:"Verknüpfe zuerst dein Spielerprofil", link_profile_text:"Dein Discord-Konto ist angemeldet, hat aber keine genehmigte Verknüpfung mit einer Spielerkarte.",
+      discord_only:"Fantasy verwendet Discord-Anmeldung", discord_only_text:"Melde dich vom Admin-/Autorenkonto ab und dann mit Discord an.",
+      linked_player:"Verknüpfter Spieler", team_building_not_open:"Der Teambau ist noch nicht geöffnet.", owner_after_deadline:"Besitz nach Deadline",
+      owned_by:"Besitz {owned} % · Kapitän {captain} %", unknown:"Unbekannt", team_not_ready:"Team noch offen",
+      form_info:"Form & Info →", show_form_stats:"Form & Statistiken →", no_player_info:"Spielerinformationen konnten nicht geladen werden.",
+      no_matches:"Noch keine Spiele registriert.", fantasy_points_label:"Fantasy-Punkte", matches:"Spiele", points_per_match:"Punkte / Spiel",
+      owned:"Besitz", captain:"Kapitän", form:"FORM", last_5_matches:"Letzte 5 Spiele", outcome:"ERGEBNIS", registered_stats:"Registrierte Statistiken",
+      goals:"Tore", assists:"Assists", blocks:"Blocks", goalie_wins:"Torhüter-Siege", saves:"Paraden", shutouts:"Shutouts",
+      leaderboard_empty:"Die Rangliste ist leer. Sie füllt sich, sobald Fantasy-Teams erstellt werden.", show_team:"Team ansehen →"
+    }
+  };
+
+  function initialLanguage() {
+    const urlLang = clean(new URLSearchParams(window.location.search).get("lang")).toLowerCase();
+    if (SUPPORTED_LANGUAGES.includes(urlLang)) return urlLang;
+    const stored = clean(localStorage.getItem("ehockey-fantasy-language")).toLowerCase();
+    if (SUPPORTED_LANGUAGES.includes(stored)) return stored;
+    const browser = clean(navigator.language).slice(0,2).toLowerCase();
+    return SUPPORTED_LANGUAGES.includes(browser) ? browser : "sv";
+  }
+
+  function t(key, vars = {}) {
+    const lang = (typeof state !== "undefined" && state?.language) || initialLanguage();
+    let text = I18N[lang]?.[key] ?? I18N.sv[key] ?? key;
+    for (const [name,value] of Object.entries(vars)) {
+      text = String(text).replaceAll("{" + name + "}", String(value));
+    }
+    return text;
+  }
+
+  function applyStaticTranslations() {
+    const lang = (typeof state !== "undefined" && state?.language) || initialLanguage();
+    document.documentElement.lang = lang;
+    $("[data-i18n]").forEach((node) => {
+      const value = t(node.dataset.i18n);
+      if (value.includes("<")) node.innerHTML = value;
+      else node.textContent = value;
+    });
+    $("[data-i18n-placeholder]").forEach((node) => {
+      node.placeholder = t(node.dataset.i18nPlaceholder);
+    });
+    $("[data-i18n-aria-label]").forEach((node) => {
+      node.setAttribute("aria-label", t(node.dataset.i18nAriaLabel));
+    });
+    if ($("languageSelect")) $("languageSelect").value = lang;
+  }
+
+  function setLanguage(lang) {
+    if (!SUPPORTED_LANGUAGES.includes(lang)) return;
+    state.language = lang;
+    localStorage.setItem("ehockey-fantasy-language", lang);
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", lang);
+    history.replaceState({}, "", url);
+    renderAll();
+    applyStaticTranslations();
+  }
+
   if (!window.supabase?.createClient || !supabaseUrl || !supabaseKey) {
     $("gateTitle").textContent = "Fantasy kunde inte startas";
     $("gateText").textContent = "Supabase-inställningarna saknas eller kunde inte laddas.";
@@ -34,6 +348,7 @@
   });
 
   const state = {
+    language: initialLanguage(),
     competitions: [],
     competition: null,
     pool: [],
@@ -143,7 +458,8 @@
   }
 
   function format(value, digits = 0) {
-    return new Intl.NumberFormat("sv-SE", {
+    const locale = state.language === "fi" ? "fi-FI" : state.language === "de" ? "de-DE" : state.language === "en" ? "en-GB" : "sv-SE";
+    return new Intl.NumberFormat(locale, {
       minimumFractionDigits: digits,
       maximumFractionDigits: digits
     }).format(number(value));
@@ -154,7 +470,8 @@
     if (!raw) return "–";
     const date = new Date(raw.length === 10 ? raw + "T12:00:00" : raw);
     if (Number.isNaN(date.valueOf())) return raw;
-    return new Intl.DateTimeFormat("sv-SE", {
+    const locale = state.language === "fi" ? "fi-FI" : state.language === "de" ? "de-DE" : state.language === "en" ? "en-GB" : "sv-SE";
+    return new Intl.DateTimeFormat(locale, {
       day: "numeric",
       month: "short"
     }).format(date);
@@ -173,7 +490,8 @@
     if (!raw) return "Ej satt";
     const date = new Date(raw);
     if (Number.isNaN(date.valueOf())) return raw;
-    return new Intl.DateTimeFormat("sv-SE", {
+    const locale = state.language === "fi" ? "fi-FI" : state.language === "de" ? "de-DE" : state.language === "en" ? "en-GB" : "sv-SE";
+    return new Intl.DateTimeFormat(locale, {
       day: "numeric",
       month: "short",
       hour: "2-digit",
