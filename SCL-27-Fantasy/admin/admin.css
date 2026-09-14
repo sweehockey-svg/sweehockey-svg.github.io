@@ -272,3 +272,56 @@ a{color:inherit}
   .fa-scl-period-action select{min-width:0;width:100%}
   .fa-scl-sim-actions>button,.fa-scl-period-action button{width:100%}
 }
+
+
+/* Division league mapping and point multipliers */
+.fa-sync-divisions{
+  overflow:hidden;
+  border:1px solid #15344b;
+  border-radius:9px;
+  background:#050f17
+}
+.fa-sync-divisions__head{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  padding:11px 12px;
+  border-bottom:1px solid #15344b
+}
+.fa-sync-divisions__head>span{
+  color:#59d8ff;
+  font-size:.64rem;
+  font-weight:950;
+  letter-spacing:.08em
+}
+.fa-sync-divisions__head small{
+  color:#5f7d91;
+  font-size:.61rem;
+  line-height:1.45
+}
+.fa-sync-division-row{
+  display:grid;
+  grid-template-columns:70px minmax(110px,1fr) 88px;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-bottom:1px solid rgba(21,52,75,.65)
+}
+.fa-sync-division-row:last-child{border-bottom:0}
+.fa-sync-division-row strong{
+  color:#d8e8f1;
+  font-size:.72rem
+}
+.fa-sync-division-row input{
+  width:100%;
+  border:1px solid #1d425b;
+  border-radius:7px;
+  background:#030a10;
+  color:#fff;
+  padding:8px 9px;
+  outline:none
+}
+.fa-sync-division-row input:focus{border-color:#2d7da9}
+@media(max-width:560px){
+  .fa-sync-division-row{grid-template-columns:60px 1fr 76px;padding:8px}
+}
