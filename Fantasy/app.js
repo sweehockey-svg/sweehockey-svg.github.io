@@ -96,7 +96,13 @@
       skater_games_count:"utespelarmatcher räknas", hidden_team:"Laget är dolt", locked_team_default:"Låst lag",
       locked_lineup_note:"Det här är den senast låsta uppställningen. Kommande byten visas inte före nästa deadline.",
       no_locked_lineup:"Ingen låst uppställning hittades.", points_remain_total:"Poängen ligger kvar i lagets total",
-      loading_locked_team:"Hämtar låst lag…", could_not_load_team:"Kunde inte hämta laget"
+      loading_locked_team:"Hämtar låst lag…", could_not_load_team:"Kunde inte hämta laget", selected:"Vald",
+      no_players_match:"Inga spelare matchar filtret.", player_profile_upper:"SPELARPROFIL / FANTASY", match_singular:"Match",
+      league_lower:"liga", ownership_from:"Ägarandel från {period} · {entries} låsta Fantasy-lag.",
+      open_discord:"Öppnar Discord…", must_login_save:"Du måste vara inloggad och ha en godkänd spelarprofil kopplad.",
+      choose_all_six:"Välj alla sex positioner innan du sparar.", team_over_budget:"Laget är över budget.",
+      choose_exact_captain:"Välj exakt en kapten.", saving_team:"Sparar laget…", team_updated:"{league}-laget är uppdaterat.",
+      team_saved_success:"{league}-laget är sparat.", captain_position_free:"Kaptensbyte/positionsändring kostar inget."
     },
     en: {
       nav_build:"BUILD", nav_compete:"COMPETE", nav_climb:"CLIMB", league:"LEAGUE", language:"LANGUAGE",
@@ -175,7 +181,13 @@
       skater_games_count:"skater games counted", hidden_team:"Team is hidden", locked_team_default:"Locked team",
       locked_lineup_note:"This is the latest locked lineup. Upcoming transfers are hidden until the next deadline.",
       no_locked_lineup:"No locked lineup found.", points_remain_total:"Points remain in the team total",
-      loading_locked_team:"Loading locked team…", could_not_load_team:"Could not load team"
+      loading_locked_team:"Loading locked team…", could_not_load_team:"Could not load team", selected:"Selected",
+      no_players_match:"No players match the filter.", player_profile_upper:"PLAYER PROFILE / FANTASY", match_singular:"Match",
+      league_lower:"league", ownership_from:"Ownership from {period} · {entries} locked Fantasy teams.",
+      open_discord:"Opening Discord…", must_login_save:"You must be logged in and have an approved linked player profile.",
+      choose_all_six:"Choose all six positions before saving.", team_over_budget:"The team is over budget.",
+      choose_exact_captain:"Choose exactly one captain.", saving_team:"Saving team…", team_updated:"{league} team updated.",
+      team_saved_success:"{league} team saved.", captain_position_free:"Captain changes and position changes are free."
     },
     fi: {
       nav_build:"RAKENNA", nav_compete:"KILPAILE", nav_climb:"NOUSE", league:"LIIGA", language:"KIELI",
@@ -254,7 +266,13 @@
       skater_games_count:"kenttäpelaajaottelut lasketaan", hidden_team:"Joukkue on piilotettu", locked_team_default:"Lukittu joukkue",
       locked_lineup_note:"Tämä on viimeisin lukittu kokoonpano. Tulevat vaihdot eivät näy ennen seuraavaa deadlinea.",
       no_locked_lineup:"Lukittua kokoonpanoa ei löytynyt.", points_remain_total:"Pisteet säilyvät joukkueen kokonaispisteissä",
-      loading_locked_team:"Ladataan lukittua joukkuetta…", could_not_load_team:"Joukkuetta ei voitu ladata"
+      loading_locked_team:"Ladataan lukittua joukkuetta…", could_not_load_team:"Joukkuetta ei voitu ladata", selected:"Valittu",
+      no_players_match:"Yksikään pelaaja ei vastaa suodatusta.", player_profile_upper:"PELAAJAPROFIILI / FANTASY", match_singular:"Ottelu",
+      league_lower:"liiga", ownership_from:"Omistus jaksosta {period} · {entries} lukittua Fantasy-joukkuetta.",
+      open_discord:"Avataan Discord…", must_login_save:"Sinun on kirjauduttava sisään ja sinulla on oltava hyväksytty linkitetty pelaajaprofiili.",
+      choose_all_six:"Valitse kaikki kuusi pelipaikkaa ennen tallennusta.", team_over_budget:"Joukkue ylittää budjetin.",
+      choose_exact_captain:"Valitse täsmälleen yksi kapteeni.", saving_team:"Tallennetaan joukkuetta…", team_updated:"{league}-joukkue päivitetty.",
+      team_saved_success:"{league}-joukkue tallennettu.", captain_position_free:"Kapteenin vaihto ja pelipaikan muutos ovat ilmaisia."
     },
     de: {
       nav_build:"BAUEN", nav_compete:"SPIELEN", nav_climb:"STEIGEN", league:"LIGA", language:"SPRACHE",
@@ -333,7 +351,13 @@
       skater_games_count:"Feldspielerspiele zählen", hidden_team:"Team ist verborgen", locked_team_default:"Gesperrtes Team",
       locked_lineup_note:"Dies ist die zuletzt gesperrte Aufstellung. Kommende Transfers werden erst nach der nächsten Deadline angezeigt.",
       no_locked_lineup:"Keine gesperrte Aufstellung gefunden.", points_remain_total:"Punkte bleiben in der Team-Gesamtsumme",
-      loading_locked_team:"Gesperrtes Team wird geladen…", could_not_load_team:"Team konnte nicht geladen werden"
+      loading_locked_team:"Gesperrtes Team wird geladen…", could_not_load_team:"Team konnte nicht geladen werden", selected:"Ausgewählt",
+      no_players_match:"Keine Spieler entsprechen dem Filter.", player_profile_upper:"SPIELERPROFIL / FANTASY", match_singular:"Spiel",
+      league_lower:"Liga", ownership_from:"Besitz aus {period} · {entries} gesperrte Fantasy-Teams.",
+      open_discord:"Discord wird geöffnet…", must_login_save:"Du musst angemeldet sein und ein genehmigtes verknüpftes Spielerprofil haben.",
+      choose_all_six:"Wähle alle sechs Positionen, bevor du speicherst.", team_over_budget:"Das Team liegt über dem Budget.",
+      choose_exact_captain:"Wähle genau einen Kapitän.", saving_team:"Team wird gespeichert…", team_updated:"{league}-Team aktualisiert.",
+      team_saved_success:"{league}-Team gespeichert.", captain_position_free:"Kapitäns- und Positionswechsel sind kostenlos."
     }
   };
 
@@ -1406,14 +1430,14 @@
           </div>
           <button type="button" data-add="${player.id}" ${alreadySelected || !competitionOpen() ? "disabled" : ""}>
             ${alreadySelected
-              ? "Vald"
+              ? t("selected")
               : eligibleSlots(player).length > 1
-                ? "Välj position"
-                : "Lägg till"}
+                ? t("choose_position")
+                : t("add")}
           </button>
         </article>
       `;
-    }).join("") || '<div class="fantasy-empty">Inga spelare matchar filtret.</div>';
+    }).join("") || '<div class="fantasy-empty">' + escapeHtml(t("no_players_match")) + '</div>';
   }
 
   function renderPlayers() {
@@ -1421,7 +1445,7 @@
     if (!host) return;
 
     if (!state.pool.length) {
-      host.innerHTML = '<div class="fantasy-empty">' + escapeHtml(seasonLabel()) + ' har ingen publicerad spelarpool ännu.</div>';
+      host.innerHTML = '<div class="fantasy-empty">' + escapeHtml(seasonLabel() + " · " + t("no_pool")) + '</div>';
       return;
     }
 
@@ -1477,7 +1501,7 @@
 
     const ownershipValue = data.ownership_visible
       ? format(ownership?.ownership_pct || 0, number(ownership?.ownership_pct) % 1 ? 1 : 0) + " %"
-      : "Efter deadline";
+      : t("after_deadline");
     const captainValue = data.ownership_visible
       ? format(ownership?.captain_pct || 0, number(ownership?.captain_pct) % 1 ? 1 : 0) + " %"
       : "–";
@@ -1488,11 +1512,11 @@
           const factorText = Math.abs(factor - 1) > 0.001
             ? '<em>×' + escapeHtml(format(factor, 2)) + '</em>'
             : "";
-          const date = match.started_at ? formatDate(match.started_at) : "Match";
+          const date = match.started_at ? formatDate(match.started_at) : t("match_singular");
           return '<div class="fantasy-player-form-row">' +
             '<span><b>' + escapeHtml(date) + '</b><small>' +
               escapeHtml(clean(match.played_position || match.scoring_role) || "–") +
-              ' · liga ' + escapeHtml(match.source_league_id || "–") +
+              ' · ' + escapeHtml(t("league_lower")) + ' ' + escapeHtml(match.source_league_id || "–") +
             '</small></span>' +
             '<span class="fantasy-player-form-row__factor">' + factorText + '</span>' +
             '<strong>' + formatPoints(match.fantasy_points) + ' P</strong>' +
@@ -1521,7 +1545,7 @@
           ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--detail")}
         </div>
         <div class="fantasy-player-detail__identity">
-          <p class="fantasy-kicker">SPELARPROFIL / FANTASY</p>
+          <p class="fantasy-kicker">${escapeHtml(t("player_profile_upper"))}</p>
           <h2 class="fantasy-player-name-line">${countryFlagMarkup(player.country_code)}<span class="fantasy-player-name">${escapeHtml(clean(player.display_gamertag) || t("unknown"))}</span></h2>
           <p>${escapeHtml(clean(player.real_team_name) || t("team_not_ready"))} · ${escapeHtml(slots || "–")}</p>
           <div class="fantasy-player-detail__tags">
@@ -1543,23 +1567,25 @@
 
       <section class="fantasy-player-detail__section">
         <div class="fantasy-player-detail__section-head">
-          <span>FORM</span>
-          <h3>Senaste 5 matcher</h3>
+          <span>${escapeHtml(t("form"))}</span>
+          <h3>${escapeHtml(t("last_5_matches"))}</h3>
         </div>
         <div class="fantasy-player-form">${recentMarkup}</div>
       </section>
 
       <section class="fantasy-player-detail__section">
         <div class="fantasy-player-detail__section-head">
-          <span>UTFALL</span>
-          <h3>Registrerad statistik</h3>
+          <span>${escapeHtml(t("outcome"))}</span>
+          <h3>${escapeHtml(t("registered_stats"))}</h3>
         </div>
         <div class="fantasy-player-detail__stats">${statPieces.join("")}</div>
         ${data.ownership_visible
-          ? '<p class="fantasy-player-detail__note">Ägarandel från ' +
-              escapeHtml(clean(ownership?.period_name) || "senast låsta Fantasy-period") +
-              ' · ' + format(ownership?.entries || 0) + ' låsta Fantasy-lag.</p>'
-          : '<p class="fantasy-player-detail__note">Ägar- och kaptenandel visas först efter Fantasy-periodens deadline.</p>'}
+          ? '<p class="fantasy-player-detail__note">' +
+              escapeHtml(t("ownership_from",{
+                period:clean(ownership?.period_name) || t("ownership_period_default"),
+                entries:format(ownership?.entries || 0)
+              })) + '</p>'
+          : '<p class="fantasy-player-detail__note">' + escapeHtml(t("ownership_after_note")) + '</p>'}
       </section>
     `;
   }
@@ -1572,7 +1598,7 @@
     const player = playerById(playerId);
     host.innerHTML = '<div class="fantasy-player-detail__loading">' +
       (player ? escapeHtml(player.display_gamertag) + ' · ' : '') +
-      'hämtar form och statistik…</div>';
+      escapeHtml(t("loading_form")) + '</div>';
     dialog.showModal();
 
     try {
@@ -1583,7 +1609,7 @@
       if (error) throw error;
       renderPlayerDetail(Array.isArray(data) ? data[0] : data);
     } catch (error) {
-      host.innerHTML = '<div class="fantasy-empty">Kunde inte hämta spelaren: ' +
+      host.innerHTML = '<div class="fantasy-empty">' + escapeHtml(t("could_not_load_player")) + ': ' +
         escapeHtml(error?.message || String(error)) + '</div>';
     }
   }
@@ -1605,9 +1631,9 @@
     host.innerHTML = rows.map((row, index) => `
       <button class="fantasy-leaderboard-row fantasy-leaderboard-row--clickable" type="button" data-view-entry="${row.entry_id}">
         <span>#${row.current_rank || index + 1}</span>
-        <strong>${escapeHtml(row.team_name || "Namnlöst lag")}</strong>
+        <strong>${escapeHtml(row.team_name || t("unnamed_team"))}</strong>
         <b>${format(row.total_points, number(row.total_points) % 1 ? 1 : 0)} P</b>
-        <em>Visa lag →</em>
+        <em>${escapeHtml(t("show_team"))}</em>
       </button>
     `).join("");
   }
