@@ -52,6 +52,26 @@
     swapSlot: null
   };
 
+  function nationalityScope() {
+    return clean(state.competition?.settings?.nationality_scope || "all").toLowerCase();
+  }
+
+  function fantasyCountryAllowed(countryCode) {
+    const scope = nationalityScope();
+    const code = clean(countryCode).toUpperCase();
+
+    if (scope === "all") return true;
+    if (scope === "sweden") return ["SE","SWE","SWEDEN"].includes(code);
+    if (scope === "scandinavia") {
+      return [
+        "SE","SWE","SWEDEN",
+        "DK","DNK","DEN","DENMARK",
+        "NO","NOR","NORWAY"
+      ].includes(code);
+    }
+    return true;
+  }
+
   function format(value, digits = 0) {
     return new Intl.NumberFormat("sv-SE", {
       minimumFractionDigits: digits,
@@ -1271,7 +1291,7 @@
 
     if (poolResult.error) throw poolResult.error;
 
-    state.pool = poolResult.data || [];
+    state.pool = (poolResult.data || []).filter((player) => fantasyCountryAllowed(player.country_code));
     await loadLeaderboard();
   }
 
