@@ -1128,9 +1128,12 @@
       const code = clean(data?.code);
       if (!code) throw new Error("Fantasy-ligan skapades men koden kunde inte läsas.");
 
+      let createdLeagueIds = [];
+
       if (league === "ECL") {
         const weights = parseNewEclWeights();
-        const hasAnyLeagueId = weights.some((item) => item.league_id);
+        createdLeagueIds = weights.map((item) => item.league_id).filter(Boolean);
+        const hasAnyLeagueId = createdLeagueIds.length > 0;
 
         if (hasAnyLeagueId) {
           const weightResult = await sb.rpc("seh_fantasy_admin_update_league_weights", {
@@ -1141,7 +1144,8 @@
         }
       } else if (league === "GCL") {
         const weights = parseNewGclWeights();
-        const hasAnyLeagueId = weights.some((item) => item.league_id);
+        createdLeagueIds = weights.map((item) => item.league_id).filter(Boolean);
+        const hasAnyLeagueId = createdLeagueIds.length > 0;
 
         if (hasAnyLeagueId) {
           const weightResult = await sb.rpc("seh_fantasy_admin_update_league_weights", {
@@ -1152,6 +1156,7 @@
         }
       } else {
         const leagueIds = parseNewGenericLeagueIds();
+        createdLeagueIds = leagueIds;
 
         if (leagueIds.length) {
           const sourceResult = await sb.rpc("seh_fantasy_admin_update_sync_sources", {
@@ -1162,7 +1167,63 @@
         }
       }
 
-      setStatus("createCompetitionStatus", "Fantasy-ligan är skapad och SportsGamer-källan är kopplad.", "success");
+      if (createdLeagueIds.length) {
+        const requestId = "fantasy_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+
+        setStatus(
+          "createCompetitionStatus",
+          "Fantasy-ligan är skapad. Hämtar lag och spelare från SportsGamer…",
+          "working"
+        );
+
+        await callAdminSync({
+          action: "start",
+          job: "fantasy_sportsgamer",
+          request_id: requestId,
+          competition_code: code,
+          league_ids: createdLeagueIds
+        });
+
+        for (let attempt = 0; attempt < 72; attempt += 1) {
+          await sleep(5000);
+          const status = await callAdminSync({
+            action: "status",
+            job: "fantasy_sportsgamer",
+            request_id: requestId
+          });
+
+          if (status.state === "completed") {
+            if (status.conclusion !== "success") {
+              throw new Error(
+                "Fantasy-ligan skapades, men SportsGamer-importen avslutades med " +
+                (status.conclusion || "fel") + "."
+              );
+            }
+
+            setStatus(
+              "createCompetitionStatus",
+              "Klart. Fantasy-ligan är byggd och spelarna är hämtade.",
+              "success"
+            );
+            break;
+          }
+
+          setStatus(
+            "createCompetitionStatus",
+            status.state === "in_progress"
+              ? "Hämtar lag, spelare och matchdata från SportsGamer…"
+              : "Importen väntar i kön…",
+            "working"
+          );
+        }
+      } else {
+        setStatus(
+          "createCompetitionStatus",
+          "Fantasy-ligan är skapad. Lägg in SportsGamer liga-ID för att hämta spelare.",
+          "success"
+        );
+      }
+
       const url = new URL(window.location.href);
       url.searchParams.set("competition", code);
       window.location.href = url.toString();
