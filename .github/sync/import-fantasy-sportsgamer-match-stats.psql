@@ -60,7 +60,7 @@ select
   (string_to_array(:'league_ids',',')::bigint[])[1] as source_league_id,
   string_to_array(:'league_ids',',')::bigint[] as source_league_ids
 from public.ehockey_fantasy_competitions c
-where c.code='SCL27'
+where upper(c.code)=upper(:'competition_code')
 limit 1;
 
 select 1 / case when count(*)=1 then 1 else 0 end as competition_settings_must_exist
