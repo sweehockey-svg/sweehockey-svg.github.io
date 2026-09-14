@@ -414,11 +414,16 @@
     const sourceIsPlaceholder = sourceLeagueIds.length === 1 && sourceLeagueIds[0] === 999999;
     const configuredLeagueIds = sourceIsPlaceholder ? [] : sourceLeagueIds.filter((id) => id !== 999999);
     const weights = Array.isArray(sync.league_weights) ? sync.league_weights : [];
+    const isEcl = activeLeagueCode() === "ECL";
+    if ($("divisionSyncSettings")) $("divisionSyncSettings").hidden = !isEcl;
+    if ($("genericSyncSettings")) $("genericSyncSettings").hidden = isEcl;
+
     DIVISION_SYNC_FIELDS.forEach((field) => {
       const row = weights.find((item) => clean(item?.division).toLowerCase() === field.division.toLowerCase()) || {};
       if ($(field.leagueId)) $(field.leagueId).value = row.league_id || "";
       if ($(field.factorId)) $(field.factorId).value = Number(row.multiplier ?? field.defaultFactor).toFixed(2);
     });
+    if ($("syncGenericLeagueIds")) $("syncGenericLeagueIds").value = configuredLeagueIds.join(", ");
     if ($("syncAutoEnabled")) $("syncAutoEnabled").checked = sourceIsPlaceholder ? false : Boolean(settings.auto_sync_enabled);
     if ($("runSportsGamerSync")) $("runSportsGamerSync").disabled = configuredLeagueIds.length === 0;
     if ($("syncTimes")) $("syncTimes").value = Array.isArray(settings.schedule_times)
@@ -762,6 +767,14 @@
     });
   }
 
+  function parseGenericLeagueIds() {
+    const values = clean($("syncGenericLeagueIds")?.value)
+      .split(/[\s,;]+/)
+      .map((value) => Number(value))
+      .filter((value) => Number.isInteger(value) && value > 0 && value !== 999999);
+    return [...new Set(values)].slice(0, 10);
+  }
+
   function parseSyncTimes() {
     return clean($("syncTimes")?.value)
       .split(/[\s,;]+/)
@@ -771,20 +784,35 @@
 
   async function saveSyncSettings(event) {
     event.preventDefault();
-    setStatus("syncSettingsStatus", "Sparar schema…", "working");
+    setStatus("syncSettingsStatus", "Sparar synkinställningar…", "working");
 
     try {
-      const weights = parseLeagueWeights();
-      const leagueIds = weights.map((item) => item.league_id).filter(Boolean);
+      const isEcl = activeLeagueCode() === "ECL";
+      let leagueIds = [];
+
+      if (isEcl) {
+        const weights = parseLeagueWeights();
+        leagueIds = weights.map((item) => item.league_id).filter(Boolean);
+
+        const weightResult = await sb.rpc("seh_fantasy_admin_update_league_weights", {
+          p_code: activeCompetitionCode(),
+          p_weights: weights
+        });
+        if (weightResult.error) throw weightResult.error;
+      } else {
+        leagueIds = parseGenericLeagueIds();
+        if (leagueIds.length) {
+          const sourceResult = await sb.rpc("seh_fantasy_admin_update_sync_sources", {
+            p_code: activeCompetitionCode(),
+            p_source_league_ids: leagueIds
+          });
+          if (sourceResult.error) throw sourceResult.error;
+        }
+      }
+
       if (Boolean($("syncAutoEnabled")?.checked) && !leagueIds.length) {
         throw new Error("Ange minst ett riktigt SportsGamer liga-ID innan autosynk aktiveras.");
       }
-
-      const weightResult = await sb.rpc("seh_fantasy_admin_update_league_weights", {
-        p_code: activeCompetitionCode(),
-        p_weights: weights
-      });
-      if (weightResult.error) throw weightResult.error;
 
       const { error } = await sb.rpc("seh_fantasy_admin_update_sync_settings", {
         p_code: activeCompetitionCode(),
@@ -794,7 +822,7 @@
       if (error) throw error;
       await loadSyncState();
       renderSync();
-      setStatus("syncSettingsStatus", "Schemat är sparat.", "success");
+      setStatus("syncSettingsStatus", "Synkinställningarna är sparade.", "success");
     } catch (error) {
       setStatus("syncSettingsStatus", "Fel: " + (error?.message || error), "error");
     }
