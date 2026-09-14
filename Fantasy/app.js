@@ -65,7 +65,7 @@
     },
     ECL: {
       label: "ECL",
-      logo: "assets/leagues/ecl.png",
+      logo: "/Fantasy/assets/leagues/ecl.webp",
       accent: "#d72b2b",
       accentRgb: "215,43,43"
     },
@@ -109,7 +109,14 @@
     const settings = state.competition?.settings || {};
     return {
       ...base,
-      logo: clean(settings.brand_logo) || base.logo || fallback.logo,
+      logo: (() => {
+        const configured = clean(settings.brand_logo);
+        if (configured === "assets/leagues/ecl.png" || configured === "/Fantasy/assets/leagues/ecl.png") {
+          return "/Fantasy/assets/leagues/ecl.webp";
+        }
+        if (configured.startsWith("assets/")) return "/Fantasy/" + configured;
+        return configured || base.logo || fallback.logo;
+      })(),
       accent: clean(settings.brand_accent) || base.accent || fallback.accent,
       accentRgb: base.accentRgb || fallback.accentRgb
     };
