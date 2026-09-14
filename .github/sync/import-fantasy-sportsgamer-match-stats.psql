@@ -57,7 +57,11 @@ from fantasy_match_player_stats_stage;
 create temporary table fantasy_import_meta on commit preserve rows as
 select
   c.id as competition_id,
-  s.source_league_id
+  s.source_league_id,
+  case
+    when coalesce(array_length(s.source_league_ids,1),0)>0 then s.source_league_ids
+    else array[s.source_league_id]
+  end as source_league_ids
 from public.ehockey_fantasy_competitions c
 join public.ehockey_fantasy_sync_settings s on s.competition_id=c.id
 where c.code='SCL27'
@@ -101,7 +105,7 @@ do update set
 delete from public.ehockey_fantasy_matches t
 using fantasy_import_meta m
 where t.competition_id=m.competition_id
-  and t.source_league_id=m.source_league_id
+  and t.source_league_id=any(m.source_league_ids)
   and not exists (
     select 1 from fantasy_matches_stage s
     where s.source_match_id=t.source_match_id
@@ -171,7 +175,7 @@ do update set
 delete from public.ehockey_fantasy_match_player_stats t
 using fantasy_import_meta m
 where t.competition_id=m.competition_id
-  and t.source_league_id=m.source_league_id
+  and t.source_league_id=any(m.source_league_ids)
   and not exists (
     select 1
     from fantasy_match_player_stats_stage s
@@ -186,12 +190,13 @@ select public.seh_fantasy_refresh_match_scores('SCL27') as result;
 update public.ehockey_fantasy_sync_runs r
 set
   status='success',
-  source_league_id=m.source_league_id,
+  source_league_id=m.source_league_ids[1],
   source_table=:'source_table',
   matches_upserted=(select count(*) from fantasy_matches_stage),
   player_rows_upserted=(select count(*) from fantasy_match_player_stats_stage),
   match_rows_scored=coalesce((select (result->>'match_rows')::integer from fantasy_refresh_result),0),
   details=jsonb_build_object(
+    'source_league_ids',to_jsonb(m.source_league_ids),
     'skater_source',:'skater_source',
     'goalie_source',:'goalie_source',
     'match_source',:'match_source',
