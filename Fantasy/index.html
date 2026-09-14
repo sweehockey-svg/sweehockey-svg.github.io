@@ -12,7 +12,7 @@
   <title>eHockey Fantasy Liga</title>
 
   <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20260914-v35-multileague">
+  <link rel="stylesheet" href="style.css?v=20260914-v36-languages">
 </head>
 <body>
   <div class="beta-ribbon">
@@ -31,23 +31,32 @@
     </a>
 
     <nav class="fantasy-site-header__center" aria-label="Fantasy">
-      <span>BYGG</span>
+      <span data-i18n="nav_build">BYGG</span>
       <i></i>
-      <span>TÄVLA</span>
+      <span data-i18n="nav_compete">TÄVLA</span>
       <i></i>
-      <span>KLÄTTRA</span>
+      <span data-i18n="nav_climb">KLÄTTRA</span>
     </nav>
 
     <div class="fantasy-site-header__actions">
       <label class="fantasy-competition-switcher">
-        <span>LIGA</span>
-        <select id="competitionSelect" aria-label="Välj Fantasy-liga"></select>
+        <span data-i18n="league">LIGA</span>
+        <select id="competitionSelect" aria-label="Välj Fantasy-liga" data-i18n-aria-label="choose_fantasy_league"></select>
+      </label>
+      <label class="fantasy-language-switcher">
+        <span data-i18n="language">SPRÅK</span>
+        <select id="languageSelect" aria-label="Välj språk" data-i18n-aria-label="choose_language">
+          <option value="sv">Svenska</option>
+          <option value="en">English</option>
+          <option value="fi">Suomi</option>
+          <option value="de">Deutsch</option>
+        </select>
       </label>
       <a class="powered-link" href="../">
-        <small>DRIVS AV</small>
+        <small data-i18n="powered_by">DRIVS AV</small>
         <strong>SVENSK eHOCKEY</strong>
       </a>
-      <button id="accountButton" class="fantasy-account-button" type="button">Logga in med Discord</button>
+      <button id="accountButton" class="fantasy-account-button" type="button" data-i18n="login_discord">Logga in med Discord</button>
     </div>
   </header>
 
@@ -66,14 +75,14 @@
 
         <div class="fantasy-hero__actions">
           <button id="heroBuildButton" type="button" class="fantasy-hero-cta" data-jump-team>Bygg din sexa</button>
-          <button type="button" class="fantasy-hero-ghost" data-jump-rules>Se regler</button>
+          <button type="button" class="fantasy-hero-ghost" data-jump-rules data-i18n="see_rules">Se regler</button>
         </div>
 
         <div class="fantasy-hero__badges">
-          <span><b>6</b> SPELARE</span>
-          <span><b>90</b> BUDGET</span>
-          <span><b>2</b> MAX / LAG</span>
-          <span><b>1,5×</b> KAPTEN</span>
+          <span><b>6</b> <span data-i18n="players_upper">SPELARE</span></span>
+          <span><b>90</b> <span data-i18n="budget_upper">BUDGET</span></span>
+          <span><b>2</b> <span data-i18n="max_per_team_upper">MAX / LAG</span></span>
+          <span><b>1,5×</b> <span data-i18n="captain_upper">KAPTEN</span></span>
         </div>
       </div>
 
@@ -84,24 +93,24 @@
         </div>
         <div class="fantasy-scoreboard__grid">
           <article>
-            <span>START</span>
+            <span data-i18n="start_upper">START</span>
             <strong id="heroStart">1 OKT</strong>
           </article>
           <article>
-            <span>STATUS</span>
+            <span data-i18n="status_upper">STATUS</span>
             <strong id="heroStatus" class="is-live">ÖPPEN</strong>
           </article>
           <article>
-            <span>BUDGET</span>
+            <span data-i18n="budget_upper">BUDGET</span>
             <strong id="heroBudget">90</strong>
           </article>
           <article>
-            <span>FANTASY-LAG</span>
+            <span data-i18n="fantasy_teams_upper">FANTASY-LAG</span>
             <strong id="heroEntries">0</strong>
           </article>
         </div>
         <div class="fantasy-scoreboard__source">
-          <span>BETAKÄLLA</span>
+          <span data-i18n="beta_source_upper">BETAKÄLLA</span>
           <strong id="scoreboardSource">LADDAR…</strong>
         </div>
       </aside>
@@ -109,20 +118,20 @@
 
     <section class="fantasy-commandbar">
       <div>
-        <span>LÄGE</span>
+        <span data-i18n="mode_upper">LÄGE</span>
         <strong id="commandMode">FANTASY / LADDAR</strong>
       </div>
       <div>
-        <span>SPELARPOOL</span>
+        <span data-i18n="player_pool_upper">SPELARPOOL</span>
         <strong id="commandPoolCount">237 SPELARE</strong>
       </div>
       <div>
-        <span>PRISINTERVALL</span>
+        <span data-i18n="price_range_upper">PRISINTERVALL</span>
         <strong>8–30 CR</strong>
       </div>
       <div>
-        <span>ÅTKOMST</span>
-        <strong>DISCORD + KOPPLAD PROFIL</strong>
+        <span data-i18n="access_upper">ÅTKOMST</span>
+        <strong data-i18n="access_value">DISCORD + KOPPLAD PROFIL</strong>
       </div>
     </section>
 
@@ -134,51 +143,50 @@
       </div>
       <div class="fantasy-period-hub__stats">
         <div>
-          <span>MATCHER</span>
+          <span data-i18n="matches_upper">MATCHER</span>
           <strong id="periodHubMatches">0</strong>
-          <small>registrerade</small>
+          <small data-i18n="registered">registrerade</small>
         </div>
         <div>
-          <span>FANTASY-LAG</span>
+          <span data-i18n="fantasy_teams_upper">FANTASY-LAG</span>
           <strong id="periodHubEntries">0</strong>
-          <small>skapade</small>
+          <small data-i18n="created">skapade</small>
         </div>
         <div>
-          <span>ÄGARINFO</span>
+          <span data-i18n="ownership_info_upper">ÄGARINFO</span>
           <strong id="periodHubOwnership">Efter deadline</strong>
-          <small>låst period</small>
+          <small data-i18n="locked_period">låst period</small>
         </div>
         <div>
-          <span>DEADLINE</span>
+          <span data-i18n="deadline_upper">DEADLINE</span>
           <strong id="periodHubDeadline">Ej satt</strong>
-          <small>svensk tid</small>
+          <small data-i18n="swedish_time">svensk tid</small>
         </div>
       </div>
     </section>
 
     <nav class="fantasy-tabs" aria-label="Fantasy">
-      <button type="button" class="is-active" data-tab="team"><span>01</span> Mitt lag</button>
-      <button type="button" data-tab="players"><span>02</span> Spelare</button>
-      <button type="button" data-tab="leaderboard"><span>03</span> Topplista</button>
-      <button type="button" data-tab="rules"><span>04</span> Regler</button>
+      <button type="button" class="is-active" data-tab="team"><span>01</span> <span data-i18n="my_team">Mitt lag</span></button>
+      <button type="button" data-tab="players"><span>02</span> <span data-i18n="players">Spelare</span></button>
+      <button type="button" data-tab="leaderboard"><span>03</span> <span data-i18n="leaderboard">Topplista</span></button>
+      <button type="button" data-tab="rules"><span>04</span> <span data-i18n="rules">Regler</span></button>
     </nav>
 
     <section class="fantasy-panel" data-panel="team" id="teamPanel">
       <section id="accountGate" class="fantasy-gate">
         <div class="fantasy-gate__icon">↗</div>
         <div class="fantasy-gate__copy">
-          <p class="fantasy-kicker">KONTO KRÄVS</p>
-          <h2 id="gateTitle">Kontrollerar ditt konto…</h2>
+          <p class="fantasy-kicker" data-i18n="account_required_upper">KONTO KRÄVS</p>
+          <h2 id="gateTitle" data-i18n="checking_account">Kontrollerar ditt konto…</h2>
           <p id="gateText">
-            Du måste vara inloggad med Discord och ha en godkänd spelarprofil kopplad
-            för att skapa ett lag.
+            <span data-i18n="account_required_text">Du måste vara inloggad med Discord och ha en godkänd spelarprofil kopplad för att skapa ett lag.</span>
           </p>
           <p id="gateStatus" class="fantasy-status" role="status"></p>
         </div>
 
         <div class="fantasy-gate__actions">
-          <button id="discordLogin" class="fantasy-primary" type="button">Logga in med Discord</button>
-          <a id="connectProfile" class="fantasy-secondary" href="../#/free-agents" hidden>Koppla spelarprofil</a>
+          <button id="discordLogin" class="fantasy-primary" type="button" data-i18n="login_discord">Logga in med Discord</button>
+          <a id="connectProfile" class="fantasy-secondary" href="../#/free-agents" hidden data-i18n="connect_profile">Koppla spelarprofil</a>
         </div>
       </section>
 
@@ -192,26 +200,26 @@
 
         <div class="fantasy-account-state">
           <div>
-            <span>LAGANSVARIG</span>
+            <span data-i18n="team_manager_upper">LAGANSVARIG</span>
             <strong id="linkedPlayer">–</strong>
           </div>
           <div class="fantasy-account-state__right">
-            <span>KONTO</span>
-            <button id="logoutButton" class="fantasy-link-button" type="button">Logga ut</button>
+            <span data-i18n="account_upper">KONTO</span>
+            <button id="logoutButton" class="fantasy-link-button" type="button" data-i18n="logout">Logga ut</button>
           </div>
         </div>
 
         <div class="fantasy-builder-top">
           <div class="fantasy-team-name fantasy-team-name--locked">
-            <span>FANTASY-LAG</span>
+            <span data-i18n="fantasy_team_upper">FANTASY-LAG</span>
             <div class="fantasy-team-name__locked">
               <strong id="teamNameDisplay">–</strong>
-              <small>Namnet följer din kopplade spelarprofil</small>
+              <small data-i18n="team_name_follows_profile">Namnet följer din kopplade spelarprofil</small>
             </div>
           </div>
 
           <div class="fantasy-mini-stat">
-            <span>TRUPP</span>
+            <span data-i18n="squad_upper">TRUPP</span>
             <strong id="selectedCount">0 / 6</strong>
           </div>
           <div class="fantasy-mini-stat fantasy-mini-stat--points">
@@ -219,32 +227,32 @@
             <strong id="teamPoints">–</strong>
           </div>
           <div class="fantasy-mini-stat">
-            <span>ANVÄNT</span>
+            <span data-i18n="used_upper">ANVÄNT</span>
             <strong id="budgetUsed">0</strong>
           </div>
           <div class="fantasy-mini-stat fantasy-mini-stat--accent">
-            <span>KVAR</span>
+            <span data-i18n="remaining_upper">KVAR</span>
             <strong id="budgetLeft">90</strong>
           </div>
         </div>
 
         <section id="transferPanel" class="fantasy-transfer-panel">
           <div class="fantasy-transfer-panel__copy">
-            <span>BYTEN</span>
+            <span data-i18n="transfers_upper">BYTEN</span>
             <strong id="transferMode">INFÖR SÄSONGEN · OBEGRÄNSADE BYTEN</strong>
             <small id="transferDetail">Bygg om fritt fram till första Fantasy-periodens deadline.</small>
           </div>
           <div class="fantasy-transfer-panel__stats">
             <div>
-              <span>GRATIS</span>
+              <span data-i18n="free_upper">GRATIS</span>
               <strong id="transferFree">∞</strong>
             </div>
             <div>
-              <span>NÄSTA</span>
+              <span data-i18n="next_upper">NÄSTA</span>
               <strong id="transferNext">0 P</strong>
             </div>
             <div>
-              <span>SISTA TID</span>
+              <span data-i18n="deadline_upper">SISTA TID</span>
               <strong id="transferDeadline">Ej satt</strong>
             </div>
           </div>
@@ -254,8 +262,8 @@
           <section class="fantasy-rink">
             <div class="fantasy-section-title">
               <div>
-                <span>STARTSEXA</span>
-                <h3>Din startsexa</h3>
+                <span data-i18n="starting_six_upper">STARTSEXA</span>
+                <h3 data-i18n="your_starting_six">Din startsexa</h3>
               </div>
               <small>LW · C · RW · LD · RD · G</small>
             </div>
@@ -272,10 +280,10 @@
             <section id="formerPlayersSection" class="fantasy-former-players" hidden>
               <div class="fantasy-former-players__head">
                 <div>
-                  <span>LAGHISTORIK</span>
-                  <h4>Tidigare spelare</h4>
+                  <span data-i18n="team_history_upper">LAGHISTORIK</span>
+                  <h4 data-i18n="former_players">Tidigare spelare</h4>
                 </div>
-                <small>Poängen de tjänade in medan de fanns i laget ligger kvar i lagets total.</small>
+                <small data-i18n="former_players_note">Poängen de tjänade in medan de fanns i laget ligger kvar i lagets total.</small>
               </div>
               <div id="formerPlayersList" class="fantasy-former-players__list"></div>
             </section>
@@ -284,22 +292,22 @@
           <section class="fantasy-market">
             <div class="fantasy-section-title">
               <div>
-                <span>SPELARMARKNAD</span>
-                <h3>Spelarlista</h3>
+                <span data-i18n="player_market_upper">SPELARMARKNAD</span>
+                <h3 data-i18n="player_list">Spelarlista</h3>
               </div>
               <small id="marketSourceLabel">FANTASY-SPELARPOOL</small>
             </div>
 
             <div class="fantasy-market__filters">
               <label class="fantasy-filter">
-                <span>SÖK SPELARE / LAG</span>
-                <input id="marketSearch" type="search" placeholder="Gamertag eller lag…">
+                <span data-i18n="search_player_team_upper">SÖK SPELARE / LAG</span>
+                <input id="marketSearch" type="search" placeholder="Gamertag eller lag…" data-i18n-placeholder="search_placeholder">
               </label>
 
               <label class="fantasy-filter">
-                <span>POSITION</span>
+                <span data-i18n="position_upper">POSITION</span>
                 <select id="marketPosition">
-                  <option value="all">Alla</option>
+                  <option value="all" data-i18n="all">Alla</option>
                   <option>LW</option>
                   <option>C</option>
                   <option>RW</option>
@@ -316,10 +324,10 @@
 
         <div class="fantasy-builder-actions">
           <div>
-            <span class="fantasy-builder-actions__label">LAGSTATUS</span>
+            <span class="fantasy-builder-actions__label" data-i18n="team_status_upper">LAGSTATUS</span>
             <p id="saveStatus" class="fantasy-status" role="status"></p>
           </div>
-          <button id="saveTeam" class="fantasy-primary fantasy-primary--save" type="button">Spara testlag</button>
+          <button id="saveTeam" class="fantasy-primary fantasy-primary--save" type="button" data-i18n="save_team">Spara lag</button>
         </div>
       </section>
     </section>
@@ -328,21 +336,21 @@
       <div class="fantasy-section-head">
         <div>
           <p id="playersKicker" class="fantasy-kicker">FANTASY / SPELARE</p>
-          <h2>Fantasy-spelare</h2>
+          <h2 data-i18n="fantasy_players">Fantasy-spelare</h2>
           <p id="playersIntro">Laddar spelarpool…</p>
         </div>
       </div>
 
       <div class="fantasy-players-filters">
         <label class="fantasy-filter">
-          <span>SÖK SPELARE / LAG</span>
-          <input id="playersSearch" type="search" placeholder="Gamertag eller lag…">
+          <span data-i18n="search_player_team_upper">SÖK SPELARE / LAG</span>
+          <input id="playersSearch" type="search" placeholder="Gamertag eller lag…" data-i18n-placeholder="search_placeholder">
         </label>
 
         <label class="fantasy-filter">
-          <span>POSITION</span>
+          <span data-i18n="position_upper">POSITION</span>
           <select id="playersPosition">
-            <option value="all">Alla</option>
+            <option value="all" data-i18n="all">Alla</option>
             <option>LW</option>
             <option>C</option>
             <option>RW</option>
@@ -359,7 +367,7 @@
     <section class="fantasy-panel" data-panel="leaderboard" hidden>
       <div class="fantasy-section-head">
         <div>
-          <p class="fantasy-kicker">BETA-TOPPLISTA</p>
+          <p class="fantasy-kicker" data-i18n="leaderboard_upper">TOPPLISTA</p>
           <h2 id="leaderboardTitle">Fantasy</h2>
           <p id="leaderboardIntro">Laddar topplista…</p>
         </div>
@@ -371,7 +379,7 @@
     <section class="fantasy-panel" data-panel="rules" hidden id="rulesPanel">
       <div class="fantasy-section-head">
         <div>
-          <p class="fantasy-kicker">REGLER / BETA V1</p>
+          <p class="fantasy-kicker" data-i18n="rules_upper">REGLER</p>
           <h2 id="rulesTitle">Så fungerar Fantasy</h2>
           <p id="rulesIntro">Reglerna anpassas efter vald liga.</p>
         </div>
@@ -380,8 +388,8 @@
       <div class="fantasy-rules-grid">
         <article class="fantasy-rule-card">
           <span>01</span>
-          <h3>Sex spelare</h3>
-          <p>LW, C, RW, LD, RD och G. Samma spelare kan bara väljas en gång. Spelare med dokumenterad positionshistorik kan vara valbara på flera platser.</p>
+          <h3 data-i18n="six_players">Sex spelare</h3>
+          <p data-i18n="six_players_text">LW, C, RW, LD, RD och G. Samma spelare kan bara väljas en gång. Spelare med dokumenterad positionshistorik kan vara valbara på flera platser.</p>
         </article>
 
         <article class="fantasy-rule-card">
@@ -404,33 +412,33 @@
 
         <article class="fantasy-rule-card fantasy-rule-card--wide">
           <span>05</span>
-          <h3>Fantasy-poäng</h3>
+          <h3 data-i18n="fantasy_points">Fantasy-poäng</h3>
 
-          <p class="fantasy-scoring-note"><strong>Position per match:</strong> På utespelarplatser räknas bara matcher som spelaren faktiskt spelar som forward eller back, och poängformeln följer den verkliga positionen i varje match. På G-platsen räknas bara matcher som spelaren faktiskt spelar målvakt. Tydliga målvakter och utespelare separeras med historik före tävlingen; verkliga hybrider kan vara valbara i båda rollerna.</p>
+          <p class="fantasy-scoring-note" data-i18n="position_per_match_text"><strong>Position per match:</strong> På utespelarplatser räknas bara matcher som spelaren faktiskt spelar som forward eller back, och poängformeln följer den verkliga positionen i varje match. På G-platsen räknas bara matcher som spelaren faktiskt spelar målvakt. Tydliga målvakter och utespelare separeras med historik före tävlingen; verkliga hybrider kan vara valbara i båda rollerna.</p>
 
           <table class="fantasy-scoring">
             <thead>
-              <tr><th>Händelse</th><th>F</th><th>D</th><th>G</th></tr>
+              <tr><th data-i18n="event">Händelse</th><th>F</th><th>D</th><th>G</th></tr>
             </thead>
             <tbody>
-              <tr><td>Spelad match</td><td>+1</td><td>+1</td><td>+1</td></tr>
-              <tr><td>Mål</td><td>+5</td><td>+6</td><td>+10</td></tr>
-              <tr><td>Assist</td><td>+3</td><td>+4</td><td>+5</td></tr>
-              <tr><td>Avgörande mål</td><td>+2</td><td>+2</td><td>–</td></tr>
-              <tr><td>Block</td><td>–</td><td>+0,25</td><td>–</td></tr>
-              <tr><td>Vinst</td><td>–</td><td>–</td><td>+6</td></tr>
-              <tr><td>Räddning</td><td>–</td><td>–</td><td>+0,35</td></tr>
-              <tr><td>Hållen nolla</td><td>–</td><td>–</td><td>+8</td></tr>
-              <tr><td>Insläppt mål</td><td>–</td><td>–</td><td>−0,50</td></tr>
+              <tr><td data-i18n="played_match">Spelad match</td><td>+1</td><td>+1</td><td>+1</td></tr>
+              <tr><td data-i18n="goal">Mål</td><td>+5</td><td>+6</td><td>+10</td></tr>
+              <tr><td data-i18n="assist">Assist</td><td>+3</td><td>+4</td><td>+5</td></tr>
+              <tr><td data-i18n="game_winning_goal">Avgörande mål</td><td>+2</td><td>+2</td><td>–</td></tr>
+              <tr><td data-i18n="block">Block</td><td>–</td><td>+0,25</td><td>–</td></tr>
+              <tr><td data-i18n="win">Vinst</td><td>–</td><td>–</td><td>+6</td></tr>
+              <tr><td data-i18n="save">Räddning</td><td>–</td><td>–</td><td>+0,35</td></tr>
+              <tr><td data-i18n="shutout">Hållen nolla</td><td>–</td><td>–</td><td>+8</td></tr>
+              <tr><td data-i18n="goal_allowed">Insläppt mål</td><td>–</td><td>–</td><td>−0,50</td></tr>
             </tbody>
           </table>
 
           <div id="divisionFactorBlock" hidden>
-            <p class="fantasy-scoring-note"><strong>ECL-divisioner:</strong> Matchens SportsGamer liga-ID avgör poängfaktorn. Ett vanligt lagbyte inom samma division påverkar inte Fantasy alls. Om en spelare byter division får bara de nya matcherna den nya divisionens faktor.</p>
+            <p class="fantasy-scoring-note" data-i18n="ecl_divisions_text"><strong>ECL-divisioner:</strong> Matchens SportsGamer liga-ID avgör poängfaktorn. Ett vanligt lagbyte inom samma division påverkar inte Fantasy alls. Om en spelare byter division får bara de nya matcherna den nya divisionens faktor.</p>
 
             <table class="fantasy-scoring">
               <thead>
-                <tr><th>Division</th><th>Faktor</th><th>Exempel: 40 råpoäng</th></tr>
+                <tr><th data-i18n="division">Division</th><th data-i18n="factor">Faktor</th><th data-i18n="example_40_raw">Exempel: 40 råpoäng</th></tr>
               </thead>
               <tbody>
                 <tr><td>Elite</td><td>1,10×</td><td>44 P</td></tr>
@@ -443,11 +451,11 @@
           </div>
 
           <div id="gclFactorBlock" hidden>
-            <p class="fantasy-scoring-note"><strong>GCL-divisioner:</strong> Div 1 ger en liten bonus eftersom motståndet är starkare. Div 2 ligger på normal faktor.</p>
+            <p class="fantasy-scoring-note" data-i18n="gcl_divisions_text"><strong>GCL-divisioner:</strong> Div 1 ger en liten bonus eftersom motståndet är starkare. Div 2 ligger på normal faktor.</p>
 
             <table class="fantasy-scoring">
               <thead>
-                <tr><th>Division</th><th>Faktor</th><th>Exempel: 40 råpoäng</th></tr>
+                <tr><th data-i18n="division">Division</th><th data-i18n="factor">Faktor</th><th data-i18n="example_40_raw">Exempel: 40 råpoäng</th></tr>
               </thead>
               <tbody>
                 <tr><td>Div 1</td><td>1,05×</td><td>42 P</td></tr>
@@ -459,16 +467,13 @@
 
         <article class="fantasy-rule-card">
           <span>06</span>
-          <h3>Verifierat konto</h3>
-          <p>
-            Alla kan se sidan och spelarpoolen. För att skapa ett lag krävs Discord-inloggning
-            och godkänd Fantasy-access, normalt genom en kopplad Svensk eHockey-spelarprofil.
-          </p>
+          <h3 data-i18n="verified_account">Verifierat konto</h3>
+          <p data-i18n="verified_account_text">Alla kan se sidan och spelarpoolen. För att skapa ett lag krävs Discord-inloggning och godkänd Fantasy-access, normalt genom en kopplad Svensk eHockey-spelarprofil.</p>
         </article>
 
         <article class="fantasy-rule-card">
           <span>07</span>
-          <h3>Fantasy-perioder och byten</h3>
+          <h3 data-i18n="periods_and_transfers">Fantasy-perioder och byten</h3>
           <p id="periodRulesText">Fantasy-perioder och byten laddas…</p>
         </article>
       </div>
@@ -476,32 +481,32 @@
   </main>
 
   <dialog id="publicEntryDialog" class="fantasy-public-entry-dialog">
-    <button id="closePublicEntryDialog" class="fantasy-public-entry-dialog__close" type="button" aria-label="Stäng">×</button>
+    <button id="closePublicEntryDialog" class="fantasy-public-entry-dialog__close" type="button" aria-label="Stäng" data-i18n-aria-label="close">×</button>
     <div id="publicEntryContent" class="fantasy-public-entry__content"></div>
   </dialog>
 
   <dialog id="playerDetailDialog" class="fantasy-player-detail-dialog">
-    <button id="closePlayerDetailDialog" class="fantasy-player-detail-dialog__close" type="button" aria-label="Stäng">×</button>
+    <button id="closePlayerDetailDialog" class="fantasy-player-detail-dialog__close" type="button" aria-label="Stäng" data-i18n-aria-label="close">×</button>
     <div id="playerDetailContent" class="fantasy-player-detail__content"></div>
   </dialog>
 
   <dialog id="playerPickerDialog" class="fantasy-player-picker-dialog">
-    <button id="closePlayerPickerDialog" class="fantasy-player-picker-dialog__close" type="button" aria-label="Stäng">×</button>
-    <p class="fantasy-kicker">SPELARMARKNAD</p>
-    <h2 id="playerPickerTitle">Välj spelare</h2>
-    <p id="playerPickerCount">Valbara spelare för positionen.</p>
+    <button id="closePlayerPickerDialog" class="fantasy-player-picker-dialog__close" type="button" aria-label="Stäng" data-i18n-aria-label="close">×</button>
+    <p class="fantasy-kicker" data-i18n="player_market_upper">SPELARMARKNAD</p>
+    <h2 id="playerPickerTitle" data-i18n="choose_player">Välj spelare</h2>
+    <p id="playerPickerCount" data-i18n="eligible_players_for_position">Valbara spelare för positionen.</p>
     <label class="fantasy-player-picker-dialog__search">
-      <span>SÖK SPELARE / LAG</span>
-      <input id="playerPickerSearch" type="search" placeholder="Gamertag eller lag…">
+      <span data-i18n="search_player_team_upper">SÖK SPELARE / LAG</span>
+      <input id="playerPickerSearch" type="search" placeholder="Gamertag eller lag…" data-i18n-placeholder="search_placeholder">
     </label>
     <div id="playerPickerList" class="fantasy-player-picker-list"></div>
   </dialog>
 
   <dialog id="positionDialog" class="fantasy-position-dialog">
-    <button id="closePositionDialog" class="fantasy-position-dialog__close" type="button" aria-label="Stäng">×</button>
-    <p class="fantasy-kicker">VÄLJ POSITION</p>
-    <h2 id="positionDialogPlayer">Placera spelaren</h2>
-    <p id="positionDialogText">Spelaren kan användas på flera positioner. Välj var han ska placeras i ditt Fantasy-lag.</p>
+    <button id="closePositionDialog" class="fantasy-position-dialog__close" type="button" aria-label="Stäng" data-i18n-aria-label="close">×</button>
+    <p class="fantasy-kicker" data-i18n="choose_position_upper">VÄLJ POSITION</p>
+    <h2 id="positionDialogPlayer" data-i18n="place_player">Placera spelaren</h2>
+    <p id="positionDialogText" data-i18n="place_player_text">Spelaren kan användas på flera positioner. Välj var han ska placeras i ditt Fantasy-lag.</p>
     <div id="positionDialogChoices" class="fantasy-position-dialog__choices"></div>
   </dialog>
 
@@ -512,11 +517,11 @@
       <img src="https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2021_08/large.SCL_logo_shading.png.eb94cae29f362f6a451128a25ebfa3ae.png" alt="SCL">
       <span id="footerCompetitionLabel">Fantasy</span>
     </div>
-    <a href="../">Drivs av Svensk eHockey →</a>
+    <a href="../" data-i18n="powered_by_full">Drivs av Svensk eHockey →</a>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="app.js?v=20260914-v45-logo-fix"></script>
+  <script src="app.js?v=20260914-v46-languages"></script>
 </body>
 </html>
