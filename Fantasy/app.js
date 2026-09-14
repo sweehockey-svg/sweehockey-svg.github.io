@@ -504,11 +504,13 @@
     },
     FCL: {
       label: "FCL",
+      logo: "/Fantasy/assets/leagues/fcl.webp",
       accent: "#e7edf4",
       accentRgb: "231,237,244"
     },
     WECL: {
       label: "WECL",
+      logo: "/Fantasy/assets/leagues/wecl.webp",
       accent: "#00aeea",
       accentRgb: "0,174,234"
     },
