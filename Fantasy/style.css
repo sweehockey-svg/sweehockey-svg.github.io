@@ -4362,3 +4362,12 @@ body[data-fantasy-league="neutral"] .fantasy-hero__copy h1{
     grid-template-columns:1fr
   }
 }
+
+
+/* Hide the giant generic site logo when a competition has no own league logo. */
+.fantasy-hero--no-logo{
+  grid-template-columns:minmax(0,1.2fr) minmax(330px,.65fr)
+}
+@media(max-width:980px){
+  .fantasy-hero--no-logo{grid-template-columns:1fr}
+}
