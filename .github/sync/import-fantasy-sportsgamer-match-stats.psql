@@ -112,7 +112,7 @@ insert into public.ehockey_fantasy_match_player_stats (
   pool_player_id,match_type,played_position,scoring_role,skater_games,
   goals,assists,game_winning_goals,blocked_shots,goalie_games,goalie_wins,
   goalie_saves,goalie_goals_allowed,goalie_shutouts,goalie_goals,goalie_assists,
-  fantasy_points,raw_stats,source_updated_at,imported_at
+  fantasy_points,base_fantasy_points,league_multiplier,raw_stats,source_updated_at,imported_at
 )
 select
   m.competition_id,
@@ -136,7 +136,12 @@ select
   coalesce(s.goalie_shutouts,0),
   coalesce(s.goalie_goals,0),
   coalesce(s.goalie_assists,0),
+  round(
+    coalesce(s.fantasy_points,0)
+    * public.seh_fantasy_league_multiplier(m.competition_id,s.source_league_id)
+  ,2),
   coalesce(s.fantasy_points,0),
+  public.seh_fantasy_league_multiplier(m.competition_id,s.source_league_id),
   coalesce(s.raw_stats,'{}'::jsonb),
   now(),
   now()
@@ -164,6 +169,8 @@ do update set
   goalie_goals=excluded.goalie_goals,
   goalie_assists=excluded.goalie_assists,
   fantasy_points=excluded.fantasy_points,
+  base_fantasy_points=excluded.base_fantasy_points,
+  league_multiplier=excluded.league_multiplier,
   raw_stats=excluded.raw_stats,
   source_updated_at=now(),
   imported_at=now();
