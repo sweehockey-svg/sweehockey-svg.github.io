@@ -583,3 +583,22 @@ a{color:inherit}
   grid-template-columns:minmax(100px,1fr) 84px;
   gap:8px
 }
+
+
+/* Permanent Fantasy competition deletion */
+.fa-delete-competition-box{
+  margin-top:14px;
+  border-color:rgba(255,77,96,.45);
+  background:
+    linear-gradient(180deg,rgba(255,77,96,.055),rgba(255,77,96,.015)),
+    #050e15
+}
+.fa-delete-competition-box .fa-box__head span{
+  color:#ff6677
+}
+.fa-delete-competition-box>p{
+  max-width:900px
+}
+.fa-delete-competition-box strong{
+  color:#ff98a4
+}
