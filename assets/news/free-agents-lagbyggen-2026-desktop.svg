@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#02030a"/><stop offset=".55" stop-color="#061124"/><stop offset="1" stop-color="#02030a"/></linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#d6b15f"/><stop offset=".5" stop-color="#f0d58b"/><stop offset="1" stop-color="#b58c2d"/></linearGradient>
+  <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#24e7e7"/><stop offset="1" stop-color="#1789a8"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="18"/></filter>
+</defs>
+<rect width="1600" height="900" fill="url(#bg)"/>
+<ellipse cx="1180" cy="300" rx="430" ry="280" fill="#0f4161" opacity=".18" filter="url(#glow)"/>
+<ellipse cx="620" cy="760" rx="500" ry="160" fill="#b78a22" opacity=".08" filter="url(#glow)"/>
+<path d="M0 735 C350 670 520 805 840 740 S1280 660 1600 730 V900 H0Z" fill="#050812" opacity=".95"/>
+<g opacity=".2" stroke="#22dbe5" fill="none"><path d="M860 130h610M860 180h490M860 230h560"/><circle cx="1210" cy="440" r="245"/><path d="M965 440h490M1210 195v490"/></g>
+<text x="78" y="72" fill="#1ee5e5" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700" letter-spacing="5">SVENSK eHOCKEY / NYHETER</text>
+<rect x="78" y="104" width="145" height="44" rx="4" fill="url(#gold)"/>
+<text x="96" y="136" fill="#05070d" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="900">NYHET</text>
+<text x="78" y="242" fill="#f7f5ef" font-family="Arial,Helvetica,sans-serif" font-size="86" font-weight="900">NYA FUNKTIONER</text>
+<text x="78" y="332" fill="url(#gold)" font-family="Arial,Helvetica,sans-serif" font-size="72" font-weight="900">FREE AGENTS &amp; LAGBYGGEN</text>
+<text x="82" y="388" fill="#ced4df" font-family="Arial,Helvetica,sans-serif" font-size="28">En enklare överblick över svenska lag och spelare inför kommande turneringar.</text>
+<text x="82" y="426" fill="#9faabd" font-family="Arial,Helvetica,sans-serif" font-size="23">ECL • SCL • ITHL • och andra tävlingar</text>
+<g transform="translate(78 500)">
+ <rect width="670" height="260" rx="22" fill="#07101c" stroke="#1e536b"/>
+ <text x="30" y="46" fill="#f7f5ef" font-family="Arial" font-size="30" font-weight="800">LAGBYGGEN</text>
+ <rect x="30" y="70" width="610" height="50" rx="9" fill="#0d1a28" stroke="#365066"/>
+ <text x="50" y="103" fill="#fff" font-family="Arial" font-size="21">BIK Karlskoga Academy</text>
+ <text x="50" y="151" fill="#f0d58b" font-family="Arial" font-size="21">↳ FaZe_lunkan07</text>
+ <text x="50" y="188" fill="#f0d58b" font-family="Arial" font-size="21">↳ Crzy Meesko</text>
+ <text x="50" y="225" fill="#8da0b2" font-family="Arial" font-size="20">Senaste IN / UT samlat på ett ställe</text>
+</g>
+<g transform="translate(790 500)">
+ <rect width="730" height="260" rx="22" fill="#07101c" stroke="#8a6d2d"/>
+ <text x="30" y="46" fill="#f7f5ef" font-family="Arial" font-size="30" font-weight="800">FREE AGENTS</text>
+ <g font-family="Arial" font-size="20" fill="#fff"><text x="50" y="100">MarreMurre</text><text x="50" y="140">Twitch_wannika</text><text x="50" y="180">troublemakingswe</text><text x="50" y="220">Svampify</text></g>
+ <g fill="#31df91"><circle cx="665" cy="93" r="7"/><circle cx="665" cy="133" r="7"/><circle cx="665" cy="173" r="7"/><circle cx="665" cy="213" r="7"/></g>
+</g>
+<g transform="translate(1025 790)"><rect width="495" height="68" rx="14" fill="url(#gold)"/><text x="44" y="44" fill="#05070d" font-family="Arial" font-size="25" font-weight="900">KOLLA IN LAGBYGGEN NU →</text></g>
+<text x="82" y="838" fill="#23dfdf" font-family="Arial" font-size="18" font-weight="700">AUTOMATISK KOPPLING:</text><text x="319" y="838" fill="#d7dde6" font-family="Arial" font-size="18">lägger du ut dig som Free Agent plockas du automatiskt bort från ditt lagbygge.</text>
+</svg>
