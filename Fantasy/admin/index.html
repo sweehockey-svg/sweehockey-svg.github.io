@@ -404,7 +404,7 @@
     <form id="createCompetitionForm" class="fa-create-competition-form">
       <span class="fa-kicker">eHOCKEY FANTASY LIGA</span>
       <h2>Skapa ny Fantasy-liga</h2>
-      <p>Skapa Fantasy-tävlingen och koppla SportsGamer-källan direkt. När liga-ID är angivet hämtas registrerade lag och spelare automatiskt och spelarpoolen byggs direkt. Om liga-ID:t inte finns ännu kan fälten lämnas tomma och fyllas i senare.</p>
+      <p>Skapa Fantasy-tävlingen och koppla SportsGamer-källan direkt. När liga-ID är angivet hämtas registrerade lag och spelare automatiskt och spelarpoolen byggs direkt. Priserna räknas fram för hela poolen från spelarnas SportsGamer-historik fram till aktuell synk, även om Fantasy-ligan gäller en äldre säsong. Om liga-ID:t inte finns ännu kan fälten lämnas tomma och fyllas i senare.</p>
 
       <div class="fa-form-grid">
         <label>
@@ -517,6 +517,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="admin.js?v=20260914-v15-wecl-sync-rpc"></script>
+  <script src="admin.js?v=20260914-v16-history-pricing"></script>
 </body>
 </html>
