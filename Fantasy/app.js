@@ -504,13 +504,13 @@
     },
     FCL: {
       label: "FCL",
-      logo: "/Fantasy/assets/leagues/fcl.webp",
+      logo: "/Fantasy/assets/leagues/fcl.webp?v=20260914-clean2",
       accent: "#e7edf4",
       accentRgb: "231,237,244"
     },
     WECL: {
       label: "WECL",
-      logo: "/Fantasy/assets/leagues/wecl.webp",
+      logo: "/Fantasy/assets/leagues/wecl.webp?v=20260914-clean2",
       accent: "#00aeea",
       accentRgb: "0,174,234"
     },
@@ -549,6 +549,12 @@
         const configured = clean(settings.brand_logo);
         if (configured === "assets/leagues/ecl.png" || configured === "/Fantasy/assets/leagues/ecl.png") {
           return "/Fantasy/assets/leagues/ecl.webp";
+        }
+        if (configured === "assets/leagues/fcl.webp" || configured === "/Fantasy/assets/leagues/fcl.webp") {
+          return "/Fantasy/assets/leagues/fcl.webp?v=20260914-clean2";
+        }
+        if (configured === "assets/leagues/wecl.webp" || configured === "/Fantasy/assets/leagues/wecl.webp") {
+          return "/Fantasy/assets/leagues/wecl.webp?v=20260914-clean2";
         }
         if (configured.startsWith("assets/")) return "/Fantasy/" + configured;
         return configured || base.logo || DEFAULT_FANTASY_LOGO;
