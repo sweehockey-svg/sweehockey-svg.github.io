@@ -165,7 +165,7 @@ jobs:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
-          timeout --foreground --kill-after=30s 12m             psql "$PGURL" -v ON_ERROR_STOP=1               -v request_id="$REQUEST_ID"               -v trigger_type="$TRIGGER_TYPE"               -v source_table="${{ steps.export.outputs.skater_source }}"               -v skater_source="${{ steps.export.outputs.skater_source }}"               -v goalie_source="${{ steps.export.outputs.goalie_source }}"               -v match_source="${{ steps.export.outputs.match_source }}"               -f .github/sync/import-fantasy-sportsgamer-match-stats.psql
+          timeout --foreground --kill-after=30s 12m             psql "$PGURL" -v ON_ERROR_STOP=1               -v request_id="$REQUEST_ID"               -v trigger_type="$TRIGGER_TYPE"               -v league_ids="$LEAGUE_IDS"               -v source_table="${{ steps.export.outputs.skater_source }}"               -v skater_source="${{ steps.export.outputs.skater_source }}"               -v goalie_source="${{ steps.export.outputs.goalie_source }}"               -v match_source="${{ steps.export.outputs.match_source }}"               -f .github/sync/import-fantasy-sportsgamer-match-stats.psql
 
       - name: Mark failed sync
         if: failure() && steps.gate.outputs.should_run == 'true'
