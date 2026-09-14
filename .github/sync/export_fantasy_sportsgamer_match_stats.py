@@ -20,7 +20,25 @@ from typing import Any, Iterable
 
 import pymysql
 
-LEAGUE_ID = int(os.environ.get("LEAGUE_ID", "447"))
+def parse_league_ids() -> list[int]:
+    raw = (os.environ.get("LEAGUE_IDS") or os.environ.get("LEAGUE_ID") or "447").strip()
+    values = []
+    for part in re.split(r"[\s,;]+", raw):
+        if not part:
+            continue
+        value = int(part)
+        if value <= 0:
+            raise RuntimeError(f"Invalid SportsGamer league ID: {value}")
+        if value not in values:
+            values.append(value)
+    if not values:
+        raise RuntimeError("At least one SportsGamer league ID is required")
+    if len(values) > 10:
+        raise RuntimeError("A maximum of 10 SportsGamer league IDs is supported")
+    return values
+
+
+LEAGUE_IDS = parse_league_ids()
 MATCH_OUTPUT = Path(os.environ.get("MATCH_OUTPUT", "/tmp/fantasy_matches.csv"))
 PLAYER_OUTPUT = Path(os.environ.get("PLAYER_OUTPUT", "/tmp/fantasy_match_player_stats.csv"))
 
@@ -296,21 +314,22 @@ def main() -> int:
     )
 
     try:
+        league_placeholders = ",".join(["%s"] * len(LEAGUE_IDS))
         participants = select(
             connection,
-            """
+            f"""
             select matchID,matchType,leagueID,teamID,playerID,totalIceTimeInSeconds
             from nhlgamer_participants
-            where leagueID=%s
+            where leagueID in ({league_placeholders})
             """,
-            (LEAGUE_ID,),
+            tuple(LEAGUE_IDS),
         )
         participants = [
             row for row in participants
             if integer(row.get("matchID")) > 0 and integer(row.get("playerID")) > 0
         ]
         if not participants:
-            raise RuntimeError(f"No participant rows found for SportsGamer league {LEAGUE_ID}")
+            raise RuntimeError(f"No participant rows found for SportsGamer leagues {LEAGUE_IDS}")
 
         match_ids = sorted({integer(row["matchID"]) for row in participants})
         inventory = table_inventory(connection)
@@ -338,7 +357,7 @@ def main() -> int:
                 ] += 1
 
         print("=== MATCH-LEVEL SOURCE DISCOVERY ===")
-        print(f"League: {LEAGUE_ID}")
+        print(f"Leagues: {', '.join(str(value) for value in LEAGUE_IDS)}")
         print(f"Participants: {len(participants)} rows / {len(match_ids)} matches")
         print(f"Skater source: {skater_table or 'NOT FOUND'} ({len(skater_rows)} rows)")
         print(f"Goalie source: {goalie_table or 'NOT FOUND'} ({len(goalie_rows)} rows)")
@@ -414,7 +433,7 @@ def main() -> int:
                 position = "G"
 
             row = {
-                "source_league_id": LEAGUE_ID,
+                "source_league_id": integer(participant.get("leagueID")),
                 "source_match_id": match_id,
                 "source_team_id": team_id,
                 "source_player_id": player_id,
@@ -451,10 +470,12 @@ def main() -> int:
         # Build match rows even when the dedicated match table cannot be found.
         match_rows: list[dict[str, Any]] = []
         participant_match_types: dict[int, str] = {}
+        participant_match_leagues: dict[int, int] = {}
         participant_teams: dict[int, list[int]] = defaultdict(list)
         for p in participants:
             mid = integer(p["matchID"])
             participant_match_types[mid] = str(p.get("matchType") or "")
+            participant_match_leagues[mid] = integer(p.get("leagueID"))
             tid = integer(p["teamID"])
             if tid and tid not in participant_teams[mid]:
                 participant_teams[mid].append(tid)
@@ -469,7 +490,7 @@ def main() -> int:
                 started = started.isoformat()
 
             match_rows.append({
-                "source_league_id": LEAGUE_ID,
+                "source_league_id": integer(first(raw, "leagueID")) or participant_match_leagues.get(match_id, 0),
                 "source_match_id": match_id,
                 "match_type": str(first(raw, "matchType") or participant_match_types.get(match_id) or ""),
                 "started_at": started or "",
