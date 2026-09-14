@@ -433,8 +433,12 @@
       if ($(field.factorId)) $(field.factorId).value = Number(row.multiplier ?? field.defaultFactor).toFixed(2);
     });
     if ($("syncGenericLeagueIds")) $("syncGenericLeagueIds").value = configuredLeagueIds.join(", ");
-    if ($("syncGclDivision1")) $("syncGclDivision1").value = configuredLeagueIds[0] || "";
-    if ($("syncGclDivision2")) $("syncGclDivision2").value = configuredLeagueIds[1] || "";
+    const gclDiv1 = weights.find((item) => clean(item?.division).toLowerCase() === "div 1") || {};
+    const gclDiv2 = weights.find((item) => clean(item?.division).toLowerCase() === "div 2") || {};
+    if ($("syncGclDivision1")) $("syncGclDivision1").value = gclDiv1.league_id || configuredLeagueIds[0] || "";
+    if ($("syncGclDivision2")) $("syncGclDivision2").value = gclDiv2.league_id || configuredLeagueIds[1] || "";
+    if ($("syncGclDivision1Factor")) $("syncGclDivision1Factor").value = Number(gclDiv1.multiplier ?? 1.05).toFixed(2);
+    if ($("syncGclDivision2Factor")) $("syncGclDivision2Factor").value = Number(gclDiv2.multiplier ?? 1.00).toFixed(2);
     if ($("syncAutoEnabled")) $("syncAutoEnabled").checked = sourceIsPlaceholder ? false : Boolean(settings.auto_sync_enabled);
     if ($("runSportsGamerSync")) $("runSportsGamerSync").disabled = configuredLeagueIds.length === 0;
     if ($("syncTimes")) $("syncTimes").value = Array.isArray(settings.schedule_times)
@@ -786,12 +790,25 @@
     return [...new Set(values)].slice(0, 10);
   }
 
-  function parseGclLeagueIds() {
-    const values = [
-      Number($("syncGclDivision1")?.value || 0),
-      Number($("syncGclDivision2")?.value || 0)
-    ].filter((value) => Number.isInteger(value) && value > 0 && value !== 999999);
-    return [...new Set(values)];
+  function parseGclWeights() {
+    const rows = [
+      ["Div 1","syncGclDivision1","syncGclDivision1Factor",1.05],
+      ["Div 2","syncGclDivision2","syncGclDivision2Factor",1.00]
+    ];
+
+    return rows.map(([division,idField,factorField,defaultFactor]) => {
+      const rawId = clean($(idField)?.value);
+      const leagueId = rawId ? Number(rawId) : null;
+      const multiplier = Number($(factorField)?.value || defaultFactor);
+
+      if (leagueId != null && (!Number.isInteger(leagueId) || leagueId <= 0 || leagueId === 999999)) {
+        throw new Error("Ogiltigt liga-ID för " + division + ".");
+      }
+      if (!Number.isFinite(multiplier) || multiplier < 0.5 || multiplier > 1.5) {
+        throw new Error("Ogiltig poängfaktor för " + division + ".");
+      }
+      return { division, league_id: leagueId, multiplier:Number(multiplier.toFixed(2)) };
+    });
   }
 
   function parseSyncTimes() {
@@ -820,8 +837,17 @@
           p_weights: weights
         });
         if (weightResult.error) throw weightResult.error;
+      } else if (isGcl) {
+        const weights = parseGclWeights();
+        leagueIds = weights.map((item) => item.league_id).filter(Boolean);
+
+        const weightResult = await sb.rpc("seh_fantasy_admin_update_league_weights", {
+          p_code: activeCompetitionCode(),
+          p_weights: weights
+        });
+        if (weightResult.error) throw weightResult.error;
       } else {
-        leagueIds = isGcl ? parseGclLeagueIds() : parseGenericLeagueIds();
+        leagueIds = parseGenericLeagueIds();
         if (leagueIds.length) {
           const sourceResult = await sb.rpc("seh_fantasy_admin_update_sync_sources", {
             p_code: activeCompetitionCode(),
@@ -1000,12 +1026,26 @@
     });
   }
 
-  function parseNewGclLeagueIds() {
-    const values = [
-      Number($("newGclDivision1Id")?.value || 0),
-      Number($("newGclDivision2Id")?.value || 0)
-    ].filter((value) => Number.isInteger(value) && value > 0);
-    return [...new Set(values)];
+  function parseNewGclWeights() {
+    const rows = [
+      ["Div 1","newGclDivision1Id","newGclDivision1Factor",1.05],
+      ["Div 2","newGclDivision2Id","newGclDivision2Factor",1.00]
+    ];
+
+    return rows.map(([division,idField,factorField,defaultFactor]) => {
+      const rawId = clean($(idField)?.value);
+      const leagueId = rawId ? Number(rawId) : null;
+      const multiplier = Number($(factorField)?.value || defaultFactor);
+
+      if (leagueId != null && (!Number.isInteger(leagueId) || leagueId <= 0)) {
+        throw new Error("Ogiltigt liga-ID för " + division + ".");
+      }
+      if (!Number.isFinite(multiplier) || multiplier < 0.5 || multiplier > 1.5) {
+        throw new Error("Ogiltig poängfaktor för " + division + ".");
+      }
+
+      return { division, league_id: leagueId, multiplier:Number(multiplier.toFixed(2)) };
+    });
   }
 
   async function createCompetition(event) {
@@ -1050,10 +1090,19 @@
           });
           if (weightResult.error) throw weightResult.error;
         }
+      } else if (league === "GCL") {
+        const weights = parseNewGclWeights();
+        const hasAnyLeagueId = weights.some((item) => item.league_id);
+
+        if (hasAnyLeagueId) {
+          const weightResult = await sb.rpc("seh_fantasy_admin_update_league_weights", {
+            p_code: code,
+            p_weights: weights
+          });
+          if (weightResult.error) throw weightResult.error;
+        }
       } else {
-        const leagueIds = league === "GCL"
-          ? parseNewGclLeagueIds()
-          : parseNewGenericLeagueIds();
+        const leagueIds = parseNewGenericLeagueIds();
 
         if (leagueIds.length) {
           const sourceResult = await sb.rpc("seh_fantasy_admin_update_sync_sources", {
