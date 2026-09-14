@@ -230,6 +230,11 @@
       ["BUDGET", fmt(comp.budget || 0)],
       ["KAPTEN", fmt(comp.captain_multiplier || 1, 1) + "×"],
       ["MAX / LAG", comp.max_players_per_real_team || "–"],
+      ["SPELARURVAL", ({
+        all: "Alla",
+        sweden: "Svenskar",
+        scandinavia: "Skandinaver"
+      })[clean(comp.settings?.nationality_scope || "all").toLowerCase()] || "Alla"],
       ["MV VINST", "+" + fmt(goalie.win || 0, 2).replace(",00", "")],
       ["MV RÄDD", "+" + fmt(goalie.save || 0, 2).replace(",00", "")]
     ].map(([label, value]) => `
@@ -240,6 +245,9 @@
   function renderCompetition() {
     const comp = state.competition || {};
     $("compStatus").value = clean(comp.status || "setup");
+    if ($("compNationalityScope")) {
+      $("compNationalityScope").value = clean(comp.settings?.nationality_scope || "all").toLowerCase();
+    }
     $("compBudget").value = num(comp.budget);
     $("compMaxTeam").value = num(comp.max_players_per_real_team || 2);
     $("compCaptainMultiplier").value = num(comp.captain_multiplier || 1.5);
@@ -421,6 +429,13 @@
       });
 
       if (error) throw error;
+
+      const scopeResult = await sb.rpc("seh_fantasy_admin_update_nationality_scope", {
+        p_code: "SCL27",
+        p_scope: $("compNationalityScope")?.value || "all"
+      });
+      if (scopeResult.error) throw scopeResult.error;
+
       await loadAll();
       setStatus("competitionStatus", "Inställningarna är sparade.", "success");
     } catch (error) {
