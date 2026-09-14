@@ -318,6 +318,14 @@
     `).join("");
   }
 
+  const DIVISION_SYNC_FIELDS = [
+    { division: "Elite", leagueId: "syncLeagueElite", factorId: "syncFactorElite", defaultFactor: 1.10 },
+    { division: "Pro", leagueId: "syncLeaguePro", factorId: "syncFactorPro", defaultFactor: 1.05 },
+    { division: "Lite", leagueId: "syncLeagueLite", factorId: "syncFactorLite", defaultFactor: 1.00 },
+    { division: "Core", leagueId: "syncLeagueCore", factorId: "syncFactorCore", defaultFactor: 0.95 },
+    { division: "Neo", leagueId: "syncLeagueNeo", factorId: "syncFactorNeo", defaultFactor: 0.90 }
+  ];
+
   function renderSync() {
     const sync = state.syncState || {};
     const settings = sync.settings || {};
@@ -329,7 +337,12 @@
       : [Number(settings.source_league_id || 0)].filter((id) => Number.isInteger(id) && id > 0);
     const sourceIsPlaceholder = sourceLeagueIds.length === 1 && sourceLeagueIds[0] === 999999;
     const configuredLeagueIds = sourceIsPlaceholder ? [] : sourceLeagueIds.filter((id) => id !== 999999);
-    if ($("syncLeagueId")) $("syncLeagueId").value = configuredLeagueIds.join(", ");
+    const weights = Array.isArray(sync.league_weights) ? sync.league_weights : [];
+    DIVISION_SYNC_FIELDS.forEach((field) => {
+      const row = weights.find((item) => clean(item?.division).toLowerCase() === field.division.toLowerCase()) || {};
+      if ($(field.leagueId)) $(field.leagueId).value = row.league_id || "";
+      if ($(field.factorId)) $(field.factorId).value = Number(row.multiplier ?? field.defaultFactor).toFixed(2);
+    });
     if ($("syncAutoEnabled")) $("syncAutoEnabled").checked = sourceIsPlaceholder ? false : Boolean(settings.auto_sync_enabled);
     if ($("runSportsGamerSync")) $("runSportsGamerSync").disabled = configuredLeagueIds.length === 0;
     if ($("syncTimes")) $("syncTimes").value = Array.isArray(settings.schedule_times)
@@ -644,12 +657,25 @@
     }
   }
 
-  function parseLeagueIds() {
-    const values = clean($("syncLeagueId")?.value)
-      .split(/[\s,;]+/)
-      .map((value) => Number(value))
-      .filter((value) => Number.isInteger(value) && value > 0 && value !== 999999);
-    return [...new Set(values)];
+  function parseLeagueWeights() {
+    return DIVISION_SYNC_FIELDS.map((field) => {
+      const rawLeague = clean($(field.leagueId)?.value);
+      const leagueId = rawLeague ? Number(rawLeague) : null;
+      const multiplier = Number($(field.factorId)?.value);
+
+      if (leagueId != null && (!Number.isInteger(leagueId) || leagueId <= 0 || leagueId === 999999)) {
+        throw new Error("Ogiltigt liga-ID för " + field.division + ".");
+      }
+      if (!Number.isFinite(multiplier) || multiplier < 0.5 || multiplier > 1.5) {
+        throw new Error("Ogiltig poängfaktor för " + field.division + ".");
+      }
+
+      return {
+        division: field.division,
+        league_id: leagueId,
+        multiplier: Number(multiplier.toFixed(2))
+      };
+    });
   }
 
   function parseSyncTimes() {
@@ -664,19 +690,17 @@
     setStatus("syncSettingsStatus", "Sparar schema…", "working");
 
     try {
-      const leagueIds = parseLeagueIds();
-      if (!leagueIds.length) {
-        throw new Error("Ange minst ett riktigt SportsGamer liga-ID.");
-      }
-      if (leagueIds.length > 10) {
-        throw new Error("Max tio SportsGamer liga-ID:n.");
+      const weights = parseLeagueWeights();
+      const leagueIds = weights.map((item) => item.league_id).filter(Boolean);
+      if (Boolean($("syncAutoEnabled")?.checked) && !leagueIds.length) {
+        throw new Error("Ange minst ett riktigt SportsGamer liga-ID innan autosynk aktiveras.");
       }
 
-      const sourceResult = await sb.rpc("seh_fantasy_admin_update_sync_sources", {
+      const weightResult = await sb.rpc("seh_fantasy_admin_update_league_weights", {
         p_code: "SCL27",
-        p_source_league_ids: leagueIds
+        p_weights: weights
       });
-      if (sourceResult.error) throw sourceResult.error;
+      if (weightResult.error) throw weightResult.error;
 
       const { error } = await sb.rpc("seh_fantasy_admin_update_sync_settings", {
         p_code: "SCL27",
