@@ -947,6 +947,23 @@
     return payload;
   }
 
+  async function queueFantasySync(code, requestId) {
+    const { data, error } = await sb.rpc("seh_fantasy_admin_queue_sync", {
+      p_code: code,
+      p_request_id: requestId,
+      p_trigger_type: "manual"
+    });
+    if (error) throw error;
+    return data || {};
+  }
+
+  async function getFantasySyncRun(code, requestId) {
+    const { data, error } = await sb.rpc("seh_fantasy_admin_sync_state", { p_code: code });
+    if (error) throw error;
+    const runs = Array.isArray(data?.runs) ? data.runs : [];
+    return runs.find((run) => clean(run?.request_id) === requestId) || null;
+  }
+
   async function runSportsGamerSync() {
     const button = $("runSportsGamerSync");
     if (!button) return;
@@ -965,37 +982,26 @@
         throw new Error("SportsGamer liga-ID:n är inte satta ännu.");
       }
 
-      await callAdminSync({
-        action: "start",
-        job: "fantasy_sportsgamer",
-        request_id: requestId,
-        competition_code: activeCompetitionCode(),
-        league_ids: leagueIds
-      });
+      await queueFantasySync(activeCompetitionCode(), requestId);
 
       setStatus("syncActionStatus", "Synken är startad. Väntar på GitHub Actions…", "working");
 
       for (let attempt = 0; attempt < 72; attempt += 1) {
         await sleep(5000);
-        const status = await callAdminSync({
-          action: "status",
-          job: "fantasy_sportsgamer",
-          request_id: requestId
-        });
+        const run = await getFantasySyncRun(activeCompetitionCode(), requestId);
 
-        if (status.state === "completed") {
-          if (status.conclusion === "success") {
-            await loadAll();
-            setStatus("syncActionStatus", "SportsGamer-synken är klar och Fantasy-poängen är uppdaterade.", "success");
-          } else {
-            await loadSyncState();
-            renderSync();
-            throw new Error("GitHub-körningen avslutades med " + (status.conclusion || "fel") + ".");
-          }
+        if (run?.status === "success") {
+          await loadAll();
+          setStatus("syncActionStatus", "SportsGamer-synken är klar och Fantasy-poängen är uppdaterade.", "success");
           return;
         }
+        if (run?.status === "failed") {
+          await loadSyncState();
+          renderSync();
+          throw new Error(run.error_message || "SportsGamer-importen misslyckades.");
+        }
 
-        const label = status.state === "in_progress" ? "Hämtar SportsGamer-data…" : "Synken väntar i kön…";
+        const label = run?.status === "running" ? "Hämtar SportsGamer-data…" : "Synken väntar i kön…";
         setStatus("syncActionStatus", label, "working");
       }
 
@@ -1176,30 +1182,13 @@
           "working"
         );
 
-        await callAdminSync({
-          action: "start",
-          job: "fantasy_sportsgamer",
-          request_id: requestId,
-          competition_code: code,
-          league_ids: createdLeagueIds
-        });
+        await queueFantasySync(code, requestId);
 
         for (let attempt = 0; attempt < 72; attempt += 1) {
           await sleep(5000);
-          const status = await callAdminSync({
-            action: "status",
-            job: "fantasy_sportsgamer",
-            request_id: requestId
-          });
+          const run = await getFantasySyncRun(code, requestId);
 
-          if (status.state === "completed") {
-            if (status.conclusion !== "success") {
-              throw new Error(
-                "Fantasy-ligan skapades, men SportsGamer-importen avslutades med " +
-                (status.conclusion || "fel") + "."
-              );
-            }
-
+          if (run?.status === "success") {
             setStatus(
               "createCompetitionStatus",
               "Klart. Fantasy-ligan är byggd och spelarna är hämtade.",
@@ -1208,9 +1197,16 @@
             break;
           }
 
+          if (run?.status === "failed") {
+            throw new Error(
+              "Fantasy-ligan skapades, men SportsGamer-importen misslyckades: " +
+              (run.error_message || "okänt fel") + "."
+            );
+          }
+
           setStatus(
             "createCompetitionStatus",
-            status.state === "in_progress"
+            run?.status === "running"
               ? "Hämtar lag, spelare och matchdata från SportsGamer…"
               : "Importen väntar i kön…",
             "working"
