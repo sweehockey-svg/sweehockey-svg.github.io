@@ -213,7 +213,7 @@ def choose_roster_source(
         if "participant" in name:
             score += 5
         if "invite" in name:
-            score -= 30
+            score += 30
         candidates.append((score, table, league_column))
 
     for _, table, league_column in sorted(candidates, reverse=True):
