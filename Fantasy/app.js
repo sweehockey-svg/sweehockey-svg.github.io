@@ -682,6 +682,8 @@
 
     const divisionBlock = $("divisionFactorBlock");
     if (divisionBlock) divisionBlock.hidden = league !== "ECL";
+    const gclFactorBlock = $("gclFactorBlock");
+    if (gclFactorBlock) gclFactorBlock.hidden = league !== "GCL";
 
     if ($("periodRulesText")) {
       $("periodRulesText").textContent = comp.status === "setup"
