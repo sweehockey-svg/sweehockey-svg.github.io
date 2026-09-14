@@ -1725,6 +1725,7 @@
     renderTeamName();
     renderTransferStatus();
     updateHeaderAccount();
+    applyStaticTranslations();
   }
 
   function placePlayer(player, slot) {
@@ -2439,7 +2440,12 @@
     if (!code || code === competitionCode()) return;
     const url = new URL(window.location.href);
     url.searchParams.set("competition", code);
+    url.searchParams.set("lang", state.language);
     window.location.href = url.toString();
+  });
+
+  $("languageSelect")?.addEventListener("change", (event) => {
+    setLanguage(clean(event.target?.value).toLowerCase());
   });
 
   document.querySelector("[data-jump-team]")?.addEventListener("click", () => {
@@ -2477,6 +2483,7 @@
     }
   });
 
+  applyStaticTranslations();
   switchTab("team");
 
   (async () => {
