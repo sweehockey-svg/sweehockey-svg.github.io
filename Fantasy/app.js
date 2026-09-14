@@ -2120,6 +2120,10 @@
 
     if (!state.competition) throw new Error("Ingen Fantasy-tävling är konfigurerad.");
 
+    // Populate the league selector and branding immediately. Secondary data
+    // such as leaderboard/insights must never leave the selector blank.
+    renderCompetitionBranding();
+
     const poolResult = await sb
       .from("ehockey_fantasy_player_pool")
       .select("*")
@@ -2130,7 +2134,22 @@
     if (poolResult.error) throw poolResult.error;
 
     state.pool = (poolResult.data || []).filter((player) => fantasyCountryAllowed(player.country_code));
-    await Promise.all([loadLeaderboard(), loadInsights()]);
+
+    const [leaderboardResult, insightsResult] = await Promise.allSettled([
+      loadLeaderboard(),
+      loadInsights()
+    ]);
+
+    if (leaderboardResult.status === "rejected") {
+      console.warn("Fantasy leaderboard kunde inte laddas", leaderboardResult.reason);
+      state.leaderboard = [];
+    }
+
+    if (insightsResult.status === "rejected") {
+      console.warn("Fantasy insights kunde inte laddas", insightsResult.reason);
+      state.insights = null;
+      state.ownership.clear();
+    }
   }
 
   async function loadTransferState() {
