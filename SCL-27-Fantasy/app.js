@@ -666,6 +666,33 @@
         ? season + " Fantasy är förberedd och reglerna kan finjusteras inför öppning."
         : "Bygg din " + league + "-sexa, håll budgeten och följ poängen period för period.";
     }
+    if ($("ruleBudgetTitle")) $("ruleBudgetTitle").textContent = format(comp.budget || 0) + " CR";
+    if ($("ruleBudgetText")) $("ruleBudgetText").textContent =
+      "Hela startsexan måste rymmas inom " + format(comp.budget || 0) + " CR.";
+    if ($("ruleTeamLimitTitle")) $("ruleTeamLimitTitle").textContent =
+      "Max " + format(comp.max_players_per_real_team || 2) + " från samma lag";
+    if ($("ruleTeamLimitText")) $("ruleTeamLimitText").textContent =
+      "Du får välja högst " + format(comp.max_players_per_real_team || 2) + " spelare från samma riktiga lag.";
+    if ($("ruleCaptainTitle")) $("ruleCaptainTitle").textContent =
+      "Kapten " + format(comp.captain_multiplier || 1, 1) + "×";
+    if ($("ruleCaptainText")) $("ruleCaptainText").textContent =
+      "En spelare utses till kapten och får " +
+      format((number(comp.captain_multiplier || 1) - 1) * 100) +
+      " procent extra Fantasy-poäng.";
+
+    const divisionBlock = $("divisionFactorBlock");
+    if (divisionBlock) divisionBlock.hidden = league !== "ECL";
+
+    if ($("periodRulesText")) {
+      $("periodRulesText").textContent = comp.status === "setup"
+        ? season + " kommer att använda Fantasy-perioder. Deadlines, fria byten och eventuellt slutspelsreset publiceras innan ligan öppnar."
+        : league === "SCL"
+          ? "SCL spelas inte i fasta omgångar, så Fantasy delas i tidsbestämda perioder. Varje ny Fantasy-period låses kl. 18:00 svensk tid och matcherna räknas efter sin faktiska starttid. Före första perioden är byten obegränsade. Därefter får du 1 gratis byte per period och kan spara upp till 2. Extra byten kostar −10 Fantasy-poäng och kaptensbyte är gratis."
+          : "Fantasy delas i tidsbestämda perioder. Matcherna räknas efter sin faktiska starttid och byten gäller från nästa låsta period.";
+    }
+
+    const betaRibbon = document.querySelector(".beta-ribbon");
+    if (betaRibbon) betaRibbon.hidden = settings.beta_mode === false;
 
     const brandLink = $("leagueBrandLink");
     if (brandLink) brandLink.setAttribute("aria-label", season + " Fantasy");
