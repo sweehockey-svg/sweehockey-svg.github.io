@@ -45,7 +45,7 @@ with source_rows as (
     nullif(trim(s.primary_position),'') as detected_primary,
     case
       when nullif(trim(s.eligible_slots),'') is null then '{}'::text[]
-      else regexp_split_to_array(trim(s.eligible_slots),'\\|')
+      else string_to_array(trim(s.eligible_slots),'|')
     end as detected_slots
   from fantasy_pool_stage s
   cross join fantasy_pool_meta m
