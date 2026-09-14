@@ -526,6 +526,7 @@
     const settings = state.competition?.settings || {};
     return {
       ...base,
+      hasLeagueLogo: Boolean(clean(settings.brand_logo) || base.logo),
       logo: (() => {
         const configured = clean(settings.brand_logo);
         if (configured === "assets/leagues/ecl.png" || configured === "/Fantasy/assets/leagues/ecl.png") {
@@ -1042,6 +1043,11 @@
     if (tabs) tabs.hidden = true;
     $$("[data-panel]").forEach((panel) => { panel.hidden = true; });
 
+    const hero = document.querySelector(".fantasy-hero");
+    if (hero) hero.classList.remove("fantasy-hero--no-logo");
+    const heroIdentity = document.querySelector(".fantasy-hero__identity");
+    if (heroIdentity) heroIdentity.hidden = false;
+
     const betaRibbon = document.querySelector(".beta-ribbon");
     if (betaRibbon) betaRibbon.hidden = true;
   }
@@ -1098,6 +1104,11 @@
       node.src = brand.logo;
       node.alt = league;
     });
+
+    const hero = document.querySelector(".fantasy-hero");
+    if (hero) hero.classList.toggle("fantasy-hero--no-logo", !brand.hasLeagueLogo);
+    const heroIdentity = document.querySelector(".fantasy-hero__identity");
+    if (heroIdentity) heroIdentity.hidden = !brand.hasLeagueLogo;
 
     if ($("leagueBrandSeason")) $("leagueBrandSeason").textContent = "eHOCKEY FANTASY";
     if ($("heroLeagueLab")) $("heroLeagueLab").innerHTML = '<span></span>' + escapeHtml(league + " FANTASY");
