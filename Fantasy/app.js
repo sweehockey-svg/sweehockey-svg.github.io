@@ -77,7 +77,7 @@
       link_pending:"Spelarkopplingen väntar på godkännande", link_pending_text:"Din valda spelarprofil måste godkännas innan du kan skapa ett Fantasy-lag.",
       link_profile_first:"Koppla din spelarprofil först", link_profile_text:"Discord-kontot är inloggat men saknar en godkänd koppling till ett spelarkort.",
       discord_only:"Fantasy använder Discord-inloggning", discord_only_text:"Logga ut från admin-/skribentkontot och logga sedan in med Discord.",
-      linked_player:"Kopplad spelare", team_building_not_open:"Lagbygget är inte öppet ännu.", owner_after_deadline:"Ägarinfo efter deadline",
+      linked_player:"Kopplad spelare", team_building_not_open:t("team_building_not_open"), owner_after_deadline:"Ägarinfo efter deadline",
       owned_by:"Ägs av {owned} % · Kapten {captain} %", unknown:"Okänd", team_not_ready:"Lag ej klart",
       form_info:"Form & info →", show_form_stats:"Visa form & statistik →", no_player_info:"Spelarinformationen kunde inte hämtas.",
       no_matches:"Inga matcher registrerade ännu.", fantasy_points_label:"Fantasy-poäng", matches:"Matcher", points_per_match:"Poäng / match",
@@ -1041,25 +1041,25 @@
     $("connectProfile").hidden = true;
     setStatus("gateStatus", "");
 
-    let title = "Logga in för att bygga ditt lag";
-    let text = message || "Du måste vara inloggad med Discord och ha en godkänd spelarprofil kopplad för att skapa ett lag.";
+    let title = t("login_to_build");
+    let text = message || t("account_required_text");
 
     if (kind === "loading") {
-      title = "Kontrollerar ditt konto…";
-      text = "Kontrollerar Discord-inloggning och kopplad spelarprofil.";
+      title = t("checking_account");
+      text = t("checking_discord");
       $("discordLogin").hidden = true;
     } else if (kind === "pending") {
-      title = "Spelarkopplingen väntar på godkännande";
-      text = message || "Din valda spelarprofil måste godkännas innan du kan skapa ett Fantasy-lag.";
+      title = t("link_pending");
+      text = message || t("link_pending_text");
       $("discordLogin").hidden = true;
     } else if (kind === "unlinked") {
-      title = "Koppla din spelarprofil först";
-      text = message || "Discord-kontot är inloggat men saknar en godkänd koppling till ett spelarkort.";
+      title = t("link_profile_first");
+      text = message || t("link_profile_text");
       $("discordLogin").hidden = true;
       $("connectProfile").hidden = false;
     } else if (kind === "wrong-account") {
-      title = "Fantasy använder Discord-inloggning";
-      text = message || "Logga ut från admin-/skribentkontot och logga sedan in med Discord.";
+      title = t("discord_only");
+      text = message || t("discord_only_text");
     }
 
     $("gateTitle").textContent = title;
@@ -1075,12 +1075,12 @@
 
     $("setupBanner").hidden = open && hasPool;
     $("saveTeam").disabled = !(open && hasPool);
-    $("linkedPlayer").textContent = clean(state.account?.player_name) || "Kopplad spelare";
+    $("linkedPlayer").textContent = clean(state.account?.player_name) || t("linked_player");
 
     if (!hasPool) {
-      setStatus("saveStatus", seasonLabel() + " har ingen publicerad spelarpool ännu.");
+      setStatus("saveStatus", seasonLabel() + " · " + t("pool_not_published"));
     } else if (!open) {
-      setStatus("saveStatus", "Lagbygget är inte öppet ännu.");
+      setStatus("saveStatus", t("team_building_not_open"));
     } else {
       setStatus("saveStatus", "");
     }
@@ -1195,13 +1195,13 @@
               ${portraitMarkup(player, "fantasy-slot__portrait")}
             </div>
             <div class="fantasy-slot__identity">
-              <strong class="fantasy-player-name-line">${flag}<span class="fantasy-player-name">${escapeHtml(clean(player.display_gamertag) || "Okänd")}</span></strong>
+              <strong class="fantasy-player-name-line">${flag}<span class="fantasy-player-name">${escapeHtml(clean(player.display_gamertag) || t("unknown"))}</span></strong>
               <small class="fantasy-slot__team fantasy-slot__club-row">
                 <span class="fantasy-slot__club-logo">
                   ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--slot")}
                 </span>
                 <span class="fantasy-slot__club-copy">
-                  <b>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</b>
+                  <b>${escapeHtml(clean(player.real_team_name) || t("team_not_ready"))}</b>
                   <em>KLUBB</em>
                 </span>
               </small>
@@ -1265,7 +1265,7 @@
     host.innerHTML = rows.map((row) => {
       const player = playerById(row.pool_player_id);
       const name = clean(player?.display_gamertag) || "Okänd spelare";
-      const team = clean(player?.real_team_name) || "Lag ej klart";
+      const team = clean(player?.real_team_name) || t("team_not_ready");
       const slot = clean(row.slot).toUpperCase() || "–";
       const rounds = Array.isArray(row.round_breakdown) ? row.round_breakdown : [];
       const roundMarkup = rounds.map((round) => {
@@ -1329,11 +1329,11 @@
           <div class="fantasy-player-row__main">
             <strong class="fantasy-player-name-line">${countryFlagMarkup(player.country_code)}<span class="fantasy-player-name">${escapeHtml(player.display_gamertag)}</span></strong>
             <small>
-              ${escapeHtml(clean(player.real_team_name) || "Lag ej klart")} ·
+              ${escapeHtml(clean(player.real_team_name) || t("team_not_ready"))} ·
               ${escapeHtml(slots)}
             </small>
             <small class="fantasy-player-row__ownership">${escapeHtml(ownershipText(player.id))}</small>
-            <button class="fantasy-inline-player-link" type="button" data-player-detail="${player.id}">Form & info →</button>
+            <button class="fantasy-inline-player-link" type="button" data-player-detail="${player.id}">${escapeHtml(t("form_info"))}</button>
           </div>
           <div class="fantasy-player-row__price">
             <b>${format(player.price)}</b>
@@ -1374,7 +1374,7 @@
             <h3 class="fantasy-player-name-line">${countryFlagMarkup(player.country_code)}<span class="fantasy-player-name">${escapeHtml(player.display_gamertag)}</span></h3>
             <p>
               ${teamLogoMarkup(player, "fantasy-team-logo fantasy-team-logo--card")}
-              <span>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</span>
+              <span>${escapeHtml(clean(player.real_team_name) || t("team_not_ready"))}</span>
             </p>
             ${differentialMarkup(player.id)}
           </div>
@@ -1383,7 +1383,7 @@
           <span>${escapeHtml(ownershipText(player.id))}</span>
           <span>${escapeHtml(eligibleSlots(player).join(" / "))}</span>
         </footer>
-        <button class="fantasy-player-card__detail" type="button" data-player-detail="${player.id}">Visa form & statistik →</button>
+        <button class="fantasy-player-card__detail" type="button" data-player-detail="${player.id}">${escapeHtml(t("show_form_stats"))}</button>
       </article>
     `).join("") || '<div class="fantasy-empty">Inga spelare matchar filtret.</div>';
   }
@@ -1398,7 +1398,7 @@
     if (!host) return;
 
     if (!data?.ok) {
-      host.innerHTML = '<div class="fantasy-empty">Spelarinformationen kunde inte hämtas.</div>';
+      host.innerHTML = '<div class="fantasy-empty">' + escapeHtml(t("no_player_info")) + '</div>';
       return;
     }
 
@@ -1433,20 +1433,20 @@
             '<strong>' + formatPoints(match.fantasy_points) + ' P</strong>' +
           '</div>';
         }).join("")
-      : '<div class="fantasy-player-detail__empty">Inga SCL-matcher registrerade ännu.</div>';
+      : '<div class="fantasy-player-detail__empty">' + escapeHtml(t("no_matches")) + '</div>';
 
     const hasGoalieGames = number(totals.goalie_games) > 0;
     const hasSkaterGames = number(totals.forward_games) + number(totals.defense_games) > 0;
     const statPieces = [];
     if (hasSkaterGames || !games) {
-      statPieces.push(playerDetailStat("Mål", format(totals.goals || 0)));
-      statPieces.push(playerDetailStat("Assist", format(totals.assists || 0)));
-      statPieces.push(playerDetailStat("Block", format(totals.blocked_shots || 0)));
+      statPieces.push(playerDetailStat(t("goals"), format(totals.goals || 0)));
+      statPieces.push(playerDetailStat(t("assists"), format(totals.assists || 0)));
+      statPieces.push(playerDetailStat(t("blocks"), format(totals.blocked_shots || 0)));
     }
     if (hasGoalieGames) {
-      statPieces.push(playerDetailStat("MV-vinster", format(totals.goalie_wins || 0)));
-      statPieces.push(playerDetailStat("Räddningar", format(totals.goalie_saves || 0)));
-      statPieces.push(playerDetailStat("Nollor", format(totals.goalie_shutouts || 0)));
+      statPieces.push(playerDetailStat(t("goalie_wins"), format(totals.goalie_wins || 0)));
+      statPieces.push(playerDetailStat(t("saves"), format(totals.goalie_saves || 0)));
+      statPieces.push(playerDetailStat(t("shutouts"), format(totals.goalie_shutouts || 0)));
     }
 
     host.innerHTML = `
@@ -1457,8 +1457,8 @@
         </div>
         <div class="fantasy-player-detail__identity">
           <p class="fantasy-kicker">SPELARPROFIL / FANTASY</p>
-          <h2 class="fantasy-player-name-line">${countryFlagMarkup(player.country_code)}<span class="fantasy-player-name">${escapeHtml(clean(player.display_gamertag) || "Okänd")}</span></h2>
-          <p>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")} · ${escapeHtml(slots || "–")}</p>
+          <h2 class="fantasy-player-name-line">${countryFlagMarkup(player.country_code)}<span class="fantasy-player-name">${escapeHtml(clean(player.display_gamertag) || t("unknown"))}</span></h2>
+          <p>${escapeHtml(clean(player.real_team_name) || t("team_not_ready"))} · ${escapeHtml(slots || "–")}</p>
           <div class="fantasy-player-detail__tags">
             <span>${format(player.price)} CR</span>
             ${data.ownership_visible && number(ownership?.ownership_pct) < 5 && number(ownership?.entries) >= 10
@@ -1469,11 +1469,11 @@
       </div>
 
       <div class="fantasy-player-detail__metrics">
-        ${playerDetailStat("Fantasy-poäng", formatPoints(totalPoints) + " P")}
-        ${playerDetailStat("Matcher", format(games))}
-        ${playerDetailStat("Poäng / match", format(totals.points_per_game || 0, 2))}
-        ${playerDetailStat("Ägd", ownershipValue)}
-        ${playerDetailStat("Kapten", captainValue)}
+        ${playerDetailStat(t("fantasy_points_label"), formatPoints(totalPoints) + " P")}
+        ${playerDetailStat(t("matches"), format(games))}
+        ${playerDetailStat(t("points_per_match"), format(totals.points_per_game || 0, 2))}
+        ${playerDetailStat(t("owned"), ownershipValue)}
+        ${playerDetailStat(t("captain"), captainValue)}
       </div>
 
       <section class="fantasy-player-detail__section">
@@ -1528,7 +1528,7 @@
     if (!host) return;
 
     if (!state.leaderboard.length) {
-      host.innerHTML = '<div class="fantasy-empty">Topplistan är tom. Den fylls när Fantasy-lag börjar skapas.</div>';
+      host.innerHTML = '<div class="fantasy-empty">' + escapeHtml(t("leaderboard_empty")) + '</div>';
       return;
     }
 
@@ -1548,7 +1548,7 @@
   }
 
   function publicRosterMeta(player) {
-    const team = clean(player?.real_team_name) || "Lag ej klart";
+    const team = clean(player?.real_team_name) || t("team_not_ready");
     const totalGames = number(player?.total_games ?? player?.games);
     const slots = Array.isArray(player?.eligible_slots)
       ? player.eligible_slots.map((slot) => clean(slot).toUpperCase()).filter(Boolean)
@@ -1586,7 +1586,7 @@
             <span class="fantasy-public-roster-player__slot">${escapeHtml(clean(player?.slot || "–"))}</span>
             <strong class="fantasy-player-name-line">
               ${countryFlagMarkup(player?.country_code)}
-              <span class="fantasy-player-name">${escapeHtml(clean(player?.display_gamertag) || "Okänd")}</span>
+              <span class="fantasy-player-name">${escapeHtml(clean(player?.display_gamertag) || t("unknown"))}</span>
             </strong>
             ${captain ? '<span class="fantasy-public-roster-player__captain">KAPTEN</span>' : ""}
           </div>
@@ -1662,9 +1662,9 @@
                 <div>
                   <strong class="fantasy-player-name-line">
                     ${countryFlagMarkup(player.country_code)}
-                    <span class="fantasy-player-name">${escapeHtml(clean(player.display_gamertag) || "Okänd")}</span>
+                    <span class="fantasy-player-name">${escapeHtml(clean(player.display_gamertag) || t("unknown"))}</span>
                   </strong>
-                  <small>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")} · ${escapeHtml((player.used_slots || []).join(" / ") || "–")} · ${number(player.games)} matcher</small>
+                  <small>${escapeHtml(clean(player.real_team_name) || t("team_not_ready"))} · ${escapeHtml((player.used_slots || []).join(" / ") || "–")} · ${number(player.games)} matcher</small>
                   <div class="fantasy-public-former-player__rounds">
                     ${rounds.map((r) =>
                       '<span>' + escapeHtml(clean(r.round_name) || ("Period " + (r.round_no || "–"))) +
@@ -1872,7 +1872,7 @@
           </div>
           <div class="fantasy-picker-player__info">
             <strong class="fantasy-player-name-line">${countryFlagMarkup(player.country_code)}<span class="fantasy-player-name">${escapeHtml(player.display_gamertag)}</span></strong>
-            <small>${escapeHtml(clean(player.real_team_name) || "Lag ej klart")}</small>
+            <small>${escapeHtml(clean(player.real_team_name) || t("team_not_ready"))}</small>
             <span>${escapeHtml(eligibleSlots(player).join(" / "))}</span>
           </div>
           <div class="fantasy-picker-player__price">
@@ -2249,7 +2249,7 @@
     }
 
     if (!competitionOpen()) {
-      setStatus("saveStatus", "Lagbygget är inte öppet ännu.", "error");
+      setStatus("saveStatus", t("team_building_not_open"), "error");
       return;
     }
 
