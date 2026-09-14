@@ -57,13 +57,9 @@ from fantasy_match_player_stats_stage;
 create temporary table fantasy_import_meta on commit preserve rows as
 select
   c.id as competition_id,
-  s.source_league_id,
-  case
-    when coalesce(array_length(s.source_league_ids,1),0)>0 then s.source_league_ids
-    else array[s.source_league_id]
-  end as source_league_ids
+  (string_to_array(:'league_ids',',')::bigint[])[1] as source_league_id,
+  string_to_array(:'league_ids',',')::bigint[] as source_league_ids
 from public.ehockey_fantasy_competitions c
-join public.ehockey_fantasy_sync_settings s on s.competition_id=c.id
 where c.code='SCL27'
 limit 1;
 
