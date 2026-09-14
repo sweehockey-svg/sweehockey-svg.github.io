@@ -602,7 +602,7 @@
       node.alt = league;
     });
 
-    if ($("leagueBrandSeason")) $("leagueBrandSeason").textContent = season;
+    if ($("leagueBrandSeason")) $("leagueBrandSeason").textContent = "eHOCKEY FANTASY";
     if ($("heroLeagueLab")) $("heroLeagueLab").innerHTML = '<span></span>' + escapeHtml(league + " FANTASY");
     if ($("heroLeagueSix")) $("heroLeagueSix").textContent = league + "-SEXA.";
     if ($("heroBuildButton")) $("heroBuildButton").textContent = "Bygg din " + league + "-sexa";
