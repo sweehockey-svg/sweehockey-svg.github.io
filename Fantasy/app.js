@@ -102,7 +102,10 @@
       open_discord:"Öppnar Discord…", must_login_save:"Du måste vara inloggad och ha en godkänd spelarprofil kopplad.",
       choose_all_six:"Välj alla sex positioner innan du sparar.", team_over_budget:"Laget är över budget.",
       choose_exact_captain:"Välj exakt en kapten.", saving_team:"Sparar laget…", team_updated:"{league}-laget är uppdaterat.",
-      team_saved_success:"{league}-laget är sparat.", captain_position_free:"Kaptensbyte/positionsändring kostar inget."
+      team_saved_success:"{league}-laget är sparat.", captain_position_free:"Kaptensbyte/positionsändring kostar inget.",
+      choose_league_option:"Välj Fantasy-liga…", neutral_hero_kicker:"eHOCKEY FANTASY", neutral_hero_first:"eHOCKEY",
+      neutral_hero_second:"FANTASY LIGA.", neutral_hero_lead:"Välj en Fantasy-liga i menyn ovan för att öppna tävlingen.",
+      neutral_choose_league:"VÄLJ FANTASY-LIGA"
     },
     en: {
       nav_build:"BUILD", nav_compete:"COMPETE", nav_climb:"CLIMB", league:"LEAGUE", language:"LANGUAGE",
@@ -187,7 +190,10 @@
       open_discord:"Opening Discord…", must_login_save:"You must be logged in and have an approved linked player profile.",
       choose_all_six:"Choose all six positions before saving.", team_over_budget:"The team is over budget.",
       choose_exact_captain:"Choose exactly one captain.", saving_team:"Saving team…", team_updated:"{league} team updated.",
-      team_saved_success:"{league} team saved.", captain_position_free:"Captain changes and position changes are free."
+      team_saved_success:"{league} team saved.", captain_position_free:"Captain changes and position changes are free.",
+      choose_league_option:"Choose Fantasy league…", neutral_hero_kicker:"eHOCKEY FANTASY", neutral_hero_first:"eHOCKEY",
+      neutral_hero_second:"FANTASY LEAGUE.", neutral_hero_lead:"Choose a Fantasy league from the menu above to open the competition.",
+      neutral_choose_league:"CHOOSE FANTASY LEAGUE"
     },
     fi: {
       nav_build:"RAKENNA", nav_compete:"KILPAILE", nav_climb:"NOUSE", league:"LIIGA", language:"KIELI",
@@ -272,7 +278,10 @@
       open_discord:"Avataan Discord…", must_login_save:"Sinun on kirjauduttava sisään ja sinulla on oltava hyväksytty linkitetty pelaajaprofiili.",
       choose_all_six:"Valitse kaikki kuusi pelipaikkaa ennen tallennusta.", team_over_budget:"Joukkue ylittää budjetin.",
       choose_exact_captain:"Valitse täsmälleen yksi kapteeni.", saving_team:"Tallennetaan joukkuetta…", team_updated:"{league}-joukkue päivitetty.",
-      team_saved_success:"{league}-joukkue tallennettu.", captain_position_free:"Kapteenin vaihto ja pelipaikan muutos ovat ilmaisia."
+      team_saved_success:"{league}-joukkue tallennettu.", captain_position_free:"Kapteenin vaihto ja pelipaikan muutos ovat ilmaisia.",
+      choose_league_option:"Valitse Fantasy-liiga…", neutral_hero_kicker:"eHOCKEY FANTASY", neutral_hero_first:"eHOCKEY",
+      neutral_hero_second:"FANTASY-LIIGA.", neutral_hero_lead:"Valitse Fantasy-liiga yllä olevasta valikosta avataksesi kilpailun.",
+      neutral_choose_league:"VALITSE FANTASY-LIIGA"
     },
     de: {
       nav_build:"BAUEN", nav_compete:"SPIELEN", nav_climb:"STEIGEN", league:"LIGA", language:"SPRACHE",
@@ -357,7 +366,10 @@
       open_discord:"Discord wird geöffnet…", must_login_save:"Du musst angemeldet sein und ein genehmigtes verknüpftes Spielerprofil haben.",
       choose_all_six:"Wähle alle sechs Positionen, bevor du speicherst.", team_over_budget:"Das Team liegt über dem Budget.",
       choose_exact_captain:"Wähle genau einen Kapitän.", saving_team:"Team wird gespeichert…", team_updated:"{league}-Team aktualisiert.",
-      team_saved_success:"{league}-Team gespeichert.", captain_position_free:"Kapitäns- und Positionswechsel sind kostenlos."
+      team_saved_success:"{league}-Team gespeichert.", captain_position_free:"Kapitäns- und Positionswechsel sind kostenlos.",
+      choose_league_option:"Fantasy-Liga wählen…", neutral_hero_kicker:"eHOCKEY FANTASY", neutral_hero_first:"eHOCKEY",
+      neutral_hero_second:"FANTASY-LIGA.", neutral_hero_lead:"Wähle oben eine Fantasy-Liga aus, um den Wettbewerb zu öffnen.",
+      neutral_choose_league:"FANTASY-LIGA WÄHLEN"
     }
   };
 
@@ -979,9 +991,66 @@
     button.dataset.action = "logout";
   }
 
+  function renderCompetitionSelector() {
+    const selector = $("competitionSelect");
+    if (!selector) return;
+
+    selector.innerHTML = [
+      '<option value="">' + escapeHtml(t("choose_league_option")) + '</option>',
+      ...state.competitions.map((row) =>
+        '<option value="' + escapeHtml(row.code) + '">' +
+          escapeHtml(clean(row.season_label || row.name || row.code)) +
+        '</option>'
+      )
+    ].join("");
+
+    selector.value = state.competition?.code || "";
+  }
+
+  function renderNeutralLanding() {
+    renderCompetitionSelector();
+
+    document.body.dataset.fantasyLeague = "neutral";
+    document.documentElement.style.setProperty("--league-accent", "#35c7ff");
+    document.documentElement.style.setProperty("--league-accent-rgb", "53,199,255");
+    document.title = "eHockey Fantasy Liga";
+
+    const logoNodes = [$("leagueBrandLogo"), $("heroLeagueLogo")].filter(Boolean);
+    logoNodes.forEach((node) => {
+      node.src = "../assets/icons/seh-icon-192.png";
+      node.alt = "eHockey Fantasy Liga";
+    });
+
+    if ($("leagueBrandSeason")) $("leagueBrandSeason").textContent = "eHOCKEY FANTASY";
+    if ($("heroLeagueLab")) $("heroLeagueLab").innerHTML = '<span></span>' + escapeHtml(t("neutral_hero_kicker"));
+    if ($("heroTitleLead")) $("heroTitleLead").textContent = t("neutral_hero_first");
+    if ($("heroLeagueSix")) $("heroLeagueSix").textContent = t("neutral_hero_second");
+    if ($("heroLead")) $("heroLead").textContent = t("neutral_hero_lead");
+    if ($("heroBuildButton")) $("heroBuildButton").textContent = t("neutral_choose_league");
+
+    const ruleButton = document.querySelector("[data-jump-rules]");
+    if (ruleButton) ruleButton.hidden = true;
+    const badges = document.querySelector(".fantasy-hero__badges");
+    if (badges) badges.hidden = true;
+    const scoreboard = document.querySelector(".fantasy-scoreboard");
+    if (scoreboard) scoreboard.hidden = true;
+    const commandbar = document.querySelector(".fantasy-commandbar");
+    if (commandbar) commandbar.hidden = true;
+    if ($("periodHub")) $("periodHub").hidden = true;
+    const tabs = document.querySelector(".fantasy-tabs");
+    if (tabs) tabs.hidden = true;
+    $("[data-panel]").forEach((panel) => { panel.hidden = true; });
+
+    const betaRibbon = document.querySelector(".beta-ribbon");
+    if (betaRibbon) betaRibbon.hidden = true;
+  }
+
   function renderCompetitionBranding() {
     const comp = state.competition;
-    if (!comp) return;
+    if (!comp) {
+      renderNeutralLanding();
+      return;
+    }
 
     const brand = leagueBrand();
     const league = brand.label || leagueCode();
@@ -1000,15 +1069,28 @@
     document.documentElement.style.setProperty("--league-accent-rgb", brand.accentRgb);
     document.title = season + " Fantasy" + (settings.beta_mode ? " Beta" : "");
 
-    const selector = $("competitionSelect");
-    if (selector) {
-      selector.innerHTML = state.competitions.map((row) =>
-        '<option value="' + escapeHtml(row.code) + '">' +
-          escapeHtml(clean(row.season_label || row.name || row.code)) +
-        '</option>'
-      ).join("");
-      selector.value = comp.code;
-    }
+    renderCompetitionSelector();
+
+    const ruleButton = document.querySelector("[data-jump-rules]");
+    if (ruleButton) ruleButton.hidden = false;
+    const badges = document.querySelector(".fantasy-hero__badges");
+    if (badges) badges.hidden = false;
+    const scoreboard = document.querySelector(".fantasy-scoreboard");
+    if (scoreboard) scoreboard.hidden = false;
+    const commandbar = document.querySelector(".fantasy-commandbar");
+    if (commandbar) commandbar.hidden = false;
+    if ($("periodHub")) $("periodHub").hidden = false;
+    const tabs = document.querySelector(".fantasy-tabs");
+    if (tabs) tabs.hidden = false;
+    $("[data-panel]").forEach((panel) => {
+      panel.hidden = panel.dataset.panel !== state.activeTab;
+    });
+
+    if ($("heroTitleLead")) $("heroTitleLead").textContent =
+      state.language === "en" ? "BUILD YOUR" :
+      state.language === "fi" ? "RAKENNA" :
+      state.language === "de" ? "BAUE DEINE" :
+      "BYGG DIN";
 
     const logoNodes = [$("leagueBrandLogo"), $("heroLeagueLogo")].filter(Boolean);
     logoNodes.forEach((node) => {
@@ -1806,6 +1888,13 @@
   }
 
   function renderAll() {
+    if (!state.competition) {
+      renderNeutralLanding();
+      updateHeaderAccount();
+      applyStaticTranslations();
+      return;
+    }
+
     renderHero();
     renderLineup();
     renderFormerPlayers();
@@ -2112,16 +2201,22 @@
     );
 
     const requested = clean(new URLSearchParams(window.location.search).get("competition")).toUpperCase();
-    state.competition =
-      state.competitions.find((row) => clean(row.code).toUpperCase() === requested) ||
-      state.competitions.find((row) => clean(row.code).toUpperCase() === "SCL27") ||
-      state.competitions[0] ||
-      null;
+    state.competition = requested
+      ? (state.competitions.find((row) => clean(row.code).toUpperCase() === requested) || null)
+      : null;
 
-    if (!state.competition) throw new Error("Ingen Fantasy-tävling är konfigurerad.");
+    renderCompetitionSelector();
 
-    // Populate the league selector and branding immediately. Secondary data
-    // such as leaderboard/insights must never leave the selector blank.
+    if (!state.competition) {
+      state.pool = [];
+      state.leaderboard = [];
+      state.insights = null;
+      state.ownership.clear();
+      return;
+    }
+
+    // Populate branding immediately. Secondary data such as leaderboard and
+    // insights must never leave the league selector blank.
     renderCompetitionBranding();
 
     const poolResult = await sb
@@ -2547,7 +2642,8 @@
   $("playersPosition")?.addEventListener("change", renderPlayers);
   $("competitionSelect")?.addEventListener("change", (event) => {
     const code = clean(event.target?.value);
-    if (!code || code === competitionCode()) return;
+    if (!code) return;
+    if (state.competition && code === competitionCode()) return;
     const url = new URL(window.location.href);
     url.searchParams.set("competition", code);
     url.searchParams.set("lang", state.language);
@@ -2559,6 +2655,10 @@
   });
 
   document.querySelector("[data-jump-team]")?.addEventListener("click", () => {
+    if (!state.competition) {
+      $("competitionSelect")?.focus();
+      return;
+    }
     switchTab("team");
     $("teamPanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
@@ -2600,7 +2700,16 @@
     try {
       await loadPublic();
       renderAll();
-      await resolveAccount();
+
+      if (state.competition) {
+        await resolveAccount();
+      } else {
+        const sessionResult = await sb.auth.getSession();
+        if (!sessionResult.error) {
+          state.session = sessionResult.data?.session || null;
+          updateHeaderAccount();
+        }
+      }
     } catch (error) {
       console.error(seasonLabel() + " Fantasy kunde inte laddas", error);
       showGate("logged-out", "Fantasy-data kunde inte hämtas just nu.");
