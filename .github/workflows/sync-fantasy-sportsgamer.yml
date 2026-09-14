@@ -129,7 +129,7 @@ jobs:
                 )
               order by c.id
               limit 1;
-SQL
+          SQL
             )"
 
               if [ -n "$bootstrap_row" ]; then
