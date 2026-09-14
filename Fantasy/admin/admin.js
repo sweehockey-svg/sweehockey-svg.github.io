@@ -532,6 +532,55 @@
     }
   }
 
+  async function deleteCompetition() {
+    const code = activeCompetitionCode();
+    const season = activeSeasonLabel();
+    const button = $("deleteCompetition");
+
+    const confirmed = window.confirm(
+      "Ta bort " + season + " permanent?\n\n" +
+      "Spelarpool, Fantasy-lag, perioder, matcher, poäng och synkhistorik för ligan kommer att raderas."
+    );
+    if (!confirmed) return;
+
+    const typed = clean(window.prompt(
+      "Skriv den interna koden " + code + " för att bekräfta:"
+    )).toUpperCase();
+
+    if (!typed) return;
+    if (typed !== code) {
+      setStatus("deleteCompetitionStatus", "Fel kod. Fantasy-ligan togs inte bort.", "error");
+      return;
+    }
+
+    if (button) button.disabled = true;
+    setStatus("deleteCompetitionStatus", "Tar bort " + season + "…", "working");
+
+    try {
+      const { data, error } = await sb.rpc("seh_fantasy_admin_delete_competition", {
+        p_code: code,
+        p_confirm_code: typed
+      });
+      if (error) throw error;
+
+      const remaining = state.competitions.filter((row) =>
+        clean(row.code).toUpperCase() !== code
+      );
+      const next = remaining.find((row) => clean(row.code).toUpperCase() === "SCL27") || remaining[0];
+
+      if (!next?.code) {
+        throw new Error("Fantasy-ligan togs bort, men ingen annan liga kunde väljas.");
+      }
+
+      const url = new URL(window.location.href);
+      url.searchParams.set("competition", clean(next.code).toUpperCase());
+      window.location.replace(url.toString());
+    } catch (error) {
+      setStatus("deleteCompetitionStatus", "Fel: " + (error?.message || error), "error");
+      if (button) button.disabled = false;
+    }
+  }
+
   async function savePlayer(id, button) {
     const row = document.querySelector('[data-pool-row="' + id + '"]');
     if (!row) return;
@@ -1170,6 +1219,7 @@
     }
   });
   $("recalculateEntries")?.addEventListener("click", recalculateEntries);
+  $("deleteCompetition")?.addEventListener("click", deleteCompetition);
   $("runSimulation")?.addEventListener("click", runSimulation);
   $("buildSclSimulation")?.addEventListener("click", () => runSclSimulationAction("build"));
   $("playNextSimNight")?.addEventListener("click", () => runSclSimulationAction("next"));
