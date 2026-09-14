@@ -324,11 +324,14 @@
     const counts = sync.counts || {};
     const runs = Array.isArray(sync.runs) ? sync.runs : [];
 
-    const sourceLeagueId = Number(settings.source_league_id || 0);
-    const sourceIsPlaceholder = sourceLeagueId === 999999;
-    if ($("syncLeagueId")) $("syncLeagueId").value = sourceIsPlaceholder ? "" : (sourceLeagueId || "");
+    const sourceLeagueIds = Array.isArray(settings.source_league_ids) && settings.source_league_ids.length
+      ? settings.source_league_ids.map(Number).filter((id) => Number.isInteger(id) && id > 0)
+      : [Number(settings.source_league_id || 0)].filter((id) => Number.isInteger(id) && id > 0);
+    const sourceIsPlaceholder = sourceLeagueIds.length === 1 && sourceLeagueIds[0] === 999999;
+    const configuredLeagueIds = sourceIsPlaceholder ? [] : sourceLeagueIds.filter((id) => id !== 999999);
+    if ($("syncLeagueId")) $("syncLeagueId").value = configuredLeagueIds.join(", ");
     if ($("syncAutoEnabled")) $("syncAutoEnabled").checked = sourceIsPlaceholder ? false : Boolean(settings.auto_sync_enabled);
-    if ($("runSportsGamerSync")) $("runSportsGamerSync").disabled = sourceIsPlaceholder;
+    if ($("runSportsGamerSync")) $("runSportsGamerSync").disabled = configuredLeagueIds.length === 0;
     if ($("syncTimes")) $("syncTimes").value = Array.isArray(settings.schedule_times)
       ? settings.schedule_times.join(", ")
       : "";
@@ -338,7 +341,7 @@
       : "Aldrig";
 
     const cards = [
-      ["SPORTSGAMER LIGA", sourceIsPlaceholder ? "EJ SATT" : (sourceLeagueId || "–"), sourceIsPlaceholder ? "väntar på SCL 27" : "källa"],
+      ["SPORTSGAMER LIGOR", configuredLeagueIds.length ? configuredLeagueIds.join(" · ") : "EJ SATT", configuredLeagueIds.length > 1 ? configuredLeagueIds.length + " källor" : (configuredLeagueIds.length ? "1 källa" : "väntar på liga-ID")],
       ["MATCHER", counts.matches || 0, "importerade"],
       ["MATCHRADER", counts.match_player_rows || 0, "spelare/match"],
       ["SPELARE", counts.players_with_match_rows || 0, "med matchdata"],
@@ -360,11 +363,14 @@
         const started = run.started_at ? new Date(run.started_at).toLocaleString("sv-SE") : "–";
         const status = clean(run.status || "–").toUpperCase();
         const source = clean(run.source_table || run.details?.skater_source || "");
+        const runLeagueIds = Array.isArray(run.details?.source_league_ids)
+          ? run.details.source_league_ids.join(", ")
+          : (run.source_league_id || "");
         return `
           <div class="fa-list-row">
             <span>
               <strong>${esc(status)} · ${esc(run.trigger_type || "manual")}</strong>
-              <small>${esc(started)} · ${esc(run.player_rows_upserted || 0)} matchrader${source ? " · " + esc(source) : ""}</small>
+              <small>${esc(started)} · liga ${esc(runLeagueIds || "–")} · ${esc(run.player_rows_upserted || 0)} matchrader${source ? " · " + esc(source) : ""}</small>
               ${run.error_message ? '<small class="fa-sync-error">' + esc(run.error_message) + '</small>' : ""}
             </span>
             <b>${esc(run.matches_upserted || 0)} M</b>
@@ -638,6 +644,14 @@
     }
   }
 
+  function parseLeagueIds() {
+    const values = clean($("syncLeagueId")?.value)
+      .split(/[\s,;]+/)
+      .map((value) => Number(value))
+      .filter((value) => Number.isInteger(value) && value > 0 && value !== 999999);
+    return [...new Set(values)];
+  }
+
   function parseSyncTimes() {
     return clean($("syncTimes")?.value)
       .split(/[\s,;]+/)
@@ -650,14 +664,17 @@
     setStatus("syncSettingsStatus", "Sparar schema…", "working");
 
     try {
-      const leagueId = Number($("syncLeagueId")?.value);
-      if (!Number.isInteger(leagueId) || leagueId <= 0 || leagueId === 999999) {
-        throw new Error("Ange SCL 27:s riktiga SportsGamer liga-ID.");
+      const leagueIds = parseLeagueIds();
+      if (!leagueIds.length) {
+        throw new Error("Ange minst ett riktigt SportsGamer liga-ID.");
+      }
+      if (leagueIds.length > 10) {
+        throw new Error("Max tio SportsGamer liga-ID:n.");
       }
 
-      const sourceResult = await sb.rpc("seh_fantasy_admin_update_sync_source", {
+      const sourceResult = await sb.rpc("seh_fantasy_admin_update_sync_sources", {
         p_code: "SCL27",
-        p_source_league_id: leagueId
+        p_source_league_ids: leagueIds
       });
       if (sourceResult.error) throw sourceResult.error;
 
@@ -707,16 +724,20 @@
     const requestId = "fantasy_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
 
     try {
-      const leagueId = Number(state.syncState?.settings?.source_league_id);
-      if (!Number.isInteger(leagueId) || leagueId <= 0 || leagueId === 999999) {
-        throw new Error("SCL 27:s riktiga SportsGamer liga-ID är inte satt ännu.");
+      const leagueIds = Array.isArray(state.syncState?.settings?.source_league_ids)
+        ? state.syncState.settings.source_league_ids
+            .map(Number)
+            .filter((id) => Number.isInteger(id) && id > 0 && id !== 999999)
+        : [];
+      if (!leagueIds.length) {
+        throw new Error("SportsGamer liga-ID:n är inte satta ännu.");
       }
 
       await callAdminSync({
         action: "start",
         job: "fantasy_sportsgamer",
         request_id: requestId,
-        league_id: leagueId
+        league_ids: leagueIds
       });
 
       setStatus("syncActionStatus", "Synken är startad. Väntar på GitHub Actions…", "working");
