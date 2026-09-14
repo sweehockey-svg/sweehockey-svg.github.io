@@ -576,3 +576,10 @@ a{color:inherit}
   .fa-sync-gcl-grid{grid-template-columns:1fr}
   .fa-new-source__row--two{grid-template-columns:82px 1fr}
 }
+
+
+.fa-sync-gcl-source-row{
+  display:grid;
+  grid-template-columns:minmax(100px,1fr) 84px;
+  gap:8px
+}
