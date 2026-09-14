@@ -807,11 +807,31 @@
     `).join("");
   }
 
+  function publicRosterMeta(player) {
+    const team = clean(player?.real_team_name) || "Lag ej klart";
+    const totalGames = number(player?.total_games ?? player?.games);
+    const slots = Array.isArray(player?.eligible_slots)
+      ? player.eligible_slots.map((slot) => clean(slot).toUpperCase()).filter(Boolean)
+      : [];
+    const hybrid = slots.includes("G") && slots.some((slot) => slot !== "G");
+
+    if (!hybrid) {
+      return team + " · " + totalGames + " matcher totalt";
+    }
+
+    const fantasySlot = clean(player?.slot).toUpperCase();
+    const countedGames = fantasySlot === "G"
+      ? number(player?.goalie_games)
+      : number(player?.skater_games);
+    const countedLabel = fantasySlot === "G"
+      ? "målvaktsmatcher räknas"
+      : "utespelarmatcher räknas";
+
+    return team + " · " + totalGames + " matcher totalt · " + countedGames + " " + countedLabel;
+  }
+
   function publicRosterPlayerMarkup(player) {
     const captain = Boolean(player?.is_captain);
-    const usedSlots = Array.isArray(player?.used_slots) && player.used_slots.length
-      ? player.used_slots.join(" / ")
-      : clean(player?.slot || "–");
     const contribution = number(player?.team_points);
     const captainBonus = number(player?.captain_bonus_points);
 
@@ -830,7 +850,7 @@
             </strong>
             ${captain ? '<span class="fantasy-public-roster-player__captain">KAPTEN</span>' : ""}
           </div>
-          <small>${escapeHtml(clean(player?.real_team_name) || "Lag ej klart")} · använd som ${escapeHtml(usedSlots)} · ${number(player?.games)} matcher</small>
+          <small>${escapeHtml(publicRosterMeta(player))}</small>
           ${captainBonus > 0
             ? '<small class="fantasy-public-roster-player__bonus">+' + formatPoints(captainBonus) + ' P kaptensbonus</small>'
             : ""}
