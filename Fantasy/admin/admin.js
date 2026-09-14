@@ -420,9 +420,12 @@
     const sourceIsPlaceholder = sourceLeagueIds.length === 1 && sourceLeagueIds[0] === 999999;
     const configuredLeagueIds = sourceIsPlaceholder ? [] : sourceLeagueIds.filter((id) => id !== 999999);
     const weights = Array.isArray(sync.league_weights) ? sync.league_weights : [];
-    const isEcl = activeLeagueCode() === "ECL";
+    const leagueCode = activeLeagueCode();
+    const isEcl = leagueCode === "ECL";
+    const isGcl = leagueCode === "GCL";
     if ($("divisionSyncSettings")) $("divisionSyncSettings").hidden = !isEcl;
-    if ($("genericSyncSettings")) $("genericSyncSettings").hidden = isEcl;
+    if ($("gclSyncSettings")) $("gclSyncSettings").hidden = !isGcl;
+    if ($("genericSyncSettings")) $("genericSyncSettings").hidden = isEcl || isGcl;
 
     DIVISION_SYNC_FIELDS.forEach((field) => {
       const row = weights.find((item) => clean(item?.division).toLowerCase() === field.division.toLowerCase()) || {};
@@ -430,6 +433,8 @@
       if ($(field.factorId)) $(field.factorId).value = Number(row.multiplier ?? field.defaultFactor).toFixed(2);
     });
     if ($("syncGenericLeagueIds")) $("syncGenericLeagueIds").value = configuredLeagueIds.join(", ");
+    if ($("syncGclDivision1")) $("syncGclDivision1").value = configuredLeagueIds[0] || "";
+    if ($("syncGclDivision2")) $("syncGclDivision2").value = configuredLeagueIds[1] || "";
     if ($("syncAutoEnabled")) $("syncAutoEnabled").checked = sourceIsPlaceholder ? false : Boolean(settings.auto_sync_enabled);
     if ($("runSportsGamerSync")) $("runSportsGamerSync").disabled = configuredLeagueIds.length === 0;
     if ($("syncTimes")) $("syncTimes").value = Array.isArray(settings.schedule_times)
@@ -781,6 +786,14 @@
     return [...new Set(values)].slice(0, 10);
   }
 
+  function parseGclLeagueIds() {
+    const values = [
+      Number($("syncGclDivision1")?.value || 0),
+      Number($("syncGclDivision2")?.value || 0)
+    ].filter((value) => Number.isInteger(value) && value > 0 && value !== 999999);
+    return [...new Set(values)];
+  }
+
   function parseSyncTimes() {
     return clean($("syncTimes")?.value)
       .split(/[\s,;]+/)
@@ -793,7 +806,9 @@
     setStatus("syncSettingsStatus", "Sparar synkinställningar…", "working");
 
     try {
-      const isEcl = activeLeagueCode() === "ECL";
+      const leagueCode = activeLeagueCode();
+      const isEcl = leagueCode === "ECL";
+      const isGcl = leagueCode === "GCL";
       let leagueIds = [];
 
       if (isEcl) {
@@ -806,7 +821,7 @@
         });
         if (weightResult.error) throw weightResult.error;
       } else {
-        leagueIds = parseGenericLeagueIds();
+        leagueIds = isGcl ? parseGclLeagueIds() : parseGenericLeagueIds();
         if (leagueIds.length) {
           const sourceResult = await sb.rpc("seh_fantasy_admin_update_sync_sources", {
             p_code: activeCompetitionCode(),
@@ -942,8 +957,9 @@
 
   function renderNewCompetitionSourceFields() {
     const league = clean($("newCompetitionLeague")?.value).toUpperCase();
-    if ($("newGenericLeagueSource")) $("newGenericLeagueSource").hidden = league === "ECL";
+    if ($("newGenericLeagueSource")) $("newGenericLeagueSource").hidden = league === "ECL" || league === "GCL";
     if ($("newEclLeagueSources")) $("newEclLeagueSources").hidden = league !== "ECL";
+    if ($("newGclLeagueSources")) $("newGclLeagueSources").hidden = league !== "GCL";
   }
 
   function parseNewGenericLeagueIds() {
@@ -982,6 +998,14 @@
         multiplier:Number(multiplier.toFixed(2))
       };
     });
+  }
+
+  function parseNewGclLeagueIds() {
+    const values = [
+      Number($("newGclDivision1Id")?.value || 0),
+      Number($("newGclDivision2Id")?.value || 0)
+    ].filter((value) => Number.isInteger(value) && value > 0);
+    return [...new Set(values)];
   }
 
   async function createCompetition(event) {
@@ -1027,7 +1051,10 @@
           if (weightResult.error) throw weightResult.error;
         }
       } else {
-        const leagueIds = parseNewGenericLeagueIds();
+        const leagueIds = league === "GCL"
+          ? parseNewGclLeagueIds()
+          : parseNewGenericLeagueIds();
+
         if (leagueIds.length) {
           const sourceResult = await sb.rpc("seh_fantasy_admin_update_sync_sources", {
             p_code: code,
