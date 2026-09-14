@@ -558,3 +558,21 @@ a{color:inherit}
     padding:8px
   }
 }
+
+
+/* GCL uses two SportsGamer divisions */
+.fa-sync-gcl-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px
+}
+.fa-sync-gcl-grid label{
+  padding:0
+}
+.fa-new-source__row--two{
+  grid-template-columns:100px minmax(120px,1fr)
+}
+@media(max-width:620px){
+  .fa-sync-gcl-grid{grid-template-columns:1fr}
+  .fa-new-source__row--two{grid-template-columns:82px 1fr}
+}
