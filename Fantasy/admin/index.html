@@ -10,7 +10,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>eHockey Fantasy Liga Admin</title>
-  <link rel="stylesheet" href="admin.css?v=20260914-v8-hero-league-switch">
+  <link rel="stylesheet" href="admin.css?v=20260914-v9-create-with-league-id">
 </head>
 <body>
   <header class="fa-header">
@@ -374,7 +374,7 @@
     <form id="createCompetitionForm" class="fa-create-competition-form">
       <span class="fa-kicker">eHOCKEY FANTASY LIGA</span>
       <h2>Skapa ny Fantasy-liga</h2>
-      <p>Skapa själva Fantasy-tävlingen först. Spelarpool, SportsGamer liga-ID:n och Fantasy-perioder kopplas sedan till den.</p>
+      <p>Skapa Fantasy-tävlingen och koppla SportsGamer-källan direkt. Om liga-ID:t inte finns ännu kan fälten lämnas tomma och fyllas i senare.</p>
 
       <div class="fa-form-grid">
         <label>
@@ -416,6 +416,50 @@
         </label>
       </div>
 
+      <section class="fa-new-source">
+        <div class="fa-new-source__head">
+          <span>SPORTSGAMER-KÄLLA</span>
+          <strong>Liga-ID</strong>
+          <small>Kopplas till den nya Fantasy-ligan direkt vid skapandet.</small>
+        </div>
+
+        <div id="newGenericLeagueSource" class="fa-new-source__generic">
+          <label>
+            <span>SportsGamer liga-ID</span>
+            <input id="newCompetitionLeagueIds" type="text" inputmode="numeric" placeholder="t.ex. 447">
+            <small>Normalt ett ID. Flera kan anges med komma om tävlingen använder flera SportsGamer-ligor.</small>
+          </label>
+        </div>
+
+        <div id="newEclLeagueSources" class="fa-new-source__ecl" hidden>
+          <div class="fa-new-source__row">
+            <strong>Elite</strong>
+            <input id="newEclEliteId" type="number" min="1" step="1" placeholder="Liga-ID">
+            <input id="newEclEliteFactor" type="number" min="0.5" max="1.5" step="0.01" value="1.10" aria-label="Elite poängfaktor">
+          </div>
+          <div class="fa-new-source__row">
+            <strong>Pro</strong>
+            <input id="newEclProId" type="number" min="1" step="1" placeholder="Liga-ID">
+            <input id="newEclProFactor" type="number" min="0.5" max="1.5" step="0.01" value="1.05" aria-label="Pro poängfaktor">
+          </div>
+          <div class="fa-new-source__row">
+            <strong>Lite</strong>
+            <input id="newEclLiteId" type="number" min="1" step="1" placeholder="Liga-ID">
+            <input id="newEclLiteFactor" type="number" min="0.5" max="1.5" step="0.01" value="1.00" aria-label="Lite poängfaktor">
+          </div>
+          <div class="fa-new-source__row">
+            <strong>Core</strong>
+            <input id="newEclCoreId" type="number" min="1" step="1" placeholder="Liga-ID">
+            <input id="newEclCoreFactor" type="number" min="0.5" max="1.5" step="0.01" value="0.95" aria-label="Core poängfaktor">
+          </div>
+          <div class="fa-new-source__row">
+            <strong>Neo</strong>
+            <input id="newEclNeoId" type="number" min="1" step="1" placeholder="Liga-ID">
+            <input id="newEclNeoFactor" type="number" min="0.5" max="1.5" step="0.01" value="0.90" aria-label="Neo poängfaktor">
+          </div>
+        </div>
+      </section>
+
       <div class="fa-form-actions">
         <p id="createCompetitionStatus" class="fa-status"></p>
         <button id="createCompetitionSubmit" class="fa-primary" type="submit">Skapa Fantasy-liga</button>
@@ -430,6 +474,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="admin.js?v=20260914-v16-hero-league-switch"></script>
+  <script src="admin.js?v=20260914-v17-create-with-league-id"></script>
 </body>
 </html>
