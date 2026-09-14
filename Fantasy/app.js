@@ -902,9 +902,9 @@
     const setupMessage = clean(settings.setup_message);
     const scope = nationalityScope();
     const scopeText =
-      scope === "sweden" ? "svenska spelare" :
-      scope === "scandinavia" ? "skandinaviska spelare" :
-      "alla spelare";
+      scope === "sweden" ? ({sv:"svenska spelare",en:"Swedish players",fi:"ruotsalaiset pelaajat",de:"schwedische Spieler"}[state.language]) :
+      scope === "scandinavia" ? ({sv:"skandinaviska spelare",en:"Scandinavian players",fi:"skandinaaviset pelaajat",de:"skandinavische Spieler"}[state.language]) :
+      ({sv:"alla spelare",en:"all players",fi:"kaikki pelaajat",de:"alle Spieler"}[state.language]);
 
     document.body.dataset.fantasyLeague = league.toLowerCase();
     document.documentElement.style.setProperty("--league-accent", brand.accent);
@@ -929,16 +929,16 @@
 
     if ($("leagueBrandSeason")) $("leagueBrandSeason").textContent = "eHOCKEY FANTASY";
     if ($("heroLeagueLab")) $("heroLeagueLab").innerHTML = '<span></span>' + escapeHtml(league + " FANTASY");
-    if ($("heroLeagueSix")) $("heroLeagueSix").textContent = league + "-SEXA.";
-    if ($("heroBuildButton")) $("heroBuildButton").textContent = "Bygg din " + league + "-sexa";
+    if ($("heroLeagueSix")) $("heroLeagueSix").textContent = t("build_six_short",{league});
+    if ($("heroBuildButton")) $("heroBuildButton").textContent = t("build_your_six",{league});
     if ($("scoreboardLeagueTitle")) $("scoreboardLeagueTitle").textContent = season + " FANTASY";
     if ($("footerCompetitionLabel")) $("footerCompetitionLabel").textContent = season + " Fantasy";
 
     const intro = comp.status === "setup"
-      ? (setupMessage || season + " Fantasy är under uppbyggnad.")
+      ? (state.language === "sv" && setupMessage ? setupMessage : t("setup_intro",{season}))
       : betaSource
-        ? "Välj sex spelare, håll dig under budget och utse din kapten. Spelarpoolen bygger just nu på " + betaSource + "."
-        : "Välj sex spelare, håll dig under budget och utse din kapten. Fantasy följer spelarnas riktiga matcher och resultat.";
+        ? t("beta_intro",{source:betaSource})
+        : t("normal_intro");
     if ($("heroLead")) $("heroLead").textContent = intro;
 
     if ($("betaRibbonTitle")) {
@@ -946,64 +946,64 @@
     }
     if ($("betaRibbonText")) {
       $("betaRibbonText").textContent = comp.status === "setup"
-        ? (setupMessage || "Fantasy-ligan förbereds.")
-        : "Spelarurval: " + scopeText + ".";
+        ? (state.language === "sv" && setupMessage ? setupMessage : t("fantasy_preparing"))
+        : t("player_selection",{scope:scopeText});
     }
     if ($("scoreboardSource")) {
       $("scoreboardSource").textContent = betaSource
         ? betaSource.toUpperCase()
-        : (comp.status === "setup" ? "SPELARPOOL EJ PUBLICERAD" : scopeText.toUpperCase());
+        : (comp.status === "setup" ? t("pool_not_published_upper") : scopeText.toUpperCase());
     }
     if ($("commandMode")) {
       $("commandMode").textContent =
         season.toUpperCase() + " / " +
-        (comp.status === "setup" ? "UNDER UPPBYGGNAD" :
-          comp.status === "open" ? "LAGBYGGE ÖPPET" :
+        (comp.status === "setup" ? t("under_construction_upper") :
+          comp.status === "open" ? t("team_building_open_upper") :
           competitionStatusLabel(comp.status));
     }
-    if ($("commandPoolCount")) $("commandPoolCount").textContent = state.pool.length + " SPELARE";
+    if ($("commandPoolCount")) $("commandPoolCount").textContent = t("players_count",{count:state.pool.length});
 
-    if ($("setupBannerTitle")) $("setupBannerTitle").textContent = season + " är under uppbyggnad";
+    if ($("setupBannerTitle")) $("setupBannerTitle").textContent = t("season_under_construction",{season});
     if ($("setupBannerText")) {
-      $("setupBannerText").textContent = setupMessage ||
-        (state.pool.length ? "Fantasy-poolen är tillgänglig." : "Spelarpoolen är inte publicerad ännu.");
+      $("setupBannerText").textContent =
+        (state.language === "sv" && setupMessage)
+          ? setupMessage
+          : (state.pool.length ? t("pool_available") : t("pool_not_published"));
     }
     if ($("marketSourceLabel")) {
       $("marketSourceLabel").textContent = betaSource
         ? betaSource.toUpperCase()
-        : (comp.status === "setup" ? "VÄNTAR PÅ SPELARPOOL" : season.toUpperCase());
+        : (comp.status === "setup" ? t("waiting_for_pool_upper") : season.toUpperCase());
     }
-    if ($("playersKicker")) $("playersKicker").textContent = season.toUpperCase() + " / FANTASYSPELARE";
+    if ($("playersKicker")) $("playersKicker").textContent = t("fantasy_players_kicker",{season:season.toUpperCase()});
     if ($("playersIntro")) {
       $("playersIntro").textContent = comp.status === "setup"
-        ? (setupMessage || "Spelarpoolen publiceras senare.")
-        : "Här ser du de spelare som är valbara i " + season + " Fantasy.";
+        ? (state.language === "sv" && setupMessage ? setupMessage : t("pool_published_later"))
+        : t("eligible_players_intro",{season});
     }
     if ($("leaderboardTitle")) $("leaderboardTitle").textContent = season + " Fantasy";
     if ($("leaderboardIntro")) {
       $("leaderboardIntro").textContent = comp.status === "setup"
-        ? "Topplistan öppnar när " + season + " Fantasy är igång."
-        : "Topplistan uppdateras med riktiga Fantasy-poäng efter matcherna.";
+        ? t("leaderboard_opens",{season})
+        : t("leaderboard_updates");
     }
-    if ($("rulesTitle")) $("rulesTitle").textContent = "Så fungerar " + league + " Fantasy";
+    if ($("rulesTitle")) $("rulesTitle").textContent = t("how_it_works",{league});
     if ($("rulesIntro")) {
       $("rulesIntro").textContent = comp.status === "setup"
-        ? season + " Fantasy är förberedd och reglerna kan finjusteras inför öppning."
-        : "Bygg din " + league + "-sexa, håll budgeten och följ poängen period för period.";
+        ? t("rules_setup_intro",{season})
+        : t("rules_live_intro",{league});
     }
     if ($("ruleBudgetTitle")) $("ruleBudgetTitle").textContent = format(comp.budget || 0) + " CR";
     if ($("ruleBudgetText")) $("ruleBudgetText").textContent =
-      "Hela startsexan måste rymmas inom " + format(comp.budget || 0) + " CR.";
+      t("budget_rule",{budget:format(comp.budget || 0)});
     if ($("ruleTeamLimitTitle")) $("ruleTeamLimitTitle").textContent =
-      "Max " + format(comp.max_players_per_real_team || 2) + " från samma lag";
+      t("max_team_rule_title",{max:format(comp.max_players_per_real_team || 2)});
     if ($("ruleTeamLimitText")) $("ruleTeamLimitText").textContent =
-      "Du får välja högst " + format(comp.max_players_per_real_team || 2) + " spelare från samma riktiga lag.";
+      t("max_team_rule",{max:format(comp.max_players_per_real_team || 2)});
     if ($("ruleCaptainTitle")) $("ruleCaptainTitle").textContent =
-      "Kapten " + format(comp.captain_multiplier || 1, 1) + "×";
+      t("captain_rule_title",{multiplier:format(comp.captain_multiplier || 1, 1)});
     if ($("ruleCaptainText")) $("ruleCaptainText").textContent =
-      "En spelare utses till kapten och får " +
-      format((number(comp.captain_multiplier || 1) - 1) * 100) +
-      " procent extra Fantasy-poäng.";
+      t("captain_rule",{percent:format((number(comp.captain_multiplier || 1) - 1) * 100)});
 
     const divisionBlock = $("divisionFactorBlock");
     if (divisionBlock) divisionBlock.hidden = league !== "ECL";
@@ -1012,10 +1012,10 @@
 
     if ($("periodRulesText")) {
       $("periodRulesText").textContent = comp.status === "setup"
-        ? season + " kommer att använda Fantasy-perioder. Deadlines, fria byten och eventuellt slutspelsreset publiceras innan ligan öppnar."
+        ? t("setup_period_rules",{season})
         : league === "SCL"
-          ? "SCL spelas inte i fasta omgångar, så Fantasy delas i tidsbestämda perioder. Varje ny Fantasy-period låses kl. 18:00 svensk tid och matcherna räknas efter sin faktiska starttid. Före första perioden är byten obegränsade. Därefter får du 1 gratis byte per period och kan spara upp till 2. Extra byten kostar −10 Fantasy-poäng och kaptensbyte är gratis."
-          : "Fantasy delas i tidsbestämda perioder. Matcherna räknas efter sin faktiska starttid och byten gäller från nästa låsta period.";
+          ? t("scl_period_rules")
+          : t("generic_period_rules");
     }
 
     const betaRibbon = document.querySelector(".beta-ribbon");
@@ -1028,7 +1028,7 @@
   function renderHero() {
     const comp = state.competition;
     renderCompetitionBranding();
-    $("heroStart").textContent = comp?.starts_on ? formatDate(comp.starts_on).toUpperCase() : "EJ SATT";
+    $("heroStart").textContent = comp?.starts_on ? formatDate(comp.starts_on).toUpperCase() : t("not_set").toUpperCase();
     $("heroStatus").textContent = competitionStatusLabel(comp?.status || "setup");
     $("heroBudget").textContent = format(comp?.budget || 100);
     $("heroEntries").textContent = String(state.leaderboard.length || 0);
