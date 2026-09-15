@@ -46,60 +46,189 @@
   <meta name="apple-mobile-web-app-title" content="Svensk eHockey">
   <link rel="stylesheet" href="styles.css?v=20260911-v13010-team-rp-history">
 <style>
-    .portal-button--primary {
-      position:relative !important;
-      display:inline-flex !important;
-      align-items:center !important;
-      justify-content:flex-start !important;
-      min-width:300px !important;
-      min-height:64px !important;
-      padding:10px 58px 10px 70px !important;
-      border:1px solid rgba(240,213,139,.72) !important;
-      border-radius:10px !important;
-      color:#f7f4ea !important;
-      background:linear-gradient(115deg,rgba(214,177,95,.16),rgba(8,15,26,.96) 38%,rgba(3,7,13,.98)) !important;
-      box-shadow:0 0 0 1px rgba(214,177,95,.08) inset,0 10px 28px rgba(0,0,0,.28),0 0 22px rgba(214,177,95,.08) !important;
-      font-size:18px !important;
-      font-weight:900 !important;
-      letter-spacing:-.02em !important;
-      text-transform:none !important;
-      overflow:hidden !important;
-      transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease !important;
+    .home-stage__cta-row {
+      position:relative;
+      z-index:3;
+      display:flex;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:10px 18px;
+      margin-top:clamp(11px,1.45vh,16px);
     }
-    .portal-button--primary::before {
-      content:"◆" !important;
-      position:absolute !important;
-      left:18px !important;
-      top:50% !important;
-      width:38px !important;
-      height:38px !important;
-      display:grid !important;
-      place-items:center !important;
-      transform:translateY(-50%) rotate(45deg) !important;
-      border:1px solid rgba(255,204,0,.48) !important;
-      border-radius:8px !important;
-      color:#ffcc00 !important;
-      background:rgba(255,204,0,.08) !important;
-      font-size:14px !important;
-      box-shadow:0 0 18px rgba(255,204,0,.08) !important;
+    .home-android-cta {
+      position:relative;
+      isolation:isolate;
+      box-sizing:border-box;
+      width:min(100%,336px);
+      min-height:54px;
+      display:grid;
+      grid-template-columns:38px minmax(0,1fr) 30px;
+      align-items:center;
+      gap:11px;
+      padding:7px 10px 7px 8px;
+      overflow:hidden;
+      border:1px solid rgba(214,177,95,.58);
+      border-radius:14px;
+      color:#f7f4ea;
+      text-decoration:none;
+      background:
+        radial-gradient(circle at 12% 50%,rgba(255,204,0,.12),transparent 28%),
+        linear-gradient(112deg,rgba(11,23,38,.98),rgba(5,10,18,.98) 58%,rgba(2,5,10,.99));
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.025) inset,
+        0 10px 26px rgba(0,0,0,.24),
+        0 0 22px rgba(214,177,95,.055);
+      transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease;
     }
-    .portal-button--primary::after {
-      content:"→" !important;
-      position:absolute !important;
-      right:18px !important;
-      top:50% !important;
-      transform:translateY(-52%) !important;
-      color:#ffcc00 !important;
-      font-size:25px !important;
-      font-weight:500 !important;
-      line-height:1 !important;
+    .home-android-cta::before {
+      position:absolute;
+      top:0;
+      right:0;
+      left:0;
+      height:2px;
+      content:"";
+      opacity:.82;
+      background:linear-gradient(90deg,rgba(67,232,225,.72),rgba(214,177,95,.92) 58%,rgba(255,204,0,.18));
     }
-    .portal-button--primary:hover,.portal-button--primary:focus-visible {
-      color:#fff !important;
-      border-color:#ffcc00 !important;
-      background:linear-gradient(115deg,rgba(214,177,95,.23),rgba(11,20,33,.98) 42%,rgba(4,8,14,.98)) !important;
-      box-shadow:0 0 0 1px rgba(255,204,0,.12) inset,0 12px 32px rgba(0,0,0,.34),0 0 28px rgba(255,204,0,.13) !important;
-      transform:translateY(-2px) !important;
+    .home-android-cta::after {
+      position:absolute;
+      top:-34px;
+      right:-28px;
+      z-index:-1;
+      width:112px;
+      height:112px;
+      border-radius:50%;
+      content:"";
+      opacity:.5;
+      background:radial-gradient(circle,rgba(255,204,0,.12),transparent 68%);
+      pointer-events:none;
+    }
+    .home-android-cta__icon {
+      position:relative;
+      width:38px;
+      height:38px;
+      display:grid;
+      place-items:center;
+      border:1px solid rgba(255,204,0,.42);
+      border-radius:11px;
+      color:#ffcc00;
+      background:linear-gradient(145deg,rgba(255,204,0,.14),rgba(255,204,0,.035));
+      box-shadow:0 0 16px rgba(255,204,0,.06) inset;
+      font-size:20px;
+      font-weight:800;
+      line-height:1;
+    }
+    .home-android-cta__icon::after {
+      position:absolute;
+      bottom:8px;
+      width:11px;
+      height:2px;
+      border-radius:2px;
+      content:"";
+      background:currentColor;
+      opacity:.9;
+    }
+    .home-android-cta__copy {
+      min-width:0;
+      display:grid;
+      gap:2px;
+    }
+    .home-android-cta__copy small,
+    .home-android-cta__copy strong {
+      display:block;
+    }
+    .home-android-cta__copy small {
+      color:rgba(67,232,225,.82);
+      font-size:8.5px;
+      font-weight:900;
+      letter-spacing:.12em;
+      line-height:1.1;
+    }
+    .home-android-cta__copy strong {
+      overflow:hidden;
+      color:#f5f2e9;
+      font-size:14.5px;
+      font-weight:900;
+      letter-spacing:-.015em;
+      line-height:1.15;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .home-android-cta__arrow {
+      width:28px;
+      height:28px;
+      display:grid;
+      place-items:center;
+      justify-self:end;
+      border:1px solid rgba(214,177,95,.32);
+      border-radius:50%;
+      color:#f0d58b;
+      background:rgba(214,177,95,.045);
+      font-size:16px;
+      line-height:1;
+      transition:transform .18s ease,border-color .18s ease,background .18s ease;
+    }
+    .home-android-cta:hover,
+    .home-android-cta:focus-visible {
+      outline:none;
+      transform:translateY(-2px);
+      border-color:rgba(255,204,0,.88);
+      background:
+        radial-gradient(circle at 12% 50%,rgba(255,204,0,.17),transparent 30%),
+        linear-gradient(112deg,rgba(13,28,45,.99),rgba(6,12,21,.99) 60%,rgba(3,7,12,.99));
+      box-shadow:
+        0 0 0 1px rgba(255,204,0,.08) inset,
+        0 13px 30px rgba(0,0,0,.3),
+        0 0 28px rgba(255,204,0,.09);
+    }
+    .home-android-cta:hover .home-android-cta__arrow,
+    .home-android-cta:focus-visible .home-android-cta__arrow {
+      transform:translateX(2px);
+      border-color:rgba(255,204,0,.56);
+      background:rgba(255,204,0,.09);
+    }
+    .home-stage__cta-row .home-stage__support {
+      flex:0 1 auto;
+      margin-top:0 !important;
+      padding-left:16px;
+      font-size:.69rem;
+      white-space:nowrap;
+    }
+    @media (max-height:860px) and (min-width:1101px) {
+      .home-stage__cta-row { margin-top:9px; gap:8px 16px; }
+      .home-android-cta {
+        width:min(100%,326px);
+        min-height:48px;
+        grid-template-columns:34px minmax(0,1fr) 28px;
+        gap:9px;
+        padding:5px 9px 5px 7px;
+      }
+      .home-android-cta__icon { width:34px; height:34px; border-radius:10px; font-size:18px; }
+      .home-android-cta__icon::after { bottom:7px; width:10px; }
+      .home-android-cta__copy small { font-size:8px; }
+      .home-android-cta__copy strong { font-size:13.5px; }
+      .home-android-cta__arrow { width:26px; height:26px; font-size:15px; }
+      .home-stage__cta-row .home-stage__support { font-size:.66rem; }
+    }
+    @media (max-width:1100px) {
+      .home-stage__cta-row { align-items:flex-start; }
+      .home-android-cta { width:min(100%,360px); }
+    }
+    @media (max-width:680px) {
+      .home-stage__cta-row {
+        display:grid;
+        grid-template-columns:1fr;
+        gap:11px;
+        margin-top:16px;
+      }
+      .home-android-cta {
+        width:100%;
+        max-width:390px;
+        min-height:56px;
+      }
+      .home-stage__cta-row .home-stage__support {
+        white-space:normal;
+      }
     }
     .portal-mark { flex:0 0 min(48vw,680px); width:min(48vw,680px); max-width:100%; position:relative; }
     .portal-mark img { display:block; width:100%; max-width:100%; height:auto; opacity:.95; }
@@ -121,7 +250,7 @@
   <script src="teamlogos-manifest.js?v=20260830-v60"></script>
   <script src="playerimages-manifest.js?v=20260904-v1"></script>
   <script src="news-articles.js?v=20260816-v5"></script>
-  <script src="app.js?v=20260915-android-download-530"></script>
+  <script src="app.js?v=20260915-home-android-cta-531"></script>
   <script src="sec-admin-sync.js?v=20260906-v1"></script>
   <script src="admin-current-stats.js?v=20260915-v7-download-count"></script>
   <script src="ecl27-team-builds-source-enrichment.js?v=20260911-v9-supabase-sep11"></script>
