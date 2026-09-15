@@ -23,6 +23,7 @@
   position: relative !important;
 }
 
+/* Behåll endast den raka färgmarkeringen till vänster. */
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122::before {
   content: "";
   position: absolute;
@@ -30,6 +31,19 @@
   width: 3px;
   background: var(--team-accent, #d6b15f);
   opacity: .9;
+}
+
+/* Ta bort diagonala dekorstreck som ärvs från de fulla spelarkorten. */
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122::after,
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__top-v1266::before,
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__top-v1266::after,
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__identity-v1266::before,
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__identity-v1266::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122:hover,
