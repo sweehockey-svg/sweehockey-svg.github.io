@@ -1,6 +1,6 @@
 /* Svensk eHockey – kompakt namnlista för spelarregistret */
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact {
-  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
   gap: 6px !important;
   padding: 10px 12px !important;
 }
@@ -11,7 +11,7 @@
   min-width: 0 !important;
   min-height: 34px !important;
   height: 34px !important;
-  padding: 0 10px 0 12px !important;
+  padding: 0 9px 0 11px !important;
   margin: 0 !important;
   overflow: hidden !important;
   border: 1px solid rgba(255,255,255,.09) !important;
@@ -38,78 +38,65 @@
   background: linear-gradient(110deg, rgba(17,25,34,.98), rgba(8,12,17,.94)) !important;
 }
 
-#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 > * {
-  display: none !important;
-}
-
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 > * { display:none !important; }
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 > .players-card__top-v1266,
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__top-v1266 > .players-card__identity-v1266,
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__identity-v1266 > .players-card__title-v122 {
-  display: block !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  height: auto !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  position: static !important;
-  background: none !important;
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  position:static !important;
+  background:none !important;
 }
-
-#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__top-v1266 > * {
-  display: none !important;
-}
-#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__top-v1266 > .players-card__identity-v1266 {
-  display: block !important;
-}
-#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__identity-v1266 > * {
-  display: none !important;
-}
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__top-v1266 > * { display:none !important; }
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__top-v1266 > .players-card__identity-v1266 { display:block !important; }
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__identity-v1266 > * { display:none !important; }
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__identity-v1266 > .players-card__title-v122 {
-  display: block !important;
-  padding-right: 18px !important;
-  position: relative !important;
+  display:block !important;
+  padding-right:14px !important;
+  position:relative !important;
 }
 
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__title-v122 h3 {
-  display: block !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  color: #f4f3ef !important;
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  line-height: 34px !important;
-  letter-spacing: 0 !important;
-  white-space: nowrap !important;
-  text-overflow: ellipsis !important;
-  text-align: left !important;
+  display:block !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  color:#f4f3ef !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  line-height:34px !important;
+  letter-spacing:0 !important;
+  white-space:nowrap !important;
+  text-overflow:ellipsis !important;
+  text-align:left !important;
 }
 
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__title-v122::after {
-  content: "›";
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-52%);
-  color: rgba(244,243,239,.42);
-  font-size: 16px;
-  line-height: 1;
+  content:"›";
+  position:absolute;
+  right:0;
+  top:50%;
+  transform:translateY(-52%);
+  color:rgba(244,243,239,.42);
+  font-size:15px;
+  line-height:1;
 }
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122:hover .players-card__title-v122::after { color:#d6b15f; }
 
-#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122:hover .players-card__title-v122::after {
-  color: #d6b15f;
+@media (max-width:1550px) {
+  #spaRouteView[data-route="players"] .player-directory__grid.is-compact { grid-template-columns:repeat(8,minmax(0,1fr)) !important; }
 }
-
-@media (max-width: 1450px) {
-  #spaRouteView[data-route="players"] .player-directory__grid.is-compact { grid-template-columns: repeat(6, minmax(0,1fr)) !important; }
+@media (max-width:1250px) {
+  #spaRouteView[data-route="players"] .player-directory__grid.is-compact { grid-template-columns:repeat(6,minmax(0,1fr)) !important; }
 }
-@media (max-width: 1200px) {
-  #spaRouteView[data-route="players"] .player-directory__grid.is-compact { grid-template-columns: repeat(5, minmax(0,1fr)) !important; }
+@media (max-width:950px) {
+  #spaRouteView[data-route="players"] .player-directory__grid.is-compact { grid-template-columns:repeat(4,minmax(0,1fr)) !important; }
 }
-@media (max-width: 950px) {
-  #spaRouteView[data-route="players"] .player-directory__grid.is-compact { grid-template-columns: repeat(3, minmax(0,1fr)) !important; }
-}
-@media (max-width: 600px) {
-  #spaRouteView[data-route="players"] .player-directory__grid.is-compact { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap:5px !important; padding:8px !important; }
+@media (max-width:700px) {
+  #spaRouteView[data-route="players"] .player-directory__grid.is-compact { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:5px !important; padding:8px !important; }
 }
