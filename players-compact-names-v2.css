@@ -1,4 +1,4 @@
-/* Svensk eHockey – riktig kompakt namnlista för spelarregistret */
+/* Svensk eHockey – kompakt namnlista för spelarregistret */
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact {
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   gap: 8px !important;
@@ -28,24 +28,41 @@
   background: rgba(214,177,95,.055) !important;
 }
 
-/* Dölj ALLT från det stora spelarkortet utom namnbehållaren. */
+/* Kortets riktiga DOM är card > top > identity > title > h3.
+   Behåll bara den kedjan synlig och dölj resten. */
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 > * {
   display: none !important;
 }
 
-#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 .players-card__content-v122 {
-  display: flex !important;
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 > .players-card__top-v1266 {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__top-v1266 > * {
+  display: none !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__top-v1266 > .players-card__identity-v1266 {
+  display: block !important;
   width: 100% !important;
   min-width: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
+  position: static !important;
 }
 
-#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 .players-card__content-v122 > * {
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__identity-v1266 > * {
   display: none !important;
 }
 
-#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 .players-card__title-v122 {
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__identity-v1266 > .players-card__title-v122 {
   display: block !important;
   width: 100% !important;
   min-width: 0 !important;
@@ -53,11 +70,7 @@
   padding: 0 !important;
 }
 
-#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 .players-card__title-v122 > * {
-  display: none !important;
-}
-
-#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 .players-card__title-v122 h3 {
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__title-v122 h3 {
   display: block !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -65,10 +78,27 @@
   color: #f4f3ef !important;
   font-size: 13px !important;
   font-weight: 850 !important;
-  line-height: 1 !important;
+  line-height: 1.15 !important;
   letter-spacing: 0 !important;
   white-space: nowrap !important;
   text-overflow: ellipsis !important;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__title-v122::after {
+  content: "›";
+  display: block;
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(244,243,239,.58);
+  font-size: 18px;
+  line-height: 1;
+}
+
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__title-v122 {
+  position: relative !important;
+  padding-right: 22px !important;
 }
 
 @media (max-width: 900px) {
@@ -90,7 +120,7 @@
     padding: 0 10px !important;
   }
 
-  #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 .players-card__title-v122 h3 {
+  #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__title-v122 h3 {
     font-size: 12px !important;
   }
 }
