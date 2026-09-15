@@ -1,5 +1,63 @@
 window.SEH_NEWS_ARTICLES = Object.freeze([
   {
+    "title": "Svensk eHockey finns nu som Android-app",
+    "date": "2026-09-15",
+    "tag": "Svensk eHockey",
+    "author": "Svensk eHockey",
+    "heroImage": "/nyhetsbilder/android-app-20260915-desktop.svg",
+    "heroImageMobile": "/nyhetsbilder/android-app-20260915-mobile.svg",
+    "heroImageAlt": "Svensk eHockey finns nu som Android-app",
+    "excerpt": "Svensk eHockey finns nu som Android-app. Nyheter, svenska spelare, lag, statistik och tävlingar finns samlat direkt i mobilen – med möjlighet att använda appen som gäst eller logga in med Discord.",
+    "url": "#svensk-ehockey-nu-pa-android",
+    "links": [
+      {
+        "label": "Ladda ner Android-appen",
+        "url": "https://www.svenskehockey.se/android.html"
+      }
+    ],
+    "body": [
+      "**Svensk eHockey finns nu som Android-app.** Målet är att göra det snabbare och enklare att följa den svenska eHockey-scenen direkt från mobilen – utan att behöva gå via webbläsaren varje gång.",
+      "I appen hittar du samma Svensk eHockey-innehåll som på sajten: nyheter, spelarprofiler, lag, tävlingar, statistik och historik. Du kan använda appen som gäst eller logga in med Discord, och pushnotiser är valfria.",
+      "Appen laddas ner direkt från Svensk eHockey på https://www.svenskehockey.se/android.html."
+    ],
+    "sections": [
+      {
+        "title": "All svensk eHockey direkt i mobilen",
+        "text": [
+          "Android-appen är byggd som en snabbare ingång till Svensk eHockey. Du kan gå direkt till nyheter, svenska spelare, lag, tävlingar och statistik och använda samma innehåll som på webbplatsen.",
+          "Tanken är inte att ersätta webben, utan att göra Svensk eHockey enklare att ha med sig. Appen ger snabb åtkomst till sajten i ett mobilanpassat format och blir samtidigt grunden för fler appfunktioner framöver."
+        ]
+      },
+      {
+        "title": "Gästläge, Discord och valfria pushnotiser",
+        "text": [
+          "Du behöver inte logga in för att använda appen. Det går att fortsätta som gäst och använda de publika delarna precis som vanligt.",
+          "Den som vill kan logga in med Discord. Pushnotiser är också valfria, så du väljer själv om appen ska kunna skicka uppdateringar när nytt innehåll publiceras."
+        ]
+      },
+      {
+        "title": "Så installerar du appen",
+        "text": [
+          "Svensk eHockey distribueras just nu som en APK-fil för Android. Öppna nedladdningssidan på mobilen, ladda ner filen och öppna den. Första gången kan Android be dig tillåta installation från webbläsaren du använder.",
+          "Den aktuella versionen är **5.30**, cirka **56 MB**, och kräver **Android 7.0 eller senare**. Appen kan inte installeras på iPhone."
+        ]
+      },
+      {
+        "title": "Uppdateringar på samma plats",
+        "text": [
+          "När en ny version släpps kommer den att finnas på samma nedladdningssida. Uppdateringen installeras ovanpå den befintliga appen, så du behöver normalt inte avinstallera först.",
+          "Har du en äldre testversion och får problem med att uppdatera rekommenderar vi att du kontaktar oss på Discord innan du avinstallerar appen."
+        ]
+      },
+      {
+        "title": "Ladda ner Svensk eHockey för Android",
+        "text": [
+          "Nedladdning och installationsguide finns på https://www.svenskehockey.se/android.html."
+        ]
+      }
+    ]
+  },
+  {
     "title": "Ztarsailor i topp när SEC Sommar ’26 börjar ta form",
     "date": "2026-08-16",
     "tag": "SEC",
