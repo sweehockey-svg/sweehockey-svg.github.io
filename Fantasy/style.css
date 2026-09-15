@@ -4391,30 +4391,62 @@ body[data-fantasy-league="neutral"] .fantasy-hero__copy h1{
 }
 
 
-/* Mobile header v41: keep league logo away from the league selector. */
+/* Mobile header v42: compact league logo + selector + flag + account row. */
 @media(max-width:720px){
   .fantasy-site-header{
-    grid-template-columns:1fr;
-    gap:0;
+    grid-template-columns:42px minmax(0,1fr);
+    gap:7px;
+    min-height:64px;
+    padding:7px 9px;
   }
   .scl-brand{
+    display:flex;
+    width:42px;
+    min-width:42px;
+    align-self:end;
+    justify-content:center;
+  }
+  .scl-brand img{
+    width:40px;
+    height:40px;
+    object-fit:contain;
+  }
+  .scl-brand span{
     display:none;
   }
   .fantasy-site-header__actions{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 58px auto;
+    grid-template-columns:minmax(72px,118px) 44px auto;
+    justify-content:space-between;
     align-items:end;
+    min-width:0;
     width:100%;
-    gap:8px;
+    gap:6px;
   }
   .fantasy-competition-switcher{
     order:initial;
-    width:auto;
+    width:100%;
     min-width:0;
   }
+  .fantasy-competition-switcher select{
+    width:100%;
+    min-width:0;
+    padding-right:24px;
+    text-overflow:ellipsis;
+  }
   .fantasy-language-switcher{
-    width:58px;
-    min-width:58px;
+    width:44px;
+    min-width:44px;
+    gap:0;
+  }
+  .fantasy-language-switcher>span:first-child{
+    display:none;
+  }
+  .fantasy-language-control{
+    min-height:34px;
+  }
+  .fantasy-language-flag{
+    font-size:1.25rem;
   }
   .fantasy-account-button{
     align-self:end;
