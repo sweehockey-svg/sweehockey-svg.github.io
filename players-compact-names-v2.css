@@ -1,23 +1,23 @@
 /* Svensk eHockey – kompakt namnlista för spelarregistret */
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact {
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  gap: 7px !important;
-  padding: 12px !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  padding: 10px 12px !important;
 }
 
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 {
   display: flex !important;
   align-items: center !important;
   min-width: 0 !important;
-  min-height: 46px !important;
-  height: 46px !important;
-  padding: 0 14px 0 16px !important;
+  min-height: 34px !important;
+  height: 34px !important;
+  padding: 0 10px 0 12px !important;
   margin: 0 !important;
   overflow: hidden !important;
-  border: 1px solid rgba(255,255,255,.10) !important;
-  border-radius: 10px !important;
-  background: linear-gradient(110deg, rgba(10,17,25,.96), rgba(5,9,14,.88)) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+  border: 1px solid rgba(255,255,255,.09) !important;
+  border-radius: 7px !important;
+  background: linear-gradient(110deg, rgba(10,17,25,.96), rgba(5,9,14,.90)) !important;
+  box-shadow: none !important;
   transform: none !important;
   text-align: left !important;
   position: relative !important;
@@ -34,18 +34,17 @@
 
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122:hover,
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122:focus-visible {
-  border-color: rgba(214,177,95,.48) !important;
+  border-color: rgba(214,177,95,.45) !important;
   background: linear-gradient(110deg, rgba(17,25,34,.98), rgba(8,12,17,.94)) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(214,177,95,.05) !important;
 }
 
-/* Kortets riktiga DOM är card > top > identity > title > h3.
-   Behåll bara den kedjan synlig och dölj resten. */
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 > * {
   display: none !important;
 }
 
-#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 > .players-card__top-v1266 {
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 > .players-card__top-v1266,
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__top-v1266 > .players-card__identity-v1266,
+#spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__identity-v1266 > .players-card__title-v122 {
   display: block !important;
   width: 100% !important;
   min-width: 0 !important;
@@ -53,32 +52,22 @@
   min-height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
+  position: static !important;
   background: none !important;
 }
 
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__top-v1266 > * {
   display: none !important;
 }
-
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__top-v1266 > .players-card__identity-v1266 {
   display: block !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  position: static !important;
 }
-
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__identity-v1266 > * {
   display: none !important;
 }
-
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__identity-v1266 > .players-card__title-v122 {
   display: block !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  margin: 0 !important;
-  padding: 0 24px 0 0 !important;
+  padding-right: 18px !important;
   position: relative !important;
 }
 
@@ -88,10 +77,10 @@
   padding: 0 !important;
   overflow: hidden !important;
   color: #f4f3ef !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
   font-weight: 800 !important;
-  line-height: 1.2 !important;
-  letter-spacing: .01em !important;
+  line-height: 34px !important;
+  letter-spacing: 0 !important;
   white-space: nowrap !important;
   text-overflow: ellipsis !important;
   text-align: left !important;
@@ -99,14 +88,12 @@
 
 #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__title-v122::after {
   content: "›";
-  display: block;
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-52%);
-  color: rgba(244,243,239,.55);
-  font-size: 18px;
-  font-weight: 400;
+  color: rgba(244,243,239,.42);
+  font-size: 16px;
   line-height: 1;
 }
 
@@ -114,32 +101,15 @@
   color: #d6b15f;
 }
 
-@media (max-width: 1250px) {
-  #spaRouteView[data-route="players"] .player-directory__grid.is-compact {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  }
+@media (max-width: 1450px) {
+  #spaRouteView[data-route="players"] .player-directory__grid.is-compact { grid-template-columns: repeat(6, minmax(0,1fr)) !important; }
 }
-
-@media (max-width: 900px) {
-  #spaRouteView[data-route="players"] .player-directory__grid.is-compact {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
+@media (max-width: 1200px) {
+  #spaRouteView[data-route="players"] .player-directory__grid.is-compact { grid-template-columns: repeat(5, minmax(0,1fr)) !important; }
 }
-
-@media (max-width: 430px) {
-  #spaRouteView[data-route="players"] .player-directory__grid.is-compact {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 6px !important;
-    padding: 8px !important;
-  }
-
-  #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card-v122 {
-    min-height: 42px !important;
-    height: 42px !important;
-    padding: 0 10px 0 12px !important;
-  }
-
-  #spaRouteView[data-route="players"] .player-directory__grid.is-compact .players-card__title-v122 h3 {
-    font-size: 12px !important;
-  }
+@media (max-width: 950px) {
+  #spaRouteView[data-route="players"] .player-directory__grid.is-compact { grid-template-columns: repeat(3, minmax(0,1fr)) !important; }
+}
+@media (max-width: 600px) {
+  #spaRouteView[data-route="players"] .player-directory__grid.is-compact { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap:5px !important; padding:8px !important; }
 }
