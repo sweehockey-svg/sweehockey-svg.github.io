@@ -59,9 +59,15 @@
     <text x="250" y="372" text-anchor="middle" fill="#d6b15f" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="900" letter-spacing="2">SVENSK eHOCKEY</text>
 
     <g transform="rotate(-6 220 270)">
-      <rect x="52" y="15" width="332" height="558" rx="46" fill="#06090f" stroke="#8194a8" stroke-width="4"/>
-      <rect x="64" y="28" width="308" height="532" rx="37" fill="url(#phone)"/>
-      <rect x="158" y="38" width="122" height="21" rx="11" fill="#02030a"/>
+      <rect x="52" y="15" width="332" height="558" rx="38" fill="#020305" stroke="#2b3139" stroke-width="5"/>
+      <rect x="59" y="22" width="318" height="544" rx="33" fill="#05070b" stroke="#000" stroke-width="2"/>
+      <rect x="64" y="28" width="308" height="532" rx="28" fill="url(#phone)"/>
+      <circle cx="218" cy="43" r="8" fill="#010205" stroke="#1a222c" stroke-width="2"/>
+      <circle cx="218" cy="43" r="2.5" fill="#0c2433"/>
+      <text x="82" y="50" fill="#f5f3eb" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="800">22:27</text>
+      <path d="M318 41l7 7 7-7M338 49v-8M344 49V38M350 49V35" fill="none" stroke="#f5f3eb" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="355" y="38" width="22" height="12" rx="6" fill="#f5f3eb"/>
+      <text x="366" y="47" text-anchor="middle" fill="#02030a" font-family="Arial,Helvetica,sans-serif" font-size="7.5" font-weight="900">100</text>
       <text x="88" y="100" fill="#0e6ba2" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="900">SEH</text>
       <text x="88" y="121" fill="#d6b15f" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="900" letter-spacing="2">SVENSK eHOCKEY</text>
 
@@ -88,10 +94,15 @@
         <text x="14" y="329" fill="#f5f3eb" font-size="17" font-weight="900">ECL · SEC · mer</text>
       </g>
 
-      <rect x="88" y="499" width="260" height="40" rx="13" fill="#02070d"/>
-      <text x="108" y="524" fill="#ffcc00" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="900">HEM</text>
-      <text x="169" y="524" fill="#788696" font-family="Arial,Helvetica,sans-serif" font-size="11">NYHETER</text>
-      <text x="250" y="524" fill="#788696" font-family="Arial,Helvetica,sans-serif" font-size="11">SPELARE</text>
+      <rect x="88" y="486" width="260" height="38" rx="13" fill="#02070d"/>
+      <text x="108" y="510" fill="#ffcc00" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="900">HEM</text>
+      <text x="165" y="510" fill="#788696" font-family="Arial,Helvetica,sans-serif" font-size="10">NYHETER</text>
+      <text x="246" y="510" fill="#788696" font-family="Arial,Helvetica,sans-serif" font-size="10">SPELARE</text>
+      <g transform="translate(141 536)" stroke="#dfe3e7" stroke-width="2.4" fill="none" stroke-linecap="round">
+        <path d="M0 0v12M6 0v12M12 0v12"/>
+        <circle cx="79" cy="6" r="7.5"/>
+        <path d="M166 0l-7 6 7 6"/>
+      </g>
     </g>
   </g>
 </svg>
