@@ -12,7 +12,7 @@
   <title>eHockey Fantasy Liga</title>
 
   <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20260915-v40-language-flags">
+  <link rel="stylesheet" href="style.css?v=20260915-v41-mobile-header">
 </head>
 <body>
   <div class="beta-ribbon">
@@ -45,12 +45,15 @@
       </label>
       <label class="fantasy-language-switcher">
         <span data-i18n="language">SPRÅK</span>
-        <select id="languageSelect" aria-label="Välj språk" data-i18n-aria-label="choose_language">
-          <option value="sv" aria-label="Svenska">🇸🇪</option>
-          <option value="en" aria-label="English">🇬🇧</option>
-          <option value="fi" aria-label="Suomi">🇫🇮</option>
-          <option value="de" aria-label="Deutsch">🇩🇪</option>
-        </select>
+        <span class="fantasy-language-control">
+          <span id="languageFlag" class="fantasy-language-flag" aria-hidden="true">🇸🇪</span>
+          <select id="languageSelect" aria-label="Välj språk" data-i18n-aria-label="choose_language">
+            <option value="sv">🇸🇪</option>
+            <option value="en">🇬🇧</option>
+            <option value="fi">🇫🇮</option>
+            <option value="de">🇩🇪</option>
+          </select>
+        </span>
       </label>
       <a class="powered-link" href="../">
         <small data-i18n="powered_by">DRIVS AV</small>
@@ -522,6 +525,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="app.js?v=20260914-v57-clean-logos"></script>
+  <script src="app.js?v=20260915-v58-language-flag"></script>
 </body>
 </html>
