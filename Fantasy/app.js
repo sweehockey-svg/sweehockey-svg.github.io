@@ -18,6 +18,7 @@
   })[char]);
 
   const SUPPORTED_LANGUAGES = ["sv","en","fi","de"];
+  const LANGUAGE_FLAGS = { sv:"🇸🇪", en:"🇬🇧", fi:"🇫🇮", de:"🇩🇪" };
   const I18N = {
     sv: {
       nav_build:"BYGG", nav_compete:"TÄVLA", nav_climb:"KLÄTTRA", league:"LIGA", language:"SPRÅK",
@@ -426,6 +427,7 @@
       node.setAttribute("aria-label", t(node.dataset.i18nAriaLabel));
     });
     if ($("languageSelect")) $("languageSelect").value = lang;
+    if ($("languageFlag")) $("languageFlag").textContent = LANGUAGE_FLAGS[lang] || "🌐";
   }
 
   function setLanguage(lang) {
