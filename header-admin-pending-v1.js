@@ -81,7 +81,7 @@
       const count = badge.querySelector('#sehNavAdminPendingCount');
       if (count) count.textContent = total > 99 ? '99+' : String(total);
       badge.setAttribute('aria-label', `${total} väntande adminärenden`);
-      badge.hidden = total <= 0;
+      badge.hidden = false;
     } catch (_) {
       badge.hidden = true;
     } finally {
