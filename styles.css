@@ -27819,3 +27819,76 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     min-height: 66px;
   }
 }
+
+/* iPhone Safari can expose a wide desktop viewport in portrait mode.
+   Use the device width/orientation as a fallback so the team profile still
+   stacks instead of rendering its desktop two-column hero off-screen. */
+@media (orientation: portrait) and (max-device-width: 600px) {
+  #spaRouteView[data-route="team"] .page-shell.history-page-shell {
+    width: calc(100% - 20px) !important;
+    max-width: none !important;
+    margin-right: auto !important;
+    margin-left: auto !important;
+    padding-top: 12px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-hero {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 14px 0 0 !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-hero-main {
+    min-width: 0 !important;
+    padding: 24px 18px !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,.075) !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-hero-main > h1,
+  #spaRouteView[data-route="team"] .history-hero h1 {
+    font-size: clamp(2.8rem, 13vw, 4.25rem) !important;
+    line-height: .9 !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-hero-main > .history-hero-content,
+  #spaRouteView[data-route="team"] .history-hero-content {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 18px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-team-identity {
+    width: min(126px, 100%) !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-team-logo {
+    width: 126px !important;
+    height: 126px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-division-panel {
+    min-width: 0 !important;
+    padding: 24px 18px !important;
+    border-left: 0 !important;
+    border-top: 1px solid rgba(255,255,255,.075) !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-division-panel h2 {
+    font-size: clamp(2.25rem, 10.5vw, 3.65rem) !important;
+    line-height: .95 !important;
+  }
+
+  #spaRouteView[data-route="team"] .division-curve {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #spaRouteView[data-route="team"] .division-curve svg {
+    width: 100% !important;
+    height: auto !important;
+  }
+}
