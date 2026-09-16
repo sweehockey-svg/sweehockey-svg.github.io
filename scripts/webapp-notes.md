@@ -16,8 +16,15 @@ Validated in isolated Chrome mobile view at 390px and 320px: guest onboarding,
 navigation, competitions, account UI, overflow, and OAuth target URL. Actual Safari
 standalone installation and completed Discord login still need an iPhone test.
 
-Push is not implemented in this release. Existing FCM Android topics cannot be
-used by Safari without a web subscription registration and delivery backend.
-The UI explicitly states this and does not ask for unusable notification permission.
-Next: Web Push subscription management, sending and opt-out, then physical iPhone
-delivery testing (iOS 16.4+ Home Screen app), before enabling the toggle.
+Web Push added 2026-09-16: webapp-push.js, webapp-sw.js and the web-push Edge Function.
+Anonymous device capabilities protect registration/preferences/deletion; only hashes
+are stored. Tables deny anon/authenticated access; service-role only (intentional
+RLS-without-policies). VAPID keys are generated once server-side, never in Git.
+The independent news trigger uses the existing webhook secret and category mapping;
+Android's trigger and function are untouched. Delivery claims are separate and
+per-device to avoid duplicates on retry. No global test broadcast was sent.
+Run node scripts/test-web-push.cjs for mocked regression tests. Physical iPhone
+delivery, opening the article from a notification and opt-out still need testing.
+On iPhone use iOS 16.4+ and launch from Home Screen. Enable under Hem → Pushnotiser.
+The important category is reserved; like Android, current automatic sends are
+published news mapped to news/sec/ecl. This does not add personal case notifications.

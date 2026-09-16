@@ -1,6 +1,29 @@
 'use strict';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+self.addEventListener('push', event => {
+  let data = {};
+  try { data = event.data?.json() || {}; } catch (_) {}
+  event.waitUntil(self.registration.showNotification(String(data.title || 'Svensk eHockey'), {
+    body: String(data.body || 'En ny uppdatering finns i webbappen.'),
+    icon: '/assets/icons/seh-icon-192.png', tag: String(data.tag || 'seh-update'),
+    data: { url: data.url || '/?webapp=1#/' }
+  }));
+});
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil((async () => {
+    let url = new URL('/?webapp=1#/', self.location.origin);
+    try { const target = new URL(event.notification.data?.url, self.location.origin); if (target.origin === self.location.origin) url = target; } catch (_) {}
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of windows) {
+      if (new URL(client.url).origin !== self.location.origin) continue;
+      const navigated = await client.navigate(url.href);
+      if (navigated) return navigated.focus();
+    }
+    return self.clients.openWindow(url.href);
+  })());
+});
 // Network-only: account pages and live statistics are never stored offline.
 self.addEventListener('fetch', event => {
   if (event.request.mode !== 'navigate' || new URL(event.request.url).origin !== self.location.origin) return;

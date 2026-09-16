@@ -34,9 +34,12 @@
   // Defer until the site's existing initialization and observer guards finish.
   setTimeout(function () {
     const script = document.createElement('script');
-    script.src = '/webapp-shell.js?v=1';
+    script.src = '/webapp-shell.js?v=2-push';
     script.onerror = function () { document.documentElement.classList.remove('seh-web-app'); };
-    document.head.appendChild(script);
+    const push = document.createElement('script');
+    push.src = '/webapp-push.js?v=1';
+    push.onload = push.onerror = function () { document.head.appendChild(script); };
+    document.head.appendChild(push);
   }, 100);
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/webapp-sw.js', { scope: '/', updateViaCache: 'none' }).catch(console.warn);

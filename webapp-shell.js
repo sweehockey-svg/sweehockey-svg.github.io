@@ -9022,15 +9022,17 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
   }
   function sehTogglePushTopic(event){
     const key=event.currentTarget?.dataset?.sehPushTopic;if(!key)return;
+    if(window.__SEH_WEB_APP__)return window.SehWebPush?.topic(key);
     const preferences=sehPushPreferences();preferences[key]=preferences[key]===false;localStorage.setItem(PUSH_PREFS_KEY,JSON.stringify(preferences));
     sehRenderPushTopics(localStorage.getItem(NOTIFY_KEY)==='1');if(localStorage.getItem(NOTIFY_KEY)==='1')sehApplyPushTopics(preferences);
   }
   function renderNotifyToggle(){
     if(window.__SEH_WEB_APP__){
+      if(window.SehWebPush){window.SehWebPush.render();return;}
       const button=document.getElementById('seh-notify-toggle');
       if(button){button.disabled=true;button.classList.remove('on');button.setAttribute('aria-checked','false');}
       sehRenderPushTopics(false);
-      sehSetPushStatus('Pushnotiser för iPhone är inte aktiverade ännu.');
+      sehSetPushStatus('Push kunde inte laddas. Öppna webbappen igen.');
       return;
     }
     const button=document.getElementById('seh-notify-toggle');
@@ -9100,7 +9102,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     sehPushRegistrationPending=false;localStorage.setItem(NOTIFY_KEY,'0');localStorage.removeItem(PUSH_TOKEN_KEY);localStorage.removeItem(PUSH_ERROR_KEY);
     delete window.__SEH_PUSH_TOKEN__;renderNotifyToggle();
   }
-  function sehTogglePushNotifications(){return localStorage.getItem(NOTIFY_KEY)==='1'?sehDisablePushNotifications():sehEnablePushNotifications();}
+  function sehTogglePushNotifications(){if(window.__SEH_WEB_APP__)return window.SehWebPush?.toggle();return localStorage.getItem(NOTIFY_KEY)==='1'?sehDisablePushNotifications():sehEnablePushNotifications();}
   async function sehInitializePushNotifications(){
     const plugin=sehPushPlugin();if(!plugin||window.__SEH_PUSH_INITIALIZED__)return;
     window.__SEH_PUSH_INITIALIZED__=true;
@@ -17937,7 +17939,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     const layer=sehV760Layer();sehV760LayerState.kind='privacy';layer.classList.add('show');
     layer.innerHTML=`<div class="seh-v760-shell">${sehV760Header('Integritet','SVENSK eHOCKEY / APP')}
       <div class="seh-v760-card"><span class="seh-v760-kicker">SENAST UPPDATERAD 10 SEPTEMBER 2026</span><h2>Så hanterar vi dina uppgifter</h2><p>Svensk eHockey använder uppgifter som behövs för Discord-inloggning, spelarkoppling, Min profil, Free Agents och valfria pushnotiser. Vi säljer aldrig personuppgifter.</p>
-      <ul class="seh-v760-privacy-list"><li>Discord kan lämna konto-id, användarnamn, profilbild och e-postadress.</li><li>Profiltexter, kontaktuppgifter och Free Agent-uppgifter sparas när du själv skickar in dem.</li><li>Supabase används för inloggning och datalagring. Tekniska loggar kan behandlas för drift och säkerhet.</li><li>Firebase Cloud Messaging behandlar en teknisk enhetstoken och valda notiskategorier när du aktiverar push. Du kan när som helst stänga av push i appen.</li><li>Favoriter och lokal spelarkoppling sparas på din mobil och kräver ingen inloggning.</li><li>Offentliga match-, lag- och turneringsresultat är idrottshistorik och ligger kvar när ett konto raderas.</li></ul></div>
+      <ul class="seh-v760-privacy-list"><li>Discord kan lämna konto-id, användarnamn, profilbild och e-postadress.</li><li>Profiltexter, kontaktuppgifter och Free Agent-uppgifter sparas när du själv skickar in dem.</li><li>Supabase används för inloggning och datalagring. Tekniska loggar kan behandlas för drift och säkerhet.</li><li>Webbpush använder webbläsarens leverantör, exempelvis Apple på iPhone. Prenumerationsadress, krypteringsnycklar och notiskategorier lagras i Supabase utan kontokoppling och tas bort när du stänger av webbpush i appen eller prenumerationen upphör.</li><li>Favoriter och lokal spelarkoppling sparas på din mobil och kräver ingen inloggning.</li><li>Offentliga match-, lag- och turneringsresultat är idrottshistorik och ligger kvar när ett konto raderas.</li></ul></div>
       <div class="seh-v760-card"><h2>Dina val</h2><p>Under Min profil kan du radera ditt appkonto med Discord-kopplingen och dina egna profiluppgifter. Spelarkortet, GT, matcher, statistik och meriter raderas inte automatiskt. Du kan också ta bort din spelarbild separat, utan adminbeslut. Gör det före kontoraderingen om du vill ta bort båda.</p><p>Frågor om dina uppgifter eller tävlingshistoriken: <b>${SEH_PRIVACY_EMAIL}</b></p><div class="seh-v760-actions"><button class="seh-v760-btn gold" data-v760-privacy-web>Öppna fullständig policy på webben</button></div></div>
     </div>`;
     sehV760BindClose(layer);
