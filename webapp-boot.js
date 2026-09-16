@@ -5,10 +5,23 @@
   const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
   let preview = false;
   try {
-    if (requested === '0') sessionStorage.removeItem('seh_webapp_preview');
+    if (requested === '0') {
+      sessionStorage.removeItem('seh_webapp_preview');
+
+      // Explicit exit always wins over preview/standalone detection.
+      // This lets the iPhone landing page return to the normal website
+      // instead of immediately booting the web-app shell again.
+      if (location.search.includes('webapp=0')) {
+        const cleanUrl = location.pathname + (location.hash || '#/');
+        history.replaceState(null, '', cleanUrl);
+      }
+      return;
+    }
     if (requested === '1') sessionStorage.setItem('seh_webapp_preview', '1');
     preview = sessionStorage.getItem('seh_webapp_preview') === '1';
-  } catch (_) {}
+  } catch (_) {
+    if (requested === '0') return;
+  }
   if (!standalone && requested !== '1' && !preview) return;
   if (window.__SEH_WEB_APP__) return;
   window.__SEH_WEB_APP__ = true;
