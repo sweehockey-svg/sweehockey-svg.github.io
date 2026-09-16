@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#02030a"/><stop offset=".58" stop-color="#07101a"/><stop offset="1" stop-color="#02030a"/></linearGradient>
+  <radialGradient id="glow"><stop stop-color="#0d5b82" stop-opacity=".34"/><stop offset="1" stop-color="#0d5b82" stop-opacity="0"/></radialGradient>
+  <linearGradient id="gold" x1="0" x2="1"><stop stop-color="#f0d58b"/><stop offset="1" stop-color="#ffd000"/></linearGradient>
+</defs>
+<rect width="1200" height="630" fill="url(#bg)"/>
+<circle cx="930" cy="130" r="370" fill="url(#glow)"/>
+<path d="M760 0h220L690 630H500z" fill="#07131e" opacity=".56"/>
+<rect x="0" y="7" width="1200" height="3" fill="url(#gold)"/>
+<text x="70" y="72" fill="#61e5df" font-family="Arial,sans-serif" font-size="18" font-weight="800" letter-spacing="2">SVENSK eHOCKEY / iPHONE</text>
+<line x1="70" y1="92" x2="260" y2="92" stroke="#61e5df" stroke-width="2"/>
+<text x="70" y="190" fill="#f5f3eb" font-family="Arial,sans-serif" font-size="72" font-weight="900">Svensk eHockey</text>
+<text x="70" y="270" fill="#f0d58b" font-family="Arial,sans-serif" font-size="72" font-weight="900">på iPhone.</text>
+<text x="72" y="330" fill="#aeb9c5" font-family="Arial,sans-serif" font-size="24">Lägg till webbappen på hemskärmen – ingen App Store behövs.</text>
+<g font-family="Arial,sans-serif" font-size="13" font-weight="800" fill="#f5f3eb">
+  <rect x="72" y="375" width="103" height="38" rx="10" fill="#07101a" stroke="#24313d"/><text x="91" y="399">SPELARE</text>
+  <rect x="187" y="375" width="72" height="38" rx="10" fill="#07101a" stroke="#24313d"/><text x="208" y="399">LAG</text>
+  <rect x="271" y="375" width="72" height="38" rx="10" fill="#07101a" stroke="#24313d"/><text x="292" y="399">SEC</text>
+  <rect x="355" y="375" width="112" height="38" rx="10" fill="#07101a" stroke="#24313d"/><text x="373" y="399">STATISTIK</text>
+</g>
+<rect x="72" y="462" width="430" height="80" rx="15" fill="#060c12" stroke="#ffd000" stroke-width="2"/>
+<circle cx="111" cy="502" r="22" fill="#101510" stroke="#ffd000"/>
+<path d="M99 498h24v15c0 5-4 9-9 9h-6c-5 0-9-4-9-9zM103 495l-5-8m20 8 5-8" fill="none" stroke="#ffd000" stroke-width="3" stroke-linecap="round"/>
+<text x="150" y="490" fill="#ffd000" font-family="Arial,sans-serif" font-size="11" font-weight="800" letter-spacing="1.5">SVENSK eHOCKEY APP</text>
+<text x="150" y="520" fill="#f5f3eb" font-family="Arial,sans-serif" font-size="23" font-weight="900">Lägg till på hemskärmen</text>
+<text x="72" y="590" fill="#f0d58b" font-family="Arial,sans-serif" font-size="16" font-weight="800" letter-spacing="1">SVENSKEHOCKEY.SE/IPHONE</text>
+<g transform="translate(825 70) rotate(4 140 240)">
+ <rect x="0" y="0" width="285" height="480" rx="43" fill="#03060a" stroke="#364653" stroke-width="5"/>
+ <rect x="12" y="12" width="261" height="456" rx="34" fill="#06101a"/>
+ <rect x="96" y="18" width="92" height="25" rx="13" fill="#000"/>
+ <text x="32" y="92" fill="#0b5480" font-family="Arial,sans-serif" font-size="28" font-weight="900">SEH</text>
+ <text x="92" y="91" fill="#61e5df" font-family="Arial,sans-serif" font-size="12" font-weight="800">SVENSK eHOCKEY</text>
+ <text x="32" y="145" fill="#f5f3eb" font-family="Arial,sans-serif" font-size="30" font-weight="900">All svensk</text>
+ <text x="32" y="178" fill="#f0d58b" font-family="Arial,sans-serif" font-size="30" font-weight="900">eHockey.</text>
+ <rect x="28" y="215" width="229" height="67" rx="12" fill="#09131f" stroke="#263442"/>
+ <text x="42" y="237" fill="#61e5df" font-family="Arial,sans-serif" font-size="9" font-weight="800">SENASTE NYTT</text><text x="42" y="263" fill="#f5f3eb" font-family="Arial,sans-serif" font-size="14" font-weight="800">Nyheter &amp; uppdateringar</text>
+ <rect x="28" y="296" width="229" height="67" rx="12" fill="#09131f" stroke="#263442"/>
+ <text x="42" y="318" fill="#61e5df" font-family="Arial,sans-serif" font-size="9" font-weight="800">SPELARE</text><text x="42" y="344" fill="#f5f3eb" font-family="Arial,sans-serif" font-size="14" font-weight="800">Profiler &amp; statistik</text>
+ <rect x="28" y="397" width="229" height="38" rx="11" fill="#02070c"/>
+ <text x="44" y="421" fill="#ffd000" font-family="Arial,sans-serif" font-size="9" font-weight="800">HEM</text><text x="101" y="421" fill="#7a8997" font-family="Arial,sans-serif" font-size="8">SPELARE</text><text x="176" y="421" fill="#7a8997" font-family="Arial,sans-serif" font-size="8">LAG</text><text x="216" y="421" fill="#7a8997" font-family="Arial,sans-serif" font-size="8">SEC</text>
+</g>
+</svg>
