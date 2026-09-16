@@ -1,0 +1,56 @@
+/* Header: adminverktyg ligger i kontomenyn; huvudmenyn visar bara väntande ärenden. */
+.seh-nav .seh-nav-auth--writer,
+.seh-nav .seh-nav-auth--admin {
+  display: none !important;
+}
+
+.seh-nav .seh-nav-admin-pending {
+  align-self: center;
+  justify-content: center;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: 1px solid rgba(255, 208, 0, .5);
+  border-radius: 999px;
+  color: #070808;
+  background: #ffd000;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.03) inset, 0 0 18px rgba(255,208,0,.08);
+  font-size: .62rem;
+  font-weight: 950;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.seh-nav .seh-nav-admin-pending[hidden] {
+  display: none !important;
+}
+
+.seh-nav .seh-nav-admin-pending::after {
+  display: none !important;
+}
+
+.seh-nav .seh-nav-admin-pending:hover,
+.seh-nav .seh-nav-admin-pending:focus-visible {
+  color: #070808;
+  background: #ffe04a;
+  border-color: #ffe04a;
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.seh-nav .seh-nav-admin-pending span {
+  display: block;
+  min-width: 1ch;
+  text-align: center;
+}
+
+@media (max-width: 920px) {
+  .seh-nav .seh-nav-admin-pending {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    margin: 6px 0;
+  }
+}
