@@ -6,7 +6,10 @@
   let preview = false;
   let oauthWebappReturn = false;
   try {
-    const rawOauthReturn = localStorage.getItem('seh_oauth_return') || '';
+    const rawOauthReturn =
+      localStorage.getItem('seh_webapp_oauth_return') ||
+      localStorage.getItem('seh_oauth_return') ||
+      '';
     if (rawOauthReturn) {
       const savedOauthReturn = JSON.parse(rawOauthReturn);
       oauthWebappReturn = Boolean(
@@ -45,7 +48,7 @@
   // Defer until the site's existing initialization and observer guards finish.
   setTimeout(function () {
     const script = document.createElement('script');
-    script.src = '/webapp-shell.js?v=20260917-home-card-size-1';
+    script.src = '/webapp-shell.js?v=20260917-oauth-return-v2';
     script.onerror = function () { document.documentElement.classList.remove('seh-web-app'); };
     const push = document.createElement('script');
     push.src = '/webapp-push.js?v=1';
