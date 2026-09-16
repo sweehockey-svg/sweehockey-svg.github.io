@@ -17668,6 +17668,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     .seh-v760-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.seh-v760-row>div{min-width:0}
     .seh-v760-avatar{width:62px;height:62px;border-radius:15px;object-fit:cover;object-position:center top;background:#0b1730;flex:0 0 62px}
     .seh-v760-profile{display:grid;grid-template-columns:62px minmax(0,1fr);gap:12px;align-items:center}.seh-v760-profile strong{font-size:18px}.seh-v760-profile span{display:block;margin-top:4px;color:#9aa2ae;font-size:11px}
+    .seh-v760-image-upload{border:1px solid #ffffff16;border-radius:14px;background:#050913;padding:12px;display:grid;gap:9px}.seh-v760-image-upload strong{font-size:13px}.seh-v760-image-upload p{margin:0;color:#9fa6b1;font-size:10px;line-height:1.45}.seh-v760-image-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.seh-v760-image-name{color:#c5cad2;font-size:10px;overflow-wrap:anywhere}.seh-v760-image-preview{width:96px;height:96px;border-radius:13px;object-fit:cover;object-position:center top;background:#0b1730;border:1px solid #ffffff18}.seh-v760-image-queue[data-state="pending"],.seh-v760-image-queue[data-state="editing"]{color:#f0d58b}.seh-v760-image-queue[data-state="published"]{color:#84dfad}.seh-v760-image-queue[data-state="rejected"]{color:#ff9999}
     .seh-v760-grid{display:grid;gap:10px}.seh-v760-team{width:100%;text-align:left;color:inherit;border:1px solid #ffffff14;border-radius:15px;background:#080d16;padding:13px}.seh-v760-team strong{display:block;font-size:15px}.seh-v760-team span{display:block;color:#979fab;font-size:10px;margin-top:4px}.seh-v760-team b{color:#d6b15f;font-size:10px}
     .seh-v760-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:0 0 12px}.seh-v760-tools input,.seh-v760-tools select,.seh-v760-form input,.seh-v760-form textarea{width:100%;border:1px solid #ffffff1c;border-radius:11px;background:#050913;color:#fff;padding:11px;font:750 12px/1.2 Inter,Arial,sans-serif;outline:none}.seh-v760-tools select{width:auto;min-width:105px}
     .seh-v760-form{display:grid;gap:9px}.seh-v760-form label span{display:block;color:#9da4af;font-size:9px;font-weight:850;letter-spacing:.06em;text-transform:uppercase;margin:0 0 5px}.seh-v760-form textarea{min-height:78px;resize:vertical}
@@ -18099,6 +18100,63 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       }catch(error){status.textContent=error.message||'Kunde inte skicka. Försök igen.';submit.disabled=false;}
     };
   }
+  const SEH_V760_IMAGE_BUCKET_PRIVATE='player-image-submissions';
+  const SEH_V760_IMAGE_MAX_SIZE=8*1024*1024;
+  const SEH_V760_IMAGE_ALLOWED=new Set(['image/jpeg','image/png','image/webp']);
+  function sehV760ValidatePlayerImage(file){
+    if(!file)return;
+    if(!SEH_V760_IMAGE_ALLOWED.has(String(file.type||'')))throw new Error('Bilden måste vara JPG, PNG eller WEBP.');
+    if(!(Number(file.size)>0)||Number(file.size)>SEH_V760_IMAGE_MAX_SIZE)throw new Error('Bilden får vara högst 8 MB.');
+  }
+  function sehV760PlayerImageExt(file){
+    const ext=String(file?.name||'').split('.').pop().toLowerCase().replace(/[^a-z0-9]/g,'');
+    if(ext)return ext;
+    if(file?.type==='image/png')return 'png';
+    if(file?.type==='image/webp')return 'webp';
+    return 'jpg';
+  }
+  async function sehV760UploadPlayerImage(client,file){
+    sehV760ValidatePlayerImage(file);
+    const sessionResult=await client.auth.getSession();
+    if(sessionResult.error)throw sessionResult.error;
+    const userId=sessionResult.data?.session?.user?.id;
+    if(!userId)throw new Error('Discord-sessionen saknas.');
+    const path=`submissions/${userId}/${Date.now()}-${Math.random().toString(36).slice(2,9)}.${sehV760PlayerImageExt(file)}`;
+    const upload=await client.storage.from(SEH_V760_IMAGE_BUCKET_PRIVATE).upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
+    if(upload.error)throw upload.error;
+    const submit=await client.rpc('seh_submit_player_image_request',{p_original_path:path,p_original_filename:file.name,p_mime_type:file.type,p_size_bytes:file.size});
+    if(submit.error){
+      try{await client.storage.from(SEH_V760_IMAGE_BUCKET_PRIVATE).remove([path]);}catch(_){}
+      throw submit.error;
+    }
+    return submit.data;
+  }
+  async function sehV760RenderPlayerImageQueue(layer,client){
+    const note=layer?.querySelector('#seh-v760-image-queue');if(!note||!client)return;
+    try{
+      const result=await client.rpc('seh_get_my_player_image_requests');if(result.error)throw result.error;
+      const rows=Array.isArray(result.data)?result.data:[];
+      const latest=rows[0]||null;
+      const active=rows.find(row=>['pending','editing'].includes(String(row?.status||'')));
+      if(active){
+        note.textContent=active.status==='editing'?'Din senaste bild är hos admin och redigeras.':'Din senaste bild väntar på admin och är inte publik.';
+        note.dataset.state=active.status;
+      }else if(latest?.status==='published'){
+        note.textContent='Din senaste spelarbild är publicerad på din profil.';
+        note.dataset.state='published';
+      }else if(latest?.status==='rejected'){
+        note.textContent=latest.admin_note?`Din senaste bild avslogs: ${latest.admin_note}`:'Din senaste spelarbild blev avslagen av admin.';
+        note.dataset.state='rejected';
+      }else{
+        note.textContent='Ingen spelarbild väntar på behandling.';
+        note.dataset.state='idle';
+      }
+    }catch(_){
+      note.textContent='';
+      note.dataset.state='idle';
+    }
+  }
+
   async function sehV760OpenProfileEditor(){
     const layer=sehV760Layer();sehV760LayerState.kind='profile-edit';layer.classList.add('show');
     layer.innerHTML=`<div class="seh-v760-shell">${sehV760Header('Redigera profil','SVENSK eHOCKEY / KONTO')}<div class="seh-v760-card"><p>Hämtar dina profiluppgifter…</p></div></div>`;sehV760BindClose(layer);
@@ -18122,18 +18180,69 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
         <label><span>Instagram</span><input id="seh-v760-profile-instagram" value="${value('instagram_url')}" placeholder="https://instagram.com/..."></label>
         <label><span>Tillgänglighet</span><input id="seh-v760-profile-availability" value="${value('availability_status')}" placeholder="Ex. Tillgänglig / Ej tillgänglig"></label>
         <label><span>Lagstatus</span><input id="seh-v760-profile-team-status" value="${value('team_status')}" placeholder="Ex. Under kontrakt / Free Agent"></label>
-        <label><span>Profilbild URL</span><input id="seh-v760-profile-image" value="${value('image_url')}" placeholder="https://..."></label>
+        <div class="seh-v760-image-upload">
+          <strong>Ladda upp spelarbild</strong>
+          <p>Originalet sparas privat. Admin redigerar bilden innan den publiceras på din spelarprofil. JPG, PNG eller WEBP · max 8 MB.</p>
+          <input id="seh-v760-profile-image-file" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+          <div class="seh-v760-image-row"><button type="button" class="seh-v760-btn" id="seh-v760-profile-image-pick">Välj originalbild</button><span class="seh-v760-image-name" id="seh-v760-profile-image-name">Ingen bild vald</span></div>
+          <img class="seh-v760-image-preview" id="seh-v760-profile-image-preview" alt="Förhandsvisning av vald bild" hidden>
+          <div id="seh-v760-image-queue" class="seh-v760-status seh-v760-image-queue" data-state="idle"></div>
+        </div>
       </div><div id="seh-v760-profile-status" class="seh-v760-status"></div>
       <div class="seh-v760-actions"><button class="seh-v760-btn gold" data-v760-profile-save>Skicka ändringar</button><button class="seh-v760-btn" data-v760-profile-cancel>Tillbaka till Min profil</button></div></div></div>`;
     sehV760BindClose(layer);
+    const imageInput=layer.querySelector('#seh-v760-profile-image-file');
+    const imagePick=layer.querySelector('#seh-v760-profile-image-pick');
+    const imageName=layer.querySelector('#seh-v760-profile-image-name');
+    const imagePreview=layer.querySelector('#seh-v760-profile-image-preview');
+    let imagePreviewUrl='';
+    imagePick?.addEventListener('click',()=>imageInput?.click());
+    imageInput?.addEventListener('change',()=>{
+      const file=imageInput.files?.[0]||null;
+      try{sehV760ValidatePlayerImage(file);}catch(error){
+        imageInput.value='';if(imageName)imageName.textContent='Ingen bild vald';if(imagePreview)imagePreview.hidden=true;
+        const status=layer.querySelector('#seh-v760-profile-status');if(status){status.textContent=error.message||String(error);status.classList.add('error');}
+        return;
+      }
+      if(imagePreviewUrl){try{URL.revokeObjectURL(imagePreviewUrl);}catch(_){}imagePreviewUrl='';}
+      if(!file){if(imageName)imageName.textContent='Ingen bild vald';if(imagePreview)imagePreview.hidden=true;return;}
+      if(imageName)imageName.textContent=file.name;
+      imagePreviewUrl=URL.createObjectURL(file);
+      if(imagePreview){imagePreview.src=imagePreviewUrl;imagePreview.hidden=false;}
+      const status=layer.querySelector('#seh-v760-profile-status');if(status){status.textContent='';status.className='seh-v760-status';}
+    });
+    sehV760RenderPlayerImageQueue(layer,client);
     layer.querySelector('[data-v760-profile-cancel]')?.addEventListener('click',sehV760OpenAccount);
     layer.querySelector('[data-v760-profile-save]')?.addEventListener('click',async()=>{
-      const status=layer.querySelector('#seh-v760-profile-status'),btn=layer.querySelector('[data-v760-profile-save]');if(btn)btn.disabled=true;if(status){status.className='seh-v760-status';status.textContent='Skickar ändringarna till admin…';}
-      const payload={presentation:String(layer.querySelector('#seh-v760-profile-presentation')?.value||'').trim(),positions_text:String(layer.querySelector('#seh-v760-profile-positions')?.value||'').trim(),contact:String(layer.querySelector('#seh-v760-profile-contact')?.value||'').trim(),twitch_url:String(layer.querySelector('#seh-v760-profile-twitch')?.value||'').trim(),x_url:String(layer.querySelector('#seh-v760-profile-x')?.value||'').trim(),instagram_url:String(layer.querySelector('#seh-v760-profile-instagram')?.value||'').trim(),availability_status:String(layer.querySelector('#seh-v760-profile-availability')?.value||'').trim(),team_status:String(layer.querySelector('#seh-v760-profile-team-status')?.value||'').trim(),image_url:String(layer.querySelector('#seh-v760-profile-image')?.value||'').trim()};
-      const r=await client.rpc('seh_submit_player_profile_request',{p_request_type:'profile_update',p_payload:payload});
-      if(btn)btn.disabled=false;
-      if(r.error){if(status){status.textContent=`Fel: ${r.error.message}`;status.classList.add('error');}return;}
-      if(status){status.textContent='Profiländringen är skickad och väntar på admin.';status.classList.add('success');}
+      const status=layer.querySelector('#seh-v760-profile-status'),btn=layer.querySelector('[data-v760-profile-save]');if(btn)btn.disabled=true;if(status){status.className='seh-v760-status';status.textContent='Skickar till admin…';}
+      const payload={presentation:String(layer.querySelector('#seh-v760-profile-presentation')?.value||'').trim(),positions_text:String(layer.querySelector('#seh-v760-profile-positions')?.value||'').trim(),contact:String(layer.querySelector('#seh-v760-profile-contact')?.value||'').trim(),twitch_url:String(layer.querySelector('#seh-v760-profile-twitch')?.value||'').trim(),x_url:String(layer.querySelector('#seh-v760-profile-x')?.value||'').trim(),instagram_url:String(layer.querySelector('#seh-v760-profile-instagram')?.value||'').trim(),availability_status:String(layer.querySelector('#seh-v760-profile-availability')?.value||'').trim(),team_status:String(layer.querySelector('#seh-v760-profile-team-status')?.value||'').trim(),image_url:String(current?.image_url||'').trim()};
+      const profileKeys=['presentation','positions_text','contact','twitch_url','x_url','instagram_url','availability_status','team_status'];
+      const textChanged=profileKeys.some(key=>String(payload[key]||'').trim()!==String(current?.[key]||'').trim());
+      const file=imageInput?.files?.[0]||null;
+      if(!file&&!textChanged){if(btn)btn.disabled=false;if(status)status.textContent='Inga nya ändringar att skicka.';return;}
+      let imageSent=false,profileSent=false;
+      try{
+        if(file){await sehV760UploadPlayerImage(client,file);imageSent=true;}
+        if(textChanged){
+          const r=await client.rpc('seh_submit_player_profile_request',{p_request_type:'profile_update',p_payload:payload});
+          if(r.error)throw r.error;
+          profileSent=true;
+        }
+        if(imageInput)imageInput.value='';
+        if(imageName)imageName.textContent='Ingen bild vald';
+        if(imagePreview){imagePreview.hidden=true;imagePreview.removeAttribute('src');}
+        if(imagePreviewUrl){try{URL.revokeObjectURL(imagePreviewUrl);}catch(_){}imagePreviewUrl='';}
+        if(status){
+          status.className='seh-v760-status success';
+          status.textContent=imageSent&&profileSent?'Profiländringarna är skickade. Originalbilden ligger privat i bildkön tills admin har redigerat och publicerat den.':imageSent?'Originalbilden är skickad privat till bildkön. Den blir inte publik förrän admin har redigerat och publicerat den.':'Profiländringen är skickad och väntar på admin.';
+        }
+        await sehV760RenderPlayerImageQueue(layer,client);
+      }catch(error){
+        if(status){
+          status.className='seh-v760-status error';
+          status.textContent=imageSent?`Originalbilden skickades, men profiländringen misslyckades: ${error?.message||error}`:`Fel: ${error?.message||error}`;
+        }
+      }finally{if(btn)btn.disabled=false;}
     });
   }
 
