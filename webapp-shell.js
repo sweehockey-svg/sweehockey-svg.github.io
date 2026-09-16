@@ -17684,6 +17684,13 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
   let sehV760AuthSubscription=null;
   let sehV760OauthReturnHandled=false;
   const SEH_ANDROID_AUTH_REDIRECT=location.origin + '/';
+  function sehV760BrowserAuthRedirect(){
+    const target=new URL(location.href);
+    target.hash='';
+    target.searchParams.delete('webapp');
+    target.searchParams.set('webapp','1');
+    return target.href;
+  }
   const SEH_PRIVACY_URL='https://www.svenskehockey.se/integritet.html';
   const SEH_PRIVACY_EMAIL='svenskehockey@gmail.com';
 
@@ -17928,7 +17935,8 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       if(existing.data?.session&&!sehV760IsDiscord(existing.data.session.user))await client.auth.signOut();
       localStorage.setItem('seh_oauth_return',JSON.stringify({hash:returnHash,savedAt:Date.now()}));
       if(window.SehNative&&typeof window.SehNative.prepareNavigation==='function'){try{window.SehNative.prepareNavigation();}catch(_){}}
-      const {data,error}=await client.auth.signInWithOAuth({provider:'discord',options:{redirectTo:SEH_ANDROID_AUTH_REDIRECT,skipBrowserRedirect:true}});if(error)throw error;
+      const authRedirect=(window.SehNative||window.Capacitor?.isNativePlatform?.())?SEH_ANDROID_AUTH_REDIRECT:sehV760BrowserAuthRedirect();
+      const {data,error}=await client.auth.signInWithOAuth({provider:'discord',options:{redirectTo:authRedirect,skipBrowserRedirect:true}});if(error)throw error;
       if(!data?.url)throw new Error('Discord-inloggningen saknar startadress.');
       if(window.SehNative&&typeof window.SehNative.openExternal==='function')window.SehNative.openExternal(data.url);
       else location.assign(data.url);
