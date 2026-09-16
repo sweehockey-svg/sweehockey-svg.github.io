@@ -27891,3 +27891,126 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     height: auto !important;
   }
 }
+
+
+/* =========================================================
+   V1.30.15 — LAGBYGGE I HUVUDMENYN + TYDLIGARE DISCORD-LOGIN
+   ========================================================= */
+.seh-nav .seh-nav-team-builds {
+  letter-spacing: .005em;
+}
+
+.seh-account-discord-mark {
+  display: none;
+  width: 21px;
+  height: 21px;
+  overflow: visible;
+  color: #fff;
+}
+
+.seh-account-discord-mark path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.seh-account-discord-mark circle {
+  fill: currentColor;
+  stroke: none;
+}
+
+.seh-account[data-state="logged-out"] .seh-account-trigger {
+  position: relative;
+  min-width: 144px;
+  overflow: hidden;
+  border-color: rgba(88,101,242,.48);
+  border-radius: 11px;
+  background:
+    linear-gradient(110deg, rgba(88,101,242,.10), transparent 48%),
+    rgba(6,9,14,.96);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    0 8px 24px rgba(0,0,0,.16);
+  transition:
+    transform .16s ease,
+    border-color .16s ease,
+    background .16s ease,
+    box-shadow .16s ease;
+}
+
+.seh-account[data-state="logged-out"] .seh-account-trigger::before {
+  position: absolute;
+  top: 0;
+  right: 24%;
+  left: 0;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, #5865f2, rgba(88,101,242,0));
+}
+
+.seh-account[data-state="logged-out"] .seh-account-trigger:hover,
+.seh-account[data-state="logged-out"] .seh-account-trigger:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(116,127,255,.88);
+  background:
+    linear-gradient(110deg, rgba(88,101,242,.16), transparent 52%),
+    #080b12;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 10px 28px rgba(0,0,0,.22),
+    0 0 20px rgba(88,101,242,.08);
+}
+
+.seh-account[data-state="logged-out"] .seh-account-avatar {
+  border-color: rgba(124,135,255,.72);
+  background: linear-gradient(145deg, #6672f5, #4b57d9);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 0 16px rgba(88,101,242,.14);
+}
+
+.seh-account[data-state="logged-out"] .seh-account-discord-mark {
+  display: block;
+}
+
+.seh-account[data-state="logged-out"] #sehAccountAvatarFallback {
+  display: none !important;
+}
+
+.seh-account[data-state="logged-out"] .seh-account-trigger__copy small {
+  color: #9aa6ff;
+}
+
+.seh-account[data-state="logged-out"] .seh-account-trigger__copy strong {
+  color: #f7f8ff;
+}
+
+.seh-account[data-state="logged-out"] .seh-account-trigger__chevron {
+  color: #8b94c5;
+}
+
+@media (max-width: 1240px) and (min-width: 921px) {
+  .seh-nav {
+    gap: clamp(13px, 1.35vw, 21px);
+  }
+
+  .seh-account[data-state="logged-out"] .seh-account-trigger {
+    min-width: 130px;
+  }
+}
+
+@media (max-width: 920px) {
+  .seh-account[data-state="logged-out"] .seh-account-trigger {
+    min-width: 44px;
+    min-height: 42px;
+    grid-template-columns: 34px;
+    padding: 4px;
+  }
+
+  .seh-account[data-state="logged-out"] .seh-account-trigger__copy,
+  .seh-account[data-state="logged-out"] .seh-account-trigger__chevron {
+    display: none;
+  }
+}
