@@ -342,14 +342,16 @@
     return card;
   }
 
-  function mountDownloadStats() {
-    if (!isAdminHome() || document.getElementById("appDownloadStatsCard")) return;
+  function mountDownloadStats(webapp = false) {
+    const cardId = webapp ? "webappOpenStatsCard" : "appDownloadStatsCard";
+    if (!isAdminHome() || document.getElementById(cardId)) return;
     const grid = document.querySelector("#adminDashboard .admin-grid");
     if (!grid) return;
     const card = document.createElement("article");
-    card.id = "appDownloadStatsCard";
+    card.id = cardId;
     card.className = "admin-card admin-home-card";
     card.innerHTML = '<p class="writer-panel-kicker">ANDROID-APPEN</p><h2>Nedladdningar</h2><p data-download-count role="status">Hämtar antal…</p><p>Klick på nedladdningsknappen från 15 september 2026. Inte installationer eller unika personer. Direktlänkar till APK-filen räknas inte.</p><div class="admin-actions"><button type="button">Uppdatera antal</button></div>';
+    if (webapp) card.innerHTML = '<p class="writer-panel-kicker">IPHONE-WEBBAPPEN</p><h2>Öppningsklick</h2><p data-download-count role="status">Hämtar antal…</p><p>Klick på ”Öppna webbappen” på iPhone-sidan från 16 september 2026. Inte unika personer eller installationer. Starter från hemskärmen räknas inte.</p><div class="admin-actions"><button type="button">Uppdatera antal</button></div>';
     grid.appendChild(card);
     const status = card.querySelector("[data-download-count]");
     const button = card.querySelector("button");
@@ -360,9 +362,9 @@
         if (!db) throw new Error("Anslutning saknas");
         const role = await db.rpc("seh_current_writer_role");
         if (role.error || role.data !== "admin") throw new Error("Admininloggning krävs");
-        const result = await db.from("seh_app_download_clicks").select("id", { count: "exact", head: true });
+        const result = await db.from(webapp ? "seh_webapp_open_clicks" : "seh_app_download_clicks").select("id", { count: "exact", head: true });
         if (result.error) throw result.error;
-        status.textContent = Number(result.count || 0).toLocaleString("sv-SE") + " nedladdningsklick totalt";
+        status.textContent = Number(result.count || 0).toLocaleString("sv-SE") + (webapp ? " öppningsklick totalt" : " nedladdningsklick totalt");
       } catch (_) {
         status.textContent = "Kunde inte hämta antal. Kontrollera admininloggningen och försök igen.";
       } finally {
@@ -375,6 +377,7 @@
 
   function mount() {
     mountDownloadStats();
+    mountDownloadStats(true);
     if (!isAdminHome()) return;
     if (document.getElementById("currentStatsSyncCard")) return;
 
