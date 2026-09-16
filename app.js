@@ -15250,8 +15250,8 @@ function SEH_initShop() {
             </div>
 
             <div class="my-profile-image-submit">
-              <div><span>SPELARBILD</span><strong>Föreslå ny profilbild</strong><small>JPG, PNG eller WEBP · max 8 MB. Bilden används först efter admin-godkännande.</small></div>
-              <label class="my-profile-file"><input id="myProfileImage" type="file" accept="image/jpeg,image/png,image/webp"><span>Välj bild</span></label>
+              <div><span>SPELARBILD</span><strong>Ladda upp spelarbild</strong><small>Originalet sparas privat. Admin redigerar bilden innan den publiceras på din spelarprofil. JPG, PNG eller WEBP · max 8 MB.</small></div>
+              <label class="my-profile-file"><input id="myProfileImage" type="file" accept="image/jpeg,image/png,image/webp"><span>Välj originalbild</span></label>
               <img id="myProfileImagePreview" alt="Förhandsvisning" hidden>
             </div>
 
@@ -15303,7 +15303,6 @@ function SEH_initShop() {
     const sb = sehGetAuthClient();
     const clean = (value) => String(value ?? '').trim();
     let dashboard = null;
-    let selectedImageUrl = '';
     let loadPromise = null;
     let authReloadTimer = 0;
 
@@ -15373,10 +15372,10 @@ function SEH_initShop() {
       $('myProfileTwitch').value=source.twitch_url||'';
       $('myProfileX').value=source.x_url||'';
       $('myProfileInstagram').value=source.instagram_url||'';
-      selectedImageUrl=source.image_url||profile.image_url||'';
       $('myProfileImage').value='';
       const preview=$('myProfileImagePreview');
-      if(pending?.payload?.image_url && pending.payload.image_url!==profile.image_url){preview.src=pending.payload.image_url;preview.hidden=false;}else preview.hidden=true;
+      preview.hidden=true;
+      preview.removeAttribute('src');
       $('myProfilePresentationCount').textContent=String($('myProfilePresentation').value.length);
       if(pending)status('myProfileFormStatus','Du har redan profiländringar som väntar på admin. Du kan uppdatera dem genom att skicka formuläret igen.','working');
     }
@@ -15528,26 +15527,16 @@ function SEH_initShop() {
       return loadPromise;
     }
 
-    async function uploadImage(file){
-      if(!file)return selectedImageUrl||'';
-      if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw new Error('Bilden måste vara JPG, PNG eller WEBP.');
-      if(file.size>8*1024*1024)throw new Error('Bilden får vara högst 8 MB.');
-      const {data:sessionData}=await sb.auth.getSession();const userId=sessionData?.session?.user?.id;if(!userId)throw new Error('Discord-sessionen saknas.');
-      const extension=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
-      const path=`submissions/${userId}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${extension}`;
-      const {error}=await sb.storage.from('player-profile-images').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});if(error)throw error;
-      return sb.storage.from('player-profile-images').getPublicUrl(path).data.publicUrl;
-    }
-
     async function submitProfile(){
       status('myProfileFormStatus','Skickar till admin…','working');$('myProfileSubmit').disabled=true;
       try{
-        const imageUrl=await uploadImage($('myProfileImage').files?.[0]);
+        if($('myProfileImage').files?.[0])throw new Error('Bildfunktionen kunde inte startas. Ladda om sidan och försök igen.');
+        const currentProfile=dashboard?.profile||{};
         const payload={
-          presentation:clean($('myProfilePresentation').value),positions_text:clean($('myProfilePositions').value),availability_status:clean($('myProfileAvailability').value),team_status:clean($('myProfileTeamStatus').value),contact:clean($('myProfileContact').value),twitch_url:clean($('myProfileTwitch').value),x_url:clean($('myProfileX').value),instagram_url:clean($('myProfileInstagram').value),image_url:imageUrl
+          presentation:clean($('myProfilePresentation').value),positions_text:clean($('myProfilePositions').value),availability_status:clean($('myProfileAvailability').value),team_status:clean($('myProfileTeamStatus').value),contact:clean($('myProfileContact').value),twitch_url:clean($('myProfileTwitch').value),x_url:clean($('myProfileX').value),instagram_url:clean($('myProfileInstagram').value),image_url:clean(currentProfile.image_url)
         };
         const {error}=await sb.rpc('seh_submit_player_profile_request',{p_request_type:'profile_update',p_payload:payload});if(error)throw error;
-        selectedImageUrl=imageUrl;status('myProfileFormStatus','Skickat. Ändringarna blir publika först när admin godkänt dem.','success');await load();
+        status('myProfileFormStatus','Skickat. Ändringarna blir publika först när admin godkänt dem.','success');await load();
       }catch(error){status('myProfileFormStatus',`Fel: ${error?.message||error}`,'error');}finally{$('myProfileSubmit').disabled=false;}
     }
 
@@ -15930,35 +15919,41 @@ function SEH_initShop() {
     try{playerAdminActiveView=sessionStorage.getItem('seh_admin_player_view')||'queue';}catch(_){playerAdminActiveView='queue';}setPlayerAdminView(playerAdminActiveView);setPlayerAdminQueueFilter('all');updatePlayerAdminCounters();
   }
   function playerAdminPendingKeys(){
+    const imageKeys=Array.isArray(window.SEH_playerImagePendingKeys)?window.SEH_playerImagePendingKeys:[];
     return new Set([
       ...faLinkRequests.map((row)=>`link:${row.user_id}`),
       ...faApprovalRequests.map((row)=>`fa:${row.id}`),
-      ...profileApprovalRequests.map((row)=>`profile:${row.id}`)
+      ...profileApprovalRequests.map((row)=>`profile:${row.id}`),
+      ...imageKeys
     ]);
   }
   function updatePlayerAdminCounters(){
-    const total=faLinkRequests.length+faApprovalRequests.length+profileApprovalRequests.length;
+    const imageCount=Number.isFinite(Number(window.SEH_playerImagePendingCount))?Number(window.SEH_playerImagePendingCount):0;
+    const profileCount=profileApprovalRequests.length+imageCount;
+    const total=faLinkRequests.length+faApprovalRequests.length+profileCount;
     const pendingBreakdown={
       links:faLinkRequests.length,
       fa:faApprovalRequests.length,
-      profiles:profileApprovalRequests.length
+      profiles:profileCount
     };
     window.dispatchEvent(new CustomEvent('seh:admin-pending-count',{
       detail:{total,breakdown:pendingBreakdown}
     }));
     window.SEH_setAdminPendingBadge?.(total,pendingBreakdown);
+    if($('profileAdminRequestCount'))$('profileAdminRequestCount').textContent=String(profileCount);
     if($('adminPlayerPendingTotal'))$('adminPlayerPendingTotal').textContent=String(total);
     if($('adminPlayerApprovedTotal'))$('adminPlayerApprovedTotal').textContent=String(faApprovedLinks.length);
     if($('playerAdminTabQueueCount'))$('playerAdminTabQueueCount').textContent=String(total);
     if($('playerAdminTabLinksCount'))$('playerAdminTabLinksCount').textContent=String(faApprovedLinks.length);
     if($('playerAdminTabFaCount'))$('playerAdminTabFaCount').textContent=String(faEntries.length);
     if($('playerAdminFilterAll'))$('playerAdminFilterAll').textContent=String(total);
-    if($('playerAdminFilterProfiles'))$('playerAdminFilterProfiles').textContent=String(profileApprovalRequests.length);
+    if($('playerAdminFilterProfiles'))$('playerAdminFilterProfiles').textContent=String(profileCount);
     if($('playerAdminFilterLinks'))$('playerAdminFilterLinks').textContent=String(faLinkRequests.length);
     if($('playerAdminFilterFa'))$('playerAdminFilterFa').textContent=String(faApprovalRequests.length);
-    for(const [name,count] of [['links',faLinkRequests.length],['fa',faApprovalRequests.length],['profiles',profileApprovalRequests.length]]){const panel=document.querySelector(`[data-admin-queue="${name}"]`);if(panel)panel.classList.toggle('has-pending',count>0);}
+    for(const [name,count] of [['links',faLinkRequests.length],['fa',faApprovalRequests.length],['profiles',profileCount]]){const panel=document.querySelector(`[data-admin-queue="${name}"]`);if(panel)panel.classList.toggle('has-pending',count>0);}
     setPlayerAdminQueueFilter(playerAdminQueueFilter);filterApprovedLinks();
   }
+  window.SEH_refreshPlayerAdminCounters=updatePlayerAdminCounters;
   function playerAdminSetLiveState(message,tone=''){
     const state=$('adminPlayerLiveState');
     if(!state)return;
