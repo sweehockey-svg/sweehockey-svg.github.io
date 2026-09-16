@@ -13596,7 +13596,7 @@ function SEH_initShop() {
         <a href="#/stod">Stöd Svensk eHockey <span aria-hidden="true">→</span></a>
       </div>
     </div>`
-  );font-weight:800;padding:12px 0">iPhone? Lägg till webbappen →</a>');
+  );
   templates.ecl = `
     <main class="directory-shell ecl-hub-shell-v12840">
       <section class="ecl-hub-hero-v12840" aria-labelledby="eclHubTitle">
