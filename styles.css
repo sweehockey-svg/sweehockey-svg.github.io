@@ -27820,10 +27820,9 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
   }
 }
 
-/* iPhone Safari can expose a wide desktop viewport in portrait mode.
-   Use the device width/orientation as a fallback so the team profile still
-   stacks instead of rendering its desktop two-column hero off-screen. */
-@media (orientation: portrait) and (max-device-width: 600px) {
+/* Restore the narrow team layout after later desktop refinements.
+   Match the viewport so resizing and rotation work in every browser. */
+@media (max-width: 920px) {
   #spaRouteView[data-route="team"] .page-shell.history-page-shell {
     width: calc(100% - 20px) !important;
     max-width: none !important;
