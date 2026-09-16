@@ -27232,3 +27232,392 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================================================
+   HOME V2.2 — PREMIUM HERO / QUICKLINKS
+   Tighter hierarchy, clearer CTA and more balanced identity.
+   ========================================================= */
+#spaRouteView[data-route="home"] .home-one-screen--refined {
+  gap: 14px;
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage {
+  grid-template-columns: minmax(0, 1.03fr) minmax(390px, .97fr);
+  min-height: clamp(460px, 58vh, 590px);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 16% 16%, rgba(67,232,225,.045), transparent 30%),
+    linear-gradient(115deg, rgba(255,255,255,.018), transparent 42%),
+    #03070a;
+  box-shadow: 0 24px 70px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage::after {
+  top: -1px;
+  right: 28px;
+  width: 31%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(67,232,225,.8), var(--v2-yellow));
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__copy {
+  justify-content: center;
+  padding: clamp(30px, 4vh, 48px) clamp(34px, 4.2vw, 70px);
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__copy h1 {
+  max-width: 700px;
+  margin: 14px 0 0;
+  font-size: clamp(62px, min(5.5vw, 9.2vh), 102px);
+  letter-spacing: -.065em;
+  line-height: .88;
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__copy h1 em {
+  position: relative;
+  display: inline-block;
+  color: #ffd400;
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__copy h1 em::after {
+  position: absolute;
+  right: .02em;
+  bottom: .02em;
+  width: 1.05em;
+  height: 4px;
+  content: "";
+  transform: rotate(-4deg);
+  border-radius: 999px;
+  background: rgba(255,212,0,.82);
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__intro {
+  max-width: 670px;
+  padding-top: clamp(20px, 2.35vh, 27px);
+  gap: 9px;
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__lead {
+  max-width: 640px;
+  font-size: clamp(14px, .98vw, 17px);
+  line-height: 1.5;
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__detail {
+  max-width: 650px;
+  color: rgba(244,241,233,.55);
+  font-size: clamp(12px, .78vw, 13.5px);
+  line-height: 1.52;
+}
+
+#spaRouteView[data-route="home"] .home-stage__cta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 13px 18px;
+  margin-top: clamp(18px, 2.2vh, 25px);
+}
+
+#spaRouteView[data-route="home"] .home-android-cta {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 11px;
+  min-width: min(100%, 338px);
+  min-height: 62px;
+  padding: 9px 10px;
+  overflow: hidden;
+  border: 1px solid rgba(214,177,95,.62);
+  border-radius: 13px;
+  color: #f5f1e8;
+  background:
+    linear-gradient(110deg, rgba(214,177,95,.09), transparent 38%),
+    rgba(7,13,18,.94);
+  text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+
+#spaRouteView[data-route="home"] .home-android-cta::before {
+  position: absolute;
+  top: 0;
+  right: 20%;
+  left: 0;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, #ffd400, rgba(255,212,0,0));
+}
+
+#spaRouteView[data-route="home"] .home-android-cta:hover,
+#spaRouteView[data-route="home"] .home-android-cta:focus-visible {
+  outline: none;
+  transform: translateY(-2px);
+  border-color: rgba(255,212,0,.9);
+  background:
+    linear-gradient(110deg, rgba(214,177,95,.14), transparent 42%),
+    rgba(9,17,22,.98);
+}
+
+#spaRouteView[data-route="home"] .home-android-cta__icon,
+#spaRouteView[data-route="home"] .home-android-cta__arrow {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,212,0,.48);
+  border-radius: 9px;
+  color: #ffd400;
+}
+
+#spaRouteView[data-route="home"] .home-android-cta__icon {
+  width: 38px;
+  height: 38px;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+#spaRouteView[data-route="home"] .home-android-cta__arrow {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 15px;
+  transition: transform .18s ease;
+}
+
+#spaRouteView[data-route="home"] .home-android-cta:hover .home-android-cta__arrow {
+  transform: translateX(2px);
+}
+
+#spaRouteView[data-route="home"] .home-android-cta__copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+#spaRouteView[data-route="home"] .home-android-cta__copy small {
+  color: var(--v2-cyan);
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: .12em;
+}
+
+#spaRouteView[data-route="home"] .home-android-cta__copy strong {
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__support {
+  margin: 0;
+  padding-left: 15px;
+  border-left: 1px solid rgba(255,255,255,.10);
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__support::before {
+  display: none;
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__identity {
+  border-left-color: rgba(255,255,255,.095);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(5,78,121,.28), transparent 41%),
+    linear-gradient(145deg, rgba(8,15,36,.78), rgba(2,3,10,.28));
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__identity-mark {
+  padding: clamp(34px, 4vh, 52px) clamp(36px, 4vw, 64px) 8px;
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__identity-mark::before {
+  position: absolute;
+  width: min(76%, 470px);
+  aspect-ratio: 1;
+  content: "";
+  border: 1px solid rgba(67,232,225,.06);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(10,75,112,.16), rgba(10,75,112,0) 66%);
+  box-shadow: 0 0 90px rgba(3,82,125,.10);
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__identity-mark img {
+  z-index: 1;
+  width: min(90%, 560px);
+  max-height: 34vh;
+  opacity: .96;
+  filter: drop-shadow(0 24px 52px rgba(0,0,0,.4));
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__identity-text {
+  margin: 0 clamp(30px, 3vw, 50px) clamp(26px, 3vh, 38px);
+  padding-top: 18px;
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__identity-text strong {
+  font-size: clamp(1rem, 1.08vw, 1.18rem);
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__identity-text p {
+  max-width: 430px;
+  color: rgba(244,241,233,.48);
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks {
+  grid-template-columns: 132px minmax(0, 1fr);
+  min-height: 112px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 14px;
+  background: rgba(2,6,9,.72);
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__label {
+  padding-left: 18px;
+  border-right-color: rgba(255,255,255,.09);
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__label h2 {
+  font-size: 27px;
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__grid a {
+  min-height: 110px;
+  padding: 15px 18px;
+  border-right-color: rgba(255,255,255,.075);
+  background: transparent;
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__grid a::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  content: "";
+  opacity: 0;
+  transform: scaleX(.35);
+  transform-origin: left;
+  background: linear-gradient(90deg, var(--v2-yellow), var(--v2-cyan));
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__grid a:hover,
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__grid a:focus-visible {
+  color: var(--v2-ink);
+  background: rgba(255,255,255,.035);
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__grid a:hover::after,
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__grid a:focus-visible::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__grid a:hover > span,
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__grid a:focus-visible > span {
+  color: var(--v2-yellow);
+}
+
+#spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__grid strong {
+  font-size: clamp(.94rem, 1.08vw, 1.08rem);
+}
+
+@media (max-height: 860px) and (min-width: 1101px) {
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage {
+    min-height: 430px;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__copy h1 {
+    font-size: clamp(58px, min(5vw, 8.3vh), 86px);
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__copy {
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks {
+    min-height: 98px;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__grid a {
+    min-height: 96px;
+  }
+}
+
+@media (max-width: 1100px) {
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__identity {
+    min-height: 360px;
+    border-top: 1px solid rgba(255,255,255,.09);
+    border-left: 0;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks {
+    grid-template-columns: 1fr;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__label {
+    display: none;
+  }
+}
+
+@media (max-width: 680px) {
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage {
+    border-radius: 13px;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__copy {
+    padding: 27px 18px 24px;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__copy h1 {
+    font-size: clamp(54px, 17vw, 76px);
+    line-height: .9;
+  }
+
+  #spaRouteView[data-route="home"] .home-stage__cta-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  #spaRouteView[data-route="home"] .home-android-cta {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__support {
+    width: 100%;
+    padding: 10px 0 0;
+    border-top: 1px solid rgba(255,255,255,.08);
+    border-left: 0;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__identity {
+    min-height: 300px;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__identity-mark img {
+    max-height: 170px;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks {
+    border-radius: 12px;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__grid {
+    grid-template-columns: 1fr;
+  }
+
+  #spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks__grid a {
+    min-height: 78px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+}
