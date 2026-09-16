@@ -13560,7 +13560,11 @@ function SEH_initShop() {
     /<div class="portal-support-note home-stage__support" aria-label="Stöd Svensk eHockey">[\s\S]*?<\/div>/,
     `<div class="home-stage__cta-row">
       <a class="home-android-cta" href="/android.html" aria-label="Ladda ner Svensk eHockey för Android">
-        <span class="home-android-cta__icon" aria-hidden="true">↓</span>
+        <span class="home-android-cta__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path d="M7.2 7.1 5.9 4.9a.8.8 0 0 1 1.4-.8l1.4 2.3A8.8 8.8 0 0 1 12 5.8c1.2 0 2.3.2 3.3.6l1.4-2.3a.8.8 0 1 1 1.4.8l-1.3 2.2A7.6 7.6 0 0 1 20 13H4a7.6 7.6 0 0 1 3.2-5.9ZM8.5 9.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm7 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2ZM5 14h14v4.2c0 1-.8 1.8-1.8 1.8H6.8c-1 0-1.8-.8-1.8-1.8V14Zm2 6h2v2H7v-2Zm8 0h2v2h-2v-2Z" fill="currentColor"/>
+          </svg>
+        </span>
         <span class="home-android-cta__copy">
           <small>SVENSK eHOCKEY APP</small>
           <strong>Ladda ner Android-appen</strong>
