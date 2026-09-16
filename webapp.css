@@ -1,0 +1,21 @@
+html.seh-web-app {
+  --seh-native-top: calc(62px + env(safe-area-inset-top, 0px)) !important;
+  --seh-native-bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+  color-scheme: dark;
+}
+html.seh-web-app #seh-native-top {
+  padding-top: calc(8px + env(safe-area-inset-top, 0px)) !important;
+  padding-left: max(12px, env(safe-area-inset-left)) !important;
+  padding-right: max(12px, env(safe-area-inset-right)) !important;
+}
+html.seh-web-app #seh-native-bottom {
+  padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)) !important;
+}
+html.seh-web-app #seh-v760-layer {
+  padding-top: max(24px, env(safe-area-inset-top)) !important;
+  padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
+}
+html.seh-web-app input, html.seh-web-app select, html.seh-web-app textarea {
+  font-size: max(16px, 1em) !important;
+}
+html.seh-web-app .home-android-cta, html.seh-web-app .home-iphone-cta { display: none !important; }

@@ -13577,6 +13577,7 @@ function SEH_initShop() {
       </div>
     </div>`
   );
+  templates.home = templates.home.replace('<div class="home-stage__cta-row">', '<div class="home-stage__cta-row"><a class="home-iphone-cta" href="/iphone.html" style="color:#70d8d0;font-weight:800;padding:12px 0">iPhone? Lägg till webbappen →</a>');
   templates.ecl = `
     <main class="directory-shell ecl-hub-shell-v12840">
       <section class="ecl-hub-hero-v12840" aria-labelledby="eclHubTitle">

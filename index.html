@@ -250,7 +250,7 @@
   <script src="teamlogos-manifest.js?v=20260830-v60"></script>
   <script src="playerimages-manifest.js?v=20260904-v1"></script>
   <script src="news-articles.js?v=20260915-android-app-news-v7-samsung"></script>
-  <script src="app.js?v=20260916-home-android-icon-532"></script>
+  <script src="app.js?v=20260916-iphone-webapp-532"></script>
   <script src="sec-admin-sync.js?v=20260906-v1"></script>
   <script src="admin-current-stats.js?v=20260915-v7-download-count"></script>
   <script src="ecl27-team-builds-source-enrichment.js?v=20260916-v10-hidden-psn-first"></script>
@@ -264,7 +264,7 @@
         try {
           const registrations = await navigator.serviceWorker.getRegistrations();
           await Promise.all(registrations.map(function (registration) {
-            try { const scope = new URL(registration.scope); if (scope.origin === window.location.origin && scope.pathname === "/") return registration.unregister(); } catch (_) {}
+            try { const scope = new URL(registration.scope); const worker = registration.active || registration.waiting || registration.installing; if (scope.origin === window.location.origin && scope.pathname === "/" && !worker?.scriptURL.includes('/webapp-sw.js')) return registration.unregister(); } catch (_) {}
             return Promise.resolve(false);
           }));
           if ("caches" in window) {
@@ -275,5 +275,6 @@
       });
     }
   </script>
+<script src="/webapp-boot.js?v=20260916-1"></script>
 </body>
 </html>

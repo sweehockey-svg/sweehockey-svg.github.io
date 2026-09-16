@@ -5,7 +5,7 @@
   "description": "Statistik, information och historia om svensk eHockey.",
   "lang": "sv-SE",
   "dir": "ltr",
-  "start_url": "/#/",
+  "start_url": "/?webapp=1#/",
   "scope": "/",
   "display": "standalone",
   "display_override": [
