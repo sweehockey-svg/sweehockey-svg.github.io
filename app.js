@@ -19512,13 +19512,45 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       const oauthReturn = localStorage.getItem("seh_oauth_return");
       if (oauthReturn) {
         try {
+          let webappReturn = null;
+          try {
+            const parsed = JSON.parse(oauthReturn);
+            if (parsed?.webapp === true) webappReturn = parsed;
+          } catch (_) {}
+
           await sehInitializeAuth();
+
           if (sehAuthState.session?.user) {
-            localStorage.removeItem("seh_oauth_return");
-            history.replaceState(null, "", `${location.pathname}${location.search}${oauthReturn}`);
+            if (webappReturn) {
+              // Äldre webbapp-login använde samma nyckel som vanliga sajten.
+              // Tolka aldrig JSON som ett SPA-hashvärde. Låt webbappens egen
+              // auth-handler slutföra returen och behåll markören tills dess.
+              const returnHash =
+                /^#\//.test(String(webappReturn.hash || ""))
+                  ? String(webappReturn.hash)
+                  : "#/";
+              const target = new URL(location.href);
+              target.searchParams.set("webapp", "1");
+              target.hash = returnHash;
+              history.replaceState(
+                null,
+                "",
+                `${target.pathname}${target.search}${target.hash}`
+              );
+            } else if (/^#\//.test(oauthReturn)) {
+              localStorage.removeItem("seh_oauth_return");
+              history.replaceState(
+                null,
+                "",
+                `${location.pathname}${location.search}${oauthReturn}`
+              );
+            } else {
+              // Okänt gammalt värde får inte kunna skapa en ogiltig SPA-route.
+              localStorage.removeItem("seh_oauth_return");
+            }
           }
         } catch (error) {
-          console.warn("Kunde inte återgå till Free Agents efter Discord-inloggning", error);
+          console.warn("Kunde inte återgå efter Discord-inloggning", error);
         }
       }
       if (!location.hash) {
