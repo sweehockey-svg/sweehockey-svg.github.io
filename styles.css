@@ -27621,3 +27621,10 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     border-bottom: 1px solid rgba(255,255,255,.07);
   }
 }
+
+
+#spaRouteView[data-route="home"] .home-android-cta__icon svg {
+  display: block;
+  width: 23px;
+  height: 23px;
+}
