@@ -165,10 +165,21 @@
       const result = await sb.rpc('seh_get_my_player_image_requests');
       if (result.error) throw result.error;
       const rows = Array.isArray(result.data) ? result.data : [];
+      const latest = rows[0] || null;
       const active = rows.find((row) => ['pending', 'editing'].includes(row.status));
       if (!active) {
-        note.textContent = 'Ingen spelarbild väntar på behandling.';
-        note.dataset.state = 'idle';
+        if (latest?.status === 'published') {
+          note.textContent = 'Din senaste spelarbild är publicerad på din profil.';
+          note.dataset.state = 'published';
+        } else if (latest?.status === 'rejected') {
+          note.textContent = latest.admin_note
+            ? `Din senaste bild avslogs: ${latest.admin_note}`
+            : 'Din senaste spelarbild blev avslagen av admin.';
+          note.dataset.state = 'rejected';
+        } else {
+          note.textContent = 'Ingen spelarbild väntar på behandling.';
+          note.dataset.state = 'idle';
+        }
         return;
       }
       note.textContent = active.status === 'editing'
@@ -238,17 +249,27 @@
       p_final_path: finalPath,
       p_public_url: publicUrl
     });
-    if (publish.error) throw publish.error;
+    if (publish.error) {
+      try { await sb.storage.from(BUCKET_PUBLIC).remove([finalPath]); } catch (_) {}
+      throw publish.error;
+    }
 
     await renderAdminQueue(true);
     adminStatus('Den redigerade spelarbilden är publicerad på spelarprofilen.', 'success');
   }
 
   function updateAdminCounts(imageCount) {
+    const safeCount = Number.isFinite(Number(imageCount)) ? Number(imageCount) : 0;
+    window.SEH_playerImagePendingCount = safeCount;
+    if (typeof window.SEH_refreshPlayerAdminCounters === 'function') {
+      window.SEH_refreshPlayerAdminCounters();
+      return;
+    }
+
     const links = document.querySelectorAll('#faAdminLinkRequests > article').length;
     const fa = document.querySelectorAll('#faAdminRequests > article').length;
     const profiles = document.querySelectorAll('#profileAdminRequests > article').length;
-    const profileTotal = profiles + imageCount;
+    const profileTotal = profiles + safeCount;
     const total = links + fa + profileTotal;
     const set = (id, value) => { const n = document.getElementById(id); if (n) n.textContent = String(value); };
     set('profileAdminRequestCount', profileTotal);
@@ -270,6 +291,7 @@
       const result = await sb.rpc('seh_admin_list_player_image_requests');
       if (result.error) throw result.error;
       const rows = Array.isArray(result.data) ? result.data : [];
+      window.SEH_playerImagePendingKeys = rows.map((row) => `image:${row.id}`);
 
       let section = panel.querySelector('#playerImageAdminQueue');
       if (!section) {
@@ -306,7 +328,7 @@
           <header class="profile-admin-request-card__head">
             <div>
               <span class="profile-admin-type">SPELARBILD · ${row.status === 'editing' ? 'REDIGERAS' : 'NY'}</span>
-              <a class="profile-admin-player-link" href="#/spelare/${encodeURIComponent(row.player_key || '')}">${esc(row.player_key)} ↗</a>
+              <a class="profile-admin-player-link" href="#/spelare/${encodeURIComponent(row.player_key || '')}">${esc(row.display_gamertag || row.player_key)} ↗</a>
               <small>${esc(when)} · ${esc(row.original_filename || 'originalbild')}</small>
             </div>
             <span class="profile-admin-waiting">${row.status === 'editing' ? 'Under redigering' : 'Väntar'}</span>
