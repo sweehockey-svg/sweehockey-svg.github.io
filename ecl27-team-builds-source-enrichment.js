@@ -8,7 +8,7 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "seh_ecl27_shared_source_v1";
+  const CACHE_KEY = "seh_ecl27_shared_source_v2";
   const EMPTY = Object.freeze({
     build:"supabase-loading",updated:"Hämtar ECL27-data…",aliases:{},
     springTeams:[],newTeams:[],moveEvents:[],posterMemberships:[],freeAgentEvents:[],
@@ -63,16 +63,34 @@
       if (alias && canonical) aliases[alias]=canonical;
     }
 
+    // Event resolution is PSN/display-first. Keep source gamertags as aliases
+    // to the resolved display identity so an old Xbox/source name cannot
+    // survive as a separate player in the lagbygge replay.
+    for (const row of events || []) {
+      const source=String(row.source_gamertag || "").trim();
+      const display=String(row.display_gamertag || "").trim();
+      const sourceKey=source.toLocaleLowerCase("sv-SE").replace(/\s+/g," ");
+      if (sourceKey && display && sourceKey !== display.toLocaleLowerCase("sv-SE").replace(/\s+/g," ")) {
+        aliases[sourceKey]=display;
+      }
+    }
+
     const byId = new Map(teams.map(t => [Number(t.id),t]));
     const springMap = new Map();
     for (const row of baseline) {
       const id = Number(row.team_project_id);
+
+      // Only teams exposed by v_ecl27_team_builds_public belong in the
+      // current lagbygge. Hidden projects can still exist in the historical
+      // Spring cache, but must never be reconstructed from that baseline.
+      const team = byId.get(id);
+      if (!team) continue;
+
       if (!springMap.has(id)) {
-        const team = byId.get(id) || {};
         springMap.set(id,{
-          name:String(row.team_name || team.name || ""),
-          division:String(row.division || team.division || ""),
-          teamId:Number(row.source_team_id || team.source_team_id) || null,
+          name:String(team.name || row.team_name || ""),
+          division:String(team.division || row.division || ""),
+          teamId:Number(team.source_team_id || row.source_team_id) || null,
           logoName:team.logo_name || undefined,
           players:[]
         });
