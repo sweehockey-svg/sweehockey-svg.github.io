@@ -8725,6 +8725,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       latestSeason:String(player.latestSeason||player.latest_season||'').trim(),
       position:String(player.position||player.primary_position||'').trim(),
       href:String(player.href||'').trim(),
+      serverLinked:Boolean(player.serverLinked||player.server_linked),
       savedAt:Date.now()
     };
     localStorage.setItem(MY_PROFILE_KEY,JSON.stringify(value));
@@ -8830,9 +8831,10 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
   }
   function myProfileFavoriteCardHtml(){
     const profile=getMyProfile();
-    if(!profile)return `<div class="seh-my-profile-favorite-card"><span class="placeholder">${icons.user}</span><div><small>MIN PROFIL</small><strong>Koppla din spelarprofil</strong><span>Skriv in ditt GT en gång och öppna sedan profilen direkt.</span></div><div class="seh-my-profile-favorite-actions"><button class="primary" type="button" data-my-profile-pick>Koppla</button></div></div>`;
+    if(!profile)return `<div class="seh-my-profile-favorite-card"><span class="placeholder">${icons.user}</span><div><small>MIN PROFIL</small><strong>Koppla din spelarprofil</strong><span>Logga in med Discord och koppla ditt befintliga spelarkort.</span></div><div class="seh-my-profile-favorite-actions"><button class="primary" type="button" data-my-profile-account>Koppla</button></div></div>`;
     const photo=String(profile.photo||ZERO_PLAYER_PNG_FALLBACK).trim();
-    return `<div class="seh-my-profile-favorite-card"><img src="${htmlEscape(photo)}" alt="${htmlEscape(profile.name)}"><div><small>MIN PROFIL</small><strong>${htmlEscape(profile.name)}</strong><span>${htmlEscape([profile.latestTeam,profile.latestSeason].filter(Boolean).join(' · ')||'Svensk spelare')}</span></div><div class="seh-my-profile-favorite-actions"><button class="primary" type="button" data-my-profile-open>Öppna</button><button type="button" data-my-profile-pick>Ändra</button></div></div>`;
+    const linked=profile.serverLinked===true;
+    return `<div class="seh-my-profile-favorite-card"><img src="${htmlEscape(photo)}" alt="${htmlEscape(profile.name)}"><div><small>${linked?'KOPPLAD SPELARPROFIL':'MIN PROFIL'}</small><strong>${htmlEscape(profile.name)}</strong><span>${htmlEscape([profile.latestTeam,profile.latestSeason].filter(Boolean).join(' · ')||'Svensk spelare')}</span></div><div class="seh-my-profile-favorite-actions"><button class="primary" type="button" data-my-profile-open>Öppna</button><button type="button" ${linked?'data-my-profile-account':'data-my-profile-pick'}>${linked?'Min profil':'Ändra'}</button></div></div>`;
   }
   function ensureTop(){
     let top=document.getElementById('seh-native-top');if(top)return;
@@ -8969,6 +8971,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     renderFavorites();
     refreshTop();
     refreshBottom();
+    sehV760LoadAccount().catch(()=>{});
   }
   function renderFavorites(){
     const host=document.getElementById('seh-favorites-list');if(!host)return;const favs=getFavs();
@@ -8985,6 +8988,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     host.innerHTML=profileCard+favoritesHtml;
 
     host.querySelector('[data-my-profile-open]')?.addEventListener('click',openSavedMyProfile);
+    host.querySelector('[data-my-profile-account]')?.addEventListener('click',()=>{closeOverlays();sehV760OpenAccount();});
     host.querySelector('[data-my-profile-pick]')?.addEventListener('click',()=>openMyProfilePicker(true));
     host.querySelectorAll('.seh-my-profile-favorite-card img,.seh-favorite-player-photo img').forEach(img=>{
       img.onerror=()=>{
@@ -17924,6 +17928,17 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
           const player={...(dashboard?.player||{}),player_key:dashboard?.player?.player_key||account.playerKey};
           dashboard={...(dashboard||{}),player:(await sehV760HydratePlayerPhotos([player]))[0]||player};
         }
+        const linkedPlayer=dashboard?.player||{};
+        setMyProfile({
+          player_key:account.playerKey,
+          display_gamertag:linkedPlayer.display_gamertag||account.playerName||account.playerKey,
+          player_image:linkedPlayer.player_image||linkedPlayer.photo||'',
+          latestTeam:linkedPlayer.latest_ecl_team||linkedPlayer.latest_team||'',
+          latestSeason:linkedPlayer.latest_ecl_division||linkedPlayer.latest_season||'',
+          position:linkedPlayer.primary_position||'',
+          href:sehV760PlayerHref(account.playerKey,linkedPlayer.display_gamertag||account.playerName||account.playerKey),
+          serverLinked:true
+        });
       }
       return {client,session,account,dashboard};
     }catch(error){return {client,session,account:null,dashboard:null,error};}
