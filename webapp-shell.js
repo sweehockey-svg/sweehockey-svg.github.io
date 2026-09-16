@@ -17689,6 +17689,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
   let sehV760AuthSubscription=null;
   let sehV760OauthReturnHandled=false;
   const SEH_ANDROID_AUTH_REDIRECT=location.origin + '/';
+  const SEH_WEBAPP_OAUTH_RETURN_KEY='seh_webapp_oauth_return';
   function sehV760BrowserAuthRedirect(){
     const target=new URL(location.href);
     target.hash='';
@@ -17701,7 +17702,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
 
   function sehV760CompleteOauthReturn(session){
     if(sehV760OauthReturnHandled||!session?.user)return;
-    let raw='';try{raw=localStorage.getItem('seh_oauth_return')||'';}catch(_){}
+    let raw='';try{raw=localStorage.getItem(SEH_WEBAPP_OAUTH_RETURN_KEY)||localStorage.getItem('seh_oauth_return')||'';}catch(_){}
     if(!raw)return;
     let returnHash='#/';
     try{
@@ -17710,7 +17711,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     }catch(_){returnHash=raw;}
     if(!/^#\//.test(returnHash))returnHash='#/';
     sehV760OauthReturnHandled=true;
-    try{localStorage.removeItem('seh_oauth_return');}catch(_){}
+    try{localStorage.removeItem(SEH_WEBAPP_OAUTH_RETURN_KEY);localStorage.removeItem('seh_oauth_return');}catch(_){}
     if(location.hash!==returnHash)history.replaceState(null,'',`${location.pathname}${location.search}${returnHash}`);
     setTimeout(()=>sehOnboardingDone()?sehV760OpenAccount():sehOnboardingAfterLogin(),0);
   }
@@ -17732,7 +17733,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       if(result.error)throw result.error;
       sehV760CompleteOauthReturn(result.data?.session||null);
     }catch(error){
-      try{localStorage.removeItem('seh_oauth_return');}catch(_){}
+      try{localStorage.removeItem(SEH_WEBAPP_OAUTH_RETURN_KEY);localStorage.removeItem('seh_oauth_return');}catch(_){}
       alert(`Discord-inloggningen misslyckades: ${error?.message||error}`);
     }
   }
@@ -17950,14 +17951,14 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       const existing=await client.auth.getSession();
       if(existing.data?.session&&!sehV760IsDiscord(existing.data.session.user))await client.auth.signOut();
       const nativeAuth=Boolean(window.SehNative||window.Capacitor?.isNativePlatform?.());
-      localStorage.setItem('seh_oauth_return',JSON.stringify({hash:returnHash,savedAt:Date.now(),webapp:!nativeAuth}));
+      localStorage.setItem(SEH_WEBAPP_OAUTH_RETURN_KEY,JSON.stringify({hash:returnHash,savedAt:Date.now(),webapp:!nativeAuth}));
       if(window.SehNative&&typeof window.SehNative.prepareNavigation==='function'){try{window.SehNative.prepareNavigation();}catch(_){}}
       const authRedirect=nativeAuth?SEH_ANDROID_AUTH_REDIRECT:sehV760BrowserAuthRedirect();
       const {data,error}=await client.auth.signInWithOAuth({provider:'discord',options:{redirectTo:authRedirect,skipBrowserRedirect:true}});if(error)throw error;
       if(!data?.url)throw new Error('Discord-inloggningen saknar startadress.');
       if(window.SehNative&&typeof window.SehNative.openExternal==='function')window.SehNative.openExternal(data.url);
       else location.assign(data.url);
-    }catch(error){try{localStorage.removeItem('seh_oauth_return');}catch(_){}alert(`Discord-inloggningen kunde inte starta: ${error?.message||error}`);}
+    }catch(error){try{localStorage.removeItem(SEH_WEBAPP_OAUTH_RETURN_KEY);}catch(_){}alert(`Discord-inloggningen kunde inte starta: ${error?.message||error}`);}
   }
 
   function sehV760OpenPrivacy(){
@@ -18007,7 +18008,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
         }else{
           if(response.data?.deleted!==true)throw new Error('Kontoraderingen kunde inte bekräftas.');
           try{await client.auth.signOut({scope:'local'});}catch(_){}
-          localStorage.removeItem('seh_oauth_return');setMyProfile(null);
+          localStorage.removeItem(SEH_WEBAPP_OAUTH_RETURN_KEY);localStorage.removeItem('seh_oauth_return');setMyProfile(null);
           sehV760LayerState.session=null;sehV760LayerState.account=null;sehV760LayerState.dashboard=null;
           status.textContent='Ditt appkonto är raderat. Spelarkortet och tävlingshistoriken finns kvar.';
         }
