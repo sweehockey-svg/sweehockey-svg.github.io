@@ -17393,10 +17393,17 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           </a>
 
           <a
-            class="${route.active === "ecl" ? "is-active" : ""}"
+            class="${route.active === "ecl" && !(route.key === "season" && route.params?.seasonId === "ecl27winter") ? "is-active" : ""}"
             href="#/ecl"
           >
             Tävlingar
+          </a>
+
+          <a
+            class="seh-nav-team-builds ${route.key === "season" && route.params?.seasonId === "ecl27winter" ? "is-active" : ""}"
+            href="#/sasong/ecl27winter"
+          >
+            Lagbygge
           </a>
 
           <a
@@ -17472,6 +17479,11 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
             >
               <span class="seh-account-avatar" aria-hidden="true">
                 <img id="sehAccountAvatar" alt="" hidden>
+                <svg class="seh-account-discord-mark" viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+                  <path d="M10.2 9.1c3.8-1.7 7.8-1.7 11.6 0 1.8 2.6 2.8 5.6 3 8.8-2.1 2.5-4.6 4-7.3 4.6l-1.1-1.6c1.1-.3 2.1-.7 3-1.3-3.1 1.4-6.3 1.4-9.4 0 .9.6 1.9 1 3 1.3l-1.1 1.6c-2.7-.6-5.2-2.1-7.3-4.6.2-3.2 1.2-6.2 3-8.8l2.6-1.2.7 1.1a14 14 0 0 1 10.2 0l.7-1.1 2.6 1.2"/>
+                  <circle cx="12.4" cy="15.3" r="1.65"/>
+                  <circle cx="19.6" cy="15.3" r="1.65"/>
+                </svg>
                 <b id="sehAccountAvatarFallback">D</b>
               </span>
               <span class="seh-account-trigger__copy">
