@@ -17933,9 +17933,10 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     try{
       const existing=await client.auth.getSession();
       if(existing.data?.session&&!sehV760IsDiscord(existing.data.session.user))await client.auth.signOut();
-      localStorage.setItem('seh_oauth_return',JSON.stringify({hash:returnHash,savedAt:Date.now()}));
+      const nativeAuth=Boolean(window.SehNative||window.Capacitor?.isNativePlatform?.());
+      localStorage.setItem('seh_oauth_return',JSON.stringify({hash:returnHash,savedAt:Date.now(),webapp:!nativeAuth}));
       if(window.SehNative&&typeof window.SehNative.prepareNavigation==='function'){try{window.SehNative.prepareNavigation();}catch(_){}}
-      const authRedirect=(window.SehNative||window.Capacitor?.isNativePlatform?.())?SEH_ANDROID_AUTH_REDIRECT:sehV760BrowserAuthRedirect();
+      const authRedirect=nativeAuth?SEH_ANDROID_AUTH_REDIRECT:sehV760BrowserAuthRedirect();
       const {data,error}=await client.auth.signInWithOAuth({provider:'discord',options:{redirectTo:authRedirect,skipBrowserRedirect:true}});if(error)throw error;
       if(!data?.url)throw new Error('Discord-inloggningen saknar startadress.');
       if(window.SehNative&&typeof window.SehNative.openExternal==='function')window.SehNative.openExternal(data.url);
