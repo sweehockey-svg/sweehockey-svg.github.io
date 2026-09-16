@@ -24,3 +24,16 @@ window.EHOCKEY_CONFIG = {
   script.defer = true;
   document.head.appendChild(script);
 })();
+
+/* Webbappen: personlig För dig-start. Samma Supabase-data kan senare återanvändas i Android. */
+(() => {
+  const css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = '/webapp-for-you-v1.css?v=20260917-1';
+  document.head.appendChild(css);
+
+  const script = document.createElement('script');
+  script.src = '/webapp-for-you-v1.js?v=20260917-1';
+  script.defer = true;
+  document.head.appendChild(script);
+})();
