@@ -7,6 +7,8 @@ on:
       - "players/**"
       - "teamlogos/**"
       - "scripts/build-web-images.mjs"
+      - "scripts/build-social-previews.mjs"
+      - "social/*.svg"
       - ".github/workflows/build-web-images.yml"
   workflow_dispatch:
 
@@ -40,14 +42,17 @@ jobs:
       - name: Build optimized WebP copies
         run: node scripts/build-web-images.mjs
 
+      - name: Build social preview PNGs
+        run: node scripts/build-social-previews.mjs
+
       - name: Commit optimized assets
         run: |
-          if [ -z "$(git status --porcelain -- web-images)" ]; then
+          if [ -z "$(git status --porcelain -- web-images social/*.png)" ]; then
             echo "No image changes."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add web-images
+          git add web-images social/*.png
           git commit -m "Build optimized web image cache"
           git push
