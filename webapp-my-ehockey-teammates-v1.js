@@ -119,7 +119,7 @@
 
     if (explicit) return explicit;
     if (sgId && Array.isArray(window.SEH_PLAYER_IMAGE_FILES) && window.SEH_PLAYER_IMAGE_FILES.includes(`${sgId}.png`)) {
-      return `/players/${encodeURIComponent(sgId)}.png`;
+      return `/web-images/players/${encodeURIComponent(sgId)}.png.webp`;
     }
     return '';
   }
