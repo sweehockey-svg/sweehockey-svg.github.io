@@ -149,6 +149,16 @@ window.EHOCKEY_CONFIG = {
   script.src = '/webapp-my-ehockey-v1.js?v=20260917-career-2';
   script.defer = true;
   document.head.appendChild(script);
+
+  const milestoneCss = document.createElement('link');
+  milestoneCss.rel = 'stylesheet';
+  milestoneCss.href = '/webapp-my-ehockey-milestones-v1.css?v=20260917-1';
+  document.head.appendChild(milestoneCss);
+
+  const milestoneScript = document.createElement('script');
+  milestoneScript.src = '/webapp-my-ehockey-milestones-v1.js?v=20260917-1';
+  milestoneScript.defer = true;
+  document.head.appendChild(milestoneScript);
 })();
 
 /* Spelarprofiler + Mitt eHockey: ECL-divisionsresa byggd på faktiska registrerade matcher. */
