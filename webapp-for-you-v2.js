@@ -2,7 +2,7 @@
   'use strict';
 
   const ROOT_ID = 'seh-webapp-for-you';
-  const PLAYER_FALLBACK = '/players/1DEFAULTBILDID.png';
+  const PLAYER_FALLBACK = '/web-images/players/1DEFAULTBILDID.png.webp';
   const COMPETITION_KEY = 'ecl27winter';
   const DEFAULT_ROUTE = '#/sasong/ecl27winter';
   const MIN_REFRESH_MS = 12000;
@@ -212,9 +212,17 @@
 
   function playerImage(player) {
     const sportsGamer = String(player?.sports_gamer_player_url || '').trim();
-    const sportsGamerId = sportsGamer.match(/\/players\/(\d+)(?:\/|$|[?#])/i)?.[1];
-    if (sportsGamerId) return `/players/${sportsGamerId}.png`;
-    return String(player?.player_image || player?.photo || '').trim() || PLAYER_FALLBACK;
+    const sportsGamerId = sportsGamer.match(/\/players\/(\d+)(?:\/|$|[?#])/i)?.[1] || '';
+    const raw = String(player?.player_image || player?.photo || '').trim();
+    try {
+      if (typeof window.SEH_playerImageUrl === 'function') {
+        return window.SEH_playerImageUrl(raw, sportsGamerId) || PLAYER_FALLBACK;
+      }
+    } catch (_) {}
+    if (sportsGamerId && Array.isArray(window.SEH_PLAYER_IMAGE_FILES) && window.SEH_PLAYER_IMAGE_FILES.includes(`${sportsGamerId}.png`)) {
+      return `/web-images/players/${encodeURIComponent(sportsGamerId)}.png.webp`;
+    }
+    return raw || PLAYER_FALLBACK;
   }
 
   function renderPersonal(root, data) {
