@@ -182,7 +182,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(css);
 
   const script = document.createElement('script');
-  script.src = '/webapp-my-ehockey-teammates-v1.js?v=20260917-2';
+  script.src = '/webapp-my-ehockey-teammates-v1.js?v=20260917-3';
   script.defer = true;
   document.head.appendChild(script);
 })();
