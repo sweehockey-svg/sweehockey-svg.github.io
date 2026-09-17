@@ -120,7 +120,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(sclWordingFix);
 
   const genericShortcuts = document.createElement('script');
-  genericShortcuts.src = '/webapp-for-you-generic-shortcuts-v1.js?v=20260917-2';
+  genericShortcuts.src = '/webapp-for-you-generic-shortcuts-v1.js?v=20260917-3';
   genericShortcuts.defer = true;
   document.head.appendChild(genericShortcuts);
 })();
