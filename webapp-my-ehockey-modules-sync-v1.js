@@ -98,7 +98,7 @@
     }
 
     const division = root.querySelector(`#${DIVISION_ID}`);
-    if (division?.dataset.ready !== '1' && typeof window.SEH_REFRESH_MY_DIVISION_JOURNEY === 'function') {
+    if (division?.dataset.ready !== '1' && !division?.dataset.loadingKey && typeof window.SEH_REFRESH_MY_DIVISION_JOURNEY === 'function') {
       window.SEH_REFRESH_MY_DIVISION_JOURNEY();
     }
   }
