@@ -1,0 +1,61 @@
+/* Mitt eHockey: personlig helsida bakom avatar-knappen. Hem lämnas orört. */
+#seh-my-ehockey{
+  position:fixed;
+  z-index:2147482850;
+  left:0;
+  right:0;
+  top:var(--seh-native-top,62px);
+  bottom:var(--seh-native-bottom,74px);
+  display:none;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  background:
+    radial-gradient(circle at 85% 0,rgba(98,212,207,.08),transparent 28%),
+    radial-gradient(circle at 5% 18%,rgba(214,177,95,.07),transparent 25%),
+    #02030a;
+  color:#f4f1e9;
+  font-family:Inter,Arial,sans-serif;
+  box-sizing:border-box;
+}
+#seh-my-ehockey::-webkit-scrollbar{display:none}
+#seh-my-ehockey.show{display:block}
+.seh-me-wrap{width:min(100%,760px);margin:0 auto;padding:18px 14px 34px;box-sizing:border-box}
+.seh-me-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:0 2px 14px}
+.seh-me-head small{display:block;margin-bottom:4px;color:#62d4cf;font-size:9px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+.seh-me-head h1{margin:0;font-size:30px;line-height:1;letter-spacing:-.035em;color:#f6f3eb}
+.seh-me-head span{color:#858d98;font-size:10px;font-weight:750;padding-bottom:3px}
+.seh-me-profile{position:relative;display:grid;grid-template-columns:82px minmax(0,1fr);gap:14px;align-items:center;padding:15px;border:1px solid rgba(214,177,95,.28);border-radius:20px;background:linear-gradient(145deg,#0a101b,#05070e);box-shadow:0 16px 38px rgba(0,0,0,.2);overflow:hidden}
+.seh-me-profile:before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,#62d4cf,#d6b15f 65%,transparent)}
+.seh-me-avatar{width:82px;height:82px;border-radius:17px;overflow:hidden;border:1px solid rgba(214,177,95,.42);background:#0a1422;display:grid;place-items:center;color:#62d4cf}
+.seh-me-avatar img{width:100%;height:100%;display:block;object-fit:cover;object-position:center top}
+.seh-me-avatar svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:1.7}
+.seh-me-copy{min-width:0}
+.seh-me-copy small{display:block;color:#d6b15f;font-size:8px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+.seh-me-copy h2{margin:0;color:#f5f2ea;font-size:23px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seh-me-copy p{margin:5px 0 0;color:#9ba2ad;font-size:11px;line-height:1.4}
+.seh-me-status{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.seh-me-pill{border:1px solid rgba(255,255,255,.10);border-radius:999px;padding:5px 8px;background:#ffffff06;color:#b8bec7;font-size:8px;font-weight:850}
+.seh-me-pill.ok{border-color:rgba(98,212,207,.28);color:#73dfd9;background:rgba(98,212,207,.07)}
+.seh-me-section{margin-top:14px;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:#070a12;overflow:hidden}
+.seh-me-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px 9px}
+.seh-me-section-head div small{display:block;color:#62d4cf;font-size:8px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;margin-bottom:3px}
+.seh-me-section-head h3{margin:0;color:#f1efe8;font-size:16px;line-height:1.1}
+.seh-me-section-head span{color:#828a96;font-size:9px}
+.seh-me-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 12px 12px}
+.seh-me-action{min-height:66px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;text-align:left;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#0b0f18;color:#f0eee8;padding:10px 11px;font:inherit;box-sizing:border-box;text-decoration:none}
+.seh-me-action strong{font-size:11px;font-weight:900}
+.seh-me-action span{color:#89919c;font-size:8.5px;line-height:1.3}
+.seh-me-action.primary{border-color:rgba(214,177,95,.34);background:linear-gradient(145deg,rgba(214,177,95,.11),#0b0f18)}
+.seh-me-action.cyan{border-color:rgba(98,212,207,.22)}
+.seh-me-favorites{display:grid;gap:7px;padding:0 12px 12px}
+.seh-me-favorite{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:9px;align-items:center;width:100%;min-height:48px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:#090d15;color:#f0eee9;text-align:left;padding:7px 9px;text-decoration:none;box-sizing:border-box}
+.seh-me-favorite b{width:32px;height:32px;display:grid;place-items:center;border-radius:9px;background:rgba(214,177,95,.08);color:#d6b15f;font-size:15px}
+.seh-me-favorite strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.seh-me-favorite small{display:block;margin-top:2px;color:#858d98;font-size:8px}
+.seh-me-favorite i{font-style:normal;color:#d6b15f;font-size:13px}
+.seh-me-empty{padding:2px 14px 14px;color:#858d98;font-size:10px;line-height:1.45}
+.seh-me-footer-note{margin:14px 4px 0;color:#6f7782;font-size:8.5px;line-height:1.45;text-align:center}
+@media(max-width:390px){.seh-me-wrap{padding-left:10px;padding-right:10px}.seh-me-profile{grid-template-columns:70px minmax(0,1fr);gap:11px;padding:13px}.seh-me-avatar{width:70px;height:70px}.seh-me-head h1{font-size:27px}.seh-me-actions{gap:6px;padding-left:10px;padding-right:10px}.seh-me-action{padding:9px;min-height:62px}}
