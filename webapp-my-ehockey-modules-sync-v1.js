@@ -97,18 +97,9 @@
       window.SEH_REFRESH_MY_TEAMMATES?.();
     }
 
-    // Divisionsmodulen observerar DOM-förändringar själv. Om dess fasta slot
-    // saknar innehåll triggar vi en riktig childList-mutation utan att toggla
-    // root-klasser, vilket tidigare kunde skapa race conditions.
     const division = root.querySelector(`#${DIVISION_ID}`);
-    if (division && division.dataset.ready !== '1' && !division.dataset.sehWake) {
-      division.dataset.sehWake = '1';
-      const wake = document.createComment('seh-division-wake');
-      division.appendChild(wake);
-      queueMicrotask(() => {
-        wake.remove();
-        delete division.dataset.sehWake;
-      });
+    if (division?.dataset.ready !== '1' && typeof window.SEH_REFRESH_MY_DIVISION_JOURNEY === 'function') {
+      window.SEH_REFRESH_MY_DIVISION_JOURNEY();
     }
   }
 
