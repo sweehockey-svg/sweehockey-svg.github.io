@@ -4,6 +4,7 @@
   const FAVORITES_KEY = 'seh_app_favorites_v1';
   const FAVORITES_TABLE = 'ehockey_user_favorites';
   const STATE_TABLE = 'ehockey_user_favorite_state';
+  const FAVORITE_TYPES = Object.freeze(['article', 'player', 'team']);
   const MAX_FAVORITES = 100;
   const LOCAL_POLL_MS = 700;
   const REMOTE_REFRESH_MS = 30000;
@@ -47,7 +48,7 @@
   }
 
   function entityKeyFor(item) {
-    const type = item?.type === 'team' ? 'team' : item?.type === 'player' ? 'player' : '';
+    const type = FAVORITE_TYPES.includes(String(item?.type || '')) ? String(item.type) : '';
     if (!type) return '';
     const url = normalizeUrl(item?.url);
     if (url) {
@@ -65,7 +66,7 @@
   }
 
   function normalizeFavorite(item, index = 0) {
-    if (!item || (item.type !== 'player' && item.type !== 'team')) return null;
+    if (!item || !FAVORITE_TYPES.includes(String(item.type || ''))) return null;
     const type = String(item.type);
     const title = cleanTitle(item.title || item.name);
     const url = normalizeUrl(item.url);
@@ -204,7 +205,7 @@
 
   async function deleteFavorites(userId, list) {
     const sb = getClient();
-    for (const type of ['player', 'team']) {
+    for (const type of FAVORITE_TYPES) {
       const keys = list.filter(item => item.type === type).map(item => item.entityKey);
       if (!keys.length) continue;
       const result = await sb
