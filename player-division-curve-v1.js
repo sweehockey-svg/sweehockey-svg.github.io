@@ -385,12 +385,10 @@
   });
 
   window.SEH_REFRESH_MY_DIVISION_JOURNEY = () => {
-    myLoadToken += 1;
     const host = document.getElementById(MY_ID);
-    if (host) {
-      delete host.dataset.loadingKey;
-      host.dataset.ready = '0';
-    }
+    if (host?.dataset.loadingKey) return;
+    myLoadToken += 1;
+    if (host) host.dataset.ready = '0';
     schedule();
   };
 
