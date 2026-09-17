@@ -1,0 +1,235 @@
+(() => {
+  'use strict';
+
+  const ROOT_ID = 'seh-my-ehockey';
+  const PROFILE_KEY = 'seh_app_my_profile_v1';
+  const HOST_ID = 'seh-my-teammates';
+  const LIMIT = 5;
+
+  let client = null;
+  let timer = 0;
+  let loadToken = 0;
+  let loadedKey = '';
+
+  function isWebApp() {
+    return Boolean(
+      window.__SEH_WEB_APP__ ||
+      document.documentElement.classList.contains('seh-web-app') ||
+      new URLSearchParams(location.search).get('webapp') === '1' ||
+      window.matchMedia?.('(display-mode: standalone)')?.matches
+    );
+  }
+
+  function cfg() {
+    return window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
+  }
+
+  function getClient() {
+    if (window.__SEH_NATIVE_SUPABASE_CLIENT__) return window.__SEH_NATIVE_SUPABASE_CLIENT__;
+    if (client) return client;
+    const config = cfg();
+    const url = String(config.supabaseUrl || config.SUPABASE_URL || '').trim();
+    const key = String(config.supabasePublishableKey || config.supabaseAnonKey || config.SUPABASE_ANON_KEY || config.SUPABASE_PUBLISHABLE_KEY || '').trim();
+    if (!window.supabase?.createClient || !url || !key) return null;
+    client = window.supabase.createClient(url, key);
+    return client;
+  }
+
+  function esc(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function fmt(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, Math.round(number)).toLocaleString('sv-SE') : '0';
+  }
+
+  function initials(name) {
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return `${parts[0][0] || ''}${parts[parts.length - 1][0] || ''}`.toUpperCase();
+  }
+
+  function localPlayerKey() {
+    try {
+      const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null');
+      return String(profile?.playerKey || profile?.player_key || profile?.key || '').trim();
+    } catch (_) {
+      return '';
+    }
+  }
+
+  async function resolvePlayerKey() {
+    const local = localPlayerKey();
+    if (local) return local;
+    const sb = getClient();
+    if (!sb) return '';
+    const result = await sb.rpc('seh_get_my_player_account');
+    if (result.error) throw result.error;
+    const row = Array.isArray(result.data) ? (result.data[0] || {}) : (result.data || {});
+    return String(row?.status || '') === 'approved' ? String(row?.player_key || '').trim() : '';
+  }
+
+  function ensureHost(root) {
+    if (!root) return null;
+    const preferredAnchor = root.querySelector('#seh-my-division-journey')
+      || root.querySelector('#seh-my-career-milestones')
+      || root.querySelector('.seh-me-career-section');
+    if (!preferredAnchor) return null;
+
+    let host = root.querySelector(`#${HOST_ID}`);
+    if (!host) {
+      host = document.createElement('section');
+      host.id = HOST_ID;
+      host.className = 'seh-me-section seh-me-teammates';
+      host.setAttribute('aria-label', 'Spelat mest med');
+      host.dataset.ready = '0';
+      host.dataset.loading = '0';
+      host.innerHTML = '<div class="seh-me-teammates-loading">Hämtar lagkamrater…</div>';
+    }
+
+    if (preferredAnchor.nextElementSibling !== host) {
+      preferredAnchor.insertAdjacentElement('afterend', host);
+    }
+    return host;
+  }
+
+  function rowMarkup(row, index) {
+    const name = String(row?.display_gamertag || '').trim() || 'Spelare';
+    const key = String(row?.teammate_key || '').trim();
+    const image = String(row?.player_image || '').trim();
+    const sharedGames = fmt(row?.shared_games);
+    const sharedTournaments = fmt(row?.shared_tournaments);
+    const latestTeam = String(row?.latest_shared_team || '').trim();
+    const href = key ? `/#/spelare/${encodeURIComponent(key)}` : '#';
+    const avatar = image
+      ? `<img src="${esc(image)}" alt="${esc(name)}" loading="lazy">`
+      : `<span>${esc(initials(name))}</span>`;
+
+    return `<a class="seh-me-teammate${index === 0 ? ' is-top' : ''}" href="${esc(href)}" data-me-teammate-link>
+      <b class="seh-me-teammate-rank">${index + 1}</b>
+      <div class="seh-me-teammate-avatar">${avatar}</div>
+      <div class="seh-me-teammate-copy">
+        <strong>${esc(name)}</strong>
+        <span>${sharedGames} matcher · ${sharedTournaments} ${Number(row?.shared_tournaments) === 1 ? 'turnering' : 'turneringar'}</span>
+        ${latestTeam ? `<small>Senast ihop: ${esc(latestTeam)}</small>` : ''}
+      </div>
+      <i>›</i>
+    </a>`;
+  }
+
+  function render(host, rows) {
+    host.innerHTML = `<div class="seh-me-section-head seh-me-teammates-head">
+        <div><small>LAGKAMRATER</small><h3>Spelat mest med</h3></div>
+        <span>Topp ${rows.length}</span>
+      </div>
+      <div class="seh-me-teammates-list">${rows.map(rowMarkup).join('')}</div>
+      <p class="seh-me-teammates-note">Matchantalet bygger på överlappande registrerade matcher i samma lag och turneringsfas.</p>`;
+    host.dataset.ready = '1';
+  }
+
+  async function load(force = false) {
+    if (!isWebApp()) return;
+    const root = document.getElementById(ROOT_ID);
+    if (!root?.classList.contains('show')) return;
+    const host = ensureHost(root);
+    if (!host || host.dataset.loading === '1') return;
+
+    let playerKey = '';
+    try {
+      playerKey = await resolvePlayerKey();
+    } catch (error) {
+      console.warn('[Svensk eHockey] Kunde inte lösa spelarprofil för lagkamrater', error);
+    }
+    if (!host.isConnected) return;
+    if (!playerKey) {
+      host.remove();
+      return;
+    }
+    if (!force && loadedKey === playerKey && host.dataset.ready === '1') return;
+
+    const token = ++loadToken;
+    host.dataset.loading = '1';
+    host.dataset.ready = '0';
+    host.innerHTML = '<div class="seh-me-teammates-loading">Hämtar lagkamrater…</div>';
+
+    try {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase saknas');
+      const result = await sb.rpc('seh_get_player_teammates', {
+        p_player_key: playerKey,
+        p_limit: LIMIT
+      });
+      if (token !== loadToken || !host.isConnected) return;
+      if (result.error) throw result.error;
+
+      const rows = Array.isArray(result.data) ? result.data.filter(row => Number(row?.shared_games) > 0) : [];
+      if (!rows.length) {
+        host.remove();
+        return;
+      }
+
+      render(host, rows);
+      loadedKey = playerKey;
+    } catch (error) {
+      console.warn('[Svensk eHockey] Spelat mest med kunde inte laddas', error);
+      if (token !== loadToken || !host.isConnected) return;
+      host.innerHTML = '<div class="seh-me-teammates-loading">Lagkamraterna kunde inte laddas just nu.</div>';
+      host.dataset.ready = '0';
+    } finally {
+      if (host.isConnected) host.dataset.loading = '0';
+    }
+  }
+
+  function schedule(delay = 90, force = false) {
+    clearTimeout(timer);
+    timer = window.setTimeout(() => load(force), delay);
+  }
+
+  const observer = new MutationObserver(mutations => {
+    if (!isWebApp()) return;
+    const root = document.getElementById(ROOT_ID);
+    if (!root?.classList.contains('show')) return;
+    const relevant = mutations.some(mutation => {
+      const target = mutation.target?.nodeType === 1 ? mutation.target : mutation.target?.parentElement;
+      return !target?.closest?.(`#${HOST_ID}`);
+    });
+    if (relevant) schedule(100);
+  });
+
+  document.addEventListener('click', event => {
+    if (event.target.closest?.('[data-me-teammate-link]')) {
+      document.getElementById(ROOT_ID)?.classList.remove('show');
+      document.body.classList.remove('seh-my-ehockey-open');
+    }
+  }, true);
+
+  window.addEventListener('storage', event => {
+    if (event.key === PROFILE_KEY) {
+      loadedKey = '';
+      loadToken += 1;
+      schedule(80, true);
+    }
+  });
+
+  window.SEH_REFRESH_MY_TEAMMATES = () => {
+    loadedKey = '';
+    loadToken += 1;
+    schedule(20, true);
+  };
+
+  function start() {
+    if (!isWebApp()) return;
+    observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    schedule(300);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
