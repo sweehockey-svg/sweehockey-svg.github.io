@@ -103,7 +103,7 @@
       <div class="seh-for-you__head"><div><small>PERSONLIGT</small><h2>För dig</h2></div></div>
       <div class="seh-for-you__welcome">
         <div class="seh-for-you__welcome-icon">◎</div>
-        <div><strong>Gör webbappen personlig</strong><span>Logga in med Discord för att få din spelarprofil, ditt lag och det senaste direkt på Hem.</span></div>
+        <div><strong>Gör webbappen personlig</strong><span>Logga in med Discord för att få din spelarprofil, dina favoriter och det senaste direkt på Hem.</span></div>
         <button type="button" data-fy-action="profile">Logga in</button>
       </div>`;
   }
@@ -114,7 +114,7 @@
     const title = status === 'pending' ? 'Spelarkopplingen väntar' : 'Koppla din spelarprofil';
     const text = status === 'pending'
       ? 'När kopplingen har godkänts visas ditt personliga flöde här automatiskt.'
-      : 'Koppla ditt befintliga spelarkort så kan För dig följa din profil och ditt lag.';
+      : 'Koppla ditt befintliga spelarkort så kan För dig följa din profil, dina favoriter och aktuella tävlingar.';
     root.dataset.ready = '1';
     root.innerHTML = `
       <div class="seh-for-you__head"><div><small>PERSONLIGT</small><h2>För dig</h2></div></div>
@@ -152,40 +152,53 @@
     return {
       building: {
         phase,
-        teamKicker: 'DITT LAG', missingTitle: 'Inte i lagbygget ännu', missingText: 'Öppna aktuella svenska lagbyggen', missingAction: 'builds', teamSubtitle: 'Aktuellt lagbygge',
-        secondKicker: 'FREE AGENTS', secondTitle: '', secondText: 'Se spelare som söker lag', secondAction: 'fa',
         feedTitle: 'Senaste för dig', feedLink: 'Alla lagbyggen →', feedAction: 'builds', shortcutLabel: 'Lagbygge', shortcutAction: 'builds',
-        emptyTeam: 'Nya IN/UT och rekryteringsposter visas här automatiskt.', emptyNoTeam: 'När du går med i ett aktuellt ECL 27-lag visas lagflödet här.'
+        emptyTeam: 'Nya IN/UT och rekryteringsposter i ECL-lagbygget visas här.', emptyNoTeam: 'Personliga laghändelser visas här när vi har en säker koppling till en aktuell tävling.'
       },
       regular: {
         phase,
-        teamKicker: 'DITT ECL-LAG', missingTitle: 'ECL-lag ej kopplat', missingText: 'Öppna ECL 27', missingAction: 'competition', teamSubtitle: 'Grundserie',
-        secondKicker: 'ECL 27', secondTitle: 'Grundserie', secondText: 'Matcher, tabell och statistik', secondAction: 'competition',
         feedTitle: 'Senaste för dig', feedLink: 'Öppna ECL 27 →', feedAction: 'competition', shortcutLabel: 'ECL 27', shortcutAction: 'competition',
-        emptyTeam: 'Matcher, resultat och laghändelser visas här när datan finns.', emptyNoTeam: 'Öppna ECL 27 för matcher, tabell och statistik.'
+        emptyTeam: 'Matcher, resultat och laghändelser visas här när datan finns.', emptyNoTeam: 'Öppna tävlingarna för matcher, tabell och statistik.'
       },
       playoffs: {
         phase,
-        teamKicker: 'DITT ECL-LAG', missingTitle: 'ECL-lag ej kopplat', missingText: 'Öppna slutspelet', missingAction: 'competition', teamSubtitle: 'Slutspel',
-        secondKicker: 'ECL 27', secondTitle: 'Slutspel', secondText: 'Serier, matcher och resultat', secondAction: 'competition',
         feedTitle: 'Slutspel för dig', feedLink: 'Öppna slutspelet →', feedAction: 'competition', shortcutLabel: 'Slutspel', shortcutAction: 'competition',
-        emptyTeam: 'Slutspelsmatcher och serieresultat visas här när datan finns.', emptyNoTeam: 'Öppna ECL 27-slutspelet.'
+        emptyTeam: 'Slutspelsmatcher och serieresultat visas här när datan finns.', emptyNoTeam: 'Öppna tävlingarna för aktuellt slutspel.'
       },
       finished: {
         phase,
-        teamKicker: 'DIN ECL-SÄSONG', missingTitle: 'Ingen ECL 27-lagkoppling', missingText: 'Öppna säsongen', missingAction: 'competition', teamSubtitle: 'Slutresultat',
-        secondKicker: 'ECL 27', secondTitle: 'Säsongen avslutad', secondText: 'Resultat och slutstatistik', secondAction: 'competition',
         feedTitle: 'Säsongen i korthet', feedLink: 'Öppna ECL 27 →', feedAction: 'competition', shortcutLabel: 'ECL 27', shortcutAction: 'competition',
-        emptyTeam: 'Säsongsresultat och slutstatistik visas här.', emptyNoTeam: 'Öppna ECL 27 och se slutresultatet.'
+        emptyTeam: 'Säsongsresultat och slutstatistik visas här.', emptyNoTeam: 'Öppna tävlingarna och se slutresultaten.'
       },
       offseason: {
         phase,
-        teamKicker: 'SENASTE ECL-LAG', missingTitle: 'Mellan ECL-säsonger', missingText: 'Se tävlingsarkivet', missingAction: 'competitions', teamSubtitle: 'Senaste säsong',
-        secondKicker: 'ECL', secondTitle: 'Mellan säsonger', secondText: 'Nyheter, historik och kommande tävlingar', secondAction: 'competitions',
         feedTitle: 'För dig just nu', feedLink: 'Tävlingar →', feedAction: 'competitions', shortcutLabel: 'Tävlingar', shortcutAction: 'competitions',
-        emptyTeam: 'När nästa lagbygge öppnar byter den här ytan automatiskt.', emptyNoTeam: 'När nästa ECL-period öppnar anpassas den här ytan automatiskt.'
+        emptyTeam: 'När nästa tävling blir aktuell anpassas den här ytan automatiskt.', emptyNoTeam: 'När nästa tävling blir aktuell anpassas den här ytan automatiskt.'
       }
     }[phase];
+  }
+
+  function currentCompetitionFocus(competitionState) {
+    const now = new Date();
+    const sclStart = new Date('2026-10-01T00:00:00+02:00');
+    const sclEnd = new Date('2026-11-16T00:00:00+01:00');
+    if (now < sclEnd) {
+      const beforeStart = now < sclStart;
+      return {
+        kicker: 'AKTUELLT',
+        title: 'SCL 27',
+        text: beforeStart ? 'Start 1 oktober · närmast på tur' : 'Pågår · följ tävlingen',
+        action: 'competitions',
+        route: '#/ecl'
+      };
+    }
+    return {
+      kicker: 'AKTUELL TÄVLING',
+      title: String(competitionState?.display_name || 'Tävlingar'),
+      text: 'Öppna aktuell tävling',
+      action: 'competition',
+      route: String(competitionState?.route_hash || DEFAULT_ROUTE)
+    };
   }
 
   function eventText(event, teamName) {
@@ -206,29 +219,30 @@
 
   function renderPersonal(root, data) {
     lastData = data;
-    const { account, player, project, events, recruitment, activeFaCount, competitionState } = data;
+    const { account, player, project, events, recruitment, competitionState } = data;
     const meta = phaseMeta(competitionState?.phase);
+    const focus = currentCompetitionFocus(competitionState);
     const routeHash = String(competitionState?.route_hash || DEFAULT_ROUTE);
     const playerName = String(player?.display_gamertag || account?.playerName || account?.playerKey || 'Din profil').trim();
     const teamName = String(project?.name || '').trim();
     const division = String(project?.division || '').trim();
     const historicalTeam = String(player?.latest_team || player?.latest_ecl_team || '').trim();
     const profileMeta = teamName
-      ? [teamName, division].filter(Boolean).join(' · ')
-      : (meta.phase === 'offseason' && historicalTeam ? historicalTeam : 'Kopplad spelare');
+      ? `${teamName} · ECL 27-lagbygge`
+      : (historicalTeam ? `Senaste lag: ${historicalTeam}` : 'Kopplad spelare');
     const sourceTeamId = Number(project?.source_team_id) || 0;
 
     const feed = [];
-    if (meta.phase === 'building' && recruitment?.text) {
+    if (meta.phase === 'building' && teamName && recruitment?.text) {
       feed.push({ marker: '!', tone: 'recruit', title: `${teamName} söker spelare`, text: String(recruitment.text).trim(), time: relativeTime(recruitment.posted_at) });
     }
     for (const event of events || []) {
       if (feed.length >= 3) break;
-      const item = eventText(event, teamName || String(event?.to_team || event?.from_team || 'ditt lag'));
+      const item = eventText(event, teamName || String(event?.to_team || event?.from_team || 'laget'));
       feed.push({ ...item, time: relativeTime(event?.occurred_at) });
     }
     if (!feed.length) {
-      feed.push({ marker: '✓', tone: '', title: teamName ? `${teamName} är kopplat` : 'Din profil är kopplad', text: teamName ? meta.emptyTeam : meta.emptyNoTeam, time: '' });
+      feed.push({ marker: '✓', tone: '', title: teamName ? `${teamName} i ECL 27-lagbygget` : 'Din profil är kopplad', text: teamName ? meta.emptyTeam : meta.emptyNoTeam, time: '' });
     }
 
     const feedHtml = feed.map(item => `
@@ -236,11 +250,9 @@
         <b>${esc(item.marker)}</b><div><strong>${esc(item.title)}</strong><span>${esc(item.text)}</span></div><time>${esc(item.time)}</time>
       </article>`).join('');
 
-    const teamSubtitle = meta.phase === 'building' ? (division || meta.teamSubtitle) : [division, meta.teamSubtitle].filter(Boolean).join(' · ');
     const teamCard = teamName
-      ? `<button type="button" class="seh-for-you__mini" data-fy-action="team" data-team-id="${sourceTeamId}" data-route="${esc(routeHash)}"><small>${esc(meta.teamKicker)}</small><strong>${esc(teamName)}</strong><span>${esc(teamSubtitle)}</span></button>`
-      : `<button type="button" class="seh-for-you__mini" data-fy-action="${esc(meta.missingAction)}" data-route="${esc(routeHash)}"><small>${esc(meta.teamKicker)}</small><strong>${esc(meta.missingTitle)}</strong><span>${esc(meta.missingText)}</span></button>`;
-    const secondTitle = meta.phase === 'building' ? `${Number(activeFaCount) || 0} aktiva` : meta.secondTitle;
+      ? `<button type="button" class="seh-for-you__mini" data-fy-action="team" data-team-id="${sourceTeamId}" data-route="${esc(routeHash)}"><small>ECL 27 · LAGBYGGE</small><strong>${esc(teamName)}</strong><span>${esc(division || 'Aktuell lagbyggedata')}</span></button>`
+      : `<button type="button" class="seh-for-you__mini" data-fy-action="competitions"><small>DINA TÄVLINGAR</small><strong>SCL 27 närmast</strong><span>Vi visar bara lag när kopplingen är säker</span></button>`;
 
     root.dataset.ready = '1';
     root.innerHTML = `
@@ -252,13 +264,13 @@
       </div>
       <div class="seh-for-you__mini-grid">
         ${teamCard}
-        <button type="button" class="seh-for-you__mini" data-fy-action="${esc(meta.secondAction)}" data-route="${esc(routeHash)}"><small>${esc(meta.secondKicker)}</small><strong>${esc(secondTitle)}</strong><span>${esc(meta.secondText)}</span></button>
+        <button type="button" class="seh-for-you__mini" data-fy-action="${esc(focus.action)}" data-route="${esc(focus.route)}"><small>${esc(focus.kicker)}</small><strong>${esc(focus.title)}</strong><span>${esc(focus.text)}</span></button>
       </div>
       <div class="seh-for-you__feed-head"><strong>${esc(meta.feedTitle)}</strong><button type="button" data-fy-action="${esc(meta.feedAction)}" data-route="${esc(routeHash)}">${esc(meta.feedLink)}</button></div>
       <div class="seh-for-you__feed">${feedHtml}</div>
       <div class="seh-for-you__shortcuts">
         <button type="button" data-fy-action="profile">Min profil</button>
-        <button type="button" data-fy-action="team" data-team-id="${sourceTeamId}" data-route="${esc(routeHash)}" ${teamName ? '' : 'disabled'}>Mitt lag</button>
+        <button type="button" data-fy-action="team" data-team-id="${sourceTeamId}" data-route="${esc(routeHash)}" ${teamName ? '' : 'disabled'}>Mitt ECL-lag</button>
         <button type="button" data-fy-action="${esc(meta.shortcutAction)}" data-route="${esc(routeHash)}">${esc(meta.shortcutLabel)}</button>
         <button type="button" data-fy-action="favorites">Favoriter</button>
       </div>`;
@@ -331,11 +343,8 @@
         const recruitmentQuery = currentProjectId && building
           ? sb.from('ecl27_recruitment_posts').select('id,posted_at,text,is_active').eq('team_project_id', currentProjectId).eq('is_active', true).order('posted_at', { ascending: false }).limit(1)
           : Promise.resolve({ data: [], error: null });
-        const faQuery = building
-          ? sb.from('v_ehockey_free_agents_public').select('player_key').limit(300)
-          : Promise.resolve({ data: [], error: null });
 
-        const [projectResult, eventsResult, recruitmentResult, faResult] = await Promise.all([projectQuery, eventsQuery, recruitmentQuery, faQuery]);
+        const [projectResult, eventsResult, recruitmentResult] = await Promise.all([projectQuery, eventsQuery, recruitmentQuery]);
         if (token !== renderToken) return;
 
         const data = {
@@ -344,8 +353,7 @@
           competitionState,
           project: projectResult.error ? null : (projectResult.data?.[0] || null),
           events: eventsResult.error ? [] : (eventsResult.data || []),
-          recruitment: recruitmentResult.error ? null : (recruitmentResult.data?.[0] || null),
-          activeFaCount: faResult.error ? 0 : (faResult.data || []).length
+          recruitment: recruitmentResult.error ? null : (recruitmentResult.data?.[0] || null)
         };
 
         renderPersonal(root, data);
