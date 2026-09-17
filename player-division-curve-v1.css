@@ -1,0 +1,50 @@
+/* Spelare: ECL-divisionsresa på publik profil + kompakt variant i Mitt eHockey. */
+.seh-player-division-card{
+  margin-top:18px;
+  padding:18px;
+  border:1px solid rgba(80,227,220,.16);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(8,17,23,.9),rgba(3,8,12,.97));
+  box-shadow:inset 0 1px rgba(255,255,255,.025),0 14px 34px rgba(0,0,0,.16);
+  overflow:hidden;
+}
+.seh-div-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:12px}
+.seh-div-head small{display:block;margin-bottom:4px;color:#50e3dc;font-size:.68rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.seh-div-head h2{margin:0;color:#f5f2e9;font-size:clamp(1.55rem,2.8vw,2.35rem);line-height:1;letter-spacing:-.03em}
+.seh-div-head p{margin:7px 0 0;color:#8f9aa5;font-size:.76rem;line-height:1.45}
+.seh-div-head>span{flex:0 0 auto;margin-top:2px;padding:5px 8px;border:1px solid rgba(214,177,95,.2);border-radius:999px;color:#d7bd79;background:rgba(214,177,95,.06);font-size:.65rem;font-weight:850}
+.seh-div-chart-scroll{overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:rgba(80,227,220,.28) transparent}
+.seh-div-chart-scroll::-webkit-scrollbar{height:5px}.seh-div-chart-scroll::-webkit-scrollbar-thumb{border-radius:999px;background:rgba(80,227,220,.28)}
+.seh-div-chart{display:block;width:100%;height:auto}
+.seh-div-grid{stroke:rgba(160,177,187,.13);stroke-width:1;stroke-dasharray:4 6}
+.seh-div-axis{fill:#7d8992;font-size:10px;font-weight:900;letter-spacing:.08em}
+.seh-div-line{fill:none;stroke:#50e3dc;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(80,227,220,.18))}
+.seh-div-point circle{fill:#071016;stroke:#50e3dc;stroke-width:4;transition:r .16s ease,stroke .16s ease,fill .16s ease}
+.seh-div-point.is-latest circle{fill:#171507;stroke:#ffd000}
+.seh-div-point:hover circle{r:9;fill:#0c2227}
+.seh-div-season{fill:#aeb9c0;font-size:9.5px;font-weight:850;letter-spacing:.015em}
+.seh-div-point.is-latest .seh-div-season{fill:#ffd000}
+.seh-div-footer{display:flex;justify-content:space-between;gap:18px;padding:10px 3px 0;border-top:1px solid rgba(255,255,255,.045);color:rgba(198,209,216,.72);font-size:.66rem;font-weight:800}
+.seh-div-footer span:last-child{color:#ffd000;text-align:right}
+.seh-div-loading,.seh-div-empty{padding:24px 12px;color:#7f8993;text-align:center;font-size:.76rem}
+
+.seh-my-division-section{overflow:hidden}
+.seh-my-div-body{padding:0 11px 12px}
+.seh-my-division-section .seh-div-chart-scroll{border:1px solid rgba(80,227,220,.11);border-radius:13px;background:#050910}
+.seh-my-division-section .seh-div-chart{width:auto;max-width:none}
+.seh-my-division-section .seh-div-axis{font-size:9px}
+.seh-my-division-section .seh-div-season{font-size:8.5px}
+.seh-my-division-section .seh-div-line{stroke-width:3}
+.seh-my-division-section .seh-div-point circle{stroke-width:3}
+.seh-my-division-section .seh-div-footer{margin-top:7px;padding:8px 2px 0;font-size:8.5px}
+.seh-div-loading--my,.seh-div-empty--my{padding:20px 12px}
+
+@media(max-width:700px){
+  .seh-player-division-card{margin-top:14px;padding:14px 11px;border-radius:16px}
+  .seh-div-head{gap:10px}
+  .seh-div-head h2{font-size:1.5rem}
+  .seh-div-head p{font-size:.7rem}
+  .seh-div-head>span{font-size:.6rem}
+  .seh-div-chart{width:auto;max-width:none}
+  .seh-div-footer{font-size:.6rem}
+}
