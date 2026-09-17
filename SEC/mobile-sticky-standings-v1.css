@@ -1,8 +1,8 @@
 /* SEC mobile standings: keep team identity visible while stats scroll horizontally. */
 @media (max-width: 760px) {
   .standing {
-    --sec-sticky-rank-width: 42px;
-    --sec-sticky-team-width: min(54vw, 220px);
+    --sec-sticky-rank-width: 36px;
+    --sec-sticky-team-width: min(48vw, 190px);
     position: relative;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -48,7 +48,10 @@
     width: var(--sec-sticky-rank-width);
     min-width: var(--sec-sticky-rank-width);
     max-width: var(--sec-sticky-rank-width);
+    padding-left: 4px;
+    padding-right: 4px;
     background: #11171e;
+    text-align: center;
   }
 
   .standing table.sortableStanding th:nth-child(2),
@@ -60,6 +63,8 @@
     min-width: var(--sec-sticky-team-width);
     max-width: var(--sec-sticky-team-width);
     overflow: hidden;
+    padding-left: 5px;
+    padding-right: 6px;
     background: #11171e;
     text-align: left;
   }
@@ -78,9 +83,9 @@
     content: "";
     position: absolute;
     top: 0;
-    right: -10px;
+    right: -8px;
     bottom: 0;
-    width: 10px;
+    width: 8px;
     pointer-events: none;
     background: linear-gradient(90deg, rgba(0, 0, 0, .28), rgba(0, 0, 0, 0));
   }
@@ -90,6 +95,8 @@
   .standing th:has(.teamIdentity) .teamIdentity {
     min-width: 0;
     max-width: 100%;
+    gap: 6px;
+    font-size: 14px;
   }
 
   .standing td:has(.teamIdentity) .teamIdentity > :last-child {
@@ -97,6 +104,22 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .standing td:has(.teamIdentity) .teamLogoInline,
+  .standing td:has(.teamIdentity) .teamLogoTiny,
+  .standing td:has(.teamIdentity) .teamLogoMicro {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border-radius: 8px;
+  }
+
+  /* Slightly denser rows on mobile, including the scrolling stats. */
+  .standing th,
+  .standing td {
+    padding-top: 7px;
+    padding-bottom: 7px;
   }
 
   /* Cut-line color must continue through the frozen cells. */
@@ -108,5 +131,33 @@
   .standing tr.cutTwo td:first-child,
   .standing tr.cutTwo td:nth-child(2) {
     border-bottom-color: var(--ice);
+  }
+}
+
+/* Extra-tight layout for narrow phones. */
+@media (max-width: 390px) {
+  .standing {
+    --sec-sticky-rank-width: 30px;
+    --sec-sticky-team-width: 158px;
+  }
+
+  .standing table.sortableStanding th:nth-child(2),
+  .standing table.sortableStanding td:nth-child(2) {
+    padding-left: 3px;
+    padding-right: 4px;
+  }
+
+  .standing td:has(.teamIdentity) .teamIdentity,
+  .standing th:has(.teamIdentity) .teamIdentity {
+    gap: 5px;
+    font-size: 13px;
+  }
+
+  .standing td:has(.teamIdentity) .teamLogoInline,
+  .standing td:has(.teamIdentity) .teamLogoTiny,
+  .standing td:has(.teamIdentity) .teamLogoMicro {
+    width: 25px;
+    height: 25px;
+    flex-basis: 25px;
   }
 }
