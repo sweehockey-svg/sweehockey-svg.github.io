@@ -9681,7 +9681,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     const name=(heading?.textContent||'').replace(/\s+/g,' ').trim();
     if(!name)return;
 
-    const logo=cardImage(card);
+    const logo=sehWebAppTeamLogo(cardImage(card),name);
     const allText=(card.innerText||'').replace(/\s+/g,' ').trim();
     const statFromLabel=(label)=>{
       const re=new RegExp(label+'\\s*([\\d\\s]+)','i');
@@ -9745,7 +9745,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     if(logo){
       const img=wrap.querySelector('.seh-ct-logo');
       const watermark=wrap.querySelector('.seh-ct-watermark');
-      const canonical=`https://sweehockey-svg.github.io/teamlogos/${encodeURIComponent(name)}.png`;
+      const canonical=sehWebAppTeamLogo('',name);
 
       /*
        * V700:
@@ -10032,6 +10032,81 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
 
   window.SEH_WEBAPP_PLAYER_IMAGE_URL=sehWebAppPlayerImage;
 
+  const SEH_WEBAPP_TEAMLOGO_BASE='https://sweehockey-svg.github.io/teamlogos/';
+  const SEH_WEBAPP_TEAMLOGO_WEBP_BASE='https://sweehockey-svg.github.io/web-images/teamlogos/';
+
+  function sehWebAppTeamLogoFile(value,teamName=''){
+    const raw=String(value||'').trim();
+    let file='';
+
+    if(raw){
+      const match=raw.match(/(?:^|\/)teamlogos\/([^/?#]+\.(?:png|jpe?g|webp))(?:[?#].*)?$/i);
+      if(match)file=match[1];
+      else if(/^[^/?#]+\.(?:png|jpe?g|webp)$/i.test(raw))file=raw;
+    }
+
+    if(!file && teamName)file=String(teamName).trim()+'.png';
+    if(!file)return '';
+
+    try{file=decodeURIComponent(file);}catch(_){}
+    const manifest=(window.SEH_TEAM_LOGO_FILES&&typeof window.SEH_TEAM_LOGO_FILES==='object')
+      ? window.SEH_TEAM_LOGO_FILES
+      : {};
+    const key=file.normalize('NFC').toLocaleLowerCase('sv-SE');
+    return String(manifest[key]||file).trim();
+  }
+
+  function sehWebAppTeamLogoOriginal(value='',teamName=''){
+    const raw=String(value||'').trim();
+    const file=sehWebAppTeamLogoFile(raw,teamName);
+    if(file)return SEH_WEBAPP_TEAMLOGO_BASE+encodeURIComponent(file);
+    if(/^https?:\/\//i.test(raw))return raw;
+    if(raw){
+      try{return new URL(raw,ROOT).href;}catch(_){return raw;}
+    }
+    return '';
+  }
+
+  function sehWebAppTeamLogo(value='',teamName=''){
+    const raw=String(value||'').trim();
+    const file=sehWebAppTeamLogoFile(raw,teamName);
+
+    if(file){
+      const manifest=(window.SEH_TEAM_LOGO_FILES&&typeof window.SEH_TEAM_LOGO_FILES==='object')
+        ? window.SEH_TEAM_LOGO_FILES
+        : {};
+      const key=file.normalize('NFC').toLocaleLowerCase('sv-SE');
+      if(Object.prototype.hasOwnProperty.call(manifest,key) || /\/teamlogos\//i.test(raw) || !raw){
+        return SEH_WEBAPP_TEAMLOGO_WEBP_BASE+encodeURIComponent(file)+'.webp';
+      }
+    }
+
+    if(/^https?:\/\//i.test(raw))return raw;
+    return sehWebAppTeamLogoOriginal(raw,teamName);
+  }
+
+  function sehWebAppTeamLogoFallbackFromOptimized(value){
+    const raw=String(value||'').trim();
+    const match=raw.match(/\/web-images\/teamlogos\/([^/?#]+)\.webp(?:[?#]|$)/i);
+    if(!match)return '';
+    let file=match[1];
+    try{file=decodeURIComponent(file);}catch(_){}
+    return file?SEH_WEBAPP_TEAMLOGO_BASE+encodeURIComponent(file):'';
+  }
+
+  document.addEventListener('error',event=>{
+    const image=event.target;
+    if(!(image instanceof HTMLImageElement))return;
+    if(image.dataset.sehTeamLogoFallbackUsed==='1')return;
+    const fallback=sehWebAppTeamLogoFallbackFromOptimized(image.getAttribute('src')||image.src);
+    if(!fallback)return;
+    image.dataset.sehTeamLogoFallbackUsed='1';
+    image.src=fallback;
+    event.stopImmediatePropagation();
+  },true);
+
+  window.SEH_WEBAPP_TEAM_LOGO_URL=sehWebAppTeamLogo;
+
   function zeroPngUrl(src){
     const raw=String(src||'').trim();
     if(!raw)return ZERO_PLAYER_PNG_FALLBACK;
@@ -10101,7 +10176,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
 
   function zeroTeamLogoUrl(teamName){
     const name=String(teamName||'').trim();
-    return name?`https://sweehockey-svg.github.io/teamlogos/${encodeURIComponent(name)}.png`:'';
+    return name?sehWebAppTeamLogo('',name):'';
   }
 
   function zeroTeamInitials(teamName){
@@ -10361,7 +10436,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
         games:Number(data?.games)||0,
         rankNo:Number(rank?.overall_rank)||0,
         rankPoints:Number(rank?.ranking_points)||0,
-        teamLogo:String(teamLogo||''),
+        teamLogo:sehWebAppTeamLogo(teamLogo,data?.latestTeam||''),
         savedAt:Date.now()
       }));
     }catch(_){}
@@ -11077,12 +11152,8 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
 
   function sehNativeTeamDirectoryLogo(row){
     const raw=String(row?.logo_url||row?.logo_path||'').trim();
-    if(/^https?:/i.test(raw))return raw;
-    if(raw){
-      try{return new URL(raw.replace(/^\/+/,''),'https://sweehockey-svg.github.io/').href;}catch(_){}
-    }
     const name=String(row?.current_name||'').trim();
-    return name?`https://sweehockey-svg.github.io/teamlogos/${encodeURIComponent(name)}.png`:'';
+    return sehWebAppTeamLogo(raw,name);
   }
 
   function sehNativeTeamDirectoryTopPhoto(row){
@@ -11186,7 +11257,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     if(logo){
       const image=card.querySelector('.seh-ct-logo');
       const watermark=card.querySelector('.seh-ct-watermark');
-      const canonical=`https://sweehockey-svg.github.io/teamlogos/${encodeURIComponent(name)}.png`;
+      const canonical=sehWebAppTeamLogo('',name);
       let canonicalTried=false;
       const fail=img=>{
         if(!canonicalTried&&img.src!==canonical){canonicalTried=true;img.src=canonical;return;}
@@ -12067,17 +12138,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
   function sehVerifiedTeamLogoUrl(displayName,club=null){
     const canonicalName=String(club?.current_name||displayName||'').trim();
     const rawLogo=String(club?.logo_url||'').trim();
-
-    if(rawLogo){
-      try{
-        if(/^https?:\/\//i.test(rawLogo))return rawLogo;
-        return new URL(rawLogo.replace(/^\/+/,''),'https://sweehockey-svg.github.io/').href;
-      }catch(_){}
-    }
-
-    return canonicalName
-      ? `https://sweehockey-svg.github.io/teamlogos/${encodeURIComponent(canonicalName)}.png`
-      : '';
+    return sehWebAppTeamLogo(rawLogo,canonicalName);
   }
 
   function sehHistoryCompetitionCode(row){
@@ -13721,8 +13782,8 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
           logo.className='logo';
           logo.alt=title;
 
-          const sourceLogo=String(img.currentSrc||img.src||'').trim();
-          const remoteLogo=`https://sweehockey-svg.github.io/teamlogos/${encodeURIComponent(title)}.png`;
+          const sourceLogo=sehWebAppTeamLogo(String(img.currentSrc||img.src||'').trim(),title);
+          const remoteLogo=sehWebAppTeamLogo('',title);
           let triedRemote=false;
 
           // V684: source-row images can point at a local WebView path that fails
@@ -15404,7 +15465,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
         img.replaceWith(fallbackEl);
       };
 
-      const directLogo=`https://sweehockey-svg.github.io/teamlogos/${encodeURIComponent(teamName)}.png`;
+      const directLogo=sehWebAppTeamLogo('',teamName);
       img.onerror=()=>{
         const fallback=historyLogoFor(teamName);
         if(fallback && img.getAttribute('src')!==fallback){
@@ -16301,12 +16362,8 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
 
   function sehTeamDirectLogo(team){
     const raw=String(team?.logo_url||team?.logo_path||'').trim();
-    if(/^https?:/i.test(raw))return raw;
-    if(raw){
-      try{return new URL(raw.replace(/^\/+/,''),'https://sweehockey-svg.github.io/').href;}catch(_){}
-    }
     const name=String(team?.current_name||'').trim();
-    return name?`https://sweehockey-svg.github.io/teamlogos/${encodeURIComponent(name)}.png`:'';
+    return sehWebAppTeamLogo(raw,name);
   }
 
   function sehTeamDirectPlayerImage(player){
@@ -16805,8 +16862,10 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     );
 
     let logoUrl=logoSource?String(logoSource.currentSrc||logoSource.getAttribute('src')||'').trim():'';
-    const canonicalLogo=`https://sweehockey-svg.github.io/teamlogos/${encodeURIComponent(teamName)}.png`;
+    const canonicalLogo=sehWebAppTeamLogo('',teamName);
+    const canonicalLogoOriginal=sehWebAppTeamLogoOriginal('',teamName);
     if(!logoUrl||/^data:/i.test(logoUrl))logoUrl=canonicalLogo;
+    else logoUrl=sehWebAppTeamLogo(logoUrl,teamName);
 
     const shell=document.createElement('section');
     shell.className='seh-team-native-shell';
@@ -16843,7 +16902,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       if(!img)return;
       let triedCanonical=false;
       img.addEventListener('error',()=>{
-        if(!triedCanonical&&img.src!==canonicalLogo){triedCanonical=true;img.src=canonicalLogo;return;}
+        if(!triedCanonical&&canonicalLogoOriginal&&img.src!==canonicalLogoOriginal){triedCanonical=true;img.src=canonicalLogoOriginal;return;}
         if(img.classList.contains('seh-team-native-mainlogo')){
           const fallback=document.createElement('div');
           fallback.className='seh-team-native-logo-fallback';
