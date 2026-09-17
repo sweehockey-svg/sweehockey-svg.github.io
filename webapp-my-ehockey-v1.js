@@ -87,7 +87,11 @@
   }
 
   function profilePhoto(profile) {
-    return String(profile?.image || profile?.photo || profile?.playerImage || profile?.player_image || profile?.avatar || '').trim();
+    const raw = String(profile?.image || profile?.photo || profile?.playerImage || profile?.player_image || profile?.avatar || '').trim();
+    try {
+      if (typeof window.SEH_playerImageUrl === 'function') return window.SEH_playerImageUrl(raw) || raw;
+    } catch (_) {}
+    return raw;
   }
 
   function profilePlayerKey(profile) {
