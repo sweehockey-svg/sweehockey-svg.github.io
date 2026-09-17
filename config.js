@@ -97,6 +97,11 @@ window.EHOCKEY_CONFIG = {
   buildsRouteFix.src = '/webapp-for-you-builds-route-fix-v1.js?v=20260917-1';
   buildsRouteFix.defer = true;
   document.head.appendChild(buildsRouteFix);
+
+  const sclWordingFix = document.createElement('script');
+  sclWordingFix.src = '/webapp-for-you-scl-wording-v1.js?v=20260917-1';
+  sclWordingFix.defer = true;
+  document.head.appendChild(sclWordingFix);
 })();
 
 /* Webbappen: personligt Notiscenter med samma läst-status för webb och kommande Android-klient. */
