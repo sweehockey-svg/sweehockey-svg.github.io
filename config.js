@@ -32,8 +32,54 @@ window.EHOCKEY_CONFIG = {
   css.href = '/webapp-for-you-v1.css?v=20260917-1';
   document.head.appendChild(css);
 
+  const preload = document.createElement('link');
+  preload.rel = 'preload';
+  preload.as = 'script';
+  preload.href = '/webapp-for-you-v2.js?v=20260917-stable-fast-1';
+  document.head.appendChild(preload);
+
+  const isWebApp = () => Boolean(
+    window.__SEH_WEB_APP__ ||
+    document.documentElement.classList.contains('seh-web-app') ||
+    new URLSearchParams(location.search).get('webapp') === '1' ||
+    window.matchMedia?.('(display-mode: standalone)')?.matches
+  );
+
+  const ensureForYouSlot = () => {
+    if (!isWebApp()) return;
+    const page = document.querySelector('#seh-app-home .seh-app-page');
+    const grid = page?.querySelector('.seh-card-grid');
+    if (!page || !grid || page.querySelector('#seh-webapp-for-you')) return;
+
+    const root = document.createElement('section');
+    root.id = 'seh-webapp-for-you';
+    root.className = 'seh-for-you';
+    root.setAttribute('aria-label', 'För dig');
+    root.innerHTML = `
+      <div class="seh-for-you__head">
+        <div><small>PERSONLIGT</small><h2>För dig</h2></div>
+        <span class="seh-for-you__live">LIVE</span>
+      </div>
+      <div class="seh-for-you__loading"><i></i><i></i><i></i></div>`;
+    grid.insertAdjacentElement('beforebegin', root);
+  };
+
+  const observer = new MutationObserver(ensureForYouSlot);
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class']
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensureForYouSlot, { once: true });
+  } else {
+    ensureForYouSlot();
+  }
+
   const script = document.createElement('script');
-  script.src = '/webapp-for-you-v1.js?v=20260917-current-team-only-1';
-  script.defer = true;
+  script.src = '/webapp-for-you-v2.js?v=20260917-stable-fast-1';
+  script.async = false;
   document.head.appendChild(script);
 })();
