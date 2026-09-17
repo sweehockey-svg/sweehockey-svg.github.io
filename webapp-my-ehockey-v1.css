@@ -44,6 +44,32 @@
 .seh-me-section-head div small{display:block;color:#62d4cf;font-size:8px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;margin-bottom:3px}
 .seh-me-section-head h3{margin:0;color:#f1efe8;font-size:16px;line-height:1.1}
 .seh-me-section-head span{color:#828a96;font-size:9px}
+.seh-me-career-section{position:relative;background:linear-gradient(155deg,rgba(11,17,28,.98),#060910)}
+.seh-me-career-section:before{content:'';position:absolute;inset:0 0 auto;height:1px;background:linear-gradient(90deg,transparent,rgba(98,212,207,.36),rgba(214,177,95,.34),transparent);pointer-events:none}
+.seh-me-career{padding:0 12px 12px}
+.seh-me-career-summary{position:relative;display:flex;align-items:center;min-height:58px;margin-bottom:8px;padding:10px 12px;border:1px solid rgba(214,177,95,.17);border-radius:13px;background:linear-gradient(135deg,rgba(214,177,95,.075),rgba(98,212,207,.035));overflow:hidden}
+.seh-me-career-summary:after{content:'';position:absolute;width:100px;height:100px;right:-42px;top:-54px;border-radius:50%;background:radial-gradient(circle,rgba(98,212,207,.1),transparent 70%);pointer-events:none}
+.seh-me-career-summary small{display:block;margin-bottom:3px;color:#d6b15f;font-size:7.5px;font-weight:900;letter-spacing:.13em}
+.seh-me-career-summary strong{display:block;color:#f3f0e8;font-size:12px;line-height:1.25}
+.seh-me-career-summary span{display:block;margin-top:3px;color:#87919e;font-size:8.5px;line-height:1.3}
+.seh-me-career-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.seh-me-career-stat{min-width:0;min-height:63px;display:flex;flex-direction:column;justify-content:center;padding:9px 10px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:#090d15;box-sizing:border-box}
+.seh-me-career-stat strong{display:block;color:#f3f1eb;font-size:18px;line-height:1;font-weight:950;letter-spacing:-.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seh-me-career-stat span{display:block;margin-top:5px;color:#7f8995;font-size:7.5px;font-weight:800;text-transform:uppercase;letter-spacing:.055em}
+.seh-me-career-stat.gold{border-color:rgba(214,177,95,.22);background:linear-gradient(145deg,rgba(214,177,95,.08),#090d15)}
+.seh-me-career-stat.gold strong{color:#e7ca84}
+.seh-me-career-stat.cyan{border-color:rgba(98,212,207,.18);background:linear-gradient(145deg,rgba(98,212,207,.065),#090d15)}
+.seh-me-career-stat.cyan strong{color:#73dfd9}
+.seh-me-goalie-row{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:7px;margin-top:8px;padding:9px;border:1px solid rgba(98,212,207,.16);border-radius:13px;background:rgba(98,212,207,.035)}
+.seh-me-goalie-row>div{min-width:0;padding:3px 5px}
+.seh-me-goalie-row small{display:block;margin-bottom:3px;color:#62d4cf;font-size:6.8px;font-weight:900;letter-spacing:.09em}
+.seh-me-goalie-row strong{display:block;color:#e9f5f4;font-size:15px;line-height:1.1}
+.seh-me-goalie-row span{display:block;margin-top:3px;color:#7e9198;font-size:7.5px}
+.seh-me-career-note{margin:9px 2px 0;color:#66717d;font-size:7.5px;line-height:1.4;text-align:center}
+.seh-me-career-loading{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.seh-me-career-loading i{display:block;height:63px;border-radius:12px;background:linear-gradient(100deg,#090d15 20%,#111a24 40%,#090d15 60%);background-size:200% 100%;animation:sehMeCareerPulse 1.25s linear infinite}
+.seh-me-career-empty{padding:12px 14px 15px;border:1px dashed rgba(255,255,255,.08);border-radius:12px;color:#858f9b;background:#090d15;font-size:9.5px;line-height:1.45;text-align:center}
+@keyframes sehMeCareerPulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
 .seh-me-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 12px 12px}
 .seh-me-action{min-height:66px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;text-align:left;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#0b0f18;color:#f0eee8;padding:10px 11px;font:inherit;box-sizing:border-box;text-decoration:none}
 .seh-me-action strong{font-size:11px;font-weight:900}
@@ -58,4 +84,4 @@
 .seh-me-favorite i{font-style:normal;color:#d6b15f;font-size:13px}
 .seh-me-empty{padding:2px 14px 14px;color:#858d98;font-size:10px;line-height:1.45}
 .seh-me-footer-note{margin:14px 4px 0;color:#6f7782;font-size:8.5px;line-height:1.45;text-align:center}
-@media(max-width:390px){.seh-me-wrap{padding-left:10px;padding-right:10px}.seh-me-profile{grid-template-columns:70px minmax(0,1fr);gap:11px;padding:13px}.seh-me-avatar{width:70px;height:70px}.seh-me-head h1{font-size:27px}.seh-me-actions{gap:6px;padding-left:10px;padding-right:10px}.seh-me-action{padding:9px;min-height:62px}}
+@media(max-width:390px){.seh-me-wrap{padding-left:10px;padding-right:10px}.seh-me-profile{grid-template-columns:70px minmax(0,1fr);gap:11px;padding:13px}.seh-me-avatar{width:70px;height:70px}.seh-me-head h1{font-size:27px}.seh-me-career{padding-left:10px;padding-right:10px}.seh-me-career-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.seh-me-goalie-row{grid-template-columns:1fr 1fr}.seh-me-goalie-row>div:first-child{grid-column:1/-1}.seh-me-actions{gap:6px;padding-left:10px;padding-right:10px}.seh-me-action{padding:9px;min-height:62px}}
