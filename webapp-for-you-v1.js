@@ -121,6 +121,9 @@
   }
 
   function playerImage(player) {
+    const sportsGamer = String(player?.sports_gamer_player_url || '').trim();
+    const sportsGamerId = sportsGamer.match(/\/players\/(\d+)(?:\/|$|[?#])/i)?.[1];
+    if (sportsGamerId) return `/players/${sportsGamerId}.png`;
     const raw = String(player?.player_image || player?.photo || '').trim();
     return raw || PLAYER_FALLBACK;
   }
@@ -225,6 +228,18 @@
       const dashboardResult = await sb.rpc('seh_get_my_player_dashboard');
       if (!dashboardResult.error) player = asRow(dashboardResult.data)?.player || {};
 
+      // Komplettera dashboard-spelaren från samma publika directory-källa som
+      // resten av webbappen använder. Där finns bl.a. SportsGamer-URL:n som
+      // ger den lokala spelarbilden /players/{id}.png.
+      const directoryResult = await sb
+        .from('app_player_directory_cache')
+        .select('player_key,display_gamertag,player_image,sports_gamer_player_url,primary_position,latest_team,latest_season')
+        .eq('player_key', account.playerKey)
+        .limit(1);
+      if (!directoryResult.error && directoryResult.data?.[0]) {
+        player = { ...directoryResult.data[0], ...player };
+      }
+
       const playerEventsResult = await sb
         .from('ecl27_roster_events')
         .select('id,occurred_at,team_project_id,event_type,player_key,gamertag,from_team,to_team')
@@ -252,8 +267,13 @@
         if (!recruitmentResult.error) recruitment = (recruitmentResult.data || [])[0] || null;
       }
 
-      const faResult = await sb.from('ehockey_free_agents').select('id', { count: 'exact', head: true }).eq('is_active', true);
-      const activeFaCount = faResult.error ? 0 : (faResult.count || 0);
+      // Använd exakt samma publika FA-källa som Free Agents-vyn.
+      // Den filtrerar redan bort inaktiva/utgångna poster.
+      const faResult = await sb
+        .from('v_ehockey_free_agents_public')
+        .select('player_key')
+        .limit(300);
+      const activeFaCount = faResult.error ? 0 : (faResult.data || []).length;
 
       if (token !== renderToken) return;
       renderPersonal(root, { account, player, project, events, recruitment, activeFaCount });
