@@ -203,12 +203,12 @@
   }
 
   function chartMarkup(rows, compact = false) {
-    const visibleRows = compact && rows.length > 8 ? rows.slice(-8) : rows;
+    const visibleRows = rows;
     if (!visibleRows.length) return '';
 
-    const margin = { left: compact ? 50 : 62, right: 24, top: 22, bottom: compact ? 42 : 52 };
-    const step = compact ? 68 : 82;
-    const width = Math.max(compact ? 500 : 650, margin.left + margin.right + Math.max(1, visibleRows.length - 1) * step);
+    const margin = { left: compact ? 50 : 62, right: compact ? 18 : 24, top: 22, bottom: compact ? 42 : 52 };
+    const step = compact ? 48 : 82;
+    const width = Math.max(compact ? 430 : 650, margin.left + margin.right + Math.max(1, visibleRows.length - 1) * step);
     const height = compact ? 238 : 286;
     const chartHeight = height - margin.top - margin.bottom;
     const xSpan = Math.max(1, width - margin.left - margin.right);
@@ -229,9 +229,10 @@
     const path = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ');
     const nodes = points.map((point, index) => {
       const latest = index === points.length - 1;
+      const seasonText = compact ? String(point.row.seasonLabel || '').replace(/^ECL\s*/i, '') : point.row.seasonLabel;
       return `<g class="seh-div-point${latest ? ' is-latest' : ''}">
         <circle cx="${point.x}" cy="${point.y}" r="${compact ? 6 : 7}"><title>${esc(pointTooltip(point.row))}</title></circle>
-        <text class="seh-div-season" x="${point.x}" y="${height - 13}" text-anchor="middle">${esc(point.row.seasonLabel)}</text>
+        <text class="seh-div-season" x="${point.x}" y="${height - 13}" text-anchor="middle">${esc(seasonText)}</text>
       </g>`;
     }).join('');
 
@@ -256,9 +257,8 @@
   }
 
   function myCardMarkup(rows) {
-    const shown = rows.length > 8 ? rows.slice(-8) : rows;
-    return `<div class="seh-me-section-head"><div><small>DIVISIONSRESA</small><h3>Din ECL-resa</h3></div><span>${rows.length > 8 ? `Senaste ${shown.length}` : `${rows.length} stopp`}</span></div>
-      <div class="seh-my-div-body">${chartMarkup(rows, true)}${footerMarkup(shown)}</div>`;
+    return `<div class="seh-me-section-head"><div><small>DIVISIONSRESA</small><h3>Din ECL-resa</h3></div><span>${rows.length} stopp</span></div>
+      <div class="seh-my-div-body">${chartMarkup(rows, true)}${footerMarkup(rows)}</div>`;
   }
 
   async function renderPublic() {
