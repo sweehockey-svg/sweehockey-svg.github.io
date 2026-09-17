@@ -30,10 +30,10 @@
 
 .seh-my-division-section{overflow:hidden}
 .seh-my-div-body{padding:0 11px 12px}
-.seh-my-division-section .seh-div-chart-scroll{border:1px solid rgba(80,227,220,.11);border-radius:13px;background:#050910}
-.seh-my-division-section .seh-div-chart{width:auto;max-width:none}
-.seh-my-division-section .seh-div-axis{font-size:9px}
-.seh-my-division-section .seh-div-season{font-size:8.5px}
+.seh-my-division-section .seh-div-chart-scroll{overflow-x:hidden;border:1px solid rgba(80,227,220,.11);border-radius:13px;background:#050910}
+.seh-my-division-section .seh-div-chart{display:block;width:100%!important;min-width:0!important;max-width:100%!important;height:auto}
+.seh-my-division-section .seh-div-axis{font-size:10.5px}
+.seh-my-division-section .seh-div-season{font-size:10.5px}
 .seh-my-division-section .seh-div-line{stroke-width:3}
 .seh-my-division-section .seh-div-point circle{stroke-width:3}
 .seh-my-division-section .seh-div-footer{margin-top:7px;padding:8px 2px 0;font-size:8.5px}
@@ -47,4 +47,15 @@
   .seh-div-head>span{font-size:.6rem}
   .seh-div-chart{width:auto;max-width:none}
   .seh-div-footer{font-size:.6rem}
+
+  .seh-my-division-section .seh-div-chart{width:100%!important;min-width:0!important;max-width:100%!important}
+  .seh-my-division-section .seh-div-axis{font-size:11px}
+  .seh-my-division-section .seh-div-season{font-size:11px}
+}
+
+@media(max-width:390px){
+  .seh-my-div-body{padding:0 7px 10px}
+  .seh-my-division-section .seh-div-axis{font-size:11.5px;letter-spacing:.04em}
+  .seh-my-division-section .seh-div-season{font-size:11px;letter-spacing:0}
+  .seh-my-division-section .seh-div-footer{font-size:8px}
 }
