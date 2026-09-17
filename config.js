@@ -102,6 +102,11 @@ window.EHOCKEY_CONFIG = {
   sclWordingFix.src = '/webapp-for-you-scl-wording-v1.js?v=20260917-1';
   sclWordingFix.defer = true;
   document.head.appendChild(sclWordingFix);
+
+  const genericShortcuts = document.createElement('script');
+  genericShortcuts.src = '/webapp-for-you-generic-shortcuts-v1.js?v=20260917-1';
+  genericShortcuts.defer = true;
+  document.head.appendChild(genericShortcuts);
 })();
 
 /* Webbappen: personligt Notiscenter med samma läst-status för webb och kommande Android-klient. */
