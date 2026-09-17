@@ -10,6 +10,7 @@
   let timer = 0;
   let loadToken = 0;
   let loadedKey = '';
+  let pendingForce = false;
 
   function isWebApp() {
     return Boolean(
@@ -123,24 +124,6 @@
     return '';
   }
 
-  async function enrichRows(sb, rows) {
-    const keys = [...new Set(rows.map(row => String(row?.teammate_key || '').trim()).filter(Boolean))];
-    if (!keys.length) return rows;
-
-    const result = await sb
-      .from('app_player_directory_cache')
-      .select('player_key,player_image,sports_gamer_player_url')
-      .in('player_key', keys);
-
-    if (result.error) {
-      console.warn('[Svensk eHockey] Kunde inte komplettera lagkamratbilder', result.error);
-      return rows;
-    }
-
-    const profiles = new Map((result.data || []).map(row => [String(row.player_key || ''), row]));
-    return rows.map(row => ({ ...row, ...(profiles.get(String(row?.teammate_key || '')) || {}) }));
-  }
-
   function ensureHost(root) {
     if (!root) return null;
     const preferredAnchor = root.querySelector('#seh-my-division-journey')
@@ -204,44 +187,41 @@
     const root = document.getElementById(ROOT_ID);
     if (!root?.classList.contains('show')) return;
     const host = ensureHost(root);
-    if (!host || host.dataset.loading === '1') return;
-
-    let playerKey = '';
-    try {
-      playerKey = await resolvePlayerKey();
-    } catch (error) {
-      console.warn('[Svensk eHockey] Kunde inte lösa spelarprofil för lagkamrater', error);
-    }
-    if (!host.isConnected) return;
-    if (!playerKey) {
-      host.remove();
+    if (!host) return;
+    if (host.dataset.loading === '1') {
+      if (force) pendingForce = true;
       return;
     }
-    if (!force && loadedKey === playerKey && host.dataset.ready === '1') return;
 
     const token = ++loadToken;
     host.dataset.loading = '1';
-    host.dataset.ready = '0';
-    host.innerHTML = '<div class="seh-me-teammates-loading">Hämtar lagkamrater…</div>';
 
     try {
+      const playerKey = await resolvePlayerKey();
+      if (token !== loadToken || !host.isConnected) return;
+      if (!playerKey) {
+        host.remove();
+        return;
+      }
+      if (!force && loadedKey === playerKey && host.dataset.ready === '1') return;
+
+      host.dataset.ready = '0';
+      host.innerHTML = '<div class="seh-me-teammates-loading">Hämtar lagkamrater…</div>';
+
       const sb = getClient();
       if (!sb) throw new Error('Supabase saknas');
-      const result = await sb.rpc('seh_get_player_teammates', {
+      const result = await sb.rpc('seh_get_player_teammates_v2', {
         p_player_key: playerKey,
         p_limit: LIMIT
       });
       if (token !== loadToken || !host.isConnected) return;
       if (result.error) throw result.error;
 
-      let rows = Array.isArray(result.data) ? result.data.filter(row => Number(row?.shared_games) > 0) : [];
+      const rows = Array.isArray(result.data) ? result.data.filter(row => Number(row?.shared_games) > 0) : [];
       if (!rows.length) {
         host.remove();
         return;
       }
-
-      rows = await enrichRows(sb, rows);
-      if (token !== loadToken || !host.isConnected) return;
 
       render(host, rows);
       loadedKey = playerKey;
@@ -251,7 +231,11 @@
       host.innerHTML = '<div class="seh-me-teammates-loading">Lagkamraterna kunde inte laddas just nu.</div>';
       host.dataset.ready = '0';
     } finally {
-      if (host.isConnected) host.dataset.loading = '0';
+      if (host.isConnected && token === loadToken) host.dataset.loading = '0';
+      if (pendingForce && host.isConnected && token === loadToken) {
+        pendingForce = false;
+        schedule(20, true);
+      }
     }
   }
 
@@ -274,14 +258,12 @@
   window.addEventListener('storage', event => {
     if (event.key === PROFILE_KEY) {
       loadedKey = '';
-      loadToken += 1;
       schedule(80, true);
     }
   });
 
   window.SEH_REFRESH_MY_TEAMMATES = () => {
     loadedKey = '';
-    loadToken += 1;
     schedule(20, true);
   };
 
