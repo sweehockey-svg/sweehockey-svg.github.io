@@ -1,0 +1,112 @@
+/* SEC mobile standings: keep team identity visible while stats scroll horizontally. */
+@media (max-width: 760px) {
+  .standing {
+    --sec-sticky-rank-width: 42px;
+    --sec-sticky-team-width: min(54vw, 220px);
+    position: relative;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  /* Preview tables have team as the first column. */
+  .standing table.previewStanding col.standingTeamCol {
+    width: var(--sec-sticky-team-width);
+  }
+
+  .standing table.previewStanding th:first-child,
+  .standing table.previewStanding td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    width: var(--sec-sticky-team-width);
+    min-width: var(--sec-sticky-team-width);
+    max-width: var(--sec-sticky-team-width);
+    background: #11171e;
+    text-align: left;
+  }
+
+  .standing table.previewStanding thead th:first-child {
+    z-index: 5;
+    background: #11171e;
+  }
+
+  /* Full standings have rank first and team second. Keep both fixed. */
+  .standing table.sortableStanding col.standingRankCol {
+    width: var(--sec-sticky-rank-width);
+  }
+
+  .standing table.sortableStanding col.standingTeamCol {
+    width: var(--sec-sticky-team-width);
+  }
+
+  .standing table.sortableStanding th:first-child,
+  .standing table.sortableStanding td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    width: var(--sec-sticky-rank-width);
+    min-width: var(--sec-sticky-rank-width);
+    max-width: var(--sec-sticky-rank-width);
+    background: #11171e;
+  }
+
+  .standing table.sortableStanding th:nth-child(2),
+  .standing table.sortableStanding td:nth-child(2) {
+    position: sticky;
+    left: var(--sec-sticky-rank-width);
+    z-index: 3;
+    width: var(--sec-sticky-team-width);
+    min-width: var(--sec-sticky-team-width);
+    max-width: var(--sec-sticky-team-width);
+    overflow: hidden;
+    background: #11171e;
+    text-align: left;
+  }
+
+  .standing table.sortableStanding thead th:first-child,
+  .standing table.sortableStanding thead th:nth-child(2) {
+    z-index: 5;
+    background: #11171e;
+  }
+
+  /* Make the frozen edge obvious without adding a heavy divider. */
+  .standing table.previewStanding th:first-child::after,
+  .standing table.previewStanding td:first-child::after,
+  .standing table.sortableStanding th:nth-child(2)::after,
+  .standing table.sortableStanding td:nth-child(2)::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: -10px;
+    bottom: 0;
+    width: 10px;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(0, 0, 0, .28), rgba(0, 0, 0, 0));
+  }
+
+  /* Keep logo + team name compact inside the frozen area. */
+  .standing td:has(.teamIdentity) .teamIdentity,
+  .standing th:has(.teamIdentity) .teamIdentity {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .standing td:has(.teamIdentity) .teamIdentity > :last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Cut-line color must continue through the frozen cells. */
+  .standing tr.playoffCutLine td:first-child,
+  .standing tr.playoffCutLine td:nth-child(2) {
+    border-bottom-color: var(--gold);
+  }
+
+  .standing tr.cutTwo td:first-child,
+  .standing tr.cutTwo td:nth-child(2) {
+    border-bottom-color: var(--ice);
+  }
+}
