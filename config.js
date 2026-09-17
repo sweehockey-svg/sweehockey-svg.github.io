@@ -25,6 +25,14 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(script);
 })();
 
+/* Favoriter: lokalt för gäster, konto/Supabase som primär lagring när användaren är inloggad. */
+(() => {
+  const script = document.createElement('script');
+  script.src = '/webapp-favorites-account-sync-v1.js?v=20260917-1';
+  script.defer = true;
+  document.head.appendChild(script);
+})();
+
 /* Webbappen: personlig För dig-start. Samma Supabase-data kan senare återanvändas i Android. */
 (() => {
   const css = document.createElement('link');
