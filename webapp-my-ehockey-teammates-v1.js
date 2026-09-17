@@ -45,6 +45,11 @@
       .replace(/'/g, '&#039;');
   }
 
+  function canonicalTeam(value) {
+    const fallback = String(value || '').replace(/\s+/g, ' ').trim();
+    try { return window.SEH_WEBAPP_TEAM_ALIASES?.canonicalName(fallback) || fallback; } catch (_) { return fallback; }
+  }
+
   function fmt(value) {
     const number = Number(value);
     return Number.isFinite(number) ? Math.max(0, Math.round(number)).toLocaleString('sv-SE') : '0';
@@ -154,7 +159,7 @@
     const image = playerImageUrl(row);
     const sharedGames = fmt(row?.shared_games);
     const sharedTournaments = fmt(row?.shared_tournaments);
-    const latestTeam = String(row?.latest_shared_team || '').trim();
+    const latestTeam = canonicalTeam(row?.latest_shared_team);
     const href = playerProfileUrl(key, name);
     const avatar = image
       ? `<img src="${esc(image)}" alt="${esc(name)}" loading="lazy">`
@@ -272,6 +277,11 @@
     observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
     schedule(300);
   }
+
+  window.addEventListener('seh-team-aliases-ready', () => {
+    loadedKey = '';
+    schedule(20, true);
+  });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
