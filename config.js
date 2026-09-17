@@ -187,10 +187,18 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(script);
 })();
 
-/* Mitt eHockey: håll personliga tilläggsmoduler monterade även vid sen webbapp-init eller omrendering. */
+/* Mitt eHockey: fasta platser för personliga moduler även efter omrendering. */
 (() => {
   const script = document.createElement('script');
-  script.src = '/webapp-my-ehockey-modules-sync-v1.js?v=20260917-1';
+  script.src = '/webapp-my-ehockey-modules-sync-v1.js?v=20260917-2';
+  script.defer = true;
+  document.head.appendChild(script);
+})();
+
+/* Mitt eHockey: intern spelarprofilnavigering utan race med overlay-stängningen. */
+(() => {
+  const script = document.createElement('script');
+  script.src = '/webapp-my-ehockey-player-route-v1.js?v=20260917-1';
   script.defer = true;
   document.head.appendChild(script);
 })();
