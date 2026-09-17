@@ -51,7 +51,7 @@ window.EHOCKEY_CONFIG = {
   const preload = document.createElement('link');
   preload.rel = 'preload';
   preload.as = 'script';
-  preload.href = '/webapp-for-you-v2.js?v=20260917-competition-aware-1';
+  preload.href = '/webapp-for-you-v2.js?v=20260917-optimized-images-1';
   document.head.appendChild(preload);
 
   const isWebApp = () => Boolean(
@@ -146,7 +146,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(css);
 
   const script = document.createElement('script');
-  script.src = '/webapp-my-ehockey-v1.js?v=20260917-personal-modules-1';
+  script.src = '/webapp-my-ehockey-v1.js?v=20260917-optimized-images-1';
   script.defer = true;
   document.head.appendChild(script);
 
@@ -182,7 +182,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(css);
 
   const script = document.createElement('script');
-  script.src = '/webapp-my-ehockey-teammates-v1.js?v=20260917-5';
+  script.src = '/webapp-my-ehockey-teammates-v1.js?v=20260917-6';
   script.defer = true;
   document.head.appendChild(script);
 })();
@@ -198,7 +198,7 @@ window.EHOCKEY_CONFIG = {
 /* Mitt eHockey: intern spelarprofilnavigering utan race med overlay-stängningen. */
 (() => {
   const script = document.createElement('script');
-  script.src = '/webapp-my-ehockey-player-route-v1.js?v=20260917-2';
+  script.src = '/webapp-my-ehockey-player-route-v1.js?v=20260917-3';
   script.defer = true;
   document.head.appendChild(script);
 })();
