@@ -159,7 +159,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(css);
 
   const script = document.createElement('script');
-  script.src = '/player-division-curve-v1.js?v=20260917-1';
+  script.src = '/player-division-curve-v1.js?v=20260917-2';
   script.defer = true;
   document.head.appendChild(script);
 })();
