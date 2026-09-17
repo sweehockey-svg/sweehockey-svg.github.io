@@ -155,7 +155,7 @@ window.EHOCKEY_CONFIG = {
 (() => {
   const css = document.createElement('link');
   css.rel = 'stylesheet';
-  css.href = '/player-division-curve-v1.css?v=20260917-1';
+  css.href = '/player-division-curve-v1.css?v=20260917-2';
   document.head.appendChild(css);
 
   const script = document.createElement('script');
