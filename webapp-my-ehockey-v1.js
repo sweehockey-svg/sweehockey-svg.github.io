@@ -5,6 +5,7 @@
   const PROFILE_KEY = 'seh_app_my_profile_v1';
   const FAVORITES_KEY = 'seh_app_favorites_v1';
   let bypassProfileClick = false;
+  let previousTitle = '';
 
   const USER_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.5-4.2 2.9-6.5 7-6.5s6.5 2.3 7 6.5"/></svg>';
 
@@ -157,6 +158,7 @@
     root.classList.add('show');
     document.body.classList.add('seh-my-ehockey-open');
     const title = document.getElementById('seh-native-title');
+    previousTitle = String(title?.textContent || '').trim();
     if (title) title.textContent = 'Mitt eHockey';
   }
 
@@ -166,7 +168,8 @@
     root.classList.remove('show');
     document.body.classList.remove('seh-my-ehockey-open');
     const title = document.getElementById('seh-native-title');
-    if (title) title.textContent = 'Hem';
+    if (title && previousTitle) title.textContent = previousTitle;
+    previousTitle = '';
     return true;
   }
 
