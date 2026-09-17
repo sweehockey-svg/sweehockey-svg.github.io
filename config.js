@@ -120,7 +120,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(css);
 
   const script = document.createElement('script');
-  script.src = '/webapp-my-ehockey-v1.js?v=20260917-1';
+  script.src = '/webapp-my-ehockey-v1.js?v=20260917-2';
   script.defer = true;
   document.head.appendChild(script);
 })();
