@@ -98,3 +98,16 @@ window.EHOCKEY_CONFIG = {
   buildsRouteFix.defer = true;
   document.head.appendChild(buildsRouteFix);
 })();
+
+/* Webbappen: personligt Notiscenter med samma läst-status för webb och kommande Android-klient. */
+(() => {
+  const css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = '/webapp-notification-center-v1.css?v=20260917-1';
+  document.head.appendChild(css);
+
+  const script = document.createElement('script');
+  script.src = '/webapp-notification-center-v1.js?v=20260917-1';
+  script.defer = true;
+  document.head.appendChild(script);
+})();
