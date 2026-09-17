@@ -384,6 +384,16 @@
     }
   });
 
+  window.SEH_REFRESH_MY_DIVISION_JOURNEY = () => {
+    myLoadToken += 1;
+    const host = document.getElementById(MY_ID);
+    if (host) {
+      delete host.dataset.loadingKey;
+      host.dataset.ready = '0';
+    }
+    schedule();
+  };
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', schedule, { once: true });
   else schedule();
 })();
