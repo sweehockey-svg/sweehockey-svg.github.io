@@ -160,7 +160,7 @@
       ? `<img src="${esc(image)}" alt="${esc(name)}" loading="lazy">`
       : `<span>${esc(initials(name))}</span>`;
 
-    return `<a class="seh-me-teammate${index === 0 ? ' is-top' : ''}" href="${esc(href)}" data-me-close-first>
+    return `<a class="seh-me-teammate${index === 0 ? ' is-top' : ''}" href="${esc(href)}" data-me-close-first data-player-key="${esc(key)}" data-player-name="${esc(name)}" data-player-photo="${esc(image)}">
       <b class="seh-me-teammate-rank">${index + 1}</b>
       <div class="seh-me-teammate-avatar">${avatar}</div>
       <div class="seh-me-teammate-copy">
