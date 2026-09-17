@@ -100,7 +100,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(instantCacheScript);
 
   const script = document.createElement('script');
-  script.src = '/webapp-for-you-v2.js?v=20260917-competition-aware-1';
+  script.src = '/webapp-for-you-v2.js?v=20260917-optimized-images-1';
   script.async = false;
   document.head.appendChild(script);
 
