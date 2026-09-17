@@ -53,6 +53,109 @@
     return fmtDate(value);
   }
 
+  function phaseMeta(value) {
+    const allowed = ['building', 'regular', 'playoffs', 'finished', 'offseason'];
+    const phase = allowed.includes(String(value || '')) ? String(value) : 'building';
+    const map = {
+      building: {
+        phase,
+        teamKicker: 'DITT LAG',
+        missingTitle: 'Inte i lagbygget ännu',
+        missingText: 'Öppna aktuella svenska lagbyggen',
+        missingAction: 'builds',
+        teamSubtitle: 'Aktuellt lagbygge',
+        secondKicker: 'FREE AGENTS',
+        secondTitle: '',
+        secondText: 'Se spelare som söker lag',
+        secondAction: 'fa',
+        feedTitle: 'Senaste för dig',
+        feedLink: 'Alla lagbyggen →',
+        feedAction: 'builds',
+        shortcutLabel: 'Lagbygge',
+        shortcutAction: 'builds',
+        emptyTeam: 'Nya IN/UT och rekryteringsposter visas här automatiskt.',
+        emptyNoTeam: 'När du går med i ett aktuellt ECL 27-lag visas lagflödet här.'
+      },
+      regular: {
+        phase,
+        teamKicker: 'DITT ECL-LAG',
+        missingTitle: 'ECL-lag ej kopplat',
+        missingText: 'Öppna ECL 27',
+        missingAction: 'competition',
+        teamSubtitle: 'Grundserie',
+        secondKicker: 'ECL 27',
+        secondTitle: 'Grundserie',
+        secondText: 'Matcher, tabell och statistik',
+        secondAction: 'competition',
+        feedTitle: 'Senaste för dig',
+        feedLink: 'Öppna ECL 27 →',
+        feedAction: 'competition',
+        shortcutLabel: 'ECL 27',
+        shortcutAction: 'competition',
+        emptyTeam: 'Matcher, resultat och laghändelser visas här när datan finns.',
+        emptyNoTeam: 'Öppna ECL 27 för matcher, tabell och statistik.'
+      },
+      playoffs: {
+        phase,
+        teamKicker: 'DITT ECL-LAG',
+        missingTitle: 'ECL-lag ej kopplat',
+        missingText: 'Öppna slutspelet',
+        missingAction: 'competition',
+        teamSubtitle: 'Slutspel',
+        secondKicker: 'ECL 27',
+        secondTitle: 'Slutspel',
+        secondText: 'Serier, matcher och resultat',
+        secondAction: 'competition',
+        feedTitle: 'Slutspel för dig',
+        feedLink: 'Öppna slutspelet →',
+        feedAction: 'competition',
+        shortcutLabel: 'Slutspel',
+        shortcutAction: 'competition',
+        emptyTeam: 'Slutspelsmatcher och serieresultat visas här när datan finns.',
+        emptyNoTeam: 'Öppna ECL 27-slutspelet.'
+      },
+      finished: {
+        phase,
+        teamKicker: 'DIN ECL-SÄSONG',
+        missingTitle: 'Ingen ECL 27-lagkoppling',
+        missingText: 'Öppna säsongen',
+        missingAction: 'competition',
+        teamSubtitle: 'Slutresultat',
+        secondKicker: 'ECL 27',
+        secondTitle: 'Säsongen avslutad',
+        secondText: 'Resultat och slutstatistik',
+        secondAction: 'competition',
+        feedTitle: 'Säsongen i korthet',
+        feedLink: 'Öppna ECL 27 →',
+        feedAction: 'competition',
+        shortcutLabel: 'ECL 27',
+        shortcutAction: 'competition',
+        emptyTeam: 'Säsongsresultat och slutstatistik visas här.',
+        emptyNoTeam: 'Öppna ECL 27 och se slutresultatet.'
+      },
+      offseason: {
+        phase,
+        teamKicker: 'SENASTE ECL-LAG',
+        missingTitle: 'Mellan ECL-säsonger',
+        missingText: 'Se tävlingsarkivet',
+        missingAction: 'competitions',
+        teamSubtitle: 'Senaste säsong',
+        secondKicker: 'ECL',
+        secondTitle: 'Mellan säsonger',
+        secondText: 'Nyheter, historik och kommande tävlingar',
+        secondAction: 'competitions',
+        feedTitle: 'För dig just nu',
+        feedLink: 'Tävlingar →',
+        feedAction: 'competitions',
+        shortcutLabel: 'Tävlingar',
+        shortcutAction: 'competitions',
+        emptyTeam: 'När nästa lagbygge öppnar byter den här ytan automatiskt.',
+        emptyNoTeam: 'När nästa ECL-period öppnar anpassas den här ytan automatiskt.'
+      }
+    };
+    return map[phase];
+  }
+
   function home() {
     return document.querySelector('#seh-app-home .seh-app-page');
   }
@@ -129,7 +232,9 @@
   }
 
   function renderPersonal(root, data) {
-    const { account, player, project, events, recruitment, activeFaCount } = data;
+    const { account, player, project, events, recruitment, activeFaCount, competitionState } = data;
+    const meta = phaseMeta(competitionState?.phase);
+    const routeHash = String(competitionState?.route_hash || '#/sasong/ecl27winter');
     const playerName = String(player?.display_gamertag || account?.playerName || account?.playerKey || 'Din profil').trim();
     const teamName = String(project?.name || '').trim();
     const division = String(project?.division || '').trim();
@@ -137,7 +242,7 @@
     const sourceTeamId = Number(project?.source_team_id) || 0;
 
     const feed = [];
-    if (recruitment?.text) {
+    if (meta.phase === 'building' && recruitment?.text) {
       feed.push({
         marker: '!', tone: 'recruit', title: `${teamName} söker spelare`,
         text: String(recruitment.text).trim(), time: relativeTime(recruitment.posted_at)
@@ -149,7 +254,13 @@
       feed.push({ ...item, time: relativeTime(event?.occurred_at) });
     }
     if (!feed.length) {
-      feed.push({ marker: '✓', tone: '', title: teamName ? `${teamName} är kopplat` : 'Din profil är kopplad', text: teamName ? 'Nya IN/UT och rekryteringsposter visas här automatiskt.' : 'När du går med i ett aktuellt ECL 27-lag visas lagflödet här.', time: '' });
+      feed.push({
+        marker: '✓',
+        tone: '',
+        title: teamName ? `${teamName} är kopplat` : 'Din profil är kopplad',
+        text: teamName ? meta.emptyTeam : meta.emptyNoTeam,
+        time: ''
+      });
     }
 
     const feedHtml = feed.map(item => `
@@ -159,13 +270,20 @@
         <time>${esc(item.time)}</time>
       </article>`).join('');
 
+    const teamSubtitle = meta.phase === 'building'
+      ? (division || meta.teamSubtitle)
+      : [division, meta.teamSubtitle].filter(Boolean).join(' · ');
     const teamCard = teamName
-      ? `<button type="button" class="seh-for-you__mini" data-fy-action="team" data-team-id="${sourceTeamId}">
-           <small>DITT LAG</small><strong>${esc(teamName)}</strong><span>${esc(division || 'Aktuellt lagbygge')}</span>
+      ? `<button type="button" class="seh-for-you__mini" data-fy-action="team" data-team-id="${sourceTeamId}" data-route="${esc(routeHash)}">
+           <small>${esc(meta.teamKicker)}</small><strong>${esc(teamName)}</strong><span>${esc(teamSubtitle)}</span>
          </button>`
-      : `<button type="button" class="seh-for-you__mini" data-fy-action="builds">
-           <small>DITT LAG</small><strong>Inte i lagbygget ännu</strong><span>Öppna aktuella svenska lagbyggen</span>
+      : `<button type="button" class="seh-for-you__mini" data-fy-action="${esc(meta.missingAction)}" data-route="${esc(routeHash)}">
+           <small>${esc(meta.teamKicker)}</small><strong>${esc(meta.missingTitle)}</strong><span>${esc(meta.missingText)}</span>
          </button>`;
+
+    const secondTitle = meta.phase === 'building'
+      ? `${Number(activeFaCount) || 0} aktiva`
+      : meta.secondTitle;
 
     root.innerHTML = `
       <div class="seh-for-you__head">
@@ -179,16 +297,16 @@
       </div>
       <div class="seh-for-you__mini-grid">
         ${teamCard}
-        <button type="button" class="seh-for-you__mini" data-fy-action="fa">
-          <small>FREE AGENTS</small><strong>${Number(activeFaCount) || 0} aktiva</strong><span>Se spelare som söker lag</span>
+        <button type="button" class="seh-for-you__mini" data-fy-action="${esc(meta.secondAction)}" data-route="${esc(routeHash)}">
+          <small>${esc(meta.secondKicker)}</small><strong>${esc(secondTitle)}</strong><span>${esc(meta.secondText)}</span>
         </button>
       </div>
-      <div class="seh-for-you__feed-head"><strong>Senaste för dig</strong><button type="button" data-fy-action="builds">Alla lagbyggen →</button></div>
+      <div class="seh-for-you__feed-head"><strong>${esc(meta.feedTitle)}</strong><button type="button" data-fy-action="${esc(meta.feedAction)}" data-route="${esc(routeHash)}">${esc(meta.feedLink)}</button></div>
       <div class="seh-for-you__feed">${feedHtml}</div>
       <div class="seh-for-you__shortcuts">
         <button type="button" data-fy-action="profile">Min profil</button>
-        <button type="button" data-fy-action="team" data-team-id="${sourceTeamId}" ${teamName ? '' : 'disabled'}>Mitt lag</button>
-        <button type="button" data-fy-action="builds">Lagbygge</button>
+        <button type="button" data-fy-action="team" data-team-id="${sourceTeamId}" data-route="${esc(routeHash)}" ${teamName ? '' : 'disabled'}>Mitt lag</button>
+        <button type="button" data-fy-action="${esc(meta.shortcutAction)}" data-route="${esc(routeHash)}">${esc(meta.shortcutLabel)}</button>
         <button type="button" data-fy-action="favorites">Favoriter</button>
       </div>`;
   }
@@ -223,6 +341,19 @@
         pending(root, account);
         return;
       }
+
+      let competitionState = {
+        competition_key: 'ecl27winter',
+        display_name: 'ECL 27 Winter',
+        phase: 'building',
+        route_hash: '#/sasong/ecl27winter'
+      };
+      const phaseResult = await sb
+        .from('seh_app_competition_states')
+        .select('competition_key,display_name,phase,route_hash,updated_at')
+        .eq('competition_key', 'ecl27winter')
+        .limit(1);
+      if (!phaseResult.error && phaseResult.data?.[0]) competitionState = phaseResult.data[0];
 
       let player = {};
       const dashboardResult = await sb.rpc('seh_get_my_player_dashboard');
@@ -267,16 +398,18 @@
         if (!recruitmentResult.error) recruitment = (recruitmentResult.data || [])[0] || null;
       }
 
-      // Använd exakt samma publika FA-källa som Free Agents-vyn.
-      // Den filtrerar redan bort inaktiva/utgångna poster.
-      const faResult = await sb
-        .from('v_ehockey_free_agents_public')
-        .select('player_key')
-        .limit(300);
-      const activeFaCount = faResult.error ? 0 : (faResult.data || []).length;
+      let activeFaCount = 0;
+      if (String(competitionState.phase || '') === 'building') {
+        // Använd exakt samma publika FA-källa som Free Agents-vyn.
+        const faResult = await sb
+          .from('v_ehockey_free_agents_public')
+          .select('player_key')
+          .limit(300);
+        activeFaCount = faResult.error ? 0 : (faResult.data || []).length;
+      }
 
       if (token !== renderToken) return;
-      renderPersonal(root, { account, player, project, events, recruitment, activeFaCount });
+      renderPersonal(root, { account, player, project, events, recruitment, activeFaCount, competitionState });
     } catch (error) {
       console.warn('[Svensk eHockey] För dig kunde inte laddas', error);
       if (token !== renderToken) return;
@@ -301,9 +434,19 @@
         location.hash = '#/sasong/ecl27winter';
         return;
       }
+      if (action === 'competition') {
+        const route = String(button.dataset.route || '#/sasong/ecl27winter');
+        location.hash = route.startsWith('#') ? route : '#/sasong/ecl27winter';
+        return;
+      }
+      if (action === 'competitions') {
+        location.hash = '#/ecl';
+        return;
+      }
       if (action === 'team') {
         const teamId = Number(button.dataset.teamId) || 0;
-        location.hash = teamId ? `#/lag/${teamId}` : '#/sasong/ecl27winter';
+        const route = String(button.dataset.route || '#/sasong/ecl27winter');
+        location.hash = teamId ? `#/lag/${teamId}` : (route.startsWith('#') ? route : '#/sasong/ecl27winter');
       }
     });
   }
