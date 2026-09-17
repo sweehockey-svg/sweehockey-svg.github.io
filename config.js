@@ -33,7 +33,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(css);
 
   const script = document.createElement('script');
-  script.src = '/webapp-for-you-v1.js?v=20260917-phase-aware-1';
+  script.src = '/webapp-for-you-v1.js?v=20260917-current-team-only-1';
   script.defer = true;
   document.head.appendChild(script);
 })();
