@@ -29,6 +29,11 @@
       .replace(/'/g, '&#039;');
   }
 
+  function canonicalTeam(value) {
+    const fallback = String(value || '').replace(/\s+/g, ' ').trim();
+    try { return window.SEH_WEBAPP_TEAM_ALIASES?.canonicalName(fallback) || fallback; } catch (_) { return fallback; }
+  }
+
   function cfg() {
     return window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
   }
@@ -166,7 +171,7 @@
     const hasSkaterHistory = skaterGames > 0 || goals > 0 || assists > 0 || points > 0;
     const isGoalieOnly = hasGoalieHistory && !hasSkaterHistory;
     const position = String(row?.primary_position || '').trim();
-    const latestTeam = String(row?.latest_team || '').trim();
+    const latestTeam = canonicalTeam(row?.latest_team);
     const latestSeason = String(row?.latest_season || '').trim();
     const context = [position ? `Position ${position}` : '', latestTeam, latestSeason].filter(Boolean);
 
@@ -274,7 +279,7 @@
     const name = profileName(profile) || 'Mitt eHockey';
     const photo = profilePhoto(profile);
     const linked = profile?.serverLinked === true || profile?.linked === true;
-    const team = String(profile?.latestTeam || profile?.team || profile?.currentTeam || '').trim();
+    const team = canonicalTeam(profile?.latestTeam || profile?.team || profile?.currentTeam);
     const season = String(profile?.latestSeason || profile?.season || '').trim();
     const route = profileRoute(profile);
     const playerFavs = favorites.filter(item => String(item?.type || '') === 'player');
@@ -448,6 +453,10 @@
     if (profileButton) profileButton.setAttribute('aria-label', 'Mitt eHockey');
     observer.observe(document.documentElement, { childList: true, subtree: true });
   }
+
+  window.addEventListener('seh-team-aliases-ready', () => {
+    if (document.getElementById(ROOT_ID)?.classList.contains('show')) render();
+  });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
