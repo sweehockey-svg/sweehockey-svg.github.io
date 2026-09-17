@@ -78,6 +78,11 @@ window.EHOCKEY_CONFIG = {
     ensureForYouSlot();
   }
 
+  const instantCacheScript = document.createElement('script');
+  instantCacheScript.src = '/webapp-for-you-instant-cache-v1.js?v=20260917-1';
+  instantCacheScript.async = false;
+  document.head.appendChild(instantCacheScript);
+
   const script = document.createElement('script');
   script.src = '/webapp-for-you-v2.js?v=20260917-stable-fast-1';
   script.async = false;
