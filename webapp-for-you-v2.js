@@ -22,6 +22,11 @@
       .replace(/'/g, '&#039;');
   }
 
+  function canonicalTeam(value) {
+    const fallback = String(value || '').replace(/\s+/g, ' ').trim();
+    try { return window.SEH_WEBAPP_TEAM_ALIASES?.canonicalName(fallback) || fallback; } catch (_) { return fallback; }
+  }
+
   function cfg() {
     return window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
   }
@@ -234,7 +239,7 @@
     const playerName = String(player?.display_gamertag || account?.playerName || account?.playerKey || 'Din profil').trim();
     const teamName = String(project?.name || '').trim();
     const division = String(project?.division || '').trim();
-    const historicalTeam = String(player?.latest_team || player?.latest_ecl_team || '').trim();
+    const historicalTeam = canonicalTeam(player?.latest_team || player?.latest_ecl_team);
     const profileMeta = teamName
       ? `${teamName} · ECL 27-lagbygge`
       : (historicalTeam ? `Senaste lag: ${historicalTeam}` : 'Kopplad spelare');
@@ -246,7 +251,7 @@
     }
     for (const event of events || []) {
       if (feed.length >= 3) break;
-      const item = eventText(event, teamName || String(event?.to_team || event?.from_team || 'laget'));
+      const item = eventText(event, teamName || canonicalTeam(event?.to_team || event?.from_team || 'laget'));
       feed.push({ ...item, time: relativeTime(event?.occurred_at) });
     }
     if (!feed.length) {
@@ -437,5 +442,6 @@
     if (document.getElementById('seh-app-home')?.classList.contains('show')) load();
   });
 
+  window.addEventListener('seh-team-aliases-ready', () => load(true));
   window.SEH_REFRESH_FOR_YOU = () => load(true);
 })();
