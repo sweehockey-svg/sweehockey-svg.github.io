@@ -1,0 +1,32 @@
+.seh-me-milestones{margin-top:11px;padding-top:11px;border-top:1px solid rgba(255,255,255,.055)}
+.seh-me-milestone-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:8px}
+.seh-me-milestone-head small{display:block;margin-bottom:3px;color:#62d4cf;font-size:7.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.seh-me-milestone-head strong{display:block;color:#f1efe8;font-size:13px;line-height:1.1}
+.seh-me-milestone-head>span{color:#818a96;font-size:8px;white-space:nowrap}
+.seh-me-record-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.seh-me-record{min-width:0;min-height:66px;padding:9px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:linear-gradient(145deg,#090d15,#070b12);box-sizing:border-box}
+.seh-me-record small{display:block;color:#7f8995;font-size:6.8px;font-weight:850;letter-spacing:.045em;text-transform:uppercase}
+.seh-me-record strong{display:block;margin-top:4px;color:#f0eee8;font-size:13px;font-weight:950;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seh-me-record span{display:block;margin-top:4px;color:#68737f;font-size:6.8px;line-height:1.28}
+.seh-me-record:nth-child(2){border-color:rgba(98,212,207,.16);background:linear-gradient(145deg,rgba(98,212,207,.055),#070b12)}
+.seh-me-record:nth-child(2) strong{color:#73dfd9}
+.seh-me-record:nth-child(4){border-color:rgba(214,177,95,.16);background:linear-gradient(145deg,rgba(214,177,95,.06),#070b12)}
+.seh-me-record:nth-child(4) strong{color:#e7ca84}
+.seh-me-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.seh-me-badge{min-height:27px;display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid rgba(214,177,95,.17);border-radius:999px;background:rgba(214,177,95,.055);color:#d9d1bc;font-size:7.5px;font-weight:850;box-sizing:border-box}
+.seh-me-badge b{min-width:18px;height:18px;display:inline-grid;place-items:center;padding:0 3px;border-radius:999px;background:rgba(214,177,95,.12);color:#e8ca7f;font-size:6.5px;line-height:1;box-sizing:border-box}
+.seh-me-badge:nth-child(even){border-color:rgba(98,212,207,.16);background:rgba(98,212,207,.045)}
+.seh-me-badge:nth-child(even) b{background:rgba(98,212,207,.11);color:#73dfd9}
+.seh-me-badge.is-muted{border-color:rgba(255,255,255,.07);background:#090d15;color:#7c8590}
+.seh-me-next-milestone{margin-top:9px;padding:9px 10px;border:1px solid rgba(98,212,207,.12);border-radius:12px;background:linear-gradient(135deg,rgba(98,212,207,.04),rgba(214,177,95,.025))}
+.seh-me-next-milestone>div:first-child{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:2px 10px}
+.seh-me-next-milestone small{grid-column:1/-1;color:#62d4cf;font-size:6.8px;font-weight:900;letter-spacing:.1em}
+.seh-me-next-milestone strong{color:#eef2ef;font-size:11px;line-height:1.15}
+.seh-me-next-milestone span{color:#8a949f;font-size:7.5px;font-weight:800}
+.seh-me-progress{height:5px;margin-top:7px;overflow:hidden;border-radius:999px;background:#111720}
+.seh-me-progress i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#62d4cf,#d6b15f)}
+.seh-me-next-milestone.is-complete{border-color:rgba(214,177,95,.15)}
+.seh-me-milestone-note{margin:8px 2px 0;color:#65707c;font-size:7px;line-height:1.35;text-align:center}
+.seh-me-milestone-loading{padding:12px;border:1px dashed rgba(255,255,255,.07);border-radius:11px;background:#090d15;color:#808995;font-size:8.5px;text-align:center}
+@media(max-width:560px){.seh-me-record-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.seh-me-record{min-height:63px}.seh-me-badge{font-size:7.2px}}
+@media(max-width:390px){.seh-me-record-grid{gap:6px}.seh-me-record{padding:8px}.seh-me-record strong{font-size:12px}.seh-me-badges{gap:5px}.seh-me-badge{padding:4px 7px}}
