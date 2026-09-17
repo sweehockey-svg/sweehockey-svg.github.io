@@ -156,7 +156,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(milestoneCss);
 
   const milestoneScript = document.createElement('script');
-  milestoneScript.src = '/webapp-my-ehockey-milestones-v1.js?v=20260917-1';
+  milestoneScript.src = '/webapp-my-ehockey-milestones-v1.js?v=20260917-2';
   milestoneScript.defer = true;
   document.head.appendChild(milestoneScript);
 })();
