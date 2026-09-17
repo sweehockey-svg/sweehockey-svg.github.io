@@ -44,6 +44,22 @@
     return client;
   }
 
+  function refreshPersonalModules() {
+    const root = document.getElementById(ROOT_ID);
+    if (!root?.classList.contains('show')) return;
+
+    const refresh = () => {
+      if (!root.classList.contains('show')) return;
+      window.SEH_REFRESH_MY_MILESTONES?.();
+      window.SEH_REFRESH_MY_DIVISION_JOURNEY?.();
+      window.SEH_REFRESH_MY_TEAMMATES?.();
+    };
+
+    requestAnimationFrame(refresh);
+    window.setTimeout(refresh, 180);
+  }
+
+
   function asRow(value) {
     return Array.isArray(value) ? (value[0] || {}) : (value || {});
   }
@@ -306,6 +322,18 @@
         </div>
       </section>
 
+      <section id="seh-my-career-milestones" class="seh-me-section seh-me-milestones" aria-label="Rekord och milstolpar" data-ready="0" data-loading="0">
+        <div class="seh-me-milestone-loading">Hämtar rekord & milstolpar…</div>
+      </section>
+
+      <section id="seh-my-division-journey" class="seh-me-section seh-my-division-section" aria-label="Din ECL-divisionsresa" data-ready="0">
+        <div class="seh-div-loading seh-div-loading--my">Hämtar din divisionsresa…</div>
+      </section>
+
+      <section id="seh-my-teammates" class="seh-me-section seh-me-teammates" aria-label="Spelat mest med" data-ready="0" data-loading="0">
+        <div class="seh-me-teammates-loading">Hämtar lagkamrater…</div>
+      </section>
+
       <section class="seh-me-section">
         <div class="seh-me-section-head"><div><small>SNABBT</small><h3>Din eHockey</h3></div></div>
         <div class="seh-me-actions">
@@ -324,6 +352,7 @@
       <p class="seh-me-footer-note">Mitt eHockey är din personliga hubb. Hem fortsätter vara en snabb startsida med nyheter och genvägar.</p>`;
 
     loadCareer(root, profile);
+    if (root.classList.contains('show')) refreshPersonalModules();
   }
 
   function open() {
@@ -332,6 +361,7 @@
     render();
     root.classList.add('show');
     document.body.classList.add('seh-my-ehockey-open');
+    refreshPersonalModules();
     const title = document.getElementById('seh-native-title');
     previousTitle = String(title?.textContent || '').trim();
     if (title) title.textContent = 'Mitt eHockey';
