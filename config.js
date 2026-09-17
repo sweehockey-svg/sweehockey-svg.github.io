@@ -82,4 +82,9 @@ window.EHOCKEY_CONFIG = {
   script.src = '/webapp-for-you-v2.js?v=20260917-stable-fast-1';
   script.async = false;
   document.head.appendChild(script);
+
+  const favoritesScript = document.createElement('script');
+  favoritesScript.src = '/webapp-for-you-favorites-v1.js?v=20260917-1';
+  favoritesScript.defer = true;
+  document.head.appendChild(favoritesScript);
 })();
