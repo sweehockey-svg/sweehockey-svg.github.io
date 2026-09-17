@@ -130,47 +130,66 @@
     const status = root?.querySelector('[data-me-career-status]');
     if (!holder) return;
 
-    const gp = Number(row?.career_gp) || 0;
-    const goals = Number(row?.career_g) || 0;
-    const assists = Number(row?.career_a) || 0;
-    const points = Number(row?.career_p) || 0;
-    const tournaments = Number(row?.career_tournaments) || 0;
-    const clubs = Number(row?.career_clubs) || 0;
-    const saves = Number(row?.career_sv) || 0;
-    const shotsAgainst = Number(row?.career_sa) || 0;
-    const shutouts = Number(row?.career_shutouts) || 0;
-    const hasGoalieHistory = saves > 0 || shotsAgainst > 0 || shutouts > 0 || Number(row?.career_save_pct) > 0;
-    const ppg = gp > 0 ? points / gp : 0;
+    const careerGames = Number(row?.career_games) || 0;
+    const skaterGames = Number(row?.total_skater_games) || 0;
+    const goalieGames = Number(row?.total_goalie_games) || 0;
+    const goals = Number(row?.total_goals) || 0;
+    const assists = Number(row?.total_assists) || 0;
+    const points = Number(row?.total_points) || 0;
+    const tournaments = Number(row?.tournament_count) || 0;
+    const clubs = Number(row?.club_count) || 0;
+    const saves = Number(row?.total_goalie_saves) || 0;
+    const shotsAgainst = Number(row?.total_goalie_shots_against) || 0;
+    const savePercentage = Number(row?.total_goalie_save_percentage);
+    const hasGoalieHistory = goalieGames > 0 || saves > 0 || shotsAgainst > 0 || (Number.isFinite(savePercentage) && savePercentage > 0);
+    const hasSkaterHistory = skaterGames > 0 || goals > 0 || assists > 0 || points > 0;
+    const isGoalieOnly = hasGoalieHistory && !hasSkaterHistory;
     const position = String(row?.primary_position || '').trim();
     const latestTeam = String(row?.latest_team || '').trim();
     const latestSeason = String(row?.latest_season || '').trim();
-
     const context = [position ? `Position ${position}` : '', latestTeam, latestSeason].filter(Boolean);
-    const highlight = gp > 0
-      ? `${statNumber(gp)} matcher · ${decimalNumber(ppg)} poäng per match`
-      : 'Karriärstatistiken fylls på när matcher finns registrerade.';
+
+    let highlight = 'Karriärstatistiken fylls på när matcher finns registrerade.';
+    if (isGoalieOnly && careerGames > 0) {
+      highlight = `${statNumber(careerGames)} matcher · ${savePct(savePercentage)} räddningsprocent`;
+    } else if (skaterGames > 0) {
+      highlight = `${statNumber(skaterGames)} utespelarmatcher · ${decimalNumber(points / skaterGames)} poäng per match`;
+    } else if (careerGames > 0) {
+      highlight = `${statNumber(careerGames)} matcher registrerade`;
+    }
+
+    const mainStats = isGoalieOnly
+      ? [
+          careerStat('Matcher', statNumber(careerGames), 'gold'),
+          careerStat('Räddningsprocent', savePct(savePercentage), 'cyan'),
+          careerStat('Räddningar', statNumber(saves)),
+          careerStat('Skott mot', statNumber(shotsAgainst)),
+          careerStat('Turneringar', statNumber(tournaments)),
+          careerStat('Klubbar', statNumber(clubs))
+        ]
+      : [
+          careerStat('Matcher', statNumber(careerGames), 'gold'),
+          careerStat('Poäng', statNumber(points), 'cyan'),
+          careerStat('Mål', statNumber(goals)),
+          careerStat('Assist', statNumber(assists)),
+          careerStat('Turneringar', statNumber(tournaments)),
+          careerStat('Klubbar', statNumber(clubs))
+        ];
 
     holder.innerHTML = `
       <div class="seh-me-career-summary">
         <div><small>ÖVERSIKT</small><strong>${esc(highlight)}</strong><span>${esc(context.join(' · ') || 'Verifierad historik från Svensk eHockey')}</span></div>
       </div>
-      <div class="seh-me-career-grid">
-        ${careerStat('Matcher', statNumber(gp), 'gold')}
-        ${careerStat('Poäng', statNumber(points), 'cyan')}
-        ${careerStat('Mål', statNumber(goals))}
-        ${careerStat('Assist', statNumber(assists))}
-        ${careerStat('Turneringar', statNumber(tournaments))}
-        ${careerStat('Klubbar', statNumber(clubs))}
-      </div>
-      ${hasGoalieHistory ? `
+      <div class="seh-me-career-grid">${mainStats.join('')}</div>
+      ${hasGoalieHistory && !isGoalieOnly ? `
         <div class="seh-me-goalie-row">
-          <div><small>MÅLVAKTSHISTORIK</small><strong>${savePct(row?.career_save_pct)}</strong><span>Räddningsprocent</span></div>
+          <div><small>MÅLVAKTSHISTORIK</small><strong>${savePct(savePercentage)}</strong><span>Räddningsprocent</span></div>
+          <div><strong>${statNumber(goalieGames)}</strong><span>Matcher i mål</span></div>
           <div><strong>${statNumber(saves)}</strong><span>Räddningar</span></div>
-          <div><strong>${statNumber(shutouts)}</strong><span>Hållna nollor</span></div>
         </div>` : ''}
       <p class="seh-me-career-note">Bygger på registrerad historik i Svensk eHockey och uppdateras automatiskt.</p>`;
 
-    if (status) status.textContent = gp || tournaments ? 'Karriärdata' : 'Ingen statistik ännu';
+    if (status) status.textContent = careerGames || tournaments ? 'Karriärdata' : 'Ingen statistik ännu';
   }
 
   function renderCareerMessage(root, message, statusText = '') {
@@ -205,7 +224,7 @@
 
       const result = await sb
         .from('app_player_directory_cache')
-        .select('player_key,display_gamertag,primary_position,latest_team,latest_season,career_gp,career_g,career_a,career_p,career_sv,career_sa,career_shutouts,career_save_pct,career_tournaments,career_clubs')
+        .select('player_key,display_gamertag,primary_position,latest_team,latest_season,total_skater_games,total_goalie_games,career_games,total_points,total_goals,total_assists,total_goalie_saves,total_goalie_shots_against,total_goalie_save_percentage,tournament_count,club_count')
         .eq('player_key', playerKey)
         .limit(1);
 
@@ -361,9 +380,7 @@
         close();
         return;
       }
-      if (event.target.closest?.('#seh-native-bottom')) {
-        close();
-      }
+      if (event.target.closest?.('#seh-native-bottom')) close();
     }
 
     if (event.target.closest?.('[data-me-account]')) {
