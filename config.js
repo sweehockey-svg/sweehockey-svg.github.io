@@ -134,3 +134,16 @@ window.EHOCKEY_CONFIG = {
   script.defer = true;
   document.head.appendChild(script);
 })();
+
+/* Spelarprofiler + Mitt eHockey: ECL-divisionsresa byggd på faktiska registrerade matcher. */
+(() => {
+  const css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = '/player-division-curve-v1.css?v=20260917-1';
+  document.head.appendChild(css);
+
+  const script = document.createElement('script');
+  script.src = '/player-division-curve-v1.js?v=20260917-1';
+  script.defer = true;
+  document.head.appendChild(script);
+})();
