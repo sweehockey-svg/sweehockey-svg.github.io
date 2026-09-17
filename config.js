@@ -28,7 +28,7 @@ window.EHOCKEY_CONFIG = {
 /* Favoriter: lokalt för gäster, konto/Supabase som primär lagring när användaren är inloggad. */
 (() => {
   const script = document.createElement('script');
-  script.src = '/webapp-favorites-account-sync-v1.js?v=20260917-1';
+  script.src = '/webapp-favorites-account-sync-v1.js?v=20260917-2';
   script.defer = true;
   document.head.appendChild(script);
 })();
