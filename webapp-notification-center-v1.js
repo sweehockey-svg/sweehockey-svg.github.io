@@ -208,14 +208,26 @@
       });
     }
 
+    const approvedByDay = new Map();
     for (const row of profileRequests) {
       if (String(row.status || '').toLowerCase() !== 'approved') continue;
+      const at = row.reviewed_at || row.updated_at;
+      if (!at) continue;
+      const day = String(at).slice(0, 10);
+      const bucket = approvedByDay.get(day) || [];
+      bucket.push({ row, at });
+      approvedByDay.set(day, bucket);
+    }
+
+    for (const [day, bucket] of approvedByDay.entries()) {
+      bucket.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+      const count = bucket.length;
       items.push({
-        key: `profile:${row.id}:approved`,
+        key: count === 1 ? `profile:${bucket[0].row.id}:approved` : `profile-group:${day}:approved`,
         type: 'profile',
-        title: 'Din profiländring är godkänd',
-        text: 'Ändringen på din spelarprofil har godkänts.',
-        at: row.reviewed_at || row.updated_at,
+        title: count === 1 ? 'Din profiländring är godkänd' : `${count} profiländringar har godkänts`,
+        text: count === 1 ? 'Ändringen på din spelarprofil har godkänts.' : 'Flera ändringar på din spelarprofil godkändes samma dag.',
+        at: bucket[0].at,
         action: 'account'
       });
     }
@@ -260,7 +272,7 @@
           <header class="seh-notification-head">
             <div><small>PERSONLIGT</small><h2 id="seh-notification-title">Notiser</h2></div>
             <div class="seh-notification-head-actions">
-              <button type="button" data-notification-read-all>Markera alla lästa</button>
+              <button type="button" data-notification-read-all>Markera lästa</button>
               <button type="button" class="seh-notification-close" data-notification-close aria-label="Stäng">×</button>
             </div>
           </header>
