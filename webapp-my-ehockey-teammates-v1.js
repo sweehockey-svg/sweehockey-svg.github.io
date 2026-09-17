@@ -56,6 +56,33 @@
     return `${parts[0][0] || ''}${parts[parts.length - 1][0] || ''}`.toUpperCase();
   }
 
+  function playerSlug(value) {
+    return String(value || '')
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase('sv-SE')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function playerProfileUrl(playerKey, gamertag) {
+    if (typeof window.SEH_playerProfileUrl === 'function') {
+      const canonical = String(window.SEH_playerProfileUrl(playerKey, gamertag) || '').trim();
+      if (canonical) return canonical;
+    }
+
+    const key = String(playerKey || '').trim();
+    const slug = playerSlug(gamertag);
+    const routeValue = slug || key;
+    if (!routeValue) return '#/spelare';
+
+    const query = new URLSearchParams();
+    if (/^[a-f0-9]{40,}$/i.test(key)) query.set('pk', key);
+    const queryString = query.toString();
+    return `#/spelare/${encodeURIComponent(routeValue)}${queryString ? `?${queryString}` : ''}`;
+  }
+
   function localPlayerKey() {
     try {
       const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null');
@@ -145,7 +172,7 @@
     const sharedGames = fmt(row?.shared_games);
     const sharedTournaments = fmt(row?.shared_tournaments);
     const latestTeam = String(row?.latest_shared_team || '').trim();
-    const href = key ? `#/spelare/${encodeURIComponent(key)}` : '#/spelare';
+    const href = playerProfileUrl(key, name);
     const avatar = image
       ? `<img src="${esc(image)}" alt="${esc(name)}" loading="lazy">`
       : `<span>${esc(initials(name))}</span>`;
