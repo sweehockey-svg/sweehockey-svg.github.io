@@ -5,6 +5,10 @@
   const PROFILE_KEY = 'seh_app_my_profile_v1';
   const HOST_ID = 'seh-my-career-milestones';
   const DIVISION_RANK = Object.freeze({ Neo: 1, Core: 2, Lite: 3, Pro: 4, Elite: 5 });
+  const EXCLUDED_ECL = Object.freeze([
+    'qualifier', 'qualification', 'kval', 'wildcard', 'crossover',
+    'registration', 'free agent', 'warmup', 'pre-season', 'preseason'
+  ]);
   const GAME_THRESHOLDS = [100, 250, 500, 1000];
   const TOURNAMENT_THRESHOLDS = [10, 25, 50, 100];
   const CLUB_THRESHOLDS = [10, 25, 50];
@@ -125,6 +129,8 @@
     for (const row of Array.isArray(rows) ? rows : []) {
       if (String(row?.competition_name || '').trim().toUpperCase() !== 'ECL') continue;
       if (rowGames(row) <= 0) continue;
+      const leagueText = String(row?.league_name || '').toLowerCase();
+      if (EXCLUDED_ECL.some(word => leagueText.includes(word))) continue;
       const division = normalizeDivision(row?.division);
       if (!division) continue;
 
