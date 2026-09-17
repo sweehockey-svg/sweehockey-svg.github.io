@@ -167,12 +167,7 @@
     const current = number(value);
     const target = thresholds.find(item => current < item);
     if (!target) return null;
-    return {
-      current,
-      target,
-      label,
-      ratio: target > 0 ? current / target : 0
-    };
+    return { current, target, label, ratio: target > 0 ? current / target : 0 };
   }
 
   function buildBadges(row, ecl) {
@@ -263,40 +258,51 @@
   }
 
   function ensureHost(root) {
-    const career = root?.querySelector('[data-me-career]');
-    if (!career) return null;
-    let host = career.querySelector(`#${HOST_ID}`);
+    const careerSection = root?.querySelector('.seh-me-career-section');
+    if (!careerSection) return null;
+
+    let host = root.querySelector(`#${HOST_ID}`);
+    if (host && host.closest('[data-me-career]')) {
+      host.remove();
+      host = null;
+    }
+
     if (!host) {
-      host = document.createElement('div');
+      host = document.createElement('section');
       host.id = HOST_ID;
-      host.className = 'seh-me-milestones';
+      host.className = 'seh-me-section seh-me-milestones';
+      host.dataset.ready = '0';
+      host.dataset.loading = '0';
       host.innerHTML = '<div class="seh-me-milestone-loading">Hämtar rekord & milstolpar…</div>';
-      career.appendChild(host);
+      careerSection.insertAdjacentElement('afterend', host);
     }
     return host;
   }
 
-  async function load() {
+  async function load(force = false) {
     if (!isWebApp()) return;
     const root = document.getElementById(ROOT_ID);
     if (!root?.classList.contains('show')) return;
     const host = ensureHost(root);
     if (!host) return;
+    if (host.dataset.loading === '1') return;
+
+    const playerKey = await resolvePlayerKey().catch(() => '');
+    if (!host.isConnected) return;
+    if (!playerKey) {
+      host.remove();
+      return;
+    }
+    if (!force && loadedKey === playerKey && host.dataset.ready === '1') return;
 
     const token = ++loadToken;
-    try {
-      const playerKey = await resolvePlayerKey();
-      if (token !== loadToken || !host.isConnected) return;
-      if (!playerKey) {
-        host.remove();
-        return;
-      }
-      if (loadedKey === playerKey && host.dataset.ready === '1') return;
+    host.dataset.loading = '1';
+    host.dataset.ready = '0';
+    host.innerHTML = '<div class="seh-me-milestone-loading">Hämtar rekord & milstolpar…</div>';
 
+    try {
       const sb = getClient();
       if (!sb) throw new Error('Supabase saknas');
-      host.dataset.ready = '0';
-      host.innerHTML = '<div class="seh-me-milestone-loading">Hämtar rekord & milstolpar…</div>';
 
       const [careerResult, eclResult] = await Promise.all([
         sb.from('app_player_directory_cache')
@@ -327,15 +333,29 @@
       if (token !== loadToken || !host.isConnected) return;
       host.innerHTML = '<div class="seh-me-milestone-loading">Rekord & milstolpar kunde inte laddas just nu.</div>';
       host.dataset.ready = '0';
+    } finally {
+      if (host.isConnected) host.dataset.loading = '0';
     }
   }
 
-  function schedule(delay = 80) {
+  function schedule(delay = 80, force = false) {
     clearTimeout(timer);
-    timer = window.setTimeout(load, delay);
+    timer = window.setTimeout(() => load(force), delay);
   }
 
-  const observer = new MutationObserver(() => schedule(80));
+  const observer = new MutationObserver(mutations => {
+    if (!isWebApp()) return;
+    const root = document.getElementById(ROOT_ID);
+    if (!root?.classList.contains('show')) return;
+
+    const relevant = mutations.some(mutation => {
+      const target = mutation.target?.nodeType === 1 ? mutation.target : mutation.target?.parentElement;
+      if (target?.closest?.(`#${HOST_ID}`)) return false;
+      if (mutation.type === 'attributes') return mutation.target === root;
+      return !root.querySelector(`#${HOST_ID}`) || Boolean(target?.closest?.(`#${ROOT_ID}`));
+    });
+    if (relevant) schedule(80);
+  });
 
   function start() {
     if (!isWebApp()) return;
@@ -352,9 +372,15 @@
     if (event.key === PROFILE_KEY) {
       loadedKey = '';
       loadToken += 1;
-      schedule(80);
+      schedule(80, true);
     }
   });
+
+  window.SEH_REFRESH_MY_MILESTONES = () => {
+    loadedKey = '';
+    loadToken += 1;
+    schedule(0, true);
+  };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
