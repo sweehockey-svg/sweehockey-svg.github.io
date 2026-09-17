@@ -6,7 +6,8 @@
   const DIVISION_ID = 'seh-my-division-journey';
   const TEAMMATE_ID = 'seh-my-teammates';
   let timer = 0;
-  let pulseTimer = 0;
+  let followupTimer = 0;
+  let syncing = false;
 
   function normalizeInternalLinks(root) {
     if (!root) return;
@@ -16,36 +17,124 @@
     }
   }
 
-  function pulseDivision(root) {
-    if (!root || root.querySelector(`#${DIVISION_ID}`)) return;
-    root.classList.add('seh-me-modules-sync-pulse');
-    requestAnimationFrame(() => root.classList.remove('seh-me-modules-sync-pulse'));
+  function isLinked(root) {
+    if (!root) return false;
+    if (root.querySelector('.seh-me-pill.ok')) return true;
+    try {
+      const profile = JSON.parse(localStorage.getItem('seh_app_my_profile_v1') || 'null');
+      return Boolean(
+        profile?.serverLinked === true ||
+        profile?.linked === true ||
+        profile?.playerKey ||
+        profile?.player_key ||
+        profile?.key
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function makeSection(id, className, label, loadingHtml) {
+    const section = document.createElement('section');
+    section.id = id;
+    section.className = `seh-me-section ${className}`;
+    section.setAttribute('aria-label', label);
+    section.dataset.ready = '0';
+    section.dataset.loading = '0';
+    section.innerHTML = loadingHtml;
+    return section;
+  }
+
+  function ensureSlots(root) {
+    const career = root?.querySelector('.seh-me-career-section');
+    if (!career || !isLinked(root)) return false;
+
+    let milestone = root.querySelector(`#${MILESTONE_ID}`);
+    if (!milestone) {
+      milestone = makeSection(
+        MILESTONE_ID,
+        'seh-me-milestones',
+        'Rekord och milstolpar',
+        '<div class="seh-me-milestone-loading">Hämtar rekord & milstolpar…</div>'
+      );
+    }
+
+    let division = root.querySelector(`#${DIVISION_ID}`);
+    if (!division) {
+      division = makeSection(
+        DIVISION_ID,
+        'seh-my-division-section',
+        'Din ECL-divisionsresa',
+        '<div class="seh-div-loading seh-div-loading--my">Hämtar din divisionsresa…</div>'
+      );
+    }
+
+    let teammate = root.querySelector(`#${TEAMMATE_ID}`);
+    if (!teammate) {
+      teammate = makeSection(
+        TEAMMATE_ID,
+        'seh-me-teammates',
+        'Spelat mest med',
+        '<div class="seh-me-teammates-loading">Hämtar lagkamrater…</div>'
+      );
+    }
+
+    if (career.nextElementSibling !== milestone) career.insertAdjacentElement('afterend', milestone);
+    if (milestone.nextElementSibling !== division) milestone.insertAdjacentElement('afterend', division);
+    if (division.nextElementSibling !== teammate) division.insertAdjacentElement('afterend', teammate);
+
+    return true;
+  }
+
+  function refreshMissing(root) {
+    const milestone = root.querySelector(`#${MILESTONE_ID}`);
+    const teammate = root.querySelector(`#${TEAMMATE_ID}`);
+
+    if (milestone?.dataset.ready !== '1' && milestone?.dataset.loading !== '1') {
+      window.SEH_REFRESH_MY_MILESTONES?.();
+    }
+    if (teammate?.dataset.ready !== '1' && teammate?.dataset.loading !== '1') {
+      window.SEH_REFRESH_MY_TEAMMATES?.();
+    }
+
+    // Divisionsmodulen observerar DOM-förändringar själv. Om dess fasta slot
+    // saknar innehåll triggar vi en riktig childList-mutation utan att toggla
+    // root-klasser, vilket tidigare kunde skapa race conditions.
+    const division = root.querySelector(`#${DIVISION_ID}`);
+    if (division && division.dataset.ready !== '1' && !division.dataset.sehWake) {
+      division.dataset.sehWake = '1';
+      const wake = document.createComment('seh-division-wake');
+      division.appendChild(wake);
+      queueMicrotask(() => {
+        wake.remove();
+        delete division.dataset.sehWake;
+      });
+    }
   }
 
   function sync() {
+    if (syncing) return;
     const root = document.getElementById(ROOT_ID);
     if (!root?.classList.contains('show')) return;
     if (!root.querySelector('.seh-me-career-section')) return;
 
-    normalizeInternalLinks(root);
+    syncing = true;
+    try {
+      normalizeInternalLinks(root);
+      if (!ensureSlots(root)) return;
+      refreshMissing(root);
 
-    if (!root.querySelector(`#${MILESTONE_ID}`) && typeof window.SEH_REFRESH_MY_MILESTONES === 'function') {
-      window.SEH_REFRESH_MY_MILESTONES();
+      clearTimeout(followupTimer);
+      followupTimer = window.setTimeout(() => {
+        const current = document.getElementById(ROOT_ID);
+        if (!current?.classList.contains('show')) return;
+        normalizeInternalLinks(current);
+        if (!ensureSlots(current)) return;
+        refreshMissing(current);
+      }, 500);
+    } finally {
+      syncing = false;
     }
-    if (!root.querySelector(`#${TEAMMATE_ID}`) && typeof window.SEH_REFRESH_MY_TEAMMATES === 'function') {
-      window.SEH_REFRESH_MY_TEAMMATES();
-    }
-    pulseDivision(root);
-
-    clearTimeout(pulseTimer);
-    pulseTimer = window.setTimeout(() => {
-      const current = document.getElementById(ROOT_ID);
-      if (!current?.classList.contains('show')) return;
-      normalizeInternalLinks(current);
-      if (!current.querySelector(`#${MILESTONE_ID}`) && typeof window.SEH_REFRESH_MY_MILESTONES === 'function') window.SEH_REFRESH_MY_MILESTONES();
-      if (!current.querySelector(`#${TEAMMATE_ID}`) && typeof window.SEH_REFRESH_MY_TEAMMATES === 'function') window.SEH_REFRESH_MY_TEAMMATES();
-      pulseDivision(current);
-    }, 650);
   }
 
   function schedule(delay = 60) {
@@ -56,12 +145,15 @@
   const observer = new MutationObserver(mutations => {
     const root = document.getElementById(ROOT_ID);
     if (!root?.classList.contains('show')) return;
+
     const relevant = mutations.some(mutation => {
       const target = mutation.target?.nodeType === 1 ? mutation.target : mutation.target?.parentElement;
       if (!target) return false;
-      return !target.closest?.(`#${MILESTONE_ID}, #${DIVISION_ID}, #${TEAMMATE_ID}`);
+      if (target.closest?.(`#${MILESTONE_ID}, #${DIVISION_ID}, #${TEAMMATE_ID}`)) return false;
+      return Boolean(target.closest?.(`#${ROOT_ID}`) || mutation.target === root);
     });
-    if (relevant) schedule(80);
+
+    if (relevant) schedule(40);
   });
 
   observer.observe(document.documentElement, {
@@ -72,15 +164,15 @@
   });
 
   document.addEventListener('click', event => {
-    if (event.target.closest?.('#seh-my-profile')) schedule(120);
+    if (event.target.closest?.('#seh-my-profile')) schedule(80);
   }, true);
 
-  window.addEventListener('pageshow', () => schedule(100));
-  window.addEventListener('focus', () => schedule(100));
+  window.addEventListener('pageshow', () => schedule(80));
+  window.addEventListener('focus', () => schedule(80));
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) schedule(100);
+    if (!document.hidden) schedule(80);
   });
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => schedule(200), { once: true });
-  else schedule(200);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => schedule(120), { once: true });
+  else schedule(120);
 })();
