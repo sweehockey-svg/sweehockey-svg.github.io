@@ -25,6 +25,14 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(script);
 })();
 
+/* Webbappen: gemensam klubbidentitet/alias för current_name + historiska namn + liganamn. */
+(() => {
+  const script = document.createElement('script');
+  script.src = '/webapp-team-aliases-v1.js?v=20260918-1';
+  script.async = false;
+  document.head.appendChild(script);
+})();
+
 /* Favoriter: lokalt för gäster, konto/Supabase som primär lagring när användaren är inloggad. */
 (() => {
   const script = document.createElement('script');
@@ -51,7 +59,7 @@ window.EHOCKEY_CONFIG = {
   const preload = document.createElement('link');
   preload.rel = 'preload';
   preload.as = 'script';
-  preload.href = '/webapp-for-you-v2.js?v=20260917-optimized-images-1';
+  preload.href = '/webapp-for-you-v2.js?v=20260918-team-aliases-1';
   document.head.appendChild(preload);
 
   const isWebApp = () => Boolean(
@@ -100,7 +108,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(instantCacheScript);
 
   const script = document.createElement('script');
-  script.src = '/webapp-for-you-v2.js?v=20260917-optimized-images-1';
+  script.src = '/webapp-for-you-v2.js?v=20260918-team-aliases-1';
   script.async = false;
   document.head.appendChild(script);
 
@@ -146,7 +154,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(css);
 
   const script = document.createElement('script');
-  script.src = '/webapp-my-ehockey-v1.js?v=20260917-optimized-images-1';
+  script.src = '/webapp-my-ehockey-v1.js?v=20260918-team-aliases-1';
   script.defer = true;
   document.head.appendChild(script);
 
@@ -182,7 +190,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(css);
 
   const script = document.createElement('script');
-  script.src = '/webapp-my-ehockey-teammates-v1.js?v=20260917-6';
+  script.src = '/webapp-my-ehockey-teammates-v1.js?v=20260918-7';
   script.defer = true;
   document.head.appendChild(script);
 })();
