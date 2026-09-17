@@ -152,11 +152,11 @@ window.EHOCKEY_CONFIG = {
 
   const milestoneCss = document.createElement('link');
   milestoneCss.rel = 'stylesheet';
-  milestoneCss.href = '/webapp-my-ehockey-milestones-v1.css?v=20260917-1';
+  milestoneCss.href = '/webapp-my-ehockey-milestones-v1.css?v=20260917-2';
   document.head.appendChild(milestoneCss);
 
   const milestoneScript = document.createElement('script');
-  milestoneScript.src = '/webapp-my-ehockey-milestones-v1.js?v=20260917-2';
+  milestoneScript.src = '/webapp-my-ehockey-milestones-v1.js?v=20260917-3';
   milestoneScript.defer = true;
   document.head.appendChild(milestoneScript);
 })();
