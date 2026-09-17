@@ -33,6 +33,14 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(script);
 })();
 
+/* Webbappen: håll Svensk eHockey öppen medan Discord OAuth körs separat i webbläsaren. */
+(() => {
+  const script = document.createElement('script');
+  script.src = '/webapp-discord-oauth-resilience-v1.js?v=20260917-1';
+  script.defer = true;
+  document.head.appendChild(script);
+})();
+
 /* Webbappen: personlig För dig-start. Samma Supabase-data kan senare återanvändas i Android. */
 (() => {
   const css = document.createElement('link');
