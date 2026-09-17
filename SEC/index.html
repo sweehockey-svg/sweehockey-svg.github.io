@@ -58,6 +58,11 @@
       mobileCss.href = "./mobile-hardening.css?v=20260909-v1";
       document.head.appendChild(mobileCss);
 
+      var stickyStandingsCss = document.createElement("link");
+      stickyStandingsCss.rel = "stylesheet";
+      stickyStandingsCss.href = "./mobile-sticky-standings-v1.css?v=20260917-1";
+      document.head.appendChild(stickyStandingsCss);
+
       function loadScript(src) {
         return new Promise(function (resolve, reject) {
           var script = document.createElement("script");
