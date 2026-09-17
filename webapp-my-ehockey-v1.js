@@ -88,6 +88,7 @@
 
   function profilePhoto(profile) {
     const raw = String(profile?.image || profile?.photo || profile?.playerImage || profile?.player_image || profile?.avatar || '').trim();
+    if (!raw) return '';
     try {
       if (typeof window.SEH_playerImageUrl === 'function') return window.SEH_playerImageUrl(raw) || raw;
     } catch (_) {}
