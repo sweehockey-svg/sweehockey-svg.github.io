@@ -238,7 +238,10 @@
     const playerName = String(player?.display_gamertag || account?.playerName || account?.playerKey || 'Din profil').trim();
     const teamName = String(project?.name || '').trim();
     const division = String(project?.division || '').trim();
-    const profileMeta = [teamName, division].filter(Boolean).join(' · ') || String(player?.latest_team || player?.latest_ecl_team || 'Kopplad spelare');
+    const historicalTeamMeta = String(player?.latest_team || player?.latest_ecl_team || '').trim();
+    const profileMeta = teamName
+      ? [teamName, division].filter(Boolean).join(' · ')
+      : (meta.phase === 'offseason' && historicalTeamMeta ? historicalTeamMeta : 'Kopplad spelare');
     const sourceTeamId = Number(project?.source_team_id) || 0;
 
     const feed = [];
