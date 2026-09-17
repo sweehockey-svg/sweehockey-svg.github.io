@@ -6,6 +6,8 @@
   const FAVORITES_KEY = 'seh_app_favorites_v1';
   let bypassProfileClick = false;
   let previousTitle = '';
+  let client = null;
+  let careerLoadToken = 0;
 
   const USER_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.5-4.2 2.9-6.5 7-6.5s6.5 2.3 7 6.5"/></svg>';
 
@@ -25,6 +27,25 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  function cfg() {
+    return window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
+  }
+
+  function getClient() {
+    if (window.__SEH_NATIVE_SUPABASE_CLIENT__) return window.__SEH_NATIVE_SUPABASE_CLIENT__;
+    if (client) return client;
+    const config = cfg();
+    const url = String(config.supabaseUrl || config.SUPABASE_URL || '').trim();
+    const key = String(config.supabasePublishableKey || config.supabaseAnonKey || config.SUPABASE_ANON_KEY || config.SUPABASE_PUBLISHABLE_KEY || '').trim();
+    if (!window.supabase?.createClient || !url || !key) return null;
+    client = window.supabase.createClient(url, key);
+    return client;
+  }
+
+  function asRow(value) {
+    return Array.isArray(value) ? (value[0] || {}) : (value || {});
   }
 
   function readProfile() {
@@ -53,10 +74,14 @@
     return String(profile?.image || profile?.photo || profile?.playerImage || profile?.player_image || profile?.avatar || '').trim();
   }
 
+  function profilePlayerKey(profile) {
+    return String(profile?.playerKey || profile?.player_key || profile?.key || '').trim();
+  }
+
   function profileRoute(profile) {
     const direct = String(profile?.url || profile?.profileUrl || '').trim();
     if (direct) return direct;
-    const key = String(profile?.playerKey || profile?.player_key || profile?.key || '').trim();
+    const key = profilePlayerKey(profile);
     const name = profileName(profile);
     const target = key || name;
     return target ? `/#/spelare/${encodeURIComponent(target)}` : '';
@@ -64,6 +89,24 @@
 
   function favTitle(item) {
     return String(item?.title || item?.name || '').replace(/\s*[|·]\s*Svensk eHockey.*$/i, '').trim();
+  }
+
+  function statNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, Math.round(number)).toLocaleString('sv-SE') : '0';
+  }
+
+  function decimalNumber(value, digits = 2) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return '0';
+    return number.toLocaleString('sv-SE', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  }
+
+  function savePct(value) {
+    let number = Number(value);
+    if (!Number.isFinite(number) || number < 0) return '–';
+    if (number <= 1) number *= 100;
+    return `${number.toLocaleString('sv-SE', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} %`;
   }
 
   function ensureRoot() {
@@ -76,6 +119,110 @@
     root.innerHTML = '<div class="seh-me-wrap"></div>';
     document.body.appendChild(root);
     return root;
+  }
+
+  function careerStat(label, value, accent = '') {
+    return `<div class="seh-me-career-stat${accent ? ` ${accent}` : ''}"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`;
+  }
+
+  function renderCareer(root, row) {
+    const holder = root?.querySelector('[data-me-career]');
+    const status = root?.querySelector('[data-me-career-status]');
+    if (!holder) return;
+
+    const gp = Number(row?.career_gp) || 0;
+    const goals = Number(row?.career_g) || 0;
+    const assists = Number(row?.career_a) || 0;
+    const points = Number(row?.career_p) || 0;
+    const tournaments = Number(row?.career_tournaments) || 0;
+    const clubs = Number(row?.career_clubs) || 0;
+    const saves = Number(row?.career_sv) || 0;
+    const shotsAgainst = Number(row?.career_sa) || 0;
+    const shutouts = Number(row?.career_shutouts) || 0;
+    const hasGoalieHistory = saves > 0 || shotsAgainst > 0 || shutouts > 0 || Number(row?.career_save_pct) > 0;
+    const ppg = gp > 0 ? points / gp : 0;
+    const position = String(row?.primary_position || '').trim();
+    const latestTeam = String(row?.latest_team || '').trim();
+    const latestSeason = String(row?.latest_season || '').trim();
+
+    const context = [position ? `Position ${position}` : '', latestTeam, latestSeason].filter(Boolean);
+    const highlight = gp > 0
+      ? `${statNumber(gp)} matcher · ${decimalNumber(ppg)} poäng per match`
+      : 'Karriärstatistiken fylls på när matcher finns registrerade.';
+
+    holder.innerHTML = `
+      <div class="seh-me-career-summary">
+        <div><small>ÖVERSIKT</small><strong>${esc(highlight)}</strong><span>${esc(context.join(' · ') || 'Verifierad historik från Svensk eHockey')}</span></div>
+      </div>
+      <div class="seh-me-career-grid">
+        ${careerStat('Matcher', statNumber(gp), 'gold')}
+        ${careerStat('Poäng', statNumber(points), 'cyan')}
+        ${careerStat('Mål', statNumber(goals))}
+        ${careerStat('Assist', statNumber(assists))}
+        ${careerStat('Turneringar', statNumber(tournaments))}
+        ${careerStat('Klubbar', statNumber(clubs))}
+      </div>
+      ${hasGoalieHistory ? `
+        <div class="seh-me-goalie-row">
+          <div><small>MÅLVAKTSHISTORIK</small><strong>${savePct(row?.career_save_pct)}</strong><span>Räddningsprocent</span></div>
+          <div><strong>${statNumber(saves)}</strong><span>Räddningar</span></div>
+          <div><strong>${statNumber(shutouts)}</strong><span>Hållna nollor</span></div>
+        </div>` : ''}
+      <p class="seh-me-career-note">Bygger på registrerad historik i Svensk eHockey och uppdateras automatiskt.</p>`;
+
+    if (status) status.textContent = gp || tournaments ? 'Karriärdata' : 'Ingen statistik ännu';
+  }
+
+  function renderCareerMessage(root, message, statusText = '') {
+    const holder = root?.querySelector('[data-me-career]');
+    const status = root?.querySelector('[data-me-career-status]');
+    if (holder) holder.innerHTML = `<div class="seh-me-career-empty">${esc(message)}</div>`;
+    if (status) status.textContent = statusText;
+  }
+
+  async function loadCareer(root, profile) {
+    const token = ++careerLoadToken;
+    const holder = root?.querySelector('[data-me-career]');
+    if (!holder) return;
+
+    try {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase saknas');
+
+      let playerKey = profilePlayerKey(profile);
+      if (!playerKey) {
+        const accountResult = await sb.rpc('seh_get_my_player_account');
+        if (token !== careerLoadToken) return;
+        if (accountResult.error) throw accountResult.error;
+        const account = asRow(accountResult.data);
+        if (String(account?.status || '') === 'approved') playerKey = String(account?.player_key || '').trim();
+      }
+
+      if (!playerKey) {
+        renderCareerMessage(root, 'Koppla din befintliga spelarprofil för att se din karriär här.', 'Profil krävs');
+        return;
+      }
+
+      const result = await sb
+        .from('app_player_directory_cache')
+        .select('player_key,display_gamertag,primary_position,latest_team,latest_season,career_gp,career_g,career_a,career_p,career_sv,career_sa,career_shutouts,career_save_pct,career_tournaments,career_clubs')
+        .eq('player_key', playerKey)
+        .limit(1);
+
+      if (token !== careerLoadToken) return;
+      if (result.error) throw result.error;
+      const row = result.data?.[0] || null;
+      if (!row) {
+        renderCareerMessage(root, 'Ingen registrerad karriärhistorik hittades för spelarprofilen ännu.', 'Ingen data');
+        return;
+      }
+
+      renderCareer(root, row);
+    } catch (error) {
+      console.warn('[Svensk eHockey] Mitt eHockey karriär kunde inte laddas', error);
+      if (token !== careerLoadToken) return;
+      renderCareerMessage(root, 'Karriärstatistiken kunde inte laddas just nu.', 'Försök igen senare');
+    }
   }
 
   function render() {
@@ -133,6 +280,13 @@
         </div>
       </section>
 
+      <section class="seh-me-section seh-me-career-section">
+        <div class="seh-me-section-head"><div><small>MIN KARRIÄR</small><h3>Karriären i siffror</h3></div><span data-me-career-status>Hämtar…</span></div>
+        <div class="seh-me-career" data-me-career>
+          <div class="seh-me-career-loading"><i></i><i></i><i></i></div>
+        </div>
+      </section>
+
       <section class="seh-me-section">
         <div class="seh-me-section-head"><div><small>SNABBT</small><h3>Din eHockey</h3></div></div>
         <div class="seh-me-actions">
@@ -149,6 +303,8 @@
       </section>
 
       <p class="seh-me-footer-note">Mitt eHockey är din personliga hubb. Hem fortsätter vara en snabb startsida med nyheter och genvägar.</p>`;
+
+    loadCareer(root, profile);
   }
 
   function open() {
@@ -165,6 +321,7 @@
   function close() {
     const root = document.getElementById(ROOT_ID);
     if (!root?.classList.contains('show')) return false;
+    careerLoadToken += 1;
     root.classList.remove('show');
     document.body.classList.remove('seh-my-ehockey-open');
     const title = document.getElementById('seh-native-title');
