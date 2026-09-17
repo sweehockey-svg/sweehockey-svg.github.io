@@ -111,3 +111,16 @@ window.EHOCKEY_CONFIG = {
   script.defer = true;
   document.head.appendChild(script);
 })();
+
+/* Webbappen: Mitt eHockey ligger bakom avatar-knappen och tar inte plats på Hem. */
+(() => {
+  const css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = '/webapp-my-ehockey-v1.css?v=20260917-1';
+  document.head.appendChild(css);
+
+  const script = document.createElement('script');
+  script.src = '/webapp-my-ehockey-v1.js?v=20260917-1';
+  script.defer = true;
+  document.head.appendChild(script);
+})();
