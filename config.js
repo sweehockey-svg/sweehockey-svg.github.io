@@ -87,4 +87,9 @@ window.EHOCKEY_CONFIG = {
   favoritesScript.src = '/webapp-for-you-favorites-v1.js?v=20260917-1';
   favoritesScript.defer = true;
   document.head.appendChild(favoritesScript);
+
+  const buildsRouteFix = document.createElement('script');
+  buildsRouteFix.src = '/webapp-for-you-builds-route-fix-v1.js?v=20260917-1';
+  buildsRouteFix.defer = true;
+  document.head.appendChild(buildsRouteFix);
 })();
