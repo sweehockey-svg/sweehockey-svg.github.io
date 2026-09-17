@@ -35,7 +35,7 @@ window.EHOCKEY_CONFIG = {
   const preload = document.createElement('link');
   preload.rel = 'preload';
   preload.as = 'script';
-  preload.href = '/webapp-for-you-v2.js?v=20260917-stable-fast-1';
+  preload.href = '/webapp-for-you-v2.js?v=20260917-competition-aware-1';
   document.head.appendChild(preload);
 
   const isWebApp = () => Boolean(
@@ -84,7 +84,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(instantCacheScript);
 
   const script = document.createElement('script');
-  script.src = '/webapp-for-you-v2.js?v=20260917-stable-fast-1';
+  script.src = '/webapp-for-you-v2.js?v=20260917-competition-aware-1';
   script.async = false;
   document.head.appendChild(script);
 
@@ -97,11 +97,6 @@ window.EHOCKEY_CONFIG = {
   buildsRouteFix.src = '/webapp-for-you-builds-route-fix-v1.js?v=20260917-1';
   buildsRouteFix.defer = true;
   document.head.appendChild(buildsRouteFix);
-
-  const contextScript = document.createElement('script');
-  contextScript.src = '/webapp-for-you-context-v1.js?v=20260917-1';
-  contextScript.defer = true;
-  document.head.appendChild(contextScript);
 })();
 
 /* Webbappen: personligt Notiscenter med samma läst-status för webb och kommande Android-klient. */
