@@ -10174,8 +10174,20 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       .trim();
   }
 
+  function sehWebAppCanonicalTeamName(value,teamId=0){
+    const fallback=String(value||'').replace(/\s+/g,' ').trim();
+    try{return window.SEH_WEBAPP_TEAM_ALIASES?.canonicalName(fallback,teamId)||fallback;}catch(_){return fallback;}
+  }
+
+  function sehWebAppTeamAliasSearchText(value,teamId=0){
+    try{return window.SEH_WEBAPP_TEAM_ALIASES?.searchText(value,teamId)||String(value||'').toLocaleLowerCase('sv-SE');}
+    catch(_){return String(value||'').toLocaleLowerCase('sv-SE');}
+  }
+
+  window.SEH_WEBAPP_CANONICAL_TEAM_NAME=sehWebAppCanonicalTeamName;
+
   function zeroTeamLogoUrl(teamName){
-    const name=String(teamName||'').trim();
+    const name=sehWebAppCanonicalTeamName(teamName);
     return name?sehWebAppTeamLogo('',name):'';
   }
 
@@ -10424,19 +10436,20 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
 
   function sehRememberFastProfileNav(data,teamLogo,rank){
     try{
+      const latestTeam=sehWebAppCanonicalTeamName(data?.latestTeam||'');
       sessionStorage.setItem(SEH_FAST_PROFILE_NAV_KEY,JSON.stringify({
         href:String(data?.href||''),
         key:String(data?.key||''),
         name:String(data?.name||''),
         position:String(data?.position||''),
         photo:String(data?.photo||''),
-        latestTeam:String(data?.latestTeam||''),
+        latestTeam:String(latestTeam||''),
         latestSeason:String(data?.latestSeason||''),
         history:String(data?.history||''),
         games:Number(data?.games)||0,
         rankNo:Number(rank?.overall_rank)||0,
         rankPoints:Number(rank?.ranking_points)||0,
-        teamLogo:sehWebAppTeamLogo(teamLogo,data?.latestTeam||''),
+        teamLogo:sehWebAppTeamLogo(teamLogo,latestTeam),
         savedAt:Date.now()
       }));
     }catch(_){}
@@ -10464,11 +10477,12 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       return decodedHref.trim().toLocaleLowerCase('sv-SE')===routeLower;
     });
     if(!row)return null;
-    const teamLogo=zeroTeamLogoUrl(row.latestTeam);
+    const latestTeam=sehWebAppCanonicalTeamName(row.latestTeam);
+    const teamLogo=zeroTeamLogoUrl(latestTeam);
     const rank=zeroRankingForName(row.name);
     return {
       href:String(row.href||''),key:String(row.key||routeKey),name:String(row.name||''),
-      position:String(row.position||''),photo:String(row.photo||''),latestTeam:String(row.latestTeam||''),
+      position:String(row.position||''),photo:String(row.photo||''),latestTeam:String(latestTeam||''),
       latestSeason:String(row.latestSeason||''),history:String(row.history||''),games:Number(row.games)||0,
       rankNo:Number(rank?.overall_rank)||0,rankPoints:Number(rank?.ranking_points)||0,
       teamLogo:String(teamLogo||''),savedAt:Date.now()
@@ -10573,15 +10587,16 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     const el=document.createElement(data.href?'a':'article');
     el.className='seh-zero-player-card seh-directory-card-v3';
     if(data.href)el.href=data.href;
+    const displayTeam=sehWebAppCanonicalTeamName(data.latestTeam);
     const rank=zeroRankingForName(data.name);
     const rankNo=Number(rank?.overall_rank);
     const rankPoints=Number(rank?.ranking_points);
     const hasRank=Number.isFinite(rankNo)&&rankNo>0&&Number.isFinite(rankPoints);
     const gamesText=new Intl.NumberFormat('sv-SE').format(Math.max(0,Number(data.games)||0));
     const clubsText=new Intl.NumberFormat('sv-SE').format(Math.max(0,Number(data.clubs)||0));
-    const teamLogo=zeroTeamLogoUrl(data.latestTeam);
-    const teamInitials=zeroTeamInitials(data.latestTeam);
-    if(ZERO_TEAM_COLOR_PRESETS[zeroTeamPaletteKey(data.latestTeam)])el.classList.add('seh-team-preset');
+    const teamLogo=zeroTeamLogoUrl(displayTeam);
+    const teamInitials=zeroTeamInitials(displayTeam);
+    if(ZERO_TEAM_COLOR_PRESETS[zeroTeamPaletteKey(displayTeam)])el.classList.add('seh-team-preset');
 
     el.innerHTML=`
       ${hasRank?`<div class="seh-zero-player-corner-rank" aria-label="Sverigerank ${htmlEscape(rankNo)}"><span>${rankNo===1?'♛':'#'}</span><strong>${htmlEscape(rankNo)}</strong></div>`:''}
@@ -10589,10 +10604,10 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       <div class="seh-zero-player-position"></div>
       <div class="seh-zero-player-photo-frame">${teamLogo?`<img class="seh-zero-player-bglogo" src="${htmlEscape(teamLogo)}" alt="" loading="lazy" decoding="async">`:''}<img class="seh-zero-player-photo" alt="" loading="lazy" decoding="async"></div>
       <div class="seh-zero-player-lower">
-        ${data.latestTeam?`
+        ${displayTeam?`
           <div class="seh-zero-player-teamrow">
             <span class="seh-zero-player-teamlogo">${teamLogo?`<img src="${htmlEscape(teamLogo)}" alt="" loading="lazy" decoding="async">`:''}<i>${htmlEscape(teamInitials)}</i></span>
-            <span class="seh-zero-player-teamcopy"><strong>${htmlEscape(data.latestTeam)}</strong>${data.latestSeason?`<small>${htmlEscape(data.latestSeason)}</small>`:''}</span>
+            <span class="seh-zero-player-teamcopy"><strong>${htmlEscape(displayTeam)}</strong>${data.latestSeason?`<small>${htmlEscape(data.latestSeason)}</small>`:''}</span>
           </div>`:''}
         <div class="seh-zero-player-statrow">
           <span class="seh-zero-player-games"><strong>${htmlEscape(gamesText)}</strong><small>matcher</small></span>
@@ -10613,7 +10628,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       logo.addEventListener('error',()=>logo.remove(),{once:true});
     }
     if(bgLogo)bgLogo.addEventListener('error',()=>bgLogo.remove(),{once:true});
-    zeroApplyTeamPalette(el,data.latestTeam,bgLogo||logo);
+    zeroApplyTeamPalette(el,displayTeam,bgLogo||logo);
     if(data.history)el.querySelector('.seh-zero-player-history').textContent=data.history;
     if(data.href){
       el.addEventListener('click',()=>sehRememberFastProfileNav(data,teamLogo,rank),{capture:true});
@@ -10685,7 +10700,13 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     const query=String(sehZeroPlayer.searchQuery||'').trim().toLocaleLowerCase('sv-SE');
     const division=sehZeroPlayer.divisionFilter;
     let list=sehZeroPlayer.all.filter(player=>{
-      if(query&&!player.searchText.includes(query))return false;
+      if(query){
+        const aliasText=[
+          sehWebAppTeamAliasSearchText(player.latestTeam),
+          ...(Array.isArray(player.clubNames)?player.clubNames.map(name=>sehWebAppTeamAliasSearchText(name)):[])
+        ].join(' ');
+        if(!player.searchText.includes(query)&&!aliasText.includes(query))return false;
+      }
       if(sehZeroPlayer.roleFilter!=='all'&&player.role!==sehZeroPlayer.roleFilter)return false;
       if(division!=='all'&&!player.filterDivisions.includes(division))return false;
       return true;
@@ -11291,7 +11312,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       const comps=zeroArray(row.competitions);
       if(league!=='all'&&!comps.some(code=>String(code).toLocaleUpperCase('sv-SE')===league.toLocaleUpperCase('sv-SE')))return false;
       if(!query)return true;
-      return [row.current_name,row.latest,row.top_player,...comps]
+      return [row.current_name,row.latest,row.top_player,...comps,sehWebAppTeamAliasSearchText(row.current_name,row.team_id)]
         .join(' ').toLocaleLowerCase('sv-SE').includes(query);
     }).slice();
 
