@@ -76,6 +76,44 @@
     return String(row?.status || '') === 'approved' ? String(row?.player_key || '').trim() : '';
   }
 
+  function sportsGamerId(value) {
+    return String(value || '').match(/\/players\/(\d+)/i)?.[1] || '';
+  }
+
+  function playerImageUrl(row) {
+    const explicit = String(row?.player_image || '').trim();
+    const sgId = sportsGamerId(row?.sports_gamer_player_url);
+
+    if (typeof window.SEH_playerImageUrl === 'function') {
+      const resolved = window.SEH_playerImageUrl(explicit, sgId);
+      if (resolved) return resolved;
+    }
+
+    if (explicit) return explicit;
+    if (sgId && Array.isArray(window.SEH_PLAYER_IMAGE_FILES) && window.SEH_PLAYER_IMAGE_FILES.includes(`${sgId}.png`)) {
+      return `/players/${encodeURIComponent(sgId)}.png`;
+    }
+    return '';
+  }
+
+  async function enrichRows(sb, rows) {
+    const keys = [...new Set(rows.map(row => String(row?.teammate_key || '').trim()).filter(Boolean))];
+    if (!keys.length) return rows;
+
+    const result = await sb
+      .from('app_player_directory_cache')
+      .select('player_key,player_image,sports_gamer_player_url')
+      .in('player_key', keys);
+
+    if (result.error) {
+      console.warn('[Svensk eHockey] Kunde inte komplettera lagkamratbilder', result.error);
+      return rows;
+    }
+
+    const profiles = new Map((result.data || []).map(row => [String(row.player_key || ''), row]));
+    return rows.map(row => ({ ...row, ...(profiles.get(String(row?.teammate_key || '')) || {}) }));
+  }
+
   function ensureHost(root) {
     if (!root) return null;
     const preferredAnchor = root.querySelector('#seh-my-division-journey')
@@ -103,16 +141,16 @@
   function rowMarkup(row, index) {
     const name = String(row?.display_gamertag || '').trim() || 'Spelare';
     const key = String(row?.teammate_key || '').trim();
-    const image = String(row?.player_image || '').trim();
+    const image = playerImageUrl(row);
     const sharedGames = fmt(row?.shared_games);
     const sharedTournaments = fmt(row?.shared_tournaments);
     const latestTeam = String(row?.latest_shared_team || '').trim();
-    const href = key ? `/#/spelare/${encodeURIComponent(key)}` : '#';
+    const href = key ? `#/spelare/${encodeURIComponent(key)}` : '#/spelare';
     const avatar = image
       ? `<img src="${esc(image)}" alt="${esc(name)}" loading="lazy">`
       : `<span>${esc(initials(name))}</span>`;
 
-    return `<a class="seh-me-teammate${index === 0 ? ' is-top' : ''}" href="${esc(href)}" data-me-teammate-link>
+    return `<a class="seh-me-teammate${index === 0 ? ' is-top' : ''}" href="${esc(href)}" data-me-close-first>
       <b class="seh-me-teammate-rank">${index + 1}</b>
       <div class="seh-me-teammate-avatar">${avatar}</div>
       <div class="seh-me-teammate-copy">
@@ -169,11 +207,14 @@
       if (token !== loadToken || !host.isConnected) return;
       if (result.error) throw result.error;
 
-      const rows = Array.isArray(result.data) ? result.data.filter(row => Number(row?.shared_games) > 0) : [];
+      let rows = Array.isArray(result.data) ? result.data.filter(row => Number(row?.shared_games) > 0) : [];
       if (!rows.length) {
         host.remove();
         return;
       }
+
+      rows = await enrichRows(sb, rows);
+      if (token !== loadToken || !host.isConnected) return;
 
       render(host, rows);
       loadedKey = playerKey;
@@ -202,13 +243,6 @@
     });
     if (relevant) schedule(100);
   });
-
-  document.addEventListener('click', event => {
-    if (event.target.closest?.('[data-me-teammate-link]')) {
-      document.getElementById(ROOT_ID)?.classList.remove('show');
-      document.body.classList.remove('seh-my-ehockey-open');
-    }
-  }, true);
 
   window.addEventListener('storage', event => {
     if (event.key === PROFILE_KEY) {
