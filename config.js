@@ -126,11 +126,11 @@ window.EHOCKEY_CONFIG = {
 (() => {
   const css = document.createElement('link');
   css.rel = 'stylesheet';
-  css.href = '/webapp-my-ehockey-v1.css?v=20260917-1';
+  css.href = '/webapp-my-ehockey-v1.css?v=20260917-career-1';
   document.head.appendChild(css);
 
   const script = document.createElement('script');
-  script.src = '/webapp-my-ehockey-v1.js?v=20260917-2';
+  script.src = '/webapp-my-ehockey-v1.js?v=20260917-career-1';
   script.defer = true;
   document.head.appendChild(script);
 })();
