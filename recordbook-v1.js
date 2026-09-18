@@ -46,6 +46,17 @@
   function playerPhoto(row){const raw=String(row?.player_image||''),id=String(row?.sports_gamer_player_url||'').match(/\/players\/(\d+)/i)?.[1]||'';try{return window.SEH_playerImageUrl?.(raw,id)||raw;}catch(_){return raw;}}
   function playerHref(row){try{return window.SEH_playerProfileUrl?.(row.player_key,row.display_gamertag)||'#/spelare';}catch(_){return '#/spelare';}}
   function teamLogo(row){try{return window.SEH_teamLogoCandidates?.([row.logo_url,row.logo_path],row.current_name)?.[0]||'';}catch(_){return '';}}
+  function currentPlayerTeam(row){
+    const kind=String(row?.current_status||'').trim();
+    const teamName=String(row?.current_team_name||'').trim();
+    if(kind==='team'&&teamName){
+      let logo='';
+      try{logo=window.SEH_teamLogoCandidates?.([row.current_team_logo],teamName)?.[0]||String(row.current_team_logo||'');}catch(_){logo=String(row.current_team_logo||'');}
+      return {name:teamName,logo};
+    }
+    if(kind==='free_agent')return {name:'Free Agent',logo:''};
+    return {name:'',logo:''};
+  }
 
   function metricAvailable(key){
     if(state.type!=='players')return true;
@@ -202,7 +213,24 @@
     }
     return playerMeta(row,metricKey);
   }
-  function podiumCard(row,index){
+  function podiumSupportingStats(row,metricKey){
+    const candidates=state.type==='teams'
+      ? [['games','GP'],['wins','W'],['goals_for','GF'],['goal_diff','+/−'],['tournament_count','T'],['titles','GULD']]
+      : state.group==='playoffs'
+        ? [['playoff_games','GP'],['playoff_goals','MÅL'],['playoff_assists','ASSIST'],['playoff_points','PTS']]
+        : state.group==='goalie'
+          ? [['goalie_games','GP'],['goalie_wins','W'],['goalie_saves','SV'],['save_percentage','SV%'],['goalie_shutouts','SO']]
+          : state.group==='merits'
+            ? [['golds','GULD'],['medals','MED'],['tournament_count','T'],['silvers','SILVER'],['bronzes','BRONS']]
+            : state.group==='match'
+              ? [['hattricks','HT'],['max_goals_game','MAX MÅL'],['fastest_goal_seconds','SNABBAST']]
+              : [['games','GP'],['goals','MÅL'],['assists','ASSIST'],['points','PTS'],['penalty_minutes','PIM'],['points_per_game','PPG']];
+    return candidates
+      .filter(([key])=>key!==metricKey&&matchesMetric(row,key))
+      .slice(0,3)
+      .map(([key,label])=>({key,label,value:metricValueText(key,value(row,key))}));
+  }
+  function podiumCard(row,index,allRows){
     const rank=index+1;
     const metric=activeMetric();
     const val=value(row,metric[0]);
@@ -215,15 +243,37 @@
     const media=visual
       ? `<img src="${esc(visual)}" alt="${esc(name)}" loading="lazy">`
       : `<span>${esc(initials||'?')}</span>`;
+    const currentTeam=isPlayer?currentPlayerTeam(row):{name:name,logo:teamLogo(row)};
+    const teamLogoUrl=String(currentTeam.logo||'');
+    const teamIdentity=currentTeam.name
+      ? `<span class="seh-record-podium-team">${esc(currentTeam.name)}</span>`
+      : '';
+    const logoMarkup=teamLogoUrl
+      ? `<img class="seh-record-podium-teamlogo" src="${esc(teamLogoUrl)}" alt="" loading="lazy"><img class="seh-record-podium-watermark" src="${esc(teamLogoUrl)}" alt="" aria-hidden="true" loading="lazy">`
+      : '';
+    const stats=podiumSupportingStats(row,metric[0]);
+    const statsHtml=stats.length
+      ? `<span class="seh-record-podium-stats">${stats.map(stat=>`<span><small>${esc(stat.label)}</small><strong>${esc(stat.value)}</strong></span>`).join('')}</span>`
+      : '';
+    const leaderValue=value(allRows?.[0],metric[0]);
+    const ratio=metric[0]==='fastest_goal_seconds'
+      ? (val>0&&leaderValue>0?Math.min(1,leaderValue/val):0)
+      : (leaderValue>0?Math.min(1,val/leaderValue):0);
+    const progress=Math.max(.08,ratio)*100;
     return `<a class="seh-record-podium-card is-rank-${rank}${isPlayer?'':' is-team'}" href="${esc(href)}">
-      <span class="seh-record-podium-rank">#${rank}</span>
+      <span class="seh-record-podium-rank">${rank}</span>
       <span class="seh-record-podium-media">${media}</span>
-      <span class="seh-record-podium-copy">
-        <small>${rank===1?'REKORDHÅLLARE':`PLATS ${rank}`}</small>
-        <strong>${esc(name)}</strong>
-        <span>${esc(podiumMeta(row,metric[0]))}</span>
+      <span class="seh-record-podium-main">
+        ${logoMarkup}
+        <span class="seh-record-podium-copy">
+          <strong>${esc(name)}</strong>
+          ${teamIdentity}
+        </span>
+        <span class="seh-record-podium-value"><strong>${shown}</strong><small>${esc(metric[2])}</small></span>
+        ${statsHtml}
+        <span class="seh-record-podium-detail">${esc(podiumMeta(row,metric[0]))}</span>
+        <span class="seh-record-podium-progress"><i style="width:${progress.toFixed(1)}%"></i></span>
       </span>
-      <span class="seh-record-podium-value"><strong>${shown}</strong><small>${esc(metric[2])}</small></span>
     </a>`;
   }
 
@@ -282,8 +332,11 @@
       const data=await rows(state.type,state.competition,state.metric);
       const top=sorted(data);
       const metric=activeMetric();
-      const podiumRows=top.slice(0,3);
+      let podiumRows=top.slice(0,3);
       const remaining=top.slice(3);
+      if(state.type==='players'&&window.SEH_currentPlayerStatus?.decorateRows){
+        try{podiumRows=await window.SEH_currentPlayerStatus.decorateRows(podiumRows);}catch(_){}
+      }
       status.textContent=`${state.competition==='ALL'?'Alla registrerade tävlingar':state.competition} · Topp ${top.length} · ${metric[1]}${statusSuffix(metric[0])}`;
       if(podium)podium.innerHTML=podiumRows.map(podiumCard).join('');
       list.innerHTML=top.length
