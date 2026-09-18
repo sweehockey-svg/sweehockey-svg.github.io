@@ -1710,3 +1710,40 @@
     margin-top: 42px !important;
   }
 }
+
+
+/* =========================================================
+   DESKTOP FOR YOU V5.4 — clean Free Agent state
+   ========================================================= */
+@media (min-width:1101px) {
+  .seh-dfy__clubline--free-agent {
+    display: inline-flex !important;
+    width: auto !important;
+    max-width: none !important;
+    grid-template-columns: none !important;
+    align-items: center;
+  }
+
+  .seh-dfy__clubline--free-agent > span {
+    display: inline-block !important;
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+    color: rgba(244,241,233,.76);
+  }
+
+  .seh-dfy__mini--free-agent {
+    grid-template-columns: minmax(0,1fr) 16px !important;
+  }
+
+  .seh-dfy__mini--free-agent .seh-dfy__mini-copy {
+    min-width: 0;
+  }
+}
+
+@media (min-width:1101px) and (max-height:900px) {
+  .seh-dfy__mini-grid--three .seh-dfy__mini--free-agent {
+    grid-template-columns: minmax(0,1fr) 12px !important;
+  }
+}
