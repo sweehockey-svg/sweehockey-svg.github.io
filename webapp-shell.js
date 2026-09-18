@@ -8722,7 +8722,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       key:String(player.key||player.player_key||'').trim(),
       name:String(player.name||player.display_gamertag||'').trim(),
       photo:sehWebAppPlayerImage(player.photo||player.player_image||'',player.sportsGamerId||player.sports_gamer_player_url||''),
-      latestTeam:String(player.latestTeam||player.latest_team||'').trim(),
+      latestTeam:String(player.currentTeam||player.current_team_name||player.latestTeam||player.latest_team||'').trim(),
       latestSeason:String(player.latestSeason||player.latest_season||'').trim(),
       position:String(player.position||player.primary_position||'').trim(),
       href:String(player.href||'').trim(),
@@ -8802,13 +8802,16 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     if(status){status.textContent='Söker…';status.classList.remove('error');}
     if(results)results.innerHTML='';
     try{
-      const raw=await sehTeamDirectRest('app_player_directory_cache',{
+      let raw=await sehTeamDirectRest('app_player_directory_cache',{
         select:zeroPlayerDirectorySelect(),
         player_country:'eq.SE',
         display_gamertag:`ilike.*${query}*`,
         order:'career_games.desc.nullslast,display_gamertag.asc',
         limit:'18'
       });
+      if(window.SEH_currentPlayerStatus?.decorateRows){
+        raw=await window.SEH_currentPlayerStatus.decorateRows(raw);
+      }
       const q=myProfileSearchKey(query);
       const compactQ=q.replace(/[^a-z0-9åäö]/gi,'');
       const players=zeroNormalizeDirectoryBatch(raw).sort((a,b)=>{
@@ -10213,9 +10216,10 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     const goalieGames=zeroNumber(row.total_goalie_games);
     const role=String(row.player_type||'').trim().toLocaleLowerCase('sv-SE')==='goalie'||goalieGames>skaterGames?'goalie':'skater';
     const latestSeason=zeroPrettyLatestSeason(String(row.latest_season||''));
-    // V723: latest team is historical-first. app_player_directory_cache.latest_team
-    // already follows this rule, while explicit fields remain supported as a safeguard.
-    const latestTeam=String(row.team_name_in_tournament||row.latest_team||row.team_current_name||'').replace(/\s+/g,' ').trim();
+    // Aktuell status: aktivt lagbygge/pågående turnering -> lag, annars Free Agent.
+    // Historiskt senaste lag finns kvar i latestHistoricalTeam.
+    const latestHistoricalTeam=String(row.team_name_in_tournament||row.latest_team||row.team_current_name||'').replace(/\s+/g,' ').trim();
+    const latestTeam=String(row.current_team_name||latestHistoricalTeam||'Free Agent').replace(/\s+/g,' ').trim();
     const latest=[latestSeason,latestTeam].filter(Boolean).join(' · ');
     const clubs=zeroNumber(row.club_count);
     const games=zeroNumber(row.career_games);
@@ -10238,6 +10242,10 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       latest,
       latestSeason,
       latestTeam,
+      currentTeam:latestTeam,
+      currentTeamId:Number(row.current_team_id)||0,
+      currentStatus:String(row.current_status||'').trim(),
+      latestHistoricalTeam,
       history:zeroPlayerHistory(row),
       href:zeroPlayerHrefFromRow(row,name),
       competitions,
@@ -10266,14 +10274,18 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     return rows;
   }
 
-  function zeroFetchDirectoryBatch(offset=0,limit=SEH_PLAYER_BATCH_SIZE){
-    return sehTeamDirectRest('app_player_directory_cache',{
+  async function zeroFetchDirectoryBatch(offset=0,limit=SEH_PLAYER_BATCH_SIZE){
+    const rows=await sehTeamDirectRest('app_player_directory_cache',{
       select:zeroPlayerDirectorySelect(),
       player_country:'eq.SE',
       order:'career_games.desc.nullslast,display_gamertag.asc',
       limit:String(limit),
       offset:String(offset)
     });
+    if(window.SEH_currentPlayerStatus?.decorateRows){
+      return window.SEH_currentPlayerStatus.decorateRows(rows);
+    }
+    return rows;
   }
 
   function zeroLoadRemainingPlayerDirectory(){
@@ -18027,11 +18039,23 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
           dashboard={...(dashboard||{}),player:(await sehV760HydratePlayerPhotos([player]))[0]||player};
         }
         const linkedPlayer=dashboard?.player||{};
+        let currentStatus=null;
+        if(window.SEH_currentPlayerStatus?.get){
+          currentStatus=await window.SEH_currentPlayerStatus.get(account.playerKey);
+        }
+        if(currentStatus){
+          linkedPlayer.current_status=currentStatus.kind;
+          linkedPlayer.current_team_name=currentStatus.teamName;
+          linkedPlayer.current_team_id=currentStatus.teamId;
+          if(dashboard)dashboard.player=linkedPlayer;
+        }
         setMyProfile({
           player_key:account.playerKey,
           display_gamertag:linkedPlayer.display_gamertag||account.playerName||account.playerKey,
           player_image:linkedPlayer.player_image||linkedPlayer.photo||'',
-          latestTeam:linkedPlayer.latest_ecl_team||linkedPlayer.latest_team||'',
+          current_team_name:linkedPlayer.current_team_name||'',
+          currentTeam:linkedPlayer.current_team_name||'',
+          latestTeam:linkedPlayer.current_team_name||linkedPlayer.latest_ecl_team||linkedPlayer.latest_team||'',
           latestSeason:linkedPlayer.latest_ecl_division||linkedPlayer.latest_season||'',
           position:linkedPlayer.primary_position||'',
           href:sehV760PlayerHref(account.playerKey,linkedPlayer.display_gamertag||account.playerName||account.playerKey),
@@ -18127,7 +18151,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     else if(result.account?.status==='wrong_provider'){body=`<div class="seh-v760-card"><h2>Fel kontotyp</h2><p>Min profil använder Discord-inloggning. Du är inloggad med ett annat Svensk eHockey-konto.</p><div class="seh-v760-actions"><button class="seh-v760-btn gold" data-v760-login>Byt till Discord</button><button class="seh-v760-btn" data-v760-logout>Logga ut</button></div></div>`;}
     else if(result.account?.status==='approved'&&result.account.playerKey){
       const p=result.dashboard?.player||{};const name=p.display_gamertag||result.account.playerName||result.account.playerKey;const photo=sehWebAppPlayerImage(p.player_image||'');const fa=result.dashboard?.free_agent||{};
-      body=`<div class="seh-v760-card"><div class="seh-v760-profile"><img class="seh-v760-avatar" src="${htmlEscape(photo)}" alt=""><div><span class="seh-v760-kicker">GODKÄND SPELARKOPPLING</span><strong>${htmlEscape(name)}</strong><span>${htmlEscape([p.primary_position,p.latest_ecl_team,p.latest_ecl_division].filter(Boolean).join(' · ')||'Svensk spelare')}</span><span>Discord: ${htmlEscape(result.account.discordUsername||sehV760DiscordName(result.session.user))}</span></div></div><div class="seh-v760-actions"><button class="seh-v760-btn gold" data-v760-server-profile>Öppna spelarprofil</button><button class="seh-v760-btn" data-v760-edit-profile>Redigera profil</button><button class="seh-v760-btn" data-v760-fa>Free Agents${fa.id&&fa.is_active!==false?' · aktiv':''}</button><button class="seh-v760-btn" data-v760-favs>Favoriter</button><button class="seh-v760-btn" data-v760-logout>Logga ut</button></div></div>`;
+      body=`<div class="seh-v760-card"><div class="seh-v760-profile"><img class="seh-v760-avatar" src="${htmlEscape(photo)}" alt=""><div><span class="seh-v760-kicker">GODKÄND SPELARKOPPLING</span><strong>${htmlEscape(name)}</strong><span>${htmlEscape([p.primary_position,p.current_team_name||'Free Agent',p.latest_ecl_division].filter(Boolean).join(' · ')||'Svensk spelare')}</span><span>Discord: ${htmlEscape(result.account.discordUsername||sehV760DiscordName(result.session.user))}</span></div></div><div class="seh-v760-actions"><button class="seh-v760-btn gold" data-v760-server-profile>Öppna spelarprofil</button><button class="seh-v760-btn" data-v760-edit-profile>Redigera profil</button><button class="seh-v760-btn" data-v760-fa>Free Agents${fa.id&&fa.is_active!==false?' · aktiv':''}</button><button class="seh-v760-btn" data-v760-favs>Favoriter</button><button class="seh-v760-btn" data-v760-logout>Logga ut</button></div></div>`;
     }else{
       const pending=result.account?.status==='pending';body=`<div class="seh-v760-card"><h2>${pending?'Spelarkoppling väntar på admin':'Koppla din spelarprofil'}</h2><p>${pending?`Begärd profil: ${htmlEscape(result.account?.requestedPlayerKey||'–')}. Du kan använda lokal Min profil under tiden.`:'Välj din svenska spelarprofil. Kopplingen skickas till samma adminflöde som på webben.'}</p>${pending?'':`<div class="seh-v760-form"><label><span>Gamertag</span><input id="seh-v760-link-search" placeholder="Skriv ditt GT"></label><div id="seh-v760-link-results"></div><div id="seh-v760-link-status" class="seh-v760-status"></div></div>`}<div class="seh-v760-actions">${local?'<button class="seh-v760-btn" data-v760-local>Öppna lokal profil</button>':'<button class="seh-v760-btn" data-v760-pick>Koppla GT lokalt</button>'}<button class="seh-v760-btn" data-v760-fa>Visa Free Agents</button><button class="seh-v760-btn" data-v760-logout>Logga ut</button></div></div>`;
     }
