@@ -318,17 +318,16 @@
     const project = data.project || null;
     const phase = String(data.competitionState?.phase || 'building');
     const playerName = String(player.display_gamertag || account.playerName || account.playerKey || 'Din profil').trim();
-    const localTeam = data.localTeam || null;
-    const teamName = String(project?.name || '').trim();
-    const division = String(project?.division || '').trim();
-    const latestTeam = String(player.latest_team || player.latest_ecl_team || '').trim();
-    const resolvedLatestTeam = String(localTeam?.current_name || latestTeam || '').trim();
-    const sourceTeamId = Number(project?.source_team_id) || Number(localTeam?.team_id) || 0;
-    const currentTeamText = teamName || resolvedLatestTeam || 'Inte i aktuellt lagbygge';
-    const currentTeamMeta = teamName
-      ? [division, phase === 'building' ? 'ECL 27 lagbygge' : 'Aktuellt lag'].filter(Boolean).join(' · ')
-      : (resolvedLatestTeam ? 'Senaste registrerade lag' : 'ECL 27 lagbygge');
-    const teamLogoPrimary = String(project?.logo_name || localTeam?.logo_url || localTeam?.logo_path || '').trim();
+    const currentStatus = data.currentStatus || null;
+    const hasCurrentTeam = currentStatus?.kind === 'team' && String(currentStatus?.teamName || '').trim();
+    const teamName = hasCurrentTeam ? String(currentStatus.teamName).trim() : '';
+    const division = String(currentStatus?.division || project?.division || '').trim();
+    const sourceTeamId = hasCurrentTeam ? (Number(currentStatus?.teamId) || Number(project?.source_team_id) || 0) : 0;
+    const currentTeamText = hasCurrentTeam ? teamName : 'Free Agent';
+    const currentTeamMeta = hasCurrentTeam
+      ? [division, String(currentStatus?.phase || phase) === 'building' ? 'Aktuellt lagbygge' : 'Pågående turnering'].filter(Boolean).join(' · ')
+      : 'Inte i aktivt lagbygge';
+    const teamLogoPrimary = hasCurrentTeam ? String(currentStatus?.logoName || project?.logo_name || '').trim() : '';
     const profileUrl = playerHref(account.playerKey, playerName);
     const competitionMeta = desktopCompetitionMeta();
 
@@ -351,8 +350,8 @@
       feed.push({
         marker: '✓',
         tone: '',
-        title: teamName ? teamName + ' är kopplat' : 'Din profil är kopplad',
-        text: teamName ? 'Nya IN/UT och rekryteringsposter visas här.' : 'När du går med i ett aktuellt lag visas lagflödet här.',
+        title: teamName ? teamName + ' är kopplat' : 'Du är Free Agent',
+        text: teamName ? 'Nya IN/UT och rekryteringsposter visas här.' : 'När du går med i ett aktivt lagbygge byts statusen automatiskt.',
         time: ''
       });
     }
@@ -365,13 +364,13 @@
       '</article>'
     ).join('');
 
-    const teamHref = sourceTeamId ? '#/lag/' + sourceTeamId : BUILDS_ROUTE;
+    const teamHref = sourceTeamId ? '#/lag/' + sourceTeamId : '#/free-agents';
 
     host.classList.add('home-stage__identity--for-you');
     host.setAttribute('data-seh-personal', 'ready');
     host.innerHTML =
       '<section id="' + ROOT_ID + '" class="seh-desktop-for-you" aria-label="För dig">' +
-        (currentTeamText && currentTeamText !== 'Inte i aktuellt lagbygge'
+        (hasCurrentTeam
           ? '<span class="seh-dfy__team-watermark" data-seh-team-logo aria-hidden="true"><img alt="" decoding="async"></span>'
           : '') +
         '<div class="seh-dfy__head">' +
@@ -392,7 +391,7 @@
         '<div class="seh-dfy__mini-grid seh-dfy__mini-grid--three">' +
           '<a class="seh-dfy__mini seh-dfy__mini--team" href="' + esc(teamHref) + '">' +
             '<span class="seh-dfy__team-logo" data-seh-team-logo><img alt="" decoding="async"></span>' +
-            '<span class="seh-dfy__mini-copy"><small>' + esc(teamName ? 'DITT LAG' : (latestTeam ? 'SENASTE LAG' : 'DITT LAG')) + '</small><strong>' + esc(currentTeamText) + '</strong><span>' + esc(currentTeamMeta) + '</span></span>' +
+            '<span class="seh-dfy__mini-copy"><small>' + esc(hasCurrentTeam ? 'AKTUELLT LAG' : 'STATUS') + '</small><strong>' + esc(currentTeamText) + '</strong><span>' + esc(currentTeamMeta) + '</span></span>' +
             '<b class="seh-dfy__mini-arrow" aria-hidden="true">↗</b>' +
           '</a>' +
           '<a class="seh-dfy__mini seh-dfy__mini--competition" href="' + esc(competitionMeta.href) + '">' +
@@ -408,13 +407,13 @@
         '<div class="seh-dfy__feed">' + feedHtml + '</div>' +
         '<div class="seh-dfy__shortcuts">' +
           '<a href="' + esc(profileUrl) + '">Spelarkort</a>' +
-          '<a href="' + esc(teamHref) + '">Mitt lag</a>' +
+          '<a href="' + esc(teamHref) + '">' + esc(hasCurrentTeam ? 'Mitt lag' : 'Free Agent') + '</a>' +
           '<a href="' + esc(BUILDS_ROUTE) + '">Lagbygge</a>' +
           '<a href="#/min-profil">Mitt eHockey</a>' +
         '</div>' +
       '</section>';
 
-    hydrateTeamLogo(host, teamLogoPrimary, currentTeamText);
+    if (hasCurrentTeam) hydrateTeamLogo(host, teamLogoPrimary, currentTeamText);
   }
 
   async function loadForHost(host) {
@@ -474,7 +473,6 @@
       const dashboardPlayer = dashboardResult.error ? {} : (dashboardRow.player || {});
       const directoryPlayer = directoryResult.error ? {} : (directoryResult.data?.[0] || {});
       const player = { ...directoryPlayer, ...dashboardPlayer };
-      const latestTeamName = String(player.latest_team || player.latest_ecl_team || '').trim();
       const competitionState = !phaseResult.error && phaseResult.data?.[0]
         ? phaseResult.data[0]
         : { competition_key: COMPETITION_KEY, display_name: 'ECL 27 Winter', phase: 'building', route_hash: BUILDS_ROUTE };
@@ -486,7 +484,7 @@
         : 0;
       const building = String(competitionState.phase || '') === 'building';
 
-      const [projectResult, eventsResult, recruitmentResult, localTeam] = await Promise.all([
+      const [projectResult, eventsResult, recruitmentResult, currentStatus] = await Promise.all([
         currentProjectId
           ? sb.from('ecl27_team_projects')
               .select('id,name,division,source_team_id,logo_name,status')
@@ -508,7 +506,9 @@
               .order('posted_at', { ascending: false })
               .limit(1)
           : Promise.resolve({ data: [], error: null }),
-        latestTeamName ? resolveLocalTeam(sb, latestTeamName) : Promise.resolve(null)
+        window.SEH_currentPlayerStatus?.get
+          ? window.SEH_currentPlayerStatus.get(account.playerKey)
+          : Promise.resolve(null)
       ]);
 
       if (token !== renderToken) return;
@@ -518,7 +518,7 @@
         player,
         competitionState,
         project: projectResult.error ? null : (projectResult.data?.[0] || null),
-        localTeam,
+        currentStatus,
         events: eventsResult.error ? [] : (eventsResult.data || []),
         recruitment: recruitmentResult.error ? null : (recruitmentResult.data?.[0] || null)
       });
