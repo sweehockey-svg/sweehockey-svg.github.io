@@ -1,6 +1,9 @@
 (() => {
   'use strict';
 
+  // Mobile phones and installed/forced web-app mode already have their own For dig implementation.
+  if (window.__SEH_WEB_APP__ || document.documentElement.classList.contains('seh-web-app')) return;
+
   const ROOT_ID = 'seh-desktop-for-you';
   const COMPETITION_KEY = 'ecl27winter';
   const BUILDS_ROUTE = '#/sasong/ecl27winter';
@@ -377,7 +380,8 @@
   function start() {
     bindAuth();
     observer = new MutationObserver(() => {
-      if (homeIdentity()) refresh();
+      const host = homeIdentity();
+      if (host && !originalMarkup.has(host)) refresh();
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
 
