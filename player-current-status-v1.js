@@ -87,6 +87,28 @@
     return match?.[1] || '';
   }
 
+  function compactGamertag(value) {
+    return normalizedGamertag(value).replace(/[^a-z0-9åäö]/gi, '');
+  }
+
+  function waitForEcl27CurrentRoster(timeoutMs = 5000) {
+    const ready = window.SEH_ECL27_CURRENT_ROSTER_V1;
+    if (ready?.teams?.length) return Promise.resolve(ready);
+
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        window.removeEventListener('seh-ecl27-current-roster-ready', onReady);
+        resolve(window.SEH_ECL27_CURRENT_ROSTER_V1 || null);
+      };
+      const onReady = () => finish();
+      window.addEventListener('seh-ecl27-current-roster-ready', onReady, { once: true });
+      window.setTimeout(finish, timeoutMs);
+    });
+  }
+
   async function loadPlayerIdentityMap(sb) {
     const rows = await fetchAll(
       sb,
@@ -96,6 +118,7 @@
 
     const byKey = new Map();
     const gamertagCandidates = new Map();
+    const compactCandidates = new Map();
 
     for (const row of rows) {
       const canonicalKey = clean(row.player_key);
@@ -114,6 +137,12 @@
         if (!gamertagCandidates.has(gt)) gamertagCandidates.set(gt, new Set());
         gamertagCandidates.get(gt).add(canonicalKey);
       }
+
+      const compact = compactGamertag(row.display_gamertag);
+      if (compact) {
+        if (!compactCandidates.has(compact)) compactCandidates.set(compact, new Set());
+        compactCandidates.get(compact).add(canonicalKey);
+      }
     }
 
     const byGamertag = new Map();
@@ -121,7 +150,54 @@
       if (keys.size === 1) byGamertag.set(gt, [...keys][0]);
     }
 
-    return { byKey, byGamertag };
+    const byCompactGamertag = new Map();
+    for (const [gt, keys] of compactCandidates) {
+      if (keys.size === 1) byCompactGamertag.set(gt, [...keys][0]);
+    }
+
+    return { byKey, byGamertag, byCompactGamertag };
+  }
+
+  function canonicalRosterPlayerKey(playerName, identity) {
+    const gt = normalizedGamertag(playerName);
+    if (gt && identity?.byGamertag?.has(gt)) return identity.byGamertag.get(gt);
+
+    const compact = compactGamertag(playerName);
+    if (compact && identity?.byCompactGamertag?.has(compact)) {
+      return identity.byCompactGamertag.get(compact);
+    }
+    return '';
+  }
+
+  function statusesFromBuildSnapshot(snapshot, identity, competition) {
+    const statuses = new Map();
+
+    for (const team of snapshot?.teams || []) {
+      const teamName = clean(team?.name);
+      if (!teamName) continue;
+
+      for (const playerName of team?.players || []) {
+        const playerKey = canonicalRosterPlayerKey(playerName, identity);
+        if (!playerKey) continue;
+
+        statuses.set(playerKey, {
+          kind: 'team',
+          playerKey,
+          teamName,
+          teamId: Number(team?.teamId) || null,
+          teamProjectId: null,
+          logoName: clean(team?.logoUrl || team?.logoName),
+          division: clean(team?.division),
+          competitionKey: clean(competition?.competition_key),
+          competitionName: clean(competition?.display_name),
+          phase: clean(competition?.phase),
+          source: 'team_build',
+          routeHash: clean(competition?.route_hash)
+        });
+      }
+    }
+
+    return statuses;
   }
 
   function canonicalEventPlayerKey(event, identity) {
@@ -145,6 +221,20 @@
     const competition = stateResult.data?.[0] || null;
     if (!competition || !ACTIVE_PHASES.has(clean(competition.phase).toLowerCase())) {
       return { competition, statuses: new Map() };
+    }
+
+    if (
+      clean(competition.phase).toLowerCase() === 'building' &&
+      clean(source.competitionKey).toLowerCase() === 'ecl27winter'
+    ) {
+      const snapshot = await waitForEcl27CurrentRoster();
+      if (!snapshot?.teams?.length) {
+        throw new Error('ECL 27 current roster snapshot is unavailable.');
+      }
+      return {
+        competition,
+        statuses: statusesFromBuildSnapshot(snapshot, identity, competition)
+      };
     }
 
     const [events, projects] = await Promise.all([
