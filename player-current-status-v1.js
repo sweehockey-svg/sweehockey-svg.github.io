@@ -107,6 +107,11 @@
       projects.map(row => [Number(row.id), row]).filter(([id]) => Number.isFinite(id) && id > 0)
     );
 
+    events.sort((a, b) =>
+      (Date.parse(b.occurred_at || '') || 0) - (Date.parse(a.occurred_at || '') || 0) ||
+      Number(b.id || 0) - Number(a.id || 0)
+    );
+
     const latestByPlayer = new Map();
     for (const event of events) {
       const playerKey = clean(event.player_key);
