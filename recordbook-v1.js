@@ -72,7 +72,7 @@
     const sb=getClient();if(!sb)throw new Error('Supabase saknas');
     const rpc=type==='teams'
       ?'seh_recordbook_teams_v1'
-      :(matchMode?'seh_recordbook_match_players_v1':'seh_recordbook_players_v3');
+      :(matchMode?'seh_recordbook_match_players_v2':'seh_recordbook_players_v3');
     const promise=sb.rpc(rpc,{p_competition:competition,p_limit:type==='players'?2000:500}).then(r=>{if(r.error)throw r.error;return Array.isArray(r.data)?r.data:[];});
     cache.set(key,promise);try{return await promise;}catch(e){cache.delete(key);throw e;}
   }
@@ -114,6 +114,49 @@
       })
       .slice(0,10);
   }
+  function recordMatchDate(value){
+    if(!value)return '';
+    const date=new Date(value);
+    if(Number.isNaN(date.getTime()))return '';
+    return date.toLocaleDateString('sv-SE',{day:'numeric',month:'short',year:'numeric'});
+  }
+  function recordMatchSeason(row){
+    const competition=String(row?.max_goals_match_competition||'').trim().toUpperCase();
+    const raw=String(row?.max_goals_match_season||'').trim();
+    const ecl=raw.match(/^ecl(\d+)(spring|winter|fall|autumn)?$/i);
+    if(ecl){
+      const period=ecl[2]?ecl[2].charAt(0).toUpperCase()+ecl[2].slice(1).toLowerCase():'';
+      return ['ECL',ecl[1],period].filter(Boolean).join(' ');
+    }
+    if(raw&&competition&&raw.toUpperCase().startsWith(competition))return raw;
+    return [competition,raw].filter(Boolean).join(' · ');
+  }
+  function recordMatchStage(value){
+    const raw=String(value||'').trim();
+    const normalized=raw.toLowerCase();
+    if(normalized==='regular season')return 'Grundserie';
+    if(normalized==='playoffs'||normalized==='playoff')return 'Slutspel';
+    return raw;
+  }
+  function maxGoalsMatchMeta(row){
+    const team=String(row?.max_goals_match_team||'').trim();
+    const opponent=String(row?.max_goals_match_opponent||'').trim();
+    const teamScore=row?.max_goals_match_team_score;
+    const opponentScore=row?.max_goals_match_opponent_score;
+    const hasScore=teamScore!==null&&teamScore!==undefined&&opponentScore!==null&&opponentScore!==undefined;
+    const primary=team&&opponent
+      ? `${team}${hasScore?` ${fmt(teamScore)}–${fmt(opponentScore)}`:' –'} ${opponent}`
+      : '';
+    const count=num(row?.max_goals_match_count);
+    const secondary=[
+      recordMatchSeason(row),
+      recordMatchStage(row?.max_goals_match_stage),
+      recordMatchDate(row?.max_goals_match_date),
+      count>1?`rekordet nått ${fmt(count)} gånger`:''
+    ].filter(Boolean).join(' · ');
+    return {primary,secondary};
+  }
+
   function playerMeta(row,metricKey){
     if(MATCH_METRICS.has(metricKey)){
       if(metricKey==='fastest_goal_seconds'){
@@ -135,7 +178,12 @@
     const shown=metricValueText(metric[0],val);
     if(state.type==='players'){
       const name=String(row.display_gamertag||'Okänd spelare'),photo=playerPhoto(row);
-      return `<a class="seh-record-row${index===0?' is-leader':''}" href="${esc(playerHref(row))}"><b class="seh-record-rank">${index+1}</b><span class="seh-record-avatar">${photo?`<img src="${esc(photo)}" alt="${esc(name)}" loading="lazy">`:'?'}</span><span class="seh-record-copy"><strong>${esc(name)}</strong><small>${esc(playerMeta(row,metric[0]))}</small></span><span class="seh-record-value"><strong>${shown}</strong><small>${esc(metric[2])}</small></span></a>`;
+      const matchMeta=metric[0]==='max_goals_game'?maxGoalsMatchMeta(row):null;
+      const hasMatchContext=Boolean(matchMeta?.primary);
+      const metaHtml=hasMatchContext
+        ? `<small class="seh-record-meta-primary">${esc(matchMeta.primary)}</small>${matchMeta.secondary?`<small class="seh-record-meta-secondary">${esc(matchMeta.secondary)}</small>`:''}`
+        : `<small>${esc(playerMeta(row,metric[0]))}</small>`;
+      return `<a class="seh-record-row${index===0?' is-leader':''}${hasMatchContext?' has-match-context':''}" href="${esc(playerHref(row))}"><b class="seh-record-rank">${index+1}</b><span class="seh-record-avatar">${photo?`<img src="${esc(photo)}" alt="${esc(name)}" loading="lazy">`:'?'}</span><span class="seh-record-copy"><strong>${esc(name)}</strong>${metaHtml}</span><span class="seh-record-value"><strong>${shown}</strong><small>${esc(metric[2])}</small></span></a>`;
     }
     const name=String(row.current_name||'Okänt lag'),logo=teamLogo(row);
     return `<a class="seh-record-row${index===0?' is-leader':''}" href="#/lag/${encodeURIComponent(row.team_id)}"><b class="seh-record-rank">${index+1}</b><span class="seh-record-avatar is-team">${logo?`<img src="${esc(logo)}" alt="${esc(name)}" loading="lazy">`:esc(name.split(/\s+/).map(x=>x[0]||'').join('').slice(0,2).toUpperCase())}</span><span class="seh-record-copy"><strong>${esc(name)}</strong><small>${fmt(row.tournament_count)} turneringar · ${fmt(row.games)} matcher</small></span><span class="seh-record-value"><strong>${shown}</strong><small>${esc(metric[2])}</small></span></a>`;
