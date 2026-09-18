@@ -22,10 +22,13 @@
 
   let client = null;
   let authBound = false;
+  let authInitialized = false;
+  let authUserId = null;
   let observer = null;
   let refreshTimer = 0;
   let resizeTimer = 0;
   let renderToken = 0;
+  let wasDesktop = isDesktopWebsite();
 
   const esc = (value) => String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -539,7 +542,7 @@
     }
   }
 
-  function refresh() {
+  function refresh(force = false) {
     clearTimeout(refreshTimer);
     refreshTimer = window.setTimeout(() => {
       const host = homeIdentity();
@@ -549,6 +552,12 @@
         restore(host);
         return;
       }
+
+      const state = String(host.getAttribute('data-seh-personal') || '');
+      const alreadyRendered = Boolean(host.querySelector('#' + ROOT_ID)) &&
+        (state === 'ready' || state === 'pending' || state === 'loading');
+      if (!force && alreadyRendered) return;
+
       loadForHost(host);
     }, 40);
   }
@@ -558,30 +567,57 @@
     const sb = getClient();
     if (!sb) return;
     authBound = true;
-    sb.auth.onAuthStateChange(() => {
-      window.setTimeout(refresh, 0);
+    sb.auth.onAuthStateChange((event, session) => {
+      const nextUserId = String(session?.user?.id || '');
+
+      if (!authInitialized || event === 'INITIAL_SESSION') {
+        authInitialized = true;
+        authUserId = nextUserId;
+        return;
+      }
+
+      const identityChanged = nextUserId !== String(authUserId || '');
+      authUserId = nextUserId;
+
+      if (identityChanged || event === 'USER_UPDATED') {
+        window.setTimeout(() => refresh(true), 0);
+      }
     });
+  }
+
+  function watchForInitialHome() {
+    if (homeIdentity()) return;
+    observer = new MutationObserver(() => {
+      if (!homeIdentity()) return;
+      observer?.disconnect();
+      observer = null;
+      refresh();
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
   }
 
   function start() {
     bindAuth();
-    observer = new MutationObserver(() => {
-      const host = homeIdentity();
-      if (host && !originalMarkup.has(host)) refresh();
-    });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+    watchForInitialHome();
 
     document.addEventListener('click', (event) => {
       if (!event.target.closest?.('[data-seh-dfy-retry]')) return;
       event.preventDefault();
-      refresh();
+      refresh(true);
     });
 
-    window.addEventListener('hashchange', refresh);
-    window.addEventListener('focus', refresh);
+    window.addEventListener('hashchange', () => {
+      window.setTimeout(() => refresh(), 80);
+    });
+
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(refresh, 120);
+      resizeTimer = window.setTimeout(() => {
+        const nowDesktop = isDesktopWebsite();
+        if (nowDesktop === wasDesktop) return;
+        wasDesktop = nowDesktop;
+        refresh(true);
+      }, 120);
     });
 
     refresh();
