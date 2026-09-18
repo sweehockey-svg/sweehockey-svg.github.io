@@ -477,3 +477,186 @@
     padding-top:9px;
   }
 }
+
+
+/* Recordbook V1.5 — Hall of Fame top three */
+.seh-record-podium{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin:0 0 10px;
+}
+.seh-record-podium:empty{
+  display:none;
+}
+.seh-record-podium-card{
+  position:relative;
+  min-width:0;
+  min-height:132px;
+  display:grid;
+  grid-template-columns:62px minmax(0,1fr) auto;
+  grid-template-rows:auto 1fr;
+  align-items:center;
+  gap:8px 11px;
+  padding:13px 14px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:13px;
+  color:#f5f2ea;
+  text-decoration:none;
+  background:
+    radial-gradient(circle at 0 0,rgba(80,227,220,.055),transparent 34%),
+    linear-gradient(145deg,#0a111b,#070c13 72%);
+  transition:transform .16s ease,border-color .16s ease,background .16s ease;
+}
+.seh-record-podium-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(80,227,220,.25);
+}
+.seh-record-podium-card.is-rank-1{
+  border-color:rgba(255,208,0,.42);
+  background:
+    radial-gradient(circle at 0 0,rgba(255,208,0,.13),transparent 38%),
+    linear-gradient(145deg,rgba(20,18,7,.97),#09101a 70%);
+  box-shadow:0 8px 24px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.025);
+}
+.seh-record-podium-card.is-rank-1::before{
+  position:absolute;
+  top:0;
+  right:0;
+  left:0;
+  height:2px;
+  content:"";
+  background:linear-gradient(90deg,#ffd000,rgba(255,208,0,.25),transparent);
+}
+.seh-record-podium-rank{
+  position:absolute;
+  top:10px;
+  right:11px;
+  z-index:2;
+  color:#657687;
+  font-size:.62rem;
+  font-weight:950;
+  letter-spacing:.1em;
+}
+.seh-record-podium-card.is-rank-1 .seh-record-podium-rank{
+  color:#ffd000;
+}
+.seh-record-podium-media{
+  grid-row:1 / span 2;
+  width:62px;
+  height:82px;
+  display:grid;
+  place-items:center;
+  align-self:end;
+  overflow:hidden;
+  border:1px solid rgba(80,227,220,.16);
+  border-radius:10px;
+  background:#0c1520;
+  color:#6de9e3;
+  font-weight:950;
+}
+.seh-record-podium-card.is-rank-1 .seh-record-podium-media{
+  border-color:rgba(255,208,0,.28);
+}
+.seh-record-podium-media img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center top;
+}
+.seh-record-podium-card.is-team .seh-record-podium-media img{
+  object-fit:contain;
+  padding:6px;
+  box-sizing:border-box;
+}
+.seh-record-podium-copy{
+  min-width:0;
+  align-self:end;
+}
+.seh-record-podium-copy>small{
+  display:block;
+  margin-bottom:4px;
+  color:#63798d;
+  font-size:.54rem;
+  font-weight:950;
+  letter-spacing:.13em;
+}
+.seh-record-podium-card.is-rank-1 .seh-record-podium-copy>small{
+  color:#c5a532;
+}
+.seh-record-podium-copy>strong{
+  display:block;
+  overflow:hidden;
+  color:#f4f1e9;
+  font-size:.92rem;
+  font-weight:950;
+  line-height:1.08;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.seh-record-podium-copy>span{
+  display:-webkit-box;
+  margin-top:5px;
+  overflow:hidden;
+  color:#708293;
+  font-size:.61rem;
+  line-height:1.35;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+}
+.seh-record-podium-value{
+  grid-column:2 / span 2;
+  align-self:start;
+  display:flex;
+  align-items:baseline;
+  gap:6px;
+}
+.seh-record-podium-value strong{
+  color:#e8edf1;
+  font-size:1.42rem;
+  font-weight:950;
+  letter-spacing:-.035em;
+  line-height:1;
+}
+.seh-record-podium-card.is-rank-1 .seh-record-podium-value strong{
+  color:#ffd000;
+}
+.seh-record-podium-value small{
+  color:#6d8192;
+  font-size:.57rem;
+  font-weight:950;
+  letter-spacing:.08em;
+}
+.seh-record-podium + .seh-record-list .seh-record-row:first-child{
+  margin-top:2px;
+}
+@media(max-width:840px){
+  .seh-record-podium{
+    display:flex;
+    gap:9px;
+    margin-right:-10px;
+    padding-right:10px;
+    overflow-x:auto;
+    overscroll-behavior-inline:contain;
+    scrollbar-width:none;
+  }
+  .seh-record-podium::-webkit-scrollbar{display:none}
+  .seh-record-podium-card{
+    flex:0 0 min(82vw,310px);
+  }
+}
+@media(max-width:520px){
+  .seh-record-podium-card{
+    min-height:122px;
+    grid-template-columns:56px minmax(0,1fr) auto;
+    padding:11px 12px;
+  }
+  .seh-record-podium-media{
+    width:56px;
+    height:74px;
+  }
+  .seh-record-podium-value strong{
+    font-size:1.25rem;
+  }
+}
