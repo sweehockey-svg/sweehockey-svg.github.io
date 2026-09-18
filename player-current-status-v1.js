@@ -200,6 +200,36 @@
     return statuses;
   }
 
+  function statusesFromRosterRows(rows, identity, competition) {
+    const statuses = new Map();
+
+    for (const row of rows || []) {
+      const playerKey =
+        clean(row?.player_key) ||
+        identity?.byKey?.get(clean(row?.subject_key)) ||
+        canonicalRosterPlayerKey(row?.display_gamertag, identity);
+      const teamName = clean(row?.team_name);
+      if (!playerKey || !teamName) continue;
+
+      statuses.set(playerKey, {
+        kind: 'team',
+        playerKey,
+        teamName,
+        teamId: Number(row?.team_id) || null,
+        teamProjectId: Number(row?.team_project_id) || null,
+        logoName: clean(row?.logo_name),
+        division: clean(row?.division),
+        competitionKey: clean(competition?.competition_key),
+        competitionName: clean(competition?.display_name),
+        phase: clean(competition?.phase),
+        source: 'team_build',
+        routeHash: clean(competition?.route_hash)
+      });
+    }
+
+    return statuses;
+  }
+
   function canonicalEventPlayerKey(event, identity) {
     const rawKey = clean(event?.player_key);
     const direct = identity?.byKey?.get(rawKey);
@@ -227,14 +257,26 @@
       clean(competition.phase).toLowerCase() === 'building' &&
       clean(source.competitionKey).toLowerCase() === 'ecl27winter'
     ) {
-      const snapshot = await waitForEcl27CurrentRoster();
-      if (!snapshot?.teams?.length) {
-        throw new Error('ECL 27 current roster snapshot is unavailable.');
+      const rosterResult = await sb
+        .from('v_ecl27_current_roster_v1')
+        .select('subject_key,player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name,roster_source');
+
+      if (!rosterResult.error && Array.isArray(rosterResult.data)) {
+        return {
+          competition,
+          statuses: statusesFromRosterRows(rosterResult.data, identity, competition)
+        };
       }
-      return {
-        competition,
-        statuses: statusesFromBuildSnapshot(snapshot, identity, competition)
-      };
+
+      const snapshot = await waitForEcl27CurrentRoster();
+      if (snapshot?.teams?.length) {
+        return {
+          competition,
+          statuses: statusesFromBuildSnapshot(snapshot, identity, competition)
+        };
+      }
+
+      throw rosterResult.error || new Error('ECL 27 current roster is unavailable.');
     }
 
     const [events, projects] = await Promise.all([
