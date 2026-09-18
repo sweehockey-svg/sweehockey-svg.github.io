@@ -13654,7 +13654,7 @@ function SEH_initShop() {
         <div>
           <p class="directory-kicker">SVENSK eHOCKEY / ALL-TIME</p>
           <h1>Rekordboken</h1>
-          <p>All-time-topplistor från den registrerade svenska eHockey-historiken. Byt mellan spelare och lag eller filtrera på ECL, SCL och SEC.</p>
+          <p>All-time-topplistor från den registrerade svenska eHockey-historiken. Jämför spelare och lag eller filtrera på ECL, SCL, SEC, SM, ITHL och LGEL.</p>
         </div>
         <aside>
           <span>LEKANDE HISTORIK</span>
@@ -13664,19 +13664,31 @@ function SEH_initShop() {
       </section>
 
       <section class="seh-recordbook-panel">
-        <div class="seh-recordbook-switch" aria-label="Typ av rekord">
-          <button type="button" data-record-type="players" class="is-active">Spelare</button>
-          <button type="button" data-record-type="teams">Lag</button>
+        <div class="seh-recordbook-control-group seh-recordbook-control-group--type">
+          <span class="seh-recordbook-control-label">VISA</span>
+          <div class="seh-recordbook-switch" aria-label="Typ av rekord">
+            <button type="button" data-record-type="players" class="is-active">Spelare</button>
+            <button type="button" data-record-type="teams">Lag</button>
+          </div>
         </div>
 
         <div class="seh-recordbook-toolbar">
-          <div class="seh-recordbook-filters" aria-label="Tävling">
-            <button type="button" data-record-competition="ALL" class="is-active">Alla</button>
-            <button type="button" data-record-competition="ECL">ECL</button>
-            <button type="button" data-record-competition="SCL">SCL</button>
-            <button type="button" data-record-competition="SEC">SEC</button>
+          <div class="seh-recordbook-control-group">
+            <span class="seh-recordbook-control-label">TÄVLING</span>
+            <div class="seh-recordbook-filters" aria-label="Tävling">
+              <button type="button" data-record-competition="ALL" class="is-active">Alla</button>
+              <button type="button" data-record-competition="ECL">ECL</button>
+              <button type="button" data-record-competition="SCL">SCL</button>
+              <button type="button" data-record-competition="SEC">SEC</button>
+              <button type="button" data-record-competition="SM">SM</button>
+              <button type="button" data-record-competition="ITHL">ITHL</button>
+              <button type="button" data-record-competition="LGEL">LGEL</button>
+            </div>
           </div>
-          <div class="seh-recordbook-metrics" data-record-metrics aria-label="Rekordtyp"></div>
+          <div class="seh-recordbook-control-group">
+            <span class="seh-recordbook-control-label">REKORD</span>
+            <div class="seh-recordbook-metrics" data-record-metrics aria-label="Rekordtyp"></div>
+          </div>
         </div>
 
         <div class="seh-recordbook-status"><strong>TOPPLISTA</strong><span data-record-status></span></div>
