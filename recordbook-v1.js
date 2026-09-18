@@ -176,10 +176,11 @@
     if(metricKey==='points_per_game'||metricKey==='goals_per_game')return `${fmt(row.skater_games)} utespelarmatcher`;
     return `${row.primary_position||'Spelare'} · ${fmt(row.games)} matcher`;
   }
-  function entity(row,index){
+  function entity(row,index,rankOffset=0){
     const metric=activeMetric();
     const val=value(row,metric[0]);
     const shown=metricValueText(metric[0],val);
+    const rank=index+1+rankOffset;
     if(state.type==='players'){
       const name=String(row.display_gamertag||'Okänd spelare'),photo=playerPhoto(row);
       const matchMeta=metric[0]==='max_goals_game'?maxGoalsMatchMeta(row):null;
@@ -187,10 +188,43 @@
       const metaHtml=hasMatchContext
         ? `<small class="seh-record-meta-primary">${esc(matchMeta.primary)}</small>${matchMeta.secondary?`<small class="seh-record-meta-secondary">${esc(matchMeta.secondary)}</small>`:''}`
         : `<small>${esc(playerMeta(row,metric[0]))}</small>`;
-      return `<a class="seh-record-row${index===0?' is-leader':''}${hasMatchContext?' has-match-context':''}" href="${esc(playerHref(row))}"><b class="seh-record-rank">${index+1}</b><span class="seh-record-avatar">${photo?`<img src="${esc(photo)}" alt="${esc(name)}" loading="lazy">`:'?'}</span><span class="seh-record-copy"><strong>${esc(name)}</strong>${metaHtml}</span><span class="seh-record-value"><strong>${shown}</strong><small>${esc(metric[2])}</small></span></a>`;
+      return `<a class="seh-record-row${hasMatchContext?' has-match-context':''}" href="${esc(playerHref(row))}"><b class="seh-record-rank">${rank}</b><span class="seh-record-avatar">${photo?`<img src="${esc(photo)}" alt="${esc(name)}" loading="lazy">`:'?'}</span><span class="seh-record-copy"><strong>${esc(name)}</strong>${metaHtml}</span><span class="seh-record-value"><strong>${shown}</strong><small>${esc(metric[2])}</small></span></a>`;
     }
     const name=String(row.current_name||'Okänt lag'),logo=teamLogo(row);
-    return `<a class="seh-record-row${index===0?' is-leader':''}" href="#/lag/${encodeURIComponent(row.team_id)}"><b class="seh-record-rank">${index+1}</b><span class="seh-record-avatar is-team">${logo?`<img src="${esc(logo)}" alt="${esc(name)}" loading="lazy">`:esc(name.split(/\s+/).map(x=>x[0]||'').join('').slice(0,2).toUpperCase())}</span><span class="seh-record-copy"><strong>${esc(name)}</strong><small>${fmt(row.tournament_count)} turneringar · ${fmt(row.games)} matcher</small></span><span class="seh-record-value"><strong>${shown}</strong><small>${esc(metric[2])}</small></span></a>`;
+    return `<a class="seh-record-row" href="#/lag/${encodeURIComponent(row.team_id)}"><b class="seh-record-rank">${rank}</b><span class="seh-record-avatar is-team">${logo?`<img src="${esc(logo)}" alt="${esc(name)}" loading="lazy">`:esc(name.split(/\s+/).map(x=>x[0]||'').join('').slice(0,2).toUpperCase())}</span><span class="seh-record-copy"><strong>${esc(name)}</strong><small>${fmt(row.tournament_count)} turneringar · ${fmt(row.games)} matcher</small></span><span class="seh-record-value"><strong>${shown}</strong><small>${esc(metric[2])}</small></span></a>`;
+  }
+
+  function podiumMeta(row,metricKey){
+    if(state.type==='teams')return `${fmt(row.tournament_count)} turneringar · ${fmt(row.games)} matcher`;
+    if(metricKey==='max_goals_game'){
+      const match=maxGoalsMatchMeta(row);
+      if(match.primary)return [match.primary,match.secondary].filter(Boolean).join(' · ');
+    }
+    return playerMeta(row,metricKey);
+  }
+  function podiumCard(row,index){
+    const rank=index+1;
+    const metric=activeMetric();
+    const val=value(row,metric[0]);
+    const shown=metricValueText(metric[0],val);
+    const isPlayer=state.type==='players';
+    const name=String(isPlayer?row.display_gamertag:row.current_name||'Okänd');
+    const href=isPlayer?playerHref(row):`#/lag/${encodeURIComponent(row.team_id)}`;
+    const visual=isPlayer?playerPhoto(row):teamLogo(row);
+    const initials=name.split(/\s+/).map(x=>x[0]||'').join('').slice(0,2).toUpperCase();
+    const media=visual
+      ? `<img src="${esc(visual)}" alt="${esc(name)}" loading="lazy">`
+      : `<span>${esc(initials||'?')}</span>`;
+    return `<a class="seh-record-podium-card is-rank-${rank}${isPlayer?'':' is-team'}" href="${esc(href)}">
+      <span class="seh-record-podium-rank">#${rank}</span>
+      <span class="seh-record-podium-media">${media}</span>
+      <span class="seh-record-podium-copy">
+        <small>${rank===1?'REKORDHÅLLARE':`PLATS ${rank}`}</small>
+        <strong>${esc(name)}</strong>
+        <span>${esc(podiumMeta(row,metric[0]))}</span>
+      </span>
+      <span class="seh-record-podium-value"><strong>${shown}</strong><small>${esc(metric[2])}</small></span>
+    </a>`;
   }
 
   function groupButtonsHtml(){
@@ -240,16 +274,24 @@
     const group=activeGroup();
     if(!group?.items.some(item=>item[0]===state.metric))state.metric=group?.items[0]?.[0]||'games';
     controls(root);
+    const podium=root.querySelector('[data-record-podium]');
     const list=root.querySelector('[data-record-list]'),status=root.querySelector('[data-record-status]');
+    if(podium)podium.innerHTML='';
     list.innerHTML='<div class="seh-record-loading">Hämtar rekord…</div>';status.textContent='';
     try{
       const data=await rows(state.type,state.competition,state.metric);
       const top=sorted(data);
       const metric=activeMetric();
+      const podiumRows=top.slice(0,3);
+      const remaining=top.slice(3);
       status.textContent=`${state.competition==='ALL'?'Alla registrerade tävlingar':state.competition} · Topp ${top.length} · ${metric[1]}${statusSuffix(metric[0])}`;
-      list.innerHTML=top.length?top.map(entity).join(''):'<div class="seh-record-loading">Ingen registrerad data för detta rekord.</div>';
+      if(podium)podium.innerHTML=podiumRows.map(podiumCard).join('');
+      list.innerHTML=top.length
+        ? remaining.map((row,index)=>entity(row,index,3)).join('')
+        : '<div class="seh-record-loading">Ingen registrerad data för detta rekord.</div>';
     }catch(error){
       console.warn('[Svensk eHockey] Rekordboken kunde inte laddas',error);
+      if(podium)podium.innerHTML='';
       list.innerHTML='<div class="seh-record-loading">Rekordboken kunde inte laddas just nu.</div>';
     }
   }
