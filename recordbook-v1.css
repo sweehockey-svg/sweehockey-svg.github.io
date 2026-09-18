@@ -129,3 +129,50 @@
   .seh-recordbook-filters,.seh-recordbook-metrics{gap:6px}
   .seh-recordbook-filters button,.seh-recordbook-metrics button{padding:8px 10px}
 }
+
+
+/* Recordbook V1.2 — grouped career, merit and match records */
+.seh-recordbook-metrics{
+  display:grid;
+  gap:10px;
+}
+.seh-recordbook-metric-group{
+  display:grid;
+  grid-template-columns:92px minmax(0,1fr);
+  align-items:start;
+  gap:10px;
+}
+.seh-recordbook-metric-group>span{
+  padding-top:10px;
+  color:#536575;
+  font-size:.57rem;
+  font-weight:950;
+  letter-spacing:.14em;
+  line-height:1;
+}
+.seh-recordbook-metric-group>div{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+.seh-recordbook-metric-group:last-child{
+  margin-top:2px;
+  padding-top:10px;
+  border-top:1px solid rgba(80,227,220,.07);
+}
+.seh-recordbook-metric-group:last-child>span{
+  color:rgba(80,227,220,.68);
+}
+.seh-recordbook-metric-group:last-child button{
+  border-color:rgba(80,227,220,.13);
+  background:rgba(7,20,27,.72);
+}
+.seh-recordbook-metric-group:last-child button.is-active{
+  border-color:rgba(80,227,220,.55);
+  color:#72e5df;
+  background:rgba(80,227,220,.075);
+}
+@media(max-width:720px){
+  .seh-recordbook-metric-group{grid-template-columns:1fr;gap:5px}
+  .seh-recordbook-metric-group>span{padding-top:2px}
+}
