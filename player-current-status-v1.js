@@ -76,7 +76,65 @@
     };
   }
 
-  async function loadSource(sb, source) {
+  function normalizedGamertag(value) {
+    return clean(value)
+      .normalize('NFKC')
+      .toLocaleLowerCase('sv-SE');
+  }
+
+  function sportsGamerId(value) {
+    const match = clean(value).match(/\/players\/(\d+)(?:\/|$|[?#])/i);
+    return match?.[1] || '';
+  }
+
+  async function loadPlayerIdentityMap(sb) {
+    const rows = await fetchAll(
+      sb,
+      'app_player_directory_cache',
+      'player_key,display_gamertag,sports_gamer_player_url'
+    );
+
+    const byKey = new Map();
+    const gamertagCandidates = new Map();
+
+    for (const row of rows) {
+      const canonicalKey = clean(row.player_key);
+      if (!canonicalKey) continue;
+
+      byKey.set(canonicalKey, canonicalKey);
+
+      const sgId = sportsGamerId(row.sports_gamer_player_url);
+      if (sgId) {
+        byKey.set('SG:' + sgId, canonicalKey);
+        byKey.set(sgId, canonicalKey);
+      }
+
+      const gt = normalizedGamertag(row.display_gamertag);
+      if (gt) {
+        if (!gamertagCandidates.has(gt)) gamertagCandidates.set(gt, new Set());
+        gamertagCandidates.get(gt).add(canonicalKey);
+      }
+    }
+
+    const byGamertag = new Map();
+    for (const [gt, keys] of gamertagCandidates) {
+      if (keys.size === 1) byGamertag.set(gt, [...keys][0]);
+    }
+
+    return { byKey, byGamertag };
+  }
+
+  function canonicalEventPlayerKey(event, identity) {
+    const rawKey = clean(event?.player_key);
+    const direct = identity?.byKey?.get(rawKey);
+    if (direct) return direct;
+
+    const gt = normalizedGamertag(event?.gamertag);
+    const byName = gt ? identity?.byGamertag?.get(gt) : '';
+    return byName || rawKey;
+  }
+
+  async function loadSource(sb, source, identity) {
     const stateResult = await sb
       .from('seh_app_competition_states')
       .select('competition_key,display_name,phase,route_hash,updated_at')
@@ -114,9 +172,9 @@
 
     const latestByPlayer = new Map();
     for (const event of events) {
-      const playerKey = clean(event.player_key);
+      const playerKey = canonicalEventPlayerKey(event, identity);
       if (!playerKey || latestByPlayer.has(playerKey)) continue;
-      latestByPlayer.set(playerKey, event);
+      latestByPlayer.set(playerKey, { ...event, canonical_player_key: playerKey });
     }
 
     const statuses = new Map();
@@ -161,9 +219,10 @@
 
       const statuses = new Map();
       const competitions = [];
+      const identity = await loadPlayerIdentityMap(sb);
 
       for (const source of SOURCES) {
-        const result = await loadSource(sb, source);
+        const result = await loadSource(sb, source, identity);
         if (result.competition) competitions.push(result.competition);
 
         // First active source wins if several competition sources are added later.
