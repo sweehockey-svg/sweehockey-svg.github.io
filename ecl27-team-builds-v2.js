@@ -346,6 +346,28 @@
 
   const model = buildModel();
 
+  // Shared authoritative ECL 27 build roster.
+  // Other surfaces (player profiles, For You, web app) must use the same
+  // playersNow model instead of trying to reconstruct current membership
+  // from only the movement log.
+  window.SEH_ECL27_CURRENT_ROSTER_V1 = {
+    competitionKey: 'ecl27winter',
+    build: DATA.build || '',
+    generatedAt: new Date().toISOString(),
+    teams: model.teams.map((team) => ({
+      name: team.name,
+      division: team.division || '',
+      teamId: teamId(team.name),
+      logoName: team.logoName || '',
+      logoUrl: logoUrl(team) || '',
+      players: [...team.playersNow]
+    }))
+  };
+  window.dispatchEvent(new CustomEvent('seh-ecl27-current-roster-ready', {
+    detail: { build: DATA.build || '' }
+  }));
+  try { window.SEH_currentPlayerStatus?.invalidate?.(); } catch (_) {}
+
   function recruitmentNeeds(team) {
     const text = [
       team?.recruitment?.seeks,
