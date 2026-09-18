@@ -660,3 +660,290 @@
     font-size:1.25rem;
   }
 }
+
+
+/* Recordbook V1.6 — tournament-stat inspired podium */
+.seh-record-podium{
+  gap:12px;
+  margin-bottom:12px;
+}
+.seh-record-podium-card{
+  min-height:214px;
+  grid-template-columns:42% 58%;
+  grid-template-rows:1fr;
+  gap:0;
+  padding:0;
+  border-radius:16px;
+  background:#05090e;
+  box-shadow:none;
+}
+.seh-record-podium-card:hover{
+  transform:translateY(-2px);
+}
+.seh-record-podium-card.is-rank-1{
+  background:#05090e;
+}
+.seh-record-podium-card.is-rank-1::before{
+  display:none;
+}
+.seh-record-podium-rank{
+  top:12px;
+  left:12px;
+  right:auto;
+  z-index:5;
+  min-width:36px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  padding:0 10px;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:10px;
+  color:#dce5eb;
+  background:rgba(8,14,23,.88);
+  font-size:.78rem;
+  letter-spacing:0;
+}
+.seh-record-podium-card.is-rank-1 .seh-record-podium-rank{
+  border-color:#ffd000;
+  color:#101214;
+  background:#ffd000;
+}
+.seh-record-podium-card.is-rank-3 .seh-record-podium-rank{
+  border-color:rgba(194,120,69,.56);
+  color:#d6a07b;
+}
+.seh-record-podium-media{
+  position:relative;
+  z-index:1;
+  grid-row:auto;
+  width:100%;
+  height:100%;
+  min-height:214px;
+  align-self:stretch;
+  border:0;
+  border-right:1px solid rgba(255,208,0,.28);
+  border-radius:0;
+  background:
+    radial-gradient(circle at 50% 30%,rgba(45,119,194,.28),transparent 46%),
+    linear-gradient(180deg,#17436f 0%,#102f50 55%,#0b2239 100%);
+}
+.seh-record-podium-card.is-rank-2 .seh-record-podium-media{
+  border-right-color:rgba(111,174,225,.35);
+}
+.seh-record-podium-card.is-rank-3 .seh-record-podium-media{
+  border-right-color:rgba(194,120,69,.34);
+}
+.seh-record-podium-media::after{
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  content:"";
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.025),transparent 35%),
+    linear-gradient(90deg,rgba(255,255,255,.025),transparent 50%);
+}
+.seh-record-podium-media img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center top;
+  transform:none;
+}
+.seh-record-podium-card.is-team .seh-record-podium-media{
+  padding:22px;
+  box-sizing:border-box;
+}
+.seh-record-podium-card.is-team .seh-record-podium-media img{
+  object-fit:contain;
+  padding:0;
+}
+.seh-record-podium-main{
+  position:relative;
+  z-index:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:28px 18px 15px 20px;
+  overflow:hidden;
+  background:
+    linear-gradient(120deg,rgba(7,12,18,.99),rgba(3,7,11,.98));
+}
+.seh-record-podium-copy{
+  position:relative;
+  z-index:3;
+  align-self:auto;
+  padding-right:42px;
+}
+.seh-record-podium-copy>strong{
+  color:#fff;
+  font-size:1.08rem;
+  line-height:1.05;
+  letter-spacing:-.025em;
+}
+.seh-record-podium-team{
+  display:block;
+  margin-top:4px;
+  overflow:hidden;
+  color:#d6e3ea;
+  font-size:.61rem;
+  font-weight:900;
+  line-height:1.1;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.seh-record-podium-teamlogo{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:4;
+  width:38px;
+  height:38px;
+  object-fit:contain;
+}
+.seh-record-podium-watermark{
+  position:absolute;
+  right:-20px;
+  bottom:5px;
+  z-index:-1;
+  width:150px;
+  height:150px;
+  object-fit:contain;
+  opacity:.11;
+  filter:saturate(.8);
+  pointer-events:none;
+}
+.seh-record-podium-value{
+  position:relative;
+  z-index:3;
+  grid-column:auto;
+  display:flex;
+  margin-top:16px;
+  align-items:baseline;
+  gap:6px;
+}
+.seh-record-podium-value strong{
+  color:#ffd000;
+  font-size:1.9rem;
+  line-height:.95;
+  letter-spacing:-.045em;
+}
+.seh-record-podium-card:not(.is-rank-1) .seh-record-podium-value strong{
+  color:#f3f6f8;
+}
+.seh-record-podium-value small{
+  color:#c8d4db;
+  font-size:.72rem;
+}
+.seh-record-podium-stats{
+  position:relative;
+  z-index:3;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  margin-top:13px;
+}
+.seh-record-podium-stats>span{
+  min-width:0;
+  min-height:48px;
+  display:grid;
+  align-content:center;
+  gap:3px;
+  padding:6px 7px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:9px;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.018));
+}
+.seh-record-podium-stats small{
+  overflow:hidden;
+  color:#7d8d99;
+  font-size:.48rem;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.seh-record-podium-stats strong{
+  overflow:hidden;
+  color:#f3f4f3;
+  font-size:.81rem;
+  font-weight:950;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.seh-record-podium-detail{
+  position:relative;
+  z-index:3;
+  display:block;
+  min-height:13px;
+  margin-top:9px;
+  overflow:hidden;
+  color:#667886;
+  font-size:.52rem;
+  line-height:1.25;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.seh-record-podium-progress{
+  position:relative;
+  z-index:3;
+  height:3px;
+  display:block;
+  margin-top:11px;
+  overflow:hidden;
+  border-radius:999px;
+  background:rgba(130,150,165,.18);
+}
+.seh-record-podium-progress i{
+  height:100%;
+  display:block;
+  border-radius:inherit;
+  background:#ffd000;
+}
+.seh-record-podium-card.is-rank-2 .seh-record-podium-progress i{
+  background:#d9e5eb;
+}
+.seh-record-podium-card.is-rank-3 .seh-record-podium-progress i{
+  background:#c78255;
+}
+@media(max-width:980px){
+  .seh-record-podium{
+    display:flex;
+    overflow-x:auto;
+    padding-bottom:2px;
+  }
+  .seh-record-podium-card{
+    flex:0 0 min(88vw,430px);
+    min-height:210px;
+  }
+}
+@media(max-width:520px){
+  .seh-record-podium-card{
+    grid-template-columns:40% 60%;
+    min-height:190px;
+  }
+  .seh-record-podium-media{
+    min-height:190px;
+  }
+  .seh-record-podium-main{
+    padding:25px 13px 12px 14px;
+  }
+  .seh-record-podium-copy>strong{
+    font-size:.96rem;
+  }
+  .seh-record-podium-value{
+    margin-top:12px;
+  }
+  .seh-record-podium-value strong{
+    font-size:1.55rem;
+  }
+  .seh-record-podium-stats{
+    gap:4px;
+    margin-top:10px;
+  }
+  .seh-record-podium-stats>span{
+    min-height:43px;
+    padding:5px;
+  }
+}
