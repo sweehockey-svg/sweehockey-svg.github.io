@@ -188,6 +188,7 @@
 
     const data = await load(Boolean(options.force));
     if (data.secBypass && options.allowSec !== true) return null;
+    if (data.error) return null;
 
     const status = data.statuses.get(key);
     if (status) return { ...status };
@@ -204,6 +205,7 @@
 
     const data = await load(Boolean(options.force));
     if (data.secBypass && options.allowSec !== true) return list;
+    if (data.error) return list;
 
     const competition = data.competitions.find(row =>
       ACTIVE_PHASES.has(clean(row.phase).toLowerCase())
