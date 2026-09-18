@@ -55,7 +55,7 @@
   // Defer until the site's existing initialization and observer guards finish.
   setTimeout(function () {
     const script = document.createElement('script');
-    script.src = '/webapp-shell.js?v=20260918-recordbook-v1';
+    script.src = '/webapp-shell.js?v=20260918-current-status-v1';
     script.onerror = function () { document.documentElement.classList.remove('seh-web-app'); };
     const push = document.createElement('script');
     push.src = '/webapp-push.js?v=1';
