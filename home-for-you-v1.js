@@ -289,7 +289,7 @@
       nearestText: 'Preliminärt · ännu inte officiellt',
       currentLabel: 'PRELIMINÄRT',
       currentTitle: 'SCL 27',
-      currentText: 'Planerad start 1 oktober · ej fastställt',
+      currentText: 'Planerad start i början av oktober · ej fastställt',
       href: '#/ecl'
     };
   }
