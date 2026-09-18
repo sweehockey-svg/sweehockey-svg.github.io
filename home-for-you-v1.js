@@ -282,36 +282,15 @@
   }
 
   function desktopCompetitionMeta() {
-    const now = new Date();
-    const sclStart = new Date('2026-10-01T00:00:00+02:00');
-    const sclEnd = new Date('2026-11-16T00:00:00+01:00');
-
-    if (now < sclStart) {
-      return {
-        nearestTitle: 'SCL 27 närmast',
-        nearestText: 'Nästa svenska tävling',
-        currentTitle: 'SCL 27',
-        currentText: 'Planerad start 1 oktober · närmast på tur',
-        href: '#/ecl'
-      };
-    }
-
-    if (now < sclEnd) {
-      return {
-        nearestTitle: 'SCL 27 pågår',
-        nearestText: 'Svenska mästerskapet',
-        currentTitle: 'SCL 27',
-        currentText: 'Matcher, tabell och statistik',
-        href: '#/ecl'
-      };
-    }
-
+    // SCL 27 is still preliminary. Do not promote it to an official/upcoming
+    // or live competition from the local date alone.
     return {
-      nearestTitle: 'ECL 27 närmast',
-      nearestText: 'Nästa större period',
-      currentTitle: 'ECL 27',
-      currentText: 'Lagbygge och kommande säsong',
-      href: BUILDS_ROUTE
+      nearestTitle: 'SCL 27 planeras',
+      nearestText: 'Preliminärt · ännu inte officiellt',
+      currentLabel: 'PRELIMINÄRT',
+      currentTitle: 'SCL 27',
+      currentText: 'Planerad start 1 oktober · ej fastställt',
+      href: '#/ecl'
     };
   }
 
@@ -406,7 +385,7 @@
             '<b class="seh-dfy__mini-arrow" aria-hidden="true">↗</b>' +
           '</a>' +
           '<a class="seh-dfy__mini seh-dfy__mini--competition" href="' + esc(competitionMeta.href) + '">' +
-            '<span class="seh-dfy__mini-copy"><small>AKTUELLT</small><strong>' + esc(competitionMeta.currentTitle) + '</strong><span>' + esc(competitionMeta.currentText) + '</span></span>' +
+            '<span class="seh-dfy__mini-copy"><small>' + esc(competitionMeta.currentLabel || 'AKTUELLT') + '</small><strong>' + esc(competitionMeta.currentTitle) + '</strong><span>' + esc(competitionMeta.currentText) + '</span></span>' +
             '<b class="seh-dfy__mini-arrow" aria-hidden="true">↗</b>' +
           '</a>' +
         '</div>' +
