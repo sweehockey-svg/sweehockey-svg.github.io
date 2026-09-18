@@ -1069,3 +1069,170 @@
     font-size: 8.7px !important;
   }
 }
+
+
+/* =========================================================
+   DESKTOP FOR YOU V4 — portrait player + stronger club identity
+   ========================================================= */
+@media (min-width:1101px) {
+  .seh-desktop-for-you {
+    isolation: isolate;
+  }
+
+  .seh-dfy__team-watermark {
+    position: absolute;
+    z-index: -1;
+    top: 56px;
+    right: 24px;
+    width: 190px;
+    height: 190px;
+    display: grid;
+    place-items: center;
+    opacity: .055;
+    filter: grayscale(.18);
+    pointer-events: none;
+  }
+
+  .seh-dfy__team-watermark img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .seh-dfy__identity {
+    grid-template-columns: 96px minmax(0,1fr) auto !important;
+    min-height: 128px !important;
+    background:
+      linear-gradient(90deg, rgba(8,14,22,.98), rgba(3,6,10,.91)) !important;
+  }
+
+  .seh-dfy__avatar {
+    width: 88px !important;
+    height: 116px !important;
+    max-width: 88px !important;
+    max-height: 116px !important;
+    align-self: end;
+    border-radius: 3px !important;
+  }
+
+  .seh-dfy__avatar img {
+    width: 88px !important;
+    height: 116px !important;
+    max-width: 88px !important;
+    max-height: 116px !important;
+    object-fit: cover !important;
+    object-position: center top !important;
+  }
+
+  .seh-dfy__identity-copy {
+    display: grid !important;
+    align-content: center;
+    gap: 5px !important;
+  }
+
+  .seh-dfy__clubline {
+    width: fit-content;
+    max-width: 100%;
+    display: inline-grid;
+    grid-template-columns: 28px minmax(0,auto) auto;
+    align-items: center;
+    gap: 7px;
+    margin-top: 3px;
+    color: rgba(244,241,233,.72);
+    text-decoration: none;
+  }
+
+  .seh-dfy__clubline--plain {
+    grid-template-columns: minmax(0,auto);
+  }
+
+  .seh-dfy__identity-team-logo {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 3px;
+    background: #080b0f;
+    color: rgba(244,241,233,.55);
+    font-size: 8px;
+    font-weight: 900;
+  }
+
+  .seh-dfy__identity-team-logo img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+  }
+
+  .seh-dfy__clubline > span:nth-child(2),
+  .seh-dfy__clubline--plain > span {
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 850;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .seh-dfy__clubline b {
+    color: rgba(98,212,207,.72);
+    font-size: 8px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .seh-dfy__clubline:hover,
+  .seh-dfy__clubline:focus-visible {
+    outline: none;
+    color: #fff;
+  }
+
+  .seh-dfy__clubline:hover b,
+  .seh-dfy__clubline:focus-visible b {
+    color: #ffd000;
+  }
+
+  .seh-dfy__mini--team {
+    background:
+      radial-gradient(circle at 18% 50%, rgba(255,208,0,.035), transparent 36%),
+      #05080d !important;
+  }
+}
+
+@media (min-width:1101px) and (max-height:900px) {
+  .seh-dfy__identity {
+    grid-template-columns: 80px minmax(0,1fr) auto !important;
+    min-height: 108px !important;
+  }
+
+  .seh-dfy__avatar,
+  .seh-dfy__avatar img {
+    width: 72px !important;
+    height: 96px !important;
+    max-width: 72px !important;
+    max-height: 96px !important;
+  }
+
+  .seh-dfy__team-watermark {
+    width: 150px;
+    height: 150px;
+    top: 48px;
+    right: 18px;
+  }
+
+  .seh-dfy__clubline {
+    grid-template-columns: 24px minmax(0,auto) auto;
+    gap: 6px;
+  }
+
+  .seh-dfy__identity-team-logo {
+    width: 24px;
+    height: 24px;
+  }
+
+  .seh-dfy__identity-team-logo img {
+    width: 20px;
+    height: 20px;
+  }
+}
