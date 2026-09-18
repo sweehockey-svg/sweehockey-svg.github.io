@@ -136,35 +136,35 @@
     return {
       building: {
         phase,
-        teamKicker: 'DITT LAG', missingTitle: 'Inte i lagbygget ännu', missingText: 'Öppna aktuella svenska lagbyggen', missingAction: 'builds', teamSubtitle: 'Aktuellt lagbygge',
+        teamKicker: 'AKTUELLT LAG', missingTitle: 'Free Agent', missingText: 'Inte i ett aktivt lagbygge', missingAction: 'fa', teamSubtitle: 'Aktuellt lagbygge',
         secondKicker: 'FREE AGENTS', secondTitle: '', secondText: 'Se spelare som söker lag', secondAction: 'fa',
         feedTitle: 'Senaste för dig', feedLink: 'Alla lagbyggen →', feedAction: 'builds', shortcutLabel: 'Lagbygge', shortcutAction: 'builds',
         emptyTeam: 'Nya IN/UT och rekryteringsposter visas här automatiskt.', emptyNoTeam: 'När du går med i ett aktuellt ECL 27-lag visas lagflödet här.'
       },
       regular: {
         phase,
-        teamKicker: 'DITT ECL-LAG', missingTitle: 'ECL-lag ej kopplat', missingText: 'Öppna ECL 27', missingAction: 'competition', teamSubtitle: 'Grundserie',
+        teamKicker: 'AKTUELLT LAG', missingTitle: 'Free Agent', missingText: 'Inte i ett pågående lag', missingAction: 'fa', teamSubtitle: 'Grundserie',
         secondKicker: 'ECL 27', secondTitle: 'Grundserie', secondText: 'Matcher, tabell och statistik', secondAction: 'competition',
         feedTitle: 'Senaste för dig', feedLink: 'Öppna ECL 27 →', feedAction: 'competition', shortcutLabel: 'ECL 27', shortcutAction: 'competition',
         emptyTeam: 'Matcher, resultat och laghändelser visas här när datan finns.', emptyNoTeam: 'Öppna ECL 27 för matcher, tabell och statistik.'
       },
       playoffs: {
         phase,
-        teamKicker: 'DITT ECL-LAG', missingTitle: 'ECL-lag ej kopplat', missingText: 'Öppna slutspelet', missingAction: 'competition', teamSubtitle: 'Slutspel',
+        teamKicker: 'AKTUELLT LAG', missingTitle: 'Free Agent', missingText: 'Inte i ett pågående lag', missingAction: 'fa', teamSubtitle: 'Slutspel',
         secondKicker: 'ECL 27', secondTitle: 'Slutspel', secondText: 'Serier, matcher och resultat', secondAction: 'competition',
         feedTitle: 'Slutspel för dig', feedLink: 'Öppna slutspelet →', feedAction: 'competition', shortcutLabel: 'Slutspel', shortcutAction: 'competition',
         emptyTeam: 'Slutspelsmatcher och serieresultat visas här när datan finns.', emptyNoTeam: 'Öppna ECL 27-slutspelet.'
       },
       finished: {
         phase,
-        teamKicker: 'DIN ECL-SÄSONG', missingTitle: 'Ingen ECL 27-lagkoppling', missingText: 'Öppna säsongen', missingAction: 'competition', teamSubtitle: 'Slutresultat',
+        teamKicker: 'STATUS', missingTitle: 'Free Agent', missingText: 'Ingen aktiv lagkoppling', missingAction: 'fa', teamSubtitle: 'Slutresultat',
         secondKicker: 'ECL 27', secondTitle: 'Säsongen avslutad', secondText: 'Resultat och slutstatistik', secondAction: 'competition',
         feedTitle: 'Säsongen i korthet', feedLink: 'Öppna ECL 27 →', feedAction: 'competition', shortcutLabel: 'ECL 27', shortcutAction: 'competition',
         emptyTeam: 'Säsongsresultat och slutstatistik visas här.', emptyNoTeam: 'Öppna ECL 27 och se slutresultatet.'
       },
       offseason: {
         phase,
-        teamKicker: 'SENASTE ECL-LAG', missingTitle: 'Mellan ECL-säsonger', missingText: 'Se tävlingsarkivet', missingAction: 'competitions', teamSubtitle: 'Senaste säsong',
+        teamKicker: 'STATUS', missingTitle: 'Free Agent', missingText: 'Ingen aktiv lagkoppling', missingAction: 'fa', teamSubtitle: 'Senaste säsong',
         secondKicker: 'ECL', secondTitle: 'Mellan säsonger', secondText: 'Nyheter, historik och kommande tävlingar', secondAction: 'competitions',
         feedTitle: 'För dig just nu', feedLink: 'Tävlingar →', feedAction: 'competitions', shortcutLabel: 'Tävlingar', shortcutAction: 'competitions',
         emptyTeam: 'När nästa lagbygge öppnar byter den här ytan automatiskt.', emptyNoTeam: 'När nästa ECL-period öppnar anpassas den här ytan automatiskt.'
@@ -286,8 +286,8 @@
         feed.push({ marker: '★', tone: 'favorite', title: 'Dina favoriter bevakas', text: 'Nya IN/UT och lagbyggehändelser från dina favoritspelare och favoritlag visas här.', time: '', stamp: 0 });
       } else {
         feed.push({
-          marker: '✓', tone: '', title: teamName ? `${teamName} är kopplat` : 'Din profil är kopplad',
-          text: teamName ? meta.emptyTeam : meta.emptyNoTeam, time: '', stamp: 0
+          marker: teamName ? '✓' : 'FA', tone: teamName ? '' : 'fa', title: teamName ? `${teamName} är kopplat` : 'Du är Free Agent',
+          text: teamName ? meta.emptyTeam : 'När du går med i ett aktivt lagbygge byts statusen automatiskt.', time: '', stamp: 0
         });
       }
     }
@@ -296,15 +296,14 @@
 
   function renderPersonal(root, data) {
     lastData = data;
-    const { account, player, project, activeFaCount, competitionState, favoriteTargets: targets } = data;
+    const { account, player, project, activeFaCount, competitionState, favoriteTargets: targets, currentStatus } = data;
     const meta = phaseMeta(competitionState?.phase);
     const routeHash = String(competitionState?.route_hash || DEFAULT_ROUTE);
     const playerName = String(player?.display_gamertag || account?.playerName || account?.playerKey || 'Din profil').trim();
-    const teamName = String(project?.name || '').trim();
-    const division = String(project?.division || '').trim();
-    const historicalTeam = String(player?.latest_team || player?.latest_ecl_team || '').trim();
-    const profileMeta = teamName ? [teamName, division].filter(Boolean).join(' · ') : (meta.phase === 'offseason' && historicalTeam ? historicalTeam : 'Kopplad spelare');
-    const sourceTeamId = Number(project?.source_team_id) || 0;
+    const teamName = currentStatus?.kind === 'team' ? String(project?.name || currentStatus?.teamName || '').trim() : '';
+    const division = String(project?.division || currentStatus?.division || '').trim();
+    const profileMeta = teamName ? [teamName, division].filter(Boolean).join(' · ') : 'Free Agent';
+    const sourceTeamId = Number(project?.source_team_id || currentStatus?.teamId) || 0;
 
     const feed = buildFeed(data, meta, teamName);
     const hasFavoriteFeed = feed.some(item => item.tone === 'favorite');
@@ -437,12 +436,30 @@
         ]);
         if (token !== renderToken) return;
 
+        const currentStatus = window.SEH_currentPlayerStatus?.get
+          ? await window.SEH_currentPlayerStatus.get(account.playerKey)
+          : null;
+        let currentProject = projectResult.error ? null : (projectResult.data?.[0] || null);
+        if (currentStatus?.kind === 'team') {
+          currentProject = currentProject || {
+            id: currentStatus.teamProjectId || null,
+            name: currentStatus.teamName,
+            division: currentStatus.division,
+            source_team_id: currentStatus.teamId,
+            logo_name: currentStatus.logoName,
+            status: currentStatus.phase
+          };
+        } else if (currentStatus?.kind === 'free_agent') {
+          currentProject = null;
+        }
+
         const data = {
           account,
           player,
           competitionState,
+          currentStatus,
           favoriteTargets: targets,
-          project: projectResult.error ? null : (projectResult.data?.[0] || null),
+          project: currentProject,
           events: eventsResult.error ? [] : (eventsResult.data || []),
           recruitment: recruitmentResult.error ? null : (recruitmentResult.data?.[0] || null),
           activeFaCount: faResult.error ? 0 : (faResult.data || []).length,
