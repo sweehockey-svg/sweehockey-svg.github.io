@@ -74,9 +74,10 @@
     const highest=valid.reduce((best,row)=>DIVISION_RANK[division(row.division)]>DIVISION_RANK[best]?division(row.division):best,division(valid[0].division));
     return {count:new Set(valid.map(row=>String(row.league_id||seasonLabel(row)))).size,first:seasonLabel(valid[0]),latest:seasonLabel(valid[valid.length-1]),highestDivision:highest};
   }
+  function highestReached(value,thresholds){const current=n(value);return [...thresholds].reverse().find(target=>current>=target)||0;}
   function badges(row,ecl){
     const out=[];
-    const add=(value,thresholds,suffix,icon)=>{for(const t of thresholds)if(n(value)>=t)out.push({text:`${fmt(t)} ${suffix}`,icon});};
+    const add=(value,thresholds,suffix,icon)=>{const mark=highestReached(value,thresholds);if(mark)out.push({text:`${fmt(mark)} ${suffix}`,icon});};
     add(row?.career_games,GAME_THRESHOLDS,'matcher','GP');
     add(row?.tournament_count,TOURNAMENT_THRESHOLDS,'turneringar','T');
     add(row?.club_count,CLUB_THRESHOLDS,'klubbar','K');
@@ -84,7 +85,7 @@
     if(n(row?.total_skater_games)>0||n(row?.total_points)>0)add(row?.total_points,POINT_THRESHOLDS,'poäng','P');
     if(ecl.count>=10)out.push({text:'10 ECL-säsonger',icon:'ECL'});
     if(ecl.highestDivision&&ecl.highestDivision!=='–')out.push({text:`${ecl.highestDivision} nådd`,icon:'↑'});
-    return out.slice(-8);
+    return out.slice(0,6);
   }
   function nextTarget(row,ecl){
     const cand=[];
@@ -109,14 +110,18 @@
     try{if(typeof window.SEH_playerImageUrl==='function')return window.SEH_playerImageUrl(raw,id)||'';}catch(_){}
     return raw;
   }
-  function playerHref(key,name){
-    try{if(typeof window.SEH_playerProfileUrl==='function')return window.SEH_playerProfileUrl(key,name);}catch(_){}
-    return `#/spelare/${encodeURIComponent(name||key)}`;
+  function playerHref(key,name){try{if(typeof window.SEH_playerProfileUrl==='function')return String(window.SEH_playerProfileUrl(key,name)||'').trim();}catch(_){}return '';}
+  function canonicalTeam(v){return String(v||'').replace(/\s+/g,' ').trim();}
+  async function localProfileKeys(rows,sb){
+    const keys=[...new Set((Array.isArray(rows)?rows:[]).map(row=>String(row?.teammate_key||'').trim()).filter(Boolean))];
+    if(!keys.length)return new Set();
+    const result=await sb.from('app_player_directory_cache').select('player_key').in('player_key',keys);
+    if(result.error)return new Set();
+    return new Set((result.data||[]).map(row=>String(row?.player_key||'').trim()).filter(Boolean));
   }
-  function canonicalTeam(v){const f=String(v||'').trim();try{return window.SEH_WEBAPP_TEAM_ALIASES?.canonicalName(f)||f;}catch(_){return f;}}
-  function teammateMarkup(rows){
+  function teammateMarkup(rows,localKeys){
     return `<div class="seh-public-extra-head"><div><small>LAGKAMRATER</small><h2>Spelat mest med</h2><p>Topp fem utifrån överlappande registrerade matcher.</p></div><span>Topp ${rows.length}</span></div>
-      <div class="seh-public-teammates">${rows.map((row,i)=>{const name=String(row?.display_gamertag||'Spelare'),img=photo(row),team=canonicalTeam(row?.latest_shared_team);return `<a href="${esc(playerHref(row?.teammate_key,name))}" class="seh-public-teammate${i===0?' is-top':''}"><b>${i+1}</b><span class="seh-public-teammate-avatar">${img?`<img src="${esc(img)}" alt="${esc(name)}" loading="lazy">`:'?'}</span><span class="seh-public-teammate-copy"><strong>${esc(name)}</strong><em>${fmt(row?.shared_games)} matcher · ${fmt(row?.shared_tournaments)} turneringar</em>${team?`<small>Senast ihop: ${esc(team)}</small>`:''}</span><i>›</i></a>`;}).join('')}</div>
+      <div class="seh-public-teammates">${rows.map((row,i)=>{const key=String(row?.teammate_key||'').trim(),name=String(row?.display_gamertag||'Spelare'),img=photo(row),team=canonicalTeam(row?.latest_shared_team),localHref=localKeys?.has(key)?playerHref(key,name):'',externalHref=!localHref?String(row?.sports_gamer_player_url||'').trim():'',href=localHref||externalHref,isExternal=Boolean(externalHref);const content=`<b>${i+1}</b><span class="seh-public-teammate-avatar">${img?`<img src="${esc(img)}" alt="${esc(name)}" loading="lazy">`:'?'}</span><span class="seh-public-teammate-copy"><strong>${esc(name)}</strong><em>${fmt(row?.shared_games)} matcher · ${fmt(row?.shared_tournaments)} turneringar</em>${team?`<small>Senast ihop: ${esc(team)}</small>`:''}</span>${href?'<i>›</i>':''}`;return href?`<a href="${esc(href)}" class="seh-public-teammate${i===0?' is-top':''}"${isExternal?' target="_blank" rel="noopener noreferrer"':''}>${content}</a>`:`<div class="seh-public-teammate${i===0?' is-top':''}">${content}</div>`;}).join('')}</div>
       <p class="seh-public-extra-note">Matchantalet bygger på överlappande registrerade matcher i samma lag och turneringsfas.</p>`;
   }
   function ensureHosts(){
@@ -151,9 +156,13 @@
       ]);
       if(myToken!==token||String(location.hash||'')!==route)return;
       const row=career.data?.[0];
-      if(row){hosts.milestones.innerHTML=milestoneMarkup(row,summarizeEcl(ecl.error?[]:ecl.data||[]));hosts.milestones.dataset.ready='1';}else hosts.milestones.remove();
+      if(row){hosts.milestones.innerHTML=milestoneMarkup(row,summarizeEcl(ecl.error?[]:ecl.data||[]));hosts.milestones.dataset.ready='1';}
+      else{hosts.milestones.innerHTML='<div class="seh-public-extra-loading">Ingen registrerad karriärdata för milstolpar ännu.</div>';hosts.milestones.dataset.ready='1';}
       const mateRows=mates.error?[]:(Array.isArray(mates.data)?mates.data.filter(x=>n(x?.shared_games)>0):[]);
-      if(mateRows.length){hosts.teammates.innerHTML=teammateMarkup(mateRows);hosts.teammates.dataset.ready='1';}else hosts.teammates.remove();
+      const localKeys=mateRows.length?await localProfileKeys(mateRows,sb):new Set();
+      if(myToken!==token||String(location.hash||'')!==route)return;
+      if(mateRows.length){hosts.teammates.innerHTML=teammateMarkup(mateRows,localKeys);hosts.teammates.dataset.ready='1';}
+      else{hosts.teammates.innerHTML='<div class="seh-public-extra-loading">Inga registrerade lagkamrater att visa ännu.</div>';hosts.teammates.dataset.ready='1';}
       loadedRoute=route;ensureHosts();
     }catch(error){
       console.warn('[Svensk eHockey] Publika spelarblock kunde inte laddas',error);
