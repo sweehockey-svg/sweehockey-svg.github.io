@@ -202,3 +202,176 @@
   .seh-record-copy .seh-record-meta-primary{font-size:.61rem}
   .seh-record-copy .seh-record-meta-secondary{font-size:.57rem}
 }
+
+
+/* Recordbook V1.3 — compact category-led control deck */
+.seh-recordbook-panel{
+  padding:18px 20px 20px;
+}
+.seh-recordbook-control-group--type{
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr);
+  gap:10px;
+  margin:0;
+  padding-bottom:14px;
+}
+.seh-recordbook-control-group--type .seh-recordbook-switch{
+  width:max-content;
+  padding:3px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:11px;
+  background:rgba(2,7,12,.54);
+}
+.seh-recordbook-control-group--type .seh-recordbook-switch button{
+  min-width:112px;
+  min-height:32px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+}
+.seh-recordbook-control-group--type .seh-recordbook-switch button.is-active{
+  border:1px solid rgba(255,208,0,.68);
+  background:linear-gradient(180deg,rgba(255,208,0,.13),rgba(255,208,0,.055));
+}
+.seh-recordbook-toolbar{
+  gap:16px;
+  padding:14px 0 4px;
+}
+.seh-recordbook-toolbar>.seh-recordbook-control-group{
+  display:grid;
+  grid-template-columns:92px minmax(0,1fr);
+  align-items:start;
+  gap:10px;
+}
+.seh-recordbook-toolbar>.seh-recordbook-control-group .seh-recordbook-control-label{
+  padding-top:11px;
+}
+.seh-recordbook-filters{
+  gap:6px;
+}
+.seh-recordbook-filters button{
+  min-width:54px;
+  min-height:34px;
+  border-radius:8px;
+  padding:8px 12px;
+}
+.seh-recordbook-record-picker{
+  display:grid;
+  gap:12px;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.055);
+}
+.seh-recordbook-record-picker>.seh-recordbook-control-group{
+  display:grid;
+  grid-template-columns:92px minmax(0,1fr);
+  align-items:start;
+  gap:10px;
+}
+.seh-recordbook-record-picker>.seh-recordbook-control-group .seh-recordbook-control-label{
+  padding-top:12px;
+}
+.seh-recordbook-group-tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+.seh-recordbook-group-tabs button{
+  appearance:none;
+  min-height:36px;
+  padding:9px 16px;
+  border:1px solid rgba(255,255,255,.085);
+  border-radius:9px;
+  background:#09101a;
+  color:#8d9aa6;
+  font:900 .72rem/1 inherit;
+  cursor:pointer;
+  transition:border-color .16s ease,background .16s ease,color .16s ease,transform .16s ease;
+}
+.seh-recordbook-group-tabs button:hover{
+  transform:translateY(-1px);
+  border-color:rgba(80,227,220,.25);
+  color:#e4ebf0;
+}
+.seh-recordbook-group-tabs button.is-active{
+  border-color:rgba(255,208,0,.62);
+  background:linear-gradient(180deg,rgba(255,208,0,.12),rgba(255,208,0,.05));
+  color:#ffd000;
+}
+.seh-recordbook-group-tabs button.is-match-group.is-active{
+  border-color:rgba(80,227,220,.5);
+  background:linear-gradient(180deg,rgba(80,227,220,.12),rgba(80,227,220,.045));
+  color:#64e4de;
+}
+.seh-recordbook-metrics{
+  display:flex !important;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-left:102px;
+  min-height:36px;
+}
+.seh-recordbook-metrics button{
+  min-height:34px;
+  padding:8px 13px;
+  border-radius:8px;
+}
+.seh-recordbook-metrics.is-match-records button{
+  border-color:rgba(80,227,220,.12);
+  background:rgba(7,20,27,.68);
+}
+.seh-recordbook-metrics.is-match-records button.is-active{
+  border-color:rgba(80,227,220,.56);
+  background:rgba(80,227,220,.08);
+  color:#6ce7e1;
+}
+.seh-recordbook-metric-group{
+  display:contents !important;
+}
+.seh-recordbook-status{
+  margin-top:18px;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.055);
+}
+@media(max-width:720px){
+  .seh-recordbook-panel{padding:14px 10px 16px}
+  .seh-recordbook-control-group--type{
+    grid-template-columns:1fr;
+    gap:7px;
+  }
+  .seh-recordbook-control-group--type .seh-recordbook-switch{
+    width:100%;
+  }
+  .seh-recordbook-control-group--type .seh-recordbook-switch button{
+    width:100%;
+    min-width:0;
+  }
+  .seh-recordbook-toolbar>.seh-recordbook-control-group,
+  .seh-recordbook-record-picker>.seh-recordbook-control-group{
+    grid-template-columns:1fr;
+    gap:6px;
+  }
+  .seh-recordbook-toolbar>.seh-recordbook-control-group .seh-recordbook-control-label,
+  .seh-recordbook-record-picker>.seh-recordbook-control-group .seh-recordbook-control-label{
+    padding-top:0;
+  }
+  .seh-recordbook-filters,
+  .seh-recordbook-group-tabs,
+  .seh-recordbook-metrics{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    overscroll-behavior-inline:contain;
+    scrollbar-width:none;
+    padding-bottom:2px;
+  }
+  .seh-recordbook-filters::-webkit-scrollbar,
+  .seh-recordbook-group-tabs::-webkit-scrollbar,
+  .seh-recordbook-metrics::-webkit-scrollbar{display:none}
+  .seh-recordbook-filters button,
+  .seh-recordbook-group-tabs button,
+  .seh-recordbook-metrics button{
+    flex:0 0 auto;
+    white-space:nowrap;
+  }
+  .seh-recordbook-metrics{
+    margin-left:0;
+  }
+}
