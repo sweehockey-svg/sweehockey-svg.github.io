@@ -13693,7 +13693,7 @@ function SEH_initShop() {
 
         <div class="seh-recordbook-status"><strong>TOPPLISTA</strong><span data-record-status></span></div>
         <div class="seh-record-list" data-record-list><div class="seh-record-loading">Hämtar rekord…</div></div>
-        <p class="seh-recordbook-note">Rekorden bygger på registrerade matcher och statistik i Svensk eHockey. ECL-filtret exkluderar kval, warmup, wildcard och pre-season.</p>
+        <p class="seh-recordbook-note">Rekorden bygger på registrerade matcher, statistik och meriter i Svensk eHockey. ECL-filtret exkluderar kval, warmup, wildcard och pre-season. Matchrekord visas bara där detaljerad matchdata finns och märks därför med sin datatäckning.</p>
       </section>
     </main>
     <footer class="directory-footer"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>
