@@ -171,7 +171,7 @@
     const hasSkaterHistory = skaterGames > 0 || goals > 0 || assists > 0 || points > 0;
     const isGoalieOnly = hasGoalieHistory && !hasSkaterHistory;
     const position = String(row?.primary_position || '').trim();
-    const latestTeam = canonicalTeam(row?.latest_team);
+    const latestTeam = canonicalTeam(row?.current_team_name || row?.latest_team);
     const latestSeason = String(row?.latest_season || '').trim();
     const context = [position ? `Position ${position}` : '', latestTeam, latestSeason].filter(Boolean);
 
@@ -262,11 +262,43 @@
         return;
       }
 
-      renderCareer(root, row);
+      let currentStatus = null;
+      if (window.SEH_currentPlayerStatus?.get) {
+        currentStatus = await window.SEH_currentPlayerStatus.get(playerKey);
+      }
+      renderCareer(root, currentStatus
+        ? { ...row, current_team_name: currentStatus.teamName, current_status: currentStatus.kind }
+        : row);
     } catch (error) {
       console.warn('[Svensk eHockey] Mitt eHockey karriär kunde inte laddas', error);
       if (token !== careerLoadToken) return;
       renderCareerMessage(root, 'Karriärstatistiken kunde inte laddas just nu.', 'Försök igen senare');
+    }
+  }
+
+  async function hydrateCurrentProfileStatus(root, profile) {
+    const holder = root?.querySelector('[data-me-current-context]');
+    if (!holder) return;
+
+    const playerKey = profilePlayerKey(profile);
+    if (!playerKey || !window.SEH_currentPlayerStatus?.get) return;
+
+    try {
+      const status = await window.SEH_currentPlayerStatus.get(playerKey);
+      if (!status) return;
+
+      if (status.kind === 'team') {
+        const suffix = status.phase === 'building'
+          ? 'Aktuellt lagbygge'
+          : (status.competitionName || 'Pågående turnering');
+        holder.textContent = [status.teamName, status.division, suffix].filter(Boolean).join(' · ');
+        holder.dataset.currentStatus = 'team';
+      } else {
+        holder.textContent = 'Free Agent';
+        holder.dataset.currentStatus = 'free_agent';
+      }
+    } catch (error) {
+      console.warn('[Svensk eHockey] Aktuell status i Mitt eHockey kunde inte laddas', error);
     }
   }
 
@@ -279,8 +311,9 @@
     const name = profileName(profile) || 'Mitt eHockey';
     const photo = profilePhoto(profile);
     const linked = profile?.serverLinked === true || profile?.linked === true;
-    const team = canonicalTeam(profile?.latestTeam || profile?.team || profile?.currentTeam);
+    const team = canonicalTeam(profile?.currentTeam || profile?.latestTeam || profile?.team);
     const season = String(profile?.latestSeason || profile?.season || '').trim();
+    const profileContext = linked ? 'Hämtar aktuell status…' : ([team, season].filter(Boolean).join(' · ') || 'Koppla en spelarprofil för mer personlig data');
     const route = profileRoute(profile);
     const playerFavs = favorites.filter(item => String(item?.type || '') === 'player');
     const teamFavs = favorites.filter(item => String(item?.type || '') === 'team');
@@ -316,7 +349,7 @@
         <div class="seh-me-copy">
           <small>${linked ? 'DIN SPELARPROFIL' : 'DITT KONTO'}</small>
           <h2>${esc(name)}</h2>
-          <p>${esc([team, season].filter(Boolean).join(' · ') || (linked ? 'Kopplad spelare' : 'Koppla en spelarprofil för mer personlig data'))}</p>
+          <p data-me-current-context>${esc(profileContext)}</p>
           <div class="seh-me-status">
             <span class="seh-me-pill${linked ? ' ok' : ''}">${linked ? 'Discord kopplad' : 'Profil ej kopplad'}</span>
             <span class="seh-me-pill">${playerFavs.length} spelare följs</span>
@@ -361,6 +394,7 @@
 
       <p class="seh-me-footer-note">Mitt eHockey är din personliga hubb. Hem fortsätter vara en snabb startsida med nyheter och genvägar.</p>`;
 
+    hydrateCurrentProfileStatus(root, profile);
     loadCareer(root, profile);
     if (root.classList.contains('show')) refreshPersonalModules();
   }
