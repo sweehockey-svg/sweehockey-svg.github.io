@@ -13597,6 +13597,45 @@ function SEH_initShop() {
       </div>
     </div>`
   );
+  templates.records = `
+    <main class="directory-shell seh-recordbook-shell" id="sehRecordbookRoot">
+      <section class="seh-recordbook-hero">
+        <div>
+          <p class="directory-kicker">SVENSK eHOCKEY / ALL-TIME</p>
+          <h1>Rekordboken</h1>
+          <p>All-time-topplistor från den registrerade svenska eHockey-historiken. Byt mellan spelare och lag eller filtrera på ECL, SCL och SEC.</p>
+        </div>
+        <aside>
+          <span>LEKANDE HISTORIK</span>
+          <strong>Vem har gjort mest?</strong>
+          <p>Matcher, poäng, mål, räddningar, vinster och fler rekord på samma plats.</p>
+        </aside>
+      </section>
+
+      <section class="seh-recordbook-panel">
+        <div class="seh-recordbook-switch" aria-label="Typ av rekord">
+          <button type="button" data-record-type="players" class="is-active">Spelare</button>
+          <button type="button" data-record-type="teams">Lag</button>
+        </div>
+
+        <div class="seh-recordbook-toolbar">
+          <div class="seh-recordbook-filters" aria-label="Tävling">
+            <button type="button" data-record-competition="ALL" class="is-active">Alla</button>
+            <button type="button" data-record-competition="ECL">ECL</button>
+            <button type="button" data-record-competition="SCL">SCL</button>
+            <button type="button" data-record-competition="SEC">SEC</button>
+          </div>
+          <div class="seh-recordbook-metrics" data-record-metrics aria-label="Rekordtyp"></div>
+        </div>
+
+        <div class="seh-recordbook-status"><strong>TOPPLISTA</strong><span data-record-status></span></div>
+        <div class="seh-record-list" data-record-list><div class="seh-record-loading">Hämtar rekord…</div></div>
+        <p class="seh-recordbook-note">Rekorden bygger på registrerade matcher och statistik i Svensk eHockey. ECL-filtret exkluderar kval, warmup, wildcard och pre-season.</p>
+      </section>
+    </main>
+    <footer class="directory-footer"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>
+  `;
+
   templates.ecl = `
     <main class="directory-shell ecl-hub-shell-v12840">
       <section class="ecl-hub-hero-v12840" aria-labelledby="eclHubTitle">
@@ -16448,13 +16487,14 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
 })();
   }
 
-  const routeBodyClasses = {"home": "directory-page portal-page", "news": "directory-page portal-page", "players": "directory-page portal-page", "freeAgents": "directory-page portal-page free-agents-page", "myProfile": "directory-page portal-page my-profile-page", "history": "directory-page", "player": "history-body", "team": "history-body", "teamTournament": "history-body", "tournament": "history-body tournament-overview-body", "shop": "directory-page shop-page", "support": "directory-page portal-page support-page", "ecl": "directory-page portal-page", "season": "directory-page portal-page", "writer": "directory-page writer-page", "admin": "directory-page"};
+  const routeBodyClasses = {"home": "directory-page portal-page", "news": "directory-page portal-page", "players": "directory-page portal-page", "records": "directory-page portal-page recordbook-page", "freeAgents": "directory-page portal-page free-agents-page", "myProfile": "directory-page portal-page my-profile-page", "history": "directory-page", "player": "history-body", "team": "history-body", "teamTournament": "history-body", "tournament": "history-body tournament-overview-body", "shop": "directory-page shop-page", "support": "directory-page portal-page support-page", "ecl": "directory-page portal-page", "season": "directory-page portal-page", "writer": "directory-page writer-page", "admin": "directory-page"};
 
   const routeControllers = {
     ecl: SEH_initEcl,
     news: SEH_initNews,
     history: SEH_initHistory,
     players: SEH_initPlayers,
+    records: () => window.SEH_initRecordBook?.(),
     freeAgents: SEH_initFreeAgents,
     myProfile: SEH_initMyProfile,
     player: SEH_initPlayer,
@@ -17218,6 +17258,15 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       };
     }
 
+    if ((parts[0] === "rekord" || parts[0] === "rekordboken") && parts.length === 1) {
+      return {
+        ...route,
+        key: "records",
+        label: "Rekordboken",
+        active: "records"
+      };
+    }
+
     if (parts[0] === "ecl" && parts.length === 1) {
       return {
         ...route,
@@ -17383,6 +17432,13 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
             href="#/spelare"
           >
             Spelare
+          </a>
+
+          <a
+            class="${route.active === "records" ? "is-active" : ""}"
+            href="#/rekord"
+          >
+            Rekord
           </a>
 
           <a
