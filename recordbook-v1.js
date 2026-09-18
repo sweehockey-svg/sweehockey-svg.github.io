@@ -143,7 +143,7 @@
 
   function metricButtonsHtml(){
     return metricGroups().map(group=>
-      `<div class="seh-recordbook-metric-group"><span>${esc(group.label)}</span><div>${group.items.map(([key,label])=>`<button type="button" data-record-metric="${key}" class="${state.metric===key?'is-active':''}">${esc(label)}</button>`).join('')}</div></div>`
+      `<div class="seh-recordbook-metric-group${group.label==='MATCHREKORD'?' is-match-records':''}"><span>${esc(group.label)}</span><div>${group.items.map(([key,label])=>`<button type="button" data-record-metric="${key}" class="${state.metric===key?'is-active':''}">${esc(label)}</button>`).join('')}</div></div>`
     ).join('');
   }
   function controls(root){
