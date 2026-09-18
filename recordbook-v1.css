@@ -176,3 +176,29 @@
   .seh-recordbook-metric-group{grid-template-columns:1fr;gap:5px}
   .seh-recordbook-metric-group>span{padding-top:2px}
 }
+
+
+/* Recordbook V1.3 — match context for single-game records */
+.seh-record-row.has-match-context{
+  min-height:76px;
+}
+.seh-record-meta-primary,
+.seh-record-meta-secondary{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.seh-record-copy .seh-record-meta-primary{
+  color:#aeb9c3;
+  font-weight:750;
+}
+.seh-record-copy .seh-record-meta-secondary{
+  margin-top:2px;
+  color:#617282;
+  font-size:.62rem;
+}
+@media(max-width:720px){
+  .seh-record-row.has-match-context{min-height:72px}
+  .seh-record-copy .seh-record-meta-primary{font-size:.61rem}
+  .seh-record-copy .seh-record-meta-secondary{font-size:.57rem}
+}
