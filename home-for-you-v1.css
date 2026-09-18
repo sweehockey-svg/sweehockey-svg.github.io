@@ -1518,3 +1518,70 @@
     padding-top: 4px !important;
   }
 }
+
+
+/* =========================================================
+   DESKTOP FOR YOU V5.2 — full-panel club watermark
+   ========================================================= */
+@media (min-width:1101px) {
+  .seh-dfy__team-watermark {
+    position: absolute !important;
+    z-index: 0 !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: grid !important;
+    place-items: center !important;
+    opacity: .085 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+    filter: grayscale(.08) saturate(.88) contrast(1.14) !important;
+  }
+
+  .seh-dfy__team-watermark img {
+    width: 88% !important;
+    height: 88% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    transform: none !important;
+  }
+
+  .seh-dfy__identity {
+    background:
+      linear-gradient(90deg, rgba(8,14,22,.89), rgba(3,6,10,.84)) !important;
+    backdrop-filter: blur(1.5px);
+  }
+
+  .seh-dfy__mini {
+    background: rgba(5,8,13,.84) !important;
+    backdrop-filter: blur(1px);
+  }
+
+  .seh-dfy__mini--team {
+    background:
+      radial-gradient(circle at 18% 50%, rgba(255,208,0,.035), transparent 36%),
+      rgba(5,8,13,.83) !important;
+  }
+
+  .seh-dfy__feed-row {
+    background: rgba(4,7,11,.84) !important;
+    backdrop-filter: blur(1px);
+  }
+
+  .seh-dfy__shortcuts a {
+    background: rgba(5,8,12,.86) !important;
+  }
+}
+
+@media (min-width:1101px) and (max-height:900px) {
+  .seh-dfy__team-watermark {
+    opacity: .075 !important;
+  }
+
+  .seh-dfy__team-watermark img {
+    width: 84% !important;
+    height: 84% !important;
+  }
+}
