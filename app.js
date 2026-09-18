@@ -2409,8 +2409,8 @@ function SEH_initPlayers() {
     }
 
     async function fetchDirectory() {
-      // Läs den färdiga katalogcachen. Den innehåller samma centrala spelarlista
-      // men slipper bygga identitets- och historikkedjan vid varje sidladdning.
+      // Historiken behålls, men "aktuellt lag" kommer från den delade statusmotorn:
+      // aktivt lagbygge/pågående turnering -> lag, annars Free Agent.
       const rows = await fetchPages("app_player_directory_cache", {
         select: [
           "player_key", "display_gamertag", "player_country", "player_image",
@@ -2425,7 +2425,11 @@ function SEH_initPlayers() {
         order: "display_gamertag.asc"
       });
 
-      return replaceNationalTeamLatest(rows);
+      const historicalRows = await replaceNationalTeamLatest(rows);
+      if (window.SEH_currentPlayerStatus?.decorateRows) {
+        return window.SEH_currentPlayerStatus.decorateRows(historicalRows);
+      }
+      return historicalRows;
     }
   
     function compactPlayerCardTournamentName(value) {
@@ -2487,6 +2491,10 @@ function SEH_initPlayers() {
         clubNames: list(row.club_names),
         latestSeason: clean(row.latest_season),
         latestTeam: clean(row.latest_team),
+        currentTeam: clean(row.current_team_name) || clean(row.latest_team) || "Free Agent",
+        currentTeamId: number(row.current_team_id),
+        currentStatus: clean(row.current_status) || (clean(row.current_team_name) ? "team" : ""),
+        currentStatusSource: clean(row.current_status_source),
         competitions: list(row.competitions),
         divisions: list(row.divisions),
         filterDivisions: list(row.filter_divisions)
@@ -2583,7 +2591,7 @@ function SEH_initPlayers() {
             </div>
             <div class="players-card__team-v122">
               <span class="players-card__team-logo-v122" aria-hidden="true"></span>
-              <strong>${escapeHtml(player.latestTeam || "Okänt lag")}</strong>
+              <strong>${escapeHtml(player.currentTeam || "Free Agent")}</strong>
             </div>
             <div class="players-card__metrics-v122">
               <div><span>MATCHER</span><strong>${player.games.toLocaleString("sv-SE")}</strong></div>
@@ -2604,15 +2612,15 @@ function SEH_initPlayers() {
         </div>
       `;
       const logoNode = link.querySelector(".players-card__team-logo-v122");
-      if (logoNode) SEH_renderTeamLogo(logoNode, [], player.latestTeam, `${player.latestTeam || "Lag"} logotyp`);
+      if (logoNode) SEH_renderTeamLogo(logoNode, [], player.currentTeam, `${player.currentTeam || "Lag"} logotyp`);
 
       const cornerLogoNode = link.querySelector(".players-card__corner-logo-v12901");
-      if (cornerLogoNode) SEH_renderTeamLogo(cornerLogoNode, [], player.latestTeam, "");
+      if (cornerLogoNode) SEH_renderTeamLogo(cornerLogoNode, [], player.currentTeam, "");
 
       const watermarkNode = link.querySelector(".players-card__team-watermark-v1265");
       if (watermarkNode) {
-        SEH_renderTeamLogo(watermarkNode, [], player.latestTeam, "");
-        SEH_hydratePlayerCardTeamPalette(link, watermarkNode, player.latestTeam);
+        SEH_renderTeamLogo(watermarkNode, [], player.currentTeam, "");
+        SEH_hydratePlayerCardTeamPalette(link, watermarkNode, player.currentTeam);
       }
 
       return link;
@@ -2658,7 +2666,7 @@ function SEH_initPlayers() {
   
     function searchable(player) {
       return [
-        player.name, player.latestTeam, player.latestSeason,
+        player.name, player.currentTeam, player.latestTeam, player.latestSeason,
         ...player.clubNames, ...player.competitions, ...player.divisions,
         ...player.filterDivisions
       ].join(" ").toLocaleLowerCase("sv");
@@ -3916,6 +3924,37 @@ function SEH_initPlayer() {
         );
       }
       hydratePlayerHeroPalette(displayName);
+    }
+
+    async function hydratePlayerCurrentStatus(playerKey) {
+      if (!playerKey || !window.SEH_currentPlayerStatus?.get) return;
+      try {
+        const status = await window.SEH_currentPlayerStatus.get(playerKey);
+        if (!status) return;
+
+        elements.playerCurrentTeam.replaceChildren();
+
+        if (status.kind === "team" && status.teamName) {
+          if (status.teamId) {
+            const link = document.createElement("a");
+            link.href = teamUrl(status.teamId);
+            link.textContent = status.teamName;
+            elements.playerCurrentTeam.append(link);
+          } else {
+            elements.playerCurrentTeam.textContent = status.teamName;
+          }
+          renderProfileTeamBrand(status.teamName);
+          return;
+        }
+
+        elements.playerCurrentTeam.textContent = "Free Agent";
+        [elements.playerCurrentTeamLogo, elements.playerHeroWatermark, elements.playerPortraitWatermark]
+          .filter(Boolean)
+          .forEach((node) => node.replaceChildren());
+        setPlayerHeroPalette(DEFAULT_HERO_PALETTE);
+      } catch (error) {
+        console.warn(`${APP_BUILD}: aktuell spelarstatus kunde inte laddas.`, error);
+      }
     }
 
     function resetProfileRanking() {
@@ -6092,6 +6131,7 @@ function SEH_initPlayer() {
 
       const currentTeamName = latestClub.teamName || "Okänt lag";
       renderProfileTeamBrand(currentTeamName);
+      void hydratePlayerCurrentStatus(latest.playerKey);
       void hydrateProfileRanking(latest.playerKey, currentName);
 
       elements.playerMeta.textContent = [
