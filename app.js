@@ -2615,7 +2615,13 @@ function SEH_initPlayers() {
       if (logoNode) SEH_renderTeamLogo(logoNode, [], player.currentTeam, `${player.currentTeam || "Lag"} logotyp`);
 
       const cornerLogoNode = link.querySelector(".players-card__corner-logo-v12901");
-      if (cornerLogoNode) SEH_renderTeamLogo(cornerLogoNode, [], player.currentTeam, "");
+      if (cornerLogoNode) {
+        if (player.currentStatus === "free_agent" || player.currentTeam === "Free Agent") {
+          cornerLogoNode.remove();
+        } else {
+          SEH_renderTeamLogo(cornerLogoNode, [], player.currentTeam, "");
+        }
+      }
 
       const watermarkNode = link.querySelector(".players-card__team-watermark-v1265");
       if (watermarkNode) {
