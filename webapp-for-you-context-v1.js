@@ -23,13 +23,12 @@
     const buildingMode = /free agents/i.test(secondaryKicker?.textContent || '') || /lagbygge/i.test(teamText?.textContent || '');
 
     if (buildingMode) {
-      if (teamKicker) teamKicker.textContent = 'ECL 27 LAGBYGGE';
-      if (teamTitle && /inte i lagbygget/i.test(teamTitle.textContent || '')) {
-        teamTitle.textContent = 'Inte med i ECL 27 ännu';
-      }
+      const isFreeAgent = /free agent/i.test(teamTitle?.textContent || '');
+      if (teamKicker) teamKicker.textContent = isFreeAgent ? 'STATUS' : 'AKTUELLT LAG';
       if (teamText) {
-        const hasTeam = !/inte med|inte i/i.test(teamTitle?.textContent || '');
-        teamText.textContent = hasTeam ? 'ECL 27 · aktuellt lagbygge' : 'Lagbygget pågår · detta är inte ditt generella aktuella lag';
+        teamText.textContent = isFreeAgent
+          ? 'Inte i ett aktivt lagbygge'
+          : 'ECL 27 · aktuellt lagbygge';
       }
 
       if (secondaryKicker) secondaryKicker.textContent = 'NÄSTA TÄVLING';
@@ -40,13 +39,13 @@
 
       const identityMeta = root.querySelector('.seh-for-you__identity > div > span');
       const teamName = String(teamTitle?.textContent || '').trim();
-      if (identityMeta && teamName && !/inte med/i.test(teamName) && identityMeta.textContent.includes(teamName)) {
-        identityMeta.textContent = `ECL 27 lagbygge · ${teamName}`;
+      if (identityMeta && teamName) {
+        identityMeta.textContent = /free agent/i.test(teamName) ? 'Free Agent' : `ECL 27 lagbygge · ${teamName}`;
       }
 
       root.querySelectorAll('.seh-for-you__feed-row span').forEach(node => {
         if (/När du går med i ett aktuellt ECL 27-lag visas lagflödet här\./i.test(node.textContent || '')) {
-          node.textContent = 'ECL 27-lagbygget visas här när du går med i ett lag.';
+          node.textContent = 'När du går med i ett aktivt lagbygge byts Free Agent-statusen automatiskt.';
         }
       });
 
