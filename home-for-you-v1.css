@@ -1236,3 +1236,211 @@
     height: 20px;
   }
 }
+
+
+/* =========================================================
+   DESKTOP FOR YOU V5 — stronger vertical proportions
+   ========================================================= */
+@media (min-width:1101px) {
+  .seh-desktop-for-you {
+    justify-content: flex-start !important;
+    gap: clamp(12px,1.55vh,16px) !important;
+    padding: clamp(18px,2.1vh,24px) clamp(22px,2vw,30px) !important;
+  }
+
+  .seh-dfy__head {
+    min-height: 58px !important;
+    align-items: flex-end !important;
+  }
+
+  .seh-dfy__head h2 {
+    font-size: clamp(30px,2vw,36px) !important;
+  }
+
+  .seh-dfy__identity {
+    grid-template-columns: 106px minmax(0,1fr) auto !important;
+    min-height: 140px !important;
+    padding: 11px 14px !important;
+  }
+
+  .seh-dfy__avatar {
+    width: 98px !important;
+    height: 130px !important;
+    max-width: 98px !important;
+    max-height: 130px !important;
+  }
+
+  .seh-dfy__avatar img {
+    width: 98px !important;
+    height: 130px !important;
+    max-width: 98px !important;
+    max-height: 130px !important;
+  }
+
+  .seh-dfy__identity-copy {
+    gap: 6px !important;
+  }
+
+  .seh-dfy__identity strong {
+    font-size: clamp(23px,1.6vw,28px) !important;
+  }
+
+  .seh-dfy__clubline > span:nth-child(2),
+  .seh-dfy__clubline--plain > span {
+    font-size: 13px !important;
+  }
+
+  .seh-dfy__profile-link {
+    min-height: 42px !important;
+    padding-inline: 16px !important;
+  }
+
+  .seh-dfy__team-watermark {
+    top: 34px !important;
+    right: 18px !important;
+    width: 220px !important;
+    height: 220px !important;
+    opacity: .075 !important;
+  }
+
+  .seh-dfy__mini-grid--three .seh-dfy__mini {
+    min-height: 98px !important;
+    padding: 12px 13px !important;
+  }
+
+  .seh-dfy__mini-grid--three .seh-dfy__mini--team {
+    grid-template-columns: 64px minmax(0,1fr) 16px !important;
+  }
+
+  .seh-dfy__mini-grid--three .seh-dfy__team-logo {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .seh-dfy__mini-grid--three .seh-dfy__team-logo img {
+    width: 52px !important;
+    height: 52px !important;
+  }
+
+  .seh-dfy__mini-grid--three .seh-dfy__mini-copy strong {
+    font-size: 16px !important;
+  }
+
+  .seh-dfy__mini-grid--three .seh-dfy__mini-copy > span {
+    font-size: 9.5px !important;
+  }
+
+  .seh-dfy__feed-head {
+    min-height: 29px !important;
+  }
+
+  .seh-dfy__feed {
+    min-height: 58px;
+  }
+
+  .seh-dfy__feed-row {
+    min-height: 56px !important;
+    padding: 8px 10px !important;
+  }
+
+  .seh-dfy__feed-row > b {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .seh-dfy__feed-row strong {
+    font-size: 12px !important;
+  }
+
+  .seh-dfy__feed-row span {
+    font-size: 9.5px !important;
+  }
+
+  .seh-dfy__shortcuts a {
+    min-height: 42px !important;
+    font-size: 9.5px !important;
+  }
+}
+
+@media (min-width:1101px) and (max-height:900px) {
+  .seh-desktop-for-you {
+    justify-content: flex-start !important;
+    gap: 9px !important;
+    padding: 12px 18px !important;
+  }
+
+  .seh-dfy__head {
+    min-height: 44px !important;
+  }
+
+  .seh-dfy__head h2 {
+    font-size: 28px !important;
+  }
+
+  .seh-dfy__identity {
+    grid-template-columns: 82px minmax(0,1fr) auto !important;
+    min-height: 112px !important;
+    padding: 8px 10px !important;
+  }
+
+  .seh-dfy__avatar,
+  .seh-dfy__avatar img {
+    width: 76px !important;
+    height: 102px !important;
+    max-width: 76px !important;
+    max-height: 102px !important;
+  }
+
+  .seh-dfy__identity strong {
+    font-size: 21px !important;
+  }
+
+  .seh-dfy__team-watermark {
+    top: 28px !important;
+    right: 14px !important;
+    width: 165px !important;
+    height: 165px !important;
+    opacity: .065 !important;
+  }
+
+  .seh-dfy__mini-grid--three .seh-dfy__mini {
+    min-height: 76px !important;
+    padding: 8px 9px !important;
+  }
+
+  .seh-dfy__mini-grid--three .seh-dfy__mini--team {
+    grid-template-columns: 49px minmax(0,1fr) 12px !important;
+  }
+
+  .seh-dfy__mini-grid--three .seh-dfy__team-logo {
+    width: 46px !important;
+    height: 46px !important;
+  }
+
+  .seh-dfy__mini-grid--three .seh-dfy__team-logo img {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .seh-dfy__feed-head {
+    min-height: 22px !important;
+  }
+
+  .seh-dfy__feed {
+    min-height: 42px;
+  }
+
+  .seh-dfy__feed-row {
+    min-height: 42px !important;
+    padding: 5px 8px !important;
+  }
+
+  .seh-dfy__feed-row > b {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .seh-dfy__shortcuts a {
+    min-height: 32px !important;
+  }
+}
