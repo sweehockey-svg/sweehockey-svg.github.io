@@ -245,6 +245,82 @@
   <link rel="stylesheet" href="player-image-review-v1.css?v=20260916-2">
   <link rel="stylesheet" href="player-public-extras-v1.css?v=20260918-1">
   <link rel="stylesheet" href="recordbook-v1.css?v=20260918-1">\n  <link rel="stylesheet" href="home-for-you-v1.css?v=20260918-2">
+
+  <style id="seh-home-for-you-inline">
+    .home-stage__identity.home-stage__identity--for-you{
+      display:flex!important;align-items:stretch!important;min-height:0!important;
+      padding:clamp(12px,1.8vh,20px) clamp(14px,1.8vw,24px)!important;
+    }
+    .home-stage__identity.home-stage__identity--for-you::before{inset:6% 4%!important;opacity:.28!important}
+    .seh-desktop-for-you{
+      position:relative;z-index:2;box-sizing:border-box;width:100%;min-width:0;min-height:0;
+      display:flex;flex-direction:column;justify-content:center;gap:7px;padding:10px;
+      border:1px solid rgba(214,177,95,.20);border-radius:16px;overflow:hidden;
+      background:radial-gradient(circle at 100% 0,rgba(214,177,95,.075),transparent 34%),linear-gradient(145deg,rgba(8,17,34,.93),rgba(4,8,17,.90));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 14px 36px rgba(0,0,0,.16)
+    }
+    .seh-dfy__head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .seh-dfy__head>div{display:grid;gap:1px}
+    .seh-dfy__head small,.seh-dfy__identity small,.seh-dfy__mini small{color:#d6b15f;font-size:8px;font-weight:950;letter-spacing:.13em}
+    .seh-dfy__head h2{margin:0;color:#f5f1e8;font-size:clamp(20px,1.55vw,26px);line-height:1;letter-spacing:-.035em}
+    .seh-dfy__head>span{padding:4px 7px;border:1px solid rgba(77,218,156,.26);border-radius:999px;color:#6ee7aa;background:rgba(77,218,156,.055);font-size:8px;font-weight:950;letter-spacing:.11em}
+    .seh-dfy__identity{
+      display:grid!important;grid-template-columns:52px minmax(0,1fr) auto!important;align-items:center!important;
+      gap:10px;min-height:64px;padding:7px;border:1px solid rgba(255,255,255,.075);border-radius:13px;background:rgba(2,7,15,.58)
+    }
+    .seh-dfy__avatar{
+      display:block!important;width:52px!important;height:52px!important;max-width:52px!important;max-height:52px!important;
+      overflow:hidden!important;border:1px solid rgba(214,177,95,.28);border-radius:11px;background:#09162c
+    }
+    .seh-dfy__avatar img{
+      display:block!important;width:52px!important;height:52px!important;max-width:52px!important;max-height:52px!important;
+      object-fit:cover!important;object-position:center top!important;transform:none!important;filter:none!important
+    }
+    .seh-dfy__identity>div{display:grid;min-width:0;gap:2px}
+    .seh-dfy__identity strong,.seh-dfy__identity span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .seh-dfy__identity strong{color:#fff;font-size:15px}
+    .seh-dfy__identity span{color:#949eae;font-size:10px}
+    .seh-dfy__profile-link,.seh-dfy__pending a,.seh-dfy__error button{
+      min-height:30px;display:inline-grid;place-items:center;padding:0 9px;border:1px solid rgba(214,177,95,.38);
+      border-radius:9px;color:#f3d991;background:rgba(214,177,95,.07);font:inherit;font-size:9px;font-weight:900;text-decoration:none
+    }
+    .seh-dfy__mini-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px}
+    .seh-dfy__mini{
+      display:grid;min-width:0;gap:2px;min-height:54px;padding:7px 9px;border:1px solid rgba(255,255,255,.07);
+      border-radius:11px;color:inherit;background:rgba(255,255,255,.018);text-decoration:none
+    }
+    .seh-dfy__mini strong,.seh-dfy__mini span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .seh-dfy__mini strong{color:#eef1f6;font-size:11px}
+    .seh-dfy__mini span{color:#858e9c;font-size:8.5px}
+    .seh-dfy__feed-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .seh-dfy__feed-head strong{color:#e9e7e1;font-size:10px}
+    .seh-dfy__feed-head a{color:#d6b15f;font-size:8px;font-weight:850;text-decoration:none}
+    .seh-dfy__feed{display:grid;gap:4px}
+    .seh-dfy__feed-row{
+      display:grid!important;grid-template-columns:25px minmax(0,1fr) auto!important;align-items:center!important;
+      gap:7px;min-height:36px;padding:4px 7px;border:1px solid rgba(255,255,255,.055);border-radius:9px;background:rgba(1,5,12,.44)
+    }
+    .seh-dfy__feed-row>b{width:24px;height:24px;display:grid;place-items:center;border-radius:7px;color:#d6b15f;background:rgba(214,177,95,.07);font-size:8px}
+    .seh-dfy__feed-row>div{display:grid;min-width:0;gap:1px}
+    .seh-dfy__feed-row strong,.seh-dfy__feed-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .seh-dfy__feed-row strong{color:#eef1f6;font-size:9.5px}
+    .seh-dfy__feed-row span{color:#858e9c;font-size:8px}
+    .seh-dfy__feed-row time{color:#626b78;font-size:8px;white-space:nowrap}
+    .seh-dfy__shortcuts{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px}
+    .seh-dfy__shortcuts a{
+      min-width:0;min-height:28px;display:grid;place-items:center;padding:3px 4px;overflow:hidden;
+      border:1px solid rgba(255,255,255,.065);border-radius:8px;color:#aab2be;background:rgba(255,255,255,.018);
+      font-size:8px;font-weight:850;text-align:center;text-decoration:none;text-overflow:ellipsis;white-space:nowrap
+    }
+    .seh-dfy__pending{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px;border:1px solid rgba(255,255,255,.07);border-radius:13px;background:rgba(2,7,15,.55)}
+    .seh-dfy__pending-icon{width:40px;height:40px;display:grid;place-items:center;border:1px solid rgba(214,177,95,.27);border-radius:11px;color:#d6b15f;font-size:19px}
+    .seh-dfy__pending strong{display:block;color:#f3f1eb;font-size:12px}
+    .seh-dfy__pending span{display:block;margin-top:3px;color:#87909f;font-size:9px;line-height:1.4}
+    .seh-dfy__loading{display:grid;gap:7px}
+    .seh-dfy__loading i{display:block;height:54px;border-radius:11px;background:linear-gradient(90deg,rgba(255,255,255,.025),rgba(255,255,255,.065),rgba(255,255,255,.025));background-size:200% 100%}
+    .seh-dfy__error{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px;border:1px solid rgba(255,255,255,.07);border-radius:13px;background:rgba(2,7,15,.55)}
+    .seh-dfy__error strong{color:#f3f1eb;font-size:11px}
+  </style>
 </head>
 <body class="directory-page portal-page">
   <noscript><main class="directory-shell"><section class="notice notice-warning"><h1>JavaScript krävs</h1><p>Svensk eHockey behöver JavaScript för att visa datavyerna.</p></section></main></noscript>
