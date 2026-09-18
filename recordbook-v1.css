@@ -155,19 +155,19 @@
   flex-wrap:wrap;
   gap:7px;
 }
-.seh-recordbook-metric-group:last-child{
+.seh-recordbook-metric-group.is-match-records{
   margin-top:2px;
   padding-top:10px;
   border-top:1px solid rgba(80,227,220,.07);
 }
-.seh-recordbook-metric-group:last-child>span{
+.seh-recordbook-metric-group.is-match-records>span{
   color:rgba(80,227,220,.68);
 }
-.seh-recordbook-metric-group:last-child button{
+.seh-recordbook-metric-group.is-match-records button{
   border-color:rgba(80,227,220,.13);
   background:rgba(7,20,27,.72);
 }
-.seh-recordbook-metric-group:last-child button.is-active{
+.seh-recordbook-metric-group.is-match-records button.is-active{
   border-color:rgba(80,227,220,.55);
   color:#72e5df;
   background:rgba(80,227,220,.075);
