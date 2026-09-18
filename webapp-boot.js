@@ -3,6 +3,13 @@
   if (window.SehNative || window.Capacitor?.isNativePlatform?.()) return;
   const requested = new URLSearchParams(location.search).get('webapp');
   const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+  const ua = String(navigator.userAgent || '');
+  const uaDataMobile = navigator.userAgentData?.mobile === true;
+  const phoneUa = /iPhone|iPod|Windows Phone|IEMobile|Android.*Mobile/i.test(ua);
+  const phoneFallback = !/iPad|Tablet/i.test(ua) &&
+    navigator.maxTouchPoints > 0 &&
+    Math.min(Number(screen.width) || 9999, Number(screen.height) || 9999) <= 600;
+  const mobilePhone = uaDataMobile || phoneUa || phoneFallback;
   let preview = false;
   let oauthWebappReturn = false;
   try {
@@ -36,7 +43,7 @@
   } catch (_) {
     if (requested === '0') return;
   }
-  if (!standalone && requested !== '1' && !preview) return;
+  if (!standalone && requested !== '1' && !preview && !mobilePhone) return;
   if (window.__SEH_WEB_APP__) return;
   window.__SEH_WEB_APP__ = true;
   document.documentElement.classList.add('seh-web-app');
