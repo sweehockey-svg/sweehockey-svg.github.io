@@ -389,11 +389,15 @@
           '<a class="seh-dfy__profile-link" href="#/min-profil">Min profil</a>' +
         '</div>' +
         '<div class="seh-dfy__mini-grid seh-dfy__mini-grid--three">' +
-          '<a class="seh-dfy__mini seh-dfy__mini--team' + (hasCurrentTeam ? '' : ' seh-dfy__mini--free-agent') + '" href="' + esc(teamHref) + '">' +
-            (hasCurrentTeam ? '<span class="seh-dfy__team-logo" data-seh-team-logo><img alt="" decoding="async"></span>' : '') +
-            '<span class="seh-dfy__mini-copy"><small>' + esc(hasCurrentTeam ? 'AKTUELLT LAG' : 'STATUS') + '</small><strong>' + esc(currentTeamText) + '</strong><span>' + esc(currentTeamMeta) + '</span></span>' +
-            '<b class="seh-dfy__mini-arrow" aria-hidden="true">↗</b>' +
-          '</a>' +
+          (hasCurrentTeam
+            ? '<a class="seh-dfy__mini seh-dfy__mini--team" href="' + esc(teamHref) + '">' +
+                '<span class="seh-dfy__team-logo" data-seh-team-logo><img alt="" decoding="async"></span>' +
+                '<span class="seh-dfy__mini-copy"><small>AKTUELLT LAG</small><strong>' + esc(currentTeamText) + '</strong><span>' + esc(currentTeamMeta) + '</span></span>' +
+                '<b class="seh-dfy__mini-arrow" aria-hidden="true">↗</b>' +
+              '</a>'
+            : '<div class="seh-dfy__mini seh-dfy__mini--team seh-dfy__mini--free-agent">' +
+                '<span class="seh-dfy__mini-copy"><small>STATUS</small><strong>' + esc(currentTeamText) + '</strong><span>' + esc(currentTeamMeta) + '</span></span>' +
+              '</div>') +
           '<a class="seh-dfy__mini seh-dfy__mini--competition" href="' + esc(competitionMeta.href) + '">' +
             '<span class="seh-dfy__mini-copy"><small>DINA TÄVLINGAR</small><strong>' + esc(competitionMeta.nearestTitle) + '</strong><span>' + esc(competitionMeta.nearestText) + '</span></span>' +
             '<b class="seh-dfy__mini-arrow" aria-hidden="true">↗</b>' +
