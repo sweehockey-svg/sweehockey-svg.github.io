@@ -13685,9 +13685,12 @@ function SEH_initShop() {
               <button type="button" data-record-competition="LGEL">LGEL</button>
             </div>
           </div>
-          <div class="seh-recordbook-control-group">
-            <span class="seh-recordbook-control-label">REKORD</span>
-            <div class="seh-recordbook-metrics" data-record-metrics aria-label="Rekordtyp"></div>
+          <div class="seh-recordbook-record-picker">
+            <div class="seh-recordbook-control-group">
+              <span class="seh-recordbook-control-label">REKORDTYP</span>
+              <div class="seh-recordbook-group-tabs" data-record-groups aria-label="Rekordkategori"></div>
+            </div>
+            <div class="seh-recordbook-metrics" data-record-metrics aria-label="Rekord"></div>
           </div>
         </div>
 
