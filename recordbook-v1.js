@@ -7,31 +7,28 @@
   const MATCH_METRICS=new Set(['fastest_goal_seconds','hattricks','max_goals_game']);
 
   const PLAYER_GROUPS=[
-    {label:'KARRIÄR',items:[
+    {key:'career',label:'Karriär',items:[
       ['games','Matcher','GP'],['points','Poäng','PTS'],['goals','Mål','G'],['assists','Assist','A'],
-      ['penalty_minutes','Utvisningsminuter','PIM']
+      ['penalty_minutes','Utvisningsminuter','PIM'],['points_per_game','Poäng/match','PPG'],['goals_per_game','Mål/match','GPG']
     ]},
-    {label:'SNITT',items:[
-      ['points_per_game','Poäng/match','PPG'],['goals_per_game','Mål/match','GPG']
+    {key:'playoffs',label:'Slutspel',items:[
+      ['playoff_games','Matcher','PO GP'],['playoff_points','Poäng','PO PTS'],
+      ['playoff_goals','Mål','PO G'],['playoff_assists','Assist','PO A']
     ]},
-    {label:'SLUTSPEL',items:[
-      ['playoff_games','Slutspelsmatcher','PO GP'],['playoff_points','Slutspelspoäng','PO PTS'],
-      ['playoff_goals','Slutspelsmål','PO G'],['playoff_assists','Slutspelsassist','PO A']
-    ]},
-    {label:'MÅLVAKT',items:[
+    {key:'goalie',label:'Målvakt',items:[
       ['goalie_wins','Vinster','W'],['goalie_saves','Räddningar','SV'],
       ['save_percentage','Räddnings%','SV%'],['goalie_shutouts','Nollor','SO']
     ]},
-    {label:'MERITER',items:[
+    {key:'merits',label:'Meriter',items:[
       ['golds','Guld','GULD'],['medals','Medaljer','MED'],['silvers','Silver','SILVER'],['bronzes','Brons','BRONS'],
       ['tournament_count','Turneringar','T'],['club_count','Klubbar','K'],['ecl_seasons','ECL-säsonger','ECL']
     ]},
-    {label:'MATCHREKORD',items:[
+    {key:'match',label:'Matchrekord',items:[
       ['fastest_goal_seconds','Snabbaste mål','TID'],['hattricks','Hattricks','HT'],['max_goals_game','Mål i en match','MÅL']
     ]}
   ];
   const TEAM_GROUPS=[
-    {label:'LAGREKORD',items:[
+    {key:'team',label:'Lagrekord',items:[
       ['games','Matcher','GP'],['wins','Vinster','W'],['goals_for','Mål','GF'],['goal_diff','Målskillnad','+/−'],
       ['tournament_count','Turneringar','T'],['titles','Titlar','GULD']
     ]}
@@ -39,7 +36,7 @@
 
   let client=null;
   const cache=new Map();
-  const state={type:'players',competition:'ALL',metric:'games'};
+  const state={type:'players',competition:'ALL',group:'career',metric:'games'};
 
   function cfg(){return window.SEH_CONFIG||window.EHOCKEY_CONFIG||window.APP_CONFIG||window.config||{};}
   function getClient(){if(client)return client;const c=cfg(),url=String(c.supabaseUrl||c.SUPABASE_URL||'').trim(),key=String(c.supabasePublishableKey||c.supabaseAnonKey||c.SUPABASE_ANON_KEY||c.SUPABASE_PUBLISHABLE_KEY||'').trim();if(!window.supabase?.createClient||!url||!key)return null;client=window.supabase.createClient(url,key);return client;}
@@ -62,8 +59,15 @@
     const groups=state.type==='players'?PLAYER_GROUPS:TEAM_GROUPS;
     return groups.map(group=>({...group,items:group.items.filter(item=>metricAvailable(item[0]))})).filter(group=>group.items.length);
   }
+  function activeGroup(){
+    const groups=metricGroups();
+    return groups.find(group=>group.key===state.group)||groups[0];
+  }
   function metrics(){return metricGroups().flatMap(group=>group.items);}
-  function activeMetric(){return metrics().find(x=>x[0]===state.metric)||metrics()[0];}
+  function activeMetric(){
+    const group=activeGroup();
+    return group?.items.find(x=>x[0]===state.metric)||group?.items[0]||metrics()[0];
+  }
 
   async function rows(type,competition,metric){
     const matchMode=type==='players'&&MATCH_METRICS.has(metric);
@@ -189,17 +193,28 @@
     return `<a class="seh-record-row${index===0?' is-leader':''}" href="#/lag/${encodeURIComponent(row.team_id)}"><b class="seh-record-rank">${index+1}</b><span class="seh-record-avatar is-team">${logo?`<img src="${esc(logo)}" alt="${esc(name)}" loading="lazy">`:esc(name.split(/\s+/).map(x=>x[0]||'').join('').slice(0,2).toUpperCase())}</span><span class="seh-record-copy"><strong>${esc(name)}</strong><small>${fmt(row.tournament_count)} turneringar · ${fmt(row.games)} matcher</small></span><span class="seh-record-value"><strong>${shown}</strong><small>${esc(metric[2])}</small></span></a>`;
   }
 
+  function groupButtonsHtml(){
+    const groups=metricGroups();
+    if(state.type==='teams')return '';
+    return groups.map(group=>`<button type="button" data-record-group="${esc(group.key)}" class="${state.group===group.key?'is-active':''}${group.key==='match'?' is-match-group':''}">${esc(group.label)}</button>`).join('');
+  }
   function metricButtonsHtml(){
-    return metricGroups().map(group=>
-      `<div class="seh-recordbook-metric-group${group.label==='MATCHREKORD'?' is-match-records':''}"><span>${esc(group.label)}</span><div>${group.items.map(([key,label])=>`<button type="button" data-record-metric="${key}" class="${state.metric===key?'is-active':''}">${esc(label)}</button>`).join('')}</div></div>`
-    ).join('');
+    const group=activeGroup();
+    if(!group)return '';
+    return group.items.map(([key,label])=>`<button type="button" data-record-metric="${key}" class="${state.metric===key?'is-active':''}">${esc(label)}</button>`).join('');
   }
   function controls(root){
     root.querySelector('[data-record-type="players"]')?.classList.toggle('is-active',state.type==='players');
     root.querySelector('[data-record-type="teams"]')?.classList.toggle('is-active',state.type==='teams');
     root.querySelectorAll('[data-record-competition]').forEach(b=>b.classList.toggle('is-active',b.dataset.recordCompetition===state.competition));
+    const groupHost=root.querySelector('[data-record-groups]');
     const metricHost=root.querySelector('[data-record-metrics]');
+    if(groupHost){
+      groupHost.innerHTML=groupButtonsHtml();
+      groupHost.hidden=state.type==='teams';
+    }
     metricHost.innerHTML=metricButtonsHtml();
+    metricHost.classList.toggle('is-match-records',state.type==='players'&&state.group==='match');
   }
   function statusSuffix(metricKey){
     if(metricKey==='save_percentage')return ` · minst ${MIN_SAVE_PERCENTAGE_GAMES} målvaktsmatcher`;
@@ -220,7 +235,10 @@
 
   async function render(){
     const root=document.getElementById(ROOT_ID);if(!root)return;
-    if(!metrics().some(item=>item[0]===state.metric))state.metric='games';
+    const groups=metricGroups();
+    if(!groups.some(group=>group.key===state.group))state.group=groups[0]?.key||'career';
+    const group=activeGroup();
+    if(!group?.items.some(item=>item[0]===state.metric))state.metric=group?.items[0]?.[0]||'games';
     controls(root);
     const list=root.querySelector('[data-record-list]'),status=root.querySelector('[data-record-status]');
     list.innerHTML='<div class="seh-record-loading">Hämtar rekord…</div>';status.textContent='';
@@ -238,8 +256,23 @@
   function bind(root){
     if(root.dataset.bound==='1')return;root.dataset.bound='1';
     root.addEventListener('click',e=>{
-      const type=e.target.closest('[data-record-type]');if(type){state.type=type.dataset.recordType;state.metric='games';render();return;}
-      const comp=e.target.closest('[data-record-competition]');if(comp){state.competition=comp.dataset.recordCompetition;if(!metrics().some(item=>item[0]===state.metric))state.metric='games';render();return;}
+      const type=e.target.closest('[data-record-type]');if(type){
+        state.type=type.dataset.recordType;
+        state.group=state.type==='players'?'career':'team';
+        state.metric='games';
+        render();return;
+      }
+      const comp=e.target.closest('[data-record-competition]');if(comp){
+        state.competition=comp.dataset.recordCompetition;
+        const group=activeGroup();
+        if(!group?.items.some(item=>item[0]===state.metric))state.metric=group?.items[0]?.[0]||'games';
+        render();return;
+      }
+      const groupButton=e.target.closest('[data-record-group]');if(groupButton){
+        state.group=groupButton.dataset.recordGroup;
+        state.metric=activeGroup()?.items?.[0]?.[0]||'games';
+        render();return;
+      }
       const metric=e.target.closest('[data-record-metric]');if(metric){state.metric=metric.dataset.recordMetric;render();}
     });
   }
