@@ -375,3 +375,105 @@
     margin-left:0;
   }
 }
+
+
+/* Recordbook V1.4 — final hierarchy and density polish */
+.seh-recordbook-panel{
+  padding:15px 20px 18px;
+}
+.seh-recordbook-control-group--type{
+  padding-bottom:11px;
+}
+.seh-recordbook-toolbar{
+  gap:13px;
+  padding:11px 0 2px;
+}
+.seh-recordbook-record-picker{
+  gap:9px;
+  padding-top:11px;
+}
+.seh-recordbook-group-tabs{
+  gap:7px;
+}
+.seh-recordbook-group-tabs button{
+  min-height:35px;
+  padding:9px 17px;
+  border-color:rgba(255,255,255,.11);
+  color:#a8b4bf;
+  font-size:.75rem;
+  font-weight:950;
+  letter-spacing:.005em;
+}
+.seh-recordbook-group-tabs button.is-active{
+  border-color:rgba(255,208,0,.78);
+  background:linear-gradient(180deg,rgba(255,208,0,.15),rgba(255,208,0,.055));
+  box-shadow:0 0 0 1px rgba(255,208,0,.035) inset;
+  color:#ffd000;
+}
+.seh-recordbook-group-tabs button.is-match-group.is-active{
+  border-color:rgba(80,227,220,.64);
+  background:linear-gradient(180deg,rgba(80,227,220,.14),rgba(80,227,220,.05));
+  box-shadow:0 0 0 1px rgba(80,227,220,.025) inset;
+  color:#6de9e3;
+}
+.seh-recordbook-metrics{
+  gap:6px;
+  min-height:31px;
+}
+.seh-recordbook-metrics button{
+  min-height:31px;
+  padding:7px 11px;
+  border-radius:7px;
+  color:#91a0ad;
+  font-size:.69rem;
+  font-weight:850;
+}
+.seh-recordbook-metrics button.is-active{
+  color:#ffd000;
+}
+.seh-recordbook-metrics.is-match-records button.is-active{
+  color:#72ebe5;
+}
+.seh-recordbook-filters button{
+  min-height:32px;
+  padding:7px 11px;
+}
+.seh-recordbook-status{
+  min-height:28px;
+  margin:14px 0 7px;
+  padding:10px 2px 0;
+}
+.seh-recordbook-status strong{
+  color:#a2b4c4;
+  font-size:.63rem;
+  letter-spacing:.14em;
+}
+.seh-recordbook-status span{
+  color:#8da7bb;
+  font-size:.67rem;
+}
+.seh-record-list{
+  gap:6px;
+}
+.seh-record-row{
+  min-height:61px;
+}
+@media(max-width:720px){
+  .seh-recordbook-panel{padding:12px 10px 15px}
+  .seh-recordbook-control-group--type{padding-bottom:9px}
+  .seh-recordbook-toolbar{gap:10px;padding:9px 0 1px}
+  .seh-recordbook-record-picker{gap:8px;padding-top:9px}
+  .seh-recordbook-group-tabs button{
+    min-height:34px;
+    padding:8px 14px;
+    font-size:.72rem;
+  }
+  .seh-recordbook-metrics button{
+    min-height:31px;
+    padding:7px 10px;
+  }
+  .seh-recordbook-status{
+    margin-top:12px;
+    padding-top:9px;
+  }
+}
