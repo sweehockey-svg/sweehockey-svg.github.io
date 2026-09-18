@@ -6119,19 +6119,24 @@ function SEH_initPlayer() {
       const bestGoalie = bestGoalieRow(rows);
 
       elements.playerCurrentTeam.replaceChildren();
-      if (latestClub.teamId) {
-        const currentTeamLink = document.createElement("a");
-        currentTeamLink.href = teamUrl(latestClub.teamId);
-        currentTeamLink.textContent = latestClub.teamName || "Okänt lag";
-        elements.playerCurrentTeam.append(currentTeamLink);
+      if (window.SEH_currentPlayerStatus?.get) {
+        elements.playerCurrentTeam.textContent = "Hämtar aktuell status…";
+        [elements.playerCurrentTeamLogo, elements.playerHeroWatermark, elements.playerPortraitWatermark]
+          .filter(Boolean)
+          .forEach((node) => node.replaceChildren());
+        setPlayerHeroPalette(DEFAULT_HERO_PALETTE);
+        void hydratePlayerCurrentStatus(latest.playerKey);
       } else {
-        elements.playerCurrentTeam.textContent =
-          latestClub.teamName || "Okänt lag";
+        if (latestClub.teamId) {
+          const currentTeamLink = document.createElement("a");
+          currentTeamLink.href = teamUrl(latestClub.teamId);
+          currentTeamLink.textContent = latestClub.teamName || "Okänt lag";
+          elements.playerCurrentTeam.append(currentTeamLink);
+        } else {
+          elements.playerCurrentTeam.textContent = latestClub.teamName || "Okänt lag";
+        }
+        renderProfileTeamBrand(latestClub.teamName || "Okänt lag");
       }
-
-      const currentTeamName = latestClub.teamName || "Okänt lag";
-      renderProfileTeamBrand(currentTeamName);
-      void hydratePlayerCurrentStatus(latest.playerKey);
       void hydrateProfileRanking(latest.playerKey, currentName);
 
       elements.playerMeta.textContent = [
