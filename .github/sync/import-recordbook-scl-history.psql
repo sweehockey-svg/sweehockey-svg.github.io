@@ -1,0 +1,108 @@
+\set ON_ERROR_STOP on
+
+begin;
+set local statement_timeout='15min';
+set local lock_timeout='30s';
+
+create temporary table scl_recordbook_matches_stage (
+  source_league_id bigint,
+  source_match_id bigint,
+  match_type text,
+  played_at timestamptz,
+  home_team_id bigint,
+  away_team_id bigint,
+  home_team_name text,
+  away_team_name text,
+  home_score integer,
+  away_score integer,
+  overtime boolean,
+  raw_match jsonb
+) on commit drop;
+
+create temporary table scl_recordbook_goals_stage (
+  source_league_id bigint,
+  source_match_id bigint,
+  source_team_id bigint,
+  source_player_id bigint,
+  scorer_gamertag text,
+  goal_seconds integer,
+  first_assist_player_id bigint,
+  second_assist_player_id bigint,
+  powerplay boolean,
+  shorthanded boolean,
+  empty_net boolean,
+  winning_goal boolean,
+  raw_goal jsonb
+) on commit drop;
+
+\copy scl_recordbook_matches_stage from '/tmp/recordbook_scl_matches.csv' with (format csv, header true, null '');
+\copy scl_recordbook_goals_stage from '/tmp/recordbook_scl_goals.csv' with (format csv, header true, null '');
+
+select 1 / case when count(*) >= 100 then 1 else 0 end as match_export_must_be_nontrivial
+from scl_recordbook_matches_stage;
+
+select 1 / case when count(*) >= 100 then 1 else 0 end as goal_export_must_be_nontrivial
+from scl_recordbook_goals_stage;
+
+select 1 / case
+  when count(*) = count(distinct (source_league_id,source_match_id))
+  then 1 else 0 end as matches_must_be_unique
+from scl_recordbook_matches_stage;
+
+select 1 / case
+  when bool_and(source_league_id = any(array[47,83,148,233,310,369,447]::bigint[]))
+  then 1 else 0 end as only_expected_scl_leagues
+from scl_recordbook_matches_stage;
+
+delete from public.sportsgamer_recordbook_goals_v1
+where source_league_id = any(array[47,83,148,233,310,369,447]::bigint[]);
+
+delete from public.sportsgamer_recordbook_matches_v1
+where source_league_id = any(array[47,83,148,233,310,369,447]::bigint[]);
+
+insert into public.sportsgamer_recordbook_matches_v1 (
+  source_league_id,source_match_id,match_type,played_at,
+  home_team_id,away_team_id,home_team_name,away_team_name,
+  home_score,away_score,overtime,raw_match,imported_at
+)
+select
+  source_league_id,source_match_id,nullif(match_type,''),played_at,
+  home_team_id,away_team_id,nullif(home_team_name,''),nullif(away_team_name,''),
+  home_score,away_score,coalesce(overtime,false),coalesce(raw_match,'{}'::jsonb),now()
+from scl_recordbook_matches_stage;
+
+insert into public.sportsgamer_recordbook_goals_v1 (
+  source_league_id,source_match_id,source_team_id,source_player_id,
+  scorer_gamertag,goal_seconds,first_assist_player_id,second_assist_player_id,
+  powerplay,shorthanded,empty_net,winning_goal,raw_goal,imported_at
+)
+select
+  source_league_id,source_match_id,source_team_id,source_player_id,
+  nullif(scorer_gamertag,''),goal_seconds,first_assist_player_id,second_assist_player_id,
+  coalesce(powerplay,false),coalesce(shorthanded,false),coalesce(empty_net,false),
+  coalesce(winning_goal,false),coalesce(raw_goal,'{}'::jsonb),now()
+from scl_recordbook_goals_stage
+where goal_seconds >= 0
+  and source_player_id is not null;
+
+analyze public.sportsgamer_recordbook_matches_v1;
+analyze public.sportsgamer_recordbook_goals_v1;
+
+commit;
+
+select
+  source_league_id,
+  count(*) as matches
+from public.sportsgamer_recordbook_matches_v1
+where source_league_id = any(array[47,83,148,233,310,369,447]::bigint[])
+group by source_league_id
+order by source_league_id;
+
+select
+  source_league_id,
+  count(*) as goals,
+  min(goal_seconds) as fastest_goal_seconds
+from public.sportsgamer_recordbook_goals_v1
+where source_league_id = any(array[47,83,148,233,310,369,447]::bigint[])
+group by source_league_id
+order by source_league_id;
