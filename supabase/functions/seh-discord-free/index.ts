@@ -72,6 +72,46 @@ function isFreeCommand(content: unknown) {
   return /^!free\s*$/i.test(String(content || "").trim());
 }
 
+function sameText(a: unknown, b: unknown) {
+  return String(a || "").trim().toLocaleLowerCase("sv-SE") === String(b || "").trim().toLocaleLowerCase("sv-SE");
+}
+
+function formatNumber(value: unknown) {
+  const n = Number(value || 0);
+  return Number.isFinite(n) ? new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 }).format(n) : "0";
+}
+
+function playerImageUrl(player: any) {
+  const direct = String(player?.player_image || "").trim();
+  if (/^https?:\/\//i.test(direct)) return direct;
+
+  const sportsId = String(player?.sports_gamer_player_id || "").trim();
+  if (sportsId) {
+    return `https://www.svenskehockey.se/web-images/players/${encodeURIComponent(sportsId)}.png.webp`;
+  }
+  return "";
+}
+
+function careerText(player: any) {
+  const primary = String(player?.primary_position || "").trim().toUpperCase();
+  const goalieGames = Number(player?.total_goalie_games || 0);
+  const goalieSaves = Number(player?.total_goalie_saves || 0);
+  const savePctRaw = Number(player?.total_goalie_save_percentage);
+  if (primary === "G" || goalieGames > 0 && Number(player?.total_skater_games || 0) === 0) {
+    const parts = [`${formatNumber(goalieGames || player?.career_games)} GP`];
+    if (goalieSaves > 0) parts.push(`${formatNumber(goalieSaves)} räddningar`);
+    if (Number.isFinite(savePctRaw) && savePctRaw > 0) {
+      const pct = savePctRaw <= 1 ? savePctRaw * 100 : savePctRaw;
+      parts.push(`${pct.toLocaleString("sv-SE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} % SV`);
+    }
+    return parts.join(" · ");
+  }
+
+  const games = Number(player?.career_games || 0);
+  const points = Number(player?.total_points || 0);
+  return `${formatNumber(games)} GP · ${formatNumber(points)} P`;
+}
+
 async function sendMessage(token: string, channelId: string, payload: Record<string, unknown>) {
   const response = await discord(`/channels/${channelId}/messages`, token, {
     method: "POST",
@@ -179,14 +219,81 @@ async function poll() {
       } else {
         linked += 1;
         const gt = String(player.display_gamertag || "Spelare").trim();
-        const pos = String(player.primary_position || "–").trim();
-        const division = String(player.division || "–").trim();
-        const team = String(player.team_name || "Free Agent").trim();
+        const positions = String(player.positions_text || player.primary_position || "–").trim();
+        const currentTeam = String(player.current_team || "").trim();
+        const currentDivision = String(player.current_division || "").trim();
+        const latestTeam = String(player.latest_team || "").trim();
+        const latestEclTeam = String(player.latest_ecl_team || "").trim();
+        const latestEclDivision = String(player.latest_ecl_division || "").trim();
+        const isFreeAgent = String(player.current_status || "") !== "team" || !currentTeam;
         const playerKey = encodeURIComponent(String(player.player_key || ""));
         const profileUrl = `${PROFILE_BASE}${playerKey}`;
+        const imageUrl = playerImageUrl(player);
+
+        const fields: any[] = [
+          { name: "POSITION", value: positions || "–", inline: true },
+          {
+            name: "AKTUELLT",
+            value: isFreeAgent ? "Free Agent" : currentTeam,
+            inline: true,
+          },
+        ];
+
+        if (!isFreeAgent && currentDivision) {
+          fields.push({ name: "DIVISION", value: currentDivision, inline: true });
+        }
+
+        if (latestTeam && (isFreeAgent || !sameText(latestTeam, currentTeam))) {
+          fields.push({ name: "SENASTE LAG", value: latestTeam, inline: true });
+        }
+
+        if (
+          latestEclTeam &&
+          !sameText(latestEclTeam, currentTeam) &&
+          !sameText(latestEclTeam, latestTeam)
+        ) {
+          fields.push({
+            name: "SENASTE ECL",
+            value: latestEclDivision ? `${latestEclTeam} · ${latestEclDivision}` : latestEclTeam,
+            inline: true,
+          });
+        } else if (
+          latestEclTeam &&
+          sameText(latestEclTeam, latestTeam) &&
+          latestEclDivision
+        ) {
+          fields.push({
+            name: "SENASTE ECL",
+            value: `${latestEclTeam} · ${latestEclDivision}`,
+            inline: true,
+          });
+        }
+
+        const career = careerText(player);
+        if (career) fields.push({ name: "KARRIÄR", value: career, inline: false });
+
+        const embed: Record<string, unknown> = {
+          color: 5763719,
+          title: `🟢 ${gt} är ledig`,
+          url: profileUrl,
+          description: "Ledig för spel just nu.",
+          fields,
+          footer: { text: "Svensk eHockey · !free" },
+          timestamp: new Date().toISOString(),
+        };
+        if (imageUrl) embed.thumbnail = { url: imageUrl };
 
         await sendMessage(token, channelId, {
-          content: `🟢 **${gt}** · ${pos} · ${division} · ${team}\n🔗 <${profileUrl}>`,
+          embeds: [embed],
+          components: [{
+            type: 1,
+            components: [{
+              type: 2,
+              style: 5,
+              label: "Spelarkort",
+              url: profileUrl,
+            }],
+          }],
           allowed_mentions: { parse: [] },
         });
       }
