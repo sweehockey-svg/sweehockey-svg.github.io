@@ -250,9 +250,16 @@ async function poll(){
     const profileUrl=String(profile?.player_url||"").trim();
     const latestEclTeam=String(profile?.latest_ecl_team||"").trim();
     const latestEclDivision=String(profile?.latest_ecl_division||"").trim();
+    const latestEclSeason=String(profile?.latest_ecl_season_short||"").trim();
+    const isEcl26Spring=Boolean(profile?.latest_ecl_is_ecl26_spring);
 
     const parts=[`<@${uid}>`,`Free ${position}`];
-    if(latestEclTeam)parts.push(latestEclDivision?`Latest ECL: ${latestEclTeam} · ${latestEclDivision}`:`Latest ECL: ${latestEclTeam}`);
+    if(latestEclTeam){
+      let eclPart=latestEclTeam;
+      if(latestEclDivision)eclPart+=` · ${latestEclDivision}`;
+      if(!isEcl26Spring&&latestEclSeason)eclPart+=` · ${latestEclSeason}`;
+      parts.push(eclPart);
+    }
     if(cmd.note)parts.push(cmd.note);
     if(profileUrl)parts.push(`[Playercard](${profileUrl})`);
 
