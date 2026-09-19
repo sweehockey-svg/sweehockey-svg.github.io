@@ -13664,17 +13664,13 @@ function SEH_initShop() {
       </section>
 
       <section class="seh-recordbook-panel">
-        <div class="seh-recordbook-control-group seh-recordbook-control-group--type">
-          <span class="seh-recordbook-control-label">VISA</span>
-          <div class="seh-recordbook-switch" aria-label="Typ av rekord">
-            <button type="button" data-record-type="players" class="is-active">Spelare</button>
-            <button type="button" data-record-type="teams">Lag</button>
-          </div>
-        </div>
+        <div class="seh-recordbook-dock">
+          <div class="seh-recordbook-dock-top">
+            <div class="seh-recordbook-switch" aria-label="Typ av rekord">
+              <button type="button" data-record-type="players" class="is-active">Spelare</button>
+              <button type="button" data-record-type="teams">Lag</button>
+            </div>
 
-        <div class="seh-recordbook-toolbar">
-          <div class="seh-recordbook-control-group">
-            <span class="seh-recordbook-control-label">TÄVLING</span>
             <div class="seh-recordbook-filters" aria-label="Tävling">
               <button type="button" data-record-competition="ALL" class="is-active">Alla</button>
               <button type="button" data-record-competition="ECL">ECL</button>
@@ -13685,13 +13681,9 @@ function SEH_initShop() {
               <button type="button" data-record-competition="LGEL">LGEL</button>
             </div>
           </div>
-          <div class="seh-recordbook-record-picker">
-            <div class="seh-recordbook-control-group">
-              <span class="seh-recordbook-control-label">REKORDTYP</span>
-              <div class="seh-recordbook-group-tabs" data-record-groups aria-label="Rekordkategori"></div>
-            </div>
-            <div class="seh-recordbook-metrics" data-record-metrics aria-label="Rekord"></div>
-          </div>
+
+          <div class="seh-recordbook-group-tabs" data-record-groups aria-label="Rekordkategori"></div>
+          <div class="seh-recordbook-metrics" data-record-metrics aria-label="Rekord"></div>
         </div>
 
         <div class="seh-recordbook-status"><strong>TOPPLISTA</strong><span data-record-status></span></div>
