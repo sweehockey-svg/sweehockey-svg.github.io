@@ -6,7 +6,36 @@ const err=e=>e instanceof Error?e.message:String(e?.message||e);
 function db(){const u=Deno.env.get("SUPABASE_URL")||"",k=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";if(!u||!k)throw Error("SUPABASE_SERVICE_CONFIG");return createClient(u,k,{auth:{persistSession:false,autoRefreshToken:false}})}
 async function dc(path,t,init={}){return fetch("https://discord.com/api/v10"+path,{...init,headers:{Authorization:"Bot "+t,"Content-Type":"application/json",...(init.headers||{})}})}
 function after(a,b){try{return BigInt(String(a||0))>BigInt(String(b||0))}catch{return String(a||"")>String(b||"")}}
-function parse(v){const m=String(v||"").trim().match(/^!fa(?:\s+(.+))?$/i);if(!m)return null;const rest=String(m[1]||"").trim(),pi=rest.indexOf("|"),head=(pi>=0?rest.slice(0,pi):rest).trim(),note=(pi>=0?rest.slice(pi+1):"").trim().slice(0,500);const a=head.toUpperCase().replace(/[,/;]+/g," ").split(/\s+/).filter(Boolean);if(a.some(x=>["BORT","REMOVE","AV","OFF"].includes(x)))return a.length===1?{type:"remove",p:[],l:[],bad:[],note:""}:{type:"bad",p:[],l:[],bad:a,note};const p=[],l=[],bad=[];let top=false;for(const x0 of a){const x=ALIAS.get(x0)||x0;if(x==="TOP"){top=true;continue}if(["UTE","UTESPELARE","SKATER"].includes(x)){for(const q of UTE)if(!p.includes(q))p.push(q);continue}if(["FWD","FORWARD","FW"].includes(x)){for(const q of FWD)if(!p.includes(q))p.push(q);continue}if(["BACK","BACKAR","D","DEF"].includes(x)){for(const q of BACK)if(!p.includes(q))p.push(q);continue}if(POS.has(x)){if(!p.includes(x))p.push(x);continue}const lm=x.match(/^(ELITE|PRO|LITE|CORE|NEO)([+-])?$/);if(lm){const base=lm[1][0]+lm[1].slice(1).toLowerCase(),q=(top?"Top ":"")+base+(lm[2]||"");if(!l.includes(q))l.push(q);top=false;continue}if(["ALLA","OPEN","ÖPPEN"].includes(x)){top=false;continue}bad.push(x0)}if(top)bad.push("TOP");return{type:"submit",p,l,bad,note}}
+function parse(v){
+ const m=String(v||"").trim().match(/^!fa(?:\s+(.+))?$/i);if(!m)return null;
+ let rest=String(m[1]||"").trim();
+ if(!rest)return{type:"submit",p:[],l:[],bad:[],note:""};
+ if(/^(BORT|REMOVE|AV|OFF)$/i.test(rest))return{type:"remove",p:[],l:[],bad:[],note:""};
+ rest=rest.replace(/\s*\/\s*/g,"/");
+ const words=rest.split(/\s+/).filter(Boolean),p=[],l=[];let top=false,noteAt=-1;
+ const add=(arr,val)=>{if(!arr.includes(val))arr.push(val)};
+ const parseAtom=(raw)=>{
+   const x0=raw.toUpperCase().replace(/^[,;]+|[,;]+$/g,""),x=ALIAS.get(x0)||x0;
+   if(x==="TOP"){top=true;return true}
+   if(["UTE","UTESPELARE","SKATER"].includes(x)){for(const q of UTE)add(p,q);return true}
+   if(["F","FWD","FORWARD","FW"].includes(x)){for(const q of FWD)add(p,q);return true}
+   if(["BACK","BACKAR","D","DEF"].includes(x)){for(const q of BACK)add(p,q);return true}
+   if(POS.has(x)){add(p,x);return true}
+   const lm=x.match(/^(ELITE|PRO|LITE|CORE|NEO)([+-])?$/);
+   if(lm){const base=lm[1][0]+lm[1].slice(1).toLowerCase(),q=(top?"Top ":"")+base+(lm[2]||"");add(l,q);top=false;return true}
+   if(["ALLA","OPEN","ÖPPEN"].includes(x)){top=false;return true}
+   return false;
+ };
+ for(let i=0;i<words.length;i++){
+   const parts=words[i].split("/").filter(Boolean);
+   let ok=true;
+   for(const part of parts){if(!parseAtom(part)){ok=false;break}}
+   if(!ok){noteAt=i;break}
+ }
+ if(top&&noteAt<0)noteAt=words.length-1;
+ const note=noteAt>=0?words.slice(noteAt).join(" ").trim().slice(0,500):"";
+ return{type:"submit",p,l,bad:[],note};
+}
 async function send(t,c,p){const r=await dc("/channels/"+c+"/messages",t,{method:"POST",body:JSON.stringify(p)});if(!r.ok)throw Error("SEND "+r.status+": "+(await r.text()).slice(0,300))}
 async function del(t,c,id){const r=await dc("/channels/"+c+"/messages/"+id,t,{method:"DELETE"});if(!r.ok&&r.status!==404)throw Error("DELETE "+r.status+": "+(await r.text()).slice(0,300))}
 async function once(){
