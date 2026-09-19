@@ -14,9 +14,7 @@ create temporary table ecl_recordbook_matches_stage (
   home_team_name text,
   away_team_name text,
   home_score integer,
-  away_score integer,
-  overtime boolean,
-  raw_match jsonb
+  away_score integer
 ) on commit drop;
 
 create temporary table ecl_recordbook_goals_stage (
@@ -24,15 +22,7 @@ create temporary table ecl_recordbook_goals_stage (
   source_match_id bigint,
   source_team_id bigint,
   source_player_id bigint,
-  scorer_gamertag text,
-  goal_seconds integer,
-  first_assist_player_id bigint,
-  second_assist_player_id bigint,
-  powerplay boolean,
-  shorthanded boolean,
-  empty_net boolean,
-  winning_goal boolean,
-  raw_goal jsonb
+  goal_seconds integer
 ) on commit drop;
 
 \copy ecl_recordbook_matches_stage from '/tmp/recordbook_ecl_matches.csv' with (format csv, header true, null '');
@@ -54,48 +44,9 @@ select 1 / case
   then 1 else 0 end as only_expected_ecl_leagues
 from ecl_recordbook_matches_stage;
 
-delete from public.sportsgamer_recordbook_goals_v1
-where source_league_id = any(array[4,5,17,18,19,20,23,24,25,28,29,27,42,36,37,35,40,41,55,56,57,58,66,67,65,68,96,97,95,94,123,122,121,120,119,171,172,173,174,170,191,192,193,194,190,250,251,252,253,254,305,306,307,308,309,342,339,340,341,338,380,381,382,383,379,413,414,415,411,412,461,462,463,464,465,488,489,490,491,487,508,511,507,509,510]::bigint[]);
-
-delete from public.sportsgamer_recordbook_matches_v1
-where source_league_id = any(array[4,5,17,18,19,20,23,24,25,28,29,27,42,36,37,35,40,41,55,56,57,58,66,67,65,68,96,97,95,94,123,122,121,120,119,171,172,173,174,170,191,192,193,194,190,250,251,252,253,254,305,306,307,308,309,342,339,340,341,338,380,381,382,383,379,413,414,415,411,412,461,462,463,464,465,488,489,490,491,487,508,511,507,509,510]::bigint[]);
-
-insert into public.sportsgamer_recordbook_matches_v1 (
-  source_league_id,source_match_id,match_type,played_at,
-  home_team_id,away_team_id,home_team_name,away_team_name,
-  home_score,away_score,overtime,raw_match,imported_at
-)
-select
-  source_league_id,source_match_id,nullif(match_type,''),played_at,
-  home_team_id,away_team_id,nullif(home_team_name,''),nullif(away_team_name,''),
-  home_score,away_score,coalesce(overtime,false),coalesce(raw_match,'{}'::jsonb),now()
-from ecl_recordbook_matches_stage;
-
-insert into public.sportsgamer_recordbook_goals_v1 (
-  source_league_id,source_match_id,source_team_id,source_player_id,
-  scorer_gamertag,goal_seconds,first_assist_player_id,second_assist_player_id,
-  powerplay,shorthanded,empty_net,winning_goal,raw_goal,imported_at
-)
-select
-  source_league_id,source_match_id,source_team_id,source_player_id,
-  nullif(scorer_gamertag,''),goal_seconds,first_assist_player_id,second_assist_player_id,
-  coalesce(powerplay,false),coalesce(shorthanded,false),coalesce(empty_net,false),
-  coalesce(winning_goal,false),coalesce(raw_goal,'{}'::jsonb),now()
-from ecl_recordbook_goals_stage
-where goal_seconds >= 0
-  and source_player_id is not null;
-
-analyze public.sportsgamer_recordbook_matches_v1;
-analyze public.sportsgamer_recordbook_goals_v1;
-
 select public.seh_refresh_recordbook_ecl_match_players_cache_v1() as refreshed_recordbook_players;
 
 commit;
 
-select count(*) as imported_matches
-from public.sportsgamer_recordbook_matches_v1
-where source_league_id = any(array[4,5,17,18,19,20,23,24,25,28,29,27,42,36,37,35,40,41,55,56,57,58,66,67,65,68,96,97,95,94,123,122,121,120,119,171,172,173,174,170,191,192,193,194,190,250,251,252,253,254,305,306,307,308,309,342,339,340,341,338,380,381,382,383,379,413,414,415,411,412,461,462,463,464,465,488,489,490,491,487,508,511,507,509,510]::bigint[]);
-
-select count(*) as imported_goals
-from public.sportsgamer_recordbook_goals_v1
-where source_league_id = any(array[4,5,17,18,19,20,23,24,25,28,29,27,42,36,37,35,40,41,55,56,57,58,66,67,65,68,96,97,95,94,123,122,121,120,119,171,172,173,174,170,191,192,193,194,190,250,251,252,253,254,305,306,307,308,309,342,339,340,341,338,380,381,382,383,379,413,414,415,411,412,461,462,463,464,465,488,489,490,491,487,508,511,507,509,510]::bigint[]);
+select count(*) as cached_recordbook_players
+from public.seh_recordbook_ecl_match_players_cache_v1;
