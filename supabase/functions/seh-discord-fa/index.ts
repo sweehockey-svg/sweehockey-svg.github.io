@@ -47,7 +47,14 @@ function parse(v){
    if(POS.has(x)){add(p,x);return true}
 
    const lm=x.match(/^(ELITE|PRO|LITE|CORE|NEO)([+-])?$/);
-   if(lm){addLevel(lm[1],lm[2]||"",wordIndex);return true}
+   if(lm){
+     const rawText=String(raw||"").replace(/^[^A-Za-zÅÄÖåäö]+|[^A-Za-zÅÄÖåäö+-]+$/g,"");
+     const hasCaseSignal=/^[A-ZÅÄÖ]/.test(rawText);
+     const compound=String(words[wordIndex]||"").includes("/");
+     const explicit=!!lm[2]||top||compound||noteAt<0||hasCaseSignal;
+     if(!explicit)return false;
+     addLevel(lm[1],lm[2]||"",wordIndex);return true;
+   }
 
    if(["ALLA","OPEN","ÖPPEN"].includes(x)){top=false;return true}
    return false;
