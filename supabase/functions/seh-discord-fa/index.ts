@@ -91,6 +91,17 @@ function parse(v){
    : "";
  return{type:"submit",p,l,bad:[],note};
 }
+function fmt(n){const v=Number(n||0);return Number.isFinite(v)?new Intl.NumberFormat("sv-SE",{maximumFractionDigits:0}).format(v):"0"}
+function careerText(p){
+ const primary=String(p?.primary_position||"").trim().toUpperCase(),gg=Number(p?.total_goalie_games||0),sg=Number(p?.total_skater_games||0),saves=Number(p?.total_goalie_saves||0),sv=Number(p?.total_goalie_save_percentage);
+ if(primary==="G"||(gg>0&&sg===0)){
+   const parts=[`${fmt(gg||p?.career_games)} GP`];
+   if(saves>0)parts.push(`${fmt(saves)} räddningar`);
+   if(Number.isFinite(sv)&&sv>0){const pct=sv<=1?sv*100:sv;parts.push(`${pct.toLocaleString("sv-SE",{minimumFractionDigits:1,maximumFractionDigits:1})} % SV`)}
+   return parts.join(" · ");
+ }
+ return `${fmt(p?.career_games)} GP · ${fmt(p?.total_points)} P`;
+}
 async function send(t,c,p){const r=await dc("/channels/"+c+"/messages",t,{method:"POST",body:JSON.stringify(p)});if(!r.ok)throw Error("SEND "+r.status+": "+(await r.text()).slice(0,300))}
 async function dm(t,uid,p){const r=await dc("/users/@me/channels",t,{method:"POST",body:JSON.stringify({recipient_id:uid})});if(!r.ok)throw Error("DM OPEN "+r.status+": "+(await r.text()).slice(0,300));const ch=await r.json();const cid=String(ch?.id||"");if(!cid)throw Error("DM CHANNEL");await send(t,cid,p)}
 async function del(t,c,id){const r=await dc("/channels/"+c+"/messages/"+id,t,{method:"DELETE"});if(!r.ok&&r.status!==404)throw Error("DELETE "+r.status+": "+(await r.text()).slice(0,300))}
@@ -109,8 +120,17 @@ async function once(){
    if(!x?.linked){try{await dm(t,uid,{content:`Du behöver först koppla ditt Discord-konto till ett godkänt spelarkort under **Min profil**: <${MIN}>`,allowed_mentions:{parse:[]}})}catch(e){errors.push(err(e))}continue}
    if(x?.ok===false){await send(t,ch,{content:`<@${uid}> du finns inte på den aktiva Free Agent-listan.`,allowed_mentions:{users:[uid],parse:[]}});continue}
    submitted++;const gt=String(x.display_gamertag||"Spelare"),remove=x.request_type==="remove",url=PROFILE+encodeURIComponent(String(x.player_key||"")),sid=String(x.sports_gamer_player_id||"");
+   let card=null;
+   if(!remove){const{data:pc,error:pe}=await a.rpc("seh_discord_free_player_card_v1",{p_discord_user_id:uid});if(pe)errors.push("PLAYER CARD: "+pe.message);else if(pc?.linked)card=pc}
    const fields=remove?[{name:"DISCORD",value:`<@${uid}>`,inline:true}]:[{name:"POSITION",value:String(x.positions_text||"–"),inline:true},{name:"NIVÅ",value:String(x.levels_text||"Öppen för förslag"),inline:true}];
    if(!remove&&String(x.message||"").trim())fields.push({name:"INFO",value:String(x.message).trim().slice(0,500),inline:false});
+   if(!remove&&card){
+     const latest=String(card.latest_team||"").trim(),division=String(card.latest_team_division||"").trim(),ecl=String(card.latest_ecl_team||"").trim(),eclDiv=String(card.latest_ecl_division||"").trim();
+     if(latest)fields.push({name:"SENASTE LAG",value:latest,inline:true});
+     if(division)fields.push({name:"DIVISION",value:division,inline:true});
+     if(ecl)fields.push({name:"SENASTE ECL",value:eclDiv?`${ecl} · ${eclDiv}`:ecl,inline:true});
+     const career=careerText(card);if(career)fields.push({name:"KARRIÄR",value:career,inline:false});
+   }
    if(!remove)fields.push({name:"DISCORD",value:`<@${uid}>`,inline:true});
    const em={color:remove?16766720:5763719,title:remove?`${gt} vill lämna Free Agent-listan`:`${gt} söker lag`,url,fields};
    if(sid)em.thumbnail={url:"https://www.svenskehockey.se/web-images/players/"+encodeURIComponent(sid)+".png.webp"};
