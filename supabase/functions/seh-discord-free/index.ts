@@ -68,6 +68,18 @@ function snowflakeSort(a: any, b: any) {
   }
 }
 
+function isSnowflakeAfter(id: unknown, cursor: unknown) {
+  const value = String(id || "").trim();
+  const last = String(cursor || "").trim();
+  if (!value) return false;
+  if (!last) return true;
+  try {
+    return BigInt(value) > BigInt(last);
+  } catch (_) {
+    return value > last;
+  }
+}
+
 const VALID_POSITIONS = new Set(["LW","C","RW","LD","RD","G"]);
 const ALL_SKATER_POSITIONS = ["LW","C","RW","LD","RD"];
 
@@ -207,10 +219,10 @@ async function poll() {
     return { enabled, configured: Boolean(channelId), processed: 0, commands: 0 };
   }
 
-  const query = new URLSearchParams({ limit: "50" });
-  if (lastMessageId) query.set("after", lastMessageId);
-
-  const listResponse = await discord(`/channels/${channelId}/messages?${query.toString()}`, token, {
+  // Fetch the latest messages and apply the cursor locally.
+  // Discord's REST "after" parameter has proved unreliable for this channel,
+  // while snowflake IDs are strictly time-ordered.
+  const listResponse = await discord(`/channels/${channelId}/messages?limit=100`, token, {
     method: "GET",
   });
   if (!listResponse.ok) {
@@ -218,8 +230,22 @@ async function poll() {
     throw new Error(`READ ${listResponse.status}: ${detail.slice(0, 500)}`);
   }
 
+  let channelMeta: any = null;
+  if (listResponse.ok) {
+    const channelResponse = await discord(`/channels/${channelId}`, token, { method: "GET" });
+    if (channelResponse.ok) {
+      channelMeta = await channelResponse.json().catch(() => null);
+    }
+  }
+
   const messages = (await listResponse.json()) as any[];
-  const ordered = Array.isArray(messages) ? [...messages].sort(snowflakeSort) : [];
+  const rawMessages = Array.isArray(messages) ? messages : [];
+  const rawSorted = [...rawMessages].sort(snowflakeSort);
+  const rawNewest = rawSorted.at(-1) || null;
+  const rawNewestNonBot = [...rawSorted].reverse().find((message) => !message?.author?.bot) || null;
+  const ordered = rawMessages
+    .filter((message) => isSnowflakeAfter(message?.id, lastMessageId))
+    .sort(snowflakeSort);
 
   let commands = 0;
   let linked = 0;
@@ -438,6 +464,16 @@ async function poll() {
     content_hidden: contentHidden,
     non_bot_messages: nonBotMessages,
     readable_non_bot_messages: readableNonBotMessages,
+    raw_message_count: rawMessages.length,
+    raw_newest_id: String(rawNewest?.id || ""),
+    raw_newest_timestamp: String(rawNewest?.timestamp || ""),
+    raw_newest_non_bot_id: String(rawNewestNonBot?.id || ""),
+    raw_newest_non_bot_timestamp: String(rawNewestNonBot?.timestamp || ""),
+    raw_newest_non_bot_content: String(rawNewestNonBot?.content || "").slice(0, 120),
+    channel_name: String(channelMeta?.name || ""),
+    channel_type: channelMeta?.type ?? null,
+    channel_last_message_id: String(channelMeta?.last_message_id || ""),
+    channel_parent_id: String(channelMeta?.parent_id || ""),
     errors,
   };
 }
