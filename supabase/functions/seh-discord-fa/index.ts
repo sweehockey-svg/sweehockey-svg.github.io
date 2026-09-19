@@ -126,8 +126,7 @@ async function once(){
    if(!remove&&String(x.message||"").trim())fields.push({name:"INFO",value:String(x.message).trim().slice(0,500),inline:false});
    if(!remove&&card){
      const latest=String(card.latest_team||"").trim(),division=String(card.latest_team_division||"").trim(),ecl=String(card.latest_ecl_team||"").trim(),eclDiv=String(card.latest_ecl_division||"").trim();
-     if(latest)fields.push({name:"SENASTE LAG",value:latest,inline:true});
-     if(division)fields.push({name:"DIVISION",value:division,inline:true});
+     if(latest)fields.push({name:"SENASTE LAG",value:division?`${latest} · ${division}`:latest,inline:true});
      if(ecl)fields.push({name:"SENASTE ECL",value:eclDiv?`${ecl} · ${eclDiv}`:ecl,inline:true});
      const career=careerText(card);if(career)fields.push({name:"KARRIÄR",value:career,inline:false});
    }
