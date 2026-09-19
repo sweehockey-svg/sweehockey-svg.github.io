@@ -88,6 +88,8 @@ where goal_seconds >= 0
 analyze public.sportsgamer_recordbook_matches_v1;
 analyze public.sportsgamer_recordbook_goals_v1;
 
+select public.seh_refresh_recordbook_scl_match_players_cache_v1() as refreshed_recordbook_players;
+
 commit;
 
 select
