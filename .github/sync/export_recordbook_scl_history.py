@@ -14,7 +14,8 @@ from zoneinfo import ZoneInfo
 
 import pymysql
 
-SYNC_VERSION = "scl-recordbook-v1"\nDEFAULT_LEAGUES = "47,83,148,233,310,369,447"
+SYNC_VERSION = "scl-recordbook-v1"
+DEFAULT_LEAGUES = "47,83,148,233,310,369,447"
 MATCH_OUTPUT = Path(os.environ.get("MATCH_OUTPUT", "/tmp/recordbook_scl_matches.csv"))
 GOAL_OUTPUT = Path(os.environ.get("GOAL_OUTPUT", "/tmp/recordbook_scl_goals.csv"))
 SOURCE_TZ = ZoneInfo("Europe/Helsinki")
