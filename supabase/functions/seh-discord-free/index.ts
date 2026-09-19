@@ -251,9 +251,37 @@ Deno.serve(async (request) => {
     if (!expectedKey || suppliedKey !== expectedKey) return json({ error: "Forbidden." }, 403);
 
     const body = await request.json().catch(() => ({}));
-    const action = String(body?.action || "poll");
-    if (action !== "poll") return json({ error: "Unknown action." }, 400);
-    return json(await poll());
+    const action = String(body?.action || "watch");
+
+    if (action === "poll") return json(await poll());
+    if (action !== "watch") return json({ error: "Unknown action." }, 400);
+
+    const startedAt = Date.now();
+    const results: any[] = [];
+    let totals = { processed: 0, commands: 0, linked: 0, unlinked: 0, deleted: 0 };
+
+    while (Date.now() - startedAt < 54000) {
+      const result: any = await poll();
+      results.push(result);
+      totals = {
+        processed: totals.processed + Number(result?.processed || 0),
+        commands: totals.commands + Number(result?.commands || 0),
+        linked: totals.linked + Number(result?.linked || 0),
+        unlinked: totals.unlinked + Number(result?.unlinked || 0),
+        deleted: totals.deleted + Number(result?.deleted || 0),
+      };
+
+      if (!result?.enabled || !result?.configured) break;
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+    }
+
+    return json({
+      mode: "watch",
+      elapsed_ms: Date.now() - startedAt,
+      iterations: results.length,
+      ...totals,
+      last: results.at(-1) || null,
+    });
   } catch (error) {
     const message = errorText(error);
     try {
