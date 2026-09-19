@@ -370,8 +370,12 @@ async function poll() {
         };
         if (imageUrl) embed.thumbnail = { url: imageUrl };
 
-        await deleteMessage(token, channelId, id);
-        deleted += 1;
+        try {
+          await deleteMessage(token, channelId, id);
+          deleted += 1;
+        } catch (error) {
+          errors.push(errorText(error));
+        }
 
         await sendMessage(token, channelId, {
           embeds: [embed],
@@ -408,9 +412,13 @@ async function poll() {
 
   const update: Record<string, unknown> = {
     last_polled_at: new Date().toISOString(),
-    last_error: errors.length ? errors.join(" | ").slice(0, 2000) : null,
     updated_at: new Date().toISOString(),
   };
+  if (errors.length) {
+    update.last_error = errors.join(" | ").slice(0, 2000);
+  } else if (commands > 0) {
+    update.last_error = null;
+  }
   if (newest && !contentHidden) update.last_message_id = newest;
 
   const { error: updateError } = await admin
