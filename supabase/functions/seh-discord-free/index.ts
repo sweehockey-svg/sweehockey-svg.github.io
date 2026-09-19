@@ -126,6 +126,16 @@ function playerImageUrl(player: any) {
   return "";
 }
 
+function normalizePositionsText(value: unknown) {
+  return String(value || "")
+    .toUpperCase()
+    .replace(/[,+/|]+/g, " ")
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(" / ");
+}
+
 function careerText(player: any) {
   const primary = String(player?.primary_position || "").trim().toUpperCase();
   const goalieGames = Number(player?.total_goalie_games || 0);
@@ -270,10 +280,13 @@ async function poll() {
       } else {
         linked += 1;
         const gt = String(player.display_gamertag || "Spelare").trim();
-        const profilePositions = String(player.positions_text || player.primary_position || "–").trim();
-        const positions = freeCommand.positions.length
-          ? freeCommand.positions.join(" / ")
-          : profilePositions;
+        const profilePositions = normalizePositionsText(player.positions_text || player.primary_position || "–");
+        const overridePositions = freeCommand.positions.join(" / ");
+        const hasPositionOverride = Boolean(
+          overridePositions &&
+          !sameText(overridePositions, profilePositions)
+        );
+        const positions = overridePositions || profilePositions;
         const currentTeam = String(player.current_team || "").trim();
         const currentDivision = String(player.current_division || "").trim();
         const latestTeam = String(player.latest_team || "").trim();
@@ -284,8 +297,18 @@ async function poll() {
         const profileUrl = `${PROFILE_BASE}${playerKey}`;
         const imageUrl = playerImageUrl(player);
 
-        const fields: any[] = [
-          { name: "POSITION", value: positions || "–", inline: true },
+        const fields: any[] = [];
+
+        if (hasPositionOverride) {
+          fields.push(
+            { name: "IKVÄLL", value: positions || "–", inline: true },
+            { name: "PROFILPOSITION", value: profilePositions || "–", inline: true },
+          );
+        } else {
+          fields.push({ name: "POSITION", value: positions || "–", inline: true });
+        }
+
+        fields.push(
           {
             name: "AKTUELLT",
             value: isFreeAgent ? "Free Agent" : currentTeam,
@@ -296,7 +319,7 @@ async function poll() {
             value: `<@${discordUserId}>`,
             inline: true,
           },
-        ];
+        );
 
         if (!isFreeAgent && currentDivision) {
           fields.push({ name: "DIVISION", value: currentDivision, inline: true });
@@ -329,7 +352,12 @@ async function poll() {
         }
 
         const career = careerText(player);
-        if (career) fields.push({ name: "KARRIÄR", value: career, inline: false });
+        if (career) {
+          const careerLabel = hasPositionOverride
+            ? `KARRIÄR SOM ${normalizePositionsText(player.primary_position || profilePositions || "") || "PROFILPOSITION"}`
+            : "KARRIÄR";
+          fields.push({ name: careerLabel, value: career, inline: false });
+        }
 
         const embed: Record<string, unknown> = {
           color: 5763719,
@@ -341,6 +369,9 @@ async function poll() {
           timestamp: new Date().toISOString(),
         };
         if (imageUrl) embed.thumbnail = { url: imageUrl };
+
+        await deleteMessage(token, channelId, id);
+        deleted += 1;
 
         await sendMessage(token, channelId, {
           embeds: [embed],
@@ -357,11 +388,13 @@ async function poll() {
         });
       }
 
-      try {
-        await deleteMessage(token, channelId, id);
-        deleted += 1;
-      } catch (error) {
-        errors.push(errorText(error));
+      if (player?.linked === false) {
+        try {
+          await deleteMessage(token, channelId, id);
+          deleted += 1;
+        } catch (error) {
+          errors.push(errorText(error));
+        }
       }
     } catch (error) {
       errors.push(errorText(error));
