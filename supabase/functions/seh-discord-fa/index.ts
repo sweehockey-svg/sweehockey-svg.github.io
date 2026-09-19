@@ -11,30 +11,77 @@ function parse(v){
  const rest=String(m[1]||"").trim();
  if(!rest)return{type:"submit",p:[],l:[],bad:[],note:""};
  if(/^(BORT|REMOVE|AV|OFF)$/i.test(rest))return{type:"remove",p:[],l:[],bad:[],note:""};
- const words=rest.split(/\s+/).filter(Boolean),p=[],l=[];let top=false,noteAt=-1;
+
+ const words=rest.split(/\s+/).filter(Boolean),p=[],l=[];
+ let top=false,noteAt=-1,lastLevelWord=-99,lastLevelList=-1,nuancedLevelWord=-1;
  const add=(arr,val)=>{if(!arr.includes(val))arr.push(val)};
- const parseAtom=(raw)=>{
-   const x0=raw.toUpperCase().replace(/^[,;]+|[,;]+$/g,""),x=ALIAS.get(x0)||x0;
+ const cleanAtom=(raw)=>String(raw||"").toUpperCase()
+   .replace(/^[^A-ZÅÄÖ0-9+-]+|[^A-ZÅÄÖ0-9+-]+$/g,"");
+ const addLevel=(base,suffix="",wordIndex=-1)=>{
+   const pretty=base[0]+base.slice(1).toLowerCase();
+   const value=(top?"Top ":"")+pretty+suffix;
+   add(l,value);
+   lastLevelList=l.indexOf(value);
+   lastLevelWord=wordIndex;
+   if(top||suffix)nuancedLevelWord=wordIndex;
+   top=false;
+ };
+ const parseAtom=(raw,wordIndex)=>{
+   const x0=cleanAtom(raw),x=ALIAS.get(x0)||x0;
    if(!x)return true;
+
+   if(["LEDIG","FREE"].includes(x))return true;
    if(x==="TOP"){top=true;return true}
-   if(["UTE","UTESPELARE","SKATER"].includes(x)){for(const q of UTE)add(p,q);return true}
-   if(["F","FWD","FORWARD","FW"].includes(x)){for(const q of FWD)add(p,q);return true}
-   if(["BACK","BACKAR","D","DEF"].includes(x)){for(const q of BACK)add(p,q);return true}
+
+   if(["UTE","UTESPELARE","UTESPELAREN","SKATER"].includes(x)){for(const q of UTE)add(p,q);return true}
+   if(["F","FWD","FORWARD","FORWARDS","FW"].includes(x)){for(const q of FWD)add(p,q);return true}
+   if(["B","BACK","BACKAR","D","DEF","DEFENCE","DEFENSE"].includes(x)){for(const q of BACK)add(p,q);return true}
+
+   if(["GOALIE","MÅLVAKT","MALVAKT"].includes(x)){add(p,"G");return true}
+   if(["CENTER","CENTRE"].includes(x)){add(p,"C");return true}
+   if(["VÄNSTERFORWARD","VANSTERFORWARD"].includes(x)){add(p,"LW");return true}
+   if(["HÖGERFORWARD","HOGERFORWARD"].includes(x)){add(p,"RW");return true}
+   if(["VÄNSTERBACK","VANSTERBACK"].includes(x)){add(p,"LD");return true}
+   if(["HÖGERBACK","HOGERBACK"].includes(x)){add(p,"RD");return true}
+
    if(POS.has(x)){add(p,x);return true}
+
    const lm=x.match(/^(ELITE|PRO|LITE|CORE|NEO)([+-])?$/);
-   if(lm){const base=lm[1][0]+lm[1].slice(1).toLowerCase(),q=(top?"Top ":"")+base+(lm[2]||"");add(l,q);top=false;return true}
+   if(lm){addLevel(lm[1],lm[2]||"",wordIndex);return true}
+
    if(["ALLA","OPEN","ÖPPEN"].includes(x)){top=false;return true}
    return false;
  };
+
  for(let i=0;i<words.length;i++){
-   if(words[i]==="/")continue;
-   const parts=words[i].split("/").filter(Boolean);
-   let ok=true;
-   for(const part of parts){if(!parseAtom(part)){ok=false;break}}
-   if(!ok){noteAt=i;break}
+   const raw=words[i];
+
+   if(/^[\/|,;:.]+$/.test(raw))continue;
+
+   if((raw==="+"||raw==="-") && lastLevelList>=0 && lastLevelWord===i-1){
+     const current=l[lastLevelList]||"";
+     if(current && !/[+-]$/.test(current)){
+       l[lastLevelList]=current+raw;
+       nuancedLevelWord=lastLevelWord;
+     }
+     continue;
+   }
+
+   const parts=raw.split("/").filter(Boolean);
+   let recognized=parts.length>0;
+   for(const part of parts){
+     if(!parseAtom(part,i)){recognized=false}
+   }
+
+   if(!recognized && noteAt<0){
+     noteAt=i;
+     if(nuancedLevelWord>=0 && i-nuancedLevelWord<=2)noteAt=nuancedLevelWord;
+   }
  }
- if(top&&noteAt<0)noteAt=words.length-1;
- const note=noteAt>=0?words.slice(noteAt).join(" ").replace(/^\s*\/\s*/,"").trim().slice(0,500):"";
+
+ const note=noteAt>=0
+   ? words.slice(noteAt).join(" ").replace(/^[\s\/|,;:.-]+/,"").trim().slice(0,500)
+   : "";
  return{type:"submit",p,l,bad:[],note};
 }
 async function send(t,c,p){const r=await dc("/channels/"+c+"/messages",t,{method:"POST",body:JSON.stringify(p)});if(!r.ok)throw Error("SEND "+r.status+": "+(await r.text()).slice(0,300))}
@@ -47,7 +94,7 @@ async function once(){
  const raw=await r.json(),ms=(Array.isArray(raw)?raw:[]).filter(x=>after(x?.id,cur)).sort((x,y)=>after(x.id,y.id)?1:-1);
  let newest=cur,commands=0,submitted=0,deleted=0;const errors=[];
  for(const m of ms){const id=String(m?.id||"");if(!id)continue;newest=id;if(m?.author?.bot)continue;const cmd=parse(m?.content);if(!cmd)continue;if(!cur&&act){const mt=Date.parse(String(m?.timestamp||""))||0;if(mt&&mt+5000<act)continue}commands++;const uid=String(m?.author?.id||"");if(!uid)continue;
-  if(cmd.type==="bad"||cmd.bad.length){try{await del(t,ch,id);deleted++}catch(e){errors.push(err(e))}await send(t,ch,{content:`<@${uid}> ogiltigt val. Exempel: \`!fa RD Pro Lite / Backup, 2+ kvällar i veckan\`, \`!fa VF/HF Core\`, \`!fa UTE\` eller \`!fa bort\`.`,allowed_mentions:{users:[uid],parse:[]}});continue}
+  if(cmd.type==="bad"||cmd.bad.length){try{await del(t,ch,id);deleted++}catch(e){errors.push(err(e))}await send(t,ch,{content:`<@${uid}> ogiltigt val. Exempel: \`!fa RD Pro Lite Backup, 2+ kvällar i veckan\`, \`!fa VF / HF Core\`, \`!fa UTE\` eller \`!fa bort\`.`,allowed_mentions:{users:[uid],parse:[]}});continue}
   try{
    const{data:x,error:e}=await a.rpc("seh_discord_submit_free_agent_request_v2",{p_discord_user_id:uid,p_positions_text:cmd.p.length?cmd.p.join(" / "):null,p_levels_text:cmd.l.length?cmd.l.join(" / "):null,p_request_type:cmd.type==="remove"?"remove":"create",p_message:cmd.note||null});if(e)throw e;
    try{await del(t,ch,id);deleted++}catch(e){errors.push(err(e))}
