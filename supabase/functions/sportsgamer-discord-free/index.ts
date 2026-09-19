@@ -204,31 +204,11 @@ async function deleteMessage(token:string,channelId:string,messageId:string){
   if(!r.ok&&r.status!==404)throw new Error("DELETE "+r.status+": "+(await r.text()).slice(0,500));
 }
 
-async function poll(){
-  const token=Deno.env.get("SPORTSGAMER_DISCORD_BOT_TOKEN")||"";
-  if(!token)throw new Error("SPORTSGAMER_DISCORD_BOT_TOKEN saknas.");
-
-  const admin=serviceClient();
-  const{data:cfg,error:cfgError}=await admin
-    .from("sportsgamer_discord_free_command_config")
-    .select("enabled,channel_id,last_message_id,activated_at")
-    .eq("id",1).maybeSingle();
-  if(cfgError)throw cfgError;
-
+async function pollChannel(admin:any,token:string,cfg:any,botIdentity:string){
+  const configId=Number(cfg?.id||0);
   const enabled=Boolean(cfg?.enabled),channelId=String(cfg?.channel_id||"").trim();
   const cursor=String(cfg?.last_message_id||"").trim(),activatedAt=Date.parse(String(cfg?.activated_at||""))||0;
-  if(!enabled||!channelId)return{enabled,configured:Boolean(channelId)};
-
-  let botIdentity="unknown";
-  try{
-    const me=await discord("/users/@me",token,{method:"GET"});
-    if(me.ok){
-      const info=await me.json();
-      botIdentity=String(info?.username||"bot")+" ("+String(info?.id||"?")+")";
-    }else{
-      botIdentity="identity "+me.status;
-    }
-  }catch(_){}
+  if(!enabled||!channelId)return{id:configId,channel_id:channelId,enabled,configured:Boolean(channelId)};
 
   const read=await discord("/channels/"+channelId+"/messages?limit=100",token,{method:"GET"});
   if(!read.ok)throw new Error("READ "+read.status+": "+(await read.text()).slice(0,500)+" | bot="+botIdentity+" | channel="+channelId);
@@ -320,13 +300,78 @@ async function poll(){
 
   const update:any={last_polled_at:new Date().toISOString(),updated_at:new Date().toISOString()};
   if(newest&&!contentHidden)update.last_message_id=newest;
-  if(errors.length)update.last_error=errors.join(" | ").slice(0,2000);
-  else if(commands||cleaned)update.last_error=null;
+  update.last_error=errors.length?errors.join(" | ").slice(0,2000):null;
 
-  const{error:updateError}=await admin.from("sportsgamer_discord_free_command_config").update(update).eq("id",1);
+  const{error:updateError}=await admin.from("sportsgamer_discord_free_command_config").update(update).eq("id",configId);
   if(updateError)throw updateError;
 
-  return{enabled:true,configured:true,processed:ordered.length,commands,posted,removed,deleted,cleaned,content_hidden:contentHidden,errors};
+  return{
+    id:configId,channel_id:channelId,enabled:true,configured:true,
+    processed:ordered.length,commands,posted,removed,deleted,cleaned,
+    content_hidden:contentHidden,errors
+  };
+}
+
+async function poll(){
+  const token=Deno.env.get("SPORTSGAMER_DISCORD_BOT_TOKEN")||"";
+  if(!token)throw new Error("SPORTSGAMER_DISCORD_BOT_TOKEN saknas.");
+
+  const admin=serviceClient();
+  const{data:configs,error:cfgError}=await admin
+    .from("sportsgamer_discord_free_command_config")
+    .select("id,enabled,channel_id,last_message_id,activated_at")
+    .eq("enabled",true)
+    .order("id",{ascending:true});
+  if(cfgError)throw cfgError;
+
+  const active=(Array.isArray(configs)?configs:[])
+    .filter((cfg:any)=>String(cfg?.channel_id||"").trim());
+  if(!active.length)return{enabled:false,configured:false,channel_count:0,channels:[]};
+
+  let botIdentity="unknown";
+  try{
+    const me=await discord("/users/@me",token,{method:"GET"});
+    if(me.ok){
+      const info=await me.json();
+      botIdentity=String(info?.username||"bot")+" ("+String(info?.id||"?")+")";
+    }else{
+      botIdentity="identity "+me.status;
+    }
+  }catch(_){}
+
+  const results:any[]=[];
+  for(const cfg of active){
+    try{
+      results.push(await pollChannel(admin,token,cfg,botIdentity));
+    }catch(error){
+      const message=errorText(error);
+      const configId=Number(cfg?.id||0);
+      try{
+        await admin.from("sportsgamer_discord_free_command_config").update({
+          last_polled_at:new Date().toISOString(),
+          last_error:message.slice(0,2000),
+          updated_at:new Date().toISOString(),
+        }).eq("id",configId);
+      }catch(_){}
+      results.push({
+        id:configId,
+        channel_id:String(cfg?.channel_id||""),
+        enabled:true,
+        configured:true,
+        error:message
+      });
+    }
+  }
+
+  return{
+    enabled:true,
+    configured:true,
+    channel_count:active.length,
+    channels:results,
+    commands:results.reduce((sum:number,r:any)=>sum+Number(r?.commands||0),0),
+    posted:results.reduce((sum:number,r:any)=>sum+Number(r?.posted||0),0),
+    errors:results.filter((r:any)=>r?.error||r?.errors?.length).length,
+  };
 }
 
 Deno.serve(async(request)=>{
@@ -358,7 +403,7 @@ Deno.serve(async(request)=>{
       const admin=serviceClient();
       await admin.from("sportsgamer_discord_free_command_config").update({
         last_polled_at:new Date().toISOString(),last_error:message.slice(0,2000),updated_at:new Date().toISOString(),
-      }).eq("id",1);
+      }).eq("enabled",true);
     }catch(_){}
     console.error("sportsgamer-discord-free:",message);
     return json({error:message},500);
