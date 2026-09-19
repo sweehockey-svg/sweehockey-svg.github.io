@@ -15047,8 +15047,10 @@ function SEH_initShop() {
       const primary=positions[0] || clean(row.primary_position) || (clean(row.player_type).toLowerCase()==='goalie'?'G':'–');
       const alternate=positions.slice(1);
       const rp=Number(row.ranking_points), rank=Number(row.overall_rank);
-      const isGoalie=positionGroup(primary)==='G';
-      const secondary=isGoalie
+      const careerIsGoalie=
+        clean(row.player_type).toLowerCase()==='goalie' ||
+        (number(row.total_goalie_games)>0 && number(row.total_skater_games)===0);
+      const secondary=careerIsGoalie
         ? (Number(row.total_goalie_save_percentage)>0 ? `${(Number(row.total_goalie_save_percentage)*100).toLocaleString('sv-SE',{maximumFractionDigits:1})}% SV` : `${format(row.total_goalie_games)} GP`)
         : `${format(row.total_points)} PTS`;
       const name=clean(row.display_gamertag)||'Okänd spelare';
