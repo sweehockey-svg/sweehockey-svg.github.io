@@ -252,8 +252,7 @@ async function poll(){
     const latestEclDivision=String(profile?.latest_ecl_division||"").trim();
 
     const parts=[`<@${uid}>`,`Free ${position}`];
-    if(latestEclTeam)parts.push(latestEclTeam);
-    if(latestEclDivision)parts.push(latestEclDivision);
+    if(latestEclTeam)parts.push(latestEclDivision?`Latest ECL: ${latestEclTeam} · ${latestEclDivision}`:`Latest ECL: ${latestEclTeam}`);
     if(cmd.note)parts.push(cmd.note);
     if(profileUrl)parts.push(`[Playercard](${profileUrl})`);
 
