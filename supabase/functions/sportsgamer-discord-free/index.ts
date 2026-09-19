@@ -133,6 +133,7 @@ function userCard(message:any,uid:string){
   const embeds=Array.isArray(message?.embeds)?message.embeds:[];
   return embeds.some((embed:any)=>{
     if(String(embed?.footer?.text||"")!==FOOTER)return false;
+    if(String(embed?.description||"").includes(`<@${uid}>`))return true;
     const fields=Array.isArray(embed?.fields)?embed.fields:[];
     return fields.some((field:any)=>String(field?.name||"").toUpperCase()==="DISCORD"&&String(field?.value||"").includes(`<@${uid}>`));
   });
