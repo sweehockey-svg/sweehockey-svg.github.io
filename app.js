@@ -14939,7 +14939,7 @@ function SEH_initShop() {
             </div>
 
             <div id="faLinkPending" class="fa-self-notice" hidden>
-              <span>VÄNTAR PÅ ADMIN</span><strong id="faLinkPendingName">Spelarkoppling skickad</strong><p>Du kan skicka FA-annonsen när kopplingen har godkänts.</p>
+              <span>SPELARKOPPLING VÄNTAR PÅ GODKÄNNANDE</span><strong id="faLinkPendingName">Spelarkoppling skickad</strong><p>Din Discord-koppling till spelarprofilen är skickad till admin för godkännande.</p>
             </div>
             <div id="faLinkRejected" class="fa-self-notice is-rejected" hidden>
               <span>KOPPLING AVSLAGEN</span><strong id="faLinkRejectedName">Välj profil igen</strong><p>Du kan söka fram rätt spelarprofil och skicka en ny begäran.</p>
@@ -15313,7 +15313,15 @@ function SEH_initShop() {
         <p class="directory-kicker">DISCORD</p>
         <h2 id="myProfileGateTitle">Logga in för att fortsätta</h2>
         <p id="myProfileGateText">Du behöver ett godkänt Discord-konto kopplat till din spelarprofil.</p>
-        <div id="myProfileGateActions" class="my-profile-gate__actions"><button id="myProfileDiscordLogin" type="button">Logga in med Discord</button><a id="myProfileConnectLink" href="#/free-agents">Koppla spelarprofil →</a><button id="myProfileRetry" type="button" hidden>Försök igen</button></div>
+        <div id="myProfileGateActions" class="my-profile-gate__actions"><button id="myProfileDiscordLogin" type="button">Logga in med Discord</button><button id="myProfileRetry" type="button" hidden>Försök igen</button></div>
+        <div id="myProfileLinkSetup" class="fa-self-link" hidden>
+          <p class="fa-self-kicker">KOPPLA SPELARPROFIL</p>
+          <h3>Vilken spelare är du?</h3>
+          <p>Sök fram din egen spelarprofil. Kopplingen skickas till admin för godkännande.</p>
+          <label><span>Sök gamertag</span><input id="myProfilePlayerSearch" type="search" autocomplete="off" placeholder="Skriv ditt gamertag…"></label>
+          <div id="myProfilePlayerResults" class="fa-self-player-results"></div>
+          <p id="myProfileLinkStatus" class="my-profile-status" role="status" aria-live="polite"></p>
+        </div>
         <p id="myProfileGateStatus" class="my-profile-status" role="status"></p>
       </section>
 
@@ -15413,13 +15421,13 @@ function SEH_initShop() {
 
     function showProfileGate(mode, text='', statusText='', tone='') {
       const gate=$('myProfileGate'), dash=$('myProfileDashboard'), title=$('myProfileGateTitle');
-      const actions=$('myProfileGateActions'), login=$('myProfileDiscordLogin'), connect=$('myProfileConnectLink'), retry=$('myProfileRetry');
+      const actions=$('myProfileGateActions'), login=$('myProfileDiscordLogin'), retry=$('myProfileRetry'), linkSetup=$('myProfileLinkSetup');
       if(gate)gate.hidden=false;
       if(dash)dash.hidden=true;
       if(actions)actions.hidden=false;
       if(login)login.hidden=false;
-      if(connect)connect.hidden=false;
       if(retry)retry.hidden=true;
+      if(linkSetup)linkSetup.hidden=true;
 
       if(mode==='loading'){
         if(title)title.textContent='Laddar din profil';
@@ -15427,17 +15435,16 @@ function SEH_initShop() {
       }else if(mode==='linked-error'){
         if(title)title.textContent='Din profil är kopplad';
         if(login)login.hidden=true;
-        if(connect)connect.hidden=true;
         if(retry)retry.hidden=false;
       }else if(mode==='pending'){
-        if(title)title.textContent='Kopplingen väntar på godkännande';
+        if(title)title.textContent='Spelarkoppling väntar på godkännande';
         if(login)login.hidden=true;
       }else if(mode==='unlinked'){
         if(title)title.textContent='Koppla din spelarprofil';
         if(login)login.hidden=true;
+        if(linkSetup)linkSetup.hidden=false;
       }else if(mode==='wrong-account'){
         if(title)title.textContent='Logga in med Discord';
-        if(connect)connect.hidden=true;
       }else{
         if(title)title.textContent='Logga in för att fortsätta';
       }
@@ -15456,6 +15463,63 @@ function SEH_initShop() {
         const {error}=await sb.auth.signInWithOAuth({provider:'discord',options:{redirectTo}});
         if(error)throw error;
       }catch(error){status('myProfileGateStatus',`Fel: ${error?.message||error}`,'error');}
+    }
+
+    let playerSearchTimer=0;
+
+    async function searchPlayersForLink(){
+      const input=$('myProfilePlayerSearch'), host=$('myProfilePlayerResults');
+      if(!input||!host)return;
+      const q=clean(input.value);
+      host.replaceChildren();
+      status('myProfileLinkStatus','');
+      if(q.length<2)return;
+
+      const {data,error}=await sb
+        .from('app_player_directory_cache')
+        .select('player_key,display_gamertag,primary_position,latest_team')
+        .ilike('display_gamertag',`%${q.replaceAll('%','')}%`)
+        .order('display_gamertag',{ascending:true})
+        .limit(8);
+      if(error){status('myProfileLinkStatus',`Fel: ${error.message}`,'error');return;}
+
+      const players=data||[];
+      let linkedKeys=new Set();
+      if(players.length){
+        const {data:linkStates,error:linkStateError}=await sb.rpc('seh_discord_player_link_status',{p_player_keys:players.map((player)=>player.player_key)});
+        if(linkStateError)console.warn('Kunde inte kontrollera Discord-kopplingar:',linkStateError);
+        else linkedKeys=new Set((linkStates||[]).filter((row)=>row.is_linked).map((row)=>String(row.player_key)));
+      }
+
+      for(const player of players){
+        const isLinked=linkedKeys.has(String(player.player_key));
+        const button=document.createElement('button');
+        button.type='button';
+        if(isLinked){
+          button.disabled=true;
+          button.classList.add('is-linked');
+        }else{
+          button.dataset.myProfilePlayer=player.player_key;
+        }
+        button.innerHTML=`<span class="fa-self-player-result__identity"><strong>${escapeHtml(player.display_gamertag||player.player_key)}</strong><small>${escapeHtml([player.primary_position,player.latest_team].filter(Boolean).join(' · ')||'Spelarprofil')}</small></span>${isLinked?'<em>Redan kopplad</em>':'<span>Välj profil</span>'}`;
+        host.append(button);
+      }
+
+      if(!players.length){
+        const p=document.createElement('p');
+        p.textContent='Ingen spelarprofil hittades.';
+        host.append(p);
+      }
+    }
+
+    async function requestPlayerLink(playerKey){
+      if(!playerKey)return;
+      status('myProfileLinkStatus','Skickar spelarkopplingen till admin…','working');
+      const {error}=await sb.rpc('seh_request_discord_player_link',{p_player_key:playerKey});
+      if(error){status('myProfileLinkStatus',`Fel: ${error.message}`,'error');return;}
+      status('myProfileLinkStatus','Spelarkopplingen är skickad och väntar på admin.','success');
+      sehAuthState.playerAccount=null;
+      await load();
     }
 
     function fillForm(){
@@ -15582,12 +15646,12 @@ function SEH_initShop() {
 
       if(account?.status==='pending'){
         dashboard=null;
-        showProfileGate('pending','Din spelarprofil är vald men måste godkännas av admin innan du kan ändra den.');
+        showProfileGate('pending','Din Discord-koppling till spelarprofilen är skickad till admin. När den är godkänd kopplas kontot till spelarprofilen.');
         return;
       }
       if(account?.status!=='approved' || !clean(account?.playerKey)){
         dashboard=null;
-        showProfileGate('unlinked','Discord-kontot är inloggat, men ingen godkänd spelarprofil är kopplad ännu.');
+        showProfileGate('unlinked','Discord-kontot är inloggat. Välj din befintliga Svensk eHockey-profil nedan för att skicka en spelarkoppling till admin.');
         return;
       }
 
@@ -15650,6 +15714,14 @@ function SEH_initShop() {
 
     $('myProfileDiscordLogin')?.addEventListener('click',discordLogin);
     $('myProfileRetry')?.addEventListener('click',()=>load().catch((error)=>status('myProfileGateStatus',`Fel: ${error?.message||error}`,'error')));
+    $('myProfilePlayerSearch')?.addEventListener('input',()=>{
+      window.clearTimeout(playerSearchTimer);
+      playerSearchTimer=window.setTimeout(()=>searchPlayersForLink().catch((error)=>status('myProfileLinkStatus',`Fel: ${error?.message||error}`,'error')),180);
+    });
+    $('myProfilePlayerResults')?.addEventListener('click',(event)=>{
+      const button=event.target.closest('[data-my-profile-player]');
+      if(button&&!button.disabled)requestPlayerLink(button.dataset.myProfilePlayer).catch((error)=>status('myProfileLinkStatus',`Fel: ${error?.message||error}`,'error'));
+    });
     $('myProfilePresentation')?.addEventListener('input',()=>{$('myProfilePresentationCount').textContent=String($('myProfilePresentation').value.length);});
     $('myProfileImage')?.addEventListener('change',()=>{const file=$('myProfileImage').files?.[0],preview=$('myProfileImagePreview');if(!file){preview.hidden=true;return;}preview.src=URL.createObjectURL(file);preview.hidden=false;});
     $('myProfileSubmit')?.addEventListener('click',submitProfile);
