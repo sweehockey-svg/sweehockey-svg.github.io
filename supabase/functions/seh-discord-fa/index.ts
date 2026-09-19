@@ -7,12 +7,14 @@ function db(){const u=Deno.env.get("SUPABASE_URL")||"",k=Deno.env.get("SUPABASE_
 async function dc(path,t,init={}){return fetch("https://discord.com/api/v10"+path,{...init,headers:{Authorization:"Bot "+t,"Content-Type":"application/json",...(init.headers||{})}})}
 function after(a,b){try{return BigInt(String(a||0))>BigInt(String(b||0))}catch{return String(a||"")>String(b||"")}}
 function parse(v){
- const m=String(v||"").trim().match(/^!fa(?:\s+(.+))?$/i);if(!m)return null;
+ const m=String(v||"").trim().match(/^!fa(?:\\s+(.+))?$/i);if(!m)return null;
  let rest=String(m[1]||"").trim();
  if(!rest)return{type:"submit",p:[],l:[],bad:[],note:""};
  if(/^(BORT|REMOVE|AV|OFF)$/i.test(rest))return{type:"remove",p:[],l:[],bad:[],note:""};
- rest=rest.replace(/\s*\/\s*/g,"/");
- const words=rest.split(/\s+/).filter(Boolean),p=[],l=[];let top=false,noteAt=-1;
+ const sep=rest.match(/\\s+\\/\\s+/);
+ const structured=(sep?rest.slice(0,sep.index):rest).trim();
+ const explicitNote=sep?rest.slice((sep.index||0)+sep[0].length).trim().slice(0,500):"";
+ const words=structured.split(/\\s+/).filter(Boolean),p=[],l=[],bad=[];let top=false,noteAt=-1;
  const add=(arr,val)=>{if(!arr.includes(val))arr.push(val)};
  const parseAtom=(raw)=>{
    const x0=raw.toUpperCase().replace(/^[,;]+|[,;]+$/g,""),x=ALIAS.get(x0)||x0;
@@ -30,11 +32,11 @@ function parse(v){
    const parts=words[i].split("/").filter(Boolean);
    let ok=true;
    for(const part of parts){if(!parseAtom(part)){ok=false;break}}
-   if(!ok){noteAt=i;break}
+   if(!ok){if(sep)bad.push(words[i]);else noteAt=i;break}
  }
- if(top&&noteAt<0)noteAt=words.length-1;
- const note=noteAt>=0?words.slice(noteAt).join(" ").trim().slice(0,500):"";
- return{type:"submit",p,l,bad:[],note};
+ if(top&&noteAt<0&&!sep)noteAt=words.length-1;
+ const note=explicitNote||(noteAt>=0?words.slice(noteAt).join(" ").trim().slice(0,500):"");
+ return{type:"submit",p,l,bad,note};
 }
 async function send(t,c,p){const r=await dc("/channels/"+c+"/messages",t,{method:"POST",body:JSON.stringify(p)});if(!r.ok)throw Error("SEND "+r.status+": "+(await r.text()).slice(0,300))}
 async function del(t,c,id){const r=await dc("/channels/"+c+"/messages/"+id,t,{method:"DELETE"});if(!r.ok&&r.status!==404)throw Error("DELETE "+r.status+": "+(await r.text()).slice(0,300))}
@@ -46,16 +48,17 @@ async function once(){
  const raw=await r.json(),ms=(Array.isArray(raw)?raw:[]).filter(x=>after(x?.id,cur)).sort((x,y)=>after(x.id,y.id)?1:-1);
  let newest=cur,commands=0,submitted=0,deleted=0;const errors=[];
  for(const m of ms){const id=String(m?.id||"");if(!id)continue;newest=id;if(m?.author?.bot)continue;const cmd=parse(m?.content);if(!cmd)continue;if(!cur&&act){const mt=Date.parse(String(m?.timestamp||""))||0;if(mt&&mt+5000<act)continue}commands++;const uid=String(m?.author?.id||"");if(!uid)continue;
-  if(cmd.type==="bad"||cmd.bad.length){try{await del(t,ch,id);deleted++}catch(e){errors.push(err(e))}await send(t,ch,{content:`<@${uid}> ogiltigt val. Exempel: \`!fa RD Pro Lite | Backup, 2+ kvällar i veckan\`, \`!fa VF/HF Core\`, \`!fa UTE\` eller \`!fa bort\`.`,allowed_mentions:{users:[uid],parse:[]}});continue}
+  if(cmd.type==="bad"||cmd.bad.length){try{await del(t,ch,id);deleted++}catch(e){errors.push(err(e))}await send(t,ch,{content:`<@${uid}> ogiltigt val. Exempel: \`!fa RD Pro Lite / Backup, 2+ kvällar i veckan\`, \`!fa VF/HF Core\`, \`!fa UTE\` eller \`!fa bort\`.`,allowed_mentions:{users:[uid],parse:[]}});continue}
   try{
    const{data:x,error:e}=await a.rpc("seh_discord_submit_free_agent_request_v2",{p_discord_user_id:uid,p_positions_text:cmd.p.length?cmd.p.join(" / "):null,p_levels_text:cmd.l.length?cmd.l.join(" / "):null,p_request_type:cmd.type==="remove"?"remove":"create",p_message:cmd.note||null});if(e)throw e;
    try{await del(t,ch,id);deleted++}catch(e){errors.push(err(e))}
    if(!x?.linked){await send(t,ch,{content:`<@${uid}> koppla först ditt Discord-konto till ett godkänt spelarkort under **Min profil**: <${MIN}>`,allowed_mentions:{users:[uid],parse:[]}});continue}
    if(x?.ok===false){await send(t,ch,{content:`<@${uid}> du finns inte på den aktiva Free Agent-listan.`,allowed_mentions:{users:[uid],parse:[]}});continue}
    submitted++;const gt=String(x.display_gamertag||"Spelare"),remove=x.request_type==="remove",url=PROFILE+encodeURIComponent(String(x.player_key||"")),sid=String(x.sports_gamer_player_id||"");
-   const fields=remove?[{name:"DISCORD",value:`<@${uid}>`,inline:true}]:[{name:"POSITIONER",value:String(x.positions_text||"–"),inline:true},{name:"SÖKER",value:String(x.levels_text||"Öppen för förslag"),inline:true},{name:"DISCORD",value:`<@${uid}>`,inline:true}];
+   const fields=remove?[{name:"DISCORD",value:`<@${uid}>`,inline:true}]:[{name:"POSITION",value:String(x.positions_text||"–"),inline:true},{name:"NIVÅ",value:String(x.levels_text||"Öppen för förslag"),inline:true}];
    if(!remove&&String(x.message||"").trim())fields.push({name:"INFO",value:String(x.message).trim().slice(0,500),inline:false});
-   const em={color:remove?16766720:5763719,title:remove?`🟡 ${gt} vill lämna Free Agent-listan`:`🟢 ${gt} söker lag`,url,fields};
+   if(!remove)fields.push({name:"DISCORD",value:`<@${uid}>`,inline:true});
+   const em={color:remove?16766720:5763719,title:remove?`${gt} vill lämna Free Agent-listan`:`${gt} söker lag`,url,fields};
    if(sid)em.thumbnail={url:"https://www.svenskehockey.se/web-images/players/"+encodeURIComponent(sid)+".png.webp"};
    await send(t,ch,{embeds:[em],components:[{type:1,components:[{type:2,style:5,label:"Spelarkort",url}]}],allowed_mentions:{parse:[]}});
   }catch(e){errors.push(err(e))}
