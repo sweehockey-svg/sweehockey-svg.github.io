@@ -80,7 +80,7 @@ function parsePositionAtom(raw: string, positions: string[]) {
 
 function parseFreeCommand(content: unknown) {
   const raw=String(content||"").trim();
-  const match=raw.match(/^!free(?:\s+(.+))?$/i);
+  const match=raw.match(/^!(?:free|f)(?:\s+(.+))?$/i);
   if(!match)return null;
   const rest=String(match[1]||"").trim();
   if(/^(BORT|REMOVE|OFF|AV)$/i.test(rest))return{type:"remove",positions:[],note:""};
