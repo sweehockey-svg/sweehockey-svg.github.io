@@ -148,6 +148,42 @@ function isFreeCard(message:any){
   });
 }
 
+function cardDescription(message:any){
+  const embeds=Array.isArray(message?.embeds)?message.embeds:[];
+  for(const embed of embeds){
+    const desc=String(embed?.description||"").trim();
+    if(desc)return desc;
+  }
+  return "";
+}
+
+function previousCardState(message:any,uid:string,latestTeam:string,latestDivision:string,latestSeason:string,isEcl26Spring:boolean){
+  if(!message)return{position:"",note:""};
+  const desc=cardDescription(message);
+  if(!desc.includes(`<@${uid}>`))return{position:"",note:""};
+  const parts=desc.split(" · ").map((x:string)=>x.trim()).filter(Boolean);
+  let position="";
+  if(parts[1]&&/^Free\s+/i.test(parts[1]))position=parts[1].replace(/^Free\s+/i,"").trim();
+
+  const tail=parts.slice(2);
+  if(tail.length&&/\[?Playercard\]?/i.test(tail[tail.length-1]))tail.pop();
+  if(latestTeam&&tail[0]===latestTeam)tail.shift();
+  if(latestDivision&&tail[0]===latestDivision)tail.shift();
+  if(!isEcl26Spring&&latestSeason&&tail[0]===latestSeason)tail.shift();
+
+  return{position,note:tail.join(" · ").trim().slice(0,500)};
+}
+
+function mergeNotes(previous:string,next:string){
+  const a=String(previous||"").trim(),b=String(next||"").trim();
+  if(!a)return b.slice(0,500);
+  if(!b)return a.slice(0,500);
+  const al=a.toLowerCase(),bl=b.toLowerCase();
+  if(al.includes(bl))return a.slice(0,500);
+  if(bl.includes(al))return b.slice(0,500);
+  return (a+" · "+b).slice(0,500);
+}
+
 function serviceDayKey(value: string|number|Date){
   const date=new Date(value);
   const fmt=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Stockholm",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",hourCycle:"h23"});
@@ -235,10 +271,14 @@ async function poll(){
 
     try{await deleteMessage(token,channelId,id);deleted++}catch(e){errors.push(errorText(e))}
 
-    for(const previous of messages){
-      if(previous?.author?.bot&&userCard(previous,uid)){
-        try{await deleteMessage(token,channelId,String(previous.id));removed++}catch(e){errors.push(errorText(e))}
-      }
+    const previousCards=messages
+      .filter((previous:any)=>previous?.author?.bot&&userCard(previous,uid))
+      .sort(sortSnowflakes)
+      .reverse();
+    const previousCard=previousCards[0]||null;
+
+    for(const previous of previousCards){
+      try{await deleteMessage(token,channelId,String(previous.id));removed++}catch(e){errors.push(errorText(e))}
     }
 
     if(cmd.type==="remove")continue;
@@ -246,12 +286,14 @@ async function poll(){
     let profile=null;
     try{profile=await resolveSportsGamerPlayer(admin,message)}catch(e){errors.push(errorText(e))}
     const profilePosition=String(profile?.position||"").trim().toUpperCase();
-    const position=cmd.positions.length?cmd.positions.join(" / "):(profilePosition||"Any");
     const profileUrl=String(profile?.player_url||"").trim();
     const latestEclTeam=String(profile?.latest_ecl_team||"").trim();
     const latestEclDivision=String(profile?.latest_ecl_division||"").trim();
     const latestEclSeason=String(profile?.latest_ecl_season_short||"").trim();
     const isEcl26Spring=Boolean(profile?.latest_ecl_is_ecl26_spring);
+    const previousState=previousCardState(previousCard,uid,latestEclTeam,latestEclDivision,latestEclSeason,isEcl26Spring);
+    const position=cmd.positions.length?cmd.positions.join(" / "):(previousState.position||profilePosition||"Any");
+    const note=mergeNotes(previousState.note,cmd.note);
 
     const parts=[`<@${uid}>`,`Free ${position}`];
     if(latestEclTeam){
@@ -260,7 +302,7 @@ async function poll(){
       if(!isEcl26Spring&&latestEclSeason)eclPart+=` · ${latestEclSeason}`;
       parts.push(eclPart);
     }
-    if(cmd.note)parts.push(cmd.note);
+    if(note)parts.push(note);
     if(profileUrl)parts.push(`[Playercard](${profileUrl})`);
 
     const embed:any={
