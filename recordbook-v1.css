@@ -984,3 +984,37 @@
   .seh-record-podium-detail-primary{font-size:.51rem}
   .seh-record-podium-detail-secondary{font-size:.47rem}
 }
+
+
+/* Recordbook V1.8 — full numeric podium stats */
+.seh-record-podium-stats{
+  gap:5px;
+}
+.seh-record-podium-stats>span{
+  padding-left:6px;
+  padding-right:6px;
+}
+.seh-record-podium-stats strong{
+  width:100%;
+  overflow:visible;
+  text-overflow:clip;
+  white-space:nowrap;
+  color:#f3f4f3;
+  font-size:clamp(.65rem,.68vw,.81rem);
+  font-weight:950;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-.025em;
+  line-height:1.05;
+}
+@media(max-width:520px){
+  .seh-record-podium-stats{
+    gap:3px;
+  }
+  .seh-record-podium-stats>span{
+    padding-left:4px;
+    padding-right:4px;
+  }
+  .seh-record-podium-stats strong{
+    font-size:.67rem;
+  }
+}
