@@ -229,27 +229,24 @@ async function poll(){
 
     let profile=null;
     try{profile=await resolveSportsGamerPlayer(admin,message)}catch(e){errors.push(errorText(e))}
-    const name=String(profile?.gamertag||displayName(message)).trim(),avatar=avatarUrl(message);
     const profilePosition=String(profile?.position||"").trim().toUpperCase();
     const position=cmd.positions.length?cmd.positions.join(" / "):(profilePosition||"Any");
     const profileUrl=String(profile?.player_url||"").trim();
+    const latestEclTeam=String(profile?.latest_ecl_team||"").trim();
+    const latestEclDivision=String(profile?.latest_ecl_division||"").trim();
 
-    const fields:any[]=[
-      {name:"POSITION",value:position,inline:true},
-      {name:"DISCORD",value:`<@${uid}>`,inline:true},
-    ];
-    if(cmd.note)fields.push({name:"INFO",value:cmd.note,inline:false});
+    const parts=[`<@${uid}>`,`Free ${position}`];
+    if(latestEclTeam)parts.push(latestEclTeam);
+    if(latestEclDivision)parts.push(latestEclDivision);
+    if(cmd.note)parts.push(cmd.note);
 
     const embed:any={
       color:5763719,
-      title:`🟢 ${name} is available tonight`,
-      description:"Available to play tonight.",
-      fields,
+      description:parts.join(" · "),
       footer:{text:FOOTER},
       timestamp:new Date().toISOString(),
     };
     if(profileUrl)embed.url=profileUrl;
-    if(avatar)embed.thumbnail={url:avatar};
 
     const payload:any={
       embeds:[embed],
