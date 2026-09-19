@@ -62,7 +62,7 @@
     if(state.type!=='players')return true;
     if(key==='ecl_seasons'&&!['ALL','ECL'].includes(state.competition))return false;
     if(key==='penalty_minutes'&&state.competition==='SM')return false;
-    if(key==='fastest_goal_seconds'&&!['ALL','ECL','SEC'].includes(state.competition))return false;
+    if(key==='fastest_goal_seconds'&&!['ALL','ECL'].includes(state.competition))return false;
     if(['hattricks','max_goals_game'].includes(key)&&!['ALL','ECL','SEC','ITHL','LGEL'].includes(state.competition))return false;
     return true;
   }
@@ -82,12 +82,15 @@
 
   async function rows(type,competition,metric){
     const matchMode=type==='players'&&MATCH_METRICS.has(metric);
-    const key=`${type}|${competition}|${matchMode?'match':'career'}`;
+    const matchDataset=metric==='fastest_goal_seconds'?'fastest':(matchMode?'match':'career');
+    const key=`${type}|${competition}|${matchDataset}`;
     if(cache.has(key))return cache.get(key);
     const sb=getClient();if(!sb)throw new Error('Supabase saknas');
     const rpc=type==='teams'
       ?'seh_recordbook_teams_v1'
-      :(matchMode?'seh_recordbook_match_players_v2':'seh_recordbook_players_v3');
+      :(metric==='fastest_goal_seconds'
+        ?'seh_recordbook_fastest_goal_players_v1'
+        :(matchMode?'seh_recordbook_match_players_v2':'seh_recordbook_players_v3'));
     const promise=sb.rpc(rpc,{p_competition:competition,p_limit:type==='players'?2000:500}).then(r=>{if(r.error)throw r.error;return Array.isArray(r.data)?r.data:[];});
     cache.set(key,promise);try{return await promise;}catch(e){cache.delete(key);throw e;}
   }
@@ -304,9 +307,7 @@
     if(metricKey==='save_percentage')return ` · minst ${MIN_SAVE_PERCENTAGE_GAMES} målvaktsmatcher`;
     if(metricKey==='points_per_game'||metricKey==='goals_per_game')return ` · minst ${MIN_RATE_GAMES} utespelarmatcher`;
     if(metricKey==='fastest_goal_seconds'){
-      if(state.competition==='ECL')return ' · matchdetaljdata: ECL 26 Spring';
-      if(state.competition==='SEC')return ' · registrerad SEC-matchdetaljdata';
-      return ' · begränsad matchdetaljdata: ECL 26 Spring + SEC';
+      return ' · verifierad matchtid: ECL 26 Spring';
     }
     if(metricKey==='hattricks'||metricKey==='max_goals_game'){
       if(state.competition==='ECL')return ' · matchdetaljdata: ECL 26 Spring';
