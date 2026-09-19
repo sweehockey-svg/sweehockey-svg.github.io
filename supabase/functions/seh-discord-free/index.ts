@@ -68,8 +68,42 @@ function snowflakeSort(a: any, b: any) {
   }
 }
 
-function isFreeCommand(content: unknown) {
-  return /^!free\s*$/i.test(String(content || "").trim());
+const VALID_POSITIONS = new Set(["LW","C","RW","LD","RD","G"]);
+const ALL_SKATER_POSITIONS = ["LW","C","RW","LD","RD"];
+
+function parseFreeCommand(content: unknown) {
+  const raw = String(content || "").trim();
+  const match = raw.match(/^!free(?:\s+(.+))?$/i);
+  if (!match) return null;
+
+  const args = String(match[1] || "")
+    .toUpperCase()
+    .replace(/[,+/|]+/g, " ")
+    .split(/\s+/)
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (!args.length) return { positions: [] as string[], invalid: [] as string[] };
+
+  const positions: string[] = [];
+  const invalid: string[] = [];
+
+  for (const value of args) {
+    if (value === "UTE" || value === "UTESPELARE" || value === "SKATER") {
+      for (const pos of ALL_SKATER_POSITIONS) {
+        if (!positions.includes(pos)) positions.push(pos);
+      }
+      continue;
+    }
+
+    if (VALID_POSITIONS.has(value)) {
+      if (!positions.includes(value)) positions.push(value);
+    } else {
+      invalid.push(value);
+    }
+  }
+
+  return { positions, invalid };
 }
 
 function sameText(a: unknown, b: unknown) {
@@ -196,7 +230,10 @@ async function poll() {
     }
 
     if (id) newest = id;
-    if (message?.author?.bot || !isFreeCommand(message?.content)) continue;
+    if (message?.author?.bot) continue;
+
+    const freeCommand = parseFreeCommand(message?.content);
+    if (!freeCommand) continue;
 
     if (!lastMessageId && configuredAt) {
       const messageTime = Date.parse(String(message?.timestamp || "")) || 0;
@@ -206,6 +243,20 @@ async function poll() {
     commands += 1;
     const discordUserId = String(message?.author?.id || "");
     if (!discordUserId) continue;
+
+    if (freeCommand.invalid.length) {
+      try {
+        await sendMessage(token, channelId, {
+          content: `<@${discordUserId}> okänd position: **${freeCommand.invalid.join(", ")}**. Använd LW, C, RW, LD, RD, G eller **UTE**.`,
+          allowed_mentions: { users: [discordUserId], parse: [] },
+        });
+        await deleteMessage(token, channelId, id);
+        deleted += 1;
+      } catch (error) {
+        errors.push(errorText(error));
+      }
+      continue;
+    }
 
     try {
       const player = await resolvePlayer(admin, discordUserId);
@@ -219,7 +270,10 @@ async function poll() {
       } else {
         linked += 1;
         const gt = String(player.display_gamertag || "Spelare").trim();
-        const positions = String(player.positions_text || player.primary_position || "–").trim();
+        const profilePositions = String(player.positions_text || player.primary_position || "–").trim();
+        const positions = freeCommand.positions.length
+          ? freeCommand.positions.join(" / ")
+          : profilePositions;
         const currentTeam = String(player.current_team || "").trim();
         const currentDivision = String(player.current_division || "").trim();
         const latestTeam = String(player.latest_team || "").trim();
