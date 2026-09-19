@@ -8,16 +8,14 @@ async function dc(path,t,init={}){return fetch("https://discord.com/api/v10"+pat
 function after(a,b){try{return BigInt(String(a||0))>BigInt(String(b||0))}catch{return String(a||"")>String(b||"")}}
 function parse(v){
  const m=String(v||"").trim().match(/^!fa(?:\s+(.+))?$/i);if(!m)return null;
- let rest=String(m[1]||"").trim();
+ const rest=String(m[1]||"").trim();
  if(!rest)return{type:"submit",p:[],l:[],bad:[],note:""};
  if(/^(BORT|REMOVE|AV|OFF)$/i.test(rest))return{type:"remove",p:[],l:[],bad:[],note:""};
- const sep=rest.match(/\s+\/\s+/);
- const structured=(sep?rest.slice(0,sep.index):rest).trim();
- const explicitNote=sep?rest.slice((sep.index||0)+sep[0].length).trim().slice(0,500):"";
- const words=structured.split(/\s+/).filter(Boolean),p=[],l=[],bad=[];let top=false,noteAt=-1;
+ const words=rest.split(/\s+/).filter(Boolean),p=[],l=[];let top=false,noteAt=-1;
  const add=(arr,val)=>{if(!arr.includes(val))arr.push(val)};
  const parseAtom=(raw)=>{
    const x0=raw.toUpperCase().replace(/^[,;]+|[,;]+$/g,""),x=ALIAS.get(x0)||x0;
+   if(!x)return true;
    if(x==="TOP"){top=true;return true}
    if(["UTE","UTESPELARE","SKATER"].includes(x)){for(const q of UTE)add(p,q);return true}
    if(["F","FWD","FORWARD","FW"].includes(x)){for(const q of FWD)add(p,q);return true}
@@ -29,14 +27,15 @@ function parse(v){
    return false;
  };
  for(let i=0;i<words.length;i++){
+   if(words[i]==="/")continue;
    const parts=words[i].split("/").filter(Boolean);
    let ok=true;
    for(const part of parts){if(!parseAtom(part)){ok=false;break}}
-   if(!ok){if(sep)bad.push(words[i]);else noteAt=i;break}
+   if(!ok){noteAt=i;break}
  }
- if(top&&noteAt<0&&!sep)noteAt=words.length-1;
- const note=explicitNote||(noteAt>=0?words.slice(noteAt).join(" ").trim().slice(0,500):"");
- return{type:"submit",p,l,bad,note};
+ if(top&&noteAt<0)noteAt=words.length-1;
+ const note=noteAt>=0?words.slice(noteAt).join(" ").replace(/^\s*\/\s*/,"").trim().slice(0,500):"";
+ return{type:"submit",p,l,bad:[],note};
 }
 async function send(t,c,p){const r=await dc("/channels/"+c+"/messages",t,{method:"POST",body:JSON.stringify(p)});if(!r.ok)throw Error("SEND "+r.status+": "+(await r.text()).slice(0,300))}
 async function del(t,c,id){const r=await dc("/channels/"+c+"/messages/"+id,t,{method:"DELETE"});if(!r.ok&&r.status!==404)throw Error("DELETE "+r.status+": "+(await r.text()).slice(0,300))}
