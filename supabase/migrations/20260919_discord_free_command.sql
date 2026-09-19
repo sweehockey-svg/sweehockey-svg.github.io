@@ -183,8 +183,8 @@ select cron.schedule(
            where name='seh_discord_free_poll_secret'
            limit 1)
       ),
-      body := jsonb_build_object('action','poll'),
-      timeout_milliseconds := 15000
+      body := jsonb_build_object('action','watch'),
+      timeout_milliseconds := 58000
     );
   $cron$
 );
