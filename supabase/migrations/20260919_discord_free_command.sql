@@ -18,6 +18,7 @@ values (1,false)
 on conflict (id) do nothing;
 
 revoke all on public.ehockey_discord_free_command_config from anon, authenticated;
+grant select, update on public.ehockey_discord_free_command_config to service_role;
 
 create or replace function public.seh_discord_free_player_card_v1(p_discord_user_id text)
 returns jsonb
