@@ -3,6 +3,19 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.2";
 const PROFILE_BASE = "https://www.svenskehockey.se/#/spelare/";
 const MY_PROFILE_URL = "https://www.svenskehockey.se/#/min-profil";
 
+function errorText(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object") {
+    const value = error as Record<string, unknown>;
+    const parts = [value.code, value.message, value.details, value.hint]
+      .map((part) => String(part || "").trim())
+      .filter(Boolean);
+    if (parts.length) return parts.join(" | ");
+    try { return JSON.stringify(value); } catch (_) {}
+  }
+  return String(error);
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -173,10 +186,10 @@ async function poll() {
         await deleteMessage(token, channelId, id);
         deleted += 1;
       } catch (error) {
-        errors.push(error instanceof Error ? error.message : String(error));
+        errors.push(errorText(error));
       }
     } catch (error) {
-      errors.push(error instanceof Error ? error.message : String(error));
+      errors.push(errorText(error));
     }
   }
 
@@ -225,7 +238,7 @@ Deno.serve(async (request) => {
     if (action !== "poll") return json({ error: "Unknown action." }, 400);
     return json(await poll());
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = errorText(error);
     try {
       const admin = serviceClient();
       await admin
