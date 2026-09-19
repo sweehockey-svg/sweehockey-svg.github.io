@@ -1,3 +1,7 @@
+create index if not exists idx_sg_team_player_stats_gamertag_lower
+on public.sportsgamer_team_player_stats (lower(display_gamertag))
+where display_gamertag is not null;
+
 create or replace function public.sportsgamer_discord_player_lookup_v1(p_gamertag text)
 returns jsonb
 language sql
@@ -5,8 +9,18 @@ stable
 security definer
 set search_path=public
 as $function$
-with player_matches as (
-  select distinct on (s.sports_gamer_player_id)
+with matched_ids as (
+  select distinct s.sports_gamer_player_id
+  from public.sportsgamer_team_player_stats s
+  where s.sports_gamer_player_id is not null
+    and nullif(trim(p_gamertag),'') is not null
+    and lower(s.display_gamertag)=lower(trim(p_gamertag))
+),
+summary as (
+  select count(*)::int as matches from matched_ids
+),
+player as (
+  select
     s.sports_gamer_player_id,
     s.display_gamertag,
     coalesce(
@@ -18,59 +32,48 @@ with player_matches as (
     coalesce(
       nullif(trim(s.sports_gamer_player_url),''),
       'https://sportsgamer.gg/players/' || s.sports_gamer_player_id::text
-    ) as player_url,
-    s.imported_at
+    ) as player_url
   from public.sportsgamer_team_player_stats s
-  where s.sports_gamer_player_id is not null
-    and nullif(trim(p_gamertag),'') is not null
-    and lower(trim(s.display_gamertag))=lower(trim(p_gamertag))
-  order by s.sports_gamer_player_id,s.imported_at desc nulls last
+  join matched_ids m using (sports_gamer_player_id)
+  order by s.imported_at desc nulls last
+  limit 1
 ),
-matches_with_ecl as (
+latest_ecl as (
   select
-    m.*,
-    e.latest_ecl_team,
-    e.latest_ecl_division
-  from player_matches m
-  left join lateral (
-    select
-      nullif(trim(s2.team_name_in_league),'') as latest_ecl_team,
-      (regexp_match(
-        coalesce(c.display_name,c.source_league_name,s2.official_league_name,''),
-        '(Elite|Pro|Lite|Core|Neo)',
-        'i'
-      ))[1] as latest_ecl_division
-    from public.sportsgamer_team_player_stats s2
-    join public.v_ehockey_league_catalog_v1 c
-      on c.league_id=s2.sports_gamer_league_id
-    where s2.sports_gamer_player_id=m.sports_gamer_player_id
-      and upper(coalesce(c.competition_code,''))='ECL'
-      and coalesce(s2.participant_regular_games,0)+coalesce(s2.participant_playoff_games,0)>0
-      and lower(coalesce(c.source_league_name,c.display_name,'')) !~
-        '(qualifier|qualification|kval|wildcard|warmup|pre-season|preseason|registration|free agent|cooldown|tbc)'
-    order by c.chronology_date desc nulls last,
-             s2.sports_gamer_league_id desc,
-             (coalesce(s2.participant_regular_games,0)+coalesce(s2.participant_playoff_games,0)) desc
-    limit 1
-  ) e on true
-),
-summary as (
-  select count(*)::int as matches from matches_with_ecl
+    nullif(trim(s.team_name_in_league),'') as team_name,
+    (regexp_match(
+      coalesce(ch.league_name,s.official_league_name,''),
+      '(Elite|Pro|Lite|Core|Neo)',
+      'i'
+    ))[1] as division
+  from public.sportsgamer_team_player_stats s
+  join player p using (sports_gamer_player_id)
+  join public.ehockey_league_chronology_cache_v18 ch
+    on ch.league_id=s.sports_gamer_league_id
+  where upper(coalesce(ch.competition_code,''))='ECL'
+    and coalesce(ch.include_in_history,true)
+    and coalesce(s.participant_regular_games,0)+coalesce(s.participant_playoff_games,0)>0
+    and lower(coalesce(ch.league_name,s.official_league_name,'')) !~
+      '(qualifier|qualification|kval|wildcard|warmup|pre-season|preseason|registration|free agent|cooldown|tbc)'
+  order by ch.chronology_date desc nulls last,
+           s.sports_gamer_league_id desc,
+           (coalesce(s.participant_regular_games,0)+coalesce(s.participant_playoff_games,0)) desc
+  limit 1
 )
 select case
   when summary.matches=1 then (
     select jsonb_build_object(
       'matched',true,
       'ambiguous',false,
-      'sports_gamer_player_id',m.sports_gamer_player_id,
-      'gamertag',m.display_gamertag,
-      'position',m.position,
-      'player_url',m.player_url,
-      'latest_ecl_team',m.latest_ecl_team,
-      'latest_ecl_division',m.latest_ecl_division
+      'sports_gamer_player_id',p.sports_gamer_player_id,
+      'gamertag',p.display_gamertag,
+      'position',p.position,
+      'player_url',p.player_url,
+      'latest_ecl_team',e.team_name,
+      'latest_ecl_division',e.division
     )
-    from matches_with_ecl m
-    limit 1
+    from player p
+    left join latest_ecl e on true
   )
   else jsonb_build_object(
     'matched',false,
