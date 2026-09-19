@@ -1254,3 +1254,39 @@
     width:100%;
   }
 }
+
+
+/* Recordbook V2.0 — dedicated team podium cards */
+.seh-record-podium-card.is-team .seh-record-podium-copy{
+  padding-right:0;
+}
+.seh-record-podium-card.is-team .seh-record-podium-copy>strong{
+  display:-webkit-box;
+  overflow:hidden;
+  color:#fff;
+  font-size:.98rem;
+  line-height:1.08;
+  letter-spacing:-.025em;
+  text-overflow:clip;
+  white-space:normal;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+}
+.seh-record-podium-card.is-team .seh-record-podium-main{
+  padding-right:15px;
+}
+.seh-record-podium-card.is-team .seh-record-podium-teamlogo{
+  display:none;
+}
+.seh-record-podium-card.is-team .seh-record-podium-watermark{
+  right:-18px;
+  bottom:-2px;
+  width:156px;
+  height:156px;
+  opacity:.105;
+}
+@media(max-width:520px){
+  .seh-record-podium-card.is-team .seh-record-podium-copy>strong{
+    font-size:.91rem;
+  }
+}
