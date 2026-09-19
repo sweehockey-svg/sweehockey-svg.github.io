@@ -237,6 +237,11 @@ async function poll() {
             value: isFreeAgent ? "Free Agent" : currentTeam,
             inline: true,
           },
+          {
+            name: "DISCORD",
+            value: `<@${discordUserId}>`,
+            inline: true,
+          },
         ];
 
         if (!isFreeAgent && currentDivision) {
