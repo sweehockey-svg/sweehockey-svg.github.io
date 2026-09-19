@@ -183,8 +183,19 @@ async function poll(){
   const cursor=String(cfg?.last_message_id||"").trim(),activatedAt=Date.parse(String(cfg?.activated_at||""))||0;
   if(!enabled||!channelId)return{enabled,configured:Boolean(channelId)};
 
+  let botIdentity="unknown";
+  try{
+    const me=await discord("/users/@me",token,{method:"GET"});
+    if(me.ok){
+      const info=await me.json();
+      botIdentity=String(info?.username||"bot")+" ("+String(info?.id||"?")+")";
+    }else{
+      botIdentity="identity "+me.status;
+    }
+  }catch(_){}
+
   const read=await discord("/channels/"+channelId+"/messages?limit=100",token,{method:"GET"});
-  if(!read.ok)throw new Error("READ "+read.status+": "+(await read.text()).slice(0,500));
+  if(!read.ok)throw new Error("READ "+read.status+": "+(await read.text()).slice(0,500)+" | bot="+botIdentity+" | channel="+channelId);
   const raw=await read.json();
   const messages=Array.isArray(raw)?raw:[];
   const ordered=messages.filter((m:any)=>isAfter(m?.id,cursor)).sort(sortSnowflakes);
