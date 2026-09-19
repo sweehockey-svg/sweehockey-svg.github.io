@@ -1290,3 +1290,81 @@
     font-size:.91rem;
   }
 }
+
+
+/* Recordbook V2.1 — unified player/team controls */
+.seh-recordbook-dock-top{
+  justify-content:flex-start;
+  gap:22px;
+}
+.seh-recordbook-filters{
+  justify-content:flex-start;
+  gap:5px;
+  margin-left:0;
+}
+.seh-recordbook-switch button,
+.seh-recordbook-filters button,
+.seh-recordbook-group-tabs button,
+.seh-recordbook-metrics button{
+  outline:none;
+}
+.seh-recordbook-switch button:focus,
+.seh-recordbook-switch button:focus-visible,
+.seh-recordbook-filters button:focus,
+.seh-recordbook-filters button:focus-visible,
+.seh-recordbook-group-tabs button:focus,
+.seh-recordbook-group-tabs button:focus-visible,
+.seh-recordbook-metrics button:focus,
+.seh-recordbook-metrics button:focus-visible{
+  outline:none;
+  box-shadow:none;
+}
+.seh-recordbook-switch button.is-active{
+  border-color:#ffd000;
+  color:#11151a;
+  background:#ffd000;
+  box-shadow:none;
+}
+.seh-recordbook-switch button.is-active:hover,
+.seh-recordbook-switch button.is-active:focus,
+.seh-recordbook-switch button.is-active:focus-visible{
+  border-color:#ffd000;
+  color:#11151a;
+  background:#ffd000;
+  box-shadow:none;
+}
+.seh-recordbook-filters button.is-active{
+  border-color:#ffd000;
+  color:#11151a;
+  background:#ffd000;
+}
+.seh-recordbook-filters button.is-active:hover,
+.seh-recordbook-filters button.is-active:focus,
+.seh-recordbook-filters button.is-active:focus-visible{
+  border-color:#ffd000;
+  color:#11151a;
+  background:#ffd000;
+}
+.seh-recordbook-group-tabs,
+.seh-recordbook-metrics{
+  margin-left:0;
+}
+@media(min-width:761px){
+  .seh-recordbook-dock-top{
+    min-height:42px;
+  }
+  .seh-recordbook-switch{
+    flex:0 0 216px;
+  }
+  .seh-recordbook-filters{
+    flex:0 1 auto;
+  }
+}
+@media(max-width:760px){
+  .seh-recordbook-dock-top{
+    gap:8px;
+  }
+  .seh-recordbook-filters{
+    margin-left:0;
+  }
+}
