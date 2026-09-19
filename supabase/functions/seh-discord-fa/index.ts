@@ -7,14 +7,14 @@ function db(){const u=Deno.env.get("SUPABASE_URL")||"",k=Deno.env.get("SUPABASE_
 async function dc(path,t,init={}){return fetch("https://discord.com/api/v10"+path,{...init,headers:{Authorization:"Bot "+t,"Content-Type":"application/json",...(init.headers||{})}})}
 function after(a,b){try{return BigInt(String(a||0))>BigInt(String(b||0))}catch{return String(a||"")>String(b||"")}}
 function parse(v){
- const m=String(v||"").trim().match(/^!fa(?:\\s+(.+))?$/i);if(!m)return null;
+ const m=String(v||"").trim().match(/^!fa(?:\s+(.+))?$/i);if(!m)return null;
  let rest=String(m[1]||"").trim();
  if(!rest)return{type:"submit",p:[],l:[],bad:[],note:""};
  if(/^(BORT|REMOVE|AV|OFF)$/i.test(rest))return{type:"remove",p:[],l:[],bad:[],note:""};
- const sep=rest.match(/\\s+\\/\\s+/);
+ const sep=rest.match(/\s+\/\s+/);
  const structured=(sep?rest.slice(0,sep.index):rest).trim();
  const explicitNote=sep?rest.slice((sep.index||0)+sep[0].length).trim().slice(0,500):"";
- const words=structured.split(/\\s+/).filter(Boolean),p=[],l=[],bad=[];let top=false,noteAt=-1;
+ const words=structured.split(/\s+/).filter(Boolean),p=[],l=[],bad=[];let top=false,noteAt=-1;
  const add=(arr,val)=>{if(!arr.includes(val))arr.push(val)};
  const parseAtom=(raw)=>{
    const x0=raw.toUpperCase().replace(/^[,;]+|[,;]+$/g,""),x=ALIAS.get(x0)||x0;
