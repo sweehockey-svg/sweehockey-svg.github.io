@@ -80,7 +80,7 @@
     return group?.items.find(x=>x[0]===state.metric)||group?.items[0]||metrics()[0];
   }
 
-  function mergeMatchRows(baseRows,sclRows){
+  function mergeMatchRows(...datasets){
     const merged=new Map();
     const keyOf=row=>String(row?.player_key||row?.sports_gamer_player_url||row?.display_gamertag||'').trim().toLowerCase();
 
@@ -124,8 +124,7 @@
       current.primary_position=current.primary_position||row.primary_position;
     }
 
-    (baseRows||[]).forEach(put);
-    (sclRows||[]).forEach(put);
+    datasets.forEach(rows=>(rows||[]).forEach(put));
     return [...merged.values()];
   }
 
@@ -150,17 +149,28 @@
         return rpcRows(sb,'seh_recordbook_players_v3',{p_competition:competition,p_limit:2000});
       }
 
+      if(competition==='ECL'){
+        return rpcRows(sb,'seh_recordbook_ecl_match_players_v1',{p_limit:3000});
+      }
+
       if(competition==='SCL'){
         return rpcRows(sb,'seh_recordbook_scl_match_players_v1',{p_limit:2000});
       }
 
       if(competition==='ALL'){
+        const eclPromise=rpcRows(sb,'seh_recordbook_ecl_match_players_v1',{p_limit:3000});
         const sclPromise=rpcRows(sb,'seh_recordbook_scl_match_players_v1',{p_limit:2000});
-        const basePromise=metric==='fastest_goal_seconds'
-          ?rpcRows(sb,'seh_recordbook_fastest_goal_players_v1',{p_competition:'ALL',p_limit:2000})
-          :rpcRows(sb,'seh_recordbook_match_players_v2',{p_competition:'ALL',p_limit:2000});
-        const [base,scl]=await Promise.all([basePromise,sclPromise]);
-        return mergeMatchRows(base,scl);
+
+        if(metric==='fastest_goal_seconds'){
+          const [ecl,scl]=await Promise.all([eclPromise,sclPromise]);
+          return mergeMatchRows(ecl,scl);
+        }
+
+        const secPromise=rpcRows(sb,'seh_recordbook_match_players_v2',{p_competition:'SEC',p_limit:2000});
+        const ithlPromise=rpcRows(sb,'seh_recordbook_match_players_v2',{p_competition:'ITHL',p_limit:2000});
+        const lgelPromise=rpcRows(sb,'seh_recordbook_match_players_v2',{p_competition:'LGEL',p_limit:2000});
+        const [ecl,scl,sec,ithl,lgel]=await Promise.all([eclPromise,sclPromise,secPromise,ithlPromise,lgelPromise]);
+        return mergeMatchRows(ecl,scl,sec,ithl,lgel);
       }
 
       if(metric==='fastest_goal_seconds'){
@@ -385,16 +395,16 @@
     if(metricKey==='save_percentage')return ` · minst ${MIN_SAVE_PERCENTAGE_GAMES} målvaktsmatcher`;
     if(metricKey==='points_per_game'||metricKey==='goals_per_game')return ` · minst ${MIN_RATE_GAMES} utespelarmatcher`;
     if(metricKey==='fastest_goal_seconds'){
-      if(state.competition==='ECL')return ' · verifierad matchtid: ECL 26 Spring';
+      if(state.competition==='ECL')return ' · validerade SportsGamer-måltider · ECL-historik';
       if(state.competition==='SCL')return ' · registrerad måltid: SCL 2023–2025';
-      return ' · verifierad/modern matchtid: ECL 26 Spring + SCL 2023–2025';
+      return ' · validerade måltider: ECL + SCL 2023–2025';
     }
     if(metricKey==='hattricks'||metricKey==='max_goals_game'){
-      if(state.competition==='ECL')return ' · matchdetaljdata: ECL 26 Spring';
+      if(state.competition==='ECL')return ' · SportsGamer-matchdata: ECL 1–26 Spring';
       if(state.competition==='SCL')return ' · SportsGamer-matchdata: SCL 2019–2025';
       if(state.competition==='SEC')return ' · registrerad SEC-matchdetaljdata';
       if(state.competition==='ITHL'||state.competition==='LGEL')return ` · registrerad ${state.competition}-matchdata`;
-      return ' · matchdetaljdata: ECL + SCL 2019–2025 + SEC + ITHL + LGEL';
+      return ' · matchdetaljdata: ECL 1–26 Spring + SCL 2019–2025 + SEC + ITHL + LGEL';
     }
     return '';
   }
