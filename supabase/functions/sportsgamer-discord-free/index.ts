@@ -299,7 +299,7 @@ async function poll(){
       parts.push(eclPart);
     }
     if(note)parts.push(note);
-    if(profileUrl)parts.push(`[Playercard](${profileUrl})`);
+    if(profileUrl)parts.push(`[Player Card](${profileUrl})`);
 
     const embed:any={
       color:5763719,
