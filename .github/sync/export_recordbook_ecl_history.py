@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import csv
-import json
 import os
 import re
 from datetime import date, datetime, time, timedelta
@@ -14,7 +13,7 @@ from zoneinfo import ZoneInfo
 
 import pymysql
 
-SYNC_VERSION = "ecl-recordbook-v1.1"
+SYNC_VERSION = "ecl-recordbook-v1.2"
 DEFAULT_LEAGUES = "4,5,17,18,19,20,23,24,25,28,29,27,42,36,37,35,40,41,55,56,57,58,66,67,65,68,96,97,95,94,123,122,121,120,119,171,172,173,174,170,191,192,193,194,190,250,251,252,253,254,305,306,307,308,309,342,339,340,341,338,380,381,382,383,379,413,414,415,411,412,461,462,463,464,465,488,489,490,491,487,508,511,507,509,510"
 MATCH_OUTPUT = Path(os.environ.get("MATCH_OUTPUT", "/tmp/recordbook_ecl_matches.csv"))
 GOAL_OUTPUT = Path(os.environ.get("GOAL_OUTPUT", "/tmp/recordbook_ecl_goals.csv"))
@@ -23,13 +22,11 @@ SOURCE_TZ = ZoneInfo("Europe/Helsinki")
 MATCH_FIELDS = [
     "source_league_id", "source_match_id", "match_type", "played_at",
     "home_team_id", "away_team_id", "home_team_name", "away_team_name",
-    "home_score", "away_score", "overtime", "raw_match",
+    "home_score", "away_score",
 ]
 GOAL_FIELDS = [
     "source_league_id", "source_match_id", "source_team_id", "source_player_id",
-    "scorer_gamertag", "goal_seconds", "first_assist_player_id",
-    "second_assist_player_id", "powerplay", "shorthanded", "empty_net",
-    "winning_goal", "raw_goal",
+    "goal_seconds",
 ]
 
 
@@ -62,13 +59,6 @@ def integer(value: Any) -> int:
     except (TypeError, ValueError):
         return 0
 
-
-def boolean(value: Any) -> bool:
-    return integer(value) > 0 or str(value).strip().lower() in {"true", "yes", "y"}
-
-
-def json_safe(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False, default=str, separators=(",", ":"))
 
 
 def seconds_from_mysql_time(value: Any) -> int:
@@ -163,7 +153,6 @@ def main() -> int:
               m.awayTeamID,
               m.goalsHome,
               m.goalsAway,
-              m.overtime,
               ht.teamName as homeTeamName,
               at.teamName as awayTeamName
             from nhlgamer_matches m
@@ -182,12 +171,13 @@ def main() -> int:
             connection,
             f"""
             select
-              g.*,
-              m.leagueID,
-              coalesce(p.psntag,p.gamertag) as scorerGamertag
+              g.matchID,
+              g.teamID,
+              g.goalPlayerID,
+              g.goalTime,
+              m.leagueID
             from nhlgamer_goals g
             join nhlgamer_matches m on m.matchID=g.matchID
-            left join nhlgamer_players p on p.playerID=g.goalPlayerID
             where m.leagueID in ({placeholders})
               and coalesce(m.matchIgnore,0)<>1
               and g.goalPlayerID is not null
@@ -217,8 +207,6 @@ def main() -> int:
             "away_team_name": str(row.get("awayTeamName") or ""),
             "home_score": integer(row.get("goalsHome")),
             "away_score": integer(row.get("goalsAway")),
-            "overtime": "true" if boolean(row.get("overtime")) else "false",
-            "raw_match": json_safe(row),
         })
 
     goal_rows: list[dict[str, Any]] = []
@@ -237,15 +225,7 @@ def main() -> int:
             "source_match_id": match_id,
             "source_team_id": integer(row.get("teamID")) or "",
             "source_player_id": player_id,
-            "scorer_gamertag": str(row.get("scorerGamertag") or ""),
             "goal_seconds": goal_seconds,
-            "first_assist_player_id": integer(row.get("firstAssistPlayerID")) or "",
-            "second_assist_player_id": integer(row.get("secondAssistPlayerID")) or "",
-            "powerplay": "true" if boolean(row.get("powerplay")) else "false",
-            "shorthanded": "true" if boolean(row.get("shorthanded")) else "false",
-            "empty_net": "true" if boolean(row.get("emptyNet")) else "false",
-            "winning_goal": "true" if boolean(row.get("winningGoal")) else "false",
-            "raw_goal": json_safe(row),
         })
 
     MATCH_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
