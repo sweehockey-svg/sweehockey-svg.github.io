@@ -30,7 +30,7 @@
   const TEAM_GROUPS=[
     {key:'team',label:'Lagrekord',items:[
       ['games','Matcher','GP'],['wins','Vinster','W'],['goals_for','Mål','GF'],['goal_diff','Målskillnad','+/−'],
-      ['tournament_count','Turneringar','T'],['titles','Titlar','GULD']
+      ['tournament_count','Turneringar','T'],['titles','Titlar','TITLAR']
     ]}
   ];
 
@@ -345,13 +345,15 @@
     const media=visual
       ? `<img src="${esc(visual)}" alt="${esc(name)}" loading="lazy">`
       : `<span>${esc(initials||'?')}</span>`;
-    const currentTeam=isPlayer?currentPlayerTeam(row):{name:name,logo:teamLogo(row)};
+    const currentTeam=isPlayer?currentPlayerTeam(row):{name:'',logo:teamLogo(row)};
     const teamLogoUrl=String(currentTeam.logo||'');
-    const teamIdentity=currentTeam.name
+    const teamIdentity=isPlayer&&currentTeam.name
       ? `<span class="seh-record-podium-team">${esc(currentTeam.name)}</span>`
       : '';
     const logoMarkup=teamLogoUrl
-      ? `<img class="seh-record-podium-teamlogo" src="${esc(teamLogoUrl)}" alt="" loading="lazy"><img class="seh-record-podium-watermark" src="${esc(teamLogoUrl)}" alt="" aria-hidden="true" loading="lazy">`
+      ? (isPlayer
+        ? `<img class="seh-record-podium-teamlogo" src="${esc(teamLogoUrl)}" alt="" loading="lazy"><img class="seh-record-podium-watermark" src="${esc(teamLogoUrl)}" alt="" aria-hidden="true" loading="lazy">`
+        : `<img class="seh-record-podium-watermark" src="${esc(teamLogoUrl)}" alt="" aria-hidden="true" loading="lazy">`)
       : '';
     const stats=podiumSupportingStats(row,metric[0]);
     const statsHtml=stats.length
