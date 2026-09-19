@@ -15306,7 +15306,7 @@ function SEH_initShop() {
           <h1>Min profil</h1>
           <p>Din egen yta på Svensk eHockey. Ändringar som påverkar den publika spelarprofilen skickas till admin för godkännande.</p>
         </div>
-        <div class="my-profile-hero__actions"><a href="#/free-agents">Free Agents →</a></div>
+
       </section>
 
       <section id="myProfileGate" class="my-profile-gate">
