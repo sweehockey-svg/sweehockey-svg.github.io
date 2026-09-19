@@ -92,6 +92,7 @@ function parse(v){
  return{type:"submit",p,l,bad:[],note};
 }
 async function send(t,c,p){const r=await dc("/channels/"+c+"/messages",t,{method:"POST",body:JSON.stringify(p)});if(!r.ok)throw Error("SEND "+r.status+": "+(await r.text()).slice(0,300))}
+async function dm(t,uid,p){const r=await dc("/users/@me/channels",t,{method:"POST",body:JSON.stringify({recipient_id:uid})});if(!r.ok)throw Error("DM OPEN "+r.status+": "+(await r.text()).slice(0,300));const ch=await r.json();const cid=String(ch?.id||"");if(!cid)throw Error("DM CHANNEL");await send(t,cid,p)}
 async function del(t,c,id){const r=await dc("/channels/"+c+"/messages/"+id,t,{method:"DELETE"});if(!r.ok&&r.status!==404)throw Error("DELETE "+r.status+": "+(await r.text()).slice(0,300))}
 async function once(){
  const t=Deno.env.get("SEH_DISCORD_BOT_TOKEN")||Deno.env.get("DISCORD_BOT_TOKEN")||"";if(!t)throw Error("BOT_TOKEN");
@@ -105,7 +106,7 @@ async function once(){
   try{
    const{data:x,error:e}=await a.rpc("seh_discord_submit_free_agent_request_v2",{p_discord_user_id:uid,p_positions_text:cmd.p.length?cmd.p.join(" / "):null,p_levels_text:cmd.l.length?cmd.l.join(" / "):null,p_request_type:cmd.type==="remove"?"remove":"create",p_message:cmd.note||null});if(e)throw e;
    try{await del(t,ch,id);deleted++}catch(e){errors.push(err(e))}
-   if(!x?.linked){await send(t,ch,{content:`<@${uid}> koppla först ditt Discord-konto till ett godkänt spelarkort under **Min profil**: <${MIN}>`,allowed_mentions:{users:[uid],parse:[]}});continue}
+   if(!x?.linked){try{await dm(t,uid,{content:`Du behöver först koppla ditt Discord-konto till ett godkänt spelarkort under **Min profil**: <${MIN}>`,allowed_mentions:{parse:[]}})}catch(e){errors.push(err(e))}continue}
    if(x?.ok===false){await send(t,ch,{content:`<@${uid}> du finns inte på den aktiva Free Agent-listan.`,allowed_mentions:{users:[uid],parse:[]}});continue}
    submitted++;const gt=String(x.display_gamertag||"Spelare"),remove=x.request_type==="remove",url=PROFILE+encodeURIComponent(String(x.player_key||"")),sid=String(x.sports_gamer_player_id||"");
    const fields=remove?[{name:"DISCORD",value:`<@${uid}>`,inline:true}]:[{name:"POSITION",value:String(x.positions_text||"–"),inline:true},{name:"NIVÅ",value:String(x.levels_text||"Öppen för förslag"),inline:true}];
