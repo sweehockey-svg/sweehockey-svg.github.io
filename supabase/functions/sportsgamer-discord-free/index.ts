@@ -110,6 +110,24 @@ function avatarUrl(message:any){
   if(uid&&avatar)return `https://cdn.discordapp.com/avatars/${uid}/${avatar}.png?size=256`;
   return "";
 }
+function profileCandidates(message:any){
+  const values=[
+    message?.author?.username,
+    message?.author?.global_name,
+    message?.member?.nick,
+  ].map((v:any)=>String(v||"").trim()).filter(Boolean);
+  return [...new Set(values)];
+}
+
+async function resolveSportsGamerPlayer(admin:any,message:any){
+  for(const candidate of profileCandidates(message)){
+    const{data,error}=await admin.rpc("sportsgamer_discord_player_lookup_v1",{p_gamertag:candidate});
+    if(error)throw new Error("SPORTSGAMER LOOKUP: "+error.message);
+    if(data?.matched)return data;
+  }
+  return null;
+}
+
 
 function userCard(message:any,uid:string){
   const embeds=Array.isArray(message?.embeds)?message.embeds:[];
@@ -209,9 +227,15 @@ async function poll(){
 
     if(cmd.type==="remove")continue;
 
-    const name=displayName(message),avatar=avatarUrl(message);
+    let profile=null;
+    try{profile=await resolveSportsGamerPlayer(admin,message)}catch(e){errors.push(errorText(e))}
+    const name=String(profile?.gamertag||displayName(message)).trim(),avatar=avatarUrl(message);
+    const profilePosition=String(profile?.position||"").trim().toUpperCase();
+    const position=cmd.positions.length?cmd.positions.join(" / "):(profilePosition||"Any");
+    const profileUrl=String(profile?.player_url||"").trim();
+
     const fields:any[]=[
-      {name:"POSITION",value:cmd.positions.length?cmd.positions.join(" / "):"Any",inline:true},
+      {name:"POSITION",value:position,inline:true},
       {name:"DISCORD",value:`<@${uid}>`,inline:true},
     ];
     if(cmd.note)fields.push({name:"INFO",value:cmd.note,inline:false});
@@ -224,12 +248,18 @@ async function poll(){
       footer:{text:FOOTER},
       timestamp:new Date().toISOString(),
     };
+    if(profileUrl)embed.url=profileUrl;
     if(avatar)embed.thumbnail={url:avatar};
 
-    await sendMessage(token,channelId,{
+    const payload:any={
       embeds:[embed],
       allowed_mentions:{parse:[]},
-    });
+    };
+    if(profileUrl){
+      payload.components=[{type:1,components:[{type:2,style:5,label:"SportsGamer Profile",url:profileUrl}]}];
+    }
+
+    await sendMessage(token,channelId,payload);
     posted++;
   }
 
