@@ -271,17 +271,14 @@ async function poll(){
 
     try{await deleteMessage(token,channelId,id);deleted++}catch(e){errors.push(errorText(e))}
 
-    const previousCards=messages
-      .filter((previous:any)=>previous?.author?.bot&&userCard(previous,uid))
-      .sort(sortSnowflakes)
-      .reverse();
-    const previousCard=previousCards[0]||null;
-
-    for(const previous of previousCards){
-      try{await deleteMessage(token,channelId,String(previous.id));removed++}catch(e){errors.push(errorText(e))}
+    if(cmd.type==="remove"){
+      const previousCards=messages
+        .filter((previous:any)=>previous?.author?.bot&&userCard(previous,uid));
+      for(const previous of previousCards){
+        try{await deleteMessage(token,channelId,String(previous.id));removed++}catch(e){errors.push(errorText(e))}
+      }
+      continue;
     }
-
-    if(cmd.type==="remove")continue;
 
     let profile=null;
     try{profile=await resolveSportsGamerPlayer(admin,message)}catch(e){errors.push(errorText(e))}
@@ -291,9 +288,8 @@ async function poll(){
     const latestEclDivision=String(profile?.latest_ecl_division||"").trim();
     const latestEclSeason=String(profile?.latest_ecl_season_short||"").trim();
     const isEcl26Spring=Boolean(profile?.latest_ecl_is_ecl26_spring);
-    const previousState=previousCardState(previousCard,uid,latestEclTeam,latestEclDivision,latestEclSeason,isEcl26Spring);
-    const position=cmd.positions.length?cmd.positions.join(" / "):(previousState.position||profilePosition||"Any");
-    const note=mergeNotes(previousState.note,cmd.note);
+    const position=cmd.positions.length?cmd.positions.join(" / "):(profilePosition||"Any");
+    const note=String(cmd.note||"").trim();
 
     const parts=[`<@${uid}>`,`Free ${position}`];
     if(latestEclTeam){
