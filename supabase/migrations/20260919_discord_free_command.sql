@@ -10,12 +10,17 @@ create table if not exists public.ehockey_discord_free_command_config (
   last_polled_at timestamptz,
   last_error text,
   updated_at timestamptz not null default now(),
+  activated_at timestamptz,
   poll_secret text
 );
 
 insert into public.ehockey_discord_free_command_config (id,enabled)
 values (1,false)
 on conflict (id) do nothing;
+
+update public.ehockey_discord_free_command_config
+set activated_at=coalesce(activated_at,now())
+where id=1;
 
 revoke all on public.ehockey_discord_free_command_config from anon, authenticated;
 grant select, update on public.ehockey_discord_free_command_config to service_role;
