@@ -947,3 +947,40 @@
     padding:5px;
   }
 }
+
+
+/* Recordbook V1.7 — record-specific podium details */
+.seh-record-podium-stats small{
+  text-overflow:clip;
+}
+.seh-record-podium-detail{
+  min-height:13px;
+  display:grid;
+  gap:2px;
+  overflow:visible;
+  white-space:normal;
+}
+.seh-record-podium-detail-primary,
+.seh-record-podium-detail-secondary{
+  display:block;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.seh-record-podium-detail-primary{
+  color:#718595;
+  font-size:.54rem;
+  font-weight:750;
+}
+.seh-record-podium-detail-secondary{
+  color:#566978;
+  font-size:.49rem;
+}
+.seh-record-podium-card .seh-record-podium-stats small{
+  letter-spacing:.055em;
+}
+@media(max-width:520px){
+  .seh-record-podium-detail-primary{font-size:.51rem}
+  .seh-record-podium-detail-secondary{font-size:.47rem}
+}
