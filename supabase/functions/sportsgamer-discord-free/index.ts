@@ -132,8 +132,9 @@ async function resolveSportsGamerPlayer(admin:any,message:any){
 function userCard(message:any,uid:string){
   const embeds=Array.isArray(message?.embeds)?message.embeds:[];
   return embeds.some((embed:any)=>{
+    const desc=String(embed?.description||"");
+    if(desc.includes(`<@${uid}>`)&&/\bFree\b/i.test(desc))return true;
     if(String(embed?.footer?.text||"")!==FOOTER)return false;
-    if(String(embed?.description||"").includes(`<@${uid}>`))return true;
     const fields=Array.isArray(embed?.fields)?embed.fields:[];
     return fields.some((field:any)=>String(field?.name||"").toUpperCase()==="DISCORD"&&String(field?.value||"").includes(`<@${uid}>`));
   });
@@ -141,7 +142,10 @@ function userCard(message:any,uid:string){
 
 function isFreeCard(message:any){
   const embeds=Array.isArray(message?.embeds)?message.embeds:[];
-  return embeds.some((embed:any)=>String(embed?.footer?.text||"")===FOOTER);
+  return embeds.some((embed:any)=>{
+    const desc=String(embed?.description||"");
+    return String(embed?.footer?.text||"")===FOOTER || (/^<@\d+>\s*·\s*Free\b/i.test(desc));
+  });
 }
 
 function serviceDayKey(value: string|number|Date){
@@ -240,22 +244,17 @@ async function poll(){
     if(latestEclTeam)parts.push(latestEclTeam);
     if(latestEclDivision)parts.push(latestEclDivision);
     if(cmd.note)parts.push(cmd.note);
+    if(profileUrl)parts.push(`[Playercard](${profileUrl})`);
 
     const embed:any={
       color:5763719,
       description:parts.join(" · "),
-      footer:{text:FOOTER},
-      timestamp:new Date().toISOString(),
     };
-    if(profileUrl)embed.url=profileUrl;
 
     const payload:any={
       embeds:[embed],
       allowed_mentions:{parse:[]},
     };
-    if(profileUrl){
-      payload.components=[{type:1,components:[{type:2,style:5,label:"SportsGamer Profile",url:profileUrl}]}];
-    }
 
     await sendMessage(token,channelId,payload);
     posted++;
