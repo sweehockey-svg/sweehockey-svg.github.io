@@ -109,7 +109,7 @@ async function poll() {
   const admin = serviceClient();
   const { data: cfg, error: cfgError } = await admin
     .from("ehockey_discord_free_command_config")
-    .select("enabled,channel_id,last_message_id,updated_at")
+    .select("enabled,channel_id,last_message_id,activated_at")
     .eq("id", 1)
     .maybeSingle();
   if (cfgError) throw cfgError;
@@ -117,7 +117,7 @@ async function poll() {
   const enabled = Boolean(cfg?.enabled);
   const channelId = String(cfg?.channel_id || "").trim();
   const lastMessageId = String(cfg?.last_message_id || "").trim();
-  const configuredAt = Date.parse(String(cfg?.updated_at || "")) || 0;
+  const configuredAt = Date.parse(String(cfg?.activated_at || "")) || 0;
 
   if (!enabled || !channelId) {
     return { enabled, configured: Boolean(channelId), processed: 0, commands: 0 };
@@ -141,13 +141,22 @@ async function poll() {
   let linked = 0;
   let unlinked = 0;
   let deleted = 0;
+  let nonBotMessages = 0;
+  let readableNonBotMessages = 0;
   const errors: string[] = [];
   let newest = lastMessageId;
 
   for (const message of ordered) {
     const id = String(message?.id || "");
+    if (!id) continue;
+
+    if (!message?.author?.bot) {
+      nonBotMessages += 1;
+      if (String(message?.content || "").trim()) readableNonBotMessages += 1;
+    }
+
     if (id) newest = id;
-    if (!id || message?.author?.bot || !isFreeCommand(message?.content)) continue;
+    if (message?.author?.bot || !isFreeCommand(message?.content)) continue;
 
     if (!lastMessageId && configuredAt) {
       const messageTime = Date.parse(String(message?.timestamp || "")) || 0;
@@ -193,12 +202,17 @@ async function poll() {
     }
   }
 
+  const contentHidden = nonBotMessages > 0 && readableNonBotMessages === 0;
+  if (contentHidden) {
+    errors.push("Discord returnerade meddelanden utan läsbar content. Kontrollera Message Content Intent för botten.");
+  }
+
   const update: Record<string, unknown> = {
     last_polled_at: new Date().toISOString(),
     last_error: errors.length ? errors.join(" | ").slice(0, 2000) : null,
     updated_at: new Date().toISOString(),
   };
-  if (newest) update.last_message_id = newest;
+  if (newest && !contentHidden) update.last_message_id = newest;
 
   const { error: updateError } = await admin
     .from("ehockey_discord_free_command_config")
@@ -214,6 +228,9 @@ async function poll() {
     linked,
     unlinked,
     deleted,
+    content_hidden: contentHidden,
+    non_bot_messages: nonBotMessages,
+    readable_non_bot_messages: readableNonBotMessages,
     errors,
   };
 }
