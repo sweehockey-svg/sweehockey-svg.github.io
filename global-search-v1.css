@@ -301,3 +301,31 @@ body.seh-global-search-open { overflow: hidden; }
   .seh-global-search__results { max-height: calc(100vh - 145px); padding: 7px; }
   .seh-global-search__footer { display: none; }
 }
+
+/* v2 — huvudmenyn tajtare, sök vid Discord/konto */
+@media (min-width: 921px) {
+  .seh-nav {
+    gap: clamp(16px, 1.45vw, 28px) !important;
+    padding-left: 14px !important;
+  }
+
+  .seh-header__tools {
+    gap: 10px !important;
+    padding-left: 12px !important;
+  }
+
+  .seh-global-search-trigger--tools {
+    display: inline-grid;
+    margin-right: 2px;
+  }
+}
+
+@media (max-width: 920px) {
+  .seh-global-search-trigger--tools {
+    display: inline-grid;
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    border-radius: 0;
+  }
+}

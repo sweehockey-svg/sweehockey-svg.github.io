@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "2026-09-20-v1";
+  var VERSION = "2026-09-20-v2";
   var state = {
     open: false,
     data: null,
@@ -394,20 +394,17 @@
   }
 
   function ensureTriggers() {
-    var nav = q("#sehNavigation");
-    if (nav && !q('[data-seh-global-search-trigger="nav"]', nav)) {
-      var trigger = createTrigger("nav");
-      var shop = Array.from(nav.querySelectorAll("a")).find(function (link) {
-        return clean(link.textContent).toLocaleLowerCase("sv-SE") === "shop";
-      });
-      nav.insertBefore(trigger, shop || null);
-    }
+    // Sökningen hör ihop med kontoverktygen, inte med huvudmenyn.
+    // Ta även bort en eventuell äldre nav-trigger från v1 om sidan uppdateras varmt.
+    qa('[data-seh-global-search-trigger="nav"]').forEach(function (button) {
+      button.remove();
+    });
 
     var tools = q(".seh-header__tools");
-    if (tools && !q('[data-seh-global-search-trigger="mobile"]', tools)) {
-      var mobile = createTrigger("mobile");
+    if (tools && !q('[data-seh-global-search-trigger="tools"]', tools)) {
+      var trigger = createTrigger("tools");
       var account = q(".seh-account", tools);
-      tools.insertBefore(mobile, account || tools.firstChild);
+      tools.insertBefore(trigger, account || tools.firstChild);
     }
   }
 
