@@ -98,6 +98,12 @@
         current.fastest_goal_seconds=row.fastest_goal_seconds;
         current.fastest_goal_date=row.fastest_goal_date;
         current.fastest_goal_competition=row.fastest_goal_competition;
+        current.fastest_goal_match_season=row.fastest_goal_match_season;
+        current.fastest_goal_match_team=row.fastest_goal_match_team;
+        current.fastest_goal_match_opponent=row.fastest_goal_match_opponent;
+        current.fastest_goal_match_team_score=row.fastest_goal_match_team_score;
+        current.fastest_goal_match_opponent_score=row.fastest_goal_match_opponent_score;
+        current.fastest_goal_match_stage=row.fastest_goal_match_stage;
       }
 
       const currentMax=num(current.max_goals_game);
@@ -150,16 +156,16 @@
       }
 
       if(competition==='ECL'){
-        return rpcRows(sb,'seh_recordbook_ecl_match_players_v1',{p_limit:3000});
+        return rpcRows(sb,'seh_recordbook_ecl_match_players_v2',{p_limit:3000});
       }
 
       if(competition==='SCL'){
-        return rpcRows(sb,'seh_recordbook_scl_match_players_v1',{p_limit:2000});
+        return rpcRows(sb,'seh_recordbook_scl_match_players_v2',{p_limit:2000});
       }
 
       if(competition==='ALL'){
-        const eclPromise=rpcRows(sb,'seh_recordbook_ecl_match_players_v1',{p_limit:3000});
-        const sclPromise=rpcRows(sb,'seh_recordbook_scl_match_players_v1',{p_limit:2000});
+        const eclPromise=rpcRows(sb,'seh_recordbook_ecl_match_players_v2',{p_limit:3000});
+        const sclPromise=rpcRows(sb,'seh_recordbook_scl_match_players_v2',{p_limit:2000});
 
         if(metric==='fastest_goal_seconds'){
           const [ecl,scl]=await Promise.all([eclPromise,sclPromise]);
@@ -263,6 +269,28 @@
     return {primary,secondary};
   }
 
+  function fastestGoalMatchMeta(row){
+    const team=String(row?.fastest_goal_match_team||'').trim();
+    const opponent=String(row?.fastest_goal_match_opponent||'').trim();
+    const teamScore=row?.fastest_goal_match_team_score;
+    const opponentScore=row?.fastest_goal_match_opponent_score;
+    const hasScore=teamScore!==null&&teamScore!==undefined&&opponentScore!==null&&opponentScore!==undefined;
+    const primary=team&&opponent
+      ? `${team}${hasScore?` ${fmt(teamScore)}–${fmt(opponentScore)}`:' –'} ${opponent}`
+      : '';
+    const season=recordMatchSeason({
+      max_goals_match_competition:row?.fastest_goal_competition,
+      max_goals_match_season:row?.fastest_goal_match_season
+    });
+    const secondary=[
+      row?.primary_position||'Spelare',
+      season,
+      recordMatchStage(row?.fastest_goal_match_stage),
+      recordMatchDate(row?.fastest_goal_date)
+    ].filter(Boolean).join(' · ');
+    return {primary,secondary};
+  }
+
   function playerMeta(row,metricKey){
     if(MATCH_METRICS.has(metricKey)){
       if(metricKey==='fastest_goal_seconds'){
@@ -285,7 +313,9 @@
     const rank=index+1+rankOffset;
     if(state.type==='players'){
       const name=String(row.display_gamertag||'Okänd spelare'),photo=playerPhoto(row);
-      const matchMeta=metric[0]==='max_goals_game'?maxGoalsMatchMeta(row):null;
+      const matchMeta=metric[0]==='max_goals_game'
+        ? maxGoalsMatchMeta(row)
+        : (metric[0]==='fastest_goal_seconds'?fastestGoalMatchMeta(row):null);
       const hasMatchContext=Boolean(matchMeta?.primary);
       const metaHtml=hasMatchContext
         ? `<small class="seh-record-meta-primary">${esc(matchMeta.primary)}</small>${matchMeta.secondary?`<small class="seh-record-meta-secondary">${esc(matchMeta.secondary)}</small>`:''}`
@@ -302,6 +332,10 @@
     }
     if(metricKey==='max_goals_game'){
       const match=maxGoalsMatchMeta(row);
+      return {primary:match.primary||playerMeta(row,metricKey),secondary:match.secondary||''};
+    }
+    if(metricKey==='fastest_goal_seconds'){
+      const match=fastestGoalMatchMeta(row);
       return {primary:match.primary||playerMeta(row,metricKey),secondary:match.secondary||''};
     }
     return {primary:playerMeta(row,metricKey),secondary:''};
