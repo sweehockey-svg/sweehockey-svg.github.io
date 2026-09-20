@@ -121,6 +121,7 @@ def main() -> int:
             inventory["metric_tables"] = [
                 row["detected_table_name"] for row in cursor.fetchall()
             ]
+            table_names = sorted(set(table_names) | set(inventory["metric_tables"]))
 
             important = {
                 "nhlgamer_players",
