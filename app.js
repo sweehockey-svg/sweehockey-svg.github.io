@@ -9777,7 +9777,7 @@ function SEH_initTeam() {
         nameCell.append(
           createInternalLink(
             tournament.nameUsed || state.team.currentName,
-            teamUrl(state.team.teamId),
+            `#/lag/${encodeURIComponent(state.team.teamId)}`,
             "history-table-link"
           )
         );
