@@ -3,11 +3,6 @@ run-name: Discover SportsGamer ECL data
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - ".github/workflows/discover-sportsgamer.yml"
-      - ".github/sync/discover_sportsgamer.py"
-      - ".github/sync/audit_gcl_13.py"
 
 permissions:
   contents: read
