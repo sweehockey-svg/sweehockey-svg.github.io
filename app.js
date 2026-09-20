@@ -5084,7 +5084,7 @@ function SEH_initPlayer() {
       return "";
     }
 
-    function buildPersonalMerits(profileRows, personalMeritRows, nationalTeamRows = [], recordMeritRows = []) {
+    function buildPersonalMerits(profileRows, personalMeritRows, nationalTeamRows = [], recordMeritRows = [], dimMeritRows = []) {
       /*
        * Statistikmeriter kommer färdigberäknade från Supabase:
        * public.v_ehockey_player_personal_merits_v2
@@ -5118,7 +5118,44 @@ function SEH_initPlayer() {
         })
         .filter(Boolean);
 
+      const dimRows = [...dimMeritRows].sort((a, b) => {
+        const aDate = Date.parse(String(a?.chronology_date || "")) || 0;
+        const bDate = Date.parse(String(b?.chronology_date || "")) || 0;
+        return bDate - aDate || number(b?.league_id) - number(a?.league_id);
+      });
+
+      if (dimRows.length) {
+        const latest = dimRows[0];
+        const titleCount = dimRows.length;
+        const latestDim = number(latest?.dim).toLocaleString("sv-SE", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+        const latestSeason = String(latest?.season_label || "ECL").trim() || "ECL";
+        const hasDimRecord = recordMeritRows.some(
+          (row) => String(row?.metric_code || "").trim().toLowerCase() === "dim_titles"
+        );
+
+        let text = "";
+        if (hasDimRecord) {
+          text = `Rekord: flest DIM-titlar i ECL bland svenska backar · ${formatInteger(titleCount, "0")} · senast ${latestSeason} · ${latestDim} DIM.`;
+        } else if (titleCount > 1) {
+          text = `DIM-ledare bland svenska backar i ${formatInteger(titleCount, "0")} ECL-divisioner · senast ${latestSeason} · ${latestDim} DIM.`;
+        } else {
+          text = `DIM-ledare bland svenska backar · ${latestSeason} · ${latestDim} DIM.`;
+        }
+
+        items.push({
+          icon: "D",
+          type: "dim",
+          text,
+          sortValue: hasDimRecord ? 199000 : 99000
+        });
+      }
+
       recordMeritRows.forEach((row) => {
+        if (String(row?.metric_code || "").trim().toLowerCase() === "dim_titles") return;
+
         const meritText = String(row?.merit_text || "").trim();
         if (!meritText) return;
 
@@ -5283,11 +5320,33 @@ function SEH_initPlayer() {
         });
       }
 
-      const [meritRows, personalMeritRows, nationalTeamRows, recordMeritRows] = await Promise.all([
+      let dimMeritsPromise = Promise.resolve([]);
+
+      if (playerKey) {
+        const dimParams = new URLSearchParams({
+          select: "league_id,season_label,chronology_date,team_name,dim,match_share,is_tied",
+          player_key: `eq.${playerKey}`,
+          order: "chronology_date.desc,league_id.desc"
+        });
+
+        dimMeritsPromise = fetchAllJson(
+          "ehockey_ecl_dim_leaders_cache_v1",
+          dimParams
+        ).catch((error) => {
+          console.warn(
+            `${APP_BUILD}: kunde inte läsa spelarens ECL DIM-meriter.`,
+            error
+          );
+          return [];
+        });
+      }
+
+      const [meritRows, personalMeritRows, nationalTeamRows, recordMeritRows, dimMeritRows] = await Promise.all([
         meritsPromise,
         personalMeritsPromise,
         fetchPlayerNationalTeams(profileRows, directoryRow),
-        recordMeritsPromise
+        recordMeritsPromise,
+        dimMeritsPromise
       ]);
 
       console.info(
@@ -5298,11 +5357,12 @@ function SEH_initPlayer() {
           teamMerits: meritRows.length,
           personalMerits: personalMeritRows.length,
           recordMerits: recordMeritRows.length,
+          dimMerits: dimMeritRows.length,
           nationalTeams: nationalTeamRows.length
         }
       );
 
-      return { meritRows, personalMeritRows, nationalTeamRows, recordMeritRows };
+      return { meritRows, personalMeritRows, nationalTeamRows, recordMeritRows, dimMeritRows };
     }
 
     function renderPlayerMerits(
@@ -5310,14 +5370,16 @@ function SEH_initPlayer() {
       meritRows = [],
       personalMeritRows = [],
       nationalTeamRows = [],
-      recordMeritRows = []
+      recordMeritRows = [],
+      dimMeritRows = []
     ) {
       const teamMerits = buildTeamMerits(meritRows);
       const personalMerits = buildPersonalMerits(
         profileRows,
         personalMeritRows,
         nationalTeamRows,
-        recordMeritRows
+        recordMeritRows,
+        dimMeritRows
       );
 
       renderOverviewMeritBadges(teamMerits, personalMerits);
@@ -5357,7 +5419,8 @@ function SEH_initPlayer() {
         data.meritRows,
         data.personalMeritRows,
         data.nationalTeamRows,
-        data.recordMeritRows
+        data.recordMeritRows,
+        data.dimMeritRows
       );
 
       if (currentBioContext) {
