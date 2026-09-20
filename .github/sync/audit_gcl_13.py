@@ -69,11 +69,11 @@ def main():
         ph=",".join(["%s"]*len(LEAGUE_IDS))
 
         league_meta=sel(c,
-          f"select leagueID,leagueName from \`nhlgamer_leagues\` where leagueID in ({ph})",
+          f"select leagueID,leagueName from `nhlgamer_leagues` where leagueID in ({ph})",
           tuple(LEAGUE_IDS))
         league_name={i(r["leagueID"]):str(r.get("leagueName") or f'League {r["leagueID"]}') for r in league_meta}
 
-        league_rows=sel(c,f"select leagueID,teamID,teamName from \`nhlgamer_leagueTeams\` where leagueID in ({ph})",tuple(LEAGUE_IDS))
+        league_rows=sel(c,f"select leagueID,teamID,teamName from `nhlgamer_leagueTeams` where leagueID in ({ph})",tuple(LEAGUE_IDS))
         team_name={(i(r["leagueID"]),i(r["teamID"])):str(r.get("teamName") or f'Team {r["teamID"]}') for r in league_rows}
 
         user_cols=table_columns(c,"nhlgamer_users")
@@ -84,7 +84,7 @@ def main():
         user_join=""
         user_select=", '' as user_country, '' as user_city, '' as user_nationality"
         if user_id_col and (user_country_col or user_city_col or user_nat_col):
-            user_join=f" left join \`nhlgamer_users\` u on u.{qid(user_id_col)}=p.userID"
+            user_join=f" left join `nhlgamer_users` u on u.{qid(user_id_col)}=p.userID"
             user_select=(
               ", "+(f"u.{qid(user_country_col)}" if user_country_col else "''")+" as user_country"
               ", "+(f"u.{qid(user_city_col)}" if user_city_col else "''")+" as user_city"
@@ -95,8 +95,8 @@ def main():
           f"""select r.leagueID,r.teamID,r.playerID,
                      p.gamertag,p.psntag,p.country,p.nationality,p.city,p.userID
                      {user_select}
-              from \`nhlgamer_leagueRosters\` r
-              left join \`nhlgamer_players\` p on p.playerID=r.playerID
+              from `nhlgamer_leagueRosters` r
+              left join `nhlgamer_players` p on p.playerID=r.playerID
               {user_join}
               where r.leagueID in ({ph})
               order by r.leagueID,r.teamID,r.playerID""",tuple(LEAGUE_IDS))
