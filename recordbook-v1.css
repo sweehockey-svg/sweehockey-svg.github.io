@@ -1726,3 +1726,20 @@
     line-height:.94;
   }
 }
+
+
+/* Recordbook V2.6 — align hero top and title baseline */
+@media(min-width:921px){
+  body:not(.seh-route-records) .seh-recordbook-shell{
+    padding-top:28px;
+  }
+
+  body:not(.seh-route-records) .seh-recordbook-hero>div{
+    align-self:stretch;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    box-sizing:border-box;
+    padding:68px 0 0;
+  }
+}
