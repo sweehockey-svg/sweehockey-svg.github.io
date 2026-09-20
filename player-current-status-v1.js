@@ -60,19 +60,35 @@
     return rows;
   }
 
-  function freeAgentStatus(playerKey, competition = null) {
+  function freeAgentStatus(playerKey) {
     return {
       kind: 'free_agent',
       playerKey: clean(playerKey),
-      teamName: 'Free Agent',
+      teamName: '',
       teamId: null,
       logoName: '',
       division: '',
-      competitionKey: clean(competition?.competition_key),
-      competitionName: clean(competition?.display_name),
-      phase: clean(competition?.phase),
-      source: 'free_agent',
-      routeHash: clean(competition?.route_hash)
+      competitionKey: '',
+      competitionName: '',
+      phase: '',
+      source: 'free_agent_list',
+      routeHash: ''
+    };
+  }
+
+  function noTeamStatus(playerKey) {
+    return {
+      kind: 'no_team',
+      playerKey: clean(playerKey),
+      teamName: '',
+      teamId: null,
+      logoName: '',
+      division: '',
+      competitionKey: '',
+      competitionName: '',
+      phase: '',
+      source: 'no_current_team',
+      routeHash: ''
     };
   }
 
@@ -167,6 +183,26 @@
       return identity.byCompactGamertag.get(compact);
     }
     return '';
+  }
+
+  function canonicalFreeAgentPlayerKey(row, identity) {
+    const rawKey = clean(row?.player_key);
+    if (rawKey) return identity?.byKey?.get(rawKey) || rawKey;
+    return canonicalRosterPlayerKey(row?.display_gamertag, identity);
+  }
+
+  async function loadActiveFreeAgentKeys(sb, identity) {
+    const rows = await fetchAll(
+      sb,
+      'v_ehockey_free_agents_public',
+      'player_key,display_gamertag'
+    );
+    const keys = new Set();
+    for (const row of rows) {
+      const playerKey = canonicalFreeAgentPlayerKey(row, identity);
+      if (playerKey) keys.add(playerKey);
+    }
+    return keys;
   }
 
   function statusesFromBuildSnapshot(snapshot, identity, competition) {
@@ -352,6 +388,7 @@
       const statuses = new Map();
       const competitions = [];
       const identity = await loadPlayerIdentityMap(sb);
+      const activeFreeAgents = await loadActiveFreeAgentKeys(sb, identity);
 
       for (const source of SOURCES) {
         const result = await loadSource(sb, source, identity);
@@ -363,12 +400,12 @@
         }
       }
 
-      cache = { loadedAt: Date.now(), statuses, competitions, secBypass: false };
+      cache = { loadedAt: Date.now(), statuses, activeFreeAgents, competitions, secBypass: false };
       window.dispatchEvent(new CustomEvent('seh-current-player-status-ready'));
       return cache;
     })().catch(error => {
       console.warn('[Svensk eHockey] Aktuell spelarstatus kunde inte laddas', error);
-      cache = { loadedAt: Date.now(), statuses: new Map(), competitions: [], error, secBypass: false };
+      cache = { loadedAt: Date.now(), statuses: new Map(), activeFreeAgents: new Set(), competitions: [], error, secBypass: false };
       return cache;
     }).finally(() => {
       loadPromise = null;
@@ -388,11 +425,8 @@
 
     const status = data.statuses.get(key);
     if (status) return { ...status };
-
-    const competition = data.competitions.find(row =>
-      ACTIVE_PHASES.has(clean(row.phase).toLowerCase())
-    ) || null;
-    return freeAgentStatus(key, competition);
+    if (data.activeFreeAgents?.has(key)) return freeAgentStatus(key);
+    return noTeamStatus(key);
   }
 
   async function decorateRows(rows, options = {}) {
@@ -403,15 +437,15 @@
     if (data.secBypass && options.allowSec !== true) return list;
     if (data.error) return list;
 
-    const competition = data.competitions.find(row =>
-      ACTIVE_PHASES.has(clean(row.phase).toLowerCase())
-    ) || null;
-
     return list.map(row => {
       const playerKey = clean(row?.player_key || row?.key);
       if (!playerKey) return row;
 
-      const status = data.statuses.get(playerKey) || freeAgentStatus(playerKey, competition);
+      const status =
+        data.statuses.get(playerKey) ||
+        (data.activeFreeAgents?.has(playerKey)
+          ? freeAgentStatus(playerKey)
+          : noTeamStatus(playerKey));
       return {
         ...row,
         current_status: status.kind,
