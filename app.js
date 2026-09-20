@@ -4362,28 +4362,6 @@ function SEH_initPlayer() {
       const oldRows = elements.playerBio.querySelectorAll("[data-national-team-bio]");
       oldRows.forEach((row) => row.remove());
 
-      recordMeritRows.forEach((row) => {
-        const meritText = String(row?.merit_text || "").trim();
-        if (!meritText) return;
-
-        const key = [
-          "record",
-          String(row?.competition_code || "").toUpperCase(),
-          String(row?.metric_code || "").toLowerCase(),
-          meritText
-        ].join("|");
-
-        if (seen.has(key)) return;
-        seen.add(key);
-
-        items.push({
-          icon: "R",
-          type: "record",
-          text: meritText,
-          sortValue: 100000 + number(row?.sort_priority)
-        });
-      });
-
       nationalTeamRows
         .filter((row) => number(row?.matches) > 0)
         .sort((a, b) => number(b?.matches) - number(a?.matches))
@@ -4501,8 +4479,7 @@ function SEH_initPlayer() {
       const personalMerits = buildPersonalMerits(
         profileRows,
         personalMeritRows,
-        nationalTeamRows,
-        recordMeritRows
+        nationalTeamRows
       );
 
       const championships = teamMerits.filter((item) => item.type === "place-1");
