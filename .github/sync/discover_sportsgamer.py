@@ -45,14 +45,7 @@ def main() -> int:
         autocommit=True,
         init_command="SET SESSION TRANSACTION READ ONLY",
     )
-    inventory: dict[str, object] = {
-        "tables": {},
-        "candidate_leagues": [],
-        "metric_candidates": [],
-        "metric_tables": [],
-        "metric_views": [],
-        "rating_defense_samples": [],
-    }
+    inventory: dict[str, object] = {"tables": {}, "candidate_leagues": []}
     try:
         with connection.cursor() as cursor:
             cursor.execute("select database() as database_name")
@@ -76,105 +69,6 @@ def main() -> int:
                 (database_name,),
             )
             table_names = [row["detected_table_name"] for row in cursor.fetchall()]
-
-            cursor.execute(
-                """
-                select
-                  table_name as detected_table_name,
-                  column_name as detected_column_name,
-                  data_type as detected_data_type
-                from information_schema.columns
-                where table_schema = %s
-                  and (
-                    lower(column_name) like '%%dim%%'
-                    or lower(column_name) like '%%impact%%'
-                    or lower(column_name) like '%%rating%%'
-                    or lower(column_name) like '%%defen%%'
-                  )
-                order by table_name, ordinal_position
-                """,
-                (database_name,),
-            )
-            inventory["metric_candidates"] = [
-                {
-                    "table_name": row["detected_table_name"],
-                    "column_name": row["detected_column_name"],
-                    "data_type": row["detected_data_type"],
-                }
-                for row in cursor.fetchall()
-            ]
-
-            cursor.execute(
-                """
-                select table_name as detected_table_name
-                from information_schema.tables
-                where table_schema = %s
-                  and (
-                    lower(table_name) like '%%stat%%'
-                    or lower(table_name) like '%%rating%%'
-                    or lower(table_name) like '%%impact%%'
-                    or lower(table_name) like '%%participant%%'
-                    or lower(table_name) like '%%metric%%'
-                  )
-                order by table_name
-                """,
-                (database_name,),
-            )
-            inventory["metric_tables"] = [
-                row["detected_table_name"] for row in cursor.fetchall()
-            ]
-            table_names = sorted(set(table_names) | set(inventory["metric_tables"]))
-
-            cursor.execute(
-                """
-                select table_name as detected_view_name, view_definition
-                from information_schema.views
-                where table_schema = %s
-                  and (
-                    lower(coalesce(view_definition,'')) like '%%ratingdefense%%'
-                    or lower(coalesce(view_definition,'')) like '%%defensive%%'
-                    or lower(coalesce(view_definition,'')) like '%% dim %%'
-                  )
-                order by table_name
-                """,
-                (database_name,),
-            )
-            inventory["metric_views"] = [
-                {
-                    "view_name": row["detected_view_name"],
-                    "view_definition": row["view_definition"],
-                }
-                for row in cursor.fetchall()
-            ]
-
-            cursor.execute(
-                """
-                select
-                  p.leagueID,
-                  p.teamID,
-                  p.playerID,
-                  p.positionID,
-                  count(*) as games,
-                  round(avg(p.ratingDefense),4) as avg_rating_defense,
-                  round(sum(p.ratingDefense),4) as sum_rating_defense,
-                  min(p.ratingDefense) as min_rating_defense,
-                  max(p.ratingDefense) as max_rating_defense,
-                  sum(p.interceptions) as interceptions,
-                  sum(p.blockedShots) as blocked_shots,
-                  sum(p.takeaways) as takeaways,
-                  sum(p.giveaways) as giveaways,
-                  sum(p.hits) as hits
-                from nhlgamer_participants p
-                where p.leagueID in (507,508,509,510,511)
-                  and p.positionID in (4,5)
-                group by p.leagueID,p.teamID,p.playerID,p.positionID
-                having count(*) > 0
-                order by p.leagueID desc, avg_rating_defense desc
-                limit 80
-                """
-            )
-            inventory["rating_defense_samples"] = list(cursor.fetchall())
-
             important = {
                 "nhlgamer_players",
                 "nhlgamer_leagueRosters",
@@ -239,14 +133,6 @@ def main() -> int:
     for row in inventory["candidate_leagues"]:
         print(f"{row['league_id']}\t{row['league_name']}\t{row['source_table']}")
     print(f"Discovered {len(inventory['tables'])} relevant tables.")
-    print("=== DIM / RATING / IMPACT CANDIDATES ===")
-    for row in inventory["metric_candidates"]:
-        print(f"{row['table_name']}\t{row['column_name']}\t{row['data_type']}")
-    print("Metric-like tables:", ", ".join(inventory["metric_tables"]))
-    print("Metric views:", ", ".join(row["view_name"] for row in inventory["metric_views"]))
-    print("=== RATING DEFENSE SAMPLES ===")
-    for row in inventory["rating_defense_samples"][:20]:
-        print(json.dumps(row, ensure_ascii=False, default=str))
     return 0
 
 
