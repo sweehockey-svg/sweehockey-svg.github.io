@@ -3,6 +3,9 @@ run-name: Discover SportsGamer ECL data
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/discover-sportsgamer.yml"
 
 permissions:
   contents: read
