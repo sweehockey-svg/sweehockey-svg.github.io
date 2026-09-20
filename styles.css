@@ -28147,3 +28147,176 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     width: 100% !important;
   }
 }
+
+
+/* V1.30.17 — shared desktop hero geometry across primary pages */
+@media (min-width: 921px) {
+  /* One desktop page width for the primary navigation destinations. */
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="news"] > .news-page-shell,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="players"] > .players-shell-v122,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] > .directory-shell,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-shell-v12840,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] .season-shell-v12840,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] > .free-agents-shell {
+    width: min(1540px, calc(100% - 42px)) !important;
+    max-width: 1540px !important;
+    margin-inline: auto !important;
+    padding-top: 28px !important;
+  }
+
+  /* The top hero should barely move when switching pages. */
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="news"] .news-page-hero,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="players"] .players-hero-v122,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .directory-hero,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-hero-v12840,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-hero,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .ecl27v2-hero {
+    box-sizing: border-box !important;
+    min-height: 356px !important;
+    height: 356px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 360px !important;
+    gap: 54px !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 54px !important;
+    border-top: 1px solid rgba(255,255,255,.11) !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,.11) !important;
+    border-left: 0 !important;
+    border-radius: 0 !important;
+    background:
+      linear-gradient(108deg, transparent 0 61%, rgba(255,208,0,.025) 61.05% 61.13%, transparent 61.2%),
+      radial-gradient(circle at 88% 26%, rgba(10,56,78,.055), transparent 28%),
+      linear-gradient(90deg, #070909 0%, #050706 55%, #06090a 100%) !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  /* Consistent copy column. */
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="news"] .news-page-hero > div:first-child,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="players"] .players-hero__copy,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .directory-hero__copy,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-hero-v12840__copy,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-hero__copy,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .ecl27v2-hero > div:first-child {
+    min-width: 0 !important;
+    align-self: center !important;
+    padding: 0 !important;
+  }
+
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="news"] .news-page-hero h1,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="players"] .players-hero-v122 h1,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .directory-hero h1,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-hero-v12840 h1,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-hero__copy h1,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .ecl27v2-hero h2 {
+    max-width: 1040px !important;
+    margin: 10px 0 16px !important;
+    color: #f4f1e9 !important;
+    font-family: var(--v2-display), "Arial Black", Impact, Haettenschweiler, sans-serif !important;
+    font-size: clamp(68px, 5vw, 96px) !important;
+    font-weight: 1000 !important;
+    letter-spacing: -.065em !important;
+    line-height: .86 !important;
+    text-transform: none !important;
+    text-wrap: balance !important;
+  }
+
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="news"] .news-page-hero > div > p:last-child,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="players"] .players-hero__copy > p:not(.directory-kicker),
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .directory-hero__copy > p:last-child,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-hero-v12840__copy > p:not(.directory-kicker),
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-hero__copy > p:not(.directory-kicker),
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .ecl27v2-hero > div > p:last-of-type {
+    max-width: 780px !important;
+    margin: 0 !important;
+    color: rgba(244,241,233,.68) !important;
+    font-size: 14px !important;
+    line-height: 1.58 !important;
+  }
+
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView :is(
+    .news-page-hero,
+    .players-hero-v122,
+    .directory-hero,
+    .ecl-hub-hero-v12840,
+    .free-agents-hero
+  ) .directory-kicker,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .directory-kicker {
+    margin: 0 0 8px !important;
+    color: #43e8e1 !important;
+    font-size: 11px !important;
+    font-weight: 950 !important;
+    letter-spacing: .055em !important;
+  }
+
+  /* Exact same yellow block footprint and vertical position. */
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="news"] .news-page-tools,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="players"] .players-overview-v122,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .history-overview-v124,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-current-v12840,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-overview,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .ecl27v2-stamp {
+    width: 360px !important;
+    min-width: 360px !important;
+    max-width: 360px !important;
+    height: 240px !important;
+    min-height: 240px !important;
+    max-height: 240px !important;
+    align-self: center !important;
+    justify-self: end !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 26px 28px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    color: #080909 !important;
+    background: #ffd000 !important;
+    box-shadow: none !important;
+  }
+
+  /* Keep overview blocks compact enough for the shared yellow footprint. */
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="players"] .players-overview-v122 > div,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .history-overview-grid,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-overview > div {
+    min-height: 0 !important;
+  }
+
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="players"] .players-overview-v122 article,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .history-overview-grid article,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-overview article {
+    min-height: 72px !important;
+    padding: 11px 14px !important;
+  }
+
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="players"] .players-overview-v122 article strong,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .history-overview-grid article strong,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-overview article strong {
+    margin-top: 7px !important;
+    font-size: 30px !important;
+    line-height: .92 !important;
+  }
+
+  /* News controls fit the same 240px card instead of defining their own height. */
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="news"] .news-page-tools {
+    display: grid !important;
+    align-content: center !important;
+    gap: 10px !important;
+  }
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="news"] .news-page-tools input {
+    min-height: 44px !important;
+  }
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="news"] .news-tag {
+    min-height: 30px !important;
+    padding-inline: 10px !important;
+    font-size: 10px !important;
+  }
+
+  /* Tags below titles keep the same rhythm. */
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="players"] .players-hero__tags,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-tags-v12840,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-hero__tags {
+    margin-top: 20px !important;
+  }
+}
