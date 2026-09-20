@@ -1760,3 +1760,61 @@
     text-transform:uppercase;
   }
 }
+
+
+/* Recordbook V2.8 — compact horizontal player/team switch */
+.seh-recordbook-dock-top{
+  justify-content:flex-start;
+  align-items:center;
+  gap:22px;
+}
+.seh-recordbook-switch{
+  flex:0 0 auto;
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(104px,1fr)) !important;
+  gap:0 !important;
+  width:auto !important;
+  margin:0 !important;
+  padding:3px !important;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:0 !important;
+  background:#090b0b;
+}
+.seh-recordbook-switch button{
+  width:auto !important;
+  min-width:104px !important;
+  min-height:34px !important;
+  margin:0 !important;
+  padding:0 16px !important;
+  border:0 !important;
+  border-right:1px solid rgba(255,255,255,.07) !important;
+  border-radius:0 !important;
+  background:transparent !important;
+}
+.seh-recordbook-switch button:last-child{
+  border-right:0 !important;
+}
+.seh-recordbook-switch button.is-active{
+  color:#080909 !important;
+  background:#ffd000 !important;
+  box-shadow:none !important;
+}
+.seh-recordbook-filters{
+  justify-content:flex-start !important;
+  flex:0 1 auto;
+}
+@media(max-width:720px){
+  .seh-recordbook-dock-top{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .seh-recordbook-switch{
+    width:min(100%,260px) !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+  .seh-recordbook-switch button{
+    min-width:0 !important;
+  }
+}
