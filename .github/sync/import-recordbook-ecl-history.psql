@@ -47,7 +47,7 @@ select 1 / case
 from ecl_recordbook_matches_stage;
 
 select public.seh_refresh_recordbook_ecl_match_players_cache_v1() as refreshed_recordbook_players;
-select public.refresh_ehockey_player_record_highlights_cache_v1() as refreshed_player_record_highlights;
+select public.refresh_ehockey_player_record_highlights_v2() as refreshed_player_record_highlights;
 
 commit;
 
