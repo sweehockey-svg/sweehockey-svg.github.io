@@ -4362,6 +4362,28 @@ function SEH_initPlayer() {
       const oldRows = elements.playerBio.querySelectorAll("[data-national-team-bio]");
       oldRows.forEach((row) => row.remove());
 
+      recordMeritRows.forEach((row) => {
+        const meritText = String(row?.merit_text || "").trim();
+        if (!meritText) return;
+
+        const key = [
+          "record",
+          String(row?.competition_code || "").toUpperCase(),
+          String(row?.metric_code || "").toLowerCase(),
+          meritText
+        ].join("|");
+
+        if (seen.has(key)) return;
+        seen.add(key);
+
+        items.push({
+          icon: "R",
+          type: "record",
+          text: meritText,
+          sortValue: 100000 + number(row?.sort_priority)
+        });
+      });
+
       nationalTeamRows
         .filter((row) => number(row?.matches) > 0)
         .sort((a, b) => number(b?.matches) - number(a?.matches))
@@ -4479,7 +4501,8 @@ function SEH_initPlayer() {
       const personalMerits = buildPersonalMerits(
         profileRows,
         personalMeritRows,
-        nationalTeamRows
+        nationalTeamRows,
+        recordMeritRows
       );
 
       const championships = teamMerits.filter((item) => item.type === "place-1");
@@ -5084,7 +5107,7 @@ function SEH_initPlayer() {
       return "";
     }
 
-    function buildPersonalMerits(profileRows, personalMeritRows, nationalTeamRows = []) {
+    function buildPersonalMerits(profileRows, personalMeritRows, nationalTeamRows = [], recordMeritRows = []) {
       /*
        * Statistikmeriter kommer färdigberäknade från Supabase:
        * public.v_ehockey_player_personal_merits_v2
@@ -5240,10 +5263,32 @@ function SEH_initPlayer() {
         });
       }
 
-      const [meritRows, personalMeritRows, nationalTeamRows] = await Promise.all([
+      let recordMeritsPromise = Promise.resolve([]);
+
+      if (playerKey) {
+        const recordParams = new URLSearchParams({
+          select: "*",
+          player_key: `eq.${playerKey}`,
+          order: "sort_priority.desc"
+        });
+
+        recordMeritsPromise = fetchAllJson(
+          "ehockey_player_record_highlights_cache_v1",
+          recordParams
+        ).catch((error) => {
+          console.warn(
+            `${APP_BUILD}: kunde inte läsa spelarens rekord från Rekordboken.`,
+            error
+          );
+          return [];
+        });
+      }
+
+      const [meritRows, personalMeritRows, nationalTeamRows, recordMeritRows] = await Promise.all([
         meritsPromise,
         personalMeritsPromise,
-        fetchPlayerNationalTeams(profileRows, directoryRow)
+        fetchPlayerNationalTeams(profileRows, directoryRow),
+        recordMeritsPromise
       ]);
 
       console.info(
@@ -5253,18 +5298,20 @@ function SEH_initPlayer() {
           sportsGamerPlayerId,
           teamMerits: meritRows.length,
           personalMerits: personalMeritRows.length,
+          recordMerits: recordMeritRows.length,
           nationalTeams: nationalTeamRows.length
         }
       );
 
-      return { meritRows, personalMeritRows, nationalTeamRows };
+      return { meritRows, personalMeritRows, nationalTeamRows, recordMeritRows };
     }
 
     function renderPlayerMerits(
       profileRows,
       meritRows = [],
       personalMeritRows = [],
-      nationalTeamRows = []
+      nationalTeamRows = [],
+      recordMeritRows = []
     ) {
       const teamMerits = buildTeamMerits(meritRows);
       const personalMerits = buildPersonalMerits(
@@ -5309,7 +5356,8 @@ function SEH_initPlayer() {
         profileRows,
         data.meritRows,
         data.personalMeritRows,
-        data.nationalTeamRows
+        data.nationalTeamRows,
+        data.recordMeritRows
       );
 
       if (currentBioContext) {
