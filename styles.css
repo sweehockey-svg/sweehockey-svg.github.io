@@ -28320,3 +28320,21 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     margin-top: 20px !important;
   }
 }
+
+
+/* V1.30.18 — lock primary hero title baseline */
+@media (min-width: 921px) {
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="news"] .news-page-hero > div:first-child,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="players"] .players-hero__copy,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .directory-hero__copy,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-hero-v12840__copy,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-hero__copy,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .ecl27v2-hero > div:first-child {
+    align-self: stretch !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    padding: 68px 0 0 !important;
+  }
+}
