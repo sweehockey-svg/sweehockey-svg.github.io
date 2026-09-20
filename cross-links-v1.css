@@ -1,0 +1,81 @@
+/* Svensk eHockey — cross-link navigation v1 */
+.history-table-link--division,
+.history-inline-link,
+.history-leader-link,
+.player-merit-cross-link {
+  color: inherit;
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+
+.history-table-link--division {
+  color: #62d4cf;
+  font-weight: 850;
+}
+
+.history-table-link--division:hover,
+.history-table-link--division:focus-visible,
+.history-inline-link:hover,
+.history-inline-link:focus-visible,
+.history-leader-link:hover,
+.history-leader-link:focus-visible,
+.player-merit-cross-link:hover,
+.player-merit-cross-link:focus-visible {
+  color: #ffd000;
+  text-decoration: underline;
+  outline: none;
+}
+
+.history-leader-link {
+  color: inherit;
+  font-weight: inherit;
+}
+
+.player-merit-cross-link {
+  color: inherit;
+  font-weight: inherit;
+}
+
+.player-merit-row--record .player-merit-cross-link,
+.player-merit-row--dim .player-merit-cross-link {
+  color: #f0d58b;
+}
+
+.players-card__team-v122.is-cross-link {
+  cursor: pointer;
+  border-radius: 9px;
+  transition: background .15s ease, box-shadow .15s ease;
+}
+
+.players-card__team-v122.is-cross-link:hover,
+.players-card__team-v122.is-cross-link:focus-visible {
+  outline: none;
+  background: rgba(98,212,207,.055);
+  box-shadow: 0 0 0 1px rgba(98,212,207,.18);
+}
+
+.players-card__team-v122.is-cross-link strong {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: color .15s ease, text-decoration-color .15s ease;
+}
+
+.players-card__team-v122.is-cross-link:hover strong,
+.players-card__team-v122.is-cross-link:focus-visible strong {
+  color: #62d4cf;
+  text-decoration-color: currentColor;
+}
+
+.team-honour-card .history-honour-link,
+.history-season-label .history-table-link {
+  text-underline-offset: 3px;
+}
+
+.team-honour-card .history-honour-link:hover,
+.team-honour-card .history-honour-link:focus-visible,
+.history-season-label .history-table-link:hover,
+.history-season-label .history-table-link:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}

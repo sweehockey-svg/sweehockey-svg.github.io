@@ -47,6 +47,36 @@
   const cache=new Map();
   const state={type:'players',competition:'ALL',group:'career',metric:'games'};
 
+  function groupForMetric(metric,type='players'){
+    const groups=type==='teams'?TEAM_GROUPS:PLAYER_GROUPS;
+    return groups.find(group=>group.items.some(item=>item[0]===metric))?.key || (type==='teams'?'team':'career');
+  }
+
+  function hydrateStateFromRoute(){
+    const query=window.SEH_ROUTE?.query;
+    if(!query)return;
+    const type=query.get('type');
+    if(type==='players'||type==='teams')state.type=type;
+    const competition=String(query.get('competition')||'').trim().toUpperCase();
+    if(competition)state.competition=competition;
+    const metric=String(query.get('metric')||'').trim();
+    if(metric){
+      state.metric=metric;
+      state.group=groupForMetric(metric,state.type);
+    }
+    const group=String(query.get('group')||'').trim();
+    if(group)state.group=group;
+  }
+
+  function syncRouteState(){
+    const params=new URLSearchParams();
+    params.set('type',state.type);
+    params.set('competition',state.competition);
+    params.set('group',state.group);
+    params.set('metric',state.metric);
+    history.replaceState(null,'',`#/rekord?${params.toString()}`);
+  }
+
   function cfg(){return window.SEH_CONFIG||window.EHOCKEY_CONFIG||window.APP_CONFIG||window.config||{};}
   function getClient(){if(client)return client;const c=cfg(),url=String(c.supabaseUrl||c.SUPABASE_URL||'').trim(),key=String(c.supabasePublishableKey||c.supabaseAnonKey||c.SUPABASE_ANON_KEY||c.SUPABASE_PUBLISHABLE_KEY||'').trim();if(!window.supabase?.createClient||!url||!key)return null;client=window.supabase.createClient(url,key);return client;}
   function esc(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
@@ -554,24 +584,25 @@
         state.type=type.dataset.recordType;
         state.group=state.type==='players'?'career':'team';
         state.metric='games';
-        render();return;
+        syncRouteState();render();return;
       }
       const comp=e.target.closest('[data-record-competition]');if(comp){
         state.competition=comp.dataset.recordCompetition;
         const group=activeGroup();
         if(!group?.items.some(item=>item[0]===state.metric))state.metric=group?.items[0]?.[0]||'games';
-        render();return;
+        syncRouteState();render();return;
       }
       const groupButton=e.target.closest('[data-record-group]');if(groupButton){
         state.group=groupButton.dataset.recordGroup;
         state.metric=activeGroup()?.items?.[0]?.[0]||'games';
-        render();return;
+        syncRouteState();render();return;
       }
-      const metric=e.target.closest('[data-record-metric]');if(metric){state.metric=metric.dataset.recordMetric;render();}
+      const metric=e.target.closest('[data-record-metric]');if(metric){state.metric=metric.dataset.recordMetric;syncRouteState();render();}
     });
   }
   window.SEH_initRecordBook=()=>{
     const root=document.getElementById(ROOT_ID);if(!root)return;
+    hydrateStateFromRoute();
     bind(root);render();
   };
 })();

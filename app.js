@@ -2220,7 +2220,7 @@ function SEH_initPlayers() {
     const REQUEST_TIMEOUT_MS = 20000;
     const DIVISION_OPTIONS = [
       "ECL", "ECL Elite", "ECL Pro", "ECL Lite", "ECL Core", "ECL Neo",
-      "SCL", "SEC", "eSHL", "LGEL", "SM",
+      "SCL", "SEC", "FCL", "GCL", "RCL", "CSCL", "NACL", "eSHL", "LGEL", "SM", "6HL",
       "ITHL", "ITHL Elite", "ITHL Sweat", "ITHL Rammer", "ITHL Core"
     ];
   
@@ -2527,6 +2527,22 @@ function SEH_initPlayers() {
       });
     }
   
+    function applyRouteFilters() {
+      const routeQuery = window.SEH_ROUTE?.query;
+      if (!routeQuery) return;
+
+      const requestedDivision = clean(routeQuery.get("division"));
+      if (
+        requestedDivision &&
+        [...elements.division.options].some((option) => option.value === requestedDivision)
+      ) {
+        elements.division.value = requestedDivision;
+      }
+
+      const requestedSearch = clean(routeQuery.get("q"));
+      if (requestedSearch) elements.search.value = requestedSearch;
+    }
+
     function rankingForPlayer(player) {
       return SEH_findPlayerRanking(state.ranking, player.key, player.name);
     }
@@ -2647,6 +2663,25 @@ function SEH_initPlayers() {
           SEH_renderTeamLogo(watermarkNode, [player.currentTeamLogo], player.currentTeam, "");
           SEH_hydratePlayerCardTeamPalette(link, watermarkNode, player.currentTeam);
         }
+      }
+
+      const teamNode = link.querySelector(".players-card__team-v122");
+      if (!isFreeAgent && teamNode && Number(player.currentTeamId) > 0) {
+        const teamHref = SEH_teamProfileUrl(player.currentTeamId);
+        teamNode.classList.add("is-cross-link");
+        teamNode.setAttribute("role", "link");
+        teamNode.tabIndex = 0;
+        teamNode.title = `Öppna ${player.currentTeam}`;
+        const openTeam = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          window.location.href = teamHref;
+        };
+        teamNode.addEventListener("click", openTeam);
+        teamNode.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          openTeam(event);
+        });
       }
 
       return link;
@@ -2776,6 +2811,7 @@ function SEH_initPlayers() {
             player.key && ["SE", "SWE"].includes(player.country)
           );
         buildDivisionFilter();
+        applyRouteFilters();
         updateOverview();
         render();
 
@@ -2856,6 +2892,49 @@ function SEH_playerProfileUrl(playerKey, gamertag, fromTeam = null) {
 
   const queryString = query.toString();
   return `#/spelare/${encodeURIComponent(routeValue)}${queryString ? `?${queryString}` : ""}`;
+}
+
+function SEH_teamProfileUrl(teamId) {
+  const id = Number(teamId);
+  return Number.isInteger(id) && id > 0
+    ? `#/lag/${encodeURIComponent(id)}`
+    : "#/laghistoria";
+}
+
+function SEH_tournamentOverviewUrl(leagueId) {
+  const id = Number(leagueId);
+  return Number.isInteger(id) && id > 0
+    ? `#/turnering/${encodeURIComponent(id)}`
+    : "#/ecl";
+}
+
+function SEH_playerDirectoryDivisionValue(division, competitionCode = "") {
+  const raw = String(division || "").trim();
+  const code = String(competitionCode || "").trim().toUpperCase();
+  const title = (value) => value ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase() : "";
+  const eclLevel = raw.match(/\b(elite|pro|lite|core|neo)\b/i)?.[1] || "";
+  const ithlLevel = raw.match(/\b(elite|sweat|rammer|core)\b/i)?.[1] || "";
+
+  if (code === "ECL") return eclLevel ? `ECL ${title(eclLevel)}` : "ECL";
+  if (code === "ITHL") return ithlLevel ? `ITHL ${title(ithlLevel)}` : "ITHL";
+  if (code === "ESHL") return "eSHL";
+  if (["SCL","SEC","FCL","GCL","RCL","CSCL","NACL","LGEL","SM","6HL"].includes(code)) return code;
+  return raw || code;
+}
+
+function SEH_playerDirectoryDivisionUrl(division, competitionCode = "") {
+  const value = SEH_playerDirectoryDivisionValue(division, competitionCode);
+  return value
+    ? `#/spelare?division=${encodeURIComponent(value)}`
+    : "#/spelare";
+}
+
+function SEH_recordbookMetricUrl(competitionCode = "ALL", metric = "games", type = "players") {
+  const params = new URLSearchParams();
+  params.set("type", type === "teams" ? "teams" : "players");
+  params.set("competition", String(competitionCode || "ALL").trim().toUpperCase() || "ALL");
+  params.set("metric", String(metric || "games").trim());
+  return `#/rekord?${params.toString()}`;
 }
 
 function SEH_initPlayer() {
@@ -4858,11 +4937,24 @@ function SEH_initPlayer() {
 
       if (item?.teamName && item?.tournament && [1, 2, 3].includes(Number(item?.placement))) {
         const lead = Number(item.placement) === 1
-          ? `Mästare i ${item.tournament} med `
+          ? "Mästare i "
           : Number(item.placement) === 2
-            ? `Silver i ${item.tournament} med `
-            : `Brons i ${item.tournament} med `;
+            ? "Silver i "
+            : "Brons i ";
         copy.append(document.createTextNode(lead));
+
+        const leagueId = Number(item.leagueId);
+        if (Number.isFinite(leagueId) && leagueId > 0) {
+          const tournamentLink = document.createElement("a");
+          tournamentLink.href = SEH_tournamentOverviewUrl(leagueId);
+          tournamentLink.textContent = item.tournament;
+          tournamentLink.className = "player-merit-cross-link";
+          tournamentLink.title = "Öppna turneringen";
+          copy.append(tournamentLink);
+        } else {
+          copy.append(document.createTextNode(item.tournament));
+        }
+        copy.append(document.createTextNode(" med "));
 
         const teamId = Number(item.teamId);
         if (Number.isFinite(teamId) && teamId > 0) {
@@ -4876,6 +4968,15 @@ function SEH_initPlayer() {
           copy.append(teamName);
         }
         copy.append(document.createTextNode("."));
+      } else if (item?.href) {
+        const meritLink = document.createElement("a");
+        meritLink.href = item.href;
+        meritLink.className = "player-merit-cross-link";
+        meritLink.textContent = item?.text || "";
+        meritLink.title = item?.type === "record" || item?.type === "dim"
+          ? "Öppna i Rekordboken"
+          : "Öppna turneringen";
+        copy.append(meritLink);
       } else {
         copy.textContent = item?.text || "";
       }
@@ -5084,6 +5185,8 @@ function SEH_initPlayer() {
             tournament,
             teamName,
             teamId: nullableNumber(row?.team_id ?? row?.teamId),
+            leagueId: nullableNumber(row?.league_id ?? row?.external_league_id),
+            competitionCode: String(row?.competition_code || "").trim().toUpperCase(),
             text: teamMeritText(placement, tournament, teamName),
             sortValue: meritSortValue(row)
           };
@@ -5136,11 +5239,15 @@ function SEH_initPlayer() {
           if (seen.has(key)) return null;
           seen.add(key);
 
+          const leagueId = Number(row?.league_id ?? row?.sports_gamer_league_id) || 0;
           return {
             icon: personalMeritIcon(row),
             type: personalMeritType(row),
             text: polishPersonalMeritText(meritText),
-            sortValue: Number(row?.league_id ?? row?.sports_gamer_league_id) || 0
+            leagueId,
+            competitionCode: String(row?.competition_code || "").trim().toUpperCase(),
+            href: leagueId > 0 ? SEH_tournamentOverviewUrl(leagueId) : "",
+            sortValue: leagueId
           };
         })
         .filter(Boolean);
@@ -5176,6 +5283,7 @@ function SEH_initPlayer() {
           icon: "D",
           type: "dim",
           text,
+          href: SEH_recordbookMetricUrl("ECL", hasDimRecord ? "dim_leader_count" : "latest_season_dim"),
           sortValue: hasDimRecord ? 199000 : 99000
         });
       }
@@ -5200,6 +5308,10 @@ function SEH_initPlayer() {
           icon: "R",
           type: "record",
           text: meritText,
+          href: SEH_recordbookMetricUrl(
+            String(row?.competition_code || "ALL").trim().toUpperCase() || "ALL",
+            String(row?.metric_code || "games").trim()
+          ),
           sortValue: 100000 + number(row?.sort_priority)
         });
       });
@@ -6082,12 +6194,13 @@ function SEH_initPlayer() {
         const tr = document.createElement("tr");
         const seasonCell = document.createElement("td");
 
-        if (row.teamId) {
+        if (Number(row.leagueId) > 0) {
           const seasonLink = document.createElement("a");
           seasonLink.className = "history-table-link history-table-link--gold";
-          seasonLink.href = tournamentUrl(row);
+          seasonLink.href = SEH_tournamentOverviewUrl(row.leagueId);
           seasonLink.textContent =
             row.catalogDisplayName || SEH_tableSeasonLabel(row.seasonLabel);
+          seasonLink.title = "Öppna hela turneringen";
           seasonCell.append(seasonLink);
         } else {
           const seasonText = document.createElement("span");
@@ -6118,8 +6231,9 @@ function SEH_initPlayer() {
         if (row.teamId) {
           const teamLink = document.createElement("a");
           teamLink.className = "history-table-link";
-          teamLink.href = tournamentUrl(row);
+          teamLink.href = teamUrl(row.teamId);
           teamLink.textContent = row.teamName;
+          teamLink.title = "Öppna lagprofil";
           teamWrap.append(teamLogo, teamLink);
         } else {
           const teamText = document.createElement("span");
@@ -6132,8 +6246,22 @@ function SEH_initPlayer() {
         const skaterGames = number(row.skaterGames);
         const goalieGames = number(row.goalieGames);
         const role = goalieGames > skaterGames ? "G" : row.position || "Utespelare";
+        const divisionCell = document.createElement("td");
+        if (row.division) {
+          const divisionLink = document.createElement("a");
+          divisionLink.className = "history-table-link history-table-link--division";
+          divisionLink.href = SEH_playerDirectoryDivisionUrl(
+            row.division,
+            normalizedCompetitionCode(row)
+          );
+          divisionLink.textContent = row.division;
+          divisionLink.title = "Visa spelare i denna division";
+          divisionCell.append(divisionLink);
+        } else {
+          divisionCell.textContent = "–";
+        }
+
         const values = [
-          row.division || "–",
           role,
           skaterGames > 0 ? formatInteger(skaterGames, "0") : "–",
           goalieGames > 0 ? formatInteger(goalieGames, "0") : "–",
@@ -6144,7 +6272,7 @@ function SEH_initPlayer() {
           goalieGames > 0 ? formatDecimal(row.gaa, 2) : "–"
         ];
 
-        tr.append(seasonCell, teamCell);
+        tr.append(seasonCell, teamCell, divisionCell);
 
         values.forEach((value) => {
           const td = document.createElement("td");
@@ -8832,12 +8960,28 @@ function SEH_initTeam() {
           (b.totalGoalieSavePercentage ?? -1) - (a.totalGoalieSavePercentage ?? -1) ||
           b.totalGoalieGames - a.totalGoalieGames
         )[0];
-  
-      elements.leaderMatches.textContent = leaderText(byGames, byGames?.careerGames, "GP");
-      elements.leaderPoints.textContent = leaderText(byPoints, byPoints?.totalPoints, "PTS");
-      elements.leaderGoalie.textContent = bestGoalie
-        ? `${bestGoalie.displayGamertag} · ${formatSavePercentage(bestGoalie.totalGoalieSavePercentage)}`
-        : "–";
+
+      const renderLeader = (element, player, value) => {
+        element.replaceChildren();
+        if (!player) {
+          element.textContent = "–";
+          return;
+        }
+        const link = document.createElement("a");
+        link.className = "history-leader-link";
+        link.href = playerPageUrl(player.playerKey, player.displayGamertag);
+        link.textContent = `${player.displayGamertag} · ${value}`;
+        link.title = "Öppna spelarprofil";
+        element.append(link);
+      };
+
+      renderLeader(elements.leaderMatches, byGames, `${formatInteger(byGames?.careerGames, "0")} GP`);
+      renderLeader(elements.leaderPoints, byPoints, `${formatInteger(byPoints?.totalPoints, "0")} PTS`);
+      renderLeader(
+        elements.leaderGoalie,
+        bestGoalie,
+        bestGoalie ? formatSavePercentage(bestGoalie.totalGoalieSavePercentage) : "–"
+      );
     }
   
   
@@ -8949,8 +9093,19 @@ function SEH_initTeam() {
       elements.divisionCurve.append(svg);
       const first = rows[0];
       const latest = rows[rows.length - 1];
-      elements.divisionCurveFirst.textContent = `${compactSeasonLabel(first)}: ${first.division}`;
-      elements.divisionCurveLatest.textContent = `${compactSeasonLabel(latest)}: ${latest.division}`;
+
+      const renderCurveFooterLink = (element, tournament) => {
+        element.replaceChildren();
+        const link = document.createElement("a");
+        link.className = "history-inline-link";
+        link.href = fullTournamentPageUrl(tournament);
+        link.textContent = `${compactSeasonLabel(tournament)}: ${tournament.division}`;
+        link.title = "Öppna turneringen";
+        element.append(link);
+      };
+
+      renderCurveFooterLink(elements.divisionCurveFirst, first);
+      renderCurveFooterLink(elements.divisionCurveLatest, latest);
     }
   
   
@@ -9246,7 +9401,7 @@ function SEH_initTeam() {
 
       const title = document.createElement("a");
       title.className = "history-honour-link";
-      title.href = tournamentPageUrl(tournament);
+      title.href = fullTournamentPageUrl(tournament);
 
       const placementLabel = honourPlacementLabel(tournament);
       const cleanTitle = cleanHonourDisplayText(seasonTitle(tournament));
@@ -9564,7 +9719,7 @@ function SEH_initTeam() {
   
       for (const tournament of visibleTournaments) {
         const row = document.createElement("tr");
-        const pageUrl = tournamentPageUrl(tournament);
+        const pageUrl = fullTournamentPageUrl(tournament);
   
         const seasonCell = document.createElement("td");
         const seasonCellContent = document.createElement("span");
@@ -9630,7 +9785,21 @@ function SEH_initTeam() {
             "history-date-cell"
           ),
           nameCell,
-          createTextCell(tournament.division || "–"),
+          (() => {
+            const cell = document.createElement("td");
+            if (tournament.division) {
+              cell.append(
+                createInternalLink(
+                  tournament.division,
+                  SEH_playerDirectoryDivisionUrl(tournament.division, tournament.competitionCode),
+                  "history-table-link history-table-link--division"
+                )
+              );
+            } else {
+              cell.textContent = "–";
+            }
+            return cell;
+          })(),
           createTextCell(formatInteger(state.playerCounts.get(tournament.leagueId) || 0, "0")),
           createTextCell(formatInteger(effectiveGames(tournament), "–")),
           createTextCell(record),
@@ -12360,7 +12529,7 @@ function SEH_initTournament() {
           const teamId = Number(row.team_id);
           const tr = document.createElement("tr");
           const teamCell = document.createElement("td");
-          teamCell.append(createLink(teamName(row), teamTournamentUrl(teamId)));
+          teamCell.append(createLink(teamName(row), teamPageUrl(teamId)));
           tr.append(
             textCell(formatInteger(row.table_position, String(index + 1))),
             teamCell,
@@ -12414,7 +12583,7 @@ function SEH_initTournament() {
           }
           const copy = document.createElement("div");
           const title = document.createElement("h3");
-          title.append(createLink(teamName(row), teamTournamentUrl(teamId)));
+          title.append(createLink(teamName(row), teamPageUrl(teamId)));
           const meta = document.createElement("p");
           meta.textContent = [
             clean(row.group_name),
@@ -12507,11 +12676,11 @@ function SEH_initTournament() {
   
         const score = document.createElement("div");
         score.className = "tournament-global-match__score";
-        const home = createLink(match.homeTeamName, match.homeTeamId ? teamTournamentUrl(match.homeTeamId) : "#");
+        const home = createLink(match.homeTeamName, match.homeTeamId ? teamPageUrl(match.homeTeamId) : "#");
         if (!match.homeTeamId) home.removeAttribute("href");
         const result = document.createElement("strong");
         result.textContent = matchScore(match);
-        const away = createLink(match.awayTeamName, match.awayTeamId ? teamTournamentUrl(match.awayTeamId) : "#");
+        const away = createLink(match.awayTeamName, match.awayTeamId ? teamPageUrl(match.awayTeamId) : "#");
         if (!match.awayTeamId) away.removeAttribute("href");
         score.append(home, result, away);
         article.append(meta, score);
@@ -12578,7 +12747,7 @@ function SEH_initTournament() {
         const row = document.createElement("tr");
         const teamCell = document.createElement("td");
         const teamId = Number(player.team_id);
-        if (teamId) teamCell.append(createLink(clean(player.team_name_in_tournament) || teamNameById(teamId), teamTournamentUrl(teamId)));
+        if (teamId) teamCell.append(createLink(clean(player.team_name_in_tournament) || teamNameById(teamId), teamPageUrl(teamId)));
         else teamCell.textContent = clean(player.team_name_in_tournament) || "–";
         row.append(
           textCell(String(index + 1)),
@@ -12598,7 +12767,7 @@ function SEH_initTournament() {
         const row = document.createElement("tr");
         const teamCell = document.createElement("td");
         const teamId = Number(player.team_id);
-        if (teamId) teamCell.append(createLink(clean(player.team_name_in_tournament) || teamNameById(teamId), teamTournamentUrl(teamId)));
+        if (teamId) teamCell.append(createLink(clean(player.team_name_in_tournament) || teamNameById(teamId), teamPageUrl(teamId)));
         else teamCell.textContent = clean(player.team_name_in_tournament) || "–";
         row.append(
           textCell(String(index + 1)),
@@ -12650,7 +12819,7 @@ function SEH_initTournament() {
   
             const teamA = document.createElement("div");
             if (winnerA) teamA.className = "is-winner";
-            const teamALink = createLink(series.teamAName, series.teamAId ? teamTournamentUrl(series.teamAId) : "#");
+            const teamALink = createLink(series.teamAName, series.teamAId ? teamPageUrl(series.teamAId) : "#");
             if (!series.teamAId) teamALink.removeAttribute("href");
             const scoreA = document.createElement("strong");
             scoreA.textContent = String(series.teamAWins);
@@ -12658,7 +12827,7 @@ function SEH_initTournament() {
   
             const teamB = document.createElement("div");
             if (winnerB) teamB.className = "is-winner";
-            const teamBLink = createLink(series.teamBName, series.teamBId ? teamTournamentUrl(series.teamBId) : "#");
+            const teamBLink = createLink(series.teamBName, series.teamBId ? teamPageUrl(series.teamBId) : "#");
             if (!series.teamBId) teamBLink.removeAttribute("href");
             const scoreB = document.createElement("strong");
             scoreB.textContent = String(series.teamBWins);
