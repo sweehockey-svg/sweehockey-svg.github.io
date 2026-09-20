@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "2026-09-20-v3";
+  var VERSION = "2026-09-20-v4";
   var state = {
     open: false,
     data: null,
@@ -111,9 +111,17 @@
         select: "slug,title,excerpt,tag,published_at",
         order: "published_at.desc.nullslast,created_at.desc"
       })
-    ]).then(function (settled) {
+    ]).then(async function (settled) {
       var players = settled[0].status === "fulfilled" ? settled[0].value : [];
       var teams = settled[1].status === "fulfilled" ? settled[1].value : [];
+
+      if (window.SEH_currentPlayerStatus?.decorateRows && players.length) {
+        try {
+          players = await window.SEH_currentPlayerStatus.decorateRows(players);
+        } catch (error) {
+          console.warn("Global sökning: aktuell spelarstatus kunde inte läggas till.", error);
+        }
+      }
       var tournaments = settled[2].status === "fulfilled" ? settled[2].value : [];
       var dbNews = settled[3].status === "fulfilled" ? settled[3].value : [];
 
@@ -225,6 +233,35 @@
     });
   }
 
+  function playerStatusMarkup(row) {
+    if (row.type !== "player") return "";
+    var freeAgent = row.statusKind === "free_agent" || row.currentTeam === "Free Agent";
+    if (freeAgent) {
+      return '<span class="seh-global-search__player-status is-free-agent">' +
+        '<b>FA</b><em>Free Agent</em>' +
+      '</span>';
+    }
+    return '<span class="seh-global-search__player-status is-team">' +
+      '<i class="seh-global-search__status-logo" aria-hidden="true" ' +
+        'data-search-current-team="' + esc(row.currentTeam || "") + '" ' +
+        'data-search-current-logo="' + esc(row.currentTeamLogo || "") + '"></i>' +
+      '<em>' + esc(row.currentTeam || "Aktuellt lag") + '</em>' +
+    '</span>';
+  }
+
+  function hydratePlayerStatusLogos(root) {
+    qa("[data-search-current-team]", root).forEach(function (container) {
+      var teamName = clean(container.dataset.searchCurrentTeam);
+      var logoName = clean(container.dataset.searchCurrentLogo);
+      if (!teamName) return;
+      try {
+        if (typeof SEH_renderTeamLogo === "function") {
+          SEH_renderTeamLogo(container, [logoName], teamName, "");
+        }
+      } catch (_) {}
+    });
+  }
+
   function buildResults(query) {
     var d = state.data;
     if (!d) return [];
@@ -239,14 +276,18 @@
 
     d.players.forEach(function (row) {
       var primary = clean(row.display_gamertag || row.player_key);
-      var s = scoreText(query, primary, [row.latest_team, row.latest_season, row.primary_position]);
+      var s = scoreText(query, primary, [row.current_team_name, row.latest_team, row.latest_season, row.primary_position]);
       if (!s) return;
       byKey.player.rows.push({
         score: s,
         title: primary,
-        meta: [clean(row.primary_position), clean(row.latest_team), clean(row.latest_season)].filter(Boolean).join(" · "),
+        meta: [clean(row.primary_position), clean(row.latest_season)].filter(Boolean).join(" · "),
         href: "#/spelare/" + encodeURIComponent(clean(row.player_key || primary)),
-        image: playerImageUrl(row)
+        image: playerImageUrl(row),
+        statusKind: clean(row.current_status) || (clean(row.current_team_name) ? "team" : ""),
+        currentTeam: clean(row.current_team_name) || clean(row.latest_team) || "Free Agent",
+        currentTeamLogo: clean(row.current_team_logo),
+        currentTeamId: clean(row.current_team_id)
       });
     });
 
@@ -392,13 +433,16 @@
         grouped[key].map(function (row) {
           return '<a class="seh-global-search__result" role="option" aria-selected="false" data-search-index="' + row.index + '" href="' + esc(row.href) + '">' +
             mediaMarkup(row) +
-            '<span class="seh-global-search__copy"><strong>' + esc(row.title) + '</strong><small>' + esc(row.meta || row.groupLabel) + '</small></span>' +
+            '<span class="seh-global-search__copy"><strong>' + esc(row.title) + '</strong>' +
+              playerStatusMarkup(row) +
+              '<small>' + esc(row.meta || row.groupLabel) + '</small></span>' +
             '<span class="seh-global-search__arrow" aria-hidden="true">→</span>' +
           '</a>';
         }).join("") +
       '</section>';
     }).join("");
     hydrateTeamLogos(host);
+    hydratePlayerStatusLogos(host);
     status.textContent = state.results.length + ' träffar på "' + query + '"';
     syncSelection();
   }
