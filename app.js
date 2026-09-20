@@ -15304,6 +15304,24 @@ function SEH_initShop() {
           <label class="free-agents-field"><span>SÖKER NIVÅ</span><select id="faLevel"><option value="all">Alla nivåer</option><option>Elite</option><option>Pro</option><option>Lite</option><option>Core</option><option>Neo</option></select></label>
           <label class="free-agents-field"><span>SORTERA</span><select id="faSort"><option value="rank">Sverige-rank</option><option value="newest">Nyast först</option><option value="rp">Högst RP</option><option value="name">Namn A–Ö</option></select></label>
         </div>
+        <div class="free-agents-secondary-filter">
+          <label class="free-agents-no-team-toggle">
+            <input id="faShowNoTeam" type="checkbox">
+            <span>
+              <strong>Visa även spelare utan aktuellt lag</strong>
+              <small>De här spelarna är inte registrerade som Free Agents. De visas separat och neutralt.</small>
+            </span>
+          </label>
+          <label id="faNoTeamActivityWrap" class="free-agents-no-team-activity" hidden>
+            <span>SENAST AKTIV</span>
+            <select id="faNoTeamActivity">
+              <option value="12" selected>Senaste 12 månaderna</option>
+              <option value="24">Senaste 24 månaderna</option>
+              <option value="all">Alla registrerade</option>
+            </select>
+          </label>
+          <p id="faNoTeamStatus" class="free-agents-no-team-status" hidden></p>
+        </div>
         <div id="faLoading" class="free-agents-loading"><div class="spinner" aria-hidden="true"></div><p>Hämtar Free Agents…</p></div>
         <div id="faEmpty" class="free-agents-empty" hidden><strong>Inga Free Agents matchar filtret.</strong><span>Ändra filtreringen eller kom tillbaka senare.</span></div>
         <div id="faGrid" class="free-agents-grid" aria-live="polite"></div>
@@ -15322,7 +15340,13 @@ function SEH_initShop() {
     const number = (value) => Number.isFinite(Number(value)) ? Number(value) : 0;
     const format = (value) => new Intl.NumberFormat('sv-SE').format(number(value));
     const sb = sehGetAuthClient();
-    const state = { rows: [] };
+    const state = {
+      rows: [],
+      noTeamRows: [],
+      noTeamLoaded: false,
+      noTeamLoading: false,
+      noTeamError: ""
+    };
 
     const positionCanonical = (value) => {
       const p = clean(value).toUpperCase().replace(/\s+/g, ' ');
@@ -15365,6 +15389,32 @@ function SEH_initShop() {
       const date = value ? new Date(`${String(value).slice(0,10)}T12:00:00`) : null;
       return (!date || Number.isNaN(date.getTime())) ? 99999 : (Date.now()-date.getTime())/86400000;
     };
+    const fetchAllRows = async (table, select, orderColumn = '') => {
+      const rows = [];
+      const pageSize = 1000;
+      for (let from = 0;; from += pageSize) {
+        let query = sb.from(table).select(select);
+        if (orderColumn) query = query.order(orderColumn, { ascending: false });
+        const { data, error } = await query.range(from, from + pageSize - 1);
+        if (error) throw error;
+        const batch = Array.isArray(data) ? data : [];
+        rows.push(...batch);
+        if (batch.length < pageSize) break;
+      }
+      return rows;
+    };
+    const noTeamActivityMatches = (row, scope) => {
+      if (scope === 'all') return true;
+      const months = Number(scope) || 12;
+      const raw = clean(row.last_appearance_date);
+      if (!raw) return false;
+      const date = new Date(`${raw.slice(0,10)}T12:00:00`);
+      if (Number.isNaN(date.getTime())) return false;
+      const cutoff = new Date();
+      cutoff.setHours(0,0,0,0);
+      cutoff.setMonth(cutoff.getMonth() - months);
+      return date >= cutoff;
+    };
     const latestPlayedEclTeam = (row) => clean(row.latest_ecl_team) || '–';
     const latestPlayedEclDivision = (row) => clean(row.latest_ecl_division) || '–';
 
@@ -15377,8 +15427,9 @@ function SEH_initShop() {
     }
 
     function card(row) {
+      const isNoTeam = row._listingType === 'no_team';
       const article=document.createElement('article');
-      article.className=`free-agent-card${row.player_key ? '' : ' is-manual'}`;
+      article.className=`free-agent-card${isNoTeam ? ' is-no-team' : (row.player_key ? '' : ' is-manual')}`;
       const levels=levelDisplayTokens(row), positions=positionTokens(row);
       const primary=positions[0] || clean(row.primary_position) || (clean(row.player_type).toLowerCase()==='goalie'?'G':'–');
       const alternate=positions.slice(1);
@@ -15392,31 +15443,147 @@ function SEH_initShop() {
       const name=clean(row.display_gamertag)||'Okänd spelare';
       const href=row.player_key ? SEH_playerProfileUrl(row.player_key,name) : '';
       const linkMarkup=href ? `<a class="free-agent-card__link" href="${escapeHtml(href)}" aria-label="Öppna spelarprofilen för ${escapeHtml(name)}"></a>` : '';
-      article.innerHTML=`${linkMarkup}<div class="free-agent-card__portrait"><img src="${escapeHtml(playerImage(row))}" alt="${escapeHtml(name)}" loading="lazy" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='players/1DEFAULTBILDID.png'}"><span>FREE AGENT</span></div><div class="free-agent-card__content"><div class="free-agent-card__topline"><span class="free-agent-card__rank">${rank>0?`#${format(rank)}`:'ORANKAD'}</span><strong>${Number.isFinite(rp)?`${SEH_formatRpNumber(rp)} RP`:'RP –'}</strong></div><h3>${escapeHtml(name)}</h3><div class="free-agent-card__positions"><b>${escapeHtml(primary)}</b>${alternate.map((p)=>`<span>${escapeHtml(p)}</span>`).join('')}</div><div class="free-agent-card__facts"><div><span>SENASTE ECL-LAG</span><strong>${escapeHtml(latestPlayedEclTeam(row))}</strong></div><div><span>DIVISION</span><strong>${escapeHtml(latestPlayedEclDivision(row))}</strong></div></div><div class="free-agent-card__career"><span>KARRIÄR</span><strong>${row.player_key?`${format(row.career_games)} GP · ${escapeHtml(secondary)}`:'–'}</strong></div><div class="free-agent-card__looking"><span>SÖKER</span><div>${levels.length?levels.map((level)=>`<b>${escapeHtml(level)}</b>`).join(''):'<b>Öppen för förslag</b>'}</div></div>${clean(row.availability)?`<p class="free-agent-card__availability"><span>TILLGÄNGLIGHET</span>${escapeHtml(row.availability)}</p>`:''}${clean(row.message)?`<p class="free-agent-card__message">${escapeHtml(row.message)}</p>`:''}<div class="free-agent-card__footer"><span>FA sedan ${escapeHtml(dateText(row.fa_date || row.created_at))}</span>${clean(row.contact)?`<strong>${escapeHtml(row.contact)}</strong>`:(href?'<strong>Öppna profil →</strong>':'<strong>Manuell FA-post</strong>')}</div></div>`;
+      const portraitLabel=isNoTeam?'INGET AKTUELLT LAG':'FREE AGENT';
+      const facts=isNoTeam
+        ? `<div class="free-agent-card__facts"><div><span>SENAST KÄNDA LAG</span><strong>${escapeHtml(clean(row.latest_team)||'–')}</strong></div><div><span>SENASTE TURNERING</span><strong>${escapeHtml(clean(row.latest_season)||'–')}</strong></div></div>`
+        : `<div class="free-agent-card__facts"><div><span>SENASTE ECL-LAG</span><strong>${escapeHtml(latestPlayedEclTeam(row))}</strong></div><div><span>DIVISION</span><strong>${escapeHtml(latestPlayedEclDivision(row))}</strong></div></div>`;
+      const statusBlock=isNoTeam
+        ? `<div class="free-agent-card__looking free-agent-card__looking--no-team"><span>STATUS</span><div><b>Ej registrerad som Free Agent</b></div></div>`
+        : `<div class="free-agent-card__looking"><span>SÖKER</span><div>${levels.length?levels.map((level)=>`<b>${escapeHtml(level)}</b>`).join(''):'<b>Öppen för förslag</b>'}</div></div>`;
+      const detailBlock=isNoTeam
+        ? ''
+        : `${clean(row.availability)?`<p class="free-agent-card__availability"><span>TILLGÄNGLIGHET</span>${escapeHtml(row.availability)}</p>`:''}${clean(row.message)?`<p class="free-agent-card__message">${escapeHtml(row.message)}</p>`:''}`;
+      const footer=isNoTeam
+        ? `<div class="free-agent-card__footer"><span>Senast aktiv ${escapeHtml(dateText(row.last_appearance_date))}</span><strong>${href?'Öppna profil →':'Spelarprofil'}</strong></div>`
+        : `<div class="free-agent-card__footer"><span>FA sedan ${escapeHtml(dateText(row.fa_date || row.created_at))}</span>${clean(row.contact)?`<strong>${escapeHtml(row.contact)}</strong>`:(href?'<strong>Öppna profil →</strong>':'<strong>Manuell FA-post</strong>')}</div>`;
+      article.innerHTML=`${linkMarkup}<div class="free-agent-card__portrait"><img src="${escapeHtml(playerImage(row))}" alt="${escapeHtml(name)}" loading="lazy" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='players/1DEFAULTBILDID.png'}"><span>${portraitLabel}</span></div><div class="free-agent-card__content"><div class="free-agent-card__topline"><span class="free-agent-card__rank">${rank>0?`#${format(rank)}`:'ORANKAD'}</span><strong>${Number.isFinite(rp)?`${SEH_formatRpNumber(rp)} RP`:'RP –'}</strong></div><h3>${escapeHtml(name)}</h3><div class="free-agent-card__positions"><b>${escapeHtml(primary)}</b>${alternate.map((p)=>`<span>${escapeHtml(p)}</span>`).join('')}</div>${facts}<div class="free-agent-card__career"><span>KARRIÄR</span><strong>${row.player_key?`${format(row.career_games)} GP · ${escapeHtml(secondary)}`:'–'}</strong></div>${statusBlock}${detailBlock}${footer}</div>`;
       return article;
+    }
+
+    function currentNoTeamScopeRows() {
+      const scope=$('#faNoTeamActivity')?.value || '12';
+      return state.noTeamRows.filter((row)=>noTeamActivityMatches(row,scope));
+    }
+
+    function updateNoTeamStatus() {
+      const status=$('#faNoTeamStatus');
+      if(!status)return;
+      if(!$('#faShowNoTeam')?.checked){
+        status.hidden=true;
+        return;
+      }
+      status.hidden=false;
+      if(state.noTeamLoading){
+        status.textContent='Hämtar spelare utan aktuellt lag…';
+        status.dataset.tone='loading';
+        return;
+      }
+      if(state.noTeamError){
+        status.textContent=state.noTeamError;
+        status.dataset.tone='error';
+        return;
+      }
+      if(!state.noTeamLoaded){
+        status.textContent='Laddas först när du väljer att visa gruppen.';
+        status.dataset.tone='';
+        return;
+      }
+      const scope=$('#faNoTeamActivity')?.value || '12';
+      const rows=currentNoTeamScopeRows();
+      const suffix=scope==='all'?'totalt':`aktiva senaste ${scope} månaderna`;
+      status.textContent=`${format(rows.length)} spelare utan aktuellt lag · ${suffix}`;
+      status.dataset.tone='ready';
     }
 
     function applyFilters() {
       const search=clean($('#faSearch').value).toLocaleLowerCase('sv-SE');
       const position=$('#faPosition').value, level=$('#faLevel').value, sort=$('#faSort').value;
-      let rows=state.rows.filter((row)=>{
+      const showNoTeam=Boolean($('#faShowNoTeam')?.checked);
+      const noTeamScopeRows=showNoTeam && state.noTeamLoaded ? currentNoTeamScopeRows() : [];
+      const sourceRows=[...state.rows,...noTeamScopeRows];
+
+      let rows=sourceRows.filter((row)=>{
+        const isNoTeam=row._listingType==='no_team';
         const rawPositions=positionTokens(row), canonical=rawPositions.map(positionCanonical), groups=canonical.map(positionGroup);
         const selected=positionCanonical(position);
         const posMatch=position==='all' || canonical.includes(selected) || (selected==='F'&&groups.includes('F')) || (selected==='D'&&groups.includes('D'));
         const canonicalLevels=levelCanonicals(row);
-        const levelMatch=level==='all' || canonicalLevels.some((x)=>x.toLowerCase()===level.toLowerCase());
-        const haystack=[row.display_gamertag,row.latest_ecl_team,row.latest_ecl_division,row.latest_ecl_season,row.latest_team,row.latest_season,row.positions_text,row.levels_text,row.message,...list(row.looking_for_levels),...rawPositions].join(' ').toLocaleLowerCase('sv-SE');
+        const levelMatch=isNoTeam ? level==='all' : (level==='all' || canonicalLevels.some((x)=>x.toLowerCase()===level.toLowerCase()));
+        const haystack=[
+          row.display_gamertag,row.latest_ecl_team,row.latest_ecl_division,row.latest_ecl_season,
+          row.latest_team,row.latest_season,row.positions_text,row.levels_text,row.message,
+          ...list(row.looking_for_levels),...rawPositions
+        ].join(' ').toLocaleLowerCase('sv-SE');
         return posMatch&&levelMatch&&(!search||haystack.includes(search));
       });
+
       rows.sort((a,b)=>{
+        const aNoTeam=a._listingType==='no_team', bNoTeam=b._listingType==='no_team';
+        if(aNoTeam!==bNoTeam)return aNoTeam?1:-1;
         if(sort==='rank')return(number(a.overall_rank)||999999)-(number(b.overall_rank)||999999);
         if(sort==='rp')return number(b.ranking_points)-number(a.ranking_points);
         if(sort==='name')return clean(a.display_gamertag).localeCompare(clean(b.display_gamertag),'sv-SE');
-        return String(b.fa_date||b.created_at||'').localeCompare(String(a.fa_date||a.created_at||''));
+        const aDate=aNoTeam?clean(a.last_appearance_date):clean(a.fa_date||a.created_at);
+        const bDate=bNoTeam?clean(b.last_appearance_date):clean(b.fa_date||b.created_at);
+        return bDate.localeCompare(aDate);
       });
+
       $('#faGrid').replaceChildren(...rows.map(card));
       $('#faEmpty').hidden=rows.length>0;
-      $('#faResultText').textContent=`${format(rows.length)} av ${format(state.rows.length)} lediga spelare`;
+
+      const shownFa=rows.filter((row)=>row._listingType!=='no_team').length;
+      const shownNoTeam=rows.length-shownFa;
+      if(showNoTeam){
+        $('#faResultText').textContent=`${format(shownFa)} Free Agents + ${format(shownNoTeam)} utan aktuellt lag`;
+      }else{
+        $('#faResultText').textContent=`${format(shownFa)} av ${format(state.rows.length)} aktiva Free Agents`;
+      }
+      updateNoTeamStatus();
+    }
+
+    async function loadNoTeamPlayers() {
+      if(state.noTeamLoaded || state.noTeamLoading)return;
+      state.noTeamLoading=true;
+      state.noTeamError='';
+      updateNoTeamStatus();
+      try{
+        const directorySelect=[
+          'player_key','display_gamertag','player_country','player_image','sports_gamer_player_url',
+          'primary_position','latest_team','latest_season','last_appearance_date','career_games',
+          'total_points','total_skater_games','total_goalie_games','total_goalie_save_percentage',
+          'player_type','filter_divisions','divisions'
+        ].join(',');
+        const [directoryRows,rankingRows]=await Promise.all([
+          fetchAllRows('app_player_directory_cache',directorySelect,'last_appearance_date'),
+          fetchAllRows('app_player_ranking_cache','player_key,overall_rank,ranking_points')
+        ]);
+        const swedish=directoryRows.filter((row)=>['SE','SWE'].includes(clean(row.player_country).toUpperCase()));
+        const decorated=window.SEH_currentPlayerStatus?.decorateRows
+          ? await window.SEH_currentPlayerStatus.decorateRows(swedish)
+          : swedish;
+        const rankingByKey=new Map(rankingRows.map((row)=>[clean(row.player_key),row]));
+        state.noTeamRows=decorated
+          .filter((row)=>clean(row.current_status)==='no_team')
+          .map((row)=>{
+            const ranking=rankingByKey.get(clean(row.player_key))||{};
+            return {
+              ...row,
+              ...ranking,
+              _listingType:'no_team',
+              alternate_positions:[],
+              positions_text:'',
+              looking_for_levels:[],
+              levels_text:''
+            };
+          });
+        state.noTeamLoaded=true;
+      }catch(error){
+        console.error('Kunde inte hämta spelare utan aktuellt lag:',error);
+        state.noTeamError='Kunde inte hämta spelare utan aktuellt lag.';
+      }finally{
+        state.noTeamLoading=false;
+        updateNoTeamStatus();
+      }
     }
 
     async function load() {
@@ -15424,7 +15591,17 @@ function SEH_initShop() {
       try {
         const {data,error}=await sb.from('v_ehockey_free_agents_public').select('*').order('fa_date',{ascending:false});
         if(error)throw error;
-        state.rows=Array.isArray(data)?data:[];
+        let rows=Array.isArray(data)?data:[];
+        if(window.SEH_currentPlayerStatus?.decorateRows){
+          try{
+            rows=await window.SEH_currentPlayerStatus.decorateRows(rows);
+          }catch(error){
+            console.warn('Kunde inte kontrollera aktuell lagstatus för Free Agents:',error);
+          }
+        }
+        state.rows=rows
+          .filter((row)=>!row.player_key || clean(row.current_status)!=='team')
+          .map((row)=>({...row,_listingType:'free_agent'}));
         updateOverview(); applyFilters();
       } catch(error) {
         console.error('Kunde inte hämta Free Agents:',error);
@@ -15630,6 +15807,20 @@ function SEH_initShop() {
     sb?.auth.onAuthStateChange(()=>window.setTimeout(()=>selfRefresh().catch((error)=>selfStatus('faDiscordLoginStatus',`Fel: ${error?.message||error}`,'error')),0));
 
     ['#faSearch','#faPosition','#faLevel','#faSort'].forEach((selector)=>$(selector)?.addEventListener(selector==='#faSearch'?'input':'change',applyFilters));
+    $('#faShowNoTeam')?.addEventListener('change',async()=>{
+      const checked=$('#faShowNoTeam').checked;
+      const activityWrap=$('#faNoTeamActivityWrap');
+      if(activityWrap)activityWrap.hidden=!checked;
+      updateNoTeamStatus();
+      if(checked&&!state.noTeamLoaded&&!state.noTeamLoading){
+        await loadNoTeamPlayers();
+      }
+      applyFilters();
+    });
+    $('#faNoTeamActivity')?.addEventListener('change',()=>{
+      updateNoTeamStatus();
+      applyFilters();
+    });
     load();
     selfRefresh().catch((error)=>selfStatus('faDiscordLoginStatus',`Fel: ${error?.message||error}`,'error'));
   }
