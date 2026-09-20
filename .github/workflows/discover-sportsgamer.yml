@@ -6,6 +6,7 @@ on:
   push:
     paths:
       - ".github/workflows/discover-sportsgamer.yml"
+      - ".github/sync/discover_sportsgamer.py"
 
 permissions:
   contents: read
