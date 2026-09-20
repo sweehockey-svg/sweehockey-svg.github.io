@@ -1589,3 +1589,40 @@
     border-left:1px solid var(--seh-line,rgba(255,255,255,.12));
   }
 }
+
+
+/* Recordbook V2.3 — prevent desktop hero title collision */
+@media(min-width:821px){
+  .seh-recordbook-hero{
+    grid-template-columns:minmax(0,1fr) clamp(300px,31vw,360px);
+    gap:24px;
+  }
+  .seh-recordbook-hero>div{
+    padding-right:18px;
+  }
+  .seh-recordbook-hero>aside{
+    padding:34px 30px;
+  }
+  .seh-recordbook-hero h1{
+    max-width:100%;
+    font-size:clamp(4.15rem,6.55vw,6.35rem);
+    line-height:.84;
+    white-space:nowrap;
+  }
+  .seh-recordbook-hero aside strong{
+    font-size:clamp(1.9rem,2.55vw,2.7rem);
+  }
+}
+@media(min-width:821px) and (max-width:1100px){
+  .seh-recordbook-hero{
+    grid-template-columns:minmax(0,1fr) 300px;
+    gap:18px;
+  }
+  .seh-recordbook-hero>div{
+    padding-left:26px;
+    padding-right:10px;
+  }
+  .seh-recordbook-hero h1{
+    font-size:clamp(3.8rem,6.35vw,4.8rem);
+  }
+}
