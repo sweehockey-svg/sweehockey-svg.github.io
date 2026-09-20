@@ -52,10 +52,3 @@ jobs:
           SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
           SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
         run: python .github/sync/discover_sportsgamer.py
-
-      - name: Upload discovery report
-        uses: actions/upload-artifact@v4
-        with:
-          name: sportsgamer-discovery
-          path: sportsgamer-discovery.json
-          retention-days: 3
