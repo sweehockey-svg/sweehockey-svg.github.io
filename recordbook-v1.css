@@ -1818,3 +1818,40 @@
     min-width:0 !important;
   }
 }
+
+
+/* Recordbook V2.9 — fixed player podium portrait geometry */
+@media(min-width:981px){
+  /* Player podium cards keep one geometry regardless of metric/detail content.
+     42% media width inside a 16:9 card is ~3:4, matching 1200x1600 portraits. */
+  .seh-record-podium-card:not(.is-team){
+    min-height:0 !important;
+    height:auto !important;
+    aspect-ratio:16 / 9 !important;
+  }
+
+  .seh-record-podium-card:not(.is-team) .seh-record-podium-media{
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:none !important;
+    align-self:stretch !important;
+  }
+
+  .seh-record-podium-card:not(.is-team) .seh-record-podium-media img{
+    display:block !important;
+    width:100% !important;
+    height:100% !important;
+    max-width:none !important;
+    max-height:none !important;
+    object-fit:cover !important;
+    object-position:50% 0% !important;
+    transform:none !important;
+  }
+
+  /* Content may vary by record, but it must not resize the portrait/card. */
+  .seh-record-podium-card:not(.is-team) .seh-record-podium-main{
+    min-height:0 !important;
+    overflow:hidden !important;
+  }
+}
