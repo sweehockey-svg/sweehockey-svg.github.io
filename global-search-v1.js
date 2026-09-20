@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "2026-09-20-v2";
+  var VERSION = "2026-09-20-v3";
   var state = {
     open: false,
     data: null,
@@ -95,11 +95,11 @@
     var staticNews = Array.isArray(window.SEH_NEWS_ARTICLES) ? window.SEH_NEWS_ARTICLES : [];
     state.loadPromise = Promise.allSettled([
       fetchRows("app_player_directory_cache", {
-        select: "player_key,display_gamertag,primary_position,latest_team,latest_season",
+        select: "player_key,display_gamertag,primary_position,latest_team,latest_season,player_image,sports_gamer_player_url",
         order: "display_gamertag.asc"
       }),
       fetchRows("v_local_team_list", {
-        select: "team_id,current_name,historical_names,names_used_in_leagues",
+        select: "team_id,current_name,historical_names,names_used_in_leagues,logo_path,logo_url",
         order: "current_name.asc"
       }),
       fetchRows("v_ehockey_league_catalog_v1", {
@@ -171,6 +171,60 @@
     return 0;
   }
 
+  function playerImageUrl(row) {
+    var sportsGamerId = clean(row && row.sports_gamer_player_url).match(/\/players\/(\d+)/i);
+    var fallbackId = sportsGamerId ? sportsGamerId[1] : "";
+    try {
+      if (typeof SEH_playerImageUrl === "function") {
+        return SEH_playerImageUrl(row && row.player_image, fallbackId);
+      }
+    } catch (_) {}
+    var raw = clean(row && row.player_image);
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (/\.png(?:[?#].*)?$/i.test(raw)) return raw.replace(/^\/+/, "");
+    return fallbackId ? "players/" + encodeURIComponent(fallbackId) + ".png" : "players/1DEFAULTBILDID.png";
+  }
+
+  function groupPriority(rows) {
+    if (!rows || !rows.length) return 0;
+    return Math.max.apply(null, rows.map(function (row) { return Number(row.score) || 0; }));
+  }
+
+  function mediaMarkup(row) {
+    if (row.type === "player") {
+      return '<span class="seh-global-search__media seh-global-search__media--player">' +
+        '<img src="' + esc(row.image || "players/1DEFAULTBILDID.png") + '" alt="" loading="lazy" decoding="async" ' +
+        'onerror="this.onerror=null;this.src=\'players/1DEFAULTBILDID.png\'">' +
+      '</span>';
+    }
+    if (row.type === "team") {
+      return '<span class="seh-global-search__media seh-global-search__media--team" ' +
+        'data-search-team-name="' + esc(row.title) + '" ' +
+        'data-search-logo-url="' + esc(row.logoUrl || "") + '" ' +
+        'data-search-logo-path="' + esc(row.logoPath || "") + '">' +
+        '<span class="seh-global-search__badge">' + esc(row.badge) + '</span>' +
+      '</span>';
+    }
+    return '<span class="seh-global-search__media"><span class="seh-global-search__badge">' + esc(row.badge) + '</span></span>';
+  }
+
+  function hydrateTeamLogos(root) {
+    qa("[data-search-team-name]", root).forEach(function (container) {
+      var name = clean(container.dataset.searchTeamName);
+      var logoUrl = clean(container.dataset.searchLogoUrl);
+      var logoPath = clean(container.dataset.searchLogoPath);
+      try {
+        if (typeof SEH_renderTeamLogo === "function") {
+          SEH_renderTeamLogo(container, [logoUrl, logoPath], name, "");
+          return;
+        }
+      } catch (_) {}
+      var source = logoUrl || logoPath;
+      if (!source) return;
+      container.innerHTML = '<img src="' + esc(source) + '" alt="" loading="lazy" decoding="async">';
+    });
+  }
+
   function buildResults(query) {
     var d = state.data;
     if (!d) return [];
@@ -191,7 +245,8 @@
         score: s,
         title: primary,
         meta: [clean(row.primary_position), clean(row.latest_team), clean(row.latest_season)].filter(Boolean).join(" · "),
-        href: "#/spelare/" + encodeURIComponent(clean(row.player_key || primary))
+        href: "#/spelare/" + encodeURIComponent(clean(row.player_key || primary)),
+        image: playerImageUrl(row)
       });
     });
 
@@ -205,7 +260,9 @@
         score: s,
         title: primary,
         meta: aliasMatch ? "Tidigare namn: " + aliasMatch : "Svenskt lag",
-        href: "#/lag/" + encodeURIComponent(clean(row.team_id))
+        href: "#/lag/" + encodeURIComponent(clean(row.team_id)),
+        logoUrl: clean(row.logo_url),
+        logoPath: clean(row.logo_path)
       });
     });
 
@@ -238,10 +295,17 @@
     var output = [];
     groups.forEach(function (group) {
       group.rows.sort(function (a, b) { return b.score - a.score || a.title.localeCompare(b.title, "sv"); });
-      group.rows.slice(0, group.limit).forEach(function (row) {
-        output.push(Object.assign({ type: group.key, groupLabel: group.label, badge: group.badge }, row));
-      });
     });
+    groups
+      .filter(function (group) { return group.rows.length; })
+      .sort(function (a, b) {
+        return groupPriority(b.rows) - groupPriority(a.rows);
+      })
+      .forEach(function (group) {
+        group.rows.slice(0, group.limit).forEach(function (row) {
+          output.push(Object.assign({ type: group.key, groupLabel: group.label, badge: group.badge }, row));
+        });
+      });
     return output;
   }
 
@@ -312,24 +376,29 @@
     }
 
     var grouped = {};
+    var order = [];
     state.results.forEach(function (row, index) {
       row.index = index;
-      (grouped[row.type] || (grouped[row.type] = [])).push(row);
+      if (!grouped[row.type]) {
+        grouped[row.type] = [];
+        order.push(row.type);
+      }
+      grouped[row.type].push(row);
     });
-    var order = ["player", "team", "tournament", "news"];
     var labels = { player: "Spelare", team: "Lag", tournament: "Turneringar", news: "Nyheter" };
-    host.innerHTML = order.filter(function (key) { return grouped[key] && grouped[key].length; }).map(function (key) {
+    host.innerHTML = order.map(function (key) {
       return '<section class="seh-global-search__group">' +
         '<div class="seh-global-search__group-title">' + esc(labels[key]) + '</div>' +
         grouped[key].map(function (row) {
           return '<a class="seh-global-search__result" role="option" aria-selected="false" data-search-index="' + row.index + '" href="' + esc(row.href) + '">' +
-            '<span class="seh-global-search__badge">' + esc(row.badge) + '</span>' +
+            mediaMarkup(row) +
             '<span class="seh-global-search__copy"><strong>' + esc(row.title) + '</strong><small>' + esc(row.meta || row.groupLabel) + '</small></span>' +
             '<span class="seh-global-search__arrow" aria-hidden="true">→</span>' +
           '</a>';
         }).join("") +
       '</section>';
     }).join("");
+    hydrateTeamLogos(host);
     status.textContent = state.results.length + ' träffar på "' + query + '"';
     syncSelection();
   }

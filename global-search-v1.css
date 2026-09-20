@@ -329,3 +329,74 @@ body.seh-global-search-open { overflow: hidden; }
     border-radius: 0;
   }
 }
+
+
+/* v3 — visuella sökträffar + tydligare direktträffar */
+.seh-global-search__input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.seh-global-search__media {
+  position: relative;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(98,212,207,.22);
+  border-radius: 11px;
+  background: linear-gradient(145deg, rgba(98,212,207,.07), rgba(255,208,0,.035));
+}
+
+.seh-global-search__media > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.seh-global-search__media--player {
+  align-items: end;
+  background:
+    radial-gradient(circle at 50% 22%, rgba(98,212,207,.12), transparent 54%),
+    #07101a;
+}
+
+.seh-global-search__media--player > img {
+  object-fit: cover;
+  object-position: center top;
+}
+
+.seh-global-search__media--team {
+  padding: 5px;
+  background: rgba(255,255,255,.025);
+}
+
+.seh-global-search__media--team > img {
+  object-fit: contain;
+}
+
+.seh-global-search__media .seh-global-search__badge {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.seh-global-search__result {
+  grid-template-columns: 46px minmax(0,1fr) auto;
+  min-height: 68px;
+}
+
+@media (max-width: 560px) {
+  .seh-global-search__media {
+    width: 42px;
+    height: 42px;
+  }
+
+  .seh-global-search__result {
+    grid-template-columns: 42px minmax(0,1fr) auto;
+  }
+}
