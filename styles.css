@@ -28437,3 +28437,25 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     white-space: nowrap !important;
   }
 }
+
+
+/* V1.30.20 — one shared yellow-block eyebrow */
+@media (min-width: 921px) {
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="news"] .news-page-tools > label:first-child,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="players"] .players-overview-v122 > .directory-kicker,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .history-overview-v124 > .directory-kicker,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-current-v12840 > span:first-child,
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-overview > .directory-kicker {
+    display:block !important;
+    height:auto !important;
+    margin:0 0 12px !important;
+    padding:0 !important;
+    color:#080909 !important;
+    font-family:Inter,Arial,Helvetica,sans-serif !important;
+    font-size:10px !important;
+    font-weight:1000 !important;
+    line-height:1 !important;
+    letter-spacing:.095em !important;
+    text-transform:uppercase !important;
+  }
+}
