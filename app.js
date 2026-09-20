@@ -15553,22 +15553,26 @@ function SEH_initShop() {
           'total_points','total_skater_games','total_goalie_games','total_goalie_save_percentage',
           'player_type','filter_divisions','divisions'
         ].join(',');
-        const [directoryRows,rankingRows]=await Promise.all([
+        const [directoryRows,rankingLookup]=await Promise.all([
           fetchAllRows('app_player_directory_cache',directorySelect,'last_appearance_date'),
-          fetchAllRows('app_player_ranking_cache','player_key,overall_rank,ranking_points')
+          SEH_loadPlayerRanking()
         ]);
         const swedish=directoryRows.filter((row)=>['SE','SWE'].includes(clean(row.player_country).toUpperCase()));
         const decorated=window.SEH_currentPlayerStatus?.decorateRows
           ? await window.SEH_currentPlayerStatus.decorateRows(swedish)
           : swedish;
-        const rankingByKey=new Map(rankingRows.map((row)=>[clean(row.player_key),row]));
         state.noTeamRows=decorated
           .filter((row)=>clean(row.current_status)==='no_team')
           .map((row)=>{
-            const ranking=rankingByKey.get(clean(row.player_key))||{};
+            const ranking=SEH_findPlayerRanking(
+              rankingLookup,
+              row.player_key,
+              row.display_gamertag
+            )||{};
             return {
               ...row,
-              ...ranking,
+              overall_rank: ranking.overall_rank,
+              ranking_points: ranking.ranking_points,
               _listingType:'no_team',
               alternate_positions:[],
               positions_text:'',
