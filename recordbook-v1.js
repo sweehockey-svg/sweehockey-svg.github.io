@@ -246,7 +246,7 @@
   function recordMatchStage(value){
     const raw=String(value||'').trim();
     const normalized=raw.toLowerCase();
-    if(normalized==='regular season')return 'Grundserie';
+    if(normalized==='regular season'||normalized==='regular')return 'Grundserie';
     if(normalized==='playoffs'||normalized==='playoff')return 'Slutspel';
     return raw;
   }
