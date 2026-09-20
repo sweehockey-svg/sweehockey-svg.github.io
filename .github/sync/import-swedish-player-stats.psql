@@ -44,6 +44,8 @@ $block$;
 analyze public.sportsgamer_team_player_stats;
 commit;
 
+select public.refresh_ehockey_player_record_highlights_v4() as refreshed_player_record_highlights;
+
 select count(*) filter (where not existed) as new_rows,
        count(*) filter (where existed) as updated_rows,
        count(distinct sports_gamer_player_id) as swedish_players_with_rows
