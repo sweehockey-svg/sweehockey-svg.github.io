@@ -67,14 +67,37 @@ def main():
       read_timeout=120, autocommit=True, init_command="SET SESSION TRANSACTION READ ONLY")
     try:
         ph=",".join(["%s"]*len(LEAGUE_IDS))
-        league_rows=sel(c,f"select leagueID,teamID,teamName from `nhlgamer_leagueTeams` where leagueID in ({ph})",tuple(LEAGUE_IDS))
+
+        league_meta=sel(c,
+          f"select leagueID,leagueName from \`nhlgamer_leagues\` where leagueID in ({ph})",
+          tuple(LEAGUE_IDS))
+        league_name={i(r["leagueID"]):str(r.get("leagueName") or f'League {r["leagueID"]}') for r in league_meta}
+
+        league_rows=sel(c,f"select leagueID,teamID,teamName from \`nhlgamer_leagueTeams\` where leagueID in ({ph})",tuple(LEAGUE_IDS))
         team_name={(i(r["leagueID"]),i(r["teamID"])):str(r.get("teamName") or f'Team {r["teamID"]}') for r in league_rows}
+
+        user_cols=table_columns(c,"nhlgamer_users")
+        user_id_col=pick(user_cols,"userID","id","member_id")
+        user_country_col=pick(user_cols,"country","countryCode","country_code")
+        user_city_col=pick(user_cols,"city")
+        user_nat_col=pick(user_cols,"nationality")
+        user_join=""
+        user_select=", '' as user_country, '' as user_city, '' as user_nationality"
+        if user_id_col and (user_country_col or user_city_col or user_nat_col):
+            user_join=f" left join \`nhlgamer_users\` u on u.{qid(user_id_col)}=p.userID"
+            user_select=(
+              ", "+(f"u.{qid(user_country_col)}" if user_country_col else "''")+" as user_country"
+              ", "+(f"u.{qid(user_city_col)}" if user_city_col else "''")+" as user_city"
+              ", "+(f"u.{qid(user_nat_col)}" if user_nat_col else "''")+" as user_nationality"
+            )
 
         roster=sel(c,
           f"""select r.leagueID,r.teamID,r.playerID,
-                     p.gamertag,p.psntag,p.country,p.nationality,p.city
-              from `nhlgamer_leagueRosters` r
-              left join `nhlgamer_players` p on p.playerID=r.playerID
+                     p.gamertag,p.psntag,p.country,p.nationality,p.city,p.userID
+                     {user_select}
+              from \`nhlgamer_leagueRosters\` r
+              left join \`nhlgamer_players\` p on p.playerID=r.playerID
+              {user_join}
               where r.leagueID in ({ph})
               order by r.leagueID,r.teamID,r.playerID""",tuple(LEAGUE_IDS))
 
@@ -84,13 +107,14 @@ def main():
         for r in roster:
             lid=i(r["leagueID"]); tid=i(r["teamID"]); pid=i(r["playerID"])
             tag=str(r.get("psntag") or r.get("gamertag") or f"Player {pid}").strip()
-            country=norm(r.get("country"))
-            nationality=norm(r.get("nationality"))
+            country=norm(r.get("country") or r.get("user_country"))
+            nationality=norm(r.get("nationality") or r.get("user_nationality"))
+            city=str(r.get("city") or r.get("user_city") or "")
             foreign = (country not in DACH) if country else None
             player_res[pid]=country
             e={"league_id":lid,"team_id":tid,"team_name":team_name.get((lid,tid),f"Team {tid}"),
                "player_id":pid,"gamertag":tag,"country":country,"nationality":nationality,
-               "city":str(r.get("city") or ""),"foreign":foreign}
+               "city":city,"foreign":foreign}
             all_players.append(e)
             by.setdefault((lid,tid),[]).append(e)
 
@@ -133,9 +157,9 @@ def main():
                     "team_name":team_name.get((lid,tid),f"Team {tid}"),"unknown_players":unk})
 
         league_names={}
-        # Best-effort names from mirrored historical table are unavailable here; team counts identify each league.
         for lid in LEAGUE_IDS:
-            league_names[str(lid)]={"team_count":sum(1 for t in teams if t["league_id"]==lid),
+            league_names[str(lid)]={"name":league_name.get(lid,f"League {lid}"),
+                                    "team_count":sum(1 for t in teams if t["league_id"]==lid),
                                     "roster_players":sum(t["roster_count"] for t in teams if t["league_id"]==lid)}
 
         out={"league_ids":LEAGUE_IDS,"dach_country_codes":sorted(DACH),
@@ -152,12 +176,13 @@ def main():
 
         print("GCL 13 audit: country/residence field used; nationality ignored for foreign status.")
         for lid in LEAGUE_IDS:
-            print(f"=== LEAGUE {lid} ===")
+            print(f"=== LEAGUE {lid}: {league_name.get(lid, f'League {lid}')} ===")
             for t in [x for x in teams if x["league_id"]==lid]:
                 fp=", ".join(f'{p["gamertag"]}({p["country"] or "?"}, nat={p["nationality"] or "?"})' for p in t["foreign_players"]) or "none"
                 unk=", ".join(p["gamertag"] for p in t["unknown_residence_players"]) or "none"
                 st="VIOLATION" if t["roster_violation"] else ("REVIEW" if t["needs_manual_review"] else "OK")
                 print(f'{t["team_id"]}\t{t["team_name"]}\tforeign={t["foreign_count"]}\t{fp}\tunknown={unk}\t{st}')
+        print("nhlgamer_users columns:", ",".join(user_cols) if user_cols else "table missing")
         print("Roster violations:",len(out["roster_violations"]))
         print("Teams needing manual residence review:",len(out["manual_review_teams"]))
         print("Lineup violations:",len(out["lineup_violations"]))
