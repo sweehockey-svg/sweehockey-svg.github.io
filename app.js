@@ -2409,8 +2409,10 @@ function SEH_initPlayers() {
     }
 
     async function fetchDirectory() {
-      // Historiken behålls, men "aktuellt lag" kommer från den delade statusmotorn:
-      // aktivt lagbygge/pågående turnering -> lag, annars Free Agent.
+      // Historiken behålls, men aktuell status kommer från den delade statusmotorn:
+      // aktivt lagbygge/pågående turnering -> lag,
+      // aktiv FA-lista -> Free Agent,
+      // annars -> inget aktuellt lag.
       const rows = await fetchPages("app_player_directory_cache", {
         select: [
           "player_key", "display_gamertag", "player_country", "player_image",
@@ -2469,6 +2471,15 @@ function SEH_initPlayers() {
       const role = clean(row.player_type).toLowerCase() === "goalie" || goalieGames > skaterGames
         ? "goalie"
         : "skater";
+      const currentStatus =
+        clean(row.current_status) ||
+        (clean(row.current_team_name) ? "team" : "no_team");
+      const currentTeam =
+        currentStatus === "team"
+          ? (clean(row.current_team_name) || "Aktuellt lag")
+          : currentStatus === "free_agent"
+            ? "Free Agent"
+            : "Inget aktuellt lag";
   
       return {
         key: clean(row.player_key),
@@ -2491,10 +2502,10 @@ function SEH_initPlayers() {
         clubNames: list(row.club_names),
         latestSeason: clean(row.latest_season),
         latestTeam: clean(row.latest_team),
-        currentTeam: clean(row.current_team_name) || clean(row.latest_team) || "Free Agent",
+        currentTeam,
         currentTeamId: number(row.current_team_id),
         currentTeamLogo: clean(row.current_team_logo),
-        currentStatus: clean(row.current_status) || (clean(row.current_team_name) ? "team" : ""),
+        currentStatus,
         currentStatusSource: clean(row.current_status_source),
         competitions: list(row.competitions),
         divisions: list(row.divisions),
@@ -2587,9 +2598,14 @@ function SEH_initPlayers() {
             : "–")
         : player.points.toLocaleString("sv-SE");
       const secondaryLabel = player.role === "goalie" ? "SV%" : "POÄNG";
-      const isFreeAgent =
-        player.currentStatus === "free_agent" ||
-        player.currentTeam === "Free Agent";
+      const isFreeAgent = player.currentStatus === "free_agent";
+      const hasCurrentTeam = player.currentStatus === "team";
+      const hasNoCurrentTeam = !hasCurrentTeam && !isFreeAgent;
+      const statusClass = isFreeAgent
+        ? " is-free-agent"
+        : hasCurrentTeam
+          ? " is-team"
+          : " is-no-team";
 
       const link = document.createElement("a");
       link.className = "players-card players-card-v122";
@@ -2609,9 +2625,9 @@ function SEH_initPlayers() {
             <div class="players-card__title-v122">
               <h3>${escapeHtml(player.name)}</h3>
             </div>
-            <div class="players-card__team-v122${isFreeAgent ? " is-free-agent" : " is-team"}">
+            <div class="players-card__team-v122${statusClass}">
               <span class="players-card__team-logo-v122" aria-hidden="true"></span>
-              <strong>${escapeHtml(player.currentTeam || "Free Agent")}</strong>
+              <strong>${escapeHtml(player.currentTeam || "Inget aktuellt lag")}</strong>
             </div>
             <div class="players-card__metrics-v122">
               <div><span>MATCHER</span><strong>${player.games.toLocaleString("sv-SE")}</strong></div>
@@ -2635,6 +2651,8 @@ function SEH_initPlayers() {
       if (logoNode) {
         if (isFreeAgent) {
           logoNode.textContent = "FA";
+        } else if (hasNoCurrentTeam) {
+          logoNode.textContent = "–";
         } else {
           SEH_renderTeamLogo(
             logoNode,
@@ -2647,7 +2665,7 @@ function SEH_initPlayers() {
 
       const cornerLogoNode = link.querySelector(".players-card__corner-logo-v12901");
       if (cornerLogoNode) {
-        if (player.currentStatus === "free_agent" || player.currentTeam === "Free Agent") {
+        if (!hasCurrentTeam) {
           cornerLogoNode.remove();
         } else {
           SEH_renderTeamLogo(cornerLogoNode, [], player.currentTeam, "");
@@ -2656,7 +2674,7 @@ function SEH_initPlayers() {
 
       const watermarkNode = link.querySelector(".players-card__team-watermark-v1265");
       if (watermarkNode) {
-        if (isFreeAgent) {
+        if (!hasCurrentTeam) {
           watermarkNode.replaceChildren();
           SEH_applyPlayerCardTeamPalette(link, SEH_PLAYER_CARD_DEFAULT_PALETTE);
         } else {
@@ -2666,7 +2684,7 @@ function SEH_initPlayers() {
       }
 
       const teamNode = link.querySelector(".players-card__team-v122");
-      if (!isFreeAgent && teamNode && Number(player.currentTeamId) > 0) {
+      if (hasCurrentTeam && teamNode && Number(player.currentTeamId) > 0) {
         const teamHref = SEH_teamProfileUrl(player.currentTeamId);
         teamNode.classList.add("is-cross-link");
         teamNode.setAttribute("role", "link");
@@ -4041,6 +4059,7 @@ function SEH_initPlayer() {
         const statusWrap = elements.playerCurrentTeam.closest(".player-profile-team-v123");
         statusWrap?.classList.toggle("is-free-agent", status.kind === "free_agent");
         statusWrap?.classList.toggle("is-team", status.kind === "team");
+        statusWrap?.classList.toggle("is-no-team", status.kind === "no_team");
 
         if (status.kind === "team" && status.teamName) {
           if (status.teamId) {
@@ -4055,10 +4074,13 @@ function SEH_initPlayer() {
           return;
         }
 
-        elements.playerCurrentTeam.textContent = "Free Agent";
+        const isFreeAgent = status.kind === "free_agent";
+        elements.playerCurrentTeam.textContent = isFreeAgent
+          ? "Free Agent"
+          : "Inget aktuellt lag";
         if (elements.playerCurrentTeamLogo) {
           elements.playerCurrentTeamLogo.replaceChildren();
-          elements.playerCurrentTeamLogo.textContent = "FA";
+          elements.playerCurrentTeamLogo.textContent = isFreeAgent ? "FA" : "–";
         }
         [elements.playerHeroWatermark, elements.playerPortraitWatermark]
           .filter(Boolean)
@@ -6599,9 +6621,16 @@ function SEH_initPlayer() {
 
       const standaloneRole = roleLabel(totalSkaterGames, totalGoalieGames);
 
-      const standaloneTeamName = directoryRow.latest_team || "Okänt lag";
-      elements.playerCurrentTeam.textContent = standaloneTeamName;
-      renderProfileTeamBrand(standaloneTeamName);
+      elements.playerCurrentTeam.textContent = "Hämtar aktuell status…";
+      [elements.playerCurrentTeamLogo, elements.playerHeroWatermark, elements.playerPortraitWatermark]
+        .filter(Boolean)
+        .forEach((node) => node.replaceChildren());
+      setPlayerHeroPalette(DEFAULT_HERO_PALETTE);
+      if (window.SEH_currentPlayerStatus?.get) {
+        void hydratePlayerCurrentStatus(directoryRow.player_key);
+      } else {
+        elements.playerCurrentTeam.textContent = "Inget aktuellt lag";
+      }
       void hydrateProfileRanking(directoryRow.player_key, profile.name);
 
       elements.playerMeta.textContent = [

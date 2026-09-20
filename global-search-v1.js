@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "2026-09-20-v4";
+  var VERSION = "2026-09-20-v5";
   var state = {
     open: false,
     data: null,
@@ -235,17 +235,21 @@
 
   function playerStatusMarkup(row) {
     if (row.type !== "player") return "";
-    var freeAgent = row.statusKind === "free_agent" || row.currentTeam === "Free Agent";
-    if (freeAgent) {
+    if (row.statusKind === "free_agent") {
       return '<span class="seh-global-search__player-status is-free-agent">' +
         '<b>FA</b><em>Free Agent</em>' +
       '</span>';
     }
-    return '<span class="seh-global-search__player-status is-team">' +
-      '<i class="seh-global-search__status-logo" aria-hidden="true" ' +
-        'data-search-current-team="' + esc(row.currentTeam || "") + '" ' +
-        'data-search-current-logo="' + esc(row.currentTeamLogo || "") + '"></i>' +
-      '<em>' + esc(row.currentTeam || "Aktuellt lag") + '</em>' +
+    if (row.statusKind === "team") {
+      return '<span class="seh-global-search__player-status is-team">' +
+        '<i class="seh-global-search__status-logo" aria-hidden="true" ' +
+          'data-search-current-team="' + esc(row.currentTeam || "") + '" ' +
+          'data-search-current-logo="' + esc(row.currentTeamLogo || "") + '"></i>' +
+        '<em>' + esc(row.currentTeam || "Aktuellt lag") + '</em>' +
+      '</span>';
+    }
+    return '<span class="seh-global-search__player-status is-no-team">' +
+      '<b>–</b><em>Inget aktuellt lag</em>' +
     '</span>';
   }
 
@@ -284,8 +288,11 @@
         meta: [clean(row.primary_position), clean(row.latest_season)].filter(Boolean).join(" · "),
         href: "#/spelare/" + encodeURIComponent(clean(row.player_key || primary)),
         image: playerImageUrl(row),
-        statusKind: clean(row.current_status) || (clean(row.current_team_name) ? "team" : ""),
-        currentTeam: clean(row.current_team_name) || clean(row.latest_team) || "Free Agent",
+        statusKind: clean(row.current_status) || (clean(row.current_team_name) ? "team" : "no_team"),
+        currentTeam:
+          clean(row.current_status) === "free_agent"
+            ? "Free Agent"
+            : clean(row.current_team_name) || "Inget aktuellt lag",
         currentTeamLogo: clean(row.current_team_logo),
         currentTeamId: clean(row.current_team_id)
       });

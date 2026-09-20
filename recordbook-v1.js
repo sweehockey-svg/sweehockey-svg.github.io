@@ -91,10 +91,10 @@
     if(kind==='team'&&teamName){
       let logo='';
       try{logo=window.SEH_teamLogoCandidates?.([row.current_team_logo],teamName)?.[0]||String(row.current_team_logo||'');}catch(_){logo=String(row.current_team_logo||'');}
-      return {name:teamName,logo};
+      return {name:teamName,logo,kind:'team'};
     }
-    if(kind==='free_agent')return {name:'Free Agent',logo:''};
-    return {name:'',logo:''};
+    if(kind==='free_agent')return {name:'Free Agent',logo:'',kind:'free_agent'};
+    return {name:'Inget aktuellt lag',logo:'',kind:'no_team'};
   }
 
   function metricAvailable(key){
@@ -456,7 +456,7 @@
     const currentTeam=isPlayer?currentPlayerTeam(row):{name:'',logo:teamLogo(row)};
     const teamLogoUrl=String(currentTeam.logo||'');
     const teamIdentity=isPlayer&&currentTeam.name
-      ? `<span class="seh-record-podium-team">${esc(currentTeam.name)}</span>`
+      ? `<span class="seh-record-podium-team is-${esc(currentTeam.kind||'team')}">${esc(currentTeam.name)}</span>`
       : '';
     const logoMarkup=teamLogoUrl
       ? (isPlayer

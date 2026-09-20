@@ -115,3 +115,62 @@
     height: 24px;
   }
 }
+
+/* v2 — aktiv Free Agent är gul; saknat aktuellt lag är neutralt */
+.players-card__team-v122.is-no-team {
+  grid-template-columns: 34px minmax(0, 1fr);
+}
+.players-card__team-v122.is-no-team .players-card__team-logo-v122 {
+  width: 34px;
+  height: 28px;
+  border-color: rgba(255,255,255,.13);
+  background: rgba(255,255,255,.035);
+  color: rgba(244,241,233,.42);
+  font-size: 12px;
+  font-weight: 900;
+}
+.players-card__team-v122.is-no-team strong {
+  color: rgba(244,241,233,.54);
+  font-weight: 800;
+}
+.player-profile-team-v123.is-no-team .player-profile-team-logo-v123 {
+  border-color: rgba(255,255,255,.13);
+  background: rgba(255,255,255,.035);
+  color: rgba(244,241,233,.45);
+  font-size: 13px;
+}
+.player-profile-team-v123.is-no-team .player-editorial-team {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.035) !important;
+  color: rgba(244,241,233,.62) !important;
+  box-shadow: none;
+}
+.seh-global-search__player-status.is-no-team {
+  gap: 6px;
+  color: rgba(244,241,233,.48);
+}
+.seh-global-search__player-status.is-no-team b {
+  display: inline-grid;
+  min-width: 27px;
+  height: 19px;
+  place-items: center;
+  padding: 0 5px;
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 5px;
+  background: rgba(255,255,255,.03);
+  color: rgba(244,241,233,.45);
+  font-size: .62rem;
+  font-weight: 900;
+}
+.seh-record-podium-team.is-free_agent { color: #ffd000; }
+.seh-record-podium-team.is-no_team { color: rgba(244,241,233,.48); }
+
+@media (max-width: 620px) {
+  .players-card__team-v122.is-no-team {
+    grid-template-columns: 30px minmax(0,auto);
+  }
+  .players-card__team-v122.is-no-team .players-card__team-logo-v122 {
+    width: 30px;
+    height: 24px;
+  }
+}
