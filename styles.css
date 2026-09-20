@@ -28014,3 +28014,136 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     display: none;
   }
 }
+
+
+/* V1.30.16 — unified yellow desktop hero side blocks */
+@media (min-width: 921px) {
+  /* Shared yellow side panel */
+  #spaRouteView[data-route="news"] .news-page-tools,
+  #spaRouteView[data-route="players"] .players-overview-v122,
+  #spaRouteView[data-route="history"] .history-overview-v124,
+  #spaRouteView[data-route="ecl"] .ecl-hub-current-v12840,
+  #spaRouteView[data-route="freeAgents"] .free-agents-overview {
+    box-sizing: border-box !important;
+    min-height: 190px !important;
+    align-self: center !important;
+    padding: 26px 28px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    color: #080909 !important;
+    background: #ffd000 !important;
+    box-shadow: none !important;
+  }
+
+  /* All labels/text in the yellow zone use black, like Recordbook/Team builds. */
+  #spaRouteView[data-route="news"] .news-page-tools label,
+  #spaRouteView[data-route="news"] .news-page-tools small,
+  #spaRouteView[data-route="players"] .players-overview-v122 > .directory-kicker,
+  #spaRouteView[data-route="history"] .history-overview-v124 > .directory-kicker,
+  #spaRouteView[data-route="ecl"] .ecl-hub-current-v12840 > span,
+  #spaRouteView[data-route="ecl"] .ecl-hub-current-v12840 > strong,
+  #spaRouteView[data-route="ecl"] .ecl-hub-current-v12840 > p,
+  #spaRouteView[data-route="freeAgents"] .free-agents-overview > .directory-kicker {
+    color: #080909 !important;
+  }
+
+  #spaRouteView[data-route="players"] .players-overview-v122 > .directory-kicker,
+  #spaRouteView[data-route="history"] .history-overview-v124 > .directory-kicker,
+  #spaRouteView[data-route="freeAgents"] .free-agents-overview > .directory-kicker {
+    margin-bottom: 12px !important;
+  }
+
+  /* Overview grids become part of the yellow block rather than dark cards inside it. */
+  #spaRouteView[data-route="players"] .players-overview-v122 > div,
+  #spaRouteView[data-route="history"] .history-overview-grid,
+  #spaRouteView[data-route="freeAgents"] .free-agents-overview > div {
+    overflow: hidden !important;
+    border: 1px solid rgba(8,9,9,.22) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  #spaRouteView[data-route="players"] .players-overview-v122 article,
+  #spaRouteView[data-route="history"] .history-overview-grid article,
+  #spaRouteView[data-route="freeAgents"] .free-agents-overview article {
+    border-color: rgba(8,9,9,.18) !important;
+    background: transparent !important;
+  }
+
+  #spaRouteView[data-route="players"] .players-overview-v122 article span,
+  #spaRouteView[data-route="history"] .history-overview-grid article span,
+  #spaRouteView[data-route="freeAgents"] .free-agents-overview article span {
+    color: rgba(8,9,9,.66) !important;
+  }
+
+  #spaRouteView[data-route="players"] .players-overview-v122 article strong,
+  #spaRouteView[data-route="history"] .history-overview-grid article strong,
+  #spaRouteView[data-route="freeAgents"] .free-agents-overview article strong {
+    color: #080909 !important;
+  }
+
+  /* News: keep search/filter controls usable on yellow. */
+  #spaRouteView[data-route="news"] .news-page-tools {
+    gap: 12px !important;
+  }
+
+  #spaRouteView[data-route="news"] .news-page-tools input {
+    border: 1px solid rgba(8,9,9,.28) !important;
+    border-radius: 0 !important;
+    color: #080909 !important;
+    background: rgba(255,255,255,.28) !important;
+    box-shadow: none !important;
+  }
+
+  #spaRouteView[data-route="news"] .news-page-tools input::placeholder {
+    color: rgba(8,9,9,.56) !important;
+  }
+
+  #spaRouteView[data-route="news"] .news-tag {
+    border: 1px solid rgba(8,9,9,.30) !important;
+    border-radius: 0 !important;
+    color: #080909 !important;
+    background: transparent !important;
+  }
+
+  #spaRouteView[data-route="news"] .news-tag:hover,
+  #spaRouteView[data-route="news"] .news-tag.is-active {
+    border-color: #080909 !important;
+    color: #ffd000 !important;
+    background: #080909 !important;
+  }
+
+  /* Competitions: yellow feature block with inverse CTA. */
+  #spaRouteView[data-route="ecl"] .ecl-hub-current-v12840 {
+    min-height: 220px !important;
+    display: grid !important;
+    align-content: center !important;
+  }
+
+  #spaRouteView[data-route="ecl"] .ecl-hub-current-v12840 > strong {
+    font-family: var(--v2-display), "Arial Black", Impact, sans-serif !important;
+    letter-spacing: -.035em !important;
+  }
+
+  #spaRouteView[data-route="ecl"] .ecl-hub-current-v12840 a,
+  #spaRouteView[data-route="ecl"] .ecl-hub-button-v12840 {
+    border-color: #080909 !important;
+    color: #ffd000 !important;
+    background: #080909 !important;
+    box-shadow: none !important;
+  }
+
+  #spaRouteView[data-route="ecl"] .ecl-hub-current-v12840 a:hover,
+  #spaRouteView[data-route="ecl"] .ecl-hub-button-v12840:hover {
+    color: #080909 !important;
+    background: rgba(255,255,255,.45) !important;
+  }
+
+  /* Make the right side feel like one family across pages. */
+  #spaRouteView[data-route="players"] .players-overview-v122,
+  #spaRouteView[data-route="history"] .history-overview-v124,
+  #spaRouteView[data-route="freeAgents"] .free-agents-overview {
+    width: 100% !important;
+  }
+}
