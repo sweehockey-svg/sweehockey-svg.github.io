@@ -6,6 +6,7 @@
   const MIN_RATE_GAMES=50;
   const MATCH_METRICS=new Set(['fastest_goal_seconds','hattricks','max_goals_game']);
   const FUN_METRICS=new Set(['one_club_games','career_span_days']);
+  const DIM_METRICS=new Set(['dim_titles']);
 
   const PLAYER_GROUPS=[
     {key:'career',label:'Karriär',items:[
@@ -15,6 +16,9 @@
     {key:'playoffs',label:'Slutspel',items:[
       ['playoff_games','Matcher','PO GP'],['playoff_points','Poäng','PO PTS'],
       ['playoff_goals','Mål','PO G'],['playoff_assists','Assist','PO A']
+    ]},
+    {key:'defense',label:'Backar',items:[
+      ['dim_titles','DIM-titlar','DIM']
     ]},
     {key:'goalie',label:'Målvakt',items:[
       ['goalie_wins','Vinster','W'],['goalie_saves','Räddningar','SV'],
@@ -66,6 +70,7 @@
     if(state.type!=='players')return true;
     if(key==='ecl_seasons'&&!['ALL','ECL'].includes(state.competition))return false;
     if(FUN_METRICS.has(key)&&state.competition!=='ALL')return false;
+    if(DIM_METRICS.has(key)&&state.competition!=='ECL')return false;
     if(key==='penalty_minutes'&&state.competition==='SM')return false;
     if(key==='fastest_goal_seconds'&&!['ALL','ECL','SCL'].includes(state.competition))return false;
     if(['hattricks','max_goals_game'].includes(key)&&!['ALL','ECL','SCL','SEC','ITHL','LGEL'].includes(state.competition))return false;
@@ -148,7 +153,8 @@
   async function rows(type,competition,metric){
     const matchMode=type==='players'&&MATCH_METRICS.has(metric);
     const funMode=type==='players'&&FUN_METRICS.has(metric);
-    const matchDataset=funMode?'fun':(metric==='fastest_goal_seconds'?'fastest':(matchMode?'match':'career'));
+    const dimMode=type==='players'&&DIM_METRICS.has(metric);
+    const matchDataset=dimMode?'dim':(funMode?'fun':(metric==='fastest_goal_seconds'?'fastest':(matchMode?'match':'career')));
     const key=`${type}|${competition}|${matchDataset}`;
     if(cache.has(key))return cache.get(key);
     const sb=getClient();if(!sb)throw new Error('Supabase saknas');
@@ -159,6 +165,9 @@
       }
       if(funMode){
         return rpcRows(sb,'seh_recordbook_fun_players_v1',{p_limit:2000});
+      }
+      if(dimMode){
+        return rpcRows(sb,'seh_recordbook_ecl_dim_titles_v1',{p_limit:2000});
       }
       if(!matchMode){
         return rpcRows(sb,'seh_recordbook_players_v3',{p_competition:competition,p_limit:2000});
@@ -317,6 +326,10 @@
     if(['goalie_wins','goalie_saves','save_percentage','goalie_shutouts'].includes(metricKey))return `${fmt(row.goalie_games)} målvaktsmatcher`;
     if(metricKey.startsWith('playoff_'))return `${fmt(row.playoff_games)} slutspelsmatcher`;
     if(['golds','silvers','bronzes','medals'].includes(metricKey))return `${fmt(row.medals)} medaljer · ${fmt(row.tournament_count)} turneringar`;
+    if(metricKey==='dim_titles'){
+      const dim=num(row.latest_dim).toLocaleString('sv-SE',{minimumFractionDigits:2,maximumFractionDigits:2});
+      return [row.latest_season||'ECL',`${dim} DIM`,row.latest_team||''].filter(Boolean).join(' · ');
+    }
     if(metricKey==='one_club_games')return [row.one_club_name||'Okänt lag',`${fmt(row.games)} matcher totalt`].filter(Boolean).join(' · ');
     if(metricKey==='career_span_days'){
       const first=recordMatchDate(row.career_first_date);
@@ -366,6 +379,8 @@
       candidates=[['games','GP'],['wins','W'],['goals_for','GF'],['goal_diff','+/−'],['tournament_count','T'],['titles','GULD']];
     }else if(state.group==='playoffs'){
       candidates=[['playoff_games','GP'],['playoff_goals','MÅL'],['playoff_assists','ASSIST'],['playoff_points','PTS']];
+    }else if(state.group==='defense'){
+      candidates=[['dim_titles','DIM-TITLAR'],['games','GP']];
     }else if(state.group==='goalie'){
       candidates=[['goalie_games','GP'],['goalie_wins','W'],['goalie_saves','SV'],['save_percentage','SV%'],['goalie_shutouts','SO']];
     }else if(state.group==='merits'){
@@ -465,6 +480,7 @@
     metricHost.classList.toggle('is-match-records',state.type==='players'&&state.group==='match');
   }
   function statusSuffix(metricKey){
+    if(metricKey==='dim_titles')return ' · DIM = (TA + INT + BS) / GP · DIM-ledare per ECL-division · minst 59 % av lagets matcher';
     if(metricKey==='save_percentage')return ` · minst ${MIN_SAVE_PERCENTAGE_GAMES} målvaktsmatcher`;
     if(metricKey==='points_per_game'||metricKey==='goals_per_game')return ` · minst ${MIN_RATE_GAMES} utespelarmatcher`;
     if(metricKey==='fastest_goal_seconds'){
