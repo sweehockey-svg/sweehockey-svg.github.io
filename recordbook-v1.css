@@ -1368,3 +1368,224 @@
     margin-left:0;
   }
 }
+
+
+/* Recordbook V2.2 — align with the primary Svensk eHockey visual system */
+.seh-recordbook-shell{
+  width:min(var(--seh-wide,1450px),calc(100% - 40px));
+}
+.seh-recordbook-hero{
+  display:grid;
+  grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);
+  align-items:stretch;
+  gap:0;
+  margin:0;
+  padding:64px 0;
+  border-top:1px solid var(--seh-line,rgba(255,255,255,.12));
+  border-bottom:1px solid var(--seh-line,rgba(255,255,255,.12));
+  background:transparent;
+}
+.seh-recordbook-hero>div,
+.seh-recordbook-hero>aside{
+  min-width:0;
+  padding:34px 38px;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
+.seh-recordbook-hero>div{
+  background:transparent;
+}
+.seh-recordbook-hero h1{
+  margin:8px 0 18px;
+  color:#f4f1e9;
+  font-family:"Arial Black",Impact,Haettenschweiler,sans-serif;
+  font-size:clamp(4.6rem,7.8vw,7.6rem);
+  font-weight:900;
+  letter-spacing:-.065em;
+  line-height:.82;
+}
+.seh-recordbook-hero>div>p:last-child{
+  max-width:760px;
+  margin:0;
+  color:#a2a8a5;
+  font-size:.96rem;
+  line-height:1.65;
+}
+.seh-recordbook-hero>aside{
+  align-content:space-between;
+  color:#090a0a;
+  background:#ffd000;
+}
+.seh-recordbook-hero aside span,
+.seh-recordbook-hero aside strong,
+.seh-recordbook-hero aside p{
+  color:#090a0a;
+}
+.seh-recordbook-hero aside span{
+  font-size:.64rem;
+  letter-spacing:.12em;
+}
+.seh-recordbook-hero aside strong{
+  margin-top:14px;
+  font-family:"Arial Black",Impact,Haettenschweiler,sans-serif;
+  font-size:clamp(2rem,3vw,3rem);
+  letter-spacing:-.045em;
+  line-height:.92;
+}
+.seh-recordbook-hero aside p{
+  margin:18px 0 0;
+  opacity:.74;
+  line-height:1.45;
+}
+.seh-recordbook-panel{
+  margin:32px 0 70px;
+  padding:0;
+  overflow:visible;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.seh-recordbook-panel::before{display:none}
+.seh-recordbook-dock{
+  padding:18px 0 14px;
+  border-top:1px solid var(--seh-line,rgba(255,255,255,.12));
+  border-bottom:1px solid var(--seh-line,rgba(255,255,255,.12));
+}
+.seh-recordbook-dock::before{
+  top:-1px;
+  left:0;
+  width:150px;
+  height:2px;
+  background:#ffd000;
+}
+.seh-recordbook-switch,
+.seh-recordbook-metrics{
+  border-radius:0;
+  background:#0b0d0d;
+}
+.seh-recordbook-switch button,
+.seh-recordbook-filters button,
+.seh-recordbook-group-tabs button,
+.seh-recordbook-metrics button{
+  border-radius:0;
+}
+.seh-recordbook-switch button.is-active,
+.seh-recordbook-filters button.is-active{
+  color:#080909;
+  border-color:#ffd000;
+  background:#ffd000;
+}
+.seh-recordbook-group-tabs{
+  border-top:1px solid rgba(255,255,255,.065);
+}
+.seh-recordbook-group-tabs button.is-active::after{
+  border-radius:0;
+}
+.seh-recordbook-metrics{
+  border-color:rgba(255,255,255,.09);
+}
+.seh-recordbook-metrics button.is-active{
+  color:#080909;
+  background:#ffd000;
+}
+.seh-recordbook-status{
+  min-height:44px;
+  margin:0;
+  padding:15px 2px 10px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.seh-record-podium{
+  gap:0;
+  margin-top:0;
+  border-left:1px solid var(--seh-line,rgba(255,255,255,.12));
+  border-top:1px solid var(--seh-line,rgba(255,255,255,.12));
+}
+.seh-record-podium-card,
+.seh-record-podium-card.is-team{
+  border-radius:0;
+  border-color:var(--seh-line,rgba(255,255,255,.12));
+  border-top:0;
+  border-left:0;
+  background:#0b0d0d;
+  box-shadow:none;
+}
+.seh-record-podium-stats>span,
+.seh-record-avatar,
+.seh-record-rank{
+  border-radius:0;
+}
+.seh-record-list{
+  gap:0;
+  border-top:1px solid var(--seh-line,rgba(255,255,255,.12));
+  border-left:1px solid var(--seh-line,rgba(255,255,255,.12));
+}
+.seh-record-row,
+.seh-record-row.is-leader{
+  min-height:68px;
+  border-radius:0;
+  border-top:0;
+  border-left:0;
+  border-color:var(--seh-line,rgba(255,255,255,.12));
+  background:#0b0d0d;
+}
+.seh-record-row:hover{
+  transform:none;
+  border-color:var(--seh-line,rgba(255,255,255,.12));
+  background:rgba(255,208,0,.035);
+}
+.seh-record-row.is-leader{
+  background:linear-gradient(90deg,rgba(255,208,0,.08),#0b0d0d 42%);
+}
+.seh-record-row.is-leader::before{
+  top:0;
+  bottom:0;
+  width:3px;
+  box-shadow:none;
+}
+.seh-recordbook-note{
+  margin:18px 2px 0;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.07);
+}
+
+@media(max-width:820px){
+  .seh-recordbook-shell{
+    width:min(100% - 24px,1450px);
+  }
+  .seh-recordbook-hero{
+    grid-template-columns:1fr;
+    padding:28px 0;
+  }
+  .seh-recordbook-hero>div,
+  .seh-recordbook-hero>aside{
+    padding:24px 18px;
+  }
+  .seh-recordbook-hero h1{
+    font-size:clamp(3.45rem,16vw,5.4rem);
+  }
+  .seh-recordbook-hero>aside{
+    min-height:155px;
+  }
+  .seh-recordbook-panel{
+    margin-top:20px;
+  }
+  .seh-recordbook-dock-top{
+    display:grid;
+    gap:9px;
+  }
+  .seh-recordbook-switch{
+    width:100%;
+  }
+  .seh-recordbook-switch button{
+    flex:1 1 0;
+    min-width:0;
+  }
+  .seh-record-podium{
+    border-left:0;
+  }
+  .seh-record-podium-card{
+    border-left:1px solid var(--seh-line,rgba(255,255,255,.12));
+  }
+}
