@@ -1310,6 +1310,22 @@
         line-height:.95;
       }
       .ecl27v2-stamp small{opacity:.72}
+      /* Shared yellow-block eyebrow v1 */
+      @media(min-width:921px){
+        .ecl27v2-stamp>span:first-child{
+          display:block;
+          margin:0 0 12px;
+          padding:0;
+          color:#080909;
+          font-family:Inter,Arial,Helvetica,sans-serif;
+          font-size:10px;
+          font-weight:1000;
+          line-height:1;
+          letter-spacing:.095em;
+          text-transform:uppercase;
+        }
+      }
+
       .ecl27v2-overview{
         grid-template-columns:repeat(4,minmax(0,1fr));
         margin:22px 0 28px;
