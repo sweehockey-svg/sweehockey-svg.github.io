@@ -57,6 +57,19 @@ def sel(c,sql,p=()):
         cur.execute(sql,p)
         return list(cur.fetchall())
 
+def table_columns(c, table):
+    db=sel(c,"select database() db")[0]["db"]
+    rows=sel(c,
+      "select column_name as col from information_schema.columns where table_schema=%s and table_name=%s order by ordinal_position",
+      (db,table))
+    return [str(r.get("col") or "") for r in rows]
+
+def pick(cols,*names):
+    m={x.lower():x for x in cols}
+    for n in names:
+        if n.lower() in m: return m[n.lower()]
+    return None
+
 def main():
     via=bool((os.environ.get("SSH_HOST") or "").strip())
     c=pymysql.connect(
