@@ -5,6 +5,7 @@
   const MIN_SAVE_PERCENTAGE_GAMES=20;
   const MIN_RATE_GAMES=50;
   const MATCH_METRICS=new Set(['fastest_goal_seconds','hattricks','max_goals_game']);
+  const FUN_METRICS=new Set(['one_club_games','career_span_days']);
 
   const PLAYER_GROUPS=[
     {key:'career',label:'Karriär',items:[
@@ -25,6 +26,9 @@
     ]},
     {key:'match',label:'Matchrekord',items:[
       ['fastest_goal_seconds','Snabbaste mål','TID'],['hattricks','Hattricks','HT'],['max_goals_game','Mål i en match','MÅL']
+    ]},
+    {key:'fun',label:'Kuriosa',items:[
+      ['one_club_games','Samma klubb','GP'],['career_span_days','Längsta karriär','TID']
     ]}
   ];
   const TEAM_GROUPS=[
@@ -61,6 +65,7 @@
   function metricAvailable(key){
     if(state.type!=='players')return true;
     if(key==='ecl_seasons'&&!['ALL','ECL'].includes(state.competition))return false;
+    if(FUN_METRICS.has(key)&&state.competition!=='ALL')return false;
     if(key==='penalty_minutes'&&state.competition==='SM')return false;
     if(key==='fastest_goal_seconds'&&!['ALL','ECL','SCL'].includes(state.competition))return false;
     if(['hattricks','max_goals_game'].includes(key)&&!['ALL','ECL','SCL','SEC','ITHL','LGEL'].includes(state.competition))return false;
@@ -142,7 +147,8 @@
 
   async function rows(type,competition,metric){
     const matchMode=type==='players'&&MATCH_METRICS.has(metric);
-    const matchDataset=metric==='fastest_goal_seconds'?'fastest':(matchMode?'match':'career');
+    const funMode=type==='players'&&FUN_METRICS.has(metric);
+    const matchDataset=funMode?'fun':(metric==='fastest_goal_seconds'?'fastest':(matchMode?'match':'career'));
     const key=`${type}|${competition}|${matchDataset}`;
     if(cache.has(key))return cache.get(key);
     const sb=getClient();if(!sb)throw new Error('Supabase saknas');
@@ -150,6 +156,9 @@
     const promise=(async()=>{
       if(type==='teams'){
         return rpcRows(sb,'seh_recordbook_teams_v1',{p_competition:competition,p_limit:500});
+      }
+      if(funMode){
+        return rpcRows(sb,'seh_recordbook_fun_players_v1',{p_limit:2000});
       }
       if(!matchMode){
         return rpcRows(sb,'seh_recordbook_players_v3',{p_competition:competition,p_limit:2000});
@@ -206,6 +215,11 @@
     }
     if(key==='points_per_game'||key==='goals_per_game')return val.toLocaleString('sv-SE',{minimumFractionDigits:2,maximumFractionDigits:2});
     if(key==='fastest_goal_seconds')return formatGoalTime(val);
+    if(key==='career_span_days'){
+      const years=Math.floor(val/365.2425);
+      const months=Math.max(0,Math.round((val-years*365.2425)/30.4375));
+      return [years?`${years} år`:'',months?`${months} mån`:''].filter(Boolean).join(' ')||'–';
+    }
     return `${key==='goal_diff'&&val>0?'+':''}${fmt(val)}`;
   }
   function matchesMetric(row,key){
@@ -303,6 +317,12 @@
     if(['goalie_wins','goalie_saves','save_percentage','goalie_shutouts'].includes(metricKey))return `${fmt(row.goalie_games)} målvaktsmatcher`;
     if(metricKey.startsWith('playoff_'))return `${fmt(row.playoff_games)} slutspelsmatcher`;
     if(['golds','silvers','bronzes','medals'].includes(metricKey))return `${fmt(row.medals)} medaljer · ${fmt(row.tournament_count)} turneringar`;
+    if(metricKey==='one_club_games')return [row.one_club_name||'Okänt lag',`${fmt(row.games)} matcher totalt`].filter(Boolean).join(' · ');
+    if(metricKey==='career_span_days'){
+      const first=recordMatchDate(row.career_first_date);
+      const last=recordMatchDate(row.career_last_date);
+      return [first&&last?`${first}–${last}`:'',`${fmt(row.games)} matcher`].filter(Boolean).join(' · ');
+    }
     if(metricKey==='points_per_game'||metricKey==='goals_per_game')return `${fmt(row.skater_games)} utespelarmatcher`;
     return `${row.primary_position||'Spelare'} · ${fmt(row.games)} matcher`;
   }
@@ -350,6 +370,8 @@
       candidates=[['goalie_games','GP'],['goalie_wins','W'],['goalie_saves','SV'],['save_percentage','SV%'],['goalie_shutouts','SO']];
     }else if(state.group==='merits'){
       candidates=[['golds','GULD'],['medals','MED'],['tournament_count','T'],['silvers','SILVER'],['bronzes','BRONS']];
+    }else if(state.group==='fun'){
+      candidates=[['one_club_games','SAMMA LAG'],['career_span_days','KARRIÄR'],['games','GP']];
     }else if(state.group==='match'){
       if(metricKey==='fastest_goal_seconds'){
         candidates=[['hattricks','HT'],['max_goals_game','MAX MÅL'],['games','GP'],['goals','MÅL']];
