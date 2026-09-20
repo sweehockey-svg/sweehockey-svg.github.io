@@ -8873,6 +8873,244 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       .seh-fa-card.is-no-team .seh-fa-tags b{border-color:#8796a34f;color:#b0bbc4}
       .seh-fa-card.is-no-team .seh-fa-open{color:#b9c4cc}
       .seh-fa-status-note{padding:7px;border:1px solid #ffffff14;border-radius:8px;color:#9ba6af;font-size:9px;font-weight:800}
+      /* Rekordbok + Lagbygge: same native-like visual language as the rest of the webapp */
+      body.seh-route-records .seh-recordbook-shell{
+        width:100%!important;
+        max-width:760px!important;
+        margin:0 auto!important;
+        padding:14px 12px 30px!important;
+        box-sizing:border-box!important;
+      }
+      body.seh-route-records .seh-recordbook-hero{
+        display:block!important;
+        margin:0 0 12px!important;
+        padding:17px!important;
+        border:1px solid rgba(255,255,255,.10)!important;
+        border-radius:18px!important;
+        background:linear-gradient(145deg,#0b101c,#060811)!important;
+      }
+      body.seh-route-records .seh-recordbook-hero>div{
+        padding:0!important;
+      }
+      body.seh-route-records .seh-recordbook-hero>aside{
+        display:none!important;
+      }
+      body.seh-route-records .seh-recordbook-hero h1{
+        margin:4px 0 8px!important;
+        font-family:Inter,Arial,sans-serif!important;
+        font-size:30px!important;
+        line-height:1.02!important;
+        letter-spacing:-.035em!important;
+      }
+      body.seh-route-records .seh-recordbook-hero .directory-kicker{
+        margin:0 0 6px!important;
+        color:#62d4cf!important;
+        font:900 10px/1 Inter,Arial,sans-serif!important;
+        letter-spacing:.09em!important;
+      }
+      body.seh-route-records .seh-recordbook-hero>div>p:last-child{
+        margin:0!important;
+        color:#9aa3ae!important;
+        font-size:12px!important;
+        line-height:1.45!important;
+      }
+      body.seh-route-records .seh-recordbook-panel{
+        margin:0!important;
+        padding:0!important;
+        border:1px solid rgba(255,255,255,.09)!important;
+        border-radius:18px!important;
+        background:#070b13!important;
+        overflow:hidden!important;
+      }
+      body.seh-route-records .seh-recordbook-dock{
+        padding:12px!important;
+        border-top:0!important;
+        border-bottom:1px solid rgba(255,255,255,.08)!important;
+      }
+      body.seh-route-records .seh-recordbook-dock::before{display:none!important}
+      body.seh-route-records .seh-recordbook-switch,
+      body.seh-route-records .seh-recordbook-metrics{
+        border-radius:11px!important;
+        background:#030711!important;
+      }
+      body.seh-route-records .seh-recordbook-switch button,
+      body.seh-route-records .seh-recordbook-filters button,
+      body.seh-route-records .seh-recordbook-metrics button{
+        border-radius:9px!important;
+      }
+      body.seh-route-records .seh-recordbook-group-tabs button{
+        border-radius:0!important;
+      }
+      body.seh-route-records .seh-recordbook-status{
+        min-height:0!important;
+        padding:11px 12px 8px!important;
+        border-bottom:0!important;
+      }
+      body.seh-route-records .seh-record-podium{
+        display:grid!important;
+        grid-template-columns:1fr!important;
+        gap:8px!important;
+        margin:0!important;
+        padding:0 10px 10px!important;
+        border:0!important;
+      }
+      body.seh-route-records .seh-record-podium-card,
+      body.seh-route-records .seh-record-podium-card.is-team{
+        border:1px solid rgba(255,255,255,.09)!important;
+        border-radius:15px!important;
+        background:linear-gradient(145deg,#0b101c,#060811)!important;
+      }
+      body.seh-route-records .seh-record-podium-stats>span,
+      body.seh-route-records .seh-record-avatar,
+      body.seh-route-records .seh-record-rank{
+        border-radius:10px!important;
+      }
+      body.seh-route-records .seh-record-list{
+        gap:7px!important;
+        padding:0 10px 10px!important;
+        border:0!important;
+      }
+      body.seh-route-records .seh-record-row,
+      body.seh-route-records .seh-record-row.is-leader{
+        min-height:62px!important;
+        border:1px solid rgba(255,255,255,.08)!important;
+        border-radius:14px!important;
+        background:#080d15!important;
+      }
+      body.seh-route-records .seh-record-row.is-leader{
+        border-color:rgba(255,208,0,.25)!important;
+        background:linear-gradient(90deg,rgba(255,208,0,.07),#080d15 45%)!important;
+      }
+      body.seh-route-records .seh-recordbook-note{
+        margin:4px 12px 14px!important;
+        padding-top:11px!important;
+      }
+
+      body.seh-winter-compact .season-shell-v12840{
+        width:100%!important;
+        max-width:760px!important;
+        margin:0 auto!important;
+        padding:12px!important;
+        box-sizing:border-box!important;
+      }
+      body.seh-winter-compact .season-hero-v12840,
+      body.seh-winter-compact .season-subnav-v12840,
+      body.seh-winter-compact .season-overview-v12840{
+        display:none!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2{
+        margin:0!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-hero{
+        display:block!important;
+        margin:0 0 12px!important;
+        padding:17px!important;
+        border:1px solid rgba(255,255,255,.10)!important;
+        border-radius:18px!important;
+        background:linear-gradient(145deg,#0b101c,#060811)!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-hero>div:first-child{
+        padding:0!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-hero h2{
+        margin:4px 0 8px!important;
+        font-family:Inter,Arial,sans-serif!important;
+        font-size:29px!important;
+        line-height:1.04!important;
+        letter-spacing:-.035em!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-hero>div>p:last-of-type{
+        margin:0!important;
+        color:#9aa3ae!important;
+        font-size:12px!important;
+        line-height:1.45!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-stamp{
+        margin-top:12px!important;
+        min-height:0!important;
+        padding:12px!important;
+        border:1px solid rgba(255,208,0,.22)!important;
+        border-radius:13px!important;
+        color:#f4f1e9!important;
+        background:rgba(255,208,0,.045)!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-stamp span,
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-stamp strong,
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-stamp small{
+        color:inherit!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-stamp strong{
+        margin:5px 0!important;
+        font-family:Inter,Arial,sans-serif!important;
+        font-size:16px!important;
+        letter-spacing:0!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-overview{
+        gap:8px!important;
+        margin:0 0 12px!important;
+        border:0!important;
+        background:transparent!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-overview>div{
+        min-height:82px!important;
+        padding:12px!important;
+        border:1px solid rgba(255,255,255,.09)!important;
+        border-radius:14px!important;
+        background:#080d15!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-panel{
+        margin-top:12px!important;
+        border:1px solid rgba(255,255,255,.09)!important;
+        border-radius:18px!important;
+        background:#070b13!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-head{
+        padding:14px!important;
+        border-bottom:1px solid rgba(255,255,255,.08)!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-head h3{
+        font-family:Inter,Arial,sans-serif!important;
+        font-size:19px!important;
+        letter-spacing:-.02em!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-toolbar{
+        padding:11px!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-toolbar input,
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-toolbar select{
+        border-radius:11px!important;
+        background:#030711!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-grid{
+        display:grid!important;
+        grid-template-columns:1fr!important;
+        gap:9px!important;
+        padding:10px!important;
+        border:0!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-card{
+        padding:15px!important;
+        border:1px solid rgba(255,255,255,.09)!important;
+        border-radius:16px!important;
+        background:linear-gradient(145deg,#0b101c,#060811)!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-logo,
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-badges span,
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-badges b,
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-metrics>div,
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-roster-player,
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-recruit,
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-detail-panel,
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-detail-logo,
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-detail-metrics>div{
+        border-radius:11px!important;
+      }
+      body.seh-winter-compact #ecl27TeamBuildsV2 .ecl27v2-method{
+        margin-top:12px!important;
+        border-radius:14px!important;
+        background:#080d15!important;
+      }
+
     `;
     document.head.appendChild(style);
   }
