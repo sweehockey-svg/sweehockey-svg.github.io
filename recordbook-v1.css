@@ -1639,3 +1639,90 @@
     max-width:var(--seh-wide,1460px);
   }
 }
+
+
+/* Recordbook V2.5 — shared desktop hero geometry */
+@media(min-width:921px){
+  body:not(.seh-route-records) .seh-recordbook-shell{
+    width:min(1540px,calc(100% - 42px));
+    max-width:1540px;
+    margin-inline:auto;
+  }
+
+  body:not(.seh-route-records) .seh-recordbook-hero{
+    box-sizing:border-box;
+    min-height:356px;
+    height:356px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 360px;
+    gap:54px;
+    align-items:center;
+    margin:0;
+    padding:0 54px;
+    border-top:1px solid rgba(255,255,255,.11);
+    border-bottom:1px solid rgba(255,255,255,.11);
+    background:
+      linear-gradient(108deg,transparent 0 61%,rgba(255,208,0,.025) 61.05% 61.13%,transparent 61.2%),
+      radial-gradient(circle at 88% 26%,rgba(10,56,78,.055),transparent 28%),
+      linear-gradient(90deg,#070909 0%,#050706 55%,#06090a 100%);
+    overflow:hidden;
+  }
+
+  body:not(.seh-route-records) .seh-recordbook-hero>div{
+    min-width:0;
+    align-self:center;
+    padding:0;
+  }
+
+  body:not(.seh-route-records) .seh-recordbook-hero h1{
+    max-width:1040px;
+    margin:10px 0 16px;
+    font-size:clamp(68px,5vw,96px);
+    font-weight:1000;
+    line-height:.86;
+    letter-spacing:-.065em;
+    white-space:normal;
+    text-wrap:balance;
+  }
+
+  body:not(.seh-route-records) .seh-recordbook-hero>div>p:last-child{
+    max-width:780px;
+    margin:0;
+    color:rgba(244,241,233,.68);
+    font-size:14px;
+    line-height:1.58;
+  }
+
+  body:not(.seh-route-records) .seh-recordbook-hero .directory-kicker{
+    margin:0 0 8px;
+    color:#43e8e1;
+    font-size:11px;
+    font-weight:950;
+    letter-spacing:.055em;
+  }
+
+  body:not(.seh-route-records) .seh-recordbook-hero>aside{
+    width:360px;
+    min-width:360px;
+    max-width:360px;
+    height:240px;
+    min-height:240px;
+    max-height:240px;
+    align-self:center;
+    justify-self:end;
+    box-sizing:border-box;
+    margin:0;
+    padding:26px 28px;
+    border:0;
+    border-radius:0;
+    color:#080909;
+    background:#ffd000;
+    box-shadow:none;
+  }
+
+  body:not(.seh-route-records) .seh-recordbook-hero aside strong{
+    margin-top:12px;
+    font-size:clamp(2rem,2.35vw,2.7rem);
+    line-height:.94;
+  }
+}
