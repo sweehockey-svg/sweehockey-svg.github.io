@@ -51,4 +51,3 @@ select count(*) filter (where not existed) as new_rows,
        count(distinct sports_gamer_player_id) as swedish_players_with_rows
 from swedish_player_stats_before;
 
-select public.refresh_ehockey_player_record_highlights_v3() as refreshed_player_record_highlights;
