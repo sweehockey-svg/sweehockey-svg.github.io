@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "2026-09-20-v5";
+  var VERSION = "2026-09-20-v6";
   var state = {
     open: false,
     data: null,
@@ -496,6 +496,10 @@
     overlay.hidden = true;
     document.body.classList.remove("seh-global-search-open");
   }
+
+  // Samma globala sök används av både webbhuvudet och webbappens egen topbar.
+  window.SEH_openGlobalSearch = openSearch;
+  window.SEH_closeGlobalSearch = closeSearch;
 
   function iconMarkup() {
     return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4.2-4.2"></path></svg>';

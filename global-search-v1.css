@@ -400,3 +400,18 @@ body.seh-global-search-open { overflow: hidden; }
     grid-template-columns: 42px minmax(0,1fr) auto;
   }
 }
+
+
+/* v4 — global sök ovanpå webbappens native-liknande skal */
+html.seh-web-app .seh-global-search {
+  z-index: 2147483646;
+}
+html.seh-web-app .seh-global-search__panel {
+  color: #f4f1e9;
+}
+@media (max-width: 560px) {
+  html.seh-web-app .seh-global-search__head {
+    padding-top: env(safe-area-inset-top, 0px);
+    min-height: calc(68px + env(safe-area-inset-top, 0px));
+  }
+}
