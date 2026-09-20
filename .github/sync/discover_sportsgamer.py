@@ -50,6 +50,8 @@ def main() -> int:
         "candidate_leagues": [],
         "metric_candidates": [],
         "metric_tables": [],
+        "metric_views": [],
+        "rating_defense_samples": [],
     }
     try:
         with connection.cursor() as cursor:
@@ -123,6 +125,56 @@ def main() -> int:
             ]
             table_names = sorted(set(table_names) | set(inventory["metric_tables"]))
 
+            cursor.execute(
+                """
+                select table_name as detected_view_name, view_definition
+                from information_schema.views
+                where table_schema = %s
+                  and (
+                    lower(coalesce(view_definition,'')) like '%%ratingdefense%%'
+                    or lower(coalesce(view_definition,'')) like '%%defensive%%'
+                    or lower(coalesce(view_definition,'')) like '%% dim %%'
+                  )
+                order by table_name
+                """,
+                (database_name,),
+            )
+            inventory["metric_views"] = [
+                {
+                    "view_name": row["detected_view_name"],
+                    "view_definition": row["view_definition"],
+                }
+                for row in cursor.fetchall()
+            ]
+
+            cursor.execute(
+                """
+                select
+                  p.leagueID,
+                  p.teamID,
+                  p.playerID,
+                  p.positionID,
+                  count(*) as games,
+                  round(avg(p.ratingDefense),4) as avg_rating_defense,
+                  round(sum(p.ratingDefense),4) as sum_rating_defense,
+                  min(p.ratingDefense) as min_rating_defense,
+                  max(p.ratingDefense) as max_rating_defense,
+                  sum(p.interceptions) as interceptions,
+                  sum(p.blockedShots) as blocked_shots,
+                  sum(p.takeaways) as takeaways,
+                  sum(p.giveaways) as giveaways,
+                  sum(p.hits) as hits
+                from nhlgamer_participants p
+                where p.leagueID in (507,508,509,510,511)
+                  and p.positionID in (4,5)
+                group by p.leagueID,p.teamID,p.playerID,p.positionID
+                having count(*) > 0
+                order by p.leagueID desc, avg_rating_defense desc
+                limit 80
+                """
+            )
+            inventory["rating_defense_samples"] = list(cursor.fetchall())
+
             important = {
                 "nhlgamer_players",
                 "nhlgamer_leagueRosters",
@@ -191,6 +243,10 @@ def main() -> int:
     for row in inventory["metric_candidates"]:
         print(f"{row['table_name']}\t{row['column_name']}\t{row['data_type']}")
     print("Metric-like tables:", ", ".join(inventory["metric_tables"]))
+    print("Metric views:", ", ".join(row["view_name"] for row in inventory["metric_views"]))
+    print("=== RATING DEFENSE SAMPLES ===")
+    for row in inventory["rating_defense_samples"][:20]:
+        print(json.dumps(row, ensure_ascii=False, default=str))
     return 0
 
 
