@@ -83,81 +83,119 @@
     const trim = options.trim || team.trim;
     const name = String(options.playerName || state.playerName || "PLAYER").toUpperCase();
     const number = String(options.playerNumber || state.playerNumber || "21");
-    const base = variant === "away" ? "#f2f2ef" : primary;
-    const dark = variant === "away" ? primary : "#050708";
+    const base = variant === "away" ? "#f1f2ef" : primary;
+    const ink = variant === "away" ? primary : trim;
+    const dark = variant === "away" ? primary : "#040607";
     const stripe = variant === "away" ? primary : accent;
     const secondary = variant === "away" ? accent : trim;
     const logo = logoUrl(team.name);
-    const clipId = `clip-${team.id}-${variant}-${side}-${Math.random().toString(36).slice(2,8)}`;
+    const uid = `jersey-${team.id}-${variant}-${side}-${Math.random().toString(36).slice(2,8)}`;
+    const silhouette = "M248 72 C262 57 338 57 352 72 L399 90 C441 103 490 132 535 174 L566 204 L505 324 L448 292 L432 530 Q300 552 168 530 L152 292 L95 324 L34 204 L65 174 C110 132 159 103 201 90 Z";
 
     const patternMarkup = {
       shoulder: `
-        <path d="M155 126 L240 70 H360 L445 126 L420 166 L365 126 H235 L180 166 Z" fill="${stripe}"/>
-        <path d="M70 228 L155 185 L177 226 L92 270 Z M530 228 L445 185 L423 226 L508 270 Z" fill="${secondary}" opacity=".98"/>
-        <path d="M75 252 L158 211 L171 236 L88 278 Z M525 252 L442 211 L429 236 L512 278 Z" fill="${stripe}"/>
-        <path d="M172 472 H428 V500 H172 Z" fill="${stripe}"/>
-        <path d="M172 500 H428 V516 H172 Z" fill="${secondary}"/>
+        <path d="M188 95 C220 84 238 76 255 66 H345 C362 76 380 84 412 95 L450 112 L421 164 C386 142 354 132 300 132 C246 132 214 142 179 164 L150 112 Z" fill="${stripe}"/>
+        <path d="M56 214 L146 166 L166 205 L76 254 Z M544 214 L454 166 L434 205 L524 254 Z" fill="${secondary}" opacity=".96"/>
+        <path d="M69 242 L154 197 L168 224 L83 269 Z M531 242 L446 197 L432 224 L517 269 Z" fill="${stripe}"/>
+        <path d="M166 467 H434 V495 H166 Z" fill="${stripe}"/>
+        <path d="M166 495 H434 V511 H166 Z" fill="${secondary}"/>
       `,
       classic: `
-        <path d="M170 438 H430 V462 H170 Z" fill="${secondary}"/>
-        <path d="M170 464 H430 V500 H170 Z" fill="${stripe}"/>
-        <path d="M80 238 L162 196 L176 224 L94 266 Z M520 238 L438 196 L424 224 L506 266 Z" fill="${secondary}"/>
-        <path d="M88 266 L168 226 L181 251 L101 291 Z M512 266 L432 226 L419 251 L499 291 Z" fill="${stripe}"/>
+        <path d="M166 442 H434 V466 H166 Z" fill="${secondary}"/>
+        <path d="M166 468 H434 V502 H166 Z" fill="${stripe}"/>
+        <path d="M58 222 L150 174 L166 206 L74 255 Z M542 222 L450 174 L434 206 L526 255 Z" fill="${secondary}"/>
+        <path d="M73 253 L158 209 L171 234 L86 278 Z M527 253 L442 209 L429 234 L514 278 Z" fill="${stripe}"/>
       `,
       diagonal: `
-        <path d="M150 395 L430 210 L430 276 L170 448 L170 510 L430 338 L430 392 L238 520 H170 V470 L150 482 Z" fill="${stripe}" opacity=".96"/>
-        <path d="M160 424 L430 246 L430 268 L170 442 L170 467 L430 295 L430 316 L170 489 L160 496 Z" fill="${secondary}" opacity=".9"/>
-        <path d="M60 180 L150 128 L186 168 L92 226 Z M540 180 L450 128 L414 168 L508 226 Z" fill="${stripe}"/>
+        <path d="M150 384 L438 205 L438 274 L164 447 L168 514 L438 345 L438 402 L242 530 H168 L163 475 L148 485 Z" fill="${stripe}" opacity=".96"/>
+        <path d="M159 414 L438 239 L438 262 L166 436 L168 462 L438 291 L438 314 L169 486 L159 493 Z" fill="${secondary}" opacity=".92"/>
+        <path d="M45 190 L142 134 L182 174 L77 236 Z M555 190 L458 134 L418 174 L523 236 Z" fill="${stripe}"/>
       `,
       minimal: `
-        <path d="M172 492 H428 V510 H172 Z" fill="${stripe}"/>
-        <path d="M76 256 L158 215 L170 238 L88 280 Z M524 256 L442 215 L430 238 L512 280 Z" fill="${stripe}"/>
+        <path d="M166 492 H434 V510 H166 Z" fill="${stripe}"/>
+        <path d="M67 250 L153 205 L166 230 L80 275 Z M533 250 L447 205 L434 230 L520 275 Z" fill="${stripe}"/>
+        <path d="M194 97 C230 84 256 79 300 79 C344 79 370 84 406 97" fill="none" stroke="${secondary}" stroke-width="8" opacity=".8"/>
       `
     }[pattern] || "";
 
     const front = `
       <g>
-        <text x="300" y="270" text-anchor="middle" fill="${variant === "away" ? dark : "#ffffff"}" opacity=".08" font-size="54" font-weight="1000">${esc(team.code)}</text>
-        ${logo ? `<image href="${esc(logo)}" x="212" y="202" width="176" height="160" preserveAspectRatio="xMidYMid meet"/>` : ""}
-        <text x="300" y="386" text-anchor="middle" fill="${variant === "away" ? dark : trim}" opacity=".82" font-size="17" font-weight="950" letter-spacing="2">${esc(team.name.toUpperCase())}</text>
+        ${logo ? `<image href="${esc(logo)}" x="211" y="190" width="178" height="158" preserveAspectRatio="xMidYMid meet"/>` : `<text x="300" y="285" text-anchor="middle" fill="${ink}" font-size="68" font-weight="1000">${esc(team.code)}</text>`}
+        <text x="300" y="379" text-anchor="middle" fill="${ink}" opacity=".84" font-size="15" font-weight="1000" letter-spacing="2.4">SVENSK eHOCKEY</text>
+        <rect x="383" y="174" width="34" height="34" rx="3" fill="${ink}" opacity=".94"/>
+        <text x="400" y="198" text-anchor="middle" fill="${variant === "away" ? "#f1f2ef" : dark}" font-size="20" font-weight="1000">C</text>
       </g>
     `;
 
     const back = `
       <g>
-        <text x="300" y="218" text-anchor="middle" fill="${variant === "away" ? dark : trim}" font-size="28" font-weight="1000" letter-spacing="2">${esc(name)}</text>
-        <text x="300" y="390" text-anchor="middle" fill="${variant === "away" ? dark : trim}" stroke="${stripe}" stroke-width="5" paint-order="stroke fill" font-size="166" font-weight="1000" letter-spacing="-8">${esc(number)}</text>
-        <text x="300" y="430" text-anchor="middle" fill="${variant === "away" ? dark : trim}" opacity=".72" font-size="14" font-weight="950" letter-spacing="3">SVENSK eHOCKEY</text>
+        <text x="300" y="210" text-anchor="middle" fill="${ink}" stroke="${stripe}" stroke-width="1.8" paint-order="stroke fill" font-size="27" font-weight="1000" letter-spacing="2.4">${esc(name)}</text>
+        <text x="300" y="393" text-anchor="middle" fill="${ink}" stroke="${stripe}" stroke-width="5.5" paint-order="stroke fill" font-size="166" font-weight="1000" letter-spacing="-8">${esc(number)}</text>
+        <text x="300" y="432" text-anchor="middle" fill="${ink}" opacity=".72" font-size="13" font-weight="1000" letter-spacing="3">SVENSK eHOCKEY</text>
       </g>
     `;
 
     return `
-      <svg viewBox="0 0 600 600" role="img" aria-label="${esc(team.name)} ${variant === "away" ? "bortatröja" : "hemmatröja"}">
+      <svg viewBox="0 0 600 600" role="img" aria-label="${esc(team.name)} ${variant === "away" ? "bortatröja" : "hemmatröja"}" class="seh-jersey-svg${compact ? " is-compact" : ""}">
         <defs>
-          <clipPath id="${clipId}">
-            <path d="M240 70 H360 L450 128 L548 184 L500 302 L432 270 V540 H168 V270 L100 302 L52 184 L150 128 Z"/>
+          <clipPath id="clip-${uid}">
+            <path d="${silhouette}"/>
           </clipPath>
-          <linearGradient id="fabric-${clipId}" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0" stop-color="#ffffff" stop-opacity=".12"/>
-            <stop offset=".42" stop-color="#ffffff" stop-opacity=".015"/>
-            <stop offset="1" stop-color="#000000" stop-opacity=".18"/>
+          <linearGradient id="fabric-${uid}" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0" stop-color="#ffffff" stop-opacity=".17"/>
+            <stop offset=".18" stop-color="#ffffff" stop-opacity=".035"/>
+            <stop offset=".55" stop-color="#000000" stop-opacity=".02"/>
+            <stop offset="1" stop-color="#000000" stop-opacity=".28"/>
           </linearGradient>
-          <filter id="shadow-${clipId}">
-            <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#000" flood-opacity=".42"/>
+          <linearGradient id="body-${uid}" x1="0" x2="1">
+            <stop offset="0" stop-color="#000000" stop-opacity=".18"/>
+            <stop offset=".24" stop-color="#ffffff" stop-opacity=".035"/>
+            <stop offset=".52" stop-color="#ffffff" stop-opacity=".08"/>
+            <stop offset=".76" stop-color="#ffffff" stop-opacity=".02"/>
+            <stop offset="1" stop-color="#000000" stop-opacity=".22"/>
+          </linearGradient>
+          <radialGradient id="chest-${uid}" cx="50%" cy="30%" r="58%">
+            <stop offset="0" stop-color="#ffffff" stop-opacity=".10"/>
+            <stop offset=".55" stop-color="#ffffff" stop-opacity=".02"/>
+            <stop offset="1" stop-color="#000000" stop-opacity=".08"/>
+          </radialGradient>
+          <pattern id="mesh-${uid}" width="8" height="8" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r=".7" fill="#ffffff" opacity=".08"/>
+            <circle cx="6" cy="6" r=".7" fill="#000000" opacity=".10"/>
+          </pattern>
+          <filter id="shadow-${uid}" x="-30%" y="-25%" width="160%" height="175%">
+            <feDropShadow dx="0" dy="22" stdDeviation="18" flood-color="#000000" flood-opacity=".48"/>
           </filter>
         </defs>
-        <g filter="url(#shadow-${clipId})">
-          <path d="M240 70 H360 L450 128 L548 184 L500 302 L432 270 V540 H168 V270 L100 302 L52 184 L150 128 Z"
-            fill="${base}" stroke="${variant === "away" ? "#c7cbcc" : "#20262a"}" stroke-width="3"/>
-          <g clip-path="url(#${clipId})">
+
+        <g filter="url(#shadow-${uid})">
+          <path d="${silhouette}" fill="${base}" stroke="${variant === "away" ? "#c9cece" : "#20272b"}" stroke-width="3"/>
+
+          <g clip-path="url(#clip-${uid})">
             ${patternMarkup}
-            <path d="M0 0 H600 V600 H0 Z" fill="url(#fabric-${clipId})"/>
+            <rect x="0" y="0" width="600" height="600" fill="url(#body-${uid})"/>
+            <rect x="0" y="0" width="600" height="600" fill="url(#chest-${uid})"/>
+            <rect x="0" y="0" width="600" height="600" fill="url(#mesh-${uid})" opacity=".42"/>
+            <rect x="0" y="0" width="600" height="600" fill="url(#fabric-${uid})"/>
           </g>
-          <path d="M242 70 Q300 130 358 70 L378 91 Q300 160 222 91 Z" fill="${dark}"/>
-          <path d="M245 76 Q300 128 355 76" fill="none" stroke="${stripe}" stroke-width="10"/>
-          <path d="M168 270 V540 M432 270 V540" stroke="#000" stroke-opacity=".18" stroke-width="3"/>
+
+          <!-- raglan seams and side construction -->
+          <path d="M201 91 C184 126 169 161 151 203" fill="none" stroke="#ffffff" stroke-opacity=".11" stroke-width="2"/>
+          <path d="M399 91 C416 126 431 161 449 203" fill="none" stroke="#ffffff" stroke-opacity=".11" stroke-width="2"/>
+          <path d="M157 285 C169 339 169 427 168 530 M443 285 C431 339 431 427 432 530" fill="none" stroke="#000000" stroke-opacity=".20" stroke-width="3"/>
+          <path d="M96 321 L108 299 M504 321 L492 299" stroke="#000000" stroke-opacity=".22" stroke-width="4"/>
+
+          <!-- V-neck -->
+          <path d="M246 72 C259 61 341 61 354 72 L373 88 C352 102 335 118 300 151 C265 118 248 102 227 88 Z" fill="${dark}"/>
+          <path d="M245 75 C263 92 281 109 300 131 C319 109 337 92 355 75" fill="none" stroke="${stripe}" stroke-width="11" stroke-linejoin="round"/>
+          <path d="M253 77 C269 93 285 108 300 124 C315 108 331 93 347 77" fill="none" stroke="${secondary}" stroke-width="3" opacity=".85"/>
+
+          <!-- cuff + hem construction -->
+          <path d="M41 208 L94 314 M559 208 L506 314" stroke="${dark}" stroke-opacity=".55" stroke-width="8"/>
+          <path d="M169 526 Q300 543 431 526" fill="none" stroke="${dark}" stroke-opacity=".48" stroke-width="7"/>
+          <path d="M172 519 Q300 536 428 519" fill="none" stroke="${secondary}" stroke-opacity=".65" stroke-width="2"/>
+
           ${side === "back" ? back : front}
-          <path d="M165 535 H435" stroke="${variant === "away" ? primary : accent}" stroke-width="6"/>
         </g>
       </svg>
     `;
