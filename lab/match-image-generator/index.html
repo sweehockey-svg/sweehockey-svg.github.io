@@ -29,6 +29,17 @@
     <section class="generator-grid">
       <aside class="controls">
         <div class="control-section">
+          <div class="section-title"><strong>Design</strong><span>5 mallar</span></div>
+          <div class="template-grid" aria-label="Välj matchbildsdesign">
+            <button type="button" class="template-card is-active" data-template="classic" aria-pressed="true"><b>Classic</b><small>Båda tröjorna · VS · lineup</small></button>
+            <button type="button" class="template-card" data-template="starting-six" aria-pressed="false"><b>Starting Six</b><small>Eget lag i fokus · ingen bortatröja</small></button>
+            <button type="button" class="template-card" data-template="versus" aria-pressed="false"><b>Versus</b><small>Stor 50/50-matchup</small></button>
+            <button type="button" class="template-card" data-template="broadcast" aria-pressed="false"><b>Broadcast</b><small>Stream och TV-känsla</small></button>
+            <button type="button" class="template-card" data-template="minimal" aria-pressed="false"><b>Minimal</b><small>Ren social grafik · eget lag</small></button>
+          </div>
+        </div>
+
+        <div class="control-section">
           <div class="section-title"><strong>Match</strong><span id="dataStatus">Hämtar aktuellt lagbygge…</span></div>
           <div class="field-grid">
             <div class="field full">
@@ -127,7 +138,7 @@
       <section class="preview-panel">
         <div class="preview-toolbar">
           <div><strong>Förhandsvisning</strong><span id="previewSize"></span></div>
-          <div class="preview-chip">V27 PREMIUM · LÅST DESIGN</div>
+          <div class="preview-chip">5 DESIGNER · V27 PREMIUM</div>
         </div>
         <div class="preview-wrap">
           <div id="graphicPreview" aria-live="polite"></div>
@@ -138,6 +149,6 @@
 
   <script src="../../config.js?v=20260918-team-aliases-v1"></script>
   <script src="../../teamlogos-manifest.js?v=20260830-v60"></script>
-  <script src="match-image-generator.js?v=3"></script>
+  <script src="match-image-generator.js?v=4"></script>
 </body>
 </html>
