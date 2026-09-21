@@ -45,6 +45,17 @@ button{cursor:pointer}
 .section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
 .section-title strong{font-size:13px;letter-spacing:.04em}
 .section-title span{color:var(--muted);font-size:10px}
+.template-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.template-card{
+  min-height:68px;padding:10px 11px;text-align:left;border:1px solid rgba(255,255,255,.08);border-radius:12px;
+  background:#0d1218;color:#eef3f7;transition:border-color .15s,background .15s,transform .15s
+}
+.template-card:last-child{grid-column:1/-1}
+.template-card:hover{transform:translateY(-1px);border-color:rgba(240,196,0,.3)}
+.template-card.is-active{border-color:rgba(240,196,0,.58);background:linear-gradient(145deg,rgba(240,196,0,.12),rgba(255,255,255,.025));box-shadow:0 0 0 3px rgba(240,196,0,.055)}
+.template-card b{display:block;font-size:12px}
+.template-card small{display:block;margin-top:4px;color:#8f9aa6;font-size:9px;line-height:1.35}
+.template-card.is-active small{color:#c4b36e}
 .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .field{display:grid;gap:6px}
 .field.full{grid-column:1/-1}
