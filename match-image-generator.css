@@ -56,6 +56,19 @@ button{cursor:pointer}
 .template-card b{display:block;font-size:12px}
 .template-card small{display:block;margin-top:4px;color:#8f9aa6;font-size:9px;line-height:1.35}
 .template-card.is-active small{color:#c4b36e}
+.background-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.background-card{
+  padding:0;overflow:hidden;text-align:left;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#0d1218;color:#eef3f7;
+  transition:border-color .15s,transform .15s,box-shadow .15s
+}
+.background-card:last-child{grid-column:1/-1}
+.background-card:hover{transform:translateY(-1px);border-color:rgba(240,196,0,.3)}
+.background-card.is-active{border-color:rgba(240,196,0,.62);box-shadow:0 0 0 3px rgba(240,196,0,.06)}
+.background-thumb{
+  display:block;width:100%;aspect-ratio:16/8;background-position:center;background-size:cover;background-repeat:no-repeat;
+  border-bottom:1px solid rgba(255,255,255,.08)
+}
+.background-card b{display:block;padding:8px 10px 9px;font-size:10px;letter-spacing:.04em}
 .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .field{display:grid;gap:6px}
 .field.full{grid-column:1/-1}
