@@ -93,3 +93,47 @@
 @media(max-width:420px){
   #spaRouteView[data-route="team"] .history-team-identity.has-public-jersey-v1{grid-template-columns:1fr}
 }
+
+
+/* V2 – admin/captain jersey editor */
+.team-public-jersey-v1__owner{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:8px 10px 10px;border-top:1px solid rgba(255,255,255,.06);
+}
+.team-public-jersey-v1__owner[hidden]{display:none}
+.team-public-jersey-v1__owner button{
+  min-height:31px;padding:0 11px;border:1px solid rgba(255,208,0,.34);border-radius:9px;
+  background:rgba(255,208,0,.08);color:#ffd000;font-size:.62rem;font-weight:950;cursor:pointer;
+}
+.team-public-jersey-v1__owner span{color:rgba(244,243,239,.42);font-size:.52rem;font-weight:900;letter-spacing:.09em}
+.team-public-jersey-v1__editor{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:11px;
+  border-top:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.28);
+}
+.team-public-jersey-v1__editor[hidden]{display:none}
+.team-public-jersey-v1__editor-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.team-public-jersey-v1__editor-head strong{color:#f6f4ee;font-size:.72rem;letter-spacing:.02em}
+.team-public-jersey-v1__editor-head button{
+  width:28px;height:28px;border:0;border-radius:50%;background:rgba(255,255,255,.06);
+  color:#dfe4e8;font-size:1.1rem;cursor:pointer;
+}
+.team-public-jersey-v1__editor label{display:grid;gap:5px}
+.team-public-jersey-v1__editor label>span{
+  color:rgba(244,243,239,.56);font-size:.52rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;
+}
+.team-public-jersey-v1__editor input[type="color"]{
+  width:100%;height:34px;padding:2px;border:1px solid rgba(255,255,255,.11);border-radius:8px;background:#071018;cursor:pointer;
+}
+.team-public-jersey-v1__pattern{grid-column:1/-1}
+.team-public-jersey-v1__editor select{
+  width:100%;min-height:34px;padding:0 8px;border:1px solid rgba(255,255,255,.11);
+  border-radius:8px;background:#071018;color:#f2f3ef;font-size:.66rem;font-weight:800;
+}
+.team-public-jersey-v1__editor-actions{grid-column:1/-1;display:grid;gap:6px}
+.team-public-jersey-v1__editor-actions button{
+  min-height:32px;padding:0 9px;border:1px solid rgba(255,255,255,.1);border-radius:8px;
+  background:rgba(255,255,255,.035);color:rgba(244,243,239,.8);font-size:.58rem;font-weight:900;cursor:pointer;
+}
+.team-public-jersey-v1__editor-actions button.is-primary{border-color:#ffd000;background:#ffd000;color:#050707}
+.team-public-jersey-v1__editor-actions button:disabled{opacity:.55;cursor:wait}
+.team-public-jersey-v1__status{grid-column:1/-1;min-height:1.2em;margin:0;color:#8eddd6;font-size:.56rem;line-height:1.35}
