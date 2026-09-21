@@ -1028,11 +1028,11 @@
     $("#streamPlatformSelect").value = state.streamPlatform;
     $("#streamChannelInput").value = state.streamChannel;
     $("#streamChannelInput").disabled = state.streamPlatform === "none";
-    $("[data-template]").forEach(button => {
+    $$("[data-template]").forEach(button => {
       button.classList.toggle("is-active",button.dataset.template === state.template);
       button.setAttribute("aria-pressed",button.dataset.template === state.template ? "true" : "false");
     });
-    $("[data-background]").forEach(button => {
+    $$("[data-background]").forEach(button => {
       const id = button.dataset.background;
       button.classList.toggle("is-active",id === state.background);
       button.setAttribute("aria-pressed",id === state.background ? "true" : "false");
@@ -1151,7 +1151,7 @@
     }
   }
 
-  $("[data-background]").forEach(button => {
+  $$("[data-background]").forEach(button => {
     button.addEventListener("click",() => {
       const id = button.dataset.background;
       state.background = BACKGROUNDS.some(item => item.id === id) ? id : "arena";
@@ -1160,7 +1160,7 @@
     });
   });
 
-  $("[data-template]").forEach(button => {
+  $$("[data-template]").forEach(button => {
     button.addEventListener("click",() => {
       const template = button.dataset.template;
       state.template = ["classic","starting-six","versus","broadcast","minimal"].includes(template)
