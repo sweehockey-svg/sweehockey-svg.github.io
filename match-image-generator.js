@@ -1012,26 +1012,27 @@
     if (format === "landscape") {
       return {
         width:1920,height:1080,
-        leftX:205,rightX:1245,jerseyY:182,jerseySize:470,
-        teamNameY:188,vsY:382,metaY:468,lineupY:822,
-        headerY:76,competitionY:116,ownLabelY:784
+        leftX:150,rightX:1270,jerseyY:205,jerseySize:500,
+        teamNameY:190,vsY:410,metaY:535,lineupY:738,
+        headerY:92,competitionY:136,ownLabelY:690
       };
     }
     if (format === "story") {
       return {
         width:1080,height:1920,
-        leftX:58,rightX:602,jerseyY:430,jerseySize:420,
-        teamNameY:398,vsY:670,metaY:760,lineupY:1135,
-        headerY:120,competitionY:174,ownLabelY:1080
+        leftX:38,rightX:602,jerseyY:300,jerseySize:440,
+        teamNameY:270,vsY:690,metaY:810,lineupY:1090,
+        headerY:112,competitionY:164,ownLabelY:1030
       };
     }
     return {
       width:1080,height:1080,
-      leftX:50,rightX:630,jerseyY:214,jerseySize:400,
-      teamNameY:195,vsY:401,metaY:488,lineupY:835,
-      headerY:62,competitionY:102,ownLabelY:799
+      leftX:55,rightX:625,jerseyY:205,jerseySize:400,
+      teamNameY:180,vsY:410,metaY:505,lineupY:815,
+      headerY:70,competitionY:108,ownLabelY:770
     };
   }
+
 
   function buildClassicSvg() {
     const own = teamById(state.teamId);
@@ -1041,19 +1042,17 @@
     const layout = layoutFor(state.format);
     const W = layout.width;
     const H = layout.height;
+    const isWide = state.format === "landscape";
+    const isStory = state.format === "story";
     const leftJersey = premiumJerseySvg(home,{variant:"home",side:"front",compact:false});
     const rightJersey = premiumJerseySvg(away,{variant:"away",side:"front",compact:false});
-    const titleSize = state.format === "landscape" ? 58 : state.format === "story" ? 56 : 42;
-    const teamSize = state.format === "landscape" ? 34 : state.format === "story" ? 31 : 27;
-    const vsSize = state.format === "landscape" ? 92 : state.format === "story" ? 78 : 68;
-    const metaSize = state.format === "landscape" ? 34 : state.format === "story" ? 32 : 25;
+    const titleSize = isWide ? 76 : isStory ? 66 : 52;
+    const teamSize = isWide ? 36 : isStory ? 30 : 27;
+    const vsSize = isWide ? 112 : isStory ? 92 : 82;
+    const metaSize = isWide ? 35 : isStory ? 32 : 27;
     const ownVariant = state.ownSide === "home" ? "home" : "away";
     const lineup = lineupForTemplate(W,layout.lineupY,own,ownVariant);
     const stream = esc(streamLabel());
-    const ownSideLabel = state.ownSide === "home" ? "HEMMA" : "BORTA";
-    const ownSideX = state.ownSide === "home"
-      ? layout.leftX + layout.jerseySize / 2
-      : layout.rightX + layout.jerseySize / 2;
     const ownName = esc(own.name);
     const homeName = esc(home.name);
     const awayName = esc(away.name);
@@ -1062,37 +1061,91 @@
     const date = esc(formatDate(state.date));
     const time = esc(cleanText(state.time,5) || "20:00");
 
+    const panelX = isWide ? 155 : isStory ? 70 : 44;
+    const panelY = isWide ? 698 : isStory ? 1042 : 770;
+    const panelW = W - panelX * 2;
+    const panelH = isWide ? 302 : isStory ? 790 : 270;
+    const lineupTitleY = panelY + (isStory ? 42 : 34);
+    const footerY = H - (isWide ? 28 : isStory ? 34 : 24);
+    const watermarkSize = isWide ? 500 : isStory ? 430 : 390;
+    const leftWatermarkX = isWide ? 20 : -55;
+    const rightWatermarkX = W - watermarkSize - (isWide ? 20 : -55);
+    const watermarkY = isStory ? 285 : 205;
+    const leftNameX = layout.leftX + layout.jerseySize / 2;
+    const rightNameX = layout.rightX + layout.jerseySize / 2;
+    const streamWidth = isWide ? 520 : isStory ? 520 : 380;
+    const streamHeight = isStory ? 54 : isWide ? 48 : 42;
+    const streamY = layout.metaY + (isStory ? 38 : 24);
+
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Matchbild ' + homeName + ' mot ' + awayName + '">',
       '<defs>',
-      '<linearGradient id="match-bg" x1="0" y1="0" x2="1" y2="1">',
-      '<stop offset="0" stop-color="' + home.primary + '"/><stop offset=".42" stop-color="#090d12"/><stop offset=".62" stop-color="#090d12"/><stop offset="1" stop-color="' + away.primary + '"/>',
+      '<linearGradient id="classic-overlay" x1="0" y1="0" x2="1" y2="1">',
+      '<stop offset="0" stop-color="' + home.primary + '" stop-opacity=".50"/>',
+      '<stop offset=".32" stop-color="#07111c" stop-opacity=".74"/>',
+      '<stop offset=".68" stop-color="#07111c" stop-opacity=".76"/>',
+      '<stop offset="1" stop-color="' + away.primary + '" stop-opacity=".52"/>',
       '</linearGradient>',
-      '<radialGradient id="match-light" cx="50%" cy="34%" r="72%"><stop offset="0" stop-color="#ffffff" stop-opacity=".13"/><stop offset=".55" stop-color="#ffffff" stop-opacity=".02"/><stop offset="1" stop-color="#000000" stop-opacity=".34"/></radialGradient>',
-      '<pattern id="match-grid" width="42" height="42" patternUnits="userSpaceOnUse"><path d="M42 0H0V42" fill="none" stroke="#fff" stroke-opacity=".028" stroke-width="1"/></pattern>',
-      '<filter id="glow"><feGaussianBlur stdDeviation="28"/></filter>',
+      '<linearGradient id="classic-title" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".58" stop-color="#f4f7fb"/><stop offset="1" stop-color="#aebbc9"/></linearGradient>',
+      '<linearGradient id="classic-vs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".52" stop-color="#e9f2fb"/><stop offset="1" stop-color="#86a7c8"/></linearGradient>',
+      '<linearGradient id="classic-ice" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fc5ff" stop-opacity="0"/><stop offset=".55" stop-color="#83c7ff" stop-opacity=".06"/><stop offset="1" stop-color="#b9e3ff" stop-opacity=".20"/></linearGradient>',
+      '<radialGradient id="classic-center-glow" cx="50%" cy="44%" r="52%"><stop offset="0" stop-color="#3e9fff" stop-opacity=".28"/><stop offset=".45" stop-color="#1d6bad" stop-opacity=".08"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></radialGradient>',
+      '<radialGradient id="classic-vignette" cx="50%" cy="45%" r="72%"><stop offset=".45" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#02070d" stop-opacity=".62"/></radialGradient>',
+      '<filter id="classic-title-shadow" x="-30%" y="-40%" width="160%" height="180%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#000814" flood-opacity=".68"/></filter>',
+      '<filter id="classic-blue-glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="' + (isWide ? 20 : 14) + '"/></filter>',
+      '<filter id="classic-soft-shadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000000" flood-opacity=".5"/></filter>',
       '</defs>',
+
       backgroundImageSvg(W,H,1),
-      '<rect width="' + W + '" height="' + H + '" fill="url(#match-bg)" opacity=".58"/>',
-      '<circle cx="' + (W * .22) + '" cy="' + (H * .27) + '" r="' + (W * .22) + '" fill="' + home.accent + '" opacity=".10" filter="url(#glow)"/>',
-      '<circle cx="' + (W * .80) + '" cy="' + (H * .29) + '" r="' + (W * .20) + '" fill="' + away.accent + '" opacity=".09" filter="url(#glow)"/>',
-      '<rect width="' + W + '" height="' + H + '" fill="url(#match-light)"/>',
-      '<rect width="' + W + '" height="' + H + '" fill="url(#match-grid)"/>',
-      '<path d="M' + (W/2) + ' 0 L' + (W*.43) + ' ' + H + ' L' + (W*.57) + ' ' + H + ' Z" fill="#ffffff" opacity=".025"/>',
-      '<text x="' + (W/2) + '" y="' + layout.headerY + '" text-anchor="middle" fill="#ffffff" font-size="' + titleSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + badge + '</text>',
-      '<text x="' + (W/2) + '" y="' + layout.competitionY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".62" font-size="' + (titleSize*.34) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + competition + '</text>',
-      '<text x="' + (layout.leftX + layout.jerseySize/2) + '" y="' + layout.teamNameY + '" text-anchor="middle" fill="#ffffff" font-size="' + teamSize + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + homeName + '</text>',
-      '<text x="' + (layout.rightX + layout.jerseySize/2) + '" y="' + layout.teamNameY + '" text-anchor="middle" fill="#ffffff" font-size="' + teamSize + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + awayName + '</text>',
-      placedJersey(leftJersey,layout.leftX,layout.jerseyY,layout.jerseySize),
-      placedJersey(rightJersey,layout.rightX,layout.jerseyY,layout.jerseySize),
-      '<circle cx="' + (W/2) + '" cy="' + layout.vsY + '" r="' + (state.format === "landscape" ? 72 : 58) + '" fill="#070a0d" fill-opacity=".86" stroke="#ffffff" stroke-opacity=".14"/>',
-      '<text x="' + (W/2) + '" y="' + (layout.vsY + vsSize*.28) + '" text-anchor="middle" fill="#ffffff" font-size="' + vsSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="-4">VS</text>',
-      '<text x="' + (W/2) + '" y="' + layout.metaY + '" text-anchor="middle" fill="#ffffff" font-size="' + metaSize + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + date + ' · ' + time + '</text>',
-      stream ? '<g><rect x="' + (W/2 - (state.format === "landscape" ? 220 : 180)) + '" y="' + (layout.metaY + 20) + '" width="' + (state.format === "landscape" ? 440 : 360) + '" height="' + (state.format === "story" ? 44 : 38) + '" rx="19" fill="#ffffff" fill-opacity=".075" stroke="#ffffff" stroke-opacity=".11"/><circle cx="' + (W/2 - (state.format === "landscape" ? 194 : 154)) + '" cy="' + (layout.metaY + (state.format === "story" ? 42 : 39)) + '" r="6" fill="#ff4d5f"/><text x="' + (W/2) + '" y="' + (layout.metaY + (state.format === "story" ? 48 : 44)) + '" text-anchor="middle" fill="#ffffff" font-size="' + (state.format === "story" ? 19 : state.format === "landscape" ? 18 : 15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1.1">' + stream + '</text></g>' : '',
-      '<text x="' + ownSideX + '" y="' + layout.ownLabelY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".54" font-size="' + (state.format === "story" ? 17 : 14) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2.5">' + ownSideLabel + ' · ' + ownName + '</text>',
-      '<text x="' + (W/2) + '" y="' + (layout.lineupY - 28) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".72" font-size="' + (state.format === "story" ? 22 : 16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">STARTING SIX</text>',
+      '<rect width="' + W + '" height="' + H + '" fill="#02070d" opacity=".26"/>',
+      '<rect width="' + W + '" height="' + H + '" fill="url(#classic-overlay)"/>',
+      '<rect width="' + W + '" height="' + H + '" fill="url(#classic-center-glow)"/>',
+      '<path d="M' + (W*.5) + ' 0 L' + (W*.39) + ' ' + H + ' H' + (W*.61) + ' Z" fill="#4aaeff" opacity=".035"/>',
+      '<path d="M' + (W*.5) + ' 0 L' + (W*.455) + ' ' + H + '" stroke="#76bdff" stroke-opacity=".11" stroke-width="' + (isWide?3:2) + '"/>',
+      '<path d="M' + (W*.5) + ' 0 L' + (W*.545) + ' ' + H + '" stroke="#76bdff" stroke-opacity=".07" stroke-width="' + (isWide?3:2) + '"/>',
+      '<rect x="0" y="' + (H*.52) + '" width="' + W + '" height="' + (H*.48) + '" fill="url(#classic-ice)"/>',
+
+      svgLogo(home,leftWatermarkX,watermarkY,watermarkSize,.075),
+      svgLogo(away,rightWatermarkX,watermarkY,watermarkSize,.075),
+
+      '<g opacity=".80">',
+      '<text x="' + (isWide?54:34) + '" y="' + (isStory?54:42) + '" fill="#ffffff" fill-opacity=".54" font-size="' + (isWide?13:11) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif" letter-spacing="5">SVENSK</text>',
+      '<text x="' + (isWide?54:34) + '" y="' + (isStory?76:62) + '" fill="#ffffff" fill-opacity=".54" font-size="' + (isWide?13:11) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif" letter-spacing="5">eHOCKEY</text>',
+      '<text x="' + (isWide?54:34) + '" y="' + (isStory?98:82) + '" fill="#ffffff" fill-opacity=".54" font-size="' + (isWide?13:11) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif" letter-spacing="5">LEAGUE</text>',
+      '</g>',
+
+      '<g filter="url(#classic-title-shadow)">',
+      '<text x="' + (W/2) + '" y="' + layout.headerY + '" text-anchor="middle" fill="url(#classic-title)" font-size="' + titleSize + '" font-weight="1000" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="' + (isWide?3:2) + '">' + badge + '</text>',
+      '</g>',
+      '<line x1="' + (W/2-(isWide?235:170)) + '" y1="' + (layout.competitionY-9) + '" x2="' + (W/2-(isWide?105:82)) + '" y2="' + (layout.competitionY-9) + '" stroke="#ffffff" stroke-opacity=".48" stroke-width="2"/>',
+      '<line x1="' + (W/2+(isWide?105:82)) + '" y1="' + (layout.competitionY-9) + '" x2="' + (W/2+(isWide?235:170)) + '" y2="' + (layout.competitionY-9) + '" stroke="#77bfff" stroke-opacity=".62" stroke-width="2"/>',
+      '<text x="' + (W/2) + '" y="' + layout.competitionY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".78" font-size="' + (isWide?20:isStory?19:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="' + (isWide?7:4) + '">' + competition + '</text>',
+
+      '<text x="' + leftNameX + '" y="' + layout.teamNameY + '" text-anchor="middle" fill="#ffffff" font-size="' + teamSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" filter="url(#classic-title-shadow)">' + homeName + '</text>',
+      '<line x1="' + (leftNameX-(isWide?170:120)) + '" y1="' + (layout.teamNameY+22) + '" x2="' + (leftNameX+(isWide?170:120)) + '" y2="' + (layout.teamNameY+22) + '" stroke="' + home.accent + '" stroke-opacity=".62" stroke-width="2"/>',
+      '<text x="' + rightNameX + '" y="' + layout.teamNameY + '" text-anchor="middle" fill="#ffffff" font-size="' + teamSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" filter="url(#classic-title-shadow)">' + awayName + '</text>',
+      '<line x1="' + (rightNameX-(isWide?170:120)) + '" y1="' + (layout.teamNameY+22) + '" x2="' + (rightNameX+(isWide?170:120)) + '" y2="' + (layout.teamNameY+22) + '" stroke="' + away.accent + '" stroke-opacity=".62" stroke-width="2"/>',
+
+      '<g filter="url(#classic-soft-shadow)">' + placedJersey(leftJersey,layout.leftX,layout.jerseyY,layout.jerseySize) + '</g>',
+      '<g filter="url(#classic-soft-shadow)">' + placedJersey(rightJersey,layout.rightX,layout.jerseyY,layout.jerseySize) + '</g>',
+
+      '<ellipse cx="' + (W/2) + '" cy="' + layout.vsY + '" rx="' + (isWide?105:78) + '" ry="' + (isWide?72:58) + '" fill="#2f8fff" opacity=".20" filter="url(#classic-blue-glow)"/>',
+      '<path d="M' + (W/2) + ' ' + (layout.vsY-(isWide?118:88)) + ' L' + (W/2-(isWide?82:60)) + ' ' + (layout.vsY+(isWide?90:68)) + ' L' + (W/2+(isWide?82:60)) + ' ' + (layout.vsY+(isWide?90:68)) + ' Z" fill="#0a1522" fill-opacity=".64" stroke="#6bb8ff" stroke-opacity=".15"/>',
+      '<text x="' + (W/2) + '" y="' + (layout.vsY + vsSize*.30) + '" text-anchor="middle" fill="url(#classic-vs)" font-size="' + vsSize + '" font-weight="1000" font-style="italic" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="-5" filter="url(#classic-title-shadow)">VS</text>',
+      '<text x="' + (W/2) + '" y="' + layout.metaY + '" text-anchor="middle" fill="#ffffff" font-size="' + metaSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="' + (isWide?3:1) + '">' + date + ' · ' + time + '</text>',
+
+      stream ? '<g><rect x="' + (W/2-streamWidth/2) + '" y="' + streamY + '" width="' + streamWidth + '" height="' + streamHeight + '" rx="' + (streamHeight/2) + '" fill="#06101b" fill-opacity=".82" stroke="#8fc8ff" stroke-opacity=".42"/><circle cx="' + (W/2-streamWidth/2+32) + '" cy="' + (streamY+streamHeight/2) + '" r="8" fill="#ff4d5f"/><circle cx="' + (W/2-streamWidth/2+32) + '" cy="' + (streamY+streamHeight/2) + '" r="15" fill="#ff4d5f" opacity=".15"/><text x="' + (W/2) + '" y="' + (streamY+streamHeight/2+6) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?20:isWide?18:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1.5">' + stream + '</text><path d="M' + (W/2+streamWidth/2-42) + ' ' + (streamY+streamHeight/2-7) + ' l8 7 -8 7" fill="none" stroke="#a9d5ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>' : '',
+
+      '<rect x="' + panelX + '" y="' + panelY + '" width="' + panelW + '" height="' + panelH + '" rx="' + (isWide?28:22) + '" fill="#06101b" fill-opacity=".54" stroke="#9ccfff" stroke-opacity=".18"/>',
+      '<line x1="' + (W/2-(isWide?270:160)) + '" y1="' + (lineupTitleY-6) + '" x2="' + (W/2-(isWide?90:65)) + '" y2="' + (lineupTitleY-6) + '" stroke="#ffffff" stroke-opacity=".34" stroke-width="2"/>',
+      '<line x1="' + (W/2+(isWide?90:65)) + '" y1="' + (lineupTitleY-6) + '" x2="' + (W/2+(isWide?270:160)) + '" y2="' + (lineupTitleY-6) + '" stroke="#72b9ff" stroke-opacity=".44" stroke-width="2"/>',
+      '<text x="' + (W/2) + '" y="' + lineupTitleY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".90" font-size="' + (isStory?23:isWide?19:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="' + (isWide?7:4) + '">STARTING SIX</text>',
       lineup,
-      '<text x="' + (W/2) + '" y="' + (H - 30) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".34" font-size="' + (state.format === "landscape" ? 17 : 13) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">SVENSK eHOCKEY · MATCH GRAPHICS</text>',
+
+      '<line x1="' + (W/2-(isWide?330:210)) + '" y1="' + (footerY-6) + '" x2="' + (W/2-(isWide?150:100)) + '" y2="' + (footerY-6) + '" stroke="#ffffff" stroke-opacity=".28"/>',
+      '<line x1="' + (W/2+(isWide?150:100)) + '" y1="' + (footerY-6) + '" x2="' + (W/2+(isWide?330:210)) + '" y2="' + (footerY-6) + '" stroke="#ffffff" stroke-opacity=".28"/>',
+      '<text x="' + (W/2) + '" y="' + footerY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".48" font-size="' + (isWide?15:isStory?14:12) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif" letter-spacing="' + (isWide?5:3) + '">SVENSK eHOCKEY · MATCH GRAPHICS</text>',
+      '<rect width="' + W + '" height="' + H + '" fill="url(#classic-vignette)" pointer-events="none"/>',
       '</svg>'
     ].join("");
   }
