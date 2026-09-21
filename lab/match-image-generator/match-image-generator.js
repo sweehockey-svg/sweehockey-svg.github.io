@@ -199,40 +199,119 @@
     }
   }
 
+  async function sharedEcl27Roster() {
+    const current = () => {
+      const model = window.SEH_ECL27_CURRENT_ROSTER_V1;
+      return model && Array.isArray(model.teams) && model.teams.length ? model : null;
+    };
+    if (current()) return current();
+
+    try {
+      if (window.SEH_ECL27_DATA_READY && typeof window.SEH_ECL27_DATA_READY.then === "function") {
+        await window.SEH_ECL27_DATA_READY;
+      }
+    } catch (_) {}
+
+    if (current()) return current();
+
+    return new Promise(resolve => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        window.removeEventListener("seh-ecl27-current-roster-ready",onReady);
+        resolve(current());
+      };
+      const onReady = () => finish();
+      window.addEventListener("seh-ecl27-current-roster-ready",onReady,{once:true});
+      window.setTimeout(finish,3000);
+    });
+  }
+
+  function applySharedEcl27Roster(model) {
+    const rows = Array.isArray(model?.teams) ? model.teams : [];
+    if (!rows.length) return false;
+
+    teamDirectory = rows.map((row,index) => {
+      const preset = JERSEY_PRESETS.find(team => normalize(team.name) === normalize(row.name));
+      if (preset) {
+        return {
+          ...preset,
+          projectId:null,
+          teamId:Number(row.teamId) || null,
+          division:String(row.division || ""),
+          logoName:String(row.logoName || "")
+        };
+      }
+      const [primary,accent,trim,pattern] = fallbackPalette(index);
+      return {
+        id:"ecl27-" + String(index + 1),
+        name:String(row.name || "Okänt lag"),
+        code:initials(row.name),
+        primary,accent,trim,pattern,
+        projectId:null,
+        teamId:Number(row.teamId) || null,
+        division:String(row.division || ""),
+        logoName:String(row.logoName || ""),
+        genericJersey:true
+      };
+    });
+
+    const byName = new Map(teamDirectory.map(team => [normalize(team.name),team]));
+    rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+
+    for (const row of rows) {
+      const team = byName.get(normalize(row.name));
+      if (!team) continue;
+      const list = rostersByTeamId.get(team.id);
+      for (const raw of Array.isArray(row.players) ? row.players : []) {
+        const player = String(raw || "").trim();
+        if (player && !list.some(name => normalize(name) === normalize(player))) list.push(player);
+      }
+      list.sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
+    }
+    return true;
+  }
+
   async function loadLagbyggeData() {
     const status = $("#dataStatus");
-    if (status) status.textContent = "Hämtar aktuellt lagbygge…";
+    if (status) status.textContent = "Hämtar ECL 27-lagbygget…";
     try {
-      const [teams,rosterRows] = await Promise.all([
-        getPublicRows(
-          "v_ecl27_team_builds_public",
-          "select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"
-        ),
-        getPublicRows(
-          "v_ecl27_current_roster_v1",
-          "select=subject_key,player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
-        )
-      ]);
+      const shared = await sharedEcl27Roster();
+      if (shared && applySharedEcl27Roster(shared)) {
+        dataSource = "ECL 27 · samma playersNow-modell som lagbygget";
+      } else {
+        const [teams,rosterRows] = await Promise.all([
+          getPublicRows(
+            "v_ecl27_team_builds_public",
+            "select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"
+          ),
+          getPublicRows(
+            "v_ecl27_current_roster_v1",
+            "select=subject_key,player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
+          )
+        ]);
 
-      const rows = Array.isArray(teams) ? teams : [];
-      if (!rows.length) throw new Error("Lagbygget innehåller inga lag");
+        const rows = Array.isArray(teams) ? teams : [];
+        if (!rows.length) throw new Error("Lagbygget innehåller inga lag");
 
-      teamDirectory = rows.map(buildDynamicTeam);
-      const byName = new Map(teamDirectory.map(team => [normalize(team.name),team]));
-      rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+        teamDirectory = rows.map(buildDynamicTeam);
+        const byName = new Map(teamDirectory.map(team => [normalize(team.name),team]));
+        rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
 
-      for (const row of Array.isArray(rosterRows) ? rosterRows : []) {
-        const team = byName.get(normalize(row.team_name));
-        const player = String(row.display_gamertag || "").trim();
-        if (!team || !player) continue;
-        const list = rostersByTeamId.get(team.id);
-        if (!list.some(name => normalize(name) === normalize(player))) list.push(player);
+        for (const row of Array.isArray(rosterRows) ? rosterRows : []) {
+          const team = byName.get(normalize(row.team_name));
+          const player = String(row.display_gamertag || "").trim();
+          if (!team || !player) continue;
+          const list = rostersByTeamId.get(team.id);
+          if (!list.some(name => normalize(name) === normalize(player))) list.push(player);
+        }
+        for (const list of rostersByTeamId.values()) {
+          list.sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
+        }
+        dataSource = "ECL 27 · roster-vy";
       }
-      for (const list of rostersByTeamId.values()) {
-        list.sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
-      }
 
-      dataSource = "ECL 27 lagbygge";
       const preferred = teamDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen")) || teamDirectory[0];
       state.teamId = preferred.id;
       state.opponentId = teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
@@ -244,7 +323,7 @@
       const playerCount = [...rostersByTeamId.values()].reduce((sum,list) => sum + list.length,0);
       if (status) status.textContent = teamDirectory.length + " lag · " + playerCount + " aktuella spelare";
     } catch (error) {
-      console.error("[Match Graphics] kunde inte läsa lagbygget",error);
+      console.error("[Match Graphics] kunde inte läsa ECL 27-lagbygget",error);
       dataSource = "lokal testdata";
       rostersByTeamId = new Map(JERSEY_PRESETS.map(team => [team.id,[]]));
       teamDirectory = [...JERSEY_PRESETS];
@@ -253,7 +332,7 @@
       state.lineup = {...EMPTY_LINEUP};
       syncForm();
       render();
-      if (status) status.textContent = "Lagbygget kunde inte laddas · visar testlag";
+      if (status) status.textContent = "ECL 27-data kunde inte laddas · visar testlag";
     }
   }
 
