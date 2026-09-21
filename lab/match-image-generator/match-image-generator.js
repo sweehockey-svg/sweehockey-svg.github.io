@@ -1307,10 +1307,10 @@
 
     const opponentLogoSize=isWide?84:isStory?112:78;
     const opponentLogoX=isWide?128:isStory?ctx.W-opponentLogoSize-74:ctx.W-opponentLogoSize-54;
-    const opponentLogoY=isWide?694:isStory?350:112;
+    const opponentLogoY=isWide?716:isStory?350:112;
 
     const infoX=isWide?102:isStory?ctx.W/2:ctx.W/2;
-    const infoY=isWide?778:isStory?400:250;
+    const infoY=isWide?806:isStory?400:250;
     const infoAnchor=isWide?"start":"middle";
     const gridTitleX=isWide?1285:ctx.W/2;
     const gridTitleY=isWide?128:isStory?535:382;
@@ -1340,11 +1340,11 @@
       '<g filter="url(#focus-shadow)">' + placedJersey(hero,heroX,heroY,heroSize) + '</g>',
 
       isWide
-        ? '<text x="102" y="654" fill="#ffffff" font-size="42" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text><line x1="102" y1="674" x2="610" y2="674" stroke="' + ctx.own.accent + '" stroke-opacity=".55" stroke-width="2"/>'
+        ? '<text x="102" y="654" fill="#ffffff" font-size="42" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text><line x1="102" y1="676" x2="610" y2="676" stroke="' + ctx.own.accent + '" stroke-opacity=".55" stroke-width="2"/>'
         : '<text x="' + (ctx.W/2) + '" y="' + (isStory?720:360) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?38:28) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>',
 
       '<g>',
-      '<text x="' + (isWide?102:opponentLogoX) + '" y="' + (opponentLogoY-18) + '" fill="#ffffff" fill-opacity=".45" font-size="12" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">MOT</text>',
+      '<text x="' + (isWide?102:opponentLogoX) + '" y="' + (isWide?opponentLogoY-8:opponentLogoY-18) + '" fill="#ffffff" fill-opacity=".45" font-size="12" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">MOT</text>',
       svgLogo(ctx.opponent,opponentLogoX,opponentLogoY,opponentLogoSize,.94),
       '<text x="' + (opponentLogoX+opponentLogoSize+18) + '" y="' + (opponentLogoY+opponentLogoSize*.58) + '" fill="#ffffff" font-size="' + (isWide?22:isStory?21:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + oppName + '</text>',
       '</g>',
