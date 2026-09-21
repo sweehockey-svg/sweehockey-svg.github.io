@@ -137,3 +137,28 @@
 .team-public-jersey-v1__editor-actions button.is-primary{border-color:#ffd000;background:#ffd000;color:#050707}
 .team-public-jersey-v1__editor-actions button:disabled{opacity:.55;cursor:wait}
 .team-public-jersey-v1__status{grid-column:1/-1;min-height:1.2em;margin:0;color:#8eddd6;font-size:.56rem;line-height:1.35}
+
+
+/* V3 – Webapp native team jersey */
+body.seh-content-mode .seh-team-native-jersey.team-public-jersey-v1{
+  width:100%!important;
+  margin:7px 0 0!important;
+  border-radius:14px!important;
+  box-sizing:border-box!important;
+}
+body.seh-content-mode .seh-team-native-jersey .team-public-jersey-v1__stage{
+  height:226px!important;
+}
+body.seh-content-mode .seh-team-native-jersey .team-public-jersey-v1__stage svg{
+  width:205px!important;
+  max-width:205px!important;
+}
+body.seh-content-mode .seh-team-native-jersey .team-public-jersey-v1__head{
+  min-height:40px!important;
+}
+body.seh-content-mode .seh-team-native-jersey .team-public-jersey-v1__owner{
+  padding:8px 10px 9px!important;
+}
+body.seh-content-mode .seh-team-native-jersey .team-public-jersey-v1__editor{
+  padding:10px!important;
+}
