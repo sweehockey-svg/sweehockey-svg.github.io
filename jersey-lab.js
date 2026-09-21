@@ -239,9 +239,9 @@
     const ink = variant === "away" ? primary : trim;
     const dark = variant === "away" ? primary : "#07090a";
 
-    // Separate sewn panels, like a real hockey jersey mockup.
-    const leftSleeve = "M217 123 C200 121 181 125 165 133 C150 141 137 151 129 164 C121 177 117 196 116 219 L114 474 Q137 486 176 490 L188 360 L184 189 Q187 146 217 123 Z";
-    const rightSleeve = "M383 123 C400 121 419 125 435 133 C450 141 463 151 471 164 C479 177 483 196 484 219 L486 474 Q463 486 424 490 L412 360 L416 189 Q413 146 383 123 Z";
+    // Separate sewn panels with deliberate overlap under the torso so no background can show through.
+    const leftSleeve = "M217 123 C200 121 181 125 165 133 C150 141 137 151 129 164 C121 177 117 196 116 219 L114 474 Q137 486 176 490 L204 360 L200 189 Q198 146 217 123 Z";
+    const rightSleeve = "M383 123 C400 121 419 125 435 133 C450 141 463 151 471 164 C479 177 483 196 484 219 L486 474 Q463 486 424 490 L396 360 L400 189 Q402 146 383 123 Z";
     const torso = "M217 123 C244 106 356 106 383 123 C399 137 406 157 405 183 L415 558 C405 576 369 582 300 584 C231 582 195 576 185 558 L195 183 C194 157 201 137 217 123 Z";
 
     const shoulderDecor = pattern === "minimal"
@@ -339,16 +339,16 @@
 
         <g filter="url(#shadow-${uid})">
           <path d="${leftSleeve}" fill="${sleeveBase}"/>
-          <path d="${torso}" fill="${bodyBase}"/>
           <path d="${rightSleeve}" fill="${sleeveBase}"/>
+          <path d="${torso}" fill="${bodyBase}"/>
 
           <g clip-path="url(#clip-${uid})">
             ${shoulderDecor}
             ${sleeveStriping}
             ${hemStriping}
-            <path d="${torso}" fill="url(#torso-${uid})"/>
             <path d="${leftSleeve}" fill="url(#left-sleeve-${uid})"/>
             <path d="${rightSleeve}" fill="url(#right-sleeve-${uid})"/>
+            <path d="${torso}" fill="url(#torso-${uid})"/>
             <rect width="600" height="600" fill="url(#chest-light-${uid})"/>
             <rect width="600" height="600" fill="url(#knit-${uid})" opacity="${compact ? ".28" : ".52"}"/>
           </g>
@@ -375,10 +375,10 @@
           <!-- barely visible sewn-panel definition: no hard black outlines -->
           ${compact ? "" : `
             <g fill="none" stroke-linecap="round" filter="url(#soft-${uid})">
-              <path d="M198 180 C193 236 191 300 190 356 C189 405 185 451 179 484" stroke="#000" stroke-opacity=".022" stroke-width="2.2"/>
-              <path d="M402 180 C407 236 409 300 410 356 C411 405 415 451 421 484" stroke="#000" stroke-opacity=".022" stroke-width="2.2"/>
-              <path d="M199 181 C196 237 195 300 194 354" stroke="#fff" stroke-opacity=".020" stroke-width="1.2"/>
-              <path d="M401 181 C404 237 405 300 406 354" stroke="#fff" stroke-opacity=".020" stroke-width="1.2"/>
+              <path d="M199 182 C195 240 194 301 194 356 C193 407 190 451 186 482" stroke="#000" stroke-opacity=".014" stroke-width="1.7"/>
+              <path d="M401 182 C405 240 406 301 406 356 C407 407 410 451 414 482" stroke="#000" stroke-opacity=".014" stroke-width="1.7"/>
+              <path d="M201 184 C198 241 198 300 198 353" stroke="#fff" stroke-opacity=".014" stroke-width="1"/>
+              <path d="M399 184 C402 241 402 300 402 353" stroke="#fff" stroke-opacity=".014" stroke-width="1"/>
             </g>
           `}
 
