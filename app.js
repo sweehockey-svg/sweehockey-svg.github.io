@@ -13548,6 +13548,8 @@ function SEH_initShop() {
     return sehAuthState.client;
   }
 
+  window.SEH_getAuthClient = sehGetAuthClient;
+
   function sehAuthIsDiscordUser(user) {
     if (!user) return false;
     const provider = String(user.app_metadata?.provider || "").toLowerCase();
