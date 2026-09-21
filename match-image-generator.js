@@ -114,7 +114,8 @@
     const normalizedTeamName = normalize(teamName);
     const aliases = {
       "bik karlskoga":"BIK Karlskoga Esport",
-      "bik karlskoga academy":"BIK Karlskoga Academy"
+      "bik karlskoga academy":"BIK Karlskoga Academy",
+      "northern ztars":"Northern Ztars Hockey"
     };
     const candidates = [explicitLogoName,teamName,aliases[normalizedTeamName]].filter(Boolean);
     for (const candidate of candidates) {
