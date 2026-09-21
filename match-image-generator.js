@@ -538,7 +538,7 @@
 
   function lineupJerseyStory(y, team, variant) {
     const jerseySize = 238;
-    const colX = [120,722];
+    const colX = [270,810];
     const rowGap = 235;
     return POSITIONS.map((pos,index) => {
       const col = index % 2;
