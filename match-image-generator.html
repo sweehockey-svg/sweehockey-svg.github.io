@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Match Graphics Lab · Svensk eHockey</title>
-  <link rel="stylesheet" href="match-image-generator.css?v=1">
+  <link rel="stylesheet" href="match-image-generator.css?v=2">
 </head>
 <body>
   <header class="lab-topbar">
@@ -23,13 +23,13 @@
         <h1>Bygg matchbilden på några klick.</h1>
         <p>Välj ditt lag, motståndare, matchtid och Starting Six. Generatorn använder exakt samma V27-tröjrenderer som Jersey Lab och ändrar inte lagens tröjdesign.</p>
       </div>
-      <div class="hero-badge">V1 · TEST</div>
+      <div class="hero-badge" id="accessBadge">ADMIN · ALLA LAG</div>
     </section>
 
     <section class="generator-grid">
       <aside class="controls">
         <div class="control-section">
-          <div class="section-title"><strong>Match</strong><span>Grunddata</span></div>
+          <div class="section-title"><strong>Match</strong><span id="dataStatus">Hämtar aktuellt lagbygge…</span></div>
           <div class="field-grid">
             <div class="field full">
               <label for="teamSelect">DITT LAG</label>
@@ -79,12 +79,12 @@
         <div class="control-section">
           <div class="section-title"><strong>Starting Six</strong><span id="ownTeamHint"></span></div>
           <div class="lineup-grid">
-            <div class="lineup-field"><label for="lwInput">LW</label><input id="lwInput" data-lineup="LW" type="text" maxlength="18"></div>
-            <div class="lineup-field"><label for="cInput">C</label><input id="cInput" data-lineup="C" type="text" maxlength="18"></div>
-            <div class="lineup-field"><label for="rwInput">RW</label><input id="rwInput" data-lineup="RW" type="text" maxlength="18"></div>
-            <div class="lineup-field"><label for="ldInput">LD</label><input id="ldInput" data-lineup="LD" type="text" maxlength="18"></div>
-            <div class="lineup-field"><label for="rdInput">RD</label><input id="rdInput" data-lineup="RD" type="text" maxlength="18"></div>
-            <div class="lineup-field"><label for="gInput">G</label><input id="gInput" data-lineup="G" type="text" maxlength="18"></div>
+            <div class="lineup-field"><label for="lwInput">LW</label><select id="lwInput" data-lineup="LW"><option value="">— Välj spelare —</option></select></div>
+            <div class="lineup-field"><label for="cInput">C</label><select id="cInput" data-lineup="C"><option value="">— Välj spelare —</option></select></div>
+            <div class="lineup-field"><label for="rwInput">RW</label><select id="rwInput" data-lineup="RW"><option value="">— Välj spelare —</option></select></div>
+            <div class="lineup-field"><label for="ldInput">LD</label><select id="ldInput" data-lineup="LD"><option value="">— Välj spelare —</option></select></div>
+            <div class="lineup-field"><label for="rdInput">RD</label><select id="rdInput" data-lineup="RD"><option value="">— Välj spelare —</option></select></div>
+            <div class="lineup-field"><label for="gInput">G</label><select id="gInput" data-lineup="G"><option value="">— Välj spelare —</option></select></div>
           </div>
         </div>
 
@@ -94,7 +94,7 @@
           <button id="resetButton" class="ghost" type="button">Återställ testdata</button>
         </div>
 
-        <p class="generator-note"><strong>V1:</strong> lag och Starting Six väljs manuellt. Nästa steg kan koppla detta direkt till kaptensbehörighet, lagets riktiga roster och kommande matcher i Svensk eHockey.</p>
+        <p class="generator-note"><strong>Adminläge:</strong> lagen och spelarna hämtas från samma ECL 27-lagbygge som Svensk eHockey använder. Alla lag är valbara här. Kaptensläget är förberett så att “Ditt lag” senare kan låsas till den inloggade kaptenens eget lag.</p>
       </aside>
 
       <section class="preview-panel">
@@ -109,7 +109,8 @@
     </section>
   </main>
 
+  <script src="config.js?v=20260918-team-aliases-v1"></script>
   <script src="teamlogos-manifest.js?v=20260830-v60"></script>
-  <script src="match-image-generator.js?v=1"></script>
+  <script src="match-image-generator.js?v=2"></script>
 </body>
 </html>
