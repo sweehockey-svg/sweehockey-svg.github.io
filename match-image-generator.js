@@ -1314,7 +1314,11 @@
       startY = 420;
     }
 
-    return POSITIONS.map((pos,index) => {
+    const displayPositions = cols === 3
+      ? ["LW","C","RW","LD","G","RD"]
+      : POSITIONS;
+
+    return displayPositions.map((pos,index) => {
       const col = index % cols;
       const row = Math.floor(index / cols);
       const x = startX + col * (cardWidth + gapX);
