@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Match Graphics Lab · Svensk eHockey</title>
-  <link rel="stylesheet" href="match-image-generator.css?v=3">
+  <link rel="stylesheet" href="match-image-generator.css?v=4">
 </head>
 <body>
   <header class="lab-topbar">
@@ -105,15 +105,16 @@
             <select id="lineupStyleSelect">
               <option value="cards">Spelarnamn / kort</option>
               <option value="jerseys">Tröjryggar</option>
+              <option value="portraits">Spelarbilder</option>
             </select>
           </div>
           <div class="lineup-grid">
-            <div class="lineup-field"><label for="lwInput">LW</label><select id="lwInput" data-lineup="LW"><option value="">— Välj spelare —</option></select></div>
-            <div class="lineup-field"><label for="cInput">C</label><select id="cInput" data-lineup="C"><option value="">— Välj spelare —</option></select></div>
-            <div class="lineup-field"><label for="rwInput">RW</label><select id="rwInput" data-lineup="RW"><option value="">— Välj spelare —</option></select></div>
-            <div class="lineup-field"><label for="ldInput">LD</label><select id="ldInput" data-lineup="LD"><option value="">— Välj spelare —</option></select></div>
-            <div class="lineup-field"><label for="rdInput">RD</label><select id="rdInput" data-lineup="RD"><option value="">— Välj spelare —</option></select></div>
-            <div class="lineup-field"><label for="gInput">G</label><select id="gInput" data-lineup="G"><option value="">— Välj spelare —</option></select></div>
+            <div class="lineup-field"><label for="lwInput">LW</label><div class="lineup-pick-row"><select id="lwInput" data-lineup="LW"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="LW" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="LW tröjnummer"></div></div>
+            <div class="lineup-field"><label for="cInput">C</label><div class="lineup-pick-row"><select id="cInput" data-lineup="C"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="C" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="C tröjnummer"></div></div>
+            <div class="lineup-field"><label for="rwInput">RW</label><div class="lineup-pick-row"><select id="rwInput" data-lineup="RW"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="RW" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="RW tröjnummer"></div></div>
+            <div class="lineup-field"><label for="ldInput">LD</label><div class="lineup-pick-row"><select id="ldInput" data-lineup="LD"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="LD" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="LD tröjnummer"></div></div>
+            <div class="lineup-field"><label for="rdInput">RD</label><div class="lineup-pick-row"><select id="rdInput" data-lineup="RD"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="RD" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="RD tröjnummer"></div></div>
+            <div class="lineup-field"><label for="gInput">G</label><div class="lineup-pick-row"><select id="gInput" data-lineup="G"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="G" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="G tröjnummer"></div></div>
           </div>
         </div>
 
@@ -143,7 +144,7 @@
           <button id="resetButton" class="ghost" type="button">Återställ testdata</button>
         </div>
 
-        <p class="generator-note"><strong>Adminläge:</strong> alla lag och aktuella spelare kommer från ECL 27-lagbygget. Starting Six kan visas som kort eller tröjryggar, och matchbilden kan kompletteras med streamingkanal. Kaptensläget är förberett för att låsa “Ditt lag” till kaptenens eget lag.</p>
+        <p class="generator-note"><strong>Adminläge:</strong> alla lag och aktuella spelare kommer från ECL 27-lagbygget. Starting Six kan visas som kort, tröjryggar med manuella nummer eller spelarporträtt, och matchbilden kan kompletteras med streamingkanal. Kaptensläget är förberett för att låsa “Ditt lag” till kaptenens eget lag.</p>
       </aside>
 
       <section class="preview-panel">
@@ -160,8 +161,9 @@
 
   <script src="config.js?v=20260918-team-aliases-v1"></script>
   <script src="teamlogos-manifest.js?v=20260830-v60"></script>
+  <script src="playerimages-manifest.js?v=20260904-v1"></script>
   <script src="ecl27-team-builds-source-enrichment.js?v=shared-model-1"></script>
   <script src="ecl27-team-builds-v2.js?v=shared-model-1"></script>
-  <script src="match-image-generator.js?v=6"></script>
+  <script src="match-image-generator.js?v=7"></script>
 </body>
 </html>
