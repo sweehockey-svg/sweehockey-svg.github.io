@@ -37,6 +37,7 @@
     date:"2026-10-01",
     time:"20:00",
     format:"square",
+    template:"classic",
     lineupStyle:"cards",
     streamPlatform:"none",
     streamChannel:"",
@@ -609,7 +610,7 @@
     };
   }
 
-  function buildMatchSvg() {
+  function buildClassicSvg() {
     const own = teamById(state.teamId);
     const opponent = teamById(state.opponentId);
     const home = state.ownSide === "home" ? own : opponent;
@@ -676,6 +677,252 @@
       '<text x="' + (W/2) + '" y="' + (H - 30) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".34" font-size="' + (state.format === "landscape" ? 17 : 13) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">SVENSK eHOCKEY · MATCH GRAPHICS</text>',
       '</svg>'
     ].join("");
+  }
+
+
+  function templateContext() {
+    const own = teamById(state.teamId);
+    const opponent = teamById(state.opponentId);
+    const home = state.ownSide === "home" ? own : opponent;
+    const away = state.ownSide === "home" ? opponent : own;
+    const format = FORMATS[state.format] || FORMATS.square;
+    return {
+      own,opponent,home,away,
+      ownVariant:state.ownSide === "home" ? "home" : "away",
+      W:format.width,H:format.height,
+      badge:esc(cleanText(state.badge,20).toUpperCase() || "MATCHDAY"),
+      competition:esc(cleanText(state.competition,28).toUpperCase() || "SVENSK eHOCKEY"),
+      date:esc(formatDate(state.date)),
+      time:esc(cleanText(state.time,5) || "20:00"),
+      stream:esc(streamLabel())
+    };
+  }
+
+  function commonTemplateDefs(ctx, id) {
+    return [
+      '<defs>',
+      '<linearGradient id="' + id + '-bg" x1="0" y1="0" x2="1" y2="1">',
+      '<stop offset="0" stop-color="' + ctx.own.primary + '"/><stop offset=".52" stop-color="#080c11"/><stop offset="1" stop-color="' + ctx.opponent.primary + '"/>',
+      '</linearGradient>',
+      '<radialGradient id="' + id + '-light" cx="50%" cy="30%" r="78%"><stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".58" stop-color="#fff" stop-opacity=".015"/><stop offset="1" stop-color="#000" stop-opacity=".36"/></radialGradient>',
+      '<pattern id="' + id + '-grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#fff" stroke-opacity=".022"/></pattern>',
+      '<filter id="' + id + '-blur"><feGaussianBlur stdDeviation="34"/></filter>',
+      '</defs>'
+    ].join("");
+  }
+
+  function templateStream(ctx, y, wide = false) {
+    if (!ctx.stream) return "";
+    const width = wide ? Math.min(ctx.W * .62,720) : Math.min(ctx.W * .44,520);
+    const height = state.format === "story" ? 54 : 44;
+    return [
+      '<g>',
+      '<rect x="' + (ctx.W/2-width/2) + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="' + (height/2) + '" fill="#090d12" fill-opacity=".84" stroke="#fff" stroke-opacity=".13"/>',
+      '<circle cx="' + (ctx.W/2-width/2+28) + '" cy="' + (y+height/2) + '" r="7" fill="#ff4d5f"/>',
+      '<text x="' + (ctx.W/2+8) + '" y="' + (y+height/2+6) + '" text-anchor="middle" fill="#fff" font-size="' + (state.format === "story" ? 20 : 16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1.1">' + ctx.stream + '</text>',
+      '</g>'
+    ].join("");
+  }
+
+  function svgLogo(team,x,y,size,opacity=1) {
+    const url = logoUrl(team.name);
+    if (!url) return '<text x="' + (x+size/2) + '" y="' + (y+size*.62) + '" text-anchor="middle" fill="#fff" fill-opacity="' + opacity + '" font-size="' + (size*.28) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(initials(team.name)) + '</text>';
+    return '<image href="' + esc(url) + '" x="' + x + '" y="' + y + '" width="' + size + '" height="' + size + '" opacity="' + opacity + '" preserveAspectRatio="xMidYMid meet"/>';
+  }
+
+  function focusLineupMarkup(ctx, y) {
+    const useJerseys = state.lineupStyle === "jerseys";
+    if (state.format === "landscape") {
+      const margin=110,gap=18,slot=(ctx.W-margin*2-gap*5)/6;
+      return POSITIONS.map((pos,index) => {
+        const x=margin+index*(slot+gap);
+        const name=cleanText(state.lineup[pos],18) || "—";
+        if (useJerseys) {
+          const size=Math.min(232,slot);
+          const jersey=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"back",compact:true,playerName:name==="—"?"PLAYER":name,playerNumber:" "});
+          return placedJersey(jersey,x+(slot-size)/2,y,size) +
+            '<text x="' + (x+slot/2) + '" y="' + (y+size+22) + '" text-anchor="middle" fill="#fff" font-size="15" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text>';
+        }
+        return '<g transform="translate(' + x + ' ' + y + ')"><rect width="' + slot + '" height="132" rx="22" fill="#fff" fill-opacity=".075" stroke="#fff" stroke-opacity=".12"/><text x="18" y="34" fill="#fff" fill-opacity=".58" font-size="14" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text><text x="18" y="88" fill="#fff" font-size="24" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(name) + '</text></g>';
+      }).join("");
+    }
+
+    const cols = state.format === "story" ? 2 : 3;
+    const margin = state.format === "story" ? 84 : 54;
+    const gapX = state.format === "story" ? 24 : 18;
+    const gapY = state.format === "story" ? 24 : 16;
+    const slot=(ctx.W-margin*2-gapX*(cols-1))/cols;
+    const jerseySize=state.format === "story" ? Math.min(270,slot) : Math.min(230,slot);
+    const cardH=state.format === "story" ? 138 : 118;
+    const rowStep=useJerseys ? jerseySize+44 : cardH+gapY;
+
+    return POSITIONS.map((pos,index) => {
+      const col=index%cols,row=Math.floor(index/cols);
+      const x=margin+col*(slot+gapX);
+      const yy=y+row*rowStep;
+      const name=cleanText(state.lineup[pos],18) || "—";
+      if (useJerseys) {
+        const jersey=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"back",compact:true,playerName:name==="—"?"PLAYER":name,playerNumber:" "});
+        return placedJersey(jersey,x+(slot-jerseySize)/2,yy,jerseySize) +
+          '<text x="' + (x+slot/2) + '" y="' + (yy+jerseySize+22) + '" text-anchor="middle" fill="#fff" font-size="' + (state.format === "story" ? 18 : 14) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text>';
+      }
+      return '<g transform="translate(' + x + ' ' + yy + ')"><rect width="' + slot + '" height="' + cardH + '" rx="20" fill="#fff" fill-opacity=".075" stroke="#fff" stroke-opacity=".12"/><text x="16" y="32" fill="#fff" fill-opacity=".58" font-size="13" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text><text x="16" y="' + (cardH-28) + '" fill="#fff" font-size="' + (state.format === "story" ? 25 : 18) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(name) + '</text></g>';
+    }).join("");
+  }
+
+  function buildStartingSixSvg() {
+    const ctx=templateContext();
+    const ownName=esc(ctx.own.name),oppName=esc(ctx.opponent.name);
+    const isStory=state.format==="story",isWide=state.format==="landscape";
+    const heroSize=isWide?470:isStory?520:390;
+    const heroX=isWide?70:(ctx.W-heroSize)/2;
+    const heroY=isWide?170:isStory?260:160;
+    const lineupY=isWide?620:isStory?830:560;
+    const opponentLogoSize=isWide?115:isStory?130:88;
+    const opponentLogoX=isWide?ctx.W-240:ctx.W-opponentLogoSize-58;
+    const opponentLogoY=isWide?112:isStory?180:102;
+    const hero=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"front",compact:false});
+
+    return [
+      '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
+      commonTemplateDefs(ctx,"focus"),
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#090d12"/>',
+      '<circle cx="' + (ctx.W*.22) + '" cy="' + (ctx.H*.28) + '" r="' + (ctx.W*.32) + '" fill="' + ctx.own.primary + '" opacity=".42" filter="url(#focus-blur)"/>',
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-light)"/>',
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-grid)"/>',
+      '<text x="' + (isWide?80:ctx.W/2) + '" y="' + (isStory?104:64) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#fff" font-size="' + (isWide?62:isStory?58:44) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">' + ctx.badge + '</text>',
+      '<text x="' + (isWide?82:ctx.W/2) + '" y="' + (isStory?154:102) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#fff" fill-opacity=".55" font-size="' + (isWide?18:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
+      placedJersey(hero,heroX,heroY,heroSize),
+      isWide ? '<text x="610" y="250" fill="#fff" font-size="54" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>' : '',
+      '<g><text x="' + (opponentLogoX+opponentLogoSize/2) + '" y="' + (opponentLogoY-18) + '" text-anchor="middle" fill="#fff" fill-opacity=".46" font-size="13" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">MOT</text>' +
+        svgLogo(ctx.opponent,opponentLogoX,opponentLogoY,opponentLogoSize,.9) +
+        '<text x="' + (opponentLogoX+opponentLogoSize/2) + '" y="' + (opponentLogoY+opponentLogoSize+28) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?22:17) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + oppName + '</text></g>',
+      '<text x="' + (isWide?610:ctx.W/2) + '" y="' + (isWide?324:isStory?740:510) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#fff" font-size="' + (isWide?36:isStory?30:24) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
+      templateStream(ctx,isWide?355:(isStory?765:530),isWide),
+      '<text x="' + (isWide?610:ctx.W/2) + '" y="' + (lineupY-26) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#fff" fill-opacity=".63" font-size="' + (isWide?18:isStory?22:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">STARTING SIX · ' + ownName.toUpperCase() + '</text>',
+      focusLineupMarkup(ctx,lineupY),
+      '<text x="' + (ctx.W/2) + '" y="' + (ctx.H-28) + '" text-anchor="middle" fill="#fff" fill-opacity=".3" font-size="13" font-weight="800" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">SVENSK eHOCKEY · STARTING SIX</text>',
+      '</svg>'
+    ].join("");
+  }
+
+  function buildVersusSvg() {
+    const ctx=templateContext();
+    const isStory=state.format==="story",isWide=state.format==="landscape";
+    const leftTeam=ctx.home,rightTeam=ctx.away;
+    const leftSize=isWide?560:isStory?520:460;
+    const rightSize=leftSize;
+    const leftX=isWide?110:isStory?30:20;
+    const rightX=isWide?ctx.W-rightSize-110:isStory?ctx.W-rightSize-30:ctx.W-rightSize-20;
+    const jerseyY=isStory?410:(isWide?190:205);
+    const lineupY=isStory?1210:(isWide?855:855);
+    const left=premiumJerseySvg(leftTeam,{variant:"home",side:"front",compact:false});
+    const right=premiumJerseySvg(rightTeam,{variant:"away",side:"front",compact:false});
+    const lineup=state.lineupStyle==="jerseys"
+      ? (isStory?lineupJerseyStory(lineupY,ctx.own,ctx.ownVariant):lineupJerseySquare(ctx.W,lineupY,ctx.own,ctx.ownVariant))
+      : (isStory?lineupMarkupStory(lineupY):lineupMarkupSquare(ctx.W,lineupY));
+
+    return [
+      '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
+      commonTemplateDefs(ctx,"versus"),
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#080b0f"/>',
+      '<path d="M0 0 H' + (ctx.W*.56) + ' L' + (ctx.W*.44) + ' ' + ctx.H + ' H0Z" fill="' + leftTeam.primary + '" opacity=".48"/>',
+      '<path d="M' + (ctx.W*.56) + ' 0 H' + ctx.W + ' V' + ctx.H + ' H' + (ctx.W*.44) + 'Z" fill="' + rightTeam.primary + '" opacity=".48"/>',
+      '<path d="M' + (ctx.W*.505) + ' 0 L' + (ctx.W*.46) + ' ' + ctx.H + '" stroke="#fff" stroke-opacity=".08" stroke-width="' + (isWide?18:10) + '"/>',
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#versus-light)"/>',
+      '<text x="' + (ctx.W/2) + '" y="' + (isStory?105:65) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?58:isWide?64:46) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.badge + '</text>',
+      '<text x="' + (ctx.W/2) + '" y="' + (isStory?155:105) + '" text-anchor="middle" fill="#fff" fill-opacity=".55" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
+      '<text x="' + (leftX+leftSize/2) + '" y="' + (jerseyY-18) + '" text-anchor="middle" fill="#fff" font-size="' + (isWide?34:27) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(leftTeam.name) + '</text>',
+      '<text x="' + (rightX+rightSize/2) + '" y="' + (jerseyY-18) + '" text-anchor="middle" fill="#fff" font-size="' + (isWide?34:27) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(rightTeam.name) + '</text>',
+      placedJersey(left,leftX,jerseyY,leftSize),
+      placedJersey(right,rightX,jerseyY,rightSize),
+      '<circle cx="' + (ctx.W/2) + '" cy="' + (isStory?700:isWide?460:450) + '" r="' + (isWide?92:68) + '" fill="#07090c" stroke="#fff" stroke-opacity=".16"/>',
+      '<text x="' + (ctx.W/2) + '" y="' + (isStory?723:isWide?490:473) + '" text-anchor="middle" fill="#fff" font-size="' + (isWide?104:76) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">VS</text>',
+      '<text x="' + (ctx.W/2) + '" y="' + (isStory?835:isWide?585:570) + '" text-anchor="middle" fill="#fff" font-size="' + (isWide?38:isStory?32:26) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
+      templateStream(ctx,isStory?872:(isWide?610:595),true),
+      '<text x="' + (ctx.W/2) + '" y="' + (lineupY-26) + '" text-anchor="middle" fill="#fff" fill-opacity=".62" font-size="' + (isStory?22:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">STARTING SIX · ' + esc(ctx.own.name).toUpperCase() + '</text>',
+      lineup,
+      '</svg>'
+    ].join("");
+  }
+
+  function buildBroadcastSvg() {
+    const ctx=templateContext();
+    const isStory=state.format==="story",isWide=state.format==="landscape";
+    const topH=isStory?560:state.format==="square"?380:350;
+    const homeLogo=isStory?150:110;
+    const logoY=isStory?185:120;
+    const jerseySize=isStory?250:isWide?250:190;
+    const leftJ=premiumJerseySvg(ctx.home,{variant:"home",side:"front",compact:true});
+    const rightJ=premiumJerseySvg(ctx.away,{variant:"away",side:"front",compact:true});
+    const lineupY=isStory?1040:isWide?725:700;
+    const lineup=state.lineupStyle==="jerseys"
+      ? (isStory?lineupJerseyStory(lineupY,ctx.own,ctx.ownVariant):lineupJerseySquare(ctx.W,lineupY,ctx.own,ctx.ownVariant))
+      : (isStory?lineupMarkupStory(lineupY):lineupMarkupSquare(ctx.W,lineupY));
+
+    return [
+      '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
+      commonTemplateDefs(ctx,"broadcast"),
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#070b10"/>',
+      '<rect width="' + ctx.W + '" height="' + topH + '" fill="url(#broadcast-bg)" opacity=".72"/>',
+      '<rect x="0" y="' + (topH-8) + '" width="' + ctx.W + '" height="8" fill="#fff" fill-opacity=".08"/>',
+      '<text x="' + (ctx.W/2) + '" y="' + (isStory?85:58) + '" text-anchor="middle" fill="#fff" fill-opacity=".58" font-size="15" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="4">' + ctx.competition + '</text>',
+      '<text x="' + (ctx.W/2) + '" y="' + (isStory?145:105) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?54:isWide?56:42) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.badge + '</text>',
+      svgLogo(ctx.home,ctx.W*.21-homeLogo/2,logoY,homeLogo,.95),
+      svgLogo(ctx.away,ctx.W*.79-homeLogo/2,logoY,homeLogo,.95),
+      placedJersey(leftJ,ctx.W*.21-jerseySize/2,logoY+homeLogo-20,jerseySize),
+      placedJersey(rightJ,ctx.W*.79-jerseySize/2,logoY+homeLogo-20,jerseySize),
+      '<text x="' + (ctx.W*.21) + '" y="' + (logoY+homeLogo+jerseySize+10) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?25:19) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.home.name) + '</text>',
+      '<text x="' + (ctx.W*.79) + '" y="' + (logoY+homeLogo+jerseySize+10) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?25:19) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.away.name) + '</text>',
+      '<text x="' + (ctx.W/2) + '" y="' + (logoY+homeLogo+55) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?58:48) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">VS</text>',
+      '<text x="' + (ctx.W/2) + '" y="' + (topH+75) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?34:isWide?34:27) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
+      ctx.stream ? '<g><rect x="' + (ctx.W*.12) + '" y="' + (topH+108) + '" width="' + (ctx.W*.76) + '" height="' + (isStory?92:72) + '" rx="18" fill="#ff4d5f" fill-opacity=".12" stroke="#ff6c78" stroke-opacity=".45"/><text x="' + (ctx.W*.16) + '" y="' + (topH+(isStory?165:153)) + '" fill="#ff6c78" font-size="' + (isStory?23:18) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">LIVE</text><text x="' + (ctx.W*.25) + '" y="' + (topH+(isStory?165:153)) + '" fill="#fff" font-size="' + (isStory?26:isWide?25:20) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.stream.replace(/^LIVE · /,"") + '</text></g>' : '',
+      '<text x="' + (ctx.W*.08) + '" y="' + (lineupY-30) + '" fill="#fff" fill-opacity=".54" font-size="' + (isStory?22:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">LINEUP · ' + esc(ctx.own.name).toUpperCase() + '</text>',
+      lineup,
+      '<rect x="0" y="' + (ctx.H-58) + '" width="' + ctx.W + '" height="58" fill="#fff" fill-opacity=".035"/>',
+      '<text x="' + (ctx.W*.06) + '" y="' + (ctx.H-22) + '" fill="#fff" fill-opacity=".42" font-size="13" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">SVENSK eHOCKEY BROADCAST</text>',
+      '</svg>'
+    ].join("");
+  }
+
+  function buildMinimalSvg() {
+    const ctx=templateContext();
+    const isStory=state.format==="story",isWide=state.format==="landscape";
+    const jerseySize=isWide?520:isStory?600:470;
+    const jerseyX=isWide?ctx.W*.08:isStory?(ctx.W-jerseySize)/2:-15;
+    const jerseyY=isWide?205:isStory?320:225;
+    const ownJ=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"front",compact:false});
+    const lineupY=isStory?1280:isWide?790:825;
+    const lineup=state.lineupStyle==="jerseys"
+      ? (isStory?lineupJerseyStory(lineupY,ctx.own,ctx.ownVariant):lineupJerseySquare(ctx.W,lineupY,ctx.own,ctx.ownVariant))
+      : (isStory?lineupMarkupStory(lineupY):lineupMarkupSquare(ctx.W,lineupY));
+
+    return [
+      '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
+      commonTemplateDefs(ctx,"minimal"),
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#f3f1eb"/>',
+      '<rect x="0" y="0" width="' + (isWide?ctx.W*.46:ctx.W) + '" height="' + (isWide?ctx.H:ctx.H*.56) + '" fill="' + ctx.own.primary + '"/>',
+      '<circle cx="' + (isWide?ctx.W*.23:ctx.W*.5) + '" cy="' + (isWide?ctx.H*.44:ctx.H*.27) + '" r="' + (isWide?ctx.W*.20:ctx.W*.38) + '" fill="' + ctx.own.accent + '" opacity=".12"/>',
+      placedJersey(ownJ,jerseyX,jerseyY,jerseySize),
+      '<text x="' + (isWide?ctx.W*.53:54) + '" y="' + (isWide?140:isStory?90:72) + '" fill="' + (isWide?"#101318":"#fff") + '" font-size="' + (isWide?70:isStory?58:44) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">' + ctx.badge + '</text>',
+      '<text x="' + (isWide?ctx.W*.53:58) + '" y="' + (isWide?190:isStory?140:110) + '" fill="' + (isWide?"#59616b":"#fff") + '" fill-opacity="' + (isWide?1:.62) + '" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
+      '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?330:isStory?1040:620) + '" fill="' + (isWide?"#101318":"#101318") + '" font-size="' + (isWide?50:isStory?46:36) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.own.name) + '</text>',
+      '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?390:isStory?1100:668) + '" fill="#7a828a" font-size="' + (isWide?24:isStory?22:18) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif">mot ' + esc(ctx.opponent.name) + '</text>',
+      svgLogo(ctx.opponent,isWide?ctx.W*.84:(ctx.W-130),isWide?255:(isStory?990:590),isWide?135:90,.95),
+      '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?475:isStory?1175:735) + '" fill="#101318" font-size="' + (isWide?32:isStory?30:24) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
+      ctx.stream ? '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?525:isStory?1220:775) + '" fill="#c43543" font-size="' + (isWide?20:isStory?19:15) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.stream + '</text>' : '',
+      '<text x="' + (ctx.W/2) + '" y="' + (lineupY-26) + '" text-anchor="middle" fill="' + (isStory?"#101318":"#101318") + '" fill-opacity=".58" font-size="' + (isStory?22:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">STARTING SIX</text>',
+      '<g style="color:#101318">' + lineup + '</g>',
+      '</svg>'
+    ].join("");
+  }
+
+  function buildMatchSvg() {
+    if (state.template === "starting-six") return buildStartingSixSvg();
+    if (state.template === "versus") return buildVersusSvg();
+    if (state.template === "broadcast") return buildBroadcastSvg();
+    if (state.template === "minimal") return buildMinimalSvg();
+    return buildClassicSvg();
   }
 
   function render() {
@@ -749,6 +996,10 @@
     $("#streamPlatformSelect").value = state.streamPlatform;
     $("#streamChannelInput").value = state.streamChannel;
     $("#streamChannelInput").disabled = state.streamPlatform === "none";
+    $("[data-template]").forEach(button => {
+      button.classList.toggle("is-active",button.dataset.template === state.template);
+      button.setAttribute("aria-pressed",button.dataset.template === state.template ? "true" : "false");
+    });
     syncLineupSelects();
     applyAccessMode();
   }
@@ -771,6 +1022,7 @@
     state.date = "2026-10-01";
     state.time = "20:00";
     state.format = "square";
+    state.template = "classic";
     state.lineupStyle = "cards";
     state.streamPlatform = "none";
     state.streamChannel = "";
@@ -858,6 +1110,17 @@
       button.textContent = original;
     }
   }
+
+  $("[data-template]").forEach(button => {
+    button.addEventListener("click",() => {
+      const template = button.dataset.template;
+      state.template = ["classic","starting-six","versus","broadcast","minimal"].includes(template)
+        ? template
+        : "classic";
+      syncForm();
+      render();
+    });
+  });
 
   $("#teamSelect").addEventListener("change",event => {
     state.teamId = event.target.value;
