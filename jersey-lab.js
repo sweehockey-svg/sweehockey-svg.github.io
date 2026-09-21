@@ -239,18 +239,18 @@
     const ink = variant === "away" ? primary : trim;
     const dark = variant === "away" ? primary : "#07090a";
 
-    const leftSleeve = "M205 112 C181 109 148 120 118 140 L84 164 C67 176 57 192 55 212 L42 425 Q82 441 128 450 L158 320 L176 169 Q180 127 205 112 Z";
-    const rightSleeve = "M395 112 C419 109 452 120 482 140 L516 164 C533 176 543 192 545 212 L558 425 Q518 441 472 450 L442 320 L424 169 Q420 127 395 112 Z";
-    const torso = "M204 112 C233 92 367 92 396 112 L421 145 L423 542 Q300 566 177 542 L179 145 Z";
-    const fullShape = "M204 112 C181 109 148 120 118 140 L84 164 C67 176 57 192 55 212 L42 425 Q82 441 128 450 L158 320 L177 542 Q300 566 423 542 L442 320 L472 450 Q518 441 558 425 L545 212 C543 192 533 176 516 164 L482 140 C452 120 419 109 396 112 C367 92 233 92 204 112 Z";
+    const leftSleeve = "M205 114 C180 111 149 120 120 139 L88 160 C69 173 58 190 56 211 L45 426 Q82 447 126 456 L154 334 L174 173 Q179 130 205 114 Z";
+    const rightSleeve = "M395 114 C420 111 451 120 480 139 L512 160 C531 173 542 190 544 211 L555 426 Q518 447 474 456 L446 334 L426 173 Q421 130 395 114 Z";
+    const torso = "M205 114 C233 94 367 94 395 114 C414 130 421 151 420 176 L424 532 C420 551 377 560 300 564 C223 560 180 551 176 532 L180 176 C179 151 186 130 205 114 Z";
+    const fullShape = "M205 114 C180 111 149 120 120 139 L88 160 C69 173 58 190 56 211 L45 426 Q82 447 126 456 L154 334 L176 532 C180 551 223 560 300 564 C377 560 420 551 424 532 L446 334 L474 456 Q518 447 555 426 L544 211 C542 190 531 173 512 160 L480 139 C451 120 420 111 395 114 C367 94 233 94 205 114 Z";
 
     const shoulderDecor = pattern === "minimal"
       ? `
         <path d="M169 151 C214 121 259 111 300 111 C341 111 386 121 431 151" fill="none" stroke="${stripeB}" stroke-width="8" opacity=".9"/>
       `
       : `
-        <path d="M121 157 C170 122 229 103 300 103 C371 103 430 122 479 157 L458 192 C412 166 360 153 300 153 C240 153 188 166 142 192 Z" fill="${yokeBase}"/>
-        <path d="M136 163 C181 135 237 120 300 120 C363 120 419 135 464 163" fill="none" stroke="${stripeB}" stroke-width="6" opacity=".9"/>
+        <path d="M137 160 C182 130 235 115 300 115 C365 115 418 130 463 160 L449 185 C405 162 356 151 300 151 C244 151 195 162 151 185 Z" fill="${yokeBase}"/>
+        <path d="M151 164 C191 140 241 127 300 127 C359 127 409 140 449 164" fill="none" stroke="${stripeB}" stroke-width="5" opacity=".86"/>
       `;
 
     const sleeveStriping = pattern === "minimal" ? `
@@ -264,10 +264,10 @@
     `;
 
     const hemStriping = pattern === "minimal" ? `
-      <path d="M178 515 Q300 535 422 515 L422 533 Q300 553 178 533 Z" fill="${stripeA}"/>
+      <path d="M177 510 Q300 528 423 510 L423 531 Q300 548 177 531 Z" fill="${stripeA}"/>
     ` : `
-      <path d="M177 500 Q300 521 423 500 L423 523 Q300 544 177 523 Z" fill="${stripeA}"/>
-      <path d="M177 526 Q300 546 423 526 L423 540 Q300 559 177 540 Z" fill="${stripeB}"/>
+      <path d="M176 499 Q300 518 424 499 L424 521 Q300 539 176 521 Z" fill="${stripeA}"/>
+      <path d="M176 525 Q300 543 424 525 L424 539 Q300 555 176 539 Z" fill="${stripeB}"/>
     `;
 
     const captain = captainRole ? `
@@ -355,18 +355,18 @@
           <!-- soft photographic folds -->
           ${compact ? "" : `
             <g fill="none" stroke-linecap="round" filter="url(#soft-${uid})">
-              <path d="M229 173 C215 258 220 410 236 520" stroke="#000" stroke-opacity=".16" stroke-width="11"/>
-              <path d="M274 164 C263 267 267 419 277 531" stroke="#fff" stroke-opacity=".10" stroke-width="8"/>
-              <path d="M329 163 C338 269 334 417 325 531" stroke="#000" stroke-opacity=".09" stroke-width="9"/>
-              <path d="M374 174 C388 258 382 408 366 520" stroke="#fff" stroke-opacity=".07" stroke-width="8"/>
-              <path d="M100 202 C112 276 108 360 98 420" stroke="#fff" stroke-opacity=".08" stroke-width="8"/>
-              <path d="M500 202 C488 276 492 360 502 420" stroke="#000" stroke-opacity=".11" stroke-width="9"/>
+              <path d="M232 180 C221 268 224 405 236 516" stroke="#000" stroke-opacity=".10" stroke-width="9"/>
+              <path d="M276 170 C268 275 271 416 279 528" stroke="#fff" stroke-opacity=".055" stroke-width="7"/>
+              <path d="M326 170 C333 274 331 416 324 528" stroke="#000" stroke-opacity=".055" stroke-width="7"/>
+              <path d="M370 180 C381 268 377 405 365 516" stroke="#fff" stroke-opacity=".045" stroke-width="6"/>
+              <path d="M105 208 C114 279 110 356 101 417" stroke="#fff" stroke-opacity=".045" stroke-width="6"/>
+              <path d="M495 208 C486 279 490 356 499 417" stroke="#000" stroke-opacity=".065" stroke-width="7"/>
             </g>
           `}
 
           <!-- sleeve/torso seams -->
-          <path d="M205 113 C190 147 180 190 176 249" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="1.4"/>
-          <path d="M395 113 C410 147 420 190 424 249" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="1.4"/>
+          <path d="M205 115 C191 150 182 192 178 248" fill="none" stroke="#fff" stroke-opacity=".10" stroke-width="1.2"/>
+          <path d="M395 115 C409 150 418 192 422 248" fill="none" stroke="#fff" stroke-opacity=".10" stroke-width="1.2"/>
           <path d="M179 153 C170 198 164 257 158 314 M421 153 C430 198 436 257 442 314" fill="none" stroke="#000" stroke-opacity=".08" stroke-width="1.4"/>
 
           <!-- realistic ribbed V collar -->
