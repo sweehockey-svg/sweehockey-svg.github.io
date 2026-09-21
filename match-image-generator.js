@@ -777,7 +777,7 @@
     const heroSize=isWide?470:isStory?520:390;
     const heroX=isWide?70:(ctx.W-heroSize)/2;
     const heroY=isWide?170:isStory?260:160;
-    const lineupY=isWide?620:isStory?830:560;
+    const lineupY=isWide?620:isStory?830:500;
     const opponentLogoSize=isWide?115:isStory?130:88;
     const opponentLogoX=isWide?ctx.W-240:ctx.W-opponentLogoSize-58;
     const opponentLogoY=isWide?112:isStory?180:102;
@@ -815,7 +815,7 @@
     const leftX=isWide?110:isStory?30:20;
     const rightX=isWide?ctx.W-rightSize-110:isStory?ctx.W-rightSize-30:ctx.W-rightSize-20;
     const jerseyY=isStory?410:(isWide?190:205);
-    const lineupY=isStory?1210:(isWide?855:855);
+    const lineupY=isStory?1160:(isWide?855:855);
     const left=premiumJerseySvg(leftTeam,{variant:"home",side:"front",compact:false});
     const right=premiumJerseySvg(rightTeam,{variant:"away",side:"front",compact:false});
     const lineup=state.lineupStyle==="jerseys"
@@ -892,7 +892,7 @@
     const jerseyX=isWide?ctx.W*.08:isStory?(ctx.W-jerseySize)/2:-15;
     const jerseyY=isWide?205:isStory?320:225;
     const ownJ=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"front",compact:false});
-    const lineupY=isStory?1280:isWide?790:825;
+    const lineupY=isStory?1150:isWide?790:825;
     const lineup=state.lineupStyle==="jerseys"
       ? (isStory?lineupJerseyStory(lineupY,ctx.own,ctx.ownVariant):lineupJerseySquare(ctx.W,lineupY,ctx.own,ctx.ownVariant))
       : (isStory?lineupMarkupStory(lineupY):lineupMarkupSquare(ctx.W,lineupY));
@@ -908,11 +908,12 @@
       '<text x="' + (isWide?ctx.W*.53:58) + '" y="' + (isWide?190:isStory?140:110) + '" fill="' + (isWide?"#59616b":"#fff") + '" fill-opacity="' + (isWide?1:.62) + '" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
       '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?330:isStory?1040:620) + '" fill="' + (isWide?"#101318":"#101318") + '" font-size="' + (isWide?50:isStory?46:36) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.own.name) + '</text>',
       '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?390:isStory?1100:668) + '" fill="#7a828a" font-size="' + (isWide?24:isStory?22:18) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif">mot ' + esc(ctx.opponent.name) + '</text>',
-      svgLogo(ctx.opponent,isWide?ctx.W*.84:(ctx.W-130),isWide?255:(isStory?990:590),isWide?135:90,.95),
+      svgLogo(ctx.opponent,isWide?ctx.W*.84:(ctx.W-130),isWide?255:(isStory?930:590),isWide?135:90,.95),
       '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?475:isStory?1175:735) + '" fill="#101318" font-size="' + (isWide?32:isStory?30:24) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
       ctx.stream ? '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?525:isStory?1220:775) + '" fill="#c43543" font-size="' + (isWide?20:isStory?19:15) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.stream + '</text>' : '',
-      '<text x="' + (ctx.W/2) + '" y="' + (lineupY-26) + '" text-anchor="middle" fill="' + (isStory?"#101318":"#101318") + '" fill-opacity=".58" font-size="' + (isStory?22:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">STARTING SIX</text>',
-      '<g style="color:#101318">' + lineup + '</g>',
+      '<rect x="' + (isWide?ctx.W*.48:24) + '" y="' + (lineupY-62) + '" width="' + (isWide?ctx.W*.49:ctx.W-48) + '" height="' + Math.min(ctx.H-lineupY+18,state.format==="story"?720:250) + '" rx="24" fill="#101318"/>',
+      '<text x="' + (isWide?ctx.W*.725:ctx.W/2) + '" y="' + (lineupY-26) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".58" font-size="' + (isStory?22:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">STARTING SIX</text>',
+      '<g>' + lineup + '</g>',
       '</svg>'
     ].join("");
   }
