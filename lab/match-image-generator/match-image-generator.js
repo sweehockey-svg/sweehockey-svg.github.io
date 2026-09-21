@@ -1259,12 +1259,12 @@
 
     if (isWide) {
       cardWidth = 330;
-      cardHeight = 300;
+      cardHeight = 338;
       gapX = 22;
-      gapY = 22;
+      gapY = 24;
       cols = 3;
       startX = 790;
-      startY = 188;
+      startY = 176;
     } else if (isStory) {
       cardWidth = 410;
       cardHeight = 310;
@@ -1297,23 +1297,23 @@
     const ownName=esc(ctx.own.name),oppName=esc(ctx.opponent.name);
     const isStory=state.format==="story",isWide=state.format==="landscape";
     const portraitMode=state.lineupStyle==="portraits";
-    const heroSize=isWide?520:isStory?470:275;
-    const heroX=isWide?92:isStory?(ctx.W-heroSize)/2:62;
-    const heroY=isWide?175:isStory?210:130;
+    const heroSize=isWide?450:isStory?470:275;
+    const heroX=isWide?140:isStory?(ctx.W-heroSize)/2:62;
+    const heroY=isWide?178:isStory?210:130;
     const hero=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"front",compact:false});
     const lineup=portraitMode
       ? startingSixPortraitGrid(ctx)
       : focusLineupMarkup(ctx,isWide?630:(isStory?875:500));
 
-    const opponentLogoSize=isWide?92:isStory?112:78;
-    const opponentLogoX=isWide?470:isStory?ctx.W-opponentLogoSize-74:ctx.W-opponentLogoSize-54;
-    const opponentLogoY=isWide?700:isStory?350:112;
+    const opponentLogoSize=isWide?84:isStory?112:78;
+    const opponentLogoX=isWide?128:isStory?ctx.W-opponentLogoSize-74:ctx.W-opponentLogoSize-54;
+    const opponentLogoY=isWide?694:isStory?350:112;
 
     const infoX=isWide?102:isStory?ctx.W/2:ctx.W/2;
-    const infoY=isWide?704:isStory?400:250;
+    const infoY=isWide?778:isStory?400:250;
     const infoAnchor=isWide?"start":"middle";
     const gridTitleX=isWide?1285:ctx.W/2;
-    const gridTitleY=isWide?135:isStory?535:382;
+    const gridTitleY=isWide?128:isStory?535:382;
 
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '" role="img" aria-label="Starting Six ' + ownName + '">',
@@ -1331,7 +1331,7 @@
       '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-glow)"/>',
       '<rect x="0" y="' + (ctx.H*.56) + '" width="' + ctx.W + '" height="' + (ctx.H*.44) + '" fill="url(#focus-ice)"/>',
 
-      isWide ? '<rect x="52" y="118" width="640" height="822" rx="34" fill="url(#focus-panel)" stroke="#ffffff" stroke-opacity=".10"/>' : '',
+      isWide ? '<rect x="52" y="118" width="640" height="858" rx="34" fill="url(#focus-panel)" stroke="#ffffff" stroke-opacity=".10"/>' : '',
       isWide ? svgLogo(ctx.own,-105,280,650,.055) : svgLogo(ctx.own,-90,isStory?290:330,isStory?650:500,.045),
 
       '<text x="' + (isWide?84:ctx.W/2) + '" y="' + (isStory?92:74) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#ffffff" font-size="' + (isWide?66:isStory?60:48) + '" font-weight="1000" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="2">STARTING SIX</text>',
@@ -1340,17 +1340,21 @@
       '<g filter="url(#focus-shadow)">' + placedJersey(hero,heroX,heroY,heroSize) + '</g>',
 
       isWide
-        ? '<text x="102" y="660" fill="#ffffff" font-size="44" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>'
+        ? '<text x="102" y="654" fill="#ffffff" font-size="42" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text><line x1="102" y1="674" x2="610" y2="674" stroke="' + ctx.own.accent + '" stroke-opacity=".55" stroke-width="2"/>'
         : '<text x="' + (ctx.W/2) + '" y="' + (isStory?720:360) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?38:28) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>',
 
       '<g>',
-      '<text x="' + opponentLogoX + '" y="' + (opponentLogoY-18) + '" fill="#ffffff" fill-opacity=".45" font-size="12" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">MOT</text>',
+      '<text x="' + (isWide?102:opponentLogoX) + '" y="' + (opponentLogoY-18) + '" fill="#ffffff" fill-opacity=".45" font-size="12" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">MOT</text>',
       svgLogo(ctx.opponent,opponentLogoX,opponentLogoY,opponentLogoSize,.94),
-      '<text x="' + (opponentLogoX+opponentLogoSize+16) + '" y="' + (opponentLogoY+opponentLogoSize*.58) + '" fill="#ffffff" font-size="' + (isWide?22:isStory?21:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + oppName + '</text>',
+      '<text x="' + (opponentLogoX+opponentLogoSize+18) + '" y="' + (opponentLogoY+opponentLogoSize*.58) + '" fill="#ffffff" font-size="' + (isWide?22:isStory?21:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + oppName + '</text>',
       '</g>',
 
-      '<text x="' + infoX + '" y="' + (infoY+94) + '" text-anchor="' + infoAnchor + '" fill="#ffffff" font-size="' + (isWide?27:isStory?26:20) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
-      ctx.stream ? templateStream(ctx,infoY+116,isWide) : '',
+      '<text x="' + infoX + '" y="' + (infoY+28) + '" text-anchor="' + infoAnchor + '" fill="#ffffff" font-size="' + (isWide?27:isStory?26:20) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
+      ctx.stream
+        ? (isWide
+          ? '<g><rect x="102" y="' + (infoY+54) + '" width="520" height="46" rx="23" fill="#07101a" fill-opacity=".88" stroke="#8fc8ff" stroke-opacity=".30"/><circle cx="132" cy="' + (infoY+77) + '" r="7" fill="#ff4d5f"/><circle cx="132" cy="' + (infoY+77) + '" r="14" fill="#ff4d5f" opacity=".14"/><text x="362" y="' + (infoY+83) + '" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1.2">' + ctx.stream + '</text></g>'
+          : templateStream(ctx,infoY+116,false))
+        : '',
 
       portraitMode ? '<text x="' + gridTitleX + '" y="' + gridTitleY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".82" font-size="' + (isWide?17:isStory?20:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="5">LINEUP</text>' : '',
       portraitMode ? '<line x1="' + (gridTitleX-(isWide?210:135)) + '" y1="' + (gridTitleY+14) + '" x2="' + (gridTitleX-55) + '" y2="' + (gridTitleY+14) + '" stroke="#ffffff" stroke-opacity=".28"/>' : '',
