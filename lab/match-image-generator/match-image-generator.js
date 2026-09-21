@@ -943,15 +943,19 @@
   }
 
 
-  function portraitCard(pos, name, x, y, width, height, team, variant) {
+  function portraitCard(pos, name, x, y, width, height, team, variant, showStats = false) {
     const cleanName = cleanText(name,20) || "PLAYER";
     const number = cleanText(state.lineupNumbers[pos],2);
     const portrait = portraitUrlForPlayer(cleanName) || defaultPlayerImageUrl();
     const clipId = "portrait-" + pos + "-" + normalize(cleanName).replace(/\s+/g,"-");
-    const nameSize = width >= 220 ? 18 : width >= 160 ? 15 : 13;
-    const imageBottom = y + height - 44;
+    const nameSize = showStats && width >= 320 ? 20 : width >= 220 ? 18 : width >= 160 ? 15 : 13;
+    const statText = showStats ? matchStatsText(cleanName,pos) : "";
+    const footerHeight = showStats ? 76 : 48;
+    const imageBottom = y + height - footerHeight;
     const imageHeight = Math.max(1,imageBottom - y - 4);
     const posBadgeWidth = pos.length > 1 ? 42 : 34;
+    const badgeFontSize = showStats && width >= 320 ? 12 : 11;
+    const statSize = width >= 320 ? 12 : width >= 250 ? 11 : 9;
 
     return [
       '<g>',
@@ -960,10 +964,12 @@
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="' + team.primary + '" opacity=".22"/>',
       '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + (y+4) + '" width="' + (width-8) + '" height="' + imageHeight + '" preserveAspectRatio="xMidYMin slice" clip-path="url(#' + clipId + ')"/>',
       '<rect x="' + (x+10) + '" y="' + (y+10) + '" width="' + posBadgeWidth + '" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>',
-      '<text x="' + (x+10+posBadgeWidth/2) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="1000" letter-spacing=".8" font-family="Arial,Helvetica,sans-serif">' + esc(pos) + '</text>',
+      '<text x="' + (x+10+posBadgeWidth/2) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" letter-spacing=".8" font-family="Arial,Helvetica,sans-serif">' + esc(pos) + '</text>',
       number ? '<rect x="' + (x+width-50) + '" y="' + (y+10) + '" width="40" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>' : '',
-      number ? '<text x="' + (x+width-30) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
-      '<rect x="' + x + '" y="' + (y+height-48) + '" width="' + width + '" height="48" fill="#05080c" fill-opacity=".93" clip-path="url(#' + clipId + ')"/>',
+      number ? '<text x="' + (x+width-30) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
+      '<rect x="' + x + '" y="' + (y+height-footerHeight) + '" width="' + width + '" height="' + footerHeight + '" fill="#05080c" fill-opacity=".94" clip-path="url(#' + clipId + ')"/>',
+      showStats ? '<rect x="' + x + '" y="' + (y+height-footerHeight) + '" width="' + width + '" height="3" fill="' + team.accent + '" fill-opacity=".78" clip-path="url(#' + clipId + ')"/>' : '',
+      statText ? '<text x="' + (x+12) + '" y="' + (y+height-45) + '" fill="#ffffff" fill-opacity=".58" font-size="' + statSize + '" font-weight="850" font-family="Arial,Helvetica,sans-serif" letter-spacing=".35">' + esc(statText) + '</text>' : '',
       '<text x="' + (x+12) + '" y="' + (y+height-17) + '" fill="#ffffff" font-size="' + nameSize + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanName) + '</text>',
       '</g>'
     ].join("");
@@ -1313,7 +1319,7 @@
       const row = Math.floor(index / cols);
       const x = startX + col * (cardWidth + gapX);
       const y = startY + row * (cardHeight + gapY);
-      return portraitCard(pos,state.lineup[pos],x,y,cardWidth,cardHeight,ctx.own,ctx.ownVariant);
+      return portraitCard(pos,state.lineup[pos],x,y,cardWidth,cardHeight,ctx.own,ctx.ownVariant,true);
     }).join("");
   }
 
