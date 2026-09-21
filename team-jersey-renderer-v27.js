@@ -139,6 +139,63 @@
     teamPaletteCache.set(exactUrl,palette); Object.assign(team,palette); return team;
   }
 
+  let jerseyClient = null;
+
+  function getSupabaseClient() {
+    if (typeof window.SEH_getAuthClient === "function") {
+      const shared = window.SEH_getAuthClient();
+      if (shared) return shared;
+    }
+    if (jerseyClient) return jerseyClient;
+    const cfg = window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
+    const url = String(cfg.supabaseUrl || cfg.SUPABASE_URL || "").trim();
+    const key = String(cfg.supabasePublishableKey || cfg.supabaseAnonKey || cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_PUBLISHABLE_KEY || "").trim();
+    if (!window.supabase?.createClient || !url || !key) return null;
+    jerseyClient = window.supabase.createClient(url,key);
+    return jerseyClient;
+  }
+
+  async function rpc(name,args={}) {
+    const client=getSupabaseClient();
+    if(!client) throw new Error("Supabase kunde inte startas.");
+    const {data,error}=await client.rpc(name,args);
+    if(error) throw error;
+    return Array.isArray(data) ? (data[0] ?? null) : data;
+  }
+
+  function safeSettings(row) {
+    if(!row || typeof row!=="object") return null;
+    const colors=[row.primary_color,row.accent_color,row.trim_color].map(value=>String(value||"").trim().toLowerCase());
+    const pattern=String(row.pattern||"").trim().toLowerCase();
+    if(!colors.every(value=>/^#[0-9a-f]{6}$/.test(value))) return null;
+    if(!["shoulder","classic","minimal","diagonal"].includes(pattern)) return null;
+    return {primary:colors[0],accent:colors[1],trim:colors[2],pattern};
+  }
+
+  async function loadSavedSettings(teamId) {
+    if(!Number.isInteger(Number(teamId)) || Number(teamId)<=0) return null;
+    try {
+      return safeSettings(await rpc("seh_get_team_jersey_settings",{p_team_id:Number(teamId)}));
+    } catch(error) {
+      console.warn("[Team Jersey] kunde inte läsa sparad tröja",error);
+      return null;
+    }
+  }
+
+  async function loadAccess(teamId) {
+    const client=getSupabaseClient();
+    if(!client || !Number.isInteger(Number(teamId)) || Number(teamId)<=0) return null;
+    try {
+      const {data:sessionData}=await client.auth.getSession();
+      if(!sessionData?.session?.user) return null;
+      const value=await rpc("seh_team_jersey_access",{p_team_id:Number(teamId)});
+      return value && typeof value==="object" ? value : null;
+    } catch(error) {
+      console.warn("[Team Jersey] kunde inte läsa redigeringsbehörighet",error);
+      return null;
+    }
+  }
+
 function premiumJerseySvg(team, options = {}) {
     const variant = options.variant || "home";
     const side = options.side || "front";
@@ -368,23 +425,169 @@ function premiumJerseySvg(team, options = {}) {
     if(!container) return;
     const team=buildTeam(input);
     teamDirectory=[team];
+
     await ensureTeamPalette(team);
+    const automaticStyle={
+      primary:team.primary,
+      accent:team.accent,
+      trim:team.trim,
+      pattern:team.pattern
+    };
+    const savedStyle=await loadSavedSettings(team.id);
+    if(savedStyle) Object.assign(team,savedStyle);
 
     container.classList.add("team-public-jersey-v1");
     container.innerHTML =
       '<div class="team-public-jersey-v1__head"><span>TRÖJA</span><div class="team-public-jersey-v1__toggle" role="group" aria-label="Välj tröja">'+
       '<button type="button" class="is-active" data-jersey-variant="home">Hemma</button>'+
       '<button type="button" data-jersey-variant="away">Borta</button></div></div>'+
-      '<div class="team-public-jersey-v1__stage"></div>';
+      '<div class="team-public-jersey-v1__stage"></div>'+
+      '<div class="team-public-jersey-v1__owner" hidden><button type="button" data-jersey-edit>Redigera tröja</button><span data-jersey-role></span></div>'+
+      '<form class="team-public-jersey-v1__editor" data-jersey-editor hidden>'+
+        '<div class="team-public-jersey-v1__editor-head"><strong>Tröjeditor</strong><button type="button" data-jersey-close aria-label="Stäng">×</button></div>'+
+        '<label><span>Grundfärg</span><input type="color" name="primary" value="#0c0f12"></label>'+
+        '<label><span>Andrafärg</span><input type="color" name="accent" value="#f4f4f1"></label>'+
+        '<label><span>Detaljer</span><input type="color" name="trim" value="#f4f4f1"></label>'+
+        '<label class="team-public-jersey-v1__pattern"><span>Mönster</span><select name="pattern">'+
+          '<option value="shoulder">Axlar</option>'+
+          '<option value="classic">Klassisk</option>'+
+          '<option value="minimal">Minimal</option>'+
+          '<option value="diagonal">Diagonal</option>'+
+        '</select></label>'+
+        '<div class="team-public-jersey-v1__editor-actions">'+
+          '<button type="button" data-jersey-auto>Från lagloggan</button>'+
+          '<button type="button" data-jersey-reset>Ta bort egen design</button>'+
+          '<button type="submit" class="is-primary">Spara</button>'+
+        '</div>'+
+        '<p class="team-public-jersey-v1__status" data-jersey-status aria-live="polite"></p>'+
+      '</form>';
 
     const stage=container.querySelector(".team-public-jersey-v1__stage");
     const buttons=[...container.querySelectorAll("[data-jersey-variant]")];
-    const paint=(variant)=>{
-      stage.innerHTML=premiumJerseySvg(team,{variant,side:"front",compact:false});
+    const owner=container.querySelector(".team-public-jersey-v1__owner");
+    const editButton=container.querySelector("[data-jersey-edit]");
+    const roleLabel=container.querySelector("[data-jersey-role]");
+    const editor=container.querySelector("[data-jersey-editor]");
+    const closeButton=container.querySelector("[data-jersey-close]");
+    const autoButton=container.querySelector("[data-jersey-auto]");
+    const resetButton=container.querySelector("[data-jersey-reset]");
+    const status=container.querySelector("[data-jersey-status]");
+    const primaryInput=editor?.elements?.primary;
+    const accentInput=editor?.elements?.accent;
+    const trimInput=editor?.elements?.trim;
+    const patternInput=editor?.elements?.pattern;
+    let variant="home";
+
+    function currentEditorStyle() {
+      return {
+        primary:String(primaryInput?.value || team.primary),
+        accent:String(accentInput?.value || team.accent),
+        trim:String(trimInput?.value || team.trim),
+        pattern:String(patternInput?.value || team.pattern)
+      };
+    }
+
+    function syncEditor(style=team) {
+      if(primaryInput) primaryInput.value=style.primary;
+      if(accentInput) accentInput.value=style.accent;
+      if(trimInput) trimInput.value=style.trim;
+      if(patternInput) patternInput.value=style.pattern;
+    }
+
+    function paint(style=team) {
+      stage.innerHTML=premiumJerseySvg({...team,...style},{variant,side:"front",compact:false});
       buttons.forEach(button=>button.classList.toggle("is-active",button.dataset.jerseyVariant===variant));
-    };
-    buttons.forEach(button=>button.addEventListener("click",()=>paint(button.dataset.jerseyVariant || "home")));
-    paint("home");
+    }
+
+    buttons.forEach(button=>button.addEventListener("click",()=>{
+      variant=button.dataset.jerseyVariant || "home";
+      paint(editor && !editor.hidden ? currentEditorStyle() : team);
+    }));
+
+    [primaryInput,accentInput,trimInput,patternInput].filter(Boolean).forEach(input=>{
+      input.addEventListener("input",()=>paint(currentEditorStyle()));
+      input.addEventListener("change",()=>paint(currentEditorStyle()));
+    });
+
+    syncEditor(team);
+    paint();
+
+    const access=await loadAccess(team.id);
+    if(access?.can_edit && owner && editor) {
+      owner.hidden=false;
+      roleLabel.textContent=access.is_admin
+        ? "ADMIN"
+        : access.staff_role==="captain"
+          ? "KAPTEN"
+          : access.staff_role==="assistant_captain"
+            ? "ASSISTERANDE KAPTEN"
+            : "LAGLEDARE";
+
+      editButton?.addEventListener("click",()=>{
+        syncEditor(team);
+        editor.hidden=false;
+        owner.hidden=true;
+        status.textContent="";
+        paint(currentEditorStyle());
+      });
+
+      closeButton?.addEventListener("click",()=>{
+        editor.hidden=true;
+        owner.hidden=false;
+        syncEditor(team);
+        status.textContent="";
+        paint(team);
+      });
+
+      autoButton?.addEventListener("click",()=>{
+        syncEditor(automaticStyle);
+        status.textContent="Förhandsvisar färgerna från lagloggan. Tryck Spara för att använda dem.";
+        paint(currentEditorStyle());
+      });
+
+      resetButton?.addEventListener("click",async()=>{
+        if(!confirm("Ta bort den sparade tröjdesignen och återgå till automatisk design från lagloggan?")) return;
+        resetButton.disabled=true;
+        status.textContent="Återställer…";
+        try{
+          await rpc("seh_reset_team_jersey",{p_team_id:Number(team.id)});
+          Object.assign(team,automaticStyle);
+          syncEditor(team);
+          status.textContent="Egen design borttagen.";
+          paint(team);
+        }catch(error){
+          status.textContent="Kunde inte återställa: "+(error?.message || error);
+        }finally{
+          resetButton.disabled=false;
+        }
+      });
+
+      editor.addEventListener("submit",async(event)=>{
+        event.preventDefault();
+        const saveButton=editor.querySelector('button[type="submit"]');
+        const style=currentEditorStyle();
+        saveButton.disabled=true;
+        status.textContent="Sparar…";
+        try{
+          const saved=safeSettings(await rpc("seh_save_team_jersey",{
+            p_team_id:Number(team.id),
+            p_primary_color:style.primary,
+            p_accent_color:style.accent,
+            p_trim_color:style.trim,
+            p_pattern:style.pattern
+          }));
+          if(!saved) throw new Error("Sparningen gav inget giltigt svar.");
+          Object.assign(team,saved);
+          syncEditor(team);
+          status.textContent="Sparat. Tröjan är nu uppdaterad för alla.";
+          paint(team);
+        }catch(error){
+          status.textContent="Kunde inte spara: "+(error?.message || error);
+        }finally{
+          saveButton.disabled=false;
+        }
+      });
+    }
   }
 
   window.SEH_TEAM_JERSEY_V27={mount};
