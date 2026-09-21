@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Jersey Lab · Svensk eHockey</title>
+  <link rel="stylesheet" href="jersey-lab.css?v=1">
+</head>
+<body>
+  <header class="lab-topbar">
+    <a class="lab-brand" href="javascript:void(0)" aria-label="Svensk eHockey Jersey Lab">
+      <span class="lab-brand-mark">SEH</span>
+      <span><strong>SVENSK eHOCKEY</strong><small>JERSEY LAB · EJ LIVE</small></span>
+    </a>
+    <div class="lab-status"><i></i> TESTMILJÖ · BRANCH: jersey-lab</div>
+  </header>
+
+  <main class="lab-shell">
+    <section class="lab-hero">
+      <div>
+        <p class="lab-kicker">CLUB IDENTITY / PROTOTYP</p>
+        <h1>Hockeytröjor för hela Svensk eHockey.</h1>
+        <p>Testa hur lagidentitet kan leva på lagprofiler, i matcher, lagbygge och ett framtida omklädningsrum. Allt nedan genereras i webben – inga färdiga tröjbilder.</p>
+      </div>
+      <aside>
+        <span>TESTVERSION</span>
+        <strong>Inte publicerad</strong>
+        <p>Den här sidan ligger bara på utvecklingsbranchen och påverkar inte den publika webbplatsen.</p>
+      </aside>
+    </section>
+
+    <section class="lab-controls" aria-label="Jersey Lab kontroller">
+      <label>
+        <span>LAG</span>
+        <select id="teamSelect"></select>
+      </label>
+      <label>
+        <span>MÖNSTER</span>
+        <select id="patternSelect">
+          <option value="shoulder">Axlar + dubbla ärmstreck</option>
+          <option value="classic">Klassiska midje-/ärmstreck</option>
+          <option value="diagonal">Diagonal modern</option>
+          <option value="minimal">Minimal</option>
+        </select>
+      </label>
+      <label>
+        <span>HUVUDFÄRG</span>
+        <input id="primaryColor" type="color">
+      </label>
+      <label>
+        <span>ACCENT</span>
+        <input id="accentColor" type="color">
+      </label>
+      <label>
+        <span>TRIM</span>
+        <input id="trimColor" type="color">
+      </label>
+      <label>
+        <span>GAMERTAG</span>
+        <input id="playerName" type="text" value="eSWAHN" maxlength="16">
+      </label>
+      <label>
+        <span>NUMMER</span>
+        <input id="playerNumber" type="number" value="21" min="0" max="99">
+      </label>
+      <button id="resetButton" type="button">Återställ lagdesign</button>
+    </section>
+
+    <section class="lab-showcase">
+      <div class="lab-section-heading">
+        <div><p class="lab-kicker">01 / LAGIDENTITET</p><h2>Hemma & borta</h2></div>
+        <div class="lab-segmented" role="group" aria-label="Visa fram- eller baksida">
+          <button class="is-active" data-side="front" type="button">Framsida</button>
+          <button data-side="back" type="button">Baksida</button>
+        </div>
+      </div>
+      <div class="jersey-pair">
+        <article class="jersey-stage is-home">
+          <div class="jersey-stage-copy"><span>HEMMA</span><strong id="homeTeamName"></strong></div>
+          <div id="homeJersey" class="jersey-render"></div>
+        </article>
+        <article class="jersey-stage is-away">
+          <div class="jersey-stage-copy"><span>BORTA</span><strong id="awayTeamName"></strong></div>
+          <div id="awayJersey" class="jersey-render"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="lab-grid">
+      <article class="lab-panel locker-panel">
+        <div class="lab-section-heading compact">
+          <div><p class="lab-kicker">02 / OMKLÄDNINGSRUM</p><h2>Starting six</h2></div>
+        </div>
+        <div id="lockerRoom" class="locker-room"></div>
+      </article>
+
+      <article class="lab-panel match-panel">
+        <div class="lab-section-heading compact">
+          <div><p class="lab-kicker">03 / MATCHVY</p><h2>Tröjor i matcher</h2></div>
+        </div>
+        <div class="match-lab">
+          <div id="matchHome" class="match-team"></div>
+          <div class="match-center"><small>ECL PRO</small><strong>VS</strong><span>SÖN 20:00</span></div>
+          <div id="matchAway" class="match-team"></div>
+        </div>
+        <div class="match-controls">
+          <label><span>HEMMA</span><select id="matchHomeSelect"></select></label>
+          <label><span>BORTA</span><select id="matchAwaySelect"></select></label>
+        </div>
+      </article>
+    </section>
+
+    <section class="lab-showcase">
+      <div class="lab-section-heading">
+        <div><p class="lab-kicker">04 / LAGBYGGE</p><h2>Tröjor som lagidentitet</h2></div>
+        <p class="lab-heading-note">Samma renderer i mindre format.</p>
+      </div>
+      <div id="teamGrid" class="team-jersey-grid"></div>
+    </section>
+
+    <section class="lab-notes">
+      <p class="lab-kicker">PROTOTYPN VISAR</p>
+      <div>
+        <span>SVG-baserad</span><span>Automatiska lagpresets</span><span>Hemma / borta</span><span>Fram / bak</span><span>Gamertag + nummer</span><span>Återanvändbar i hela sajten</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="teamlogos-manifest.js?v=20260830-v60"></script>
+  <script src="jersey-lab.js?v=1"></script>
+</body>
+</html>
