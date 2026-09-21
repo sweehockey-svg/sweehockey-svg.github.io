@@ -338,9 +338,9 @@
         </defs>
 
         <g filter="url(#shadow-${uid})">
-          <path d="${leftSleeve}" fill="${sleeveBase}" stroke="#000" stroke-opacity=".18" stroke-width="2"/>
-          <path d="${torso}" fill="${bodyBase}" stroke="#000" stroke-opacity=".16" stroke-width="2"/>
-          <path d="${rightSleeve}" fill="${sleeveBase}" stroke="#000" stroke-opacity=".18" stroke-width="2"/>
+          <path d="${leftSleeve}" fill="${sleeveBase}"/>
+          <path d="${torso}" fill="${bodyBase}"/>
+          <path d="${rightSleeve}" fill="${sleeveBase}"/>
 
           <g clip-path="url(#clip-${uid})">
             ${shoulderDecor}
@@ -372,10 +372,15 @@
             </g>
           ` : ""}
 
-          <!-- subtle stitched sleeve/torso seams -->
-          <path d="M217 124 C205 154 198 195 196 248" fill="none" stroke="#fff" stroke-opacity=".04" stroke-width=".8"/>
-          <path d="M383 124 C395 154 402 195 404 248" fill="none" stroke="#fff" stroke-opacity=".04" stroke-width=".8"/>
-          <path d="M189 360 C187 402 183 449 177 486 M411 360 C413 402 417 449 423 486" fill="none" stroke="#000" stroke-opacity=".045" stroke-width="1.1"/>
+          <!-- barely visible sewn-panel definition: no hard black outlines -->
+          ${compact ? "" : `
+            <g fill="none" stroke-linecap="round" filter="url(#soft-${uid})">
+              <path d="M198 180 C193 236 191 300 190 356 C189 405 185 451 179 484" stroke="#000" stroke-opacity=".022" stroke-width="2.2"/>
+              <path d="M402 180 C407 236 409 300 410 356 C411 405 415 451 421 484" stroke="#000" stroke-opacity=".022" stroke-width="2.2"/>
+              <path d="M199 181 C196 237 195 300 194 354" stroke="#fff" stroke-opacity=".020" stroke-width="1.2"/>
+              <path d="M401 181 C404 237 405 300 406 354" stroke="#fff" stroke-opacity=".020" stroke-width="1.2"/>
+            </g>
+          `}
 
           <!-- realistic ribbed V collar -->
           <path d="M258 108 C273 96 327 96 342 108 L355 118 C338 130 320 144 300 158 C280 144 262 130 245 118 Z" fill="${dark}"/>
