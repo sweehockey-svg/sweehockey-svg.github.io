@@ -254,20 +254,20 @@
       `;
 
     const sleeveStriping = pattern === "minimal" ? `
-      <path d="M82 333 L151 319 L145 347 L80 359 Z M518 333 L449 319 L455 347 L520 359 Z" fill="${stripeA}"/>
+      <path d="M82 346 L151 332 L145 360 L80 372 Z M518 346 L449 332 L455 360 L520 372 Z" fill="${stripeA}"/>
     ` : pattern === "diagonal" ? `
-      <path d="M81 277 L154 244 L148 284 L79 316 Z M519 277 L446 244 L452 284 L521 316 Z" fill="${stripeA}"/>
-      <path d="M79 315 L146 285 L142 310 L78 339 Z M521 315 L454 285 L458 310 L522 339 Z" fill="${stripeB}"/>
+      <path d="M81 292 L154 259 L148 299 L79 331 Z M519 292 L446 259 L452 299 L521 331 Z" fill="${stripeA}"/>
+      <path d="M79 330 L146 300 L142 325 L78 354 Z M521 330 L454 300 L458 325 L522 354 Z" fill="${stripeB}"/>
     ` : `
-      <path d="M81 282 L153 267 L148 301 L79 315 Z M519 282 L447 267 L452 301 L521 315 Z" fill="${stripeA}"/>
-      <path d="M79 319 L146 306 L142 332 L78 345 Z M521 319 L454 306 L458 332 L522 345 Z" fill="${stripeB}"/>
+      <path d="M81 297 L153 282 L148 316 L79 330 Z M519 297 L447 282 L452 316 L521 330 Z" fill="${stripeA}"/>
+      <path d="M79 334 L146 321 L142 347 L78 360 Z M521 334 L454 321 L458 347 L522 360 Z" fill="${stripeB}"/>
     `;
 
     const hemStriping = pattern === "minimal" ? `
-      <path d="M183 532 Q300 547 417 532 L417 553 Q300 568 183 553 Z" fill="${stripeA}"/>
+      <path d="M183 532 Q249 543 300 545 Q354 544 417 531 L417 553 Q354 565 300 566 Q247 564 183 553 Z" fill="${stripeA}"/>
     ` : `
-      <path d="M182 522 Q300 538 418 522 L418 544 Q300 560 182 544 Z" fill="${stripeA}"/>
-      <path d="M182 548 Q300 563 418 548 L418 561 Q300 575 182 561 Z" fill="${stripeB}"/>
+      <path d="M182 522 Q246 534 300 536 Q357 535 418 521 L418 544 Q356 556 300 558 Q245 556 182 544 Z" fill="${stripeA}"/>
+      <path d="M182 548 Q247 559 300 560 Q356 559 418 547 L418 561 Q355 572 300 573 Q246 571 182 561 Z" fill="${stripeB}"/>
     `;
 
     const captain = captainRole ? `
@@ -280,7 +280,7 @@
     const front = `
       <g>
         ${logo
-          ? `<image href="${esc(logo)}" x="188" y="196" width="224" height="202" preserveAspectRatio="xMidYMid meet"/>`
+          ? `<image href="${esc(logo)}" x="199" y="205" width="202" height="182" preserveAspectRatio="xMidYMid meet"/>`
           : `<text x="300" y="310" text-anchor="middle" fill="${ink}" font-size="74" font-weight="1000">${esc(team.code)}</text>`}
         ${captain}
       </g>
@@ -317,7 +317,7 @@
             <stop offset=".43" stop-color="#fff" stop-opacity=".05"/>
             <stop offset="1" stop-color="#000" stop-opacity=".12"/>
           </linearGradient>
-          <radialGradient id="chest-light-${uid}" cx="48%" cy="18%" r="70%">
+          <radialGradient id="chest-light-${uid}" cx="${variant === "away" ? "46%" : "48%"}" cy="18%" r="70%">
             <stop offset="0" stop-color="#fff" stop-opacity=".20"/>
             <stop offset=".28" stop-color="#fff" stop-opacity=".06"/>
             <stop offset=".7" stop-color="#000" stop-opacity=".02"/>
