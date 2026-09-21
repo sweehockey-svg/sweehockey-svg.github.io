@@ -96,14 +96,14 @@
 
     // V4 uses separate full-size and compact hockey cuts.
     const silhouette = compact
-      ? "M246 74 C264 58 336 58 354 74 L400 92 C438 106 473 128 505 157 L548 196 L526 410 L449 395 L431 526 Q300 544 169 526 L151 395 L74 410 L52 196 L95 157 C127 128 162 106 200 92 Z"
-      : "M244 72 C263 56 337 56 356 72 L402 89 C438 100 476 125 510 153 L558 195 L532 430 L451 412 L432 532 Q300 552 168 532 L149 412 L68 430 L42 195 L90 153 C124 125 162 100 198 89 Z";
+      ? "M246 74 C264 58 336 58 354 74 L400 91 C436 102 470 123 501 150 L546 190 L522 434 L451 419 L431 526 Q300 544 169 526 L149 419 L78 434 L54 190 L99 150 C130 123 164 102 200 91 Z"
+      : "M244 72 C263 56 337 56 356 72 L401 88 C435 97 470 118 503 146 L554 190 L526 456 L452 439 L432 532 Q300 552 168 532 L148 439 L74 456 L46 190 L97 146 C130 118 165 97 199 88 Z";
 
     const patternMarkup = {
       shoulder: `
         <path d="M187 93 C224 80 252 72 300 72 C348 72 376 80 413 93 L469 124 L433 181 C390 154 352 142 300 142 C248 142 210 154 167 181 L131 124 Z" fill="${stripe}"/>
-        <path d="M47 232 L144 182 L158 225 L61 275 Z M553 232 L456 182 L442 225 L539 275 Z" fill="${secondary}" opacity=".98"/>
-        <path d="M53 274 L150 224 L161 257 L64 307 Z M547 274 L450 224 L439 257 L536 307 Z" fill="${stripe}"/>
+        <path d="M49 241 L143 194 L157 237 L63 284 Z M551 241 L457 194 L443 237 L537 284 Z" fill="${secondary}" opacity=".98"/>
+        <path d="M55 286 L149 239 L160 272 L66 319 Z M545 286 L451 239 L440 272 L534 319 Z" fill="${stripe}"/>
         <path d="M169 469 H431 V496 H169 Z" fill="${stripe}"/>
         <path d="M169 496 H431 V512 H169 Z" fill="${secondary}"/>
       `,
@@ -136,9 +136,9 @@
     const front = `
       <g>
         ${logo
-          ? `<image href="${esc(logo)}" x="${compact ? 193 : 194}" y="${compact ? 178 : 170}" width="${compact ? 214 : 212}" height="${compact ? 186 : 198}" preserveAspectRatio="xMidYMid meet"/>`
+          ? `<image href="${esc(logo)}" x="${compact ? 193 : 194}" y="${compact ? 182 : 178}" width="${compact ? 214 : 212}" height="${compact ? 186 : 198}" preserveAspectRatio="xMidYMid meet"/>`
           : `<text x="300" y="286" text-anchor="middle" fill="${ink}" font-size="72" font-weight="1000">${esc(team.code)}</text>`}
-        ${compact ? "" : `<text x="300" y="400" text-anchor="middle" fill="${ink}" opacity=".56" font-size="11" font-weight="1000" letter-spacing="3.8">SVENSK eHOCKEY</text>`}
+        ${compact ? "" : `<text x="300" y="408" text-anchor="middle" fill="${ink}" opacity=".40" font-size="9" font-weight="1000" letter-spacing="3.6">SVENSK eHOCKEY</text>`}
         ${captainMarkup}
       </g>
     `;
@@ -189,15 +189,15 @@
 
           <path d="M198 91 C179 137 163 192 153 249" fill="none" stroke="#ffffff" stroke-opacity=".055" stroke-width="1.5"/>
           <path d="M402 91 C421 137 437 192 447 249" fill="none" stroke="#ffffff" stroke-opacity=".055" stroke-width="1.5"/>
-          <path d="M151 412 C164 451 168 493 168 532 M449 412 C436 451 432 493 432 532" fill="none" stroke="#000000" stroke-opacity=".12" stroke-width="2"/>
+          <path d="M149 438 C162 463 168 497 168 532 M451 438 C438 463 432 497 432 532" fill="none" stroke="#000000" stroke-opacity=".10" stroke-width="2"/>
 
           <path d="M243 72 C261 57 339 57 357 72 L377 88 C351 104 330 124 300 154 C270 124 249 104 223 88 Z" fill="${dark}"/>
           <path d="M244 76 C264 94 282 112 300 134 C318 112 336 94 356 76" fill="none" stroke="${stripe}" stroke-width="12" stroke-linejoin="round"/>
           <path d="M253 79 C270 95 285 111 300 127 C315 111 330 95 347 79" fill="none" stroke="${secondary}" stroke-width="3.2" opacity=".9"/>
           ${compact ? "" : `<text x="300" y="101" text-anchor="middle" fill="${secondary}" opacity=".72" font-size="10" font-weight="1000" letter-spacing="1.5">SEH</text>`}
 
-          <path d="M68 404 L149 386" stroke="${dark}" stroke-opacity=".28" stroke-width="6"/>
-          <path d="M532 404 L451 386" stroke="${dark}" stroke-opacity=".28" stroke-width="6"/>
+          <path d="M75 444 L148 428" stroke="${dark}" stroke-opacity=".22" stroke-width="5"/>
+          <path d="M525 444 L452 428" stroke="${dark}" stroke-opacity=".22" stroke-width="5"/>
           <path d="M171 526 Q300 545 429 526" fill="none" stroke="${dark}" stroke-opacity=".48" stroke-width="7"/>
           <path d="M174 519 Q300 537 426 519" fill="none" stroke="${secondary}" stroke-opacity=".55" stroke-width="2"/>
 
