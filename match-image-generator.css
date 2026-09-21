@@ -56,7 +56,9 @@ input,select{
 input:focus,select:focus{border-color:rgba(240,196,0,.48);box-shadow:0 0 0 3px rgba(240,196,0,.08)}
 .lineup-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
 .lineup-field{display:grid;gap:5px}
-.lineup-field input{height:40px}
+.lineup-field input,.lineup-field select{height:40px}
+select:disabled{opacity:.62;cursor:not-allowed}
+#dataStatus{max-width:190px;text-align:right;line-height:1.25}
 .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .action-grid button{
   min-height:43px;border:0;border-radius:12px;background:#f0c400;color:#121212;font-weight:950
