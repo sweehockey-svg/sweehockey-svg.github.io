@@ -1250,42 +1250,119 @@
     }).join("");
   }
 
+  function startingSixPortraitGrid(ctx) {
+    if (state.lineupStyle !== "portraits") return "";
+
+    const isStory = state.format === "story";
+    const isWide = state.format === "landscape";
+    let cardWidth,cardHeight,gapX,gapY,startX,startY,cols;
+
+    if (isWide) {
+      cardWidth = 330;
+      cardHeight = 300;
+      gapX = 22;
+      gapY = 22;
+      cols = 3;
+      startX = 790;
+      startY = 188;
+    } else if (isStory) {
+      cardWidth = 410;
+      cardHeight = 310;
+      gapX = 24;
+      gapY = 24;
+      cols = 2;
+      startX = (ctx.W - (cardWidth * 2 + gapX)) / 2;
+      startY = 585;
+    } else {
+      cardWidth = 292;
+      cardHeight = 250;
+      gapX = 18;
+      gapY = 18;
+      cols = 3;
+      startX = (ctx.W - (cardWidth * 3 + gapX * 2)) / 2;
+      startY = 420;
+    }
+
+    return POSITIONS.map((pos,index) => {
+      const col = index % cols;
+      const row = Math.floor(index / cols);
+      const x = startX + col * (cardWidth + gapX);
+      const y = startY + row * (cardHeight + gapY);
+      return portraitCard(pos,state.lineup[pos],x,y,cardWidth,cardHeight,ctx.own,ctx.ownVariant);
+    }).join("");
+  }
+
   function buildStartingSixSvg() {
     const ctx=templateContext();
     const ownName=esc(ctx.own.name),oppName=esc(ctx.opponent.name);
     const isStory=state.format==="story",isWide=state.format==="landscape";
-    const heroSize=isWide?470:isStory?520:390;
-    const heroX=isWide?70:(ctx.W-heroSize)/2;
-    const heroY=isWide?170:isStory?260:160;
-    const lineupY=isWide?620:isStory?830:500;
-    const opponentLogoSize=isWide?115:isStory?130:88;
-    const opponentLogoX=isWide?ctx.W-240:ctx.W-opponentLogoSize-58;
-    const opponentLogoY=isWide?112:isStory?180:102;
+    const portraitMode=state.lineupStyle==="portraits";
+    const heroSize=isWide?520:isStory?470:275;
+    const heroX=isWide?92:isStory?(ctx.W-heroSize)/2:62;
+    const heroY=isWide?175:isStory?210:130;
     const hero=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"front",compact:false});
+    const lineup=portraitMode
+      ? startingSixPortraitGrid(ctx)
+      : focusLineupMarkup(ctx,isWide?630:(isStory?875:500));
+
+    const opponentLogoSize=isWide?92:isStory?112:78;
+    const opponentLogoX=isWide?470:isStory?ctx.W-opponentLogoSize-74:ctx.W-opponentLogoSize-54;
+    const opponentLogoY=isWide?700:isStory?350:112;
+
+    const infoX=isWide?102:isStory?ctx.W/2:ctx.W/2;
+    const infoY=isWide?704:isStory?400:250;
+    const infoAnchor=isWide?"start":"middle";
+    const gridTitleX=isWide?1285:ctx.W/2;
+    const gridTitleY=isWide?135:isStory?535:382;
 
     return [
-      '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
-      commonTemplateDefs(ctx,"focus"),
+      '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '" role="img" aria-label="Starting Six ' + ownName + '">',
+      '<defs>',
+      '<linearGradient id="focus-premium-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + ctx.own.primary + '" stop-opacity=".58"/><stop offset=".38" stop-color="#06111b" stop-opacity=".90"/><stop offset="1" stop-color="#03080d" stop-opacity=".96"/></linearGradient>',
+      '<linearGradient id="focus-panel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".085"/><stop offset="1" stop-color="#ffffff" stop-opacity=".018"/></linearGradient>',
+      '<radialGradient id="focus-glow" cx="42%" cy="42%" r="62%"><stop offset="0" stop-color="' + ctx.own.accent + '" stop-opacity=".20"/><stop offset=".45" stop-color="#4ea5ff" stop-opacity=".08"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></radialGradient>',
+      '<linearGradient id="focus-ice" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8cc9ff" stop-opacity="0"/><stop offset="1" stop-color="#9fd5ff" stop-opacity=".16"/></linearGradient>',
+      '<filter id="focus-shadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#000000" flood-opacity=".52"/></filter>',
+      '<filter id="focus-blur"><feGaussianBlur stdDeviation="34"/></filter>',
+      '</defs>',
       backgroundImageSvg(ctx.W,ctx.H,1),
-      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#05080c" opacity=".68"/>',
-      '<circle cx="' + (ctx.W*.22) + '" cy="' + (ctx.H*.28) + '" r="' + (ctx.W*.32) + '" fill="' + ctx.own.primary + '" opacity=".42" filter="url(#focus-blur)"/>',
-      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-light)"/>',
-      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-grid)"/>',
-      '<text x="' + (isWide?80:ctx.W/2) + '" y="' + (isStory?104:64) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#fff" font-size="' + (isWide?62:isStory?58:44) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">' + ctx.badge + '</text>',
-      '<text x="' + (isWide?82:ctx.W/2) + '" y="' + (isStory?154:102) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#fff" fill-opacity=".55" font-size="' + (isWide?18:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
-      placedJersey(hero,heroX,heroY,heroSize),
-      isWide ? '<text x="610" y="250" fill="#fff" font-size="54" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>' : '',
-      '<g><text x="' + (opponentLogoX+opponentLogoSize/2) + '" y="' + (opponentLogoY-18) + '" text-anchor="middle" fill="#fff" fill-opacity=".46" font-size="13" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">MOT</text>' +
-        svgLogo(ctx.opponent,opponentLogoX,opponentLogoY,opponentLogoSize,.9) +
-        '<text x="' + (opponentLogoX+opponentLogoSize/2) + '" y="' + (opponentLogoY+opponentLogoSize+28) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?22:17) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + oppName + '</text></g>',
-      '<text x="' + (isWide?610:ctx.W/2) + '" y="' + (isWide?324:isStory?740:510) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#fff" font-size="' + (isWide?36:isStory?30:24) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
-      templateStream(ctx,isWide?355:(isStory?765:530),isWide),
-      '<text x="' + (isWide?610:ctx.W/2) + '" y="' + (lineupY-26) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#fff" fill-opacity=".63" font-size="' + (isWide?18:isStory?22:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">STARTING SIX · ' + ownName.toUpperCase() + '</text>',
-      focusLineupMarkup(ctx,lineupY),
-      '<text x="' + (ctx.W/2) + '" y="' + (ctx.H-28) + '" text-anchor="middle" fill="#fff" fill-opacity=".3" font-size="13" font-weight="800" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">SVENSK eHOCKEY · STARTING SIX</text>',
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#02070c" opacity=".34"/>',
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-premium-bg)"/>',
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-glow)"/>',
+      '<rect x="0" y="' + (ctx.H*.56) + '" width="' + ctx.W + '" height="' + (ctx.H*.44) + '" fill="url(#focus-ice)"/>',
+
+      isWide ? '<rect x="52" y="118" width="640" height="822" rx="34" fill="url(#focus-panel)" stroke="#ffffff" stroke-opacity=".10"/>' : '',
+      isWide ? svgLogo(ctx.own,-105,280,650,.055) : svgLogo(ctx.own,-90,isStory?290:330,isStory?650:500,.045),
+
+      '<text x="' + (isWide?84:ctx.W/2) + '" y="' + (isStory?92:74) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#ffffff" font-size="' + (isWide?66:isStory?60:48) + '" font-weight="1000" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="2">STARTING SIX</text>',
+      '<text x="' + (isWide?86:ctx.W/2) + '" y="' + (isStory?140:112) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#ffffff" fill-opacity=".58" font-size="' + (isWide?17:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="4">' + ctx.competition + '</text>',
+
+      '<g filter="url(#focus-shadow)">' + placedJersey(hero,heroX,heroY,heroSize) + '</g>',
+
+      isWide
+        ? '<text x="102" y="660" fill="#ffffff" font-size="44" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>'
+        : '<text x="' + (ctx.W/2) + '" y="' + (isStory?720:360) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?38:28) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>',
+
+      '<g>',
+      '<text x="' + opponentLogoX + '" y="' + (opponentLogoY-18) + '" fill="#ffffff" fill-opacity=".45" font-size="12" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">MOT</text>',
+      svgLogo(ctx.opponent,opponentLogoX,opponentLogoY,opponentLogoSize,.94),
+      '<text x="' + (opponentLogoX+opponentLogoSize+16) + '" y="' + (opponentLogoY+opponentLogoSize*.58) + '" fill="#ffffff" font-size="' + (isWide?22:isStory?21:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + oppName + '</text>',
+      '</g>',
+
+      '<text x="' + infoX + '" y="' + (infoY+94) + '" text-anchor="' + infoAnchor + '" fill="#ffffff" font-size="' + (isWide?27:isStory?26:20) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
+      ctx.stream ? templateStream(ctx,infoY+116,isWide) : '',
+
+      portraitMode ? '<text x="' + gridTitleX + '" y="' + gridTitleY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".82" font-size="' + (isWide?17:isStory?20:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="5">LINEUP</text>' : '',
+      portraitMode ? '<line x1="' + (gridTitleX-(isWide?210:135)) + '" y1="' + (gridTitleY+14) + '" x2="' + (gridTitleX-55) + '" y2="' + (gridTitleY+14) + '" stroke="#ffffff" stroke-opacity=".28"/>' : '',
+      portraitMode ? '<line x1="' + (gridTitleX+55) + '" y1="' + (gridTitleY+14) + '" x2="' + (gridTitleX+(isWide?210:135)) + '" y2="' + (gridTitleY+14) + '" stroke="' + ctx.own.accent + '" stroke-opacity=".48"/>' : '',
+
+      lineup,
+
+      '<text x="' + (ctx.W/2) + '" y="' + (ctx.H-28) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".30" font-size="13" font-weight="800" font-family="Arial,Helvetica,sans-serif" letter-spacing="4">SVENSK eHOCKEY · STARTING SIX</text>',
       '</svg>'
     ].join("");
   }
+
 
   function buildVersusSvg() {
     const ctx=templateContext();
