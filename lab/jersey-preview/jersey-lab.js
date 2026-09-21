@@ -442,7 +442,9 @@
 
     // Roster enrichment is independent of the already-rendered team list.
     try {
-      const rosterRows = await getPublicRows("v_ecl27_current_roster_public","select=player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name&order=team_name.asc,display_gamertag.asc");
+      const rosterRows = Array.isArray(window.SEH_ECL27_ROSTER_SNAPSHOT?.rows)
+        ? window.SEH_ECL27_ROSTER_SNAPSHOT.rows
+        : await getPublicRows("v_ecl27_current_roster_public","select=player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name&order=team_name.asc,display_gamertag.asc");
       rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
       playerKeysByName = new Map();
       applyDirectRosterRows(rosterRows);
