@@ -78,6 +78,13 @@
 
         <div class="control-section">
           <div class="section-title"><strong>Starting Six</strong><span id="ownTeamHint"></span></div>
+          <div class="field full" style="margin-bottom:10px">
+            <label for="lineupStyleSelect">VISNING I MATCHBILD</label>
+            <select id="lineupStyleSelect">
+              <option value="cards">Spelarnamn / kort</option>
+              <option value="jerseys">Tröjryggar</option>
+            </select>
+          </div>
           <div class="lineup-grid">
             <div class="lineup-field"><label for="lwInput">LW</label><select id="lwInput" data-lineup="LW"><option value="">— Välj spelare —</option></select></div>
             <div class="lineup-field"><label for="cInput">C</label><select id="cInput" data-lineup="C"><option value="">— Välj spelare —</option></select></div>
@@ -88,13 +95,33 @@
           </div>
         </div>
 
+        <div class="control-section">
+          <div class="section-title"><strong>Sändning</strong><span>Valfritt</span></div>
+          <div class="field-grid">
+            <div class="field">
+              <label for="streamPlatformSelect">PLATTFORM</label>
+              <select id="streamPlatformSelect">
+                <option value="none">Ingen sändning</option>
+                <option value="twitch">Twitch</option>
+                <option value="youtube">YouTube</option>
+                <option value="kick">Kick</option>
+                <option value="other">Annan</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="streamChannelInput">KANAL / HANDLE</label>
+              <input id="streamChannelInput" type="text" maxlength="48" placeholder="t.ex. sportsgamer" disabled>
+            </div>
+          </div>
+        </div>
+
         <div class="action-grid">
           <button id="pngButton" type="button">Ladda ner PNG</button>
           <button id="svgButton" class="secondary" type="button">Ladda ner SVG</button>
           <button id="resetButton" class="ghost" type="button">Återställ testdata</button>
         </div>
 
-        <p class="generator-note"><strong>Adminläge:</strong> lagen och spelarna hämtas från samma ECL 27-lagbygge som Svensk eHockey använder. Alla lag är valbara här. Kaptensläget är förberett så att “Ditt lag” senare kan låsas till den inloggade kaptenens eget lag.</p>
+        <p class="generator-note"><strong>Adminläge:</strong> alla lag och aktuella spelare kommer från ECL 27-lagbygget. Starting Six kan visas som kort eller tröjryggar, och matchbilden kan kompletteras med streamingkanal. Kaptensläget är förberett för att låsa “Ditt lag” till kaptenens eget lag.</p>
       </aside>
 
       <section class="preview-panel">
@@ -111,6 +138,6 @@
 
   <script src="../../config.js?v=20260918-team-aliases-v1"></script>
   <script src="../../teamlogos-manifest.js?v=20260830-v60"></script>
-  <script src="match-image-generator.js?v=2"></script>
+  <script src="match-image-generator.js?v=3"></script>
 </body>
 </html>
