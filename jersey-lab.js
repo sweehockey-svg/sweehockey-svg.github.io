@@ -230,7 +230,7 @@
     const uid = `premium-${team.id}-${variant}-${side}-${Math.random().toString(36).slice(2,8)}`;
 
     const bodyBase = variant === "away" ? "#f4f4f1" : primary;
-    const sleeveBase = variant === "away" ? "#f2f2ef" : primary;
+    const sleeveBase = bodyBase;
     const yokeBase = pattern === "shoulder"
       ? (variant === "away" ? primary : accent)
       : (variant === "away" ? trim : primary);
@@ -302,22 +302,26 @@
             <path d="${rightSleeve}"/>
           </clipPath>
           <linearGradient id="torso-${uid}" x1="0" x2="1">
-            <stop offset="0" stop-color="#000" stop-opacity=".22"/>
+            <stop offset="0" stop-color="#000" stop-opacity="0"/>
+            <stop offset=".055" stop-color="#000" stop-opacity=".045"/>
             <stop offset=".14" stop-color="#fff" stop-opacity=".055"/>
             <stop offset=".38" stop-color="#fff" stop-opacity=".015"/>
             <stop offset=".58" stop-color="#fff" stop-opacity=".11"/>
             <stop offset=".82" stop-color="#000" stop-opacity=".05"/>
-            <stop offset="1" stop-color="#000" stop-opacity=".28"/>
+            <stop offset=".945" stop-color="#000" stop-opacity=".065"/>
+            <stop offset="1" stop-color="#000" stop-opacity="0"/>
           </linearGradient>
           <linearGradient id="left-sleeve-${uid}" x1="0" x2="1">
             <stop offset="0" stop-color="#000" stop-opacity=".34"/>
             <stop offset=".43" stop-color="#fff" stop-opacity=".05"/>
-            <stop offset="1" stop-color="#000" stop-opacity=".035"/>
+            <stop offset=".78" stop-color="#000" stop-opacity=".012"/>
+            <stop offset="1" stop-color="#000" stop-opacity="0"/>
           </linearGradient>
           <linearGradient id="right-sleeve-${uid}" x1="1" x2="0">
             <stop offset="0" stop-color="#000" stop-opacity=".34"/>
             <stop offset=".43" stop-color="#fff" stop-opacity=".05"/>
-            <stop offset="1" stop-color="#000" stop-opacity=".035"/>
+            <stop offset=".78" stop-color="#000" stop-opacity=".012"/>
+            <stop offset="1" stop-color="#000" stop-opacity="0"/>
           </linearGradient>
           <radialGradient id="chest-light-${uid}" cx="${variant === "away" ? "44%" : "48%"}" cy="${variant === "away" ? "21%" : "18%"}" r="72%">
             <stop offset="0" stop-color="#fff" stop-opacity="${variant === "away" ? ".16" : ".20"}"/>
