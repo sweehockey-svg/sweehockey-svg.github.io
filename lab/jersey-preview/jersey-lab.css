@@ -692,3 +692,53 @@ button,input,select{font:inherit}
   .locker-slot{min-height:330px}
   .locker-jersey .seh-jersey-svg{max-height:235px}
 }
+
+
+/* Jersey Lab V8 — premium mockup renderer */
+.lab-controls{
+  grid-template-columns:1.05fr .92fr 1.25fr repeat(3,86px) 1fr 80px 104px auto;
+}
+#rendererModeSelect{
+  border-color:rgba(255,208,0,.38);
+  background:
+    linear-gradient(180deg,rgba(255,208,0,.055),rgba(255,208,0,.015)),
+    #080c0f;
+}
+.seh-jersey-premium{
+  overflow:visible;
+}
+.jersey-stage .seh-jersey-premium{
+  width:min(100%,470px);
+  height:min(100%,525px);
+  filter:
+    drop-shadow(0 34px 26px rgba(0,0,0,.5))
+    drop-shadow(0 8px 8px rgba(0,0,0,.24));
+}
+.jersey-stage:hover .seh-jersey-premium{
+  transform:translateY(-2px) scale(1.008);
+}
+.locker-jersey .seh-jersey-premium{
+  width:120%;
+  margin-left:-10%;
+  max-height:300px;
+  filter:drop-shadow(0 20px 12px rgba(0,0,0,.64));
+}
+.match-team .seh-jersey-premium{
+  max-width:230px;
+  height:245px;
+}
+.team-jersey-card .seh-jersey-premium{
+  height:235px;
+}
+.jersey-stage.is-home::after,
+.jersey-stage.is-away::after{
+  opacity:.52;
+}
+@media(max-width:1300px){
+  .lab-controls{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .lab-controls{grid-template-columns:1fr 1fr}
+  .jersey-stage .seh-jersey-premium{width:min(100%,410px);height:min(100%,455px)}
+  .locker-jersey .seh-jersey-premium{width:112%;margin-left:-6%;max-height:245px}
+}
