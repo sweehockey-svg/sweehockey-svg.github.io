@@ -906,12 +906,12 @@
       placedJersey(ownJ,jerseyX,jerseyY,jerseySize),
       '<text x="' + (isWide?ctx.W*.53:54) + '" y="' + (isWide?140:isStory?90:72) + '" fill="' + (isWide?"#101318":"#fff") + '" font-size="' + (isWide?70:isStory?58:44) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">' + ctx.badge + '</text>',
       '<text x="' + (isWide?ctx.W*.53:58) + '" y="' + (isWide?190:isStory?140:110) + '" fill="' + (isWide?"#59616b":"#fff") + '" fill-opacity="' + (isWide?1:.62) + '" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
-      '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?330:isStory?1040:620) + '" fill="' + (isWide?"#101318":"#101318") + '" font-size="' + (isWide?50:isStory?46:36) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.own.name) + '</text>',
-      '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?390:isStory?1100:668) + '" fill="#7a828a" font-size="' + (isWide?24:isStory?22:18) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif">mot ' + esc(ctx.opponent.name) + '</text>',
+      '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?330:isStory?955:620) + '" fill="' + (isWide?"#101318":"#101318") + '" font-size="' + (isWide?50:isStory?46:36) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.own.name) + '</text>',
+      '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?390:isStory?1005:668) + '" fill="#7a828a" font-size="' + (isWide?24:isStory?22:18) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif">mot ' + esc(ctx.opponent.name) + '</text>',
       svgLogo(ctx.opponent,isWide?ctx.W*.84:(ctx.W-130),isWide?255:(isStory?930:590),isWide?135:90,.95),
-      '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?475:isStory?1175:735) + '" fill="#101318" font-size="' + (isWide?32:isStory?30:24) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
-      ctx.stream ? '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?525:isStory?1220:775) + '" fill="#c43543" font-size="' + (isWide?20:isStory?19:15) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.stream + '</text>' : '',
-      '<rect x="' + (isWide?ctx.W*.48:24) + '" y="' + (lineupY-62) + '" width="' + (isWide?ctx.W*.49:ctx.W-48) + '" height="' + Math.min(ctx.H-lineupY+18,state.format==="story"?720:250) + '" rx="24" fill="#101318"/>',
+      '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?475:isStory?1070:735) + '" fill="#101318" font-size="' + (isWide?32:isStory?30:24) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
+      ctx.stream ? '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?525:isStory?1110:775) + '" fill="#c43543" font-size="' + (isWide?20:isStory?19:15) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.stream + '</text>' : '',
+      '<rect x="' + (isWide?ctx.W*.48:24) + '" y="' + (lineupY-62) + '" width="' + (isWide?ctx.W*.49:ctx.W-48) + '" height="' + (ctx.H-lineupY+34) + '" rx="24" fill="#101318"/>',
       '<text x="' + (isWide?ctx.W*.725:ctx.W/2) + '" y="' + (lineupY-26) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".58" font-size="' + (isStory?22:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">STARTING SIX</text>',
       '<g>' + lineup + '</g>',
       '</svg>'
@@ -997,7 +997,7 @@
     $("#streamPlatformSelect").value = state.streamPlatform;
     $("#streamChannelInput").value = state.streamChannel;
     $("#streamChannelInput").disabled = state.streamPlatform === "none";
-    $("[data-template]").forEach(button => {
+    $$("[data-template]").forEach(button => {
       button.classList.toggle("is-active",button.dataset.template === state.template);
       button.setAttribute("aria-pressed",button.dataset.template === state.template ? "true" : "false");
     });
@@ -1112,7 +1112,7 @@
     }
   }
 
-  $("[data-template]").forEach(button => {
+  $$("[data-template]").forEach(button => {
     button.addEventListener("click",() => {
       const template = button.dataset.template;
       state.template = ["classic","starting-six","versus","broadcast","minimal"].includes(template)
