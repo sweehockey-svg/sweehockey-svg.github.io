@@ -21,6 +21,7 @@
   };
   let teamDirectory = [...JERSEY_PRESETS];
   let rostersByTeamId = new Map();
+  let playerKeysByName = new Map();
   let playerPortraits = new Map();
   let dataSource = "testdata";
 
@@ -182,21 +183,24 @@
     const missing = names.filter(name => !playerPortraits.has(normalize(name)));
     if (!missing.length) return;
 
-    try {
-      const rows = await getRpcRows("seh_ecl27_player_card_rows",{p_names:missing});
-      const byName = new Map(
-        (Array.isArray(rows) ? rows : [])
-          .map(row => [normalize(row?.display_gamertag),row])
-          .filter(([key]) => key)
-      );
-      for (const name of missing) {
-        const row = byName.get(normalize(name));
-        playerPortraits.set(normalize(name),portraitUrlFromRow(row));
+    await Promise.all(missing.map(async name => {
+      const normalized = normalize(name);
+      try {
+        const playerKey = playerKeysByName.get(normalized) || "";
+        const filter = playerKey
+          ? "player_key=eq." + encodeURIComponent(playerKey)
+          : "display_gamertag=eq." + encodeURIComponent(name);
+        const rows = await getPublicRows(
+          "app_player_directory_cache",
+          "select=player_key,display_gamertag,player_image,sports_gamer_player_url&" + filter + "&limit=1"
+        );
+        const row = Array.isArray(rows) ? rows[0] : null;
+        playerPortraits.set(normalized,portraitUrlFromRow(row));
+      } catch (error) {
+        console.warn("[Match Graphics] kunde inte hämta spelarporträtt för",name,error);
+        playerPortraits.set(normalized,"");
       }
-    } catch (error) {
-      console.warn("[Match Graphics] kunde inte hämta spelarporträtt",error);
-      for (const name of missing) playerPortraits.set(normalize(name),"");
-    }
+    }));
   }
 
   function buildDynamicTeam(row,index) {
@@ -244,11 +248,24 @@
       const list = rostersByTeamId.get(team.id) || [];
       if (!list.some(name => normalize(name) === normalize(player))) list.push(player);
       rostersByTeamId.set(team.id,list);
+      const key = String(row.player_key || "").trim();
+      if (key) playerKeysByName.set(normalize(player),key);
     }
     for (const list of rostersByTeamId.values()) {
       list.sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
     }
     return rosterPlayerCount();
+  }
+
+  async function refreshCurrentRostersFromView() {
+    const rows = await getPublicRows(
+      "v_ecl27_current_roster_v1",
+      "select=player_key,display_gamertag,team_name,division&order=team_name.asc,display_gamertag.asc"
+    );
+    if (!Array.isArray(rows) || !rows.length) return 0;
+    rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+    playerKeysByName = new Map();
+    return applyDirectRosterRows(rows);
   }
 
   function setDefaultLineup() {
@@ -363,15 +380,9 @@
     try {
       const shared = await sharedEcl27Roster();
       if (shared && applySharedEcl27Roster(shared)) {
-        dataSource = "ECL 27 · samma playersNow-modell som lagbygget";
-        if (!rosterPlayerCount()) {
-          const directRows = await getPublicRows(
-            "v_ecl27_current_roster_v1",
-            "select=display_gamertag,team_name,division&order=team_name.asc,display_gamertag.asc"
-          );
-          const recovered = applyDirectRosterRows(directRows);
-          if (recovered) dataSource += " + roster-vy";
-        }
+        dataSource = "ECL 27 · samma lagmodell som lagbygget";
+        const recovered = await refreshCurrentRostersFromView();
+        if (recovered) dataSource += " + aktuella roster-namn";
       } else {
         const [teams,rosterRows] = await Promise.all([
           getPublicRows(
@@ -380,7 +391,7 @@
           ),
           getPublicRows(
             "v_ecl27_current_roster_v1",
-            "select=subject_key,player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
+            "select=player_key,display_gamertag,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
           )
         ]);
 
@@ -389,6 +400,7 @@
 
         teamDirectory = rows.map(buildDynamicTeam);
         rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+        playerKeysByName = new Map();
         applyDirectRosterRows(rosterRows);
         dataSource = "ECL 27 · roster-vy";
       }
