@@ -214,6 +214,92 @@
   }
 
 
+  // A neutral, procedural cloth-lighting layer shared by every team and colour.
+  // Compute once per side, not per jersey or control change. No external image assets.
+  const fabricLightingCache = new Map();
+  function jerseyFabricLighting(side) {
+    if (fabricLightingCache.has(side)) return fabricLightingCache.get(side);
+    try {
+      const size = 600;
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = size;
+      const context = canvas.getContext("2d");
+      if (!context) { fabricLightingCache.set(side,""); return ""; }
+      const heights = new Float32Array(size * size);
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const smooth = v => { const t = clamp(v, 0, 1); return t * t * (3 - 2 * t); };
+      const gaussian = (v, width) => Math.exp(-(v * v) / (width * width));
+      // [start x/y, end x/y, width, relief]: stress folds radiate from sewn edges.
+      const creases = [
+        [151, 137, 224, 105, 5.5, 5.5], [132, 159, 216, 134, 7, -4.5],
+        [162, 173, 197, 247, 6, -9], [145, 189, 175, 264, 9, 6],
+        [382, 108, 456, 146, 6, -5], [392, 135, 470, 165, 8, 4],
+        [444, 179, 408, 275, 6.5, -11], [458, 200, 428, 295, 10, 6],
+        [177, 414, 236, 453, 10, -3.8], [402, 447, 352, 482, 10, -4],
+        [103, 497, 173, 508, 4, 3], [102, 514, 169, 519, 3, -2.5],
+        [430, 501, 499, 493, 5, -3.2], [433, 515, 499, 516, 3.5, 2.2],
+        [199, 550, 261, 564, 4.5, 2.2], [330, 561, 402, 550, 5, -2.5]
+      ].map(([x0,y0,x1,y1,width,relief]) => {
+        const dx=x1-x0, dy=y1-y0, length=Math.hypot(dx,dy);
+        return {x0,y0,dx:dx/length,dy:dy/length,length,width:width*1.5,relief:relief*.58};
+      });
+      const backShift = side === "back" ? 18 : 0;
+      for (let y=86; y<589; y++) {
+        const hanging = smooth((y-177)/170);
+        for (let x=89; x<511; x++) {
+          // Rounded torso/sleeves, joined gradually to avoid a straight panel shadow.
+          const torso = 24 * gaussian(x-296, 112);
+          const left = 13 * gaussian(x-143, 34);
+          const right = 12 * gaussian(x-461, 35);
+          const joinL = smooth((x-165)/45), joinR = smooth((435-x)/45);
+          let h = torso * joinL * joinR + left * (1-joinL) + right * (1-joinR);
+          const c1=226+backShift+12*Math.sin((y-195)*.012);
+          const c2=298-backShift+9*Math.sin(y*.016+.9);
+          const c3=363+10*Math.sin((y-270)*.011);
+          h += hanging * (7.5*gaussian(x-c1,24)-5.8*gaussian(x-c2,30)+8.2*gaussian(x-c3,26));
+          h += .55*Math.sin(x*.071+y*.033)*Math.sin(y*.052-x*.024);
+          h += 4.2*gaussian(x-(132+8*Math.sin(y*.016)),10)*smooth((y-215)/90);
+          h -= 5*gaussian(x-(467+6*Math.sin(y*.013)),12)*smooth((y-238)/80);
+          for (const c of creases) {
+            const px=x-c.x0, py=y-c.y0, along=(px*c.dx+py*c.dy)/c.length;
+            if (along<=0 || along>=1) continue;
+            const across=-px*c.dy+py*c.dx;
+            if (Math.abs(across)>c.width*3) continue;
+            const taper=Math.sin(Math.PI*along);
+            h += c.relief*taper*taper*gaussian(across,c.width);
+          }
+          heights[y*size+x]=h;
+        }
+      }
+      const pixels=context.createImageData(size,size);
+      for (let y=90; y<585; y++) {
+        for (let x=93; x<507; x++) {
+          const i=y*size+x;
+          const sx=(heights[i+1]-heights[i-1])*.5;
+          const sy=(heights[i+size]-heights[i-size])*.5;
+          const norm=1/Math.sqrt(1+sx*sx+sy*sy);
+          // Large studio softbox above-left, with ambient fill for white and black kits.
+          const light=clamp((sx*.48+sy*.27+.834)*norm,0,1);
+          const tone=(light-.834)*1.08;
+          const weave=(Math.sin(x*2.9+y*.65)*Math.sin(y*3.1-x*.25))*.026;
+          const grain=((((x*73856093)^(y*19349663))>>>0)%101/100-.5)*.018;
+          const value=tone+weave+grain;
+          const p=i*4, white=value>0;
+          pixels.data[p]=pixels.data[p+1]=pixels.data[p+2]=white?255:0;
+          pixels.data[p+3]=Math.round(255*(white?Math.min(.14,value*.46):Math.min(.38,-value)));
+        }
+      }
+      context.putImageData(pixels,0,0);
+      const result=canvas.toDataURL("image/png");
+      fabricLightingCache.set(side,result);
+      return result;
+    } catch {
+      // Keep the existing vector lighting available if canvas is restricted.
+      fabricLightingCache.set(side,"");
+      return "";
+    }
+  }
+
   function premiumJerseySvg(team, options = {}) {
     const variant = options.variant || "home";
     const side = options.side || "front";
@@ -228,6 +314,7 @@
     const captainRole = roleRaw === "C" || roleRaw === "A" ? roleRaw : "";
     const logo = logoUrl(team.name);
     const uid = `premium-${team.id}-${variant}-${side}-${Math.random().toString(36).slice(2,8)}`;
+    const fabricLighting = jerseyFabricLighting(side);
 
     const bodyBase = variant === "away" ? "#f4f4f1" : primary;
     const sleeveBase = bodyBase;
@@ -239,14 +326,14 @@
     const ink = variant === "away" ? primary : trim;
     const dark = variant === "away" ? primary : "#07090a";
 
-    // V27: softer, slightly asymmetric hockey cut with longer sleeves and natural fabric drape.
-    const leftSleeve = "M242 96 C216 96 179 103 151 116 C124 129 111 154 109 188 C106 249 104 322 102 391 L97 520 C99 532 126 536 171 531 C181 512 184 476 189 439 C194 397 199 348 199 302 C198 252 190 210 186 176 C184 143 208 108 242 96 Z";
-    const rightSleeve = "M358 93 C385 96 423 104 449 118 C475 132 487 156 490 190 C493 254 495 327 497 393 L503 518 C501 531 474 535 428 530 C419 514 415 480 410 442 C404 399 400 349 401 300 C402 250 411 207 415 177 C418 141 392 106 358 93 Z";
+    // V28: gently sloping shoulders and relaxed sleeve edges with overlapping upper panels.
+    const leftSleeve = "M242 96 C213 99 177 108 152 122 C127 136 114 157 111 188 C107 226 110 247 107 278 C107 318 104 350 103 391 C104 431 98 473 97 516 Q96 524 104 527 C126 535 151 533 171 529 C181 510 184 476 189 439 C194 397 199 348 199 302 C198 252 190 210 186 176 C184 143 208 108 242 96 Z";
+    const rightSleeve = "M358 93 C387 99 421 110 445 125 C470 140 484 161 488 191 C493 226 490 251 493 284 C495 325 495 354 497 393 C496 437 501 477 502 513 Q505 523 497 528 C474 534 449 534 429 529 C420 513 415 480 410 442 C404 399 400 349 401 300 C402 250 411 207 415 177 C418 141 392 106 358 93 Z";
     const torso = "M242 96 Q297 111 358 93 C390 101 418 126 425 161 C431 194 425 233 419 270 C414 315 413 357 410 398 C407 447 411 500 407 558 C401 570 377 573 352 576 Q298 586 247 578 C219 575 197 570 191 558 C188 510 190 466 185 422 C181 381 177 341 175 305 C170 259 166 214 170 178 C175 135 204 105 242 96 Z";
 
     const shoulderDecor = pattern === "shoulder" ? `
-      <path d="M116 111 C160 101 205 99 242 96 Q299 112 358 93 C399 99 442 105 484 120 L480 169 C420 151 360 145 301 149 C239 145 181 152 120 172 Z" fill="${yokeBase}"/>
-      <path d="M121 169 C180 151 239 144 301 148 C361 144 420 151 479 168" fill="none" stroke="${stripeB}" stroke-width="7.5" stroke-linecap="round"/>
+      <path d="M96 84 H504 V178 C425 154 363 145 301 149 C238 144 177 157 96 181 Z" fill="${yokeBase}"/>
+      <path d="M99 178 C177 155 238 143 301 148 C363 144 425 152 501 175" fill="none" stroke="${stripeB}" stroke-width="7.5"/>
     ` : "";
 
     const sleeveStriping = pattern === "minimal" ? `
@@ -346,11 +433,8 @@
           <filter id="shadow-${uid}" x="-35%" y="-30%" width="170%" height="190%">
             <feDropShadow dx="0" dy="${compact ? 17 : 24}" stdDeviation="${compact ? 13 : 18}" flood-color="#000" flood-opacity=".52"/>
           </filter>
-          <filter id="soft-${uid}" x="-30%" y="-20%" width="160%" height="150%">
-            <feGaussianBlur stdDeviation="10"/>
-          </filter>
-          <filter id="crease-${uid}" x="-40%" y="-25%" width="180%" height="150%">
-            <feGaussianBlur stdDeviation="1.2"/>
+          <filter id="collar-shade-${uid}" x="-15%" y="-15%" width="130%" height="130%">
+            <feGaussianBlur stdDeviation="1.4"/>
           </filter>
         </defs>
 
@@ -364,34 +448,18 @@
             <g mask="url(#sleeves-only-${uid})">${sleeveStriping}</g>
             <g clip-path="url(#torso-clip-${uid})">${hemStriping}</g>
             ${side === "back" ? back : front}
+            ${fabricLighting ? `<rect width="600" height="600" fill="url(#chest-light-${uid})" opacity=".48"/><image href="${fabricLighting}" x="0" y="0" width="600" height="600" opacity="${compact ? ".88" : "1"}"/>` : `
             <path d="${leftSleeve}" fill="url(#left-sleeve-${uid})"/>
             <path d="${rightSleeve}" fill="url(#right-sleeve-${uid})"/>
             <path d="${torso}" fill="url(#torso-${uid})"/>
             <path d="${torso}" fill="url(#torso-drape-${uid})"/>
             <rect width="600" height="600" fill="url(#chest-light-${uid})"/>
-            <rect width="600" height="600" fill="url(#knit-${uid})" opacity="${compact ? ".18" : ".34"}"/>
+            `}
+            <rect width="600" height="600" fill="url(#knit-${uid})" opacity="${compact ? ".16" : ".38"}"/>
           </g>
 
-          <!-- V27 broad photographic fabric shading with small asymmetric stress folds. -->
+          <!-- Sewn hems remain crisp over the continuous cloth lighting. -->
           <g clip-path="url(#clip-${uid})">
-            <g filter="url(#soft-${uid})" opacity="${variant === "away" ? ".58" : ".76"}">
-              <path d="M141 141 C177 125 207 137 226 173 C191 157 168 163 151 202 C134 189 128 160 141 141 Z" fill="#fff" opacity=".12"/>
-              <path d="M118 188 C143 165 169 177 183 214 C164 196 144 204 123 243 C112 228 108 207 118 188 Z" fill="#000" opacity=".13"/>
-              <path d="M395 128 C432 126 463 146 474 177 C449 159 426 166 411 204 C401 181 394 151 395 128 Z" fill="#fff" opacity=".09"/>
-              <path d="M420 175 C447 166 470 190 480 225 C458 206 439 218 420 257 C412 229 411 199 420 175 Z" fill="#000" opacity=".16"/>
-              <path d="M125 286 C154 265 178 286 184 342 C165 316 146 323 120 365 C112 338 113 309 125 286 Z" fill="#fff" opacity=".075"/>
-              <path d="M438 292 C461 281 480 309 481 359 C464 336 447 345 427 386 C424 348 427 316 438 292 Z" fill="#000" opacity=".11"/>
-              <path d="M223 180 C255 161 282 190 291 251 C269 220 244 226 218 284 C207 244 209 207 223 180 Z" fill="#fff" opacity=".06"/>
-              <path d="M330 168 C362 172 382 211 375 268 C361 232 337 232 313 287 C310 236 315 194 330 168 Z" fill="#000" opacity=".075"/>
-              <path d="M210 358 C242 335 270 364 276 437 C253 399 229 410 207 474 C197 431 199 390 210 358 Z" fill="#000" opacity=".065"/>
-              <path d="M340 353 C371 340 392 379 386 448 C371 409 349 414 326 478 C322 430 327 385 340 353 Z" fill="#fff" opacity=".055"/>
-            </g>
-            <g fill="none" stroke-linecap="round" filter="url(#crease-${uid})">
-              <path d="M151 128 Q176 133 193 151 M185 111 Q211 117 230 132" stroke="#fff" stroke-opacity=".13" stroke-width="2.6"/>
-              <path d="M389 109 Q419 116 440 138" stroke="#000" stroke-opacity=".09" stroke-width="2.1"/>
-              <path d="M161 178 Q158 198 174 216 M437 171 Q442 194 427 220" stroke="#000" stroke-opacity=".11" stroke-width="1.7"/>
-              <path d="M173 510 Q150 520 118 514 M429 512 Q458 521 490 513" stroke="#fff" stroke-opacity=".095" stroke-width="1.8"/>
-            </g>
             <g fill="none" stroke-linecap="round">
               <path d="M104 516 Q136 526 170 520" stroke="#000" stroke-opacity=".14" stroke-width=".75" stroke-dasharray="1 2.1"/>
               <path d="M430 519 Q462 526 496 516" stroke="#000" stroke-opacity=".14" stroke-width=".75" stroke-dasharray="1 2.1"/>
@@ -399,12 +467,13 @@
               <path d="M198 552 Q249 565 300 567 Q350 565 400 553" stroke="#fff" stroke-opacity=".09" stroke-width=".65" stroke-dasharray=".9 2.2"/>
             </g>
           </g>
-          <!-- V27 ribbed V-neck: inner lining, soft edge shadow and discreet stitching. -->
+          <!-- Ribbed neckline sits above the body, with a soft contact shadow. -->
           ${side === "back" ? `
             <path d="M240 95 Q299 116 360 93 L357 108 Q300 133 243 109 Z" fill="${dark}"/>
             <path d="M245 104 Q300 126 355 103" fill="none" stroke="${stripeA}" stroke-width="2.5" stroke-linecap="round"/>
             <path d="M249 110 Q300 129 351 108" fill="none" stroke="${stripeB}" stroke-opacity=".26" stroke-width=".65" stroke-dasharray="1 1.7"/>
           ` : `
+            <path d="M238 100 C244 130 267 155 299 183 C334 158 358 132 363 100" fill="none" stroke="#000" stroke-opacity=".20" stroke-width="3.2" filter="url(#collar-shade-${uid})"/>
             <path d="M243 94 Q299 111 358 93 C353 120 328 150 300 171 C271 150 248 120 243 94 Z" fill="url(#neck-lining-${uid})"/>
             <path d="M245 96 Q299 113 356 94 L352 106 Q300 125 249 107 Z" fill="${dark}" opacity=".98"/>
             <path d="M234 95 Q240 90 247 96 C249 119 272 149 305 173 L298 182 C261 155 240 128 234 95 Z" fill="${primary}"/>
@@ -413,6 +482,7 @@
             <path d="M242 99 C249 128 269 151 299 175 C329 152 351 128 358 98" fill="none" stroke="${stripeA}" stroke-width="2.15" stroke-linecap="round"/>
             <path d="M248 108 C255 133 275 154 300 172 M352 107 C345 132 325 155 300 172" fill="none" stroke="${stripeB}" stroke-opacity=".30" stroke-width=".62" stroke-dasharray=".9 1.55"/>
             <path d="M252 112 C260 134 278 153 300 168 M348 111 C341 134 323 153 300 168" fill="none" stroke="#000" stroke-opacity=".10" stroke-width=".55" stroke-dasharray=".8 1.7"/>
+            <path d="M238 97 C245 132 270 158 298 179 L304 174 C274 151 250 123 245 96 Z M358 96 C351 127 328 154 298 178 L294 173 C327 147 351 119 354 96 Z" fill="url(#knit-${uid})" opacity=".85"/>
           `}
         </g>
       </svg>
