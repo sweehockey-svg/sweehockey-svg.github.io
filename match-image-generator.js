@@ -946,9 +946,9 @@
 
   function lineupPortraitSquare(width, y, team, variant) {
     const landscape = width === 1920;
-    const cardWidth = landscape ? 205 : 140;
-    const cardHeight = landscape ? 238 : 190;
-    const gap = landscape ? 18 : 8;
+    const cardWidth = landscape ? 220 : 140;
+    const cardHeight = landscape ? 254 : 190;
+    const gap = landscape ? 20 : 8;
     const totalWidth = cardWidth * 6 + gap * 5;
     const startX = (width - totalWidth) / 2;
     return POSITIONS.map((pos,index) => {
@@ -1062,9 +1062,9 @@
     const time = esc(cleanText(state.time,5) || "20:00");
 
     const panelX = isWide ? 155 : isStory ? 70 : 44;
-    const panelY = isWide ? 690 : isStory ? 1042 : 765;
+    const panelY = isWide ? 678 : isStory ? 1042 : 765;
     const panelW = W - panelX * 2;
-    const panelH = isWide ? 322 : isStory ? 790 : 278;
+    const panelH = isWide ? 336 : isStory ? 790 : 278;
     const lineupTitleY = panelY + (isStory ? 42 : 38);
     const footerY = H - (isWide ? 28 : isStory ? 34 : 24);
     const watermarkSize = isWide ? 560 : isStory ? 430 : 410;
@@ -1131,14 +1131,15 @@
       '<g filter="url(#classic-soft-shadow)">' + placedJersey(leftJersey,layout.leftX,layout.jerseyY,layout.jerseySize) + '</g>',
       '<g filter="url(#classic-soft-shadow)">' + placedJersey(rightJersey,layout.rightX,layout.jerseyY,layout.jerseySize) + '</g>',
 
-      '<ellipse cx="' + (W/2) + '" cy="' + layout.vsY + '" rx="' + (isWide?105:78) + '" ry="' + (isWide?72:58) + '" fill="#2f8fff" opacity=".30" filter="url(#classic-blue-glow)"/>',
-      '<path d="M' + (W/2) + ' ' + (layout.vsY-(isWide?118:88)) + ' L' + (W/2-(isWide?82:60)) + ' ' + (layout.vsY+(isWide?90:68)) + ' L' + (W/2+(isWide?82:60)) + ' ' + (layout.vsY+(isWide?90:68)) + ' Z" fill="#0a1522" fill-opacity=".48" stroke="#8fcbff" stroke-opacity=".30"/>',
+      '<ellipse cx="' + (W/2) + '" cy="' + layout.vsY + '" rx="' + (isWide?118:84) + '" ry="' + (isWide?84:62) + '" fill="#2f8fff" opacity=".24" filter="url(#classic-blue-glow)"/>',
+      '<circle cx="' + (W/2) + '" cy="' + layout.vsY + '" r="' + (isWide?78:58) + '" fill="#06111c" fill-opacity=".44" stroke="#8fcaff" stroke-opacity=".16"/>',
+      '<circle cx="' + (W/2) + '" cy="' + layout.vsY + '" r="' + (isWide?64:48) + '" fill="none" stroke="#ffffff" stroke-opacity=".08"/>',
       '<text x="' + (W/2) + '" y="' + (layout.vsY + vsSize*.30) + '" text-anchor="middle" fill="url(#classic-vs)" font-size="' + vsSize + '" font-weight="1000" font-style="italic" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="-5" filter="url(#classic-title-shadow)">VS</text>',
       '<text x="' + (W/2) + '" y="' + layout.metaY + '" text-anchor="middle" fill="#ffffff" font-size="' + metaSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="' + (isWide?3:1) + '">' + date + ' · ' + time + '</text>',
 
       stream ? '<g><rect x="' + (W/2-streamWidth/2) + '" y="' + streamY + '" width="' + streamWidth + '" height="' + streamHeight + '" rx="' + (streamHeight/2) + '" fill="#06101b" fill-opacity=".82" stroke="#8fc8ff" stroke-opacity=".42"/><circle cx="' + (W/2-streamWidth/2+32) + '" cy="' + (streamY+streamHeight/2) + '" r="8" fill="#ff4d5f"/><circle cx="' + (W/2-streamWidth/2+32) + '" cy="' + (streamY+streamHeight/2) + '" r="15" fill="#ff4d5f" opacity=".15"/><text x="' + (W/2) + '" y="' + (streamY+streamHeight/2+6) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?20:isWide?18:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1.5">' + stream + '</text><path d="M' + (W/2+streamWidth/2-42) + ' ' + (streamY+streamHeight/2-7) + ' l8 7 -8 7" fill="none" stroke="#a9d5ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>' : '',
 
-      '<rect x="' + panelX + '" y="' + panelY + '" width="' + panelW + '" height="' + panelH + '" rx="' + (isWide?28:22) + '" fill="#06101b" fill-opacity=".42" stroke="#9ccfff" stroke-opacity=".26"/>',
+      '<rect x="' + panelX + '" y="' + panelY + '" width="' + panelW + '" height="' + panelH + '" rx="' + (isWide?28:22) + '" fill="#06101b" fill-opacity=".30" stroke="#9ccfff" stroke-opacity=".20"/>',
       '<line x1="' + (W/2-(isWide?270:160)) + '" y1="' + (lineupTitleY-6) + '" x2="' + (W/2-(isWide?90:65)) + '" y2="' + (lineupTitleY-6) + '" stroke="#ffffff" stroke-opacity=".34" stroke-width="2"/>',
       '<line x1="' + (W/2+(isWide?90:65)) + '" y1="' + (lineupTitleY-6) + '" x2="' + (W/2+(isWide?270:160)) + '" y2="' + (lineupTitleY-6) + '" stroke="#72b9ff" stroke-opacity=".44" stroke-width="2"/>',
       '<text x="' + (W/2) + '" y="' + lineupTitleY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".90" font-size="' + (isStory?23:isWide?19:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="' + (isWide?7:4) + '">STARTING SIX</text>',
