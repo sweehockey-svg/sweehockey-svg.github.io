@@ -310,12 +310,12 @@
           <linearGradient id="left-sleeve-${uid}" x1="0" x2="1">
             <stop offset="0" stop-color="#000" stop-opacity=".34"/>
             <stop offset=".43" stop-color="#fff" stop-opacity=".05"/>
-            <stop offset="1" stop-color="#000" stop-opacity=".12"/>
+            <stop offset="1" stop-color="#000" stop-opacity=".075"/>
           </linearGradient>
           <linearGradient id="right-sleeve-${uid}" x1="1" x2="0">
             <stop offset="0" stop-color="#000" stop-opacity=".34"/>
             <stop offset=".43" stop-color="#fff" stop-opacity=".05"/>
-            <stop offset="1" stop-color="#000" stop-opacity=".12"/>
+            <stop offset="1" stop-color="#000" stop-opacity=".075"/>
           </linearGradient>
           <radialGradient id="chest-light-${uid}" cx="${variant === "away" ? "44%" : "48%"}" cy="${variant === "away" ? "21%" : "18%"}" r="72%">
             <stop offset="0" stop-color="#fff" stop-opacity="${variant === "away" ? ".16" : ".20"}"/>
@@ -371,13 +371,15 @@
             </g>
           ` : ""}
 
-          <!-- underarm fabric transition -->
+          <!-- underarm fabric bridge: keeps the sleeve attached to the torso instead of exposing background -->
           ${compact ? "" : `
             <g>
-              <path d="M181 300 C188 322 190 356 188 392 C185 430 179 462 170 485 L189 485 C194 445 196 402 195 356 C194 330 191 309 187 293 Z" fill="${bodyBase}" opacity=".94"/>
-              <path d="M419 300 C412 322 410 356 412 392 C415 430 421 462 430 485 L411 485 C406 445 404 402 405 356 C406 330 409 309 413 293 Z" fill="${bodyBase}" opacity=".94"/>
-              <path d="M186 309 C190 340 190 383 186 426 C183 452 179 471 175 482" fill="none" stroke="#000" stroke-opacity=".055" stroke-width="3" stroke-linecap="round" filter="url(#soft-${uid})"/>
-              <path d="M414 309 C410 340 410 383 414 426 C417 452 421 471 425 482" fill="none" stroke="#000" stroke-opacity=".055" stroke-width="3" stroke-linecap="round" filter="url(#soft-${uid})"/>
+              <path d="M174 246 C184 281 190 325 192 369 C194 414 188 458 176 492 L207 492 C203 452 204 410 206 367 C208 322 205 281 198 244 Z" fill="${bodyBase}" opacity=".995"/>
+              <path d="M426 246 C416 281 410 325 408 369 C406 414 412 458 424 492 L393 492 C397 452 396 410 394 367 C392 322 395 281 402 244 Z" fill="${bodyBase}" opacity=".995"/>
+              <path d="M176 252 C181 296 181 345 179 392 C177 435 173 469 168 489 L184 489 C190 449 192 408 192 367 C192 326 189 286 184 251 Z" fill="${sleeveBase}" opacity=".72"/>
+              <path d="M424 252 C419 296 419 345 421 392 C423 435 427 469 432 489 L416 489 C410 449 408 408 408 367 C408 326 411 286 416 251 Z" fill="${sleeveBase}" opacity=".72"/>
+              <path d="M194 254 C198 299 199 345 198 390 C197 429 194 462 190 486" fill="none" stroke="#000" stroke-opacity=".045" stroke-width="3" stroke-linecap="round" filter="url(#soft-${uid})"/>
+              <path d="M406 254 C402 299 401 345 402 390 C403 429 406 462 410 486" fill="none" stroke="#000" stroke-opacity=".045" stroke-width="3" stroke-linecap="round" filter="url(#soft-${uid})"/>
             </g>
           `}
 
