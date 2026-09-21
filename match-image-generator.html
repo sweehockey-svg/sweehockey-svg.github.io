@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Match Graphics Lab · Svensk eHockey</title>
+  <link rel="stylesheet" href="match-image-generator.css?v=1">
+</head>
+<body>
+  <header class="lab-topbar">
+    <a class="lab-brand" href="javascript:void(0)" aria-label="Svensk eHockey Match Graphics Lab">
+      <span class="lab-brand-mark">SEH</span>
+      <span><strong>SVENSK eHOCKEY</strong><small>MATCH GRAPHICS LAB · EJ LIVE</small></span>
+    </a>
+    <div class="lab-status"><i></i> DOLD TESTMILJÖ</div>
+  </header>
+
+  <main class="generator-shell">
+    <section class="hero">
+      <div>
+        <p class="kicker">CLUB MEDIA / PROTOTYP</p>
+        <h1>Bygg matchbilden på några klick.</h1>
+        <p>Välj ditt lag, motståndare, matchtid och Starting Six. Generatorn använder exakt samma V27-tröjrenderer som Jersey Lab och ändrar inte lagens tröjdesign.</p>
+      </div>
+      <div class="hero-badge">V1 · TEST</div>
+    </section>
+
+    <section class="generator-grid">
+      <aside class="controls">
+        <div class="control-section">
+          <div class="section-title"><strong>Match</strong><span>Grunddata</span></div>
+          <div class="field-grid">
+            <div class="field full">
+              <label for="teamSelect">DITT LAG</label>
+              <select id="teamSelect"></select>
+            </div>
+            <div class="field full">
+              <label for="opponentSelect">MOTSTÅNDARE</label>
+              <select id="opponentSelect"></select>
+            </div>
+            <div class="field">
+              <label for="sideSelect">DITT LAG SPELAR</label>
+              <select id="sideSelect">
+                <option value="home">Hemma</option>
+                <option value="away">Borta</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="badgeSelect">RUBRIK</label>
+              <select id="badgeSelect">
+                <option value="MATCHDAY">MATCHDAY</option>
+                <option value="GAMEDAY">GAMEDAY</option>
+                <option value="PLAYOFFS">PLAYOFFS</option>
+                <option value="KVARTSFINAL">KVARTSFINAL</option>
+                <option value="SEMIFINAL">SEMIFINAL</option>
+                <option value="FINAL">FINAL</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="competitionInput">TURNERING / LIGA</label>
+              <input id="competitionInput" type="text" maxlength="28" value="SCL 27">
+            </div>
+            <div class="field">
+              <label for="dateInput">DATUM</label>
+              <input id="dateInput" type="date" value="2026-10-01">
+            </div>
+            <div class="field">
+              <label for="timeInput">TID</label>
+              <input id="timeInput" type="time" value="20:00">
+            </div>
+            <div class="field full">
+              <label for="formatSelect">FORMAT</label>
+              <select id="formatSelect"></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-section">
+          <div class="section-title"><strong>Starting Six</strong><span id="ownTeamHint"></span></div>
+          <div class="lineup-grid">
+            <div class="lineup-field"><label for="lwInput">LW</label><input id="lwInput" data-lineup="LW" type="text" maxlength="18"></div>
+            <div class="lineup-field"><label for="cInput">C</label><input id="cInput" data-lineup="C" type="text" maxlength="18"></div>
+            <div class="lineup-field"><label for="rwInput">RW</label><input id="rwInput" data-lineup="RW" type="text" maxlength="18"></div>
+            <div class="lineup-field"><label for="ldInput">LD</label><input id="ldInput" data-lineup="LD" type="text" maxlength="18"></div>
+            <div class="lineup-field"><label for="rdInput">RD</label><input id="rdInput" data-lineup="RD" type="text" maxlength="18"></div>
+            <div class="lineup-field"><label for="gInput">G</label><input id="gInput" data-lineup="G" type="text" maxlength="18"></div>
+          </div>
+        </div>
+
+        <div class="action-grid">
+          <button id="pngButton" type="button">Ladda ner PNG</button>
+          <button id="svgButton" class="secondary" type="button">Ladda ner SVG</button>
+          <button id="resetButton" class="ghost" type="button">Återställ testdata</button>
+        </div>
+
+        <p class="generator-note"><strong>V1:</strong> lag och Starting Six väljs manuellt. Nästa steg kan koppla detta direkt till kaptensbehörighet, lagets riktiga roster och kommande matcher i Svensk eHockey.</p>
+      </aside>
+
+      <section class="preview-panel">
+        <div class="preview-toolbar">
+          <div><strong>Förhandsvisning</strong><span id="previewSize"></span></div>
+          <div class="preview-chip">V27 PREMIUM · LÅST DESIGN</div>
+        </div>
+        <div class="preview-wrap">
+          <div id="graphicPreview" aria-live="polite"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="teamlogos-manifest.js?v=20260830-v60"></script>
+  <script src="match-image-generator.js?v=1"></script>
+</body>
+</html>
