@@ -1259,12 +1259,12 @@
 
     if (isWide) {
       cardWidth = 330;
-      cardHeight = 338;
+      cardHeight = 365;
       gapX = 22;
-      gapY = 24;
+      gapY = 22;
       cols = 3;
       startX = 790;
-      startY = 176;
+      startY = 158;
     } else if (isStory) {
       cardWidth = 410;
       cardHeight = 310;
