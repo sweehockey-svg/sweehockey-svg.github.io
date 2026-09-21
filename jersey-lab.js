@@ -237,6 +237,21 @@
     return response.json();
   }
 
+  async function getRpcRows(name, payload = {}) {
+    const {url,key} = configValues();
+    if (!url || !key) throw new Error("Supabase-konfiguration saknas");
+    const headers = {apikey:key,Accept:"application/json","Content-Type":"application/json"};
+    if (/^eyJ/i.test(key)) headers.Authorization = "Bearer " + key;
+    const response = await fetch(url + "/rest/v1/rpc/" + name,{
+      method:"POST",
+      headers,
+      cache:"no-store",
+      body:JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error(name + ": HTTP " + response.status);
+    return response.json();
+  }
+
   function buildDynamicTeam(row,index) {
     const preset = JERSEY_PRESETS.find(team => normalize(team.name) === normalize(row.name));
     if (preset) {
@@ -292,10 +307,7 @@
   }
 
   async function refreshCurrentRostersFromView() {
-    const rows = await getPublicRows(
-      "v_ecl27_current_roster_v1",
-      "select=player_key,display_gamertag,team_name,division&order=team_name.asc,display_gamertag.asc"
-    );
+    const rows = await getRpcRows("seh_ecl27_current_roster_public",{});
     if (!Array.isArray(rows) || !rows.length) return 0;
     rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
     playerKeysByName = new Map();
@@ -430,10 +442,7 @@
 
     // Roster enrichment is independent of the already-rendered team list.
     try {
-      const rosterRows = await getPublicRows(
-        "v_ecl27_current_roster_v1",
-        "select=player_key,display_gamertag,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
-      );
+      const rosterRows = await getRpcRows("seh_ecl27_current_roster_public",{});
       rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
       playerKeysByName = new Map();
       applyDirectRosterRows(rosterRows);
