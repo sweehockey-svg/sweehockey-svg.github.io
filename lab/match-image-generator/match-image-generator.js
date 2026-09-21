@@ -387,7 +387,7 @@
   }
 
   async function refreshCurrentRostersFromView() {
-    const rows = await getRpcRows("seh_ecl27_current_roster_public",{});
+    const rows = await getPublicRows("v_ecl27_current_roster_public","select=player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name&order=team_name.asc,display_gamertag.asc");
     if (!Array.isArray(rows) || !rows.length) return 0;
     rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
     playerKeysByName = new Map();
@@ -549,7 +549,7 @@
 
     // Roster loading is independent from the team list.
     try {
-      const rosterRows = await getRpcRows("seh_ecl27_current_roster_public",{});
+      const rosterRows = await getPublicRows("v_ecl27_current_roster_public","select=player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name&order=team_name.asc,display_gamertag.asc");
       rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
       playerKeysByName = new Map();
       applyDirectRosterRows(rosterRows);
