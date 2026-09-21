@@ -921,63 +921,53 @@
   function portraitCard(pos, name, x, y, width, height, team, variant) {
     const cleanName = cleanText(name,20) || "PLAYER";
     const number = cleanText(state.lineupNumbers[pos],2);
-    const portrait = portraitUrlForPlayer(cleanName);
-    if (!portrait) {
-      const jerseySize = Math.min(width,height - 10);
-      const jersey = premiumJerseySvg(team,{
-        variant,
-        side:"back",
-        compact:true,
-        playerName:cleanName,
-        playerNumber:number || " "
-      });
-      return [
-        '<g>',
-        '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="#080c11" fill-opacity=".72" stroke="#ffffff" stroke-opacity=".12"/>',
-        placedJersey(jersey,x+(width-jerseySize)/2,y-4,jerseySize),
-        '<rect x="' + (x+10) + '" y="' + (y+height-34) + '" width="' + (width-20) + '" height="26" rx="8" fill="#05080c" fill-opacity=".86"/>',
-        '<text x="' + (x+18) + '" y="' + (y+height-16) + '" fill="#ffffff" font-size="12" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text>',
-        number ? '<text x="' + (x+width-18) + '" y="' + (y+height-16) + '" text-anchor="end" fill="#ffffff" font-size="12" font-weight="900" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
-        '</g>'
-      ].join("");
-    }
-
+    const portrait = portraitUrlForPlayer(cleanName) || defaultPlayerImageUrl();
     const clipId = "portrait-" + pos + "-" + normalize(cleanName).replace(/\s+/g,"-");
-    const nameSize = width >= 250 ? 19 : width >= 160 ? 14 : 11;
+    const nameSize = width >= 220 ? 18 : width >= 160 ? 15 : 13;
+    const imageBottom = y + height - 44;
+    const imageHeight = Math.max(1,imageBottom - y - 4);
+    const posBadgeWidth = pos.length > 1 ? 42 : 34;
+
     return [
       '<g>',
       '<defs><clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18"/></clipPath></defs>',
-      '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="#0a0f15" stroke="#ffffff" stroke-opacity=".13"/>',
-      '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="' + team.primary + '" opacity=".24"/>',
-      '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + (y+4) + '" width="' + (width-8) + '" height="' + (height-36) + '" preserveAspectRatio="xMidYMax meet" clip-path="url(#' + clipId + ')"/>',
-      '<rect x="' + x + '" y="' + (y+height-44) + '" width="' + width + '" height="44" fill="#05080c" fill-opacity=".9" clip-path="url(#' + clipId + ')"/>',
-      '<text x="' + (x+12) + '" y="' + (y+height-25) + '" fill="#ffffff" fill-opacity=".62" font-size="10" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text>',
-      '<text x="' + (x+12) + '" y="' + (y+height-10) + '" fill="#ffffff" font-size="' + nameSize + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanName) + '</text>',
-      number ? '<text x="' + (x+width-12) + '" y="' + (y+height-14) + '" text-anchor="end" fill="#ffffff" font-size="' + (nameSize+2) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
+      '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="#0a0f15" stroke="#ffffff" stroke-opacity=".14"/>',
+      '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="' + team.primary + '" opacity=".22"/>',
+      '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + (y+4) + '" width="' + (width-8) + '" height="' + imageHeight + '" preserveAspectRatio="xMidYMin slice" clip-path="url(#' + clipId + ')"/>',
+      '<rect x="' + (x+10) + '" y="' + (y+10) + '" width="' + posBadgeWidth + '" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>',
+      '<text x="' + (x+10+posBadgeWidth/2) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="1000" letter-spacing=".8" font-family="Arial,Helvetica,sans-serif">' + esc(pos) + '</text>',
+      number ? '<rect x="' + (x+width-50) + '" y="' + (y+10) + '" width="40" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>' : '',
+      number ? '<text x="' + (x+width-30) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
+      '<rect x="' + x + '" y="' + (y+height-48) + '" width="' + width + '" height="48" fill="#05080c" fill-opacity=".93" clip-path="url(#' + clipId + ')"/>',
+      '<text x="' + (x+12) + '" y="' + (y+height-17) + '" fill="#ffffff" font-size="' + nameSize + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanName) + '</text>',
       '</g>'
     ].join("");
   }
 
   function lineupPortraitSquare(width, y, team, variant) {
-    const margin = width === 1920 ? 150 : 44;
-    const gap = width === 1920 ? 14 : 7;
-    const slotWidth = (width - margin * 2 - gap * 5) / 6;
-    const cardHeight = width === 1920 ? 176 : 150;
+    const landscape = width === 1920;
+    const cardWidth = landscape ? 190 : 140;
+    const cardHeight = landscape ? 220 : 190;
+    const gap = landscape ? 16 : 8;
+    const totalWidth = cardWidth * 6 + gap * 5;
+    const startX = (width - totalWidth) / 2;
     return POSITIONS.map((pos,index) => {
-      const x = margin + index * (slotWidth + gap);
-      return portraitCard(pos,state.lineup[pos],x,y,slotWidth,cardHeight,team,variant);
+      const x = startX + index * (cardWidth + gap);
+      return portraitCard(pos,state.lineup[pos],x,y,cardWidth,cardHeight,team,variant);
     }).join("");
   }
 
   function lineupPortraitStory(y, team, variant) {
-    const cardWidth = 430;
-    const cardHeight = 210;
+    const cardWidth = 220;
+    const cardHeight = 240;
     const gapX = 20;
     const gapY = 18;
+    const totalWidth = cardWidth * 2 + gapX;
+    const startX = (1080 - totalWidth) / 2;
     return POSITIONS.map((pos,index) => {
       const col = index % 2;
       const row = Math.floor(index / 2);
-      const x = 100 + col * (cardWidth + gapX);
+      const x = startX + col * (cardWidth + gapX);
       const yy = y + row * (cardHeight + gapY);
       return portraitCard(pos,state.lineup[pos],x,yy,cardWidth,cardHeight,team,variant);
     }).join("");
