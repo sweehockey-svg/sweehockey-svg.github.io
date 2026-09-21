@@ -239,28 +239,24 @@
     const ink = variant === "away" ? primary : trim;
     const dark = variant === "away" ? primary : "#07090a";
 
-    // Separate sewn panels with deliberate overlap under the torso so no background can show through.
-    const leftSleeve = "M217 123 C200 121 181 125 165 133 C150 141 137 151 129 164 C121 177 117 196 116 219 L112 492 Q140 504 188 508 C192 474 197 416 201 362 C204 303 204 239 200 189 Q198 146 217 123 Z";
-    const rightSleeve = "M383 123 C400 121 419 125 435 133 C450 141 463 151 471 164 C479 177 483 196 484 219 L488 492 Q460 504 412 508 C408 474 403 416 399 362 C396 303 396 239 400 189 Q402 146 383 123 Z";
-    const torso = "M217 123 C244 106 356 106 383 123 C399 137 406 157 405 183 L415 558 C405 576 369 582 300 584 C231 582 195 576 185 558 L195 183 C194 157 201 137 217 123 Z";
+    // V26: reference-led hockey cut. Sleeves overlap the chest; only the lower cuff separates.
+    const leftSleeve = "M244 94 C216 97 178 103 153 115 C126 128 114 151 112 183 C109 242 107 309 104 377 L97 516 Q98 530 173 529 C181 517 184 480 190 445 C195 407 199 354 198 306 C197 253 189 213 185 179 C183 144 210 109 244 94 Z";
+    const rightSleeve = "M356 94 C384 97 422 103 447 115 C474 128 486 151 488 183 C491 242 493 309 496 377 L503 516 Q502 530 427 529 C419 517 416 480 410 445 C405 407 401 354 402 306 C403 253 411 213 415 179 C417 144 390 109 356 94 Z";
+    const torso = "M244 94 Q300 110 356 94 C387 100 420 125 426 160 C432 191 426 230 420 264 C416 306 414 346 411 385 C407 438 410 494 408 558 Q406 568 384 571 Q300 587 216 571 Q194 568 192 558 C190 505 188 467 185 426 C181 380 179 340 176 305 C170 258 166 213 170 178 C175 134 205 105 244 94 Z";
 
-    const shoulderDecor = pattern === "minimal"
-      ? `
-        <path d="M176 168 L228 151 Q300 137 372 151 L424 168" fill="none" stroke="${stripeB}" stroke-width="5" opacity=".72"/>
-      `
-      : `
-        <path d="M165 166 L224 143 Q300 125 376 143 L435 166 L427 180 L376 163 Q300 149 224 163 L173 180 Z" fill="${yokeBase}"/>
-        <path d="M176 169 L228 152 Q300 138 372 152 L424 169" fill="none" stroke="${stripeB}" stroke-width="3.8" opacity=".72"/>
-      `;
+    const shoulderDecor = pattern === "shoulder" ? `
+      <path d="M106 85 H494 V169 Q398 142 300 146 Q202 142 106 169 Z" fill="${yokeBase}"/>
+      <path d="M109 170 Q204 144 300 148 Q396 144 491 170" fill="none" stroke="${stripeB}" stroke-width="8"/>
+    ` : "";
 
     const sleeveStriping = pattern === "minimal" ? `
-      <path d="M103 371 L154 360 L148 388 L102 398 Z M497 371 L446 360 L452 388 L498 398 Z" fill="${stripeA}"/>
+      <path d="M98 328 Q143 332 194 326 L196 347 Q143 353 98 349 Z M502 328 Q457 332 406 326 L404 347 Q457 353 502 349 Z" fill="${stripeA}"/>
     ` : pattern === "diagonal" ? `
-      <path d="M102 318 L155 294 L149 333 L101 355 Z M498 318 L445 294 L451 333 L499 355 Z" fill="${stripeA}"/>
-      <path d="M101 356 L149 334 L145 358 L101 378 Z M499 356 L451 334 L455 358 L499 378 Z" fill="${stripeB}"/>
+      <path d="M98 304 L196 287 V308 L98 325 Z M502 304 L404 287 V308 L502 325 Z" fill="${stripeA}"/>
+      <path d="M98 331 L196 314 V336 L98 353 Z M502 331 L404 314 V336 L502 353 Z" fill="${stripeB}"/>
     ` : `
-      <path d="M102 323 L155 312 L149 346 L101 356 Z M498 323 L445 312 L451 346 L499 356 Z" fill="${stripeA}"/>
-      <path d="M101 360 L149 350 L145 376 L101 386 Z M499 360 L451 350 L455 376 L499 386 Z" fill="${stripeB}"/>
+      <path d="M98 299 Q143 302 195 298 V324 Q143 328 98 325 Z M502 299 Q457 302 405 298 V324 Q457 328 502 325 Z" fill="${stripeB}"/>
+      <path d="M98 340 Q143 344 196 340 V366 Q143 370 98 366 Z M502 340 Q457 344 404 340 V366 Q457 370 502 366 Z" fill="${stripeA}"/>
     `;
 
     const hemStriping = pattern === "minimal" ? `
@@ -280,8 +276,8 @@
     const front = `
       <g>
         ${logo
-          ? `<image href="${esc(logo)}" x="199" y="205" width="202" height="182" preserveAspectRatio="xMidYMid meet"/>`
-          : `<text x="300" y="310" text-anchor="middle" fill="${ink}" font-size="74" font-weight="1000">${esc(team.code)}</text>`}
+          ? `<image href="${esc(logo)}" x="199" y="226" width="202" height="202" preserveAspectRatio="xMidYMid meet"/>`
+          : `<text x="300" y="335" text-anchor="middle" fill="${ink}" font-size="74" font-weight="1000">${esc(team.code)}</text>`}
         ${captain}
       </g>
     `;
@@ -301,13 +297,18 @@
             <path d="${torso}"/>
             <path d="${rightSleeve}"/>
           </clipPath>
+          <clipPath id="torso-clip-${uid}"><path d="${torso}"/></clipPath>
+          <mask id="sleeves-only-${uid}" maskUnits="userSpaceOnUse" x="0" y="0" width="600" height="600">
+            <path d="${leftSleeve}" fill="#fff"/><path d="${rightSleeve}" fill="#fff"/>
+            <path d="${torso}" fill="#000"/>
+          </mask>
           <linearGradient id="torso-${uid}" x1="0" x2="1">
             <stop offset="0" stop-color="#000" stop-opacity="0"/>
             <stop offset=".055" stop-color="#000" stop-opacity=".045"/>
-            <stop offset=".14" stop-color="#fff" stop-opacity=".055"/>
-            <stop offset=".38" stop-color="#fff" stop-opacity=".015"/>
-            <stop offset=".58" stop-color="#fff" stop-opacity=".11"/>
-            <stop offset=".82" stop-color="#000" stop-opacity=".05"/>
+            <stop offset=".19" stop-color="#fff" stop-opacity=".16"/>
+            <stop offset=".38" stop-color="#fff" stop-opacity=".045"/>
+            <stop offset=".58" stop-color="#fff" stop-opacity=".09"/>
+            <stop offset=".82" stop-color="#000" stop-opacity=".16"/>
             <stop offset=".945" stop-color="#000" stop-opacity=".065"/>
             <stop offset="1" stop-color="#000" stop-opacity="0"/>
           </linearGradient>
@@ -323,21 +324,30 @@
             <stop offset=".78" stop-color="#000" stop-opacity=".012"/>
             <stop offset="1" stop-color="#000" stop-opacity="0"/>
           </linearGradient>
-          <radialGradient id="chest-light-${uid}" cx="${variant === "away" ? "44%" : "48%"}" cy="${variant === "away" ? "21%" : "18%"}" r="72%">
-            <stop offset="0" stop-color="#fff" stop-opacity="${variant === "away" ? ".16" : ".20"}"/>
-            <stop offset=".28" stop-color="#fff" stop-opacity="${variant === "away" ? ".045" : ".06"}"/>
+          <radialGradient id="chest-light-${uid}" cx="32%" cy="20%" r="78%">
+            <stop offset="0" stop-color="#fff" stop-opacity="${variant === "away" ? ".22" : ".30"}"/>
+            <stop offset=".28" stop-color="#fff" stop-opacity=".09"/>
             <stop offset=".7" stop-color="#000" stop-opacity=".025"/>
             <stop offset="1" stop-color="#000" stop-opacity=".15"/>
           </radialGradient>
-          <pattern id="knit-${uid}" width="5" height="5" patternUnits="userSpaceOnUse">
-            <circle cx="1.1" cy="1.1" r=".5" fill="#fff" opacity=".11"/>
-            <circle cx="3.7" cy="3.7" r=".55" fill="#000" opacity=".13"/>
+          <pattern id="knit-${uid}" width="2.6" height="3.4" patternUnits="userSpaceOnUse" patternTransform="rotate(18)">
+            <path d="M.3 .2 L1.3 1.6 L.3 3" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width=".45"/>
+            <path d="M1.5 .2 L2.5 1.6 L1.5 3" fill="none" stroke="#000" stroke-opacity=".14" stroke-width=".45"/>
           </pattern>
+          <linearGradient id="neck-lining-${uid}" x1="0" y1="0" x2=".2" y2="1">
+            <stop stop-color="#555f65"/><stop offset=".35" stop-color="#d9dcd9"/><stop offset="1" stop-color="#8e9699"/>
+          </linearGradient>
+          <linearGradient id="collar-light-${uid}" x1="0" x2="1" y2=".4">
+            <stop stop-color="#fff" stop-opacity=".27"/><stop offset=".5" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#000" stop-opacity=".25"/>
+          </linearGradient>
           <filter id="shadow-${uid}" x="-35%" y="-30%" width="170%" height="190%">
             <feDropShadow dx="0" dy="${compact ? 17 : 24}" stdDeviation="${compact ? 13 : 18}" flood-color="#000" flood-opacity=".52"/>
           </filter>
           <filter id="soft-${uid}">
-            <feGaussianBlur stdDeviation="7"/>
+            <feGaussianBlur stdDeviation="4.5"/>
+          </filter>
+          <filter id="crease-${uid}" x="-40%" y="-20%" width="180%" height="140%">
+            <feGaussianBlur stdDeviation="1.8"/>
           </filter>
         </defs>
 
@@ -348,8 +358,9 @@
 
           <g clip-path="url(#clip-${uid})">
             ${shoulderDecor}
-            ${sleeveStriping}
-            ${hemStriping}
+            <g mask="url(#sleeves-only-${uid})">${sleeveStriping}</g>
+            <g clip-path="url(#torso-clip-${uid})">${hemStriping}</g>
+            ${side === "back" ? back : front}
             <path d="${leftSleeve}" fill="url(#left-sleeve-${uid})"/>
             <path d="${rightSleeve}" fill="url(#right-sleeve-${uid})"/>
             <path d="${torso}" fill="url(#torso-${uid})"/>
@@ -357,42 +368,44 @@
             <rect width="600" height="600" fill="url(#knit-${uid})" opacity="${compact ? ".28" : ".52"}"/>
           </g>
 
-          <!-- soft photographic folds -->
-          ${compact ? "" : `
-            <g fill="none" stroke-linecap="round" filter="url(#soft-${uid})">
-              <path d="M238 190 C230 286 232 417 240 535" stroke="#000" stroke-opacity=".050" stroke-width="7"/>
-              <path d="M279 181 C274 289 276 431 281 546" stroke="#fff" stroke-opacity=".024" stroke-width="5"/>
-              <path d="M321 181 C326 289 324 431 319 546" stroke="#000" stroke-opacity=".024" stroke-width="5"/>
-              <path d="M362 190 C370 286 368 417 360 535" stroke="#fff" stroke-opacity=".020" stroke-width="4"/>
-              <path d="M126 226 C131 296 129 374 123 434" stroke="#fff" stroke-opacity=".014" stroke-width="3"/>
-              <path d="M474 226 C469 296 471 374 477 434" stroke="#000" stroke-opacity=".020" stroke-width="4"/>
+          <!-- Draped fabric: tapered, asymmetric folds rather than straight panel outlines. -->
+          <g clip-path="url(#clip-${uid})">
+            <g filter="url(#soft-${uid})" opacity="${variant === "away" ? ".72" : "1"}">
+              <path d="M175 166 C167 207 186 235 189 272 C176 238 151 209 157 173 Z" fill="#000" opacity=".23"/>
+              <path d="M181 178 C180 219 199 229 207 268 C197 243 181 233 176 214 Z" fill="#fff" opacity=".17"/>
+              <path d="M428 158 C446 199 419 237 413 280 C411 233 426 207 428 158 Z" fill="#000" opacity=".29"/>
+              <path d="M439 177 C448 216 427 260 427 304 C417 268 436 215 439 177 Z" fill="#fff" opacity=".18"/>
+              <path d="M179 257 C169 320 181 386 189 450 C167 400 158 315 179 257 Z" fill="#000" opacity=".22"/>
+              <path d="M420 270 C443 354 414 422 416 491 C398 434 435 350 420 270 Z" fill="#000" opacity=".27"/>
+              <path d="M148 267 C123 353 145 405 131 504 C156 425 134 354 148 267 Z" fill="#fff" opacity=".16"/>
+              <path d="M474 272 C458 359 480 411 462 516 C490 445 473 359 474 272 Z" fill="#fff" opacity=".14"/>
+              <path d="M266 193 C247 270 276 342 241 424 C218 482 233 527 230 568 C216 508 209 478 229 420 C260 338 237 264 266 193 Z" fill="#000" opacity=".11"/>
+              <path d="M274 202 C255 279 286 350 253 429 C235 480 248 535 248 570 C227 506 235 465 246 424 C277 343 247 266 274 202 Z" fill="#fff" opacity=".12"/>
+              <path d="M353 174 C327 222 360 303 346 366 C335 422 364 491 358 569 C346 506 318 445 333 367 C345 301 319 222 353 174 Z" fill="#000" opacity=".16"/>
+              <path d="M367 192 C348 250 383 319 364 381 C352 438 383 496 376 560 C369 497 340 439 353 379 C371 313 343 251 367 192 Z" fill="#fff" opacity=".12"/>
             </g>
+            <g fill="none" stroke-linecap="round" filter="url(#crease-${uid})">
+              <path d="M156 127 Q176 134 191 156 M188 111 Q215 118 232 133" stroke="#fff" stroke-opacity=".18" stroke-width="4"/>
+              <path d="M148 139 Q165 142 179 168 M388 112 Q421 121 440 142" stroke="#000" stroke-opacity=".13" stroke-width="3"/>
+              <path d="M159 175 Q157 203 178 223 M439 166 Q445 198 426 227" stroke="#000" stroke-opacity=".16" stroke-width="2.4"/>
+              <path d="M108 510 Q137 518 171 513 M430 515 Q463 521 497 513" stroke="#fff" stroke-opacity=".15" stroke-width="2.5"/>
+              <path d="M196 559 Q295 579 404 558" stroke="#000" stroke-opacity=".11" stroke-width="2"/>
+            </g>
+          </g>
+
+          <!-- Curved knit neckline, with a shallow back collar for player views. -->
+          ${side === "back" ? `
+            <path d="M239 94 Q300 117 361 94 L358 109 Q300 137 242 109 Z" fill="${dark}"/>
+            <path d="M244 105 Q300 129 356 105" fill="none" stroke="${stripeA}" stroke-width="3"/>
+          ` : `
+            <path d="M244 94 Q300 112 356 94 C351 119 327 147 300 168 C273 147 249 119 244 94 Z" fill="url(#neck-lining-${uid})"/>
+            <path d="M244 94 Q300 111 356 94 L351 105 Q300 123 249 105 Z" fill="${dark}"/>
+            <path d="M235 94 Q240 90 247 95 C248 119 273 149 307 172 L298 182 C260 154 240 128 235 94 Z" fill="${primary}"/>
+            <path d="M353 95 Q360 90 365 94 C360 129 338 156 298 182 L290 174 C327 145 349 121 353 95 Z" fill="${primary}"/>
+            <path d="M241 97 C247 129 269 152 299 176 C330 153 353 130 359 97" fill="none" stroke="${stripeA}" stroke-width="2.7"/>
+            <path d="M237 96 C244 131 266 154 298 181 C337 154 359 124 363 96 L356 96 C350 125 329 149 298 173 C269 151 248 125 245 96 Z" fill="url(#collar-light-${uid})"/>
+            <path d="M247 108 C254 132 275 155 300 172 M351 108 C344 133 324 155 300 172" fill="none" stroke="${stripeB}" stroke-opacity=".34" stroke-width=".7" stroke-dasharray="1 1.5"/>
           `}
-
-          ${variant === "away" && !compact ? `
-            <g fill="none" stroke-linecap="round" filter="url(#soft-${uid})">
-              <path d="M214 469 C244 486 278 493 313 490 C348 487 376 479 401 465" stroke="#000" stroke-opacity=".035" stroke-width="5"/>
-              <path d="M196 528 C242 540 286 543 329 539 C363 536 389 529 409 519" stroke="#fff" stroke-opacity=".040" stroke-width="4"/>
-            </g>
-          ` : ""}
-
-          <!-- barely visible sewn-panel definition: no hard black outlines -->
-          ${compact ? "" : `
-            <g fill="none" stroke-linecap="round" filter="url(#soft-${uid})">
-              <path d="M199 184 C196 243 195 304 195 360 C194 412 192 458 189 499" stroke="#000" stroke-opacity=".008" stroke-width="1.4"/>
-              <path d="M401 184 C404 243 405 304 405 360 C406 412 408 458 411 499" stroke="#000" stroke-opacity=".008" stroke-width="1.4"/>
-              <path d="M201 186 C199 244 199 303 199 357" stroke="#fff" stroke-opacity=".010" stroke-width=".9"/>
-              <path d="M399 186 C401 244 401 303 401 357" stroke="#fff" stroke-opacity=".010" stroke-width=".9"/>
-            </g>
-          `}
-
-          <!-- realistic ribbed V collar -->
-          <path d="M258 108 C273 96 327 96 342 108 L355 118 C338 130 320 144 300 158 C280 144 262 130 245 118 Z" fill="${dark}"/>
-          <path d="M259 110 C273 122 287 135 300 148 C313 135 327 122 341 110" fill="none" stroke="${stripeA}" stroke-width="9.5" stroke-linejoin="round"/>
-          <path d="M265 113 C277 124 289 135 300 145 C311 135 323 124 335 113" fill="none" stroke="${stripeB}" stroke-width="2.3" opacity=".84"/>
-          <path d="M273 115 C282 123 291 132 300 140 C309 132 318 123 327 115" fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="1"/>
-
-          ${side === "back" ? back : front}
         </g>
       </svg>
     `;
