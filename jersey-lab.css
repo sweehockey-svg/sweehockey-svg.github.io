@@ -434,3 +434,76 @@ button,input,select{font:inherit}
   content:"";
   background:linear-gradient(90deg,var(--yellow),rgba(94,232,225,.45),transparent 72%);
 }
+
+
+/* Jersey Lab V3 — hockey product studio */
+.lab-shell{padding-top:34px}
+.lab-hero{
+  min-height:330px;
+  overflow:visible;
+  padding-top:18px;
+}
+.lab-hero h1{
+  padding-top:.06em;
+  line-height:.9;
+}
+.jersey-stage{
+  min-height:545px;
+  background:
+    radial-gradient(circle at 50% 18%,rgba(79,154,212,.18),transparent 23%),
+    radial-gradient(ellipse at 50% 98%,rgba(255,255,255,.045),transparent 28%),
+    linear-gradient(180deg,#11253a 0%,#08131f 58%,#04080c 100%);
+}
+.jersey-stage.is-away{
+  background:
+    radial-gradient(circle at 50% 18%,rgba(255,255,255,.13),transparent 22%),
+    radial-gradient(ellipse at 50% 98%,rgba(255,255,255,.045),transparent 28%),
+    linear-gradient(180deg,#202930 0%,#0f151a 58%,#050708 100%);
+}
+.jersey-stage::before{
+  right:15%;
+  bottom:3%;
+  left:15%;
+  height:54px;
+  background:radial-gradient(ellipse at center,rgba(0,0,0,.55),rgba(0,0,0,.20) 52%,transparent 74%);
+  filter:blur(13px);
+}
+.jersey-render{
+  inset:28px 48px 12px;
+}
+.jersey-render svg{
+  width:min(100%,450px);
+  height:min(100%,505px);
+  transform:translateY(6px);
+  filter:drop-shadow(0 28px 24px rgba(0,0,0,.46));
+}
+.jersey-stage:hover .jersey-render svg{
+  transform:translateY(0) scale(1.01);
+}
+.jersey-stage-copy{
+  top:18px;
+  left:20px;
+}
+.jersey-stage-copy strong{
+  font-size:13px;
+}
+.locker-jersey{
+  padding:12px 4px 5px;
+}
+.locker-jersey .seh-jersey-svg{
+  max-height:235px;
+}
+.match-team .seh-jersey-svg{
+  max-width:205px;
+  height:220px;
+}
+.team-jersey-card svg{
+  height:215px;
+}
+@media(max-width:760px){
+  .lab-shell{padding-top:14px}
+  .lab-hero{padding-top:36px}
+  .jersey-stage{min-height:460px}
+  .jersey-render{inset:34px 18px 10px}
+  .jersey-render svg{width:min(100%,390px);height:min(100%,430px)}
+}
