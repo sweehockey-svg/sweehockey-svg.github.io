@@ -239,28 +239,28 @@
     const ink = variant === "away" ? primary : trim;
     const dark = variant === "away" ? primary : "#07090a";
 
-    const leftSleeve = "M211 120 C190 117 165 122 143 134 C125 144 108 157 98 171 C89 184 84 202 83 224 L78 470 Q101 481 130 488 L161 352 L179 184 Q182 139 211 120 Z";
-    const rightSleeve = "M389 120 C410 117 435 122 457 134 C475 144 492 157 502 171 C511 184 516 202 517 224 L522 470 Q499 481 470 488 L439 352 L421 184 Q418 139 389 120 Z";
-    const torso = "M211 120 C240 101 360 101 389 120 C406 134 413 155 412 181 L422 558 C412 576 373 582 300 584 C227 582 188 576 178 558 L188 181 C187 155 194 134 211 120 Z";
-    const fullShape = "M211 120 C190 117 165 122 143 134 C125 144 108 157 98 171 C89 184 84 202 83 224 L78 470 Q101 481 130 488 L161 352 L178 558 C188 576 227 582 300 584 C373 582 412 576 422 558 L439 352 L470 488 Q499 481 522 470 L517 224 C516 202 511 184 502 171 C492 157 475 144 457 134 C435 122 410 117 389 120 C360 101 240 101 211 120 Z";
+    const leftSleeve = "M214 121 C194 119 171 124 151 135 C134 145 120 157 111 171 C103 184 99 203 98 225 L94 472 Q112 481 136 487 L164 353 L181 187 Q184 142 214 121 Z";
+    const rightSleeve = "M386 121 C406 119 429 124 449 135 C466 145 480 157 489 171 C497 184 501 203 502 225 L506 472 Q488 481 464 487 L436 353 L419 187 Q416 142 386 121 Z";
+    const torso = "M214 121 C242 103 358 103 386 121 C402 135 409 156 408 182 L418 558 C408 576 371 582 300 584 C229 582 192 576 182 558 L192 182 C191 156 198 135 214 121 Z";
+    const fullShape = "M214 121 C194 119 171 124 151 135 C134 145 120 157 111 171 C103 184 99 203 98 225 L94 472 Q112 481 136 487 L164 353 L182 558 C192 576 229 582 300 584 C371 582 408 576 418 558 L436 353 L464 487 Q488 481 506 472 L502 225 C501 203 497 184 489 171 C480 157 466 145 449 135 C429 124 406 119 386 121 C358 103 242 103 214 121 Z";
 
     const shoulderDecor = pattern === "minimal"
       ? `
-        <path d="M157 161 L222 141 Q300 124 378 141 L443 161" fill="none" stroke="${stripeB}" stroke-width="6" opacity=".82"/>
+        <path d="M166 165 L224 147 Q300 132 376 147 L434 165" fill="none" stroke="${stripeB}" stroke-width="5.5" opacity=".78"/>
       `
       : `
-        <path d="M143 161 L214 132 Q300 111 386 132 L457 161 L445 184 L384 163 Q300 145 216 163 L155 184 Z" fill="${yokeBase}"/>
-        <path d="M157 165 L220 143 Q300 125 380 143 L443 165" fill="none" stroke="${stripeB}" stroke-width="4.3" opacity=".80"/>
+        <path d="M154 164 L220 138 Q300 119 380 138 L446 164 L436 181 L380 163 Q300 147 220 163 L164 181 Z" fill="${yokeBase}"/>
+        <path d="M166 167 L224 148 Q300 133 376 148 L434 167" fill="none" stroke="${stripeB}" stroke-width="4" opacity=".76"/>
       `;
 
     const sleeveStriping = pattern === "minimal" ? `
-      <path d="M82 346 L151 332 L145 360 L80 372 Z M518 346 L449 332 L455 360 L520 372 Z" fill="${stripeA}"/>
+      <path d="M96 360 L154 348 L148 376 L95 387 Z M504 360 L446 348 L452 376 L505 387 Z" fill="${stripeA}"/>
     ` : pattern === "diagonal" ? `
-      <path d="M81 292 L154 259 L148 299 L79 331 Z M519 292 L446 259 L452 299 L521 331 Z" fill="${stripeA}"/>
-      <path d="M79 330 L146 300 L142 325 L78 354 Z M521 330 L454 300 L458 325 L522 354 Z" fill="${stripeB}"/>
+      <path d="M95 307 L155 280 L149 320 L94 345 Z M505 307 L445 280 L451 320 L506 345 Z" fill="${stripeA}"/>
+      <path d="M94 345 L149 320 L145 345 L94 368 Z M506 345 L451 320 L455 345 L506 368 Z" fill="${stripeB}"/>
     ` : `
-      <path d="M81 297 L153 282 L148 316 L79 330 Z M519 297 L447 282 L452 316 L521 330 Z" fill="${stripeA}"/>
-      <path d="M79 334 L146 321 L142 347 L78 360 Z M521 334 L454 321 L458 347 L522 360 Z" fill="${stripeB}"/>
+      <path d="M95 312 L155 299 L149 333 L94 345 Z M505 312 L445 299 L451 333 L506 345 Z" fill="${stripeA}"/>
+      <path d="M94 349 L149 338 L145 364 L94 375 Z M506 349 L451 338 L455 364 L506 375 Z" fill="${stripeB}"/>
     `;
 
     const hemStriping = pattern === "minimal" ? `
@@ -317,10 +317,10 @@
             <stop offset=".43" stop-color="#fff" stop-opacity=".05"/>
             <stop offset="1" stop-color="#000" stop-opacity=".12"/>
           </linearGradient>
-          <radialGradient id="chest-light-${uid}" cx="${variant === "away" ? "46%" : "48%"}" cy="18%" r="70%">
-            <stop offset="0" stop-color="#fff" stop-opacity=".20"/>
-            <stop offset=".28" stop-color="#fff" stop-opacity=".06"/>
-            <stop offset=".7" stop-color="#000" stop-opacity=".02"/>
+          <radialGradient id="chest-light-${uid}" cx="${variant === "away" ? "44%" : "48%"}" cy="${variant === "away" ? "21%" : "18%"}" r="72%">
+            <stop offset="0" stop-color="#fff" stop-opacity="${variant === "away" ? ".16" : ".20"}"/>
+            <stop offset=".28" stop-color="#fff" stop-opacity="${variant === "away" ? ".045" : ".06"}"/>
+            <stop offset=".7" stop-color="#000" stop-opacity=".025"/>
             <stop offset="1" stop-color="#000" stop-opacity=".15"/>
           </radialGradient>
           <pattern id="knit-${uid}" width="5" height="5" patternUnits="userSpaceOnUse">
