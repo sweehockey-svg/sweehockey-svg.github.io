@@ -14,12 +14,14 @@
 
   const POSITIONS = ["LW","C","RW","LD","RD","G"];
   const EMPTY_LINEUP = Object.freeze({LW:"",C:"",RW:"",LD:"",RD:"",G:""});
+  const EMPTY_NUMBERS = Object.freeze({LW:"",C:"",RW:"",LD:"",RD:"",G:""});
   const access = {
     mode:String(window.SEH_MATCH_GRAPHICS_ACCESS?.mode || "admin").toLowerCase(),
     teamName:String(window.SEH_MATCH_GRAPHICS_ACCESS?.teamName || "").trim()
   };
   let teamDirectory = [...JERSEY_PRESETS];
   let rostersByTeamId = new Map();
+  let playerPortraits = new Map();
   let dataSource = "testdata";
 
   const FORMATS = {
@@ -52,7 +54,8 @@
     streamChannel:"",
     playerName:"eSWAHN",
     playerNumber:"21",
-    lineup:{...EMPTY_LINEUP}
+    lineup:{...EMPTY_LINEUP},
+    lineupNumbers:{...EMPTY_NUMBERS}
   };
 
   const normalize = value => String(value || "")
@@ -142,6 +145,60 @@
     return response.json();
   }
 
+  async function getRpcRows(name, payload) {
+    const {url,key} = configValues();
+    if (!url || !key) throw new Error("Supabase-konfiguration saknas");
+    const headers = {apikey:key,Accept:"application/json","Content-Type":"application/json"};
+    if (/^eyJ/i.test(key)) headers.Authorization = "Bearer " + key;
+    const response = await fetch(url + "/rest/v1/rpc/" + name,{
+      method:"POST",
+      headers,
+      cache:"no-store",
+      body:JSON.stringify(payload || {})
+    });
+    if (!response.ok) throw new Error(name + ": HTTP " + response.status);
+    return response.json();
+  }
+
+  function sportsGamerId(value) {
+    return String(value || "").match(/\/players\/(\d+)/i)?.[1] || "";
+  }
+
+  function portraitUrlFromRow(row) {
+    const id = sportsGamerId(row?.sports_gamer_player_url);
+    if (id && Array.isArray(window.SEH_PLAYER_IMAGE_FILES) && window.SEH_PLAYER_IMAGE_FILES.includes(id + ".png")) {
+      return assetPrefix + "players/" + encodeURIComponent(id + ".png");
+    }
+    const raw = String(row?.player_image || "").trim();
+    return /^https?:\/\//i.test(raw) ? raw : "";
+  }
+
+  function portraitUrlForPlayer(name) {
+    return playerPortraits.get(normalize(name)) || "";
+  }
+
+  async function hydratePlayerPortraits(teamId) {
+    const names = rosterFor(teamId).filter(Boolean);
+    const missing = names.filter(name => !playerPortraits.has(normalize(name)));
+    if (!missing.length) return;
+
+    try {
+      const rows = await getRpcRows("seh_ecl27_player_card_rows",{p_names:missing});
+      const byName = new Map(
+        (Array.isArray(rows) ? rows : [])
+          .map(row => [normalize(row?.display_gamertag),row])
+          .filter(([key]) => key)
+      );
+      for (const name of missing) {
+        const row = byName.get(normalize(name));
+        playerPortraits.set(normalize(name),portraitUrlFromRow(row));
+      }
+    } catch (error) {
+      console.warn("[Match Graphics] kunde inte hämta spelarporträtt",error);
+      for (const name of missing) playerPortraits.set(normalize(name),"");
+    }
+  }
+
   function buildDynamicTeam(row,index) {
     const preset = JERSEY_PRESETS.find(team => normalize(team.name) === normalize(row.name));
     if (preset) {
@@ -178,6 +235,7 @@
       next[pos] = players[index] || "";
     });
     state.lineup = next;
+    state.lineupNumbers = {...EMPTY_NUMBERS};
   }
 
   function applyAccessMode() {
@@ -317,6 +375,7 @@
       state.opponentId = teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
       applyAccessMode();
       setDefaultLineup();
+      await hydratePlayerPortraits(state.teamId);
       syncForm();
       render();
 
@@ -629,7 +688,7 @@
         side:"back",
         compact:true,
         playerName:name,
-        playerNumber:" "
+        playerNumber:state.lineupNumbers[pos] || " "
       });
       return [
         '<g>',
@@ -656,7 +715,7 @@
         side:"back",
         compact:true,
         playerName:name,
-        playerNumber:" "
+        playerNumber:state.lineupNumbers[pos] || " "
       });
       return [
         '<g>',
@@ -666,6 +725,86 @@
         '</g>'
       ].join("");
     }).join("");
+  }
+
+
+  function portraitCard(pos, name, x, y, width, height, team, variant) {
+    const cleanName = cleanText(name,20) || "PLAYER";
+    const number = cleanText(state.lineupNumbers[pos],2);
+    const portrait = portraitUrlForPlayer(cleanName);
+    if (!portrait) {
+      const jerseySize = Math.min(width,height - 10);
+      const jersey = premiumJerseySvg(team,{
+        variant,
+        side:"back",
+        compact:true,
+        playerName:cleanName,
+        playerNumber:number || " "
+      });
+      return [
+        '<g>',
+        '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="#080c11" fill-opacity=".72" stroke="#ffffff" stroke-opacity=".12"/>',
+        placedJersey(jersey,x+(width-jerseySize)/2,y-4,jerseySize),
+        '<rect x="' + (x+10) + '" y="' + (y+height-34) + '" width="' + (width-20) + '" height="26" rx="8" fill="#05080c" fill-opacity=".86"/>',
+        '<text x="' + (x+18) + '" y="' + (y+height-16) + '" fill="#ffffff" font-size="12" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text>',
+        number ? '<text x="' + (x+width-18) + '" y="' + (y+height-16) + '" text-anchor="end" fill="#ffffff" font-size="12" font-weight="900" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
+        '</g>'
+      ].join("");
+    }
+
+    const clipId = "portrait-" + pos + "-" + normalize(cleanName).replace(/\s+/g,"-");
+    const nameSize = width >= 250 ? 19 : width >= 160 ? 14 : 11;
+    return [
+      '<g>',
+      '<defs><clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18"/></clipPath></defs>',
+      '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="#0a0f15" stroke="#ffffff" stroke-opacity=".13"/>',
+      '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="' + team.primary + '" opacity=".24"/>',
+      '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + (y+4) + '" width="' + (width-8) + '" height="' + (height-36) + '" preserveAspectRatio="xMidYMax meet" clip-path="url(#' + clipId + ')"/>',
+      '<rect x="' + x + '" y="' + (y+height-44) + '" width="' + width + '" height="44" fill="#05080c" fill-opacity=".9" clip-path="url(#' + clipId + ')"/>',
+      '<text x="' + (x+12) + '" y="' + (y+height-25) + '" fill="#ffffff" fill-opacity=".62" font-size="10" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text>',
+      '<text x="' + (x+12) + '" y="' + (y+height-10) + '" fill="#ffffff" font-size="' + nameSize + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanName) + '</text>',
+      number ? '<text x="' + (x+width-12) + '" y="' + (y+height-14) + '" text-anchor="end" fill="#ffffff" font-size="' + (nameSize+2) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
+      '</g>'
+    ].join("");
+  }
+
+  function lineupPortraitSquare(width, y, team, variant) {
+    const margin = width === 1920 ? 150 : 44;
+    const gap = width === 1920 ? 14 : 7;
+    const slotWidth = (width - margin * 2 - gap * 5) / 6;
+    const cardHeight = width === 1920 ? 176 : 150;
+    return POSITIONS.map((pos,index) => {
+      const x = margin + index * (slotWidth + gap);
+      return portraitCard(pos,state.lineup[pos],x,y,slotWidth,cardHeight,team,variant);
+    }).join("");
+  }
+
+  function lineupPortraitStory(y, team, variant) {
+    const cardWidth = 430;
+    const cardHeight = 210;
+    const gapX = 20;
+    const gapY = 18;
+    return POSITIONS.map((pos,index) => {
+      const col = index % 2;
+      const row = Math.floor(index / 2);
+      const x = 100 + col * (cardWidth + gapX);
+      const yy = y + row * (cardHeight + gapY);
+      return portraitCard(pos,state.lineup[pos],x,yy,cardWidth,cardHeight,team,variant);
+    }).join("");
+  }
+
+  function lineupForTemplate(width, y, team, variant) {
+    if (state.lineupStyle === "portraits") {
+      return state.format === "story"
+        ? lineupPortraitStory(y,team,variant)
+        : lineupPortraitSquare(width,y,team,variant);
+    }
+    if (state.lineupStyle === "jerseys") {
+      return state.format === "story"
+        ? lineupJerseyStory(y,team,variant)
+        : lineupJerseySquare(width,y,team,variant);
+    }
+    return state.format === "story" ? lineupMarkupStory(y) : lineupMarkupSquare(width,y);
   }
 
   function cleanStreamChannel(value) {
@@ -729,13 +868,7 @@
     const vsSize = state.format === "landscape" ? 92 : state.format === "story" ? 78 : 68;
     const metaSize = state.format === "landscape" ? 34 : state.format === "story" ? 32 : 25;
     const ownVariant = state.ownSide === "home" ? "home" : "away";
-    const lineup = state.lineupStyle === "jerseys"
-      ? (state.format === "story"
-          ? lineupJerseyStory(layout.lineupY,own,ownVariant)
-          : lineupJerseySquare(W,layout.lineupY,own,ownVariant))
-      : (state.format === "story"
-          ? lineupMarkupStory(layout.lineupY)
-          : lineupMarkupSquare(W,layout.lineupY));
+    const lineup = lineupForTemplate(W,layout.lineupY,own,ownVariant);
     const stream = esc(streamLabel());
     const ownSideLabel = state.ownSide === "home" ? "HEMMA" : "BORTA";
     const ownSideX = state.ownSide === "home"
@@ -837,6 +970,11 @@
   }
 
   function focusLineupMarkup(ctx, y) {
+    if (state.lineupStyle === "portraits") {
+      return state.format === "story"
+        ? lineupPortraitStory(y,ctx.own,ctx.ownVariant)
+        : lineupPortraitSquare(ctx.W,y,ctx.own,ctx.ownVariant);
+    }
     const useJerseys = state.lineupStyle === "jerseys";
     if (state.format === "landscape") {
       const margin=110,gap=18,slot=(ctx.W-margin*2-gap*5)/6;
@@ -845,7 +983,7 @@
         const name=cleanText(state.lineup[pos],18) || "—";
         if (useJerseys) {
           const size=Math.min(232,slot);
-          const jersey=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"back",compact:true,playerName:name==="—"?"PLAYER":name,playerNumber:" "});
+          const jersey=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"back",compact:true,playerName:name==="—"?"PLAYER":name,playerNumber:state.lineupNumbers[pos] || " "});
           return placedJersey(jersey,x+(slot-size)/2,y,size) +
             '<text x="' + (x+slot/2) + '" y="' + (y+size+22) + '" text-anchor="middle" fill="#fff" font-size="15" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text>';
         }
@@ -868,7 +1006,7 @@
       const yy=y+row*rowStep;
       const name=cleanText(state.lineup[pos],18) || "—";
       if (useJerseys) {
-        const jersey=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"back",compact:true,playerName:name==="—"?"PLAYER":name,playerNumber:" "});
+        const jersey=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"back",compact:true,playerName:name==="—"?"PLAYER":name,playerNumber:state.lineupNumbers[pos] || " "});
         return placedJersey(jersey,x+(slot-jerseySize)/2,yy,jerseySize) +
           '<text x="' + (x+slot/2) + '" y="' + (yy+jerseySize+22) + '" text-anchor="middle" fill="#fff" font-size="' + (state.format === "story" ? 18 : 14) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text>';
       }
@@ -925,9 +1063,7 @@
     const lineupY=isStory?1160:(isWide?855:855);
     const left=premiumJerseySvg(leftTeam,{variant:"home",side:"front",compact:false});
     const right=premiumJerseySvg(rightTeam,{variant:"away",side:"front",compact:false});
-    const lineup=state.lineupStyle==="jerseys"
-      ? (isStory?lineupJerseyStory(lineupY,ctx.own,ctx.ownVariant):lineupJerseySquare(ctx.W,lineupY,ctx.own,ctx.ownVariant))
-      : (isStory?lineupMarkupStory(lineupY):lineupMarkupSquare(ctx.W,lineupY));
+    const lineup=lineupForTemplate(ctx.W,lineupY,ctx.own,ctx.ownVariant);
 
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
@@ -964,9 +1100,7 @@
     const leftJ=premiumJerseySvg(ctx.home,{variant:"home",side:"front",compact:true});
     const rightJ=premiumJerseySvg(ctx.away,{variant:"away",side:"front",compact:true});
     const lineupY=isStory?1040:isWide?725:700;
-    const lineup=state.lineupStyle==="jerseys"
-      ? (isStory?lineupJerseyStory(lineupY,ctx.own,ctx.ownVariant):lineupJerseySquare(ctx.W,lineupY,ctx.own,ctx.ownVariant))
-      : (isStory?lineupMarkupStory(lineupY):lineupMarkupSquare(ctx.W,lineupY));
+    const lineup=lineupForTemplate(ctx.W,lineupY,ctx.own,ctx.ownVariant);
 
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
@@ -1002,9 +1136,7 @@
     const jerseyY=isWide?205:isStory?320:225;
     const ownJ=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"front",compact:false});
     const lineupY=isStory?1150:isWide?790:825;
-    const lineup=state.lineupStyle==="jerseys"
-      ? (isStory?lineupJerseyStory(lineupY,ctx.own,ctx.ownVariant):lineupJerseySquare(ctx.W,lineupY,ctx.own,ctx.ownVariant))
-      : (isStory?lineupMarkupStory(lineupY):lineupMarkupSquare(ctx.W,lineupY));
+    const lineup=lineupForTemplate(ctx.W,lineupY,ctx.own,ctx.ownVariant);
 
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
@@ -1119,6 +1251,10 @@
       if (preview) preview.style.backgroundImage = 'url("' + backgroundUrl(id) + '")';
     });
     syncLineupSelects();
+    POSITIONS.forEach(pos => {
+      const input = $('[data-lineup-number="' + pos + '"]');
+      if (input) input.value = state.lineupNumbers[pos] || "";
+    });
     applyAccessMode();
   }
 
@@ -1143,6 +1279,7 @@
     state.template = "classic";
     state.background = "arena";
     state.lineupStyle = "cards";
+    state.lineupNumbers = {...EMPTY_NUMBERS};
     state.streamPlatform = "none";
     state.streamChannel = "";
     applyAccessMode();
@@ -1250,10 +1387,11 @@
     });
   });
 
-  $("#teamSelect").addEventListener("change",event => {
+  $("#teamSelect").addEventListener("change",async event => {
     state.teamId = event.target.value;
     ensureDifferentTeams("team");
     setDefaultLineup();
+    await hydratePlayerPortraits(state.teamId);
     syncForm();
     render();
   });
@@ -1295,8 +1433,11 @@
     render();
   });
 
-  $("#lineupStyleSelect").addEventListener("change",event => {
-    state.lineupStyle = event.target.value === "jerseys" ? "jerseys" : "cards";
+  $("#lineupStyleSelect").addEventListener("change",async event => {
+    state.lineupStyle = ["jerseys","portraits"].includes(event.target.value)
+      ? event.target.value
+      : "cards";
+    if (state.lineupStyle === "portraits") await hydratePlayerPortraits(state.teamId);
     render();
   });
 
@@ -1313,7 +1454,7 @@
     render();
   });
 
-  $$("[data-lineup]").forEach(select => {
+  $("[data-lineup]").forEach(select => {
     select.addEventListener("change",event => {
       const pos = event.target.dataset.lineup;
       const player = event.target.value;
@@ -1326,6 +1467,16 @@
       }
       state.lineup[pos] = player;
       syncLineupSelects();
+      render();
+    });
+  });
+
+  $("[data-lineup-number]").forEach(input => {
+    input.addEventListener("input",event => {
+      const pos = event.target.dataset.lineupNumber;
+      const value = String(event.target.value || "").replace(/\D/g,"").slice(0,2);
+      event.target.value = value;
+      state.lineupNumbers[pos] = value;
       render();
     });
   });
