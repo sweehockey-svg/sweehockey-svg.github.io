@@ -17274,6 +17274,18 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     installLogoFallback(mainLogo);installLogoFallback(bgLogo);installLogoFallback(watermark);
     try{zeroApplyTeamPalette(hero,teamName,mainLogo||bgLogo);}catch(_){}
 
+    const nativeJersey=document.createElement('div');
+    nativeJersey.className='seh-team-native-jersey';
+    if(teamId>0 && window.SEH_TEAM_JERSEY_V27?.mount){
+      void window.SEH_TEAM_JERSEY_V27.mount(nativeJersey,{
+        id:teamId,
+        teamId,
+        name:teamName,
+        currentName:teamName,
+        logoUrl
+      });
+    }
+
     const targets=sehTeamProfileTargets(sourceRoot);
 
     /*
@@ -17345,7 +17357,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       dock.appendChild(button);
     });
 
-    shell.append(hero,dock);
+    shell.append(hero,nativeJersey,dock);
     ['overview','stats','history','players','merits'].forEach(key=>{
       const panel=targets.panels?.[key];
       if(panel)shell.appendChild(panel);
