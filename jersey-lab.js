@@ -397,29 +397,19 @@
   }
 
   async function loadEcl27Data() {
+    // Load the exact ECL 27 team list first. Roster, palette or image failures
+    // must never leave the UI stuck on the five local test presets.
     try {
-      const shared = await sharedEcl27Roster();
-      if (shared && applySharedEcl27Roster(shared)) {
-        await refreshCurrentRostersFromView();
-      } else {
-        const [teams,rosterRows] = await Promise.all([
-          getPublicRows(
-            "v_ecl27_team_builds_public",
-            "select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"
-          ),
-          getPublicRows(
-            "v_ecl27_current_roster_v1",
-            "select=player_key,display_gamertag,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
-          )
-        ]);
-        const rows = Array.isArray(teams) ? teams : [];
-        if (!rows.length) throw new Error("ECL 27 saknar lagdata");
+      const teams = await getPublicRows(
+        "v_ecl27_team_builds_public",
+        "select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"
+      );
+      const rows = Array.isArray(teams) ? teams : [];
+      if (!rows.length) throw new Error("ECL 27 saknar lagdata");
 
-        teamDirectory = rows.map(buildDynamicTeam);
-        rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
-        playerKeysByName = new Map();
-        applyDirectRosterRows(rosterRows);
-      }
+      teamDirectory = rows.map(buildDynamicTeam);
+      rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+      playerKeysByName = new Map();
 
       const current = teamDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen"))
         || teamDirectory[0];
@@ -427,24 +417,40 @@
       state.matchHome = current.id;
       state.matchAway = teamDirectory.find(team => team.id !== current.id)?.id || current.id;
 
-      await Promise.all([
-        ensureTeamPalette(teamById(state.teamId)),
-        ensureTeamPalette(teamById(state.matchHome)),
-        ensureTeamPalette(teamById(state.matchAway))
-      ]);
-
       fillSelect($("#teamSelect"),state.teamId);
       fillSelect($("#matchHomeSelect"),state.matchHome);
       fillSelect($("#matchAwaySelect"),state.matchAway);
       syncControlsFromTeam(current);
       fillPlayerSelect();
       renderAll();
-      hydrateTeamPalettes().then(() => {
-        renderGrid();
-        renderMatch();
-      });
     } catch (error) {
-      console.error("[Jersey Lab] kunde inte läsa ECL 27-data",error);
+      console.error("[Jersey Lab] kunde inte läsa ECL 27-laglistan",error);
+      return;
+    }
+
+    // Roster enrichment is independent of the already-rendered team list.
+    try {
+      const rosterRows = await getPublicRows(
+        "v_ecl27_current_roster_v1",
+        "select=player_key,display_gamertag,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
+      );
+      rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+      playerKeysByName = new Map();
+      applyDirectRosterRows(rosterRows);
+      fillPlayerSelect();
+      renderLocker();
+    } catch (error) {
+      console.warn("[Jersey Lab] laglistan laddad men roster kunde inte hämtas",error);
+    }
+
+    // Palette enrichment may update colors, never identity/team membership.
+    try {
+      await hydrateTeamPalettes();
+      const selected = teamById(state.teamId);
+      syncControlsFromTeam(selected);
+      renderAll();
+    } catch (error) {
+      console.warn("[Jersey Lab] kunde inte läsa lagfärger",error);
     }
   }
 
