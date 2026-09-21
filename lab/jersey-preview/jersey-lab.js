@@ -240,8 +240,8 @@
     const dark = variant === "away" ? primary : "#07090a";
 
     // Separate sewn panels with deliberate overlap under the torso so no background can show through.
-    const leftSleeve = "M217 123 C200 121 181 125 165 133 C150 141 137 151 129 164 C121 177 117 196 116 219 L114 474 Q137 486 176 490 L204 360 L200 189 Q198 146 217 123 Z";
-    const rightSleeve = "M383 123 C400 121 419 125 435 133 C450 141 463 151 471 164 C479 177 483 196 484 219 L486 474 Q463 486 424 490 L396 360 L400 189 Q402 146 383 123 Z";
+    const leftSleeve = "M217 123 C200 121 181 125 165 133 C150 141 137 151 129 164 C121 177 117 196 116 219 L112 492 Q138 505 178 510 L204 362 L200 189 Q198 146 217 123 Z";
+    const rightSleeve = "M383 123 C400 121 419 125 435 133 C450 141 463 151 471 164 C479 177 483 196 484 219 L488 492 Q462 505 422 510 L396 362 L400 189 Q402 146 383 123 Z";
     const torso = "M217 123 C244 106 356 106 383 123 C399 137 406 157 405 183 L415 558 C405 576 369 582 300 584 C231 582 195 576 185 558 L195 183 C194 157 201 137 217 123 Z";
 
     const shoulderDecor = pattern === "minimal"
@@ -254,13 +254,13 @@
       `;
 
     const sleeveStriping = pattern === "minimal" ? `
-      <path d="M104 362 L154 351 L148 378 L103 388 Z M496 362 L446 351 L452 378 L497 388 Z" fill="${stripeA}"/>
+      <path d="M103 371 L154 360 L148 388 L102 398 Z M497 371 L446 360 L452 388 L498 398 Z" fill="${stripeA}"/>
     ` : pattern === "diagonal" ? `
-      <path d="M103 309 L155 285 L149 324 L102 346 Z M497 309 L445 285 L451 324 L498 346 Z" fill="${stripeA}"/>
-      <path d="M102 347 L149 325 L145 349 L102 369 Z M498 347 L451 325 L455 349 L498 369 Z" fill="${stripeB}"/>
+      <path d="M102 318 L155 294 L149 333 L101 355 Z M498 318 L445 294 L451 333 L499 355 Z" fill="${stripeA}"/>
+      <path d="M101 356 L149 334 L145 358 L101 378 Z M499 356 L451 334 L455 358 L499 378 Z" fill="${stripeB}"/>
     ` : `
-      <path d="M103 314 L155 303 L149 337 L102 347 Z M497 314 L445 303 L451 337 L498 347 Z" fill="${stripeA}"/>
-      <path d="M102 351 L149 341 L145 367 L102 377 Z M498 351 L451 341 L455 367 L498 377 Z" fill="${stripeB}"/>
+      <path d="M102 323 L155 312 L149 346 L101 356 Z M498 323 L445 312 L451 346 L499 356 Z" fill="${stripeA}"/>
+      <path d="M101 360 L149 350 L145 376 L101 386 Z M499 360 L451 350 L455 376 L499 386 Z" fill="${stripeB}"/>
     `;
 
     const hemStriping = pattern === "minimal" ? `
@@ -312,12 +312,12 @@
           <linearGradient id="left-sleeve-${uid}" x1="0" x2="1">
             <stop offset="0" stop-color="#000" stop-opacity=".34"/>
             <stop offset=".43" stop-color="#fff" stop-opacity=".05"/>
-            <stop offset="1" stop-color="#000" stop-opacity=".075"/>
+            <stop offset="1" stop-color="#000" stop-opacity=".035"/>
           </linearGradient>
           <linearGradient id="right-sleeve-${uid}" x1="1" x2="0">
             <stop offset="0" stop-color="#000" stop-opacity=".34"/>
             <stop offset=".43" stop-color="#fff" stop-opacity=".05"/>
-            <stop offset="1" stop-color="#000" stop-opacity=".075"/>
+            <stop offset="1" stop-color="#000" stop-opacity=".035"/>
           </linearGradient>
           <radialGradient id="chest-light-${uid}" cx="${variant === "away" ? "44%" : "48%"}" cy="${variant === "away" ? "21%" : "18%"}" r="72%">
             <stop offset="0" stop-color="#fff" stop-opacity="${variant === "away" ? ".16" : ".20"}"/>
@@ -375,10 +375,10 @@
           <!-- barely visible sewn-panel definition: no hard black outlines -->
           ${compact ? "" : `
             <g fill="none" stroke-linecap="round" filter="url(#soft-${uid})">
-              <path d="M199 182 C195 240 194 301 194 356 C193 407 190 451 186 482" stroke="#000" stroke-opacity=".014" stroke-width="1.7"/>
-              <path d="M401 182 C405 240 406 301 406 356 C407 407 410 451 414 482" stroke="#000" stroke-opacity=".014" stroke-width="1.7"/>
-              <path d="M201 184 C198 241 198 300 198 353" stroke="#fff" stroke-opacity=".014" stroke-width="1"/>
-              <path d="M399 184 C402 241 402 300 402 353" stroke="#fff" stroke-opacity=".014" stroke-width="1"/>
+              <path d="M199 184 C196 243 195 304 195 360 C194 412 192 458 189 499" stroke="#000" stroke-opacity=".008" stroke-width="1.4"/>
+              <path d="M401 184 C404 243 405 304 405 360 C406 412 408 458 411 499" stroke="#000" stroke-opacity=".008" stroke-width="1.4"/>
+              <path d="M201 186 C199 244 199 303 199 357" stroke="#fff" stroke-opacity=".010" stroke-width=".9"/>
+              <path d="M399 186 C401 244 401 303 401 357" stroke="#fff" stroke-opacity=".010" stroke-width=".9"/>
             </g>
           `}
 
