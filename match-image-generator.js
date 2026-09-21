@@ -37,6 +37,9 @@
     date:"2026-10-01",
     time:"20:00",
     format:"square",
+    lineupStyle:"cards",
+    streamPlatform:"none",
+    streamChannel:"",
     playerName:"eSWAHN",
     playerNumber:"21",
     lineup:{...EMPTY_LINEUP}
@@ -507,6 +510,80 @@
     }).join("");
   }
 
+  function lineupJerseySquare(width, y, team, variant) {
+    const margin = width === 1920 ? 160 : 48;
+    const gap = width === 1920 ? 12 : 6;
+    const available = width - margin * 2 - gap * 5;
+    const slotWidth = available / 6;
+    const jerseySize = width === 1920 ? 176 : 148;
+    return POSITIONS.map((pos,index) => {
+      const x = margin + index * (slotWidth + gap) + (slotWidth - jerseySize) / 2;
+      const name = cleanText(state.lineup[pos],18) || "PLAYER";
+      const jersey = premiumJerseySvg(team,{
+        variant,
+        side:"back",
+        compact:true,
+        playerName:name,
+        playerNumber:" "
+      });
+      return [
+        '<g>',
+        placedJersey(jersey,x,y,jerseySize),
+        '<rect x="' + (x + jerseySize/2 - 23) + '" y="' + (y + jerseySize - 5) + '" width="46" height="25" rx="8" fill="#070a0d" fill-opacity=".86" stroke="#ffffff" stroke-opacity=".13"/>',
+        '<text x="' + (x + jerseySize/2) + '" y="' + (y + jerseySize + 13) + '" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text>',
+        '</g>'
+      ].join("");
+    }).join("");
+  }
+
+  function lineupJerseyStory(y, team, variant) {
+    const jerseySize = 238;
+    const colX = [120,722];
+    const rowGap = 235;
+    return POSITIONS.map((pos,index) => {
+      const col = index % 2;
+      const row = Math.floor(index / 2);
+      const x = colX[col] - jerseySize/2;
+      const yy = y + row * rowGap;
+      const name = cleanText(state.lineup[pos],20) || "PLAYER";
+      const jersey = premiumJerseySvg(team,{
+        variant,
+        side:"back",
+        compact:true,
+        playerName:name,
+        playerNumber:" "
+      });
+      return [
+        '<g>',
+        placedJersey(jersey,x,yy,jerseySize),
+        '<rect x="' + (x + jerseySize/2 - 28) + '" y="' + (yy + jerseySize - 6) + '" width="56" height="30" rx="9" fill="#070a0d" fill-opacity=".86" stroke="#ffffff" stroke-opacity=".13"/>',
+        '<text x="' + (x + jerseySize/2) + '" y="' + (yy + jerseySize + 16) + '" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text>',
+        '</g>'
+      ].join("");
+    }).join("");
+  }
+
+  function cleanStreamChannel(value) {
+    return String(value || "")
+      .trim()
+      .replace(/^https?:\/\//i,"")
+      .replace(/^www\./i,"")
+      .replace(/^twitch\.tv\//i,"")
+      .replace(/^youtube\.com\//i,"")
+      .replace(/^youtu\.be\//i,"")
+      .replace(/^kick\.com\//i,"")
+      .replace(/\/$/,"");
+  }
+
+  function streamLabel() {
+    const channel = cleanStreamChannel(state.streamChannel);
+    if (!channel || state.streamPlatform === "none") return "";
+    if (state.streamPlatform === "twitch") return "LIVE · TWITCH.TV/" + channel.toUpperCase();
+    if (state.streamPlatform === "youtube") return "LIVE · YOUTUBE · " + channel.toUpperCase();
+    if (state.streamPlatform === "kick") return "LIVE · KICK.COM/" + channel.toUpperCase();
+    return "LIVE · " + channel.toUpperCase();
+  }
+
   function layoutFor(format) {
     if (format === "landscape") {
       return {
@@ -546,9 +623,15 @@
     const teamSize = state.format === "landscape" ? 34 : state.format === "story" ? 31 : 27;
     const vsSize = state.format === "landscape" ? 92 : state.format === "story" ? 78 : 68;
     const metaSize = state.format === "landscape" ? 34 : state.format === "story" ? 32 : 25;
-    const lineup = state.format === "story"
-      ? lineupMarkupStory(layout.lineupY)
-      : lineupMarkupSquare(W,layout.lineupY);
+    const ownVariant = state.ownSide === "home" ? "home" : "away";
+    const lineup = state.lineupStyle === "jerseys"
+      ? (state.format === "story"
+          ? lineupJerseyStory(layout.lineupY,own,ownVariant)
+          : lineupJerseySquare(W,layout.lineupY,own,ownVariant))
+      : (state.format === "story"
+          ? lineupMarkupStory(layout.lineupY)
+          : lineupMarkupSquare(W,layout.lineupY));
+    const stream = esc(streamLabel());
     const ownSideLabel = state.ownSide === "home" ? "HEMMA" : "BORTA";
     const ownSideX = state.ownSide === "home"
       ? layout.leftX + layout.jerseySize / 2
@@ -586,6 +669,7 @@
       '<circle cx="' + (W/2) + '" cy="' + layout.vsY + '" r="' + (state.format === "landscape" ? 72 : 58) + '" fill="#070a0d" fill-opacity=".86" stroke="#ffffff" stroke-opacity=".14"/>',
       '<text x="' + (W/2) + '" y="' + (layout.vsY + vsSize*.28) + '" text-anchor="middle" fill="#ffffff" font-size="' + vsSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="-4">VS</text>',
       '<text x="' + (W/2) + '" y="' + layout.metaY + '" text-anchor="middle" fill="#ffffff" font-size="' + metaSize + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + date + ' · ' + time + '</text>',
+      stream ? '<g><rect x="' + (W/2 - (state.format === "landscape" ? 220 : 180)) + '" y="' + (layout.metaY + 20) + '" width="' + (state.format === "landscape" ? 440 : 360) + '" height="' + (state.format === "story" ? 44 : 38) + '" rx="19" fill="#ffffff" fill-opacity=".075" stroke="#ffffff" stroke-opacity=".11"/><circle cx="' + (W/2 - (state.format === "landscape" ? 194 : 154)) + '" cy="' + (layout.metaY + (state.format === "story" ? 42 : 39)) + '" r="6" fill="#ff4d5f"/><text x="' + (W/2) + '" y="' + (layout.metaY + (state.format === "story" ? 48 : 44)) + '" text-anchor="middle" fill="#ffffff" font-size="' + (state.format === "story" ? 19 : state.format === "landscape" ? 18 : 15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1.1">' + stream + '</text></g>' : '',
       '<text x="' + ownSideX + '" y="' + layout.ownLabelY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".54" font-size="' + (state.format === "story" ? 17 : 14) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2.5">' + ownSideLabel + ' · ' + ownName + '</text>',
       '<text x="' + (W/2) + '" y="' + (layout.lineupY - 28) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".72" font-size="' + (state.format === "story" ? 22 : 16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">STARTING SIX</text>',
       lineup,
@@ -661,6 +745,10 @@
     $("#badgeSelect").value = state.badge;
     $("#dateInput").value = state.date;
     $("#timeInput").value = state.time;
+    $("#lineupStyleSelect").value = state.lineupStyle;
+    $("#streamPlatformSelect").value = state.streamPlatform;
+    $("#streamChannelInput").value = state.streamChannel;
+    $("#streamChannelInput").disabled = state.streamPlatform === "none";
     syncLineupSelects();
     applyAccessMode();
   }
@@ -683,6 +771,9 @@
     state.date = "2026-10-01";
     state.time = "20:00";
     state.format = "square";
+    state.lineupStyle = "cards";
+    state.streamPlatform = "none";
+    state.streamChannel = "";
     applyAccessMode();
     setDefaultLineup();
     syncForm();
@@ -810,6 +901,24 @@
 
   $("#formatSelect").addEventListener("change",event => {
     state.format = FORMATS[event.target.value] ? event.target.value : "square";
+    render();
+  });
+
+  $("#lineupStyleSelect").addEventListener("change",event => {
+    state.lineupStyle = event.target.value === "jerseys" ? "jerseys" : "cards";
+    render();
+  });
+
+  $("#streamPlatformSelect").addEventListener("change",event => {
+    state.streamPlatform = ["twitch","youtube","kick","other"].includes(event.target.value)
+      ? event.target.value
+      : "none";
+    $("#streamChannelInput").disabled = state.streamPlatform === "none";
+    render();
+  });
+
+  $("#streamChannelInput").addEventListener("input",event => {
+    state.streamChannel = event.target.value;
     render();
   });
 
