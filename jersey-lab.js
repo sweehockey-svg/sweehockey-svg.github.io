@@ -4,13 +4,15 @@
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => [...document.querySelectorAll(selector)];
 
-  const TEAMS = [
+  const JERSEY_PRESETS = [
     { id:"carolus", name:"Carolus Icemen", code:"CI", primary:"#123b67", accent:"#c99a32", trim:"#f3f4f2", pattern:"shoulder" },
     { id:"shadow", name:"Shadow skulls", code:"SS", primary:"#090b0d", accent:"#c52e33", trim:"#f1f1ef", pattern:"diagonal" },
     { id:"vasteras", name:"Västerås IK", code:"VIK", primary:"#0b0c0d", accent:"#f0c400", trim:"#f3f3ef", pattern:"classic" },
     { id:"nordic", name:"Nordic Nosebleed", code:"NNB", primary:"#102b48", accent:"#b62d31", trim:"#eef2f4", pattern:"shoulder" },
     { id:"ssk", name:"SSK Academy", code:"SSK", primary:"#123f83", accent:"#f1c21b", trim:"#f4f4ef", pattern:"classic" }
   ];
+  let teamDirectory = [...JERSEY_PRESETS];
+  let rostersByTeamId = new Map();
 
   const LOCKER = [
     { pos:"G", name:"Rootmos", number:"30" },
@@ -64,7 +66,141 @@
   }
 
   function teamById(id) {
-    return TEAMS.find(team => team.id === id) || TEAMS[0];
+    return teamDirectory.find(team => team.id === id) || teamDirectory[0] || JERSEY_PRESETS[0];
+  }
+
+  function initials(name) {
+    return String(name || "?")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0,3)
+      .map(part => part[0])
+      .join("")
+      .toUpperCase();
+  }
+
+  function fallbackPalette(index) {
+    const palettes = [
+      ["#142d4c","#d6b15f","#f4f4ef","shoulder"],
+      ["#11161d","#c63b42","#f0f2f4","classic"],
+      ["#183b34","#d8b35e","#f2f3ef","minimal"],
+      ["#30204c","#d1a33f","#f4f0f5","diagonal"]
+    ];
+    return palettes[Math.abs(index) % palettes.length];
+  }
+
+  function configValues() {
+    const cfg = window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
+    return {
+      url:String(cfg.supabaseUrl || cfg.SUPABASE_URL || "").replace(/\/+$/,""),
+      key:String(cfg.supabasePublishableKey || cfg.supabaseAnonKey || cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_PUBLISHABLE_KEY || "")
+    };
+  }
+
+  async function getPublicRows(view, query) {
+    const {url,key} = configValues();
+    if (!url || !key) throw new Error("Supabase-konfiguration saknas");
+    const headers = {apikey:key,Accept:"application/json"};
+    if (/^eyJ/i.test(key)) headers.Authorization = "Bearer " + key;
+    const response = await fetch(url + "/rest/v1/" + view + "?" + query,{headers,cache:"no-store"});
+    if (!response.ok) throw new Error(view + ": HTTP " + response.status);
+    return response.json();
+  }
+
+  function buildDynamicTeam(row,index) {
+    const preset = JERSEY_PRESETS.find(team => normalize(team.name) === normalize(row.name));
+    if (preset) {
+      return {
+        ...preset,
+        projectId:Number(row.id) || null,
+        sourceTeamId:Number(row.source_team_id) || null,
+        division:String(row.division || ""),
+        logoName:String(row.logo_name || "")
+      };
+    }
+    const [primary,accent,trim,pattern] = fallbackPalette(index);
+    return {
+      id:"ecl27-" + String(row.id || index + 1),
+      name:String(row.name || "Okänt lag"),
+      code:initials(row.name),
+      primary,accent,trim,pattern,
+      projectId:Number(row.id) || null,
+      sourceTeamId:Number(row.source_team_id) || null,
+      division:String(row.division || ""),
+      logoName:String(row.logo_name || ""),
+      genericJersey:true
+    };
+  }
+
+  function rosterFor(teamId) {
+    return rostersByTeamId.get(teamId) || [];
+  }
+
+  function fillPlayerSelect() {
+    const select = $("#playerName");
+    if (!select) return;
+    const players = rosterFor(state.teamId);
+    if (!players.length) {
+      select.innerHTML = `<option value="${esc(state.playerName || "PLAYER")}">${esc(state.playerName || "PLAYER")}</option>`;
+      return;
+    }
+    const exists = players.some(name => normalize(name) === normalize(state.playerName));
+    if (!exists) state.playerName = players[0];
+    select.innerHTML = players.map(name =>
+      `<option value="${esc(name)}"${normalize(name) === normalize(state.playerName) ? " selected" : ""}>${esc(name)}</option>`
+    ).join("");
+  }
+
+  async function loadEcl27Data() {
+    try {
+      const [teams,rosterRows] = await Promise.all([
+        getPublicRows(
+          "v_ecl27_team_builds_public",
+          "select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"
+        ),
+        getPublicRows(
+          "v_ecl27_current_roster_v1",
+          "select=subject_key,player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
+        )
+      ]);
+      const rows = Array.isArray(teams) ? teams : [];
+      if (!rows.length) throw new Error("ECL 27 saknar lagdata");
+
+      teamDirectory = rows.map(buildDynamicTeam);
+      const byName = new Map(teamDirectory.map(team => [normalize(team.name),team]));
+      rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+
+      for (const row of Array.isArray(rosterRows) ? rosterRows : []) {
+        const team = byName.get(normalize(row.team_name));
+        const player = String(row.display_gamertag || "").trim();
+        if (!team || !player) continue;
+        const list = rostersByTeamId.get(team.id);
+        if (!list.some(name => normalize(name) === normalize(player))) list.push(player);
+      }
+      for (const list of rostersByTeamId.values()) {
+        list.sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
+      }
+
+      const current = teamDirectory.find(team => team.id === state.teamId)
+        || teamDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen"))
+        || teamDirectory[0];
+      state.teamId = current.id;
+      state.matchHome = teamDirectory.some(team => team.id === state.matchHome)
+        ? state.matchHome
+        : current.id;
+      state.matchAway = teamDirectory.some(team => team.id === state.matchAway)
+        ? state.matchAway
+        : (teamDirectory.find(team => team.id !== state.matchHome)?.id || current.id);
+
+      fillSelect($("#teamSelect"),state.teamId);
+      fillSelect($("#matchHomeSelect"),state.matchHome);
+      fillSelect($("#matchAwaySelect"),state.matchAway);
+      syncControlsFromTeam(current);
+      fillPlayerSelect();
+      renderAll();
+    } catch (error) {
+      console.error("[Jersey Lab] kunde inte läsa ECL 27-data",error);
+    }
   }
 
   function esc(value) {
@@ -507,7 +643,9 @@
   }
 
   function fillSelect(select, selected) {
-    select.innerHTML = TEAMS.map(team => `<option value="${team.id}"${team.id === selected ? " selected" : ""}>${esc(team.name)}</option>`).join("");
+    select.innerHTML = teamDirectory.map(team =>
+      `<option value="${team.id}"${team.id === selected ? " selected" : ""}>${esc(team.name)}${team.division ? " · " + esc(team.division) : ""}</option>`
+    ).join("");
   }
 
   function syncControlsFromTeam(team) {
@@ -538,7 +676,11 @@
 
   function renderLocker() {
     const team = currentDesignTeam();
-    $("#lockerRoom").innerHTML = LOCKER.map(({pos,name,number}) => `
+    const livePlayers = rosterFor(state.teamId).slice(0,6);
+    const locker = livePlayers.length
+      ? livePlayers.map(name => ({pos:"ECL",name,number:" "}))
+      : LOCKER;
+    $("#lockerRoom").innerHTML = locker.map(({pos,name,number}) => `
       <div class="locker-slot">
         <div class="locker-light" aria-hidden="true"></div>
         <div class="locker-nameplate">
@@ -547,7 +689,7 @@
         </div>
         <div class="locker-hook" aria-hidden="true"></div>
         <div class="locker-jersey">${renderJersey(team,{variant:"home",side:"back",pattern:state.pattern,playerName:name,playerNumber:number,compact:true})}</div>
-        <div class="locker-base"><span>${esc(pos)}</span><small>#${esc(number)}</small></div>
+        <div class="locker-base"><span>${esc(pos)}</span><small>${number.trim() ? "#" + esc(number) : "ECL 27"}</small></div>
       </div>
     `).join("");
   }
@@ -566,11 +708,11 @@
   }
 
   function renderGrid() {
-    $("#teamGrid").innerHTML = TEAMS.map(team => `
+    $("#teamGrid").innerHTML = teamDirectory.map(team => `
       <article class="team-jersey-card">
         ${renderJersey(team,{variant:"home",side:"front",pattern:team.pattern,compact:true})}
         <strong>${esc(team.name)}</strong>
-        <small>HEMMA · ${esc(team.pattern.toUpperCase())}</small>
+        <small>${team.division ? esc(team.division.toUpperCase()) + " · " : ""}HEMMA · ${esc(team.pattern.toUpperCase())}</small>
       </article>
     `).join("");
   }
@@ -591,6 +733,7 @@
 
   $("#teamSelect").addEventListener("change",event => {
     syncControlsFromTeam(teamById(event.target.value));
+    fillPlayerSelect();
     renderPair();
     renderLocker();
   });
@@ -598,7 +741,7 @@
   $("#primaryColor").addEventListener("input",event => { state.primary=event.target.value; renderPair(); renderLocker(); });
   $("#accentColor").addEventListener("input",event => { state.accent=event.target.value; renderPair(); renderLocker(); });
   $("#trimColor").addEventListener("input",event => { state.trim=event.target.value; renderPair(); renderLocker(); });
-  $("#playerName").addEventListener("input",event => { state.playerName=event.target.value || "PLAYER"; renderPair(); });
+  $("#playerName").addEventListener("change",event => { state.playerName=event.target.value || "PLAYER"; renderPair(); });
   $("#playerNumber").addEventListener("input",event => { state.playerNumber=event.target.value || "0"; renderPair(); });
   $("#captainRoleSelect").addEventListener("change",event => { state.captainRole=event.target.value; renderPair(); });
   $("#rendererModeSelect").addEventListener("change",event => {
@@ -621,5 +764,7 @@
   $("#matchHomeSelect").addEventListener("change",event => { state.matchHome=event.target.value; renderMatch(); });
   $("#matchAwaySelect").addEventListener("change",event => { state.matchAway=event.target.value; renderMatch(); });
 
+  fillPlayerSelect();
   renderAll();
+  loadEcl27Data();
 })();
