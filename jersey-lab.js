@@ -239,28 +239,28 @@
     const ink = variant === "away" ? primary : trim;
     const dark = variant === "away" ? primary : "#07090a";
 
-    const leftSleeve = "M214 121 C194 119 171 124 151 135 C134 145 120 157 111 171 C103 184 99 203 98 225 L94 472 Q112 481 136 487 L164 353 L181 187 Q184 142 214 121 Z";
-    const rightSleeve = "M386 121 C406 119 429 124 449 135 C466 145 480 157 489 171 C497 184 501 203 502 225 L506 472 Q488 481 464 487 L436 353 L419 187 Q416 142 386 121 Z";
-    const torso = "M214 121 C242 103 358 103 386 121 C402 135 409 156 408 182 L418 558 C408 576 371 582 300 584 C229 582 192 576 182 558 L192 182 C191 156 198 135 214 121 Z";
-    const fullShape = "M214 121 C194 119 171 124 151 135 C134 145 120 157 111 171 C103 184 99 203 98 225 L94 472 Q112 481 136 487 L164 353 L182 558 C192 576 229 582 300 584 C371 582 408 576 418 558 L436 353 L464 487 Q488 481 506 472 L502 225 C501 203 497 184 489 171 C480 157 466 145 449 135 C429 124 406 119 386 121 C358 103 242 103 214 121 Z";
+    const leftSleeve = "M215 123 C197 121 176 125 158 134 C142 142 128 153 119 167 C111 180 107 199 106 222 L102 474 Q116 482 132 487 L162 354 L182 188 Q185 144 215 123 Z";
+    const rightSleeve = "M385 123 C403 121 424 125 442 134 C458 142 472 153 481 167 C489 180 493 199 494 222 L498 474 Q484 482 468 487 L438 354 L418 188 Q415 144 385 123 Z";
+    const torso = "M215 123 C243 105 357 105 385 123 C401 137 408 157 407 183 L417 558 C407 576 370 582 300 584 C230 582 193 576 183 558 L193 183 C192 157 199 137 215 123 Z";
+    const fullShape = "M215 123 C197 121 176 125 158 134 C142 142 128 153 119 167 C111 180 107 199 106 222 L102 474 Q116 482 132 487 L162 354 L183 558 C193 576 230 582 300 584 C370 582 407 576 417 558 L438 354 L468 487 Q484 482 498 474 L494 222 C493 199 489 180 481 167 C472 153 458 142 442 134 C424 125 403 121 385 123 C357 105 243 105 215 123 Z";
 
     const shoulderDecor = pattern === "minimal"
       ? `
-        <path d="M166 165 L224 147 Q300 132 376 147 L434 165" fill="none" stroke="${stripeB}" stroke-width="5.5" opacity=".78"/>
+        <path d="M176 168 L228 151 Q300 137 372 151 L424 168" fill="none" stroke="${stripeB}" stroke-width="5" opacity=".72"/>
       `
       : `
-        <path d="M154 164 L220 138 Q300 119 380 138 L446 164 L436 181 L380 163 Q300 147 220 163 L164 181 Z" fill="${yokeBase}"/>
-        <path d="M166 167 L224 148 Q300 133 376 148 L434 167" fill="none" stroke="${stripeB}" stroke-width="4" opacity=".76"/>
+        <path d="M165 166 L224 143 Q300 125 376 143 L435 166 L427 180 L376 163 Q300 149 224 163 L173 180 Z" fill="${yokeBase}"/>
+        <path d="M176 169 L228 152 Q300 138 372 152 L424 169" fill="none" stroke="${stripeB}" stroke-width="3.8" opacity=".72"/>
       `;
 
     const sleeveStriping = pattern === "minimal" ? `
-      <path d="M96 360 L154 348 L148 376 L95 387 Z M504 360 L446 348 L452 376 L505 387 Z" fill="${stripeA}"/>
+      <path d="M104 362 L154 351 L148 378 L103 388 Z M496 362 L446 351 L452 378 L497 388 Z" fill="${stripeA}"/>
     ` : pattern === "diagonal" ? `
-      <path d="M95 307 L155 280 L149 320 L94 345 Z M505 307 L445 280 L451 320 L506 345 Z" fill="${stripeA}"/>
-      <path d="M94 345 L149 320 L145 345 L94 368 Z M506 345 L451 320 L455 345 L506 368 Z" fill="${stripeB}"/>
+      <path d="M103 309 L155 285 L149 324 L102 346 Z M497 309 L445 285 L451 324 L498 346 Z" fill="${stripeA}"/>
+      <path d="M102 347 L149 325 L145 349 L102 369 Z M498 347 L451 325 L455 349 L498 369 Z" fill="${stripeB}"/>
     ` : `
-      <path d="M95 312 L155 299 L149 333 L94 345 Z M505 312 L445 299 L451 333 L506 345 Z" fill="${stripeA}"/>
-      <path d="M94 349 L149 338 L145 364 L94 375 Z M506 349 L451 338 L455 364 L506 375 Z" fill="${stripeB}"/>
+      <path d="M103 314 L155 303 L149 337 L102 347 Z M497 314 L445 303 L451 337 L498 347 Z" fill="${stripeA}"/>
+      <path d="M102 351 L149 341 L145 367 L102 377 Z M498 351 L451 341 L455 367 L498 377 Z" fill="${stripeB}"/>
     `;
 
     const hemStriping = pattern === "minimal" ? `
@@ -355,14 +355,21 @@
           <!-- soft photographic folds -->
           ${compact ? "" : `
             <g fill="none" stroke-linecap="round" filter="url(#soft-${uid})">
-              <path d="M236 188 C227 282 230 416 239 535" stroke="#000" stroke-opacity=".075" stroke-width="8"/>
-              <path d="M278 178 C272 286 274 430 280 546" stroke="#fff" stroke-opacity=".038" stroke-width="6"/>
-              <path d="M322 178 C328 286 326 430 320 546" stroke="#000" stroke-opacity=".038" stroke-width="6"/>
-              <path d="M364 188 C373 282 370 416 361 535" stroke="#fff" stroke-opacity=".032" stroke-width="5"/>
-              <path d="M109 217 C116 292 112 373 104 438" stroke="#fff" stroke-opacity=".032" stroke-width="5"/>
-              <path d="M491 217 C484 292 488 373 496 438" stroke="#000" stroke-opacity=".045" stroke-width="6"/>
+              <path d="M238 190 C230 286 232 417 240 535" stroke="#000" stroke-opacity=".050" stroke-width="7"/>
+              <path d="M279 181 C274 289 276 431 281 546" stroke="#fff" stroke-opacity=".024" stroke-width="5"/>
+              <path d="M321 181 C326 289 324 431 319 546" stroke="#000" stroke-opacity=".024" stroke-width="5"/>
+              <path d="M362 190 C370 286 368 417 360 535" stroke="#fff" stroke-opacity=".020" stroke-width="4"/>
+              <path d="M113 220 C119 295 116 375 109 439" stroke="#fff" stroke-opacity=".020" stroke-width="4"/>
+              <path d="M487 220 C481 295 484 375 491 439" stroke="#000" stroke-opacity=".030" stroke-width="5"/>
             </g>
           `}
+
+          ${variant === "away" && !compact ? `
+            <g fill="none" stroke-linecap="round" filter="url(#soft-${uid})">
+              <path d="M214 469 C244 486 278 493 313 490 C348 487 376 479 401 465" stroke="#000" stroke-opacity=".035" stroke-width="5"/>
+              <path d="M196 528 C242 540 286 543 329 539 C363 536 389 529 409 519" stroke="#fff" stroke-opacity=".040" stroke-width="4"/>
+            </g>
+          ` : ""}
 
           <!-- sleeve/torso seams -->
           <path d="M205 115 C191 150 182 192 178 248" fill="none" stroke="#fff" stroke-opacity=".10" stroke-width="1.2"/>
