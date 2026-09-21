@@ -13,6 +13,7 @@
   ];
   let teamDirectory = [...JERSEY_PRESETS];
   let rostersByTeamId = new Map();
+  let playerKeysByName = new Map();
 
   const LOCKER = [
     { pos:"G", name:"Rootmos", number:"30" },
@@ -152,11 +153,24 @@
       const list = rostersByTeamId.get(team.id) || [];
       if (!list.some(name => normalize(name) === normalize(player))) list.push(player);
       rostersByTeamId.set(team.id,list);
+      const key = String(row.player_key || "").trim();
+      if (key) playerKeysByName.set(normalize(player),key);
     }
     for (const list of rostersByTeamId.values()) {
       list.sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
     }
     return rosterPlayerCount();
+  }
+
+  async function refreshCurrentRostersFromView() {
+    const rows = await getPublicRows(
+      "v_ecl27_current_roster_v1",
+      "select=player_key,display_gamertag,team_name,division&order=team_name.asc,display_gamertag.asc"
+    );
+    if (!Array.isArray(rows) || !rows.length) return 0;
+    rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+    playerKeysByName = new Map();
+    return applyDirectRosterRows(rows);
   }
 
   function fillPlayerSelect() {
@@ -255,13 +269,7 @@
     try {
       const shared = await sharedEcl27Roster();
       if (shared && applySharedEcl27Roster(shared)) {
-        if (!rosterPlayerCount()) {
-          const directRows = await getPublicRows(
-            "v_ecl27_current_roster_v1",
-            "select=display_gamertag,team_name,division&order=team_name.asc,display_gamertag.asc"
-          );
-          applyDirectRosterRows(directRows);
-        }
+        await refreshCurrentRostersFromView();
       } else {
         const [teams,rosterRows] = await Promise.all([
           getPublicRows(
@@ -270,7 +278,7 @@
           ),
           getPublicRows(
             "v_ecl27_current_roster_v1",
-            "select=subject_key,player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
+            "select=player_key,display_gamertag,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
           )
         ]);
         const rows = Array.isArray(teams) ? teams : [];
@@ -278,6 +286,7 @@
 
         teamDirectory = rows.map(buildDynamicTeam);
         rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+        playerKeysByName = new Map();
         applyDirectRosterRows(rosterRows);
       }
 
