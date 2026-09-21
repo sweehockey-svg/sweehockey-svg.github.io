@@ -102,9 +102,8 @@
     const patternMarkup = {
       shoulder: `
         <path d="M187 93 C224 80 252 72 300 72 C348 72 376 80 413 93 L469 124 L433 181 C390 154 352 142 300 142 C248 142 210 154 167 181 L131 124 Z" fill="${stripe}"/>
-        <path d="M48 226 L145 176 L161 229 L62 280 Z M552 226 L455 176 L439 229 L538 280 Z" fill="${secondary}" opacity=".98"/>
-        <path d="M53 269 L151 218 L163 254 L65 305 Z M547 269 L449 218 L437 254 L535 305 Z" fill="${stripe}"/>
-        <path d="M70 361 L151 340 L156 374 L75 395 Z M530 361 L449 340 L444 374 L525 395 Z" fill="${secondary}" opacity=".96"/>
+        <path d="M47 232 L144 182 L158 225 L61 275 Z M553 232 L456 182 L442 225 L539 275 Z" fill="${secondary}" opacity=".98"/>
+        <path d="M53 274 L150 224 L161 257 L64 307 Z M547 274 L450 224 L439 257 L536 307 Z" fill="${stripe}"/>
         <path d="M169 469 H431 V496 H169 Z" fill="${stripe}"/>
         <path d="M169 496 H431 V512 H169 Z" fill="${secondary}"/>
       `,
@@ -170,16 +169,6 @@
             <stop offset=".42" stop-color="#ffffff" stop-opacity=".025"/>
             <stop offset="1" stop-color="#000000" stop-opacity=".10"/>
           </radialGradient>
-          <linearGradient id="sleeve-left-${uid}" x1="0" x2="1">
-            <stop offset="0" stop-color="#000" stop-opacity=".30"/>
-            <stop offset=".72" stop-color="#fff" stop-opacity=".04"/>
-            <stop offset="1" stop-color="#000" stop-opacity=".05"/>
-          </linearGradient>
-          <linearGradient id="sleeve-right-${uid}" x1="1" x2="0">
-            <stop offset="0" stop-color="#000" stop-opacity=".30"/>
-            <stop offset=".72" stop-color="#fff" stop-opacity=".04"/>
-            <stop offset="1" stop-color="#000" stop-opacity=".05"/>
-          </linearGradient>
           <pattern id="mesh-${uid}" width="7" height="7" patternUnits="userSpaceOnUse">
             <circle cx="1.8" cy="1.8" r=".65" fill="#ffffff" opacity=".085"/>
             <circle cx="5.4" cy="5.4" r=".65" fill="#000000" opacity=".11"/>
@@ -195,22 +184,20 @@
             ${patternMarkup}
             <rect width="600" height="600" fill="url(#body-${uid})"/>
             <rect width="600" height="600" fill="url(#chest-${uid})"/>
-            <path d="M27 176 L158 126 L179 424 L58 447 Z" fill="url(#sleeve-left-${uid})"/>
-            <path d="M573 176 L442 126 L421 424 L542 447 Z" fill="url(#sleeve-right-${uid})"/>
             <rect width="600" height="600" fill="url(#mesh-${uid})" opacity="${compact ? ".28" : ".38"}"/>
           </g>
 
-          <path d="M198 91 C177 136 160 190 149 250" fill="none" stroke="#ffffff" stroke-opacity=".12" stroke-width="2"/>
-          <path d="M402 91 C423 136 440 190 451 250" fill="none" stroke="#ffffff" stroke-opacity=".12" stroke-width="2"/>
-          <path d="M149 410 C164 440 169 489 168 532 M451 410 C436 440 431 489 432 532" fill="none" stroke="#000000" stroke-opacity=".23" stroke-width="3"/>
+          <path d="M198 91 C179 137 163 192 153 249" fill="none" stroke="#ffffff" stroke-opacity=".055" stroke-width="1.5"/>
+          <path d="M402 91 C421 137 437 192 447 249" fill="none" stroke="#ffffff" stroke-opacity=".055" stroke-width="1.5"/>
+          <path d="M151 412 C164 451 168 493 168 532 M449 412 C436 451 432 493 432 532" fill="none" stroke="#000000" stroke-opacity=".12" stroke-width="2"/>
 
           <path d="M243 72 C261 57 339 57 357 72 L377 88 C351 104 330 124 300 154 C270 124 249 104 223 88 Z" fill="${dark}"/>
           <path d="M244 76 C264 94 282 112 300 134 C318 112 336 94 356 76" fill="none" stroke="${stripe}" stroke-width="12" stroke-linejoin="round"/>
           <path d="M253 79 C270 95 285 111 300 127 C315 111 330 95 347 79" fill="none" stroke="${secondary}" stroke-width="3.2" opacity=".9"/>
           ${compact ? "" : `<text x="300" y="101" text-anchor="middle" fill="${secondary}" opacity=".72" font-size="10" font-weight="1000" letter-spacing="1.5">SEH</text>`}
 
-          <path d="M67 401 L149 383" stroke="${dark}" stroke-opacity=".58" stroke-width="10"/>
-          <path d="M533 401 L451 383" stroke="${dark}" stroke-opacity=".58" stroke-width="10"/>
+          <path d="M68 404 L149 386" stroke="${dark}" stroke-opacity=".28" stroke-width="6"/>
+          <path d="M532 404 L451 386" stroke="${dark}" stroke-opacity=".28" stroke-width="6"/>
           <path d="M171 526 Q300 545 429 526" fill="none" stroke="${dark}" stroke-opacity=".48" stroke-width="7"/>
           <path d="M174 519 Q300 537 426 519" fill="none" stroke="${secondary}" stroke-opacity=".55" stroke-width="2"/>
 
