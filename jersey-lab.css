@@ -372,3 +372,65 @@ button,input,select{font:inherit}
   .team-jersey-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .lab-section-heading{align-items:start;flex-direction:column}
 }
+
+
+/* Jersey Lab V2 — studio jersey presentation */
+.jersey-stage{
+  isolation:isolate;
+  perspective:1200px;
+}
+.jersey-stage::before{
+  position:absolute;
+  right:8%;
+  bottom:5%;
+  left:8%;
+  height:74px;
+  content:"";
+  border-radius:50%;
+  background:radial-gradient(ellipse at center,rgba(0,0,0,.48),rgba(0,0,0,.18) 48%,transparent 72%);
+  filter:blur(10px);
+  pointer-events:none;
+}
+.jersey-stage.is-home{
+  background:
+    radial-gradient(circle at 50% 21%,rgba(84,172,229,.22),transparent 25%),
+    linear-gradient(180deg,#122941 0%,#0a1725 53%,#04080c 100%);
+}
+.jersey-stage.is-away{
+  background:
+    radial-gradient(circle at 50% 21%,rgba(255,255,255,.14),transparent 24%),
+    linear-gradient(180deg,#212b32 0%,#10161b 55%,#050708 100%);
+}
+.jersey-render{
+  transform:translateZ(0);
+}
+.jersey-render svg{
+  transform:translateY(2px) rotateX(1.5deg);
+  transition:transform .22s ease,filter .22s ease;
+}
+.jersey-stage:hover .jersey-render svg{
+  transform:translateY(-4px) rotateX(0deg) scale(1.015);
+  filter:drop-shadow(0 36px 30px rgba(0,0,0,.5));
+}
+.seh-jersey-svg text{
+  font-family:Inter,Arial,Helvetica,sans-serif;
+}
+.locker-jersey .seh-jersey-svg{
+  filter:drop-shadow(0 16px 10px rgba(0,0,0,.5));
+}
+.match-team .seh-jersey-svg{
+  filter:drop-shadow(0 18px 12px rgba(0,0,0,.42));
+}
+.team-jersey-card{
+  position:relative;
+  overflow:hidden;
+}
+.team-jersey-card::before{
+  position:absolute;
+  top:0;
+  right:0;
+  left:0;
+  height:2px;
+  content:"";
+  background:linear-gradient(90deg,var(--yellow),rgba(94,232,225,.45),transparent 72%);
+}
