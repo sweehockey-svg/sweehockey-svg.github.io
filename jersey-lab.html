@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Jersey Lab · Svensk eHockey</title>
-  <link rel="stylesheet" href="jersey-lab.css?v=3">
+  <link rel="stylesheet" href="jersey-lab.css?v=4">
 </head>
 <body>
   <header class="lab-topbar">
@@ -63,6 +63,14 @@
       <label>
         <span>NUMMER</span>
         <input id="playerNumber" type="number" value="21" min="0" max="99">
+      </label>
+      <label>
+        <span>KAPTENSROLL</span>
+        <select id="captainRoleSelect">
+          <option value="">Ingen</option>
+          <option value="C">C</option>
+          <option value="A">A</option>
+        </select>
       </label>
       <button id="resetButton" type="button">Återställ lagdesign</button>
     </section>
@@ -128,6 +136,6 @@
   </main>
 
   <script src="teamlogos-manifest.js?v=20260830-v60"></script>
-  <script src="jersey-lab.js?v=3"></script>
+  <script src="jersey-lab.js?v=4"></script>
 </body>
 </html>
