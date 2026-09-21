@@ -87,16 +87,33 @@
 
   function logoFileFor(teamName) {
     const wanted = normalize(teamName);
-    let hit = manifestEntries.find(([key,value]) =>
-      normalize(key.replace(/\.png$/i,"")) === wanted ||
-      normalize(value.replace(/\.png$/i,"")) === wanted
-    );
-    if (!hit) {
-      hit = manifestEntries.find(([key,value]) =>
-        normalize(key).includes(wanted) || normalize(value).includes(wanted)
-      );
-    }
-    return hit ? hit[1] : "";
+    const wantedTokens = new Set(wanted.split(" ").filter(Boolean));
+    const benignExtra = new Set(["esport","esports","hockey","hc","gaming"]);
+
+    const ranked = manifestEntries
+      .map(([key,value]) => {
+        const keyBase = normalize(key.replace(/\.png$/i,""));
+        const valueBase = normalize(value.replace(/\.png$/i,""));
+        const candidate = valueBase || keyBase;
+        if (candidate === wanted || keyBase === wanted) return {hit:[key,value],score:-1000};
+        if (!candidate.includes(wanted) && !wanted.includes(candidate) && !keyBase.includes(wanted)) return null;
+
+        const candidateTokens = candidate.split(" ").filter(Boolean);
+        let score = Math.abs(candidate.length - wanted.length) * .02;
+        for (const token of wantedTokens) {
+          if (!candidateTokens.includes(token)) score += 20;
+        }
+        for (const token of candidateTokens) {
+          if (wantedTokens.has(token)) continue;
+          score += benignExtra.has(token) ? .6 : 5;
+        }
+        if (candidate.startsWith(wanted)) score -= .25;
+        return {hit:[key,value],score};
+      })
+      .filter(Boolean)
+      .sort((a,b) => a.score - b.score);
+
+    return ranked[0]?.hit?.[1] || "";
   }
 
   function logoUrl(teamName) {
@@ -119,13 +136,139 @@
   }
 
   function fallbackPalette(index) {
-    const palettes = [
-      ["#142d4c","#d6b15f","#f4f4ef","shoulder"],
-      ["#11161d","#c63b42","#f0f2f4","classic"],
-      ["#183b34","#d8b35e","#f2f3ef","minimal"],
-      ["#30204c","#d1a33f","#f4f0f5","diagonal"]
-    ];
-    return palettes[Math.abs(index) % palettes.length];
+    const patterns = ["shoulder","classic","minimal","diagonal"];
+    return ["#0c0f12","#f4f4f1","#f4f4f1",patterns[Math.abs(index) % patterns.length]];
+  }
+
+  const teamPaletteCache = new Map();
+
+  function rgbToHex(r,g,b) {
+    const hex = value => Math.max(0,Math.min(255,Math.round(value))).toString(16).padStart(2,"0");
+    return "#" + hex(r) + hex(g) + hex(b);
+  }
+
+  function colorDistance(a,b) {
+    return Math.hypot(a.r-b.r,a.g-b.g,a.b-b.b);
+  }
+
+  function colorStats(r,g,b,weight=1) {
+    const max = Math.max(r,g,b);
+    const min = Math.min(r,g,b);
+    const saturation = max ? (max-min)/max : 0;
+    const luminance = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+    return {r,g,b,weight,saturation,luminance};
+  }
+
+  function blackWhiteFallback(team) {
+    team.primary = "#0c0f12";
+    team.accent = "#f4f4f1";
+    team.trim = "#f4f4f1";
+    team.paletteSource = "black-white-fallback";
+    return team;
+  }
+
+  function isPresetTeam(team) {
+    return JERSEY_PRESETS.some(preset => normalize(preset.name) === normalize(team?.name));
+  }
+
+  async function extractLogoPalette(url) {
+    return new Promise(resolve => {
+      const image = new Image();
+      image.onload = () => {
+        try {
+          const size = 56;
+          const canvas = document.createElement("canvas");
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext("2d",{willReadFrequently:true});
+          if (!ctx) return resolve(null);
+          ctx.clearRect(0,0,size,size);
+          ctx.drawImage(image,0,0,size,size);
+          const pixels = ctx.getImageData(0,0,size,size).data;
+          const buckets = new Map();
+
+          for (let i=0;i<pixels.length;i+=4) {
+            const alpha = pixels[i+3];
+            if (alpha < 72) continue;
+            const r = Math.min(255,Math.round(pixels[i]/32)*32);
+            const g = Math.min(255,Math.round(pixels[i+1]/32)*32);
+            const b = Math.min(255,Math.round(pixels[i+2]/32)*32);
+            const stats = colorStats(r,g,b,alpha/255);
+            if (stats.luminance > .95 && stats.saturation < .10) continue;
+            const key = r + "," + g + "," + b;
+            const current = buckets.get(key) || {r,g,b,weight:0};
+            current.weight += alpha/255;
+            buckets.set(key,current);
+          }
+
+          const colors = [...buckets.values()]
+            .map(item => colorStats(item.r,item.g,item.b,item.weight))
+            .sort((a,b) => b.weight-a.weight);
+          if (!colors.length) return resolve(null);
+
+          const topWeight = colors[0].weight || 1;
+          const darkCandidates = colors
+            .filter(color => color.luminance <= .56 && color.weight >= topWeight * .08)
+            .sort((a,b) =>
+              (b.weight*(1+b.saturation*.28)) -
+              (a.weight*(1+a.saturation*.28))
+            );
+          const colorfulCandidates = colors
+            .filter(color => color.saturation >= .20 && color.luminance <= .86)
+            .sort((a,b) =>
+              (b.weight*(1+b.saturation*.70)) -
+              (a.weight*(1+a.saturation*.70))
+            );
+
+          const primary = darkCandidates[0] || colorfulCandidates[0] || colors[0];
+          const accent = colors
+            .filter(color =>
+              colorDistance(color,primary) >= 88 &&
+              (color.saturation >= .20 || color.luminance >= .62)
+            )
+            .sort((a,b) =>
+              (b.weight*(.7+b.saturation*1.5+b.luminance*.25)) -
+              (a.weight*(.7+a.saturation*1.5+a.luminance*.25))
+            )[0];
+
+          const trim = primary.luminance < .58 ? "#f4f4f1" : "#101214";
+          resolve({
+            primary:rgbToHex(primary.r,primary.g,primary.b),
+            accent:accent ? rgbToHex(accent.r,accent.g,accent.b) : trim,
+            trim
+          });
+        } catch (error) {
+          console.warn("[Jersey Lab] kunde inte läsa logofärger",error);
+          resolve(null);
+        }
+      };
+      image.onerror = () => resolve(null);
+      image.src = url;
+    });
+  }
+
+  async function ensureTeamPalette(team) {
+    if (!team || isPresetTeam(team)) return team;
+    const file = logoFileFor(team.name);
+    if (!file) return blackWhiteFallback(team);
+
+    if (teamPaletteCache.has(file)) {
+      Object.assign(team,teamPaletteCache.get(file));
+      team.paletteSource = "logo-cache";
+      return team;
+    }
+
+    const palette = await extractLogoPalette(logoUrl(team.name));
+    if (!palette) return blackWhiteFallback(team);
+    teamPaletteCache.set(file,palette);
+    Object.assign(team,palette);
+    team.paletteSource = "logo";
+    return team;
+  }
+
+  async function hydrateTeamPalettes(teams = teamDirectory) {
+    await Promise.all((Array.isArray(teams) ? teams : []).map(team => ensureTeamPalette(team)));
+    return teams;
   }
 
   function configValues() {
@@ -409,6 +552,10 @@
       state.teamId = preferred.id;
       state.opponentId = teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
       applyAccessMode();
+      await Promise.all([
+        ensureTeamPalette(teamById(state.teamId)),
+        ensureTeamPalette(teamById(state.opponentId))
+      ]);
       setDefaultLineup();
       await hydratePlayerPortraits(state.teamId);
       syncForm();
@@ -1425,15 +1572,23 @@
   $("#teamSelect").addEventListener("change",async event => {
     state.teamId = event.target.value;
     ensureDifferentTeams("team");
+    await Promise.all([
+      ensureTeamPalette(teamById(state.teamId)),
+      ensureTeamPalette(teamById(state.opponentId))
+    ]);
     setDefaultLineup();
     await hydratePlayerPortraits(state.teamId);
     syncForm();
     render();
   });
 
-  $("#opponentSelect").addEventListener("change",event => {
+  $("#opponentSelect").addEventListener("change",async event => {
     state.opponentId = event.target.value;
     ensureDifferentTeams("opponent");
+    await Promise.all([
+      ensureTeamPalette(teamById(state.teamId)),
+      ensureTeamPalette(teamById(state.opponentId))
+    ]);
     syncForm();
     render();
   });
