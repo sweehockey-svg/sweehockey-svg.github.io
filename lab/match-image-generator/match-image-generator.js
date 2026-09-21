@@ -507,62 +507,82 @@
 
   async function loadLagbyggeData() {
     const status = $("#dataStatus");
-    if (status) status.textContent = "Hämtar ECL 27-lagbygget…";
+    if (status) status.textContent = "Hämtar ECL 27-lag…";
+
+    // Team list is the authoritative first step. Nothing after this point is
+    // allowed to replace a successfully loaded ECL 27 team list with test data.
+    let rows = [];
     try {
-      const shared = await sharedEcl27Roster();
-      if (shared && applySharedEcl27Roster(shared)) {
-        dataSource = "ECL 27 · samma lagmodell som lagbygget";
-        const recovered = await refreshCurrentRostersFromView();
-        if (recovered) dataSource += " + aktuella roster-namn";
-      } else {
-        const [teams,rosterRows] = await Promise.all([
-          getPublicRows(
-            "v_ecl27_team_builds_public",
-            "select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"
-          ),
-          getPublicRows(
-            "v_ecl27_current_roster_v1",
-            "select=player_key,display_gamertag,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
-          )
-        ]);
+      const teams = await getPublicRows(
+        "v_ecl27_team_builds_public",
+        "select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"
+      );
+      rows = Array.isArray(teams) ? teams : [];
+      if (!rows.length) throw new Error("ECL 27 innehåller inga lag");
 
-        const rows = Array.isArray(teams) ? teams : [];
-        if (!rows.length) throw new Error("Lagbygget innehåller inga lag");
+      teamDirectory = rows.map(buildDynamicTeam);
 
-        teamDirectory = rows.map(buildDynamicTeam);
-        rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
-        playerKeysByName = new Map();
-        applyDirectRosterRows(rosterRows);
-        dataSource = "ECL 27 · roster-vy";
-      }
-
-      const preferred = teamDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen")) || teamDirectory[0];
+      const preferred = teamDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen"))
+        || teamDirectory[0];
       state.teamId = preferred.id;
       state.opponentId = teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
+
+      rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+      playerKeysByName = new Map();
       applyAccessMode();
-      await Promise.all([
-        ensureTeamPalette(teamById(state.teamId)),
-        ensureTeamPalette(teamById(state.opponentId))
-      ]);
       setDefaultLineup();
-      await hydratePlayerPortraits(state.teamId);
       syncForm();
       render();
 
-      const playerCount = [...rostersByTeamId.values()].reduce((sum,list) => sum + list.length,0);
-      if (status) status.textContent = teamDirectory.length + " lag · " + playerCount + " aktuella spelare";
+      if (status) status.textContent = teamDirectory.length + " lag · hämtar spelare…";
     } catch (error) {
-      console.error("[Match Graphics] kunde inte läsa ECL 27-lagbygget",error);
+      console.error("[Match Graphics] kunde inte läsa ECL 27-laglistan",error);
       dataSource = "lokal testdata";
       rostersByTeamId = new Map(JERSEY_PRESETS.map(team => [team.id,[]]));
       teamDirectory = [...JERSEY_PRESETS];
       state.teamId = teamDirectory[0].id;
       state.opponentId = teamDirectory[1]?.id || teamDirectory[0].id;
       state.lineup = {...EMPTY_LINEUP};
+      state.lineupNumbers = {...EMPTY_NUMBERS};
       syncForm();
       render();
-      if (status) status.textContent = "ECL 27-data kunde inte laddas · visar testlag";
+      if (status) status.textContent = "ECL 27-lag kunde inte laddas · visar testlag";
+      return;
     }
+
+    // Roster loading is independent from the team list.
+    try {
+      const rosterRows = await getPublicRows(
+        "v_ecl27_current_roster_v1",
+        "select=player_key,display_gamertag,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
+      );
+      rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+      playerKeysByName = new Map();
+      applyDirectRosterRows(rosterRows);
+      setDefaultLineup();
+      await hydratePlayerPortraits(state.teamId);
+      syncForm();
+      render();
+      dataSource = "ECL 27 · team + current roster";
+    } catch (error) {
+      console.warn("[Match Graphics] laglistan laddad men roster kunde inte hämtas",error);
+      dataSource = "ECL 27 · laglista utan roster";
+    }
+
+    // Logo-derived palette is also non-blocking. Exact team identity is already
+    // established by teamDirectory and may never be replaced here.
+    try {
+      await Promise.all([
+        ensureTeamPalette(teamById(state.teamId)),
+        ensureTeamPalette(teamById(state.opponentId))
+      ]);
+      render();
+    } catch (error) {
+      console.warn("[Match Graphics] kunde inte läsa lagfärger",error);
+    }
+
+    const playerCount = rosterPlayerCount();
+    if (status) status.textContent = teamDirectory.length + " lag · " + playerCount + " aktuella spelare";
   }
 
   function esc(value) {
