@@ -946,9 +946,9 @@
 
   function lineupPortraitSquare(width, y, team, variant) {
     const landscape = width === 1920;
-    const cardWidth = landscape ? 190 : 140;
-    const cardHeight = landscape ? 220 : 190;
-    const gap = landscape ? 16 : 8;
+    const cardWidth = landscape ? 205 : 140;
+    const cardHeight = landscape ? 238 : 190;
+    const gap = landscape ? 18 : 8;
     const totalWidth = cardWidth * 6 + gap * 5;
     const startX = (width - totalWidth) / 2;
     return POSITIONS.map((pos,index) => {
@@ -1012,9 +1012,9 @@
     if (format === "landscape") {
       return {
         width:1920,height:1080,
-        leftX:150,rightX:1270,jerseyY:205,jerseySize:500,
-        teamNameY:190,vsY:410,metaY:535,lineupY:738,
-        headerY:92,competitionY:136,ownLabelY:690
+        leftX:125,rightX:1295,jerseyY:190,jerseySize:540,
+        teamNameY:182,vsY:405,metaY:535,lineupY:730,
+        headerY:96,competitionY:142,ownLabelY:684
       };
     }
     if (format === "story") {
@@ -1046,8 +1046,8 @@
     const isStory = state.format === "story";
     const leftJersey = premiumJerseySvg(home,{variant:"home",side:"front",compact:false});
     const rightJersey = premiumJerseySvg(away,{variant:"away",side:"front",compact:false});
-    const titleSize = isWide ? 76 : isStory ? 66 : 52;
-    const teamSize = isWide ? 36 : isStory ? 30 : 27;
+    const titleSize = isWide ? 84 : isStory ? 68 : 54;
+    const teamSize = isWide ? 40 : isStory ? 31 : 28;
     const vsSize = isWide ? 112 : isStory ? 92 : 82;
     const metaSize = isWide ? 35 : isStory ? 32 : 27;
     const ownVariant = state.ownSide === "home" ? "home" : "away";
@@ -1062,12 +1062,12 @@
     const time = esc(cleanText(state.time,5) || "20:00");
 
     const panelX = isWide ? 155 : isStory ? 70 : 44;
-    const panelY = isWide ? 698 : isStory ? 1042 : 770;
+    const panelY = isWide ? 690 : isStory ? 1042 : 765;
     const panelW = W - panelX * 2;
-    const panelH = isWide ? 302 : isStory ? 790 : 270;
-    const lineupTitleY = panelY + (isStory ? 42 : 34);
+    const panelH = isWide ? 322 : isStory ? 790 : 278;
+    const lineupTitleY = panelY + (isStory ? 42 : 38);
     const footerY = H - (isWide ? 28 : isStory ? 34 : 24);
-    const watermarkSize = isWide ? 500 : isStory ? 430 : 390;
+    const watermarkSize = isWide ? 560 : isStory ? 430 : 410;
     const leftWatermarkX = isWide ? 20 : -55;
     const rightWatermarkX = W - watermarkSize - (isWide ? 20 : -55);
     const watermarkY = isStory ? 285 : 205;
@@ -1097,13 +1097,15 @@
       '</defs>',
 
       backgroundImageSvg(W,H,1),
-      '<rect width="' + W + '" height="' + H + '" fill="#02070d" opacity=".26"/>',
-      '<rect width="' + W + '" height="' + H + '" fill="url(#classic-overlay)"/>',
+      '<rect width="' + W + '" height="' + H + '" fill="#02070d" opacity=".15"/>',
+      '<rect width="' + W + '" height="' + H + '" fill="url(#classic-overlay)" opacity=".88"/>',
       '<rect width="' + W + '" height="' + H + '" fill="url(#classic-center-glow)"/>',
       '<path d="M' + (W*.5) + ' 0 L' + (W*.39) + ' ' + H + ' H' + (W*.61) + ' Z" fill="#4aaeff" opacity=".035"/>',
       '<path d="M' + (W*.5) + ' 0 L' + (W*.455) + ' ' + H + '" stroke="#76bdff" stroke-opacity=".11" stroke-width="' + (isWide?3:2) + '"/>',
       '<path d="M' + (W*.5) + ' 0 L' + (W*.545) + ' ' + H + '" stroke="#76bdff" stroke-opacity=".07" stroke-width="' + (isWide?3:2) + '"/>',
-      '<rect x="0" y="' + (H*.52) + '" width="' + W + '" height="' + (H*.48) + '" fill="url(#classic-ice)"/>',
+      '<rect x="0" y="' + (H*.50) + '" width="' + W + '" height="' + (H*.50) + '" fill="url(#classic-ice)"/>',
+      '<ellipse cx="' + (W/2) + '" cy="' + (H*.79) + '" rx="' + (W*.46) + '" ry="' + (H*.13) + '" fill="#7cc7ff" opacity=".10" filter="url(#classic-blue-glow)"/>',
+      '<line x1="' + (W*.08) + '" y1="' + (H*.755) + '" x2="' + (W*.92) + '" y2="' + (H*.755) + '" stroke="#b9dcff" stroke-opacity=".12" stroke-width="2"/>',
 
       svgLogo(home,leftWatermarkX,watermarkY,watermarkSize,.075),
       svgLogo(away,rightWatermarkX,watermarkY,watermarkSize,.075),
@@ -1129,14 +1131,14 @@
       '<g filter="url(#classic-soft-shadow)">' + placedJersey(leftJersey,layout.leftX,layout.jerseyY,layout.jerseySize) + '</g>',
       '<g filter="url(#classic-soft-shadow)">' + placedJersey(rightJersey,layout.rightX,layout.jerseyY,layout.jerseySize) + '</g>',
 
-      '<ellipse cx="' + (W/2) + '" cy="' + layout.vsY + '" rx="' + (isWide?105:78) + '" ry="' + (isWide?72:58) + '" fill="#2f8fff" opacity=".20" filter="url(#classic-blue-glow)"/>',
-      '<path d="M' + (W/2) + ' ' + (layout.vsY-(isWide?118:88)) + ' L' + (W/2-(isWide?82:60)) + ' ' + (layout.vsY+(isWide?90:68)) + ' L' + (W/2+(isWide?82:60)) + ' ' + (layout.vsY+(isWide?90:68)) + ' Z" fill="#0a1522" fill-opacity=".64" stroke="#6bb8ff" stroke-opacity=".15"/>',
+      '<ellipse cx="' + (W/2) + '" cy="' + layout.vsY + '" rx="' + (isWide?105:78) + '" ry="' + (isWide?72:58) + '" fill="#2f8fff" opacity=".30" filter="url(#classic-blue-glow)"/>',
+      '<path d="M' + (W/2) + ' ' + (layout.vsY-(isWide?118:88)) + ' L' + (W/2-(isWide?82:60)) + ' ' + (layout.vsY+(isWide?90:68)) + ' L' + (W/2+(isWide?82:60)) + ' ' + (layout.vsY+(isWide?90:68)) + ' Z" fill="#0a1522" fill-opacity=".48" stroke="#8fcbff" stroke-opacity=".30"/>',
       '<text x="' + (W/2) + '" y="' + (layout.vsY + vsSize*.30) + '" text-anchor="middle" fill="url(#classic-vs)" font-size="' + vsSize + '" font-weight="1000" font-style="italic" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="-5" filter="url(#classic-title-shadow)">VS</text>',
       '<text x="' + (W/2) + '" y="' + layout.metaY + '" text-anchor="middle" fill="#ffffff" font-size="' + metaSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="' + (isWide?3:1) + '">' + date + ' · ' + time + '</text>',
 
       stream ? '<g><rect x="' + (W/2-streamWidth/2) + '" y="' + streamY + '" width="' + streamWidth + '" height="' + streamHeight + '" rx="' + (streamHeight/2) + '" fill="#06101b" fill-opacity=".82" stroke="#8fc8ff" stroke-opacity=".42"/><circle cx="' + (W/2-streamWidth/2+32) + '" cy="' + (streamY+streamHeight/2) + '" r="8" fill="#ff4d5f"/><circle cx="' + (W/2-streamWidth/2+32) + '" cy="' + (streamY+streamHeight/2) + '" r="15" fill="#ff4d5f" opacity=".15"/><text x="' + (W/2) + '" y="' + (streamY+streamHeight/2+6) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?20:isWide?18:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1.5">' + stream + '</text><path d="M' + (W/2+streamWidth/2-42) + ' ' + (streamY+streamHeight/2-7) + ' l8 7 -8 7" fill="none" stroke="#a9d5ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>' : '',
 
-      '<rect x="' + panelX + '" y="' + panelY + '" width="' + panelW + '" height="' + panelH + '" rx="' + (isWide?28:22) + '" fill="#06101b" fill-opacity=".54" stroke="#9ccfff" stroke-opacity=".18"/>',
+      '<rect x="' + panelX + '" y="' + panelY + '" width="' + panelW + '" height="' + panelH + '" rx="' + (isWide?28:22) + '" fill="#06101b" fill-opacity=".42" stroke="#9ccfff" stroke-opacity=".26"/>',
       '<line x1="' + (W/2-(isWide?270:160)) + '" y1="' + (lineupTitleY-6) + '" x2="' + (W/2-(isWide?90:65)) + '" y2="' + (lineupTitleY-6) + '" stroke="#ffffff" stroke-opacity=".34" stroke-width="2"/>',
       '<line x1="' + (W/2+(isWide?90:65)) + '" y1="' + (lineupTitleY-6) + '" x2="' + (W/2+(isWide?270:160)) + '" y2="' + (lineupTitleY-6) + '" stroke="#72b9ff" stroke-opacity=".44" stroke-width="2"/>',
       '<text x="' + (W/2) + '" y="' + lineupTitleY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".90" font-size="' + (isStory?23:isWide?19:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="' + (isWide?7:4) + '">STARTING SIX</text>',
