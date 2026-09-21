@@ -31,6 +31,7 @@
     playerName:"eSWAHN",
     playerNumber:"21",
     captainRole:"",
+    rendererMode:"premium",
     matchHome:"vasteras",
     matchAway:"nordic"
   };
@@ -212,6 +213,179 @@
     `;
   }
 
+
+  function premiumJerseySvg(team, options = {}) {
+    const variant = options.variant || "home";
+    const side = options.side || "front";
+    const compact = options.compact === true;
+    const pattern = options.pattern || team.pattern || "shoulder";
+    const primary = options.primary || team.primary;
+    const accent = options.accent || team.accent;
+    const trim = options.trim || team.trim;
+    const name = String(options.playerName || state.playerName || "PLAYER").toUpperCase();
+    const number = String(options.playerNumber || state.playerNumber || "21");
+    const roleRaw = String(options.captainRole || "").toUpperCase();
+    const captainRole = roleRaw === "C" || roleRaw === "A" ? roleRaw : "";
+    const logo = logoUrl(team.name);
+    const uid = `premium-${team.id}-${variant}-${side}-${Math.random().toString(36).slice(2,8)}`;
+
+    const bodyBase = variant === "away" ? "#f4f4f1" : primary;
+    const sleeveBase = variant === "away" ? "#f2f2ef" : primary;
+    const yokeBase = pattern === "shoulder"
+      ? (variant === "away" ? primary : accent)
+      : (variant === "away" ? trim : primary);
+    const stripeA = variant === "away" ? primary : accent;
+    const stripeB = variant === "away" ? accent : trim;
+    const ink = variant === "away" ? primary : trim;
+    const dark = variant === "away" ? primary : "#07090a";
+
+    const leftSleeve = "M206 111 C176 116 135 134 103 158 L66 188 L42 430 L130 450 L171 255 L183 149 Z";
+    const rightSleeve = "M394 111 C424 116 465 134 497 158 L534 188 L558 430 L470 450 L429 255 L417 149 Z";
+    const torso = "M205 112 C232 91 368 91 395 112 L424 151 L423 542 Q300 566 177 542 L176 151 Z";
+    const fullShape = "M205 112 C176 116 135 134 103 158 L66 188 L42 430 L130 450 L158 314 L177 542 Q300 566 423 542 L442 314 L470 450 L558 430 L534 188 L497 158 C465 134 424 116 395 112 C368 91 232 91 205 112 Z";
+
+    const shoulderDecor = pattern === "minimal"
+      ? `
+        <path d="M169 151 C214 121 259 111 300 111 C341 111 386 121 431 151" fill="none" stroke="${stripeB}" stroke-width="8" opacity=".9"/>
+      `
+      : `
+        <path d="M132 154 C185 117 236 102 300 102 C364 102 415 117 468 154 L444 205 C395 177 351 165 300 165 C249 165 205 177 156 205 Z" fill="${yokeBase}"/>
+        <path d="M142 165 C190 134 239 119 300 119 C361 119 410 134 458 165" fill="none" stroke="${stripeB}" stroke-width="7" opacity=".95"/>
+      `;
+
+    const sleeveStriping = pattern === "minimal" ? `
+      <path d="M52 326 L143 312 L138 340 L49 354 Z M548 326 L457 312 L462 340 L551 354 Z" fill="${stripeA}"/>
+    ` : pattern === "diagonal" ? `
+      <path d="M49 269 L149 231 L143 273 L45 311 Z M551 269 L451 231 L457 273 L555 311 Z" fill="${stripeA}"/>
+      <path d="M45 309 L140 274 L136 299 L42 334 Z M555 309 L460 274 L464 299 L558 334 Z" fill="${stripeB}"/>
+    ` : `
+      <path d="M48 276 L146 258 L141 293 L44 311 Z M552 276 L454 258 L459 293 L556 311 Z" fill="${stripeA}"/>
+      <path d="M44 316 L139 300 L135 327 L42 342 Z M556 316 L461 300 L465 327 L558 342 Z" fill="${stripeB}"/>
+    `;
+
+    const hemStriping = pattern === "minimal" ? `
+      <path d="M178 515 Q300 535 422 515 L422 533 Q300 553 178 533 Z" fill="${stripeA}"/>
+    ` : `
+      <path d="M177 500 Q300 521 423 500 L423 523 Q300 544 177 523 Z" fill="${stripeA}"/>
+      <path d="M177 526 Q300 546 423 526 L423 540 Q300 559 177 540 Z" fill="${stripeB}"/>
+    `;
+
+    const captain = captainRole ? `
+      <g transform="translate(377 190)">
+        <path d="M0 0 H40 V40 H0 Z" fill="${ink}" opacity=".95"/>
+        <text x="20" y="28" text-anchor="middle" fill="${variant === "away" ? "#f5f5f1" : dark}" font-size="21" font-weight="1000">${captainRole}</text>
+      </g>
+    ` : "";
+
+    const front = `
+      <g>
+        ${logo
+          ? `<image href="${esc(logo)}" x="188" y="196" width="224" height="202" preserveAspectRatio="xMidYMid meet"/>`
+          : `<text x="300" y="310" text-anchor="middle" fill="${ink}" font-size="74" font-weight="1000">${esc(team.code)}</text>`}
+        ${captain}
+      </g>
+    `;
+
+    const back = `
+      <g>
+        <text x="300" y="215" text-anchor="middle" fill="${ink}" stroke="${stripeA}" stroke-width="1.5" paint-order="stroke fill" font-size="${compact ? 27 : 30}" font-weight="1000" letter-spacing="2.4">${esc(name)}</text>
+        <text x="300" y="420" text-anchor="middle" fill="${ink}" stroke="${stripeA}" stroke-width="6" paint-order="stroke fill" font-size="${compact ? 174 : 184}" font-weight="1000" letter-spacing="-8">${esc(number)}</text>
+      </g>
+    `;
+
+    return `
+      <svg viewBox="0 0 600 600" role="img" aria-label="${esc(team.name)} premium ${variant === "away" ? "bortatröja" : "hemmatröja"}" class="seh-jersey-svg seh-jersey-premium${compact ? " is-compact" : ""}">
+        <defs>
+          <clipPath id="clip-${uid}">
+            <path d="${fullShape}"/>
+          </clipPath>
+          <linearGradient id="torso-${uid}" x1="0" x2="1">
+            <stop offset="0" stop-color="#000" stop-opacity=".22"/>
+            <stop offset=".14" stop-color="#fff" stop-opacity=".055"/>
+            <stop offset=".38" stop-color="#fff" stop-opacity=".015"/>
+            <stop offset=".58" stop-color="#fff" stop-opacity=".11"/>
+            <stop offset=".82" stop-color="#000" stop-opacity=".05"/>
+            <stop offset="1" stop-color="#000" stop-opacity=".28"/>
+          </linearGradient>
+          <linearGradient id="left-sleeve-${uid}" x1="0" x2="1">
+            <stop offset="0" stop-color="#000" stop-opacity=".34"/>
+            <stop offset=".43" stop-color="#fff" stop-opacity=".05"/>
+            <stop offset="1" stop-color="#000" stop-opacity=".12"/>
+          </linearGradient>
+          <linearGradient id="right-sleeve-${uid}" x1="1" x2="0">
+            <stop offset="0" stop-color="#000" stop-opacity=".34"/>
+            <stop offset=".43" stop-color="#fff" stop-opacity=".05"/>
+            <stop offset="1" stop-color="#000" stop-opacity=".12"/>
+          </linearGradient>
+          <radialGradient id="chest-light-${uid}" cx="48%" cy="18%" r="70%">
+            <stop offset="0" stop-color="#fff" stop-opacity=".20"/>
+            <stop offset=".28" stop-color="#fff" stop-opacity=".06"/>
+            <stop offset=".7" stop-color="#000" stop-opacity=".02"/>
+            <stop offset="1" stop-color="#000" stop-opacity=".15"/>
+          </radialGradient>
+          <pattern id="knit-${uid}" width="5" height="5" patternUnits="userSpaceOnUse">
+            <circle cx="1.1" cy="1.1" r=".5" fill="#fff" opacity=".11"/>
+            <circle cx="3.7" cy="3.7" r=".55" fill="#000" opacity=".13"/>
+          </pattern>
+          <filter id="shadow-${uid}" x="-35%" y="-30%" width="170%" height="190%">
+            <feDropShadow dx="0" dy="${compact ? 17 : 24}" stdDeviation="${compact ? 13 : 18}" flood-color="#000" flood-opacity=".52"/>
+          </filter>
+          <filter id="soft-${uid}">
+            <feGaussianBlur stdDeviation="7"/>
+          </filter>
+        </defs>
+
+        <g filter="url(#shadow-${uid})">
+          <path d="${leftSleeve}" fill="${sleeveBase}" stroke="#000" stroke-opacity=".28" stroke-width="2.5"/>
+          <path d="${rightSleeve}" fill="${sleeveBase}" stroke="#000" stroke-opacity=".28" stroke-width="2.5"/>
+          <path d="${torso}" fill="${bodyBase}" stroke="#000" stroke-opacity=".25" stroke-width="2.5"/>
+
+          <g clip-path="url(#clip-${uid})">
+            ${shoulderDecor}
+            ${sleeveStriping}
+            ${hemStriping}
+            <path d="${torso}" fill="url(#torso-${uid})"/>
+            <path d="${leftSleeve}" fill="url(#left-sleeve-${uid})"/>
+            <path d="${rightSleeve}" fill="url(#right-sleeve-${uid})"/>
+            <rect width="600" height="600" fill="url(#chest-light-${uid})"/>
+            <rect width="600" height="600" fill="url(#knit-${uid})" opacity="${compact ? ".28" : ".52"}"/>
+          </g>
+
+          <!-- soft photographic folds -->
+          ${compact ? "" : `
+            <g fill="none" stroke-linecap="round" filter="url(#soft-${uid})">
+              <path d="M229 173 C215 258 220 410 236 520" stroke="#000" stroke-opacity=".16" stroke-width="11"/>
+              <path d="M274 164 C263 267 267 419 277 531" stroke="#fff" stroke-opacity=".10" stroke-width="8"/>
+              <path d="M329 163 C338 269 334 417 325 531" stroke="#000" stroke-opacity=".09" stroke-width="9"/>
+              <path d="M374 174 C388 258 382 408 366 520" stroke="#fff" stroke-opacity=".07" stroke-width="8"/>
+              <path d="M100 202 C112 276 108 360 98 420" stroke="#fff" stroke-opacity=".08" stroke-width="8"/>
+              <path d="M500 202 C488 276 492 360 502 420" stroke="#000" stroke-opacity=".11" stroke-width="9"/>
+            </g>
+          `}
+
+          <!-- sleeve/torso seams -->
+          <path d="M205 113 C190 147 180 190 176 249" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="1.4"/>
+          <path d="M395 113 C410 147 420 190 424 249" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="1.4"/>
+          <path d="M176 151 L158 314 M424 151 L442 314" stroke="#000" stroke-opacity=".18" stroke-width="2"/>
+
+          <!-- realistic ribbed V collar -->
+          <path d="M240 99 C260 82 340 82 360 99 L380 113 C354 130 329 149 300 177 C271 149 246 130 220 113 Z" fill="${dark}"/>
+          <path d="M241 101 C261 119 281 138 300 158 C319 138 339 119 359 101" fill="none" stroke="${stripeA}" stroke-width="13" stroke-linejoin="round"/>
+          <path d="M249 104 C266 120 283 136 300 153 C317 136 334 120 351 104" fill="none" stroke="${stripeB}" stroke-width="3" opacity=".88"/>
+          <path d="M261 106 C273 118 286 131 300 145 C314 131 327 118 339 106" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="1.5"/>
+
+          ${side === "back" ? back : front}
+        </g>
+      </svg>
+    `;
+  }
+
+  function renderJersey(team, options = {}) {
+    return state.rendererMode === "premium"
+      ? premiumJerseySvg(team, options)
+      : jerseySvg(team, options);
+  }
+
   function currentDesignTeam() {
     const base = teamById(state.teamId);
     return {
@@ -243,11 +417,11 @@
     const team = currentDesignTeam();
     $("#homeTeamName").textContent = team.name;
     $("#awayTeamName").textContent = team.name;
-    $("#homeJersey").innerHTML = jerseySvg(team,{
+    $("#homeJersey").innerHTML = renderJersey(team,{
       variant:"home",side:state.side,pattern:state.pattern,
       playerName:state.playerName,playerNumber:state.playerNumber,captainRole:state.captainRole
     });
-    $("#awayJersey").innerHTML = jerseySvg(team,{
+    $("#awayJersey").innerHTML = renderJersey(team,{
       variant:"away",side:state.side,pattern:state.pattern,
       playerName:state.playerName,playerNumber:state.playerNumber,captainRole:state.captainRole
     });
@@ -263,7 +437,7 @@
           <span>${esc(pos)}</span>
         </div>
         <div class="locker-hook" aria-hidden="true"></div>
-        <div class="locker-jersey">${jerseySvg(team,{variant:"home",side:"back",pattern:state.pattern,playerName:name,playerNumber:number,compact:true})}</div>
+        <div class="locker-jersey">${renderJersey(team,{variant:"home",side:"back",pattern:state.pattern,playerName:name,playerNumber:number,compact:true})}</div>
         <div class="locker-base"><span>${esc(pos)}</span><small>#${esc(number)}</small></div>
       </div>
     `).join("");
@@ -272,7 +446,7 @@
   function renderMatchTeam(hostId, teamId, variant) {
     const team = teamById(teamId);
     $(hostId).innerHTML = `
-      ${jerseySvg(team,{variant,side:"front",pattern:team.pattern,compact:true})}
+      ${renderJersey(team,{variant,side:"front",pattern:team.pattern,compact:true})}
       <strong>${esc(team.name)}</strong>
     `;
   }
@@ -285,7 +459,7 @@
   function renderGrid() {
     $("#teamGrid").innerHTML = TEAMS.map(team => `
       <article class="team-jersey-card">
-        ${jerseySvg(team,{variant:"home",side:"front",pattern:team.pattern,compact:true})}
+        ${renderJersey(team,{variant:"home",side:"front",pattern:team.pattern,compact:true})}
         <strong>${esc(team.name)}</strong>
         <small>HEMMA · ${esc(team.pattern.toUpperCase())}</small>
       </article>
@@ -303,6 +477,7 @@
   fillSelect($("#matchHomeSelect"),state.matchHome);
   fillSelect($("#matchAwaySelect"),state.matchAway);
   $("#captainRoleSelect").value = state.captainRole;
+  $("#rendererModeSelect").value = state.rendererMode;
   syncControlsFromTeam(teamById(state.teamId));
 
   $("#teamSelect").addEventListener("change",event => {
@@ -317,6 +492,10 @@
   $("#playerName").addEventListener("input",event => { state.playerName=event.target.value || "PLAYER"; renderPair(); });
   $("#playerNumber").addEventListener("input",event => { state.playerNumber=event.target.value || "0"; renderPair(); });
   $("#captainRoleSelect").addEventListener("change",event => { state.captainRole=event.target.value; renderPair(); });
+  $("#rendererModeSelect").addEventListener("change",event => {
+    state.rendererMode = event.target.value === "standard" ? "standard" : "premium";
+    renderAll();
+  });
 
   $$(".lab-segmented button").forEach(button => button.addEventListener("click",() => {
     state.side=button.dataset.side;
