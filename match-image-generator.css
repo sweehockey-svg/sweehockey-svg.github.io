@@ -80,7 +80,13 @@ input,select{
 input:focus,select:focus{border-color:rgba(240,196,0,.48);box-shadow:0 0 0 3px rgba(240,196,0,.08)}
 .lineup-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
 .lineup-field{display:grid;gap:5px}
+.lineup-pick-row{display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:6px;align-items:center}
 .lineup-field input,.lineup-field select{height:40px}
+.lineup-number{
+  padding:0 8px;text-align:center;font-weight:950;font-variant-numeric:tabular-nums;
+  border-color:rgba(240,196,0,.18)
+}
+.lineup-number::placeholder{color:#66717d;font-weight:800}
 select:disabled{opacity:.62;cursor:not-allowed}
 #dataStatus{max-width:190px;text-align:right;line-height:1.25}
 .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
