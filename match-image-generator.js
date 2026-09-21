@@ -946,9 +946,9 @@
 
   function lineupPortraitSquare(width, y, team, variant) {
     const landscape = width === 1920;
-    const cardWidth = landscape ? 220 : 140;
-    const cardHeight = landscape ? 254 : 190;
-    const gap = landscape ? 20 : 8;
+    const cardWidth = landscape ? 220 : 148;
+    const cardHeight = landscape ? 254 : 206;
+    const gap = landscape ? 20 : 9;
     const totalWidth = cardWidth * 6 + gap * 5;
     const startX = (width - totalWidth) / 2;
     return POSITIONS.map((pos,index) => {
@@ -1028,7 +1028,7 @@
     return {
       width:1080,height:1080,
       leftX:55,rightX:625,jerseyY:205,jerseySize:400,
-      teamNameY:180,vsY:410,metaY:505,lineupY:815,
+      teamNameY:180,vsY:410,metaY:505,lineupY:746,
       headerY:70,competitionY:108,ownLabelY:770
     };
   }
@@ -1062,9 +1062,9 @@
     const time = esc(cleanText(state.time,5) || "20:00");
 
     const panelX = isWide ? 155 : isStory ? 70 : 44;
-    const panelY = isWide ? 678 : isStory ? 1042 : 765;
+    const panelY = isWide ? 678 : isStory ? 1042 : 688;
     const panelW = W - panelX * 2;
-    const panelH = isWide ? 336 : isStory ? 790 : 278;
+    const panelH = isWide ? 336 : isStory ? 790 : 328;
     const lineupTitleY = panelY + (isStory ? 42 : 38);
     const footerY = H - (isWide ? 28 : isStory ? 34 : 24);
     const watermarkSize = isWide ? 560 : isStory ? 430 : 410;
