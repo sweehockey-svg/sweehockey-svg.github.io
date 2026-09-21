@@ -28,6 +28,14 @@
     story:{ label:"Story · 1080×1920", width:1080, height:1920 }
   };
 
+  const BACKGROUNDS = [
+    {id:"outdoor",label:"Utomhus"},
+    {id:"arena",label:"Arena"},
+    {id:"smoke",label:"Rök"},
+    {id:"ice",label:"Ice Texture"},
+    {id:"sweden",label:"Sverige"}
+  ];
+
   const state = {
     teamId:"carolus",
     opponentId:"vasteras",
@@ -38,6 +46,7 @@
     time:"20:00",
     format:"square",
     template:"classic",
+    background:"arena",
     lineupStyle:"cards",
     streamPlatform:"none",
     streamChannel:"",
@@ -55,6 +64,22 @@
 
   const manifestEntries = Object.entries(window.SEH_TEAM_LOGO_FILES || {});
   const assetPrefix = location.pathname.includes("/lab/match-image-generator/") ? "../../" : "";
+  const backgroundPrefix = location.pathname.includes("/lab/match-image-generator/")
+    ? "backgrounds/"
+    : "match-image-generator-backgrounds/";
+
+  function backgroundUrl(id = state.background) {
+    if (id === "outdoor") return assetPrefix + "assets/bgsommar.png";
+    if (id === "arena") return assetPrefix + "assets/bg.jpg";
+    if (id === "smoke") return backgroundPrefix + "smoke.svg";
+    if (id === "ice") return backgroundPrefix + "ice-texture.svg";
+    if (id === "sweden") return backgroundPrefix + "sweden.svg";
+    return assetPrefix + "assets/bg.jpg";
+  }
+
+  function backgroundImageSvg(width,height,opacity=1) {
+    return '<image href="' + esc(backgroundUrl()) + '" x="0" y="0" width="' + width + '" height="' + height + '" opacity="' + opacity + '" preserveAspectRatio="xMidYMid slice"/>';
+  }
 
   function logoFileFor(teamName) {
     const wanted = normalize(teamName);
@@ -655,7 +680,8 @@
       '<pattern id="match-grid" width="42" height="42" patternUnits="userSpaceOnUse"><path d="M42 0H0V42" fill="none" stroke="#fff" stroke-opacity=".028" stroke-width="1"/></pattern>',
       '<filter id="glow"><feGaussianBlur stdDeviation="28"/></filter>',
       '</defs>',
-      '<rect width="' + W + '" height="' + H + '" fill="url(#match-bg)"/>',
+      backgroundImageSvg(W,H,1),
+      '<rect width="' + W + '" height="' + H + '" fill="url(#match-bg)" opacity=".58"/>',
       '<circle cx="' + (W * .22) + '" cy="' + (H * .27) + '" r="' + (W * .22) + '" fill="' + home.accent + '" opacity=".10" filter="url(#glow)"/>',
       '<circle cx="' + (W * .80) + '" cy="' + (H * .29) + '" r="' + (W * .20) + '" fill="' + away.accent + '" opacity=".09" filter="url(#glow)"/>',
       '<rect width="' + W + '" height="' + H + '" fill="url(#match-light)"/>',
@@ -694,7 +720,8 @@
       competition:esc(cleanText(state.competition,28).toUpperCase() || "SVENSK eHOCKEY"),
       date:esc(formatDate(state.date)),
       time:esc(cleanText(state.time,5) || "20:00"),
-      stream:esc(streamLabel())
+      stream:esc(streamLabel()),
+      background:state.background
     };
   }
 
@@ -786,7 +813,8 @@
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
       commonTemplateDefs(ctx,"focus"),
-      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#090d12"/>',
+      backgroundImageSvg(ctx.W,ctx.H,1),
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#05080c" opacity=".68"/>',
       '<circle cx="' + (ctx.W*.22) + '" cy="' + (ctx.H*.28) + '" r="' + (ctx.W*.32) + '" fill="' + ctx.own.primary + '" opacity=".42" filter="url(#focus-blur)"/>',
       '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-light)"/>',
       '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-grid)"/>',
@@ -825,9 +853,10 @@
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
       commonTemplateDefs(ctx,"versus"),
-      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#080b0f"/>',
-      '<path d="M0 0 H' + (ctx.W*.56) + ' L' + (ctx.W*.44) + ' ' + ctx.H + ' H0Z" fill="' + leftTeam.primary + '" opacity=".48"/>',
-      '<path d="M' + (ctx.W*.56) + ' 0 H' + ctx.W + ' V' + ctx.H + ' H' + (ctx.W*.44) + 'Z" fill="' + rightTeam.primary + '" opacity=".48"/>',
+      backgroundImageSvg(ctx.W,ctx.H,1),
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#05080c" opacity=".58"/>',
+      '<path d="M0 0 H' + (ctx.W*.56) + ' L' + (ctx.W*.44) + ' ' + ctx.H + ' H0Z" fill="' + leftTeam.primary + '" opacity=".38"/>',
+      '<path d="M' + (ctx.W*.56) + ' 0 H' + ctx.W + ' V' + ctx.H + ' H' + (ctx.W*.44) + 'Z" fill="' + rightTeam.primary + '" opacity=".38"/>',
       '<path d="M' + (ctx.W*.505) + ' 0 L' + (ctx.W*.46) + ' ' + ctx.H + '" stroke="#fff" stroke-opacity=".08" stroke-width="' + (isWide?18:10) + '"/>',
       '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#versus-light)"/>',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?105:65) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?58:isWide?64:46) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.badge + '</text>',
@@ -863,7 +892,8 @@
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
       commonTemplateDefs(ctx,"broadcast"),
-      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#070b10"/>',
+      backgroundImageSvg(ctx.W,ctx.H,1),
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#05080c" opacity=".72"/>',
       '<rect width="' + ctx.W + '" height="' + topH + '" fill="url(#broadcast-bg)" opacity=".72"/>',
       '<rect x="0" y="' + (topH-8) + '" width="' + ctx.W + '" height="8" fill="#fff" fill-opacity=".08"/>',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?85:58) + '" text-anchor="middle" fill="#fff" fill-opacity=".58" font-size="15" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="4">' + ctx.competition + '</text>',
@@ -900,8 +930,9 @@
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
       commonTemplateDefs(ctx,"minimal"),
-      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#f3f1eb"/>',
-      '<rect x="0" y="0" width="' + (isWide?ctx.W*.46:ctx.W) + '" height="' + (isWide?ctx.H:ctx.H*.56) + '" fill="' + ctx.own.primary + '"/>',
+      backgroundImageSvg(ctx.W,ctx.H,1),
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#f3f1eb" opacity=".86"/>',
+      '<rect x="0" y="0" width="' + (isWide?ctx.W*.46:ctx.W) + '" height="' + (isWide?ctx.H:ctx.H*.56) + '" fill="' + ctx.own.primary + '" opacity=".91"/>',
       '<circle cx="' + (isWide?ctx.W*.23:ctx.W*.5) + '" cy="' + (isWide?ctx.H*.44:ctx.H*.27) + '" r="' + (isWide?ctx.W*.20:ctx.W*.38) + '" fill="' + ctx.own.accent + '" opacity=".12"/>',
       placedJersey(ownJ,jerseyX,jerseyY,jerseySize),
       '<text x="' + (isWide?ctx.W*.53:54) + '" y="' + (isWide?140:isStory?90:72) + '" fill="' + (isWide?"#101318":"#fff") + '" font-size="' + (isWide?70:isStory?58:44) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">' + ctx.badge + '</text>',
@@ -1001,6 +1032,13 @@
       button.classList.toggle("is-active",button.dataset.template === state.template);
       button.setAttribute("aria-pressed",button.dataset.template === state.template ? "true" : "false");
     });
+    $$("[data-background]").forEach(button => {
+      const id = button.dataset.background;
+      button.classList.toggle("is-active",id === state.background);
+      button.setAttribute("aria-pressed",id === state.background ? "true" : "false");
+      const preview = button.querySelector(".background-thumb");
+      if (preview) preview.style.backgroundImage = 'url("' + backgroundUrl(id) + '")';
+    });
     syncLineupSelects();
     applyAccessMode();
   }
@@ -1024,6 +1062,7 @@
     state.time = "20:00";
     state.format = "square";
     state.template = "classic";
+    state.background = "arena";
     state.lineupStyle = "cards";
     state.streamPlatform = "none";
     state.streamChannel = "";
@@ -1111,6 +1150,15 @@
       button.textContent = original;
     }
   }
+
+  $$("[data-background]").forEach(button => {
+    button.addEventListener("click",() => {
+      const id = button.dataset.background;
+      state.background = BACKGROUNDS.some(item => item.id === id) ? id : "arena";
+      syncForm();
+      render();
+    });
+  });
 
   $$("[data-template]").forEach(button => {
     button.addEventListener("click",() => {
