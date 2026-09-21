@@ -239,10 +239,10 @@
     const ink = variant === "away" ? primary : trim;
     const dark = variant === "away" ? primary : "#07090a";
 
-    const leftSleeve = "M217 123 C200 121 181 125 165 133 C150 141 137 151 129 164 C121 177 117 196 116 219 L114 474 Q136 486 168 490 L198 360 L194 188 Q193 146 217 123 Z";
-    const rightSleeve = "M383 123 C400 121 419 125 435 133 C450 141 463 151 471 164 C479 177 483 196 484 219 L486 474 Q464 486 432 490 L402 360 L406 188 Q407 146 383 123 Z";
+    // Separate sewn panels, like a real hockey jersey mockup.
+    const leftSleeve = "M217 123 C200 121 181 125 165 133 C150 141 137 151 129 164 C121 177 117 196 116 219 L114 474 Q137 486 176 490 L188 360 L184 189 Q187 146 217 123 Z";
+    const rightSleeve = "M383 123 C400 121 419 125 435 133 C450 141 463 151 471 164 C479 177 483 196 484 219 L486 474 Q463 486 424 490 L412 360 L416 189 Q413 146 383 123 Z";
     const torso = "M217 123 C244 106 356 106 383 123 C399 137 406 157 405 183 L415 558 C405 576 369 582 300 584 C231 582 195 576 185 558 L195 183 C194 157 201 137 217 123 Z";
-    const fullShape = "M217 123 C200 121 181 125 165 133 C150 141 137 151 129 164 C121 177 117 196 116 219 L114 474 Q136 486 168 490 C177 493 184 499 187 509 L185 558 C195 576 231 582 300 584 C369 582 405 576 415 558 L413 509 C416 499 423 493 432 490 Q464 486 486 474 L484 219 C483 196 479 177 471 164 C463 151 450 141 435 133 C419 125 400 121 383 123 C356 106 244 106 217 123 Z";
 
     const shoulderDecor = pattern === "minimal"
       ? `
@@ -297,7 +297,9 @@
       <svg viewBox="0 0 600 600" role="img" aria-label="${esc(team.name)} premium ${variant === "away" ? "bortatröja" : "hemmatröja"}" class="seh-jersey-svg seh-jersey-premium${compact ? " is-compact" : ""}">
         <defs>
           <clipPath id="clip-${uid}">
-            <path d="${fullShape}"/>
+            <path d="${leftSleeve}"/>
+            <path d="${torso}"/>
+            <path d="${rightSleeve}"/>
           </clipPath>
           <linearGradient id="torso-${uid}" x1="0" x2="1">
             <stop offset="0" stop-color="#000" stop-opacity=".22"/>
@@ -336,10 +338,9 @@
         </defs>
 
         <g filter="url(#shadow-${uid})">
-          <path d="${fullShape}" fill="${bodyBase}" stroke="#000" stroke-opacity=".24" stroke-width="2.5"/>
-          <path d="${leftSleeve}" fill="${sleeveBase}"/>
-          <path d="${rightSleeve}" fill="${sleeveBase}"/>
-          <path d="${torso}" fill="${bodyBase}"/>
+          <path d="${leftSleeve}" fill="${sleeveBase}" stroke="#000" stroke-opacity=".18" stroke-width="2"/>
+          <path d="${torso}" fill="${bodyBase}" stroke="#000" stroke-opacity=".16" stroke-width="2"/>
+          <path d="${rightSleeve}" fill="${sleeveBase}" stroke="#000" stroke-opacity=".18" stroke-width="2"/>
 
           <g clip-path="url(#clip-${uid})">
             ${shoulderDecor}
@@ -371,11 +372,10 @@
             </g>
           ` : ""}
 
-          <!-- sleeve/torso seams: geometry now overlaps naturally, no overlay panels -->
-
-          <path d="M217 124 C205 154 198 195 196 248" fill="none" stroke="#fff" stroke-opacity=".045" stroke-width=".9"/>
-          <path d="M383 124 C395 154 402 195 404 248" fill="none" stroke="#fff" stroke-opacity=".045" stroke-width=".9"/>
-          <path d="M195 164 C193 212 194 266 196 318 M405 164 C407 212 406 266 404 318" fill="none" stroke="#000" stroke-opacity=".022" stroke-width=".9"/>
+          <!-- subtle stitched sleeve/torso seams -->
+          <path d="M217 124 C205 154 198 195 196 248" fill="none" stroke="#fff" stroke-opacity=".04" stroke-width=".8"/>
+          <path d="M383 124 C395 154 402 195 404 248" fill="none" stroke="#fff" stroke-opacity=".04" stroke-width=".8"/>
+          <path d="M189 360 C187 402 183 449 177 486 M411 360 C413 402 417 449 423 486" fill="none" stroke="#000" stroke-opacity=".045" stroke-width="1.1"/>
 
           <!-- realistic ribbed V collar -->
           <path d="M258 108 C273 96 327 96 342 108 L355 118 C338 130 320 144 300 158 C280 144 262 130 245 118 Z" fill="${dark}"/>
