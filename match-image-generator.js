@@ -294,17 +294,21 @@
     return String(value || "").match(/\/players\/(\d+)/i)?.[1] || "";
   }
 
+  function defaultPlayerImageUrl() {
+    return assetPrefix + "players/1DEFAULTBILDID.png";
+  }
+
   function portraitUrlFromRow(row) {
     const id = sportsGamerId(row?.sports_gamer_player_url);
     if (id && Array.isArray(window.SEH_PLAYER_IMAGE_FILES) && window.SEH_PLAYER_IMAGE_FILES.includes(id + ".png")) {
       return assetPrefix + "players/" + encodeURIComponent(id + ".png");
     }
     const raw = String(row?.player_image || "").trim();
-    return /^https?:\/\//i.test(raw) ? raw : "";
+    return /^https?:\/\//i.test(raw) ? raw : defaultPlayerImageUrl();
   }
 
   function portraitUrlForPlayer(name) {
-    return playerPortraits.get(normalize(name)) || "";
+    return playerPortraits.get(normalize(name)) || defaultPlayerImageUrl();
   }
 
   async function hydratePlayerPortraits(teamId) {
@@ -327,7 +331,7 @@
         playerPortraits.set(normalized,portraitUrlFromRow(row));
       } catch (error) {
         console.warn("[Match Graphics] kunde inte hämta spelarporträtt för",name,error);
-        playerPortraits.set(normalized,"");
+        playerPortraits.set(normalized,defaultPlayerImageUrl());
       }
     }));
   }
