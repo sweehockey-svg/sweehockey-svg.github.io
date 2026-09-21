@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Match Graphics Lab · Svensk eHockey</title>
-  <link rel="stylesheet" href="match-image-generator.css?v=2">
+  <link rel="stylesheet" href="match-image-generator.css?v=3">
 </head>
 <body>
   <header class="lab-topbar">
@@ -36,6 +36,17 @@
             <button type="button" class="template-card" data-template="versus" aria-pressed="false"><b>Versus</b><small>Stor 50/50-matchup</small></button>
             <button type="button" class="template-card" data-template="broadcast" aria-pressed="false"><b>Broadcast</b><small>Stream och TV-känsla</small></button>
             <button type="button" class="template-card" data-template="minimal" aria-pressed="false"><b>Minimal</b><small>Ren social grafik · eget lag</small></button>
+          </div>
+        </div>
+
+        <div class="control-section">
+          <div class="section-title"><strong>Bakgrund</strong><span>5 val</span></div>
+          <div class="background-grid" aria-label="Välj bakgrund">
+            <button type="button" class="background-card" data-background="outdoor" aria-pressed="false"><span class="background-thumb"></span><b>Utomhus</b></button>
+            <button type="button" class="background-card is-active" data-background="arena" aria-pressed="true"><span class="background-thumb"></span><b>Arena</b></button>
+            <button type="button" class="background-card" data-background="smoke" aria-pressed="false"><span class="background-thumb"></span><b>Rök</b></button>
+            <button type="button" class="background-card" data-background="ice" aria-pressed="false"><span class="background-thumb"></span><b>Ice Texture</b></button>
+            <button type="button" class="background-card" data-background="sweden" aria-pressed="false"><span class="background-thumb"></span><b>Sverige</b></button>
           </div>
         </div>
 
@@ -138,7 +149,7 @@
       <section class="preview-panel">
         <div class="preview-toolbar">
           <div><strong>Förhandsvisning</strong><span id="previewSize"></span></div>
-          <div class="preview-chip">5 DESIGNER · V27 PREMIUM</div>
+          <div class="preview-chip">5 DESIGNER · 5 BAKGRUNDER · V27</div>
         </div>
         <div class="preview-wrap">
           <div id="graphicPreview" aria-live="polite"></div>
@@ -149,6 +160,6 @@
 
   <script src="config.js?v=20260918-team-aliases-v1"></script>
   <script src="teamlogos-manifest.js?v=20260830-v60"></script>
-  <script src="match-image-generator.js?v=4"></script>
+  <script src="match-image-generator.js?v=5"></script>
 </body>
 </html>
