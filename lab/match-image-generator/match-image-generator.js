@@ -1477,7 +1477,7 @@
     render();
   });
 
-  $("[data-lineup]").forEach(select => {
+  $$("[data-lineup]").forEach(select => {
     select.addEventListener("change",event => {
       const pos = event.target.dataset.lineup;
       const player = event.target.value;
@@ -1494,7 +1494,7 @@
     });
   });
 
-  $("[data-lineup-number]").forEach(input => {
+  $$("[data-lineup-number]").forEach(input => {
     input.addEventListener("input",event => {
       const pos = event.target.dataset.lineupNumber;
       const value = String(event.target.value || "").replace(/\D/g,"").slice(0,2);
