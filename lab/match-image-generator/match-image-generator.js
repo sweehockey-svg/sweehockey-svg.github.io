@@ -4,7 +4,7 @@
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
 
-  const TEAMS = [
+  const JERSEY_PRESETS = [
     { id:"carolus", name:"Carolus Icemen", code:"CI", primary:"#123b67", accent:"#c99a32", trim:"#f3f4f2", pattern:"shoulder" },
     { id:"shadow", name:"Shadow skulls", code:"SS", primary:"#090b0d", accent:"#c52e33", trim:"#f1f1ef", pattern:"diagonal" },
     { id:"vasteras", name:"Västerås IK", code:"VIK", primary:"#0b0c0d", accent:"#f0c400", trim:"#f3f3ef", pattern:"classic" },
@@ -13,14 +13,14 @@
   ];
 
   const POSITIONS = ["LW","C","RW","LD","RD","G"];
-  const DEFAULT_LINEUP = {
-    LW:"Bulten_49",
-    C:"eSwahn",
-    RW:"Feffe1och2",
-    LD:"I-Ashborn-I",
-    RD:"KabbeTV",
-    G:"Rootmos"
+  const EMPTY_LINEUP = Object.freeze({LW:"",C:"",RW:"",LD:"",RD:"",G:""});
+  const access = {
+    mode:String(window.SEH_MATCH_GRAPHICS_ACCESS?.mode || "admin").toLowerCase(),
+    teamName:String(window.SEH_MATCH_GRAPHICS_ACCESS?.teamName || "").trim()
   };
+  let teamDirectory = [...JERSEY_PRESETS];
+  let rostersByTeamId = new Map();
+  let dataSource = "testdata";
 
   const FORMATS = {
     square:{ label:"Kvadrat · 1080×1080", width:1080, height:1080 },
@@ -32,14 +32,14 @@
     teamId:"carolus",
     opponentId:"vasteras",
     ownSide:"home",
-    competition:"SCL 27",
+    competition:"ECL 27 Winter",
     badge:"MATCHDAY",
     date:"2026-10-01",
     time:"20:00",
     format:"square",
     playerName:"eSWAHN",
     playerNumber:"21",
-    lineup:{...DEFAULT_LINEUP}
+    lineup:{...EMPTY_LINEUP}
   };
 
   const normalize = value => String(value || "")
@@ -72,7 +72,160 @@
   }
 
   function teamById(id) {
-    return TEAMS.find(team => team.id === id) || TEAMS[0];
+    return teamDirectory.find(team => team.id === id) || teamDirectory[0] || JERSEY_PRESETS[0];
+  }
+
+  function initials(name) {
+    return String(name || "?")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0,3)
+      .map(part => part[0])
+      .join("")
+      .toUpperCase();
+  }
+
+  function fallbackPalette(index) {
+    const palettes = [
+      ["#142d4c","#d6b15f","#f4f4ef","shoulder"],
+      ["#11161d","#c63b42","#f0f2f4","classic"],
+      ["#183b34","#d8b35e","#f2f3ef","minimal"],
+      ["#30204c","#d1a33f","#f4f0f5","diagonal"]
+    ];
+    return palettes[Math.abs(index) % palettes.length];
+  }
+
+  function configValues() {
+    const cfg = window.SEH_CONFIG || window.EHOCKEY_CONFIG || window.APP_CONFIG || window.config || {};
+    return {
+      url:String(cfg.supabaseUrl || cfg.SUPABASE_URL || "").replace(/\/+$/,""),
+      key:String(cfg.supabasePublishableKey || cfg.supabaseAnonKey || cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_PUBLISHABLE_KEY || "")
+    };
+  }
+
+  async function getPublicRows(view, query) {
+    const {url,key} = configValues();
+    if (!url || !key) throw new Error("Supabase-konfiguration saknas");
+    const headers = {apikey:key,Accept:"application/json"};
+    if (/^eyJ/i.test(key)) headers.Authorization = "Bearer " + key;
+    const response = await fetch(url + "/rest/v1/" + view + "?" + query,{headers,cache:"no-store"});
+    if (!response.ok) throw new Error(view + ": HTTP " + response.status);
+    return response.json();
+  }
+
+  function buildDynamicTeam(row,index) {
+    const preset = JERSEY_PRESETS.find(team => normalize(team.name) === normalize(row.name));
+    if (preset) {
+      return {
+        ...preset,
+        projectId:Number(row.id) || null,
+        teamId:Number(row.source_team_id) || null,
+        division:String(row.division || ""),
+        logoName:String(row.logo_name || "")
+      };
+    }
+    const [primary,accent,trim,pattern] = fallbackPalette(index);
+    return {
+      id:"build-" + String(row.id || index + 1),
+      name:String(row.name || "Okänt lag"),
+      code:initials(row.name),
+      primary,accent,trim,pattern,
+      projectId:Number(row.id) || null,
+      teamId:Number(row.source_team_id) || null,
+      division:String(row.division || ""),
+      logoName:String(row.logo_name || ""),
+      genericJersey:true
+    };
+  }
+
+  function rosterFor(teamId) {
+    return rostersByTeamId.get(teamId) || [];
+  }
+
+  function setDefaultLineup() {
+    const players = rosterFor(state.teamId);
+    const next = {...EMPTY_LINEUP};
+    POSITIONS.forEach((pos,index) => {
+      next[pos] = players[index] || "";
+    });
+    state.lineup = next;
+  }
+
+  function applyAccessMode() {
+    const select = $("#teamSelect");
+    const badge = $("#accessBadge");
+    if (access.mode === "captain" && access.teamName) {
+      const locked = teamDirectory.find(team => normalize(team.name) === normalize(access.teamName));
+      if (locked) {
+        state.teamId = locked.id;
+        if (state.opponentId === locked.id) {
+          state.opponentId = teamDirectory.find(team => team.id !== locked.id)?.id || locked.id;
+        }
+        if (select) select.disabled = true;
+        if (badge) badge.textContent = "KAPTEN · " + locked.name;
+      }
+    } else {
+      if (select) select.disabled = false;
+      if (badge) badge.textContent = "ADMIN · ALLA LAG";
+    }
+  }
+
+  async function loadLagbyggeData() {
+    const status = $("#dataStatus");
+    if (status) status.textContent = "Hämtar aktuellt lagbygge…";
+    try {
+      const [teams,rosterRows] = await Promise.all([
+        getPublicRows(
+          "v_ecl27_team_builds_public",
+          "select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"
+        ),
+        getPublicRows(
+          "v_ecl27_current_roster_v1",
+          "select=subject_key,player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name,roster_source&order=team_name.asc,display_gamertag.asc"
+        )
+      ]);
+
+      const rows = Array.isArray(teams) ? teams : [];
+      if (!rows.length) throw new Error("Lagbygget innehåller inga lag");
+
+      teamDirectory = rows.map(buildDynamicTeam);
+      const byName = new Map(teamDirectory.map(team => [normalize(team.name),team]));
+      rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+
+      for (const row of Array.isArray(rosterRows) ? rosterRows : []) {
+        const team = byName.get(normalize(row.team_name));
+        const player = String(row.display_gamertag || "").trim();
+        if (!team || !player) continue;
+        const list = rostersByTeamId.get(team.id);
+        if (!list.some(name => normalize(name) === normalize(player))) list.push(player);
+      }
+      for (const list of rostersByTeamId.values()) {
+        list.sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
+      }
+
+      dataSource = "ECL 27 lagbygge";
+      const preferred = teamDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen")) || teamDirectory[0];
+      state.teamId = preferred.id;
+      state.opponentId = teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
+      applyAccessMode();
+      setDefaultLineup();
+      syncForm();
+      render();
+
+      const playerCount = [...rostersByTeamId.values()].reduce((sum,list) => sum + list.length,0);
+      if (status) status.textContent = teamDirectory.length + " lag · " + playerCount + " aktuella spelare";
+    } catch (error) {
+      console.error("[Match Graphics] kunde inte läsa lagbygget",error);
+      dataSource = "lokal testdata";
+      rostersByTeamId = new Map(JERSEY_PRESETS.map(team => [team.id,[]]));
+      teamDirectory = [...JERSEY_PRESETS];
+      state.teamId = teamDirectory[0].id;
+      state.opponentId = teamDirectory[1]?.id || teamDirectory[0].id;
+      state.lineup = {...EMPTY_LINEUP};
+      syncForm();
+      render();
+      if (status) status.textContent = "Lagbygget kunde inte laddas · visar testlag";
+    }
   }
 
   function esc(value) {
@@ -444,12 +597,19 @@
   function render() {
     $("#graphicPreview").innerHTML = buildMatchSvg();
     $("#previewSize").textContent = FORMATS[state.format].label;
-    $("#ownTeamHint").textContent = teamById(state.teamId).name + " · " + (state.ownSide === "home" ? "hemmatröja" : "bortatröja");
+    const team = teamById(state.teamId);
+    const rosterCount = rosterFor(state.teamId).length;
+    $("#ownTeamHint").textContent =
+      team.name +
+      (team.division ? " · " + team.division : "") +
+      " · " + rosterCount + " spelare";
   }
 
   function fillTeamSelect(select, selected) {
-    select.innerHTML = TEAMS.map(team =>
-      '<option value="' + team.id + '"' + (team.id === selected ? ' selected' : '') + '>' + esc(team.name) + '</option>'
+    select.innerHTML = teamDirectory.map(team =>
+      '<option value="' + esc(team.id) + '"' + (team.id === selected ? ' selected' : '') + '>' +
+      esc(team.name) + (team.division ? ' · ' + esc(team.division) : '') +
+      '</option>'
     ).join("");
   }
 
@@ -459,10 +619,36 @@
     ).join("");
   }
 
-  function syncLineupInputs() {
+  function lineupOptions(position) {
+    const players = rosterFor(state.teamId);
+    const selectedElsewhere = new Set(
+      POSITIONS.filter(pos => pos !== position)
+        .map(pos => state.lineup[pos])
+        .filter(Boolean)
+        .map(normalize)
+    );
+    const current = state.lineup[position] || "";
+    return [
+      '<option value="">— Välj spelare —</option>',
+      ...players.map(player =>
+        '<option value="' + esc(player) + '"' +
+        (normalize(player) === normalize(current) ? ' selected' : '') +
+        (selectedElsewhere.has(normalize(player)) ? ' disabled' : '') +
+        '>' + esc(player) + '</option>'
+      )
+    ].join("");
+  }
+
+  function syncLineupSelects() {
     POSITIONS.forEach(pos => {
-      const input = $('[data-lineup="' + pos + '"]');
-      if (input) input.value = state.lineup[pos] || "";
+      const select = $('[data-lineup="' + pos + '"]');
+      if (!select) return;
+      const roster = rosterFor(state.teamId);
+      if (state.lineup[pos] && !roster.some(player => normalize(player) === normalize(state.lineup[pos]))) {
+        state.lineup[pos] = "";
+      }
+      select.innerHTML = lineupOptions(pos);
+      select.disabled = !roster.length;
     });
   }
 
@@ -475,28 +661,30 @@
     $("#badgeSelect").value = state.badge;
     $("#dateInput").value = state.date;
     $("#timeInput").value = state.time;
-    syncLineupInputs();
+    syncLineupSelects();
+    applyAccessMode();
   }
 
   function ensureDifferentTeams(changed) {
     if (state.teamId !== state.opponentId) return;
-    const replacement = TEAMS.find(team => team.id !== (changed === "team" ? state.teamId : state.opponentId));
+    const replacement = teamDirectory.find(team => team.id !== (changed === "team" ? state.teamId : state.opponentId));
     if (!replacement) return;
     if (changed === "team") state.opponentId = replacement.id;
     else state.teamId = replacement.id;
-    syncForm();
   }
 
   function reset() {
-    state.teamId = "carolus";
-    state.opponentId = "vasteras";
+    const preferred = teamDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen")) || teamDirectory[0];
+    state.teamId = preferred?.id || "";
+    state.opponentId = teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
     state.ownSide = "home";
-    state.competition = "SCL 27";
+    state.competition = "ECL 27 Winter";
     state.badge = "MATCHDAY";
     state.date = "2026-10-01";
     state.time = "20:00";
     state.format = "square";
-    state.lineup = {...DEFAULT_LINEUP};
+    applyAccessMode();
+    setDefaultLineup();
     syncForm();
     render();
   }
@@ -583,12 +771,15 @@
   $("#teamSelect").addEventListener("change",event => {
     state.teamId = event.target.value;
     ensureDifferentTeams("team");
+    setDefaultLineup();
+    syncForm();
     render();
   });
 
   $("#opponentSelect").addEventListener("change",event => {
     state.opponentId = event.target.value;
     ensureDifferentTeams("opponent");
+    syncForm();
     render();
   });
 
@@ -622,9 +813,19 @@
     render();
   });
 
-  $$("[data-lineup]").forEach(input => {
-    input.addEventListener("input",event => {
-      state.lineup[event.target.dataset.lineup] = event.target.value;
+  $$("[data-lineup]").forEach(select => {
+    select.addEventListener("change",event => {
+      const pos = event.target.dataset.lineup;
+      const player = event.target.value;
+      if (player) {
+        for (const other of POSITIONS) {
+          if (other !== pos && normalize(state.lineup[other]) === normalize(player)) {
+            state.lineup[other] = "";
+          }
+        }
+      }
+      state.lineup[pos] = player;
+      syncLineupSelects();
       render();
     });
   });
@@ -635,4 +836,5 @@
 
   syncForm();
   render();
+  loadLagbyggeData();
 })();
