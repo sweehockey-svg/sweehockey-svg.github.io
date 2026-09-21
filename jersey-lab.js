@@ -47,39 +47,24 @@
     .trim();
 
   const manifestEntries = Object.entries(window.SEH_TEAM_LOGO_FILES || {});
-  function logoFileFor(teamName) {
-    const wanted = normalize(teamName);
-    const wantedTokens = new Set(wanted.split(" ").filter(Boolean));
-    const benignExtra = new Set(["esport","esports","hockey","hc","gaming"]);
-
-    const ranked = manifestEntries
-      .map(([key,value]) => {
-        const keyBase = normalize(key.replace(/\.png$/i,""));
-        const valueBase = normalize(value.replace(/\.png$/i,""));
-        const candidate = valueBase || keyBase;
-        if (candidate === wanted || keyBase === wanted) return {hit:[key,value],score:-1000};
-        if (!candidate.includes(wanted) && !wanted.includes(candidate) && !keyBase.includes(wanted)) return null;
-
-        const candidateTokens = candidate.split(" ").filter(Boolean);
-        let score = Math.abs(candidate.length - wanted.length) * .02;
-        for (const token of wantedTokens) {
-          if (!candidateTokens.includes(token)) score += 20;
-        }
-        for (const token of candidateTokens) {
-          if (wantedTokens.has(token)) continue;
-          score += benignExtra.has(token) ? .6 : 5;
-        }
-        if (candidate.startsWith(wanted)) score -= .25;
-        return {hit:[key,value],score};
-      })
-      .filter(Boolean)
-      .sort((a,b) => a.score - b.score);
-
-    return ranked[0]?.hit?.[1] || "";
+  function logoFileFor(teamName, explicitLogoName = "") {
+    const candidates = [explicitLogoName,teamName].filter(Boolean);
+    for (const candidate of candidates) {
+      const key = (String(candidate).trim() + ".png").normalize("NFC").toLocaleLowerCase("sv-SE");
+      const actual = window.SEH_TEAM_LOGO_FILES?.[key];
+      if (actual) return actual;
+    }
+    return "";
   }
 
   function logoUrl(teamName) {
-    const file = logoFileFor(teamName);
+    const team = teamDirectory.find(item => normalize(item.name) === normalize(teamName)) || null;
+    const path = String(team?.exactLogoUrl || "").trim();
+    if (path) {
+      if (/^https?:\/\//i.test(path)) return path;
+      return path.replace(/^\/+/, "");
+    }
+    const file = logoFileFor(teamName,team?.logoName || "");
     return file ? `teamlogos/${encodeURIComponent(file).replace(/%2F/gi,"/")}` : "";
   }
 
@@ -211,18 +196,19 @@
 
   async function ensureTeamPalette(team) {
     if (!team || isPresetTeam(team)) return team;
-    const file = logoFileFor(team.name);
-    if (!file) return blackWhiteFallback(team);
+    const exactUrl = logoUrl(team.name);
+    if (!exactUrl) return blackWhiteFallback(team);
 
-    if (teamPaletteCache.has(file)) {
-      Object.assign(team,teamPaletteCache.get(file));
+    const cacheKey = exactUrl;
+    if (teamPaletteCache.has(cacheKey)) {
+      Object.assign(team,teamPaletteCache.get(cacheKey));
       team.paletteSource = "logo-cache";
       return team;
     }
 
-    const palette = await extractLogoPalette(logoUrl(team.name));
+    const palette = await extractLogoPalette(exactUrl);
     if (!palette) return blackWhiteFallback(team);
-    teamPaletteCache.set(file,palette);
+    teamPaletteCache.set(cacheKey,palette);
     Object.assign(team,palette);
     team.paletteSource = "logo";
     return team;
@@ -372,7 +358,8 @@
           projectId:null,
           sourceTeamId:Number(row.teamId) || null,
           division:String(row.division || ""),
-          logoName:String(row.logoName || "")
+          logoName:String(row.logoName || ""),
+          exactLogoUrl:String(row.logoUrl || "")
         };
       }
       const [primary,accent,trim,pattern] = fallbackPalette(index);
@@ -385,6 +372,7 @@
         sourceTeamId:Number(row.teamId) || null,
         division:String(row.division || ""),
         logoName:String(row.logoName || ""),
+        exactLogoUrl:String(row.logoUrl || ""),
         genericJersey:true
       };
     });
