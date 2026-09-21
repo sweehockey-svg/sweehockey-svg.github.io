@@ -111,7 +111,12 @@
   }
 
   function logoFileFor(teamName, explicitLogoName = "") {
-    const candidates = [explicitLogoName,teamName].filter(Boolean);
+    const normalizedTeamName = normalize(teamName);
+    const aliases = {
+      "bik karlskoga":"BIK Karlskoga Esport",
+      "bik karlskoga academy":"BIK Karlskoga Academy"
+    };
+    const candidates = [explicitLogoName,teamName,aliases[normalizedTeamName]].filter(Boolean);
     for (const candidate of candidates) {
       const key = (String(candidate).trim() + ".png").normalize("NFC").toLocaleLowerCase("sv-SE");
       const actual = window.SEH_TEAM_LOGO_FILES?.[key];
