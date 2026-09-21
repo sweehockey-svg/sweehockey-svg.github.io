@@ -8723,6 +8723,28 @@ function SEH_initTeam() {
       SEH_hydratePlayerCardTeamPalette(elements.teamPage, watermark, team.currentName);
     }
 
+    function renderPublicTeamJersey(team) {
+      const identity = elements.teamPage?.querySelector(".history-team-identity");
+      if (!identity || !window.SEH_TEAM_JERSEY_V27?.mount) return;
+
+      let jersey = identity.querySelector("#teamPublicJerseyV27");
+      if (!jersey) {
+        jersey = document.createElement("div");
+        jersey.id = "teamPublicJerseyV27";
+        identity.append(jersey);
+      }
+      identity.classList.add("has-public-jersey-v1");
+
+      void window.SEH_TEAM_JERSEY_V27.mount(jersey, {
+        id: team.teamId,
+        teamId: team.teamId,
+        name: team.currentName,
+        currentName: team.currentName,
+        logoUrl: team.logoUrl,
+        logoPath: team.logoPath
+      });
+    }
+
     function renderTeamLinks(team) {
       elements.teamLinks.replaceChildren();
   
@@ -9145,6 +9167,7 @@ function SEH_initTeam() {
       elements.playersHeading.textContent = "Spelare – all-time";
   
       renderProfileAvatar(team);
+      renderPublicTeamJersey(team);
       renderTeamLinks(team);
       renderHistoryBadges();
       renderHeroChips();
