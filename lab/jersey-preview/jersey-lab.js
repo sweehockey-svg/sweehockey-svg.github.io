@@ -615,6 +615,7 @@
   // A neutral, procedural cloth-lighting layer shared by every team and colour.
   // Compute once per side, not per jersey or control change. No external image assets.
   const fabricLightingCache = new Map();
+  const fabricDisplacementCache = new Map();
   function jerseyFabricLighting(side) {
     if (fabricLightingCache.has(side)) return fabricLightingCache.get(side);
     try {
@@ -642,25 +643,29 @@
         return {x0,y0,dx:dx/length,dy:dy/length,length,width:width*2.1,relief:relief*.34};
       });
       const backShift = side === "back" ? 18 : 0;
-      for (let y=86; y<589; y++) {
+      for (let y=76; y<594; y++) {
         const hanging = smooth((y-177)/170);
-        for (let x=89; x<511; x++) {
+        for (let x=65; x<535; x++) {
           // Rounded torso/sleeves, joined gradually to avoid a straight panel shadow.
           const torso = 19 * gaussian(x-296, 125);
-          const left = 13 * gaussian(x-143, 34);
-          const right = 12 * gaussian(x-461, 35);
+          const left = 12 * gaussian(x-(146-(y-170)*.038), 37);
+          const right = 11 * gaussian(x-(455+(y-170)*.04), 38);
           const joinL = smooth((x-165)/45), joinR = smooth((435-x)/45);
           let h = torso * joinL * joinR + left * (1-joinL) + right * (1-joinR);
           const c1=226+backShift+12*Math.sin((y-195)*.012);
           const c2=298-backShift+9*Math.sin(y*.016+.9);
           const c3=363+10*Math.sin((y-270)*.011);
-          h += hanging * (6.2*gaussian(x-c1,29)-4.3*gaussian(x-c2,35)+6.8*gaussian(x-c3,31));
+          h += hanging * (8.3*gaussian(x-c1,23)-5.2*gaussian(x-c2,30)+8.5*gaussian(x-c3,27));
+          // Narrow valleys between broad folds, varied along the length of the cloth.
+          h -= 3.2*gaussian(x-(251+11*Math.sin(y*.012)),9)*gaussian(y-409,132);
+          h += 2.5*gaussian(x-(329+15*Math.sin(y*.01)),12)*gaussian(y-445,105);
+          h -= 2.4*gaussian(x-(390-14*Math.sin(y*.009)),10)*gaussian(y-352,118);
           // Broad, irregular drape and shorter wrinkles near cuffs and hem.
           h += .8*Math.sin(x*.051+y*.025)*Math.sin(y*.037-x*.019);
           h += 2.1*gaussian(x-(132+8*Math.sin(y*.016)),16)*smooth((y-215)/90);
           h -= 2.6*gaussian(x-(467+6*Math.sin(y*.013)),19)*smooth((y-238)/80);
-          h += 1.8*Math.sin(y*.115+x*.028)*gaussian(y-494,42)*(gaussian(x-141,36)+gaussian(x-463,36));
-          h += 1.3*Math.sin(x*.074+y*.048)*gaussian(y-538,37)*gaussian(x-298,105);
+          h += 2.2*Math.sin(y*.115+x*.028)*gaussian(y-494,42)*(gaussian(x-131,36)+gaussian(x-471,36));
+          h += 1.8*Math.sin(x*.074+y*.048)*gaussian(y-538,37)*gaussian(x-298,105);
           for (const c of creases) {
             const px=x-c.x0, py=y-c.y0, along=(px*c.dx+py*c.dy)/c.length;
             if (along<=0 || along>=1) continue;
@@ -673,26 +678,37 @@
         }
       }
       const pixels=context.createImageData(size,size);
-      for (let y=90; y<585; y++) {
-        for (let x=93; x<507; x++) {
+      const displacement=context.createImageData(size,size);
+      for (let i=0;i<size*size;i++) {
+        displacement.data[i*4]=displacement.data[i*4+1]=128;
+        displacement.data[i*4+2]=128;
+        displacement.data[i*4+3]=255;
+      }
+      for (let y=80; y<590; y++) {
+        for (let x=69; x<531; x++) {
           const i=y*size+x;
           const sx=(heights[i+1]-heights[i-1])*.5;
           const sy=(heights[i+size]-heights[i-size])*.5;
           const norm=1/Math.sqrt(1+sx*sx+sy*sy);
           // Large studio softbox above-left, with ambient fill for white and black kits.
           const light=clamp((sx*.42+sy*.23+.875)*norm,0,1);
-          const tone=(light-.875)*.83;
+          const tone=(light-.875)*.98;
           // Surface-following knit; soft contrast keeps white polyester matte.
           const weave=(Math.sin(x*2.9+y*.65+heights[i]*.12)*Math.sin(y*3.1-x*.25))*.035;
           const grain=((((x*73856093)^(y*19349663))>>>0)%101/100-.5)*.018;
           const value=tone+weave+grain;
           const p=i*4, white=value>0;
+          // The printed artwork bends on the same surface that receives the light.
+          displacement.data[p]=clamp(128+sx*92,35,220);
+          displacement.data[p+1]=clamp(128+sy*76+(heights[i]-15)*1.1,45,210);
           pixels.data[p]=pixels.data[p+1]=pixels.data[p+2]=white?255:0;
-          pixels.data[p+3]=Math.round(255*(white?Math.min(.12,value*.50):Math.min(.25,-value)));
+          pixels.data[p+3]=Math.round(255*(white?Math.min(.16,value*.63):Math.min(.29,-value)));
         }
       }
       context.putImageData(pixels,0,0);
       const result=canvas.toDataURL("image/png");
+      context.putImageData(displacement,0,0);
+      fabricDisplacementCache.set(side,canvas.toDataURL("image/png"));
       fabricLightingCache.set(side,result);
       return result;
     } catch {
@@ -717,6 +733,7 @@
     const logo = logoUrl(team.name);
     const uid = `premium-${team.id}-${variant}-${side}-${Math.random().toString(36).slice(2,8)}`;
     const fabricLighting = jerseyFabricLighting(side);
+    const fabricDisplacement = fabricDisplacementCache.get(side) || "";
 
     const bodyBase = variant === "away" ? "#f4f4f1" : primary;
     const sleeveBase = bodyBase;
@@ -729,9 +746,9 @@
     const dark = variant === "away" ? primary : "#07090a";
 
     // V28: gently sloping shoulders and relaxed sleeve edges with overlapping upper panels.
-    const leftSleeve = "M242 96 C216 101 185 109 160 119 C134 130 119 145 114 166 C110 178 111 183 111 188 C107 226 110 247 107 278 C107 318 104 350 103 391 C104 431 98 473 97 516 Q96 524 104 527 C126 535 151 533 171 529 C181 510 184 476 189 439 C194 397 199 348 199 302 C198 252 190 210 186 176 C184 143 208 108 242 96 Z";
-    const rightSleeve = "M358 93 C387 101 414 109 439 121 C463 133 479 150 485 171 C489 182 488 185 488 191 C493 226 490 251 493 284 C495 325 495 354 497 393 C496 437 501 477 502 513 Q505 523 497 528 C474 534 449 534 429 529 C420 513 415 480 410 442 C404 399 400 349 401 300 C402 250 411 207 415 177 C418 141 392 106 358 93 Z";
-    const torso = "M242 96 Q297 111 358 93 C390 101 418 126 425 161 C431 194 425 233 419 270 C414 315 413 357 410 398 C407 447 411 500 407 558 C401 570 377 573 352 576 Q298 586 247 578 C219 575 197 570 191 558 C188 510 190 466 185 422 C181 381 177 341 175 305 C170 259 166 214 170 178 C175 135 204 105 242 96 Z";
+    const leftSleeve = "M242 96 C213 100 179 109 153 120 C127 131 112 150 106 177 C101 203 104 226 101 255 C99 281 101 301 97 328 C94 353 97 375 94 405 C91 433 94 451 89 479 L86 505 Q82 522 94 526 C114 532 140 534 160 529 C170 509 170 490 174 470 C178 450 176 432 181 408 C187 379 191 348 197 318 C205 278 205 246 198 212 C190 175 187 151 205 125 Z";
+    const rightSleeve = "M358 93 C387 99 420 110 446 124 C470 137 487 157 492 185 C497 211 493 235 497 261 C499 284 498 308 502 336 C505 361 501 383 506 412 C509 438 506 459 512 483 L515 508 Q519 524 507 529 C486 536 461 535 440 530 C430 512 433 492 426 471 C421 450 425 432 418 407 C411 377 408 348 402 317 C394 277 395 245 401 213 C409 176 414 153 395 128 Z";
+    const torso = "M242 96 Q297 111 358 93 C389 101 414 123 421 153 C429 183 420 217 413 249 C406 283 409 315 408 350 C407 385 404 412 408 445 C410 472 406 491 408 513 L405 552 Q407 565 393 570 C365 577 333 579 300 580 C267 581 234 576 207 573 Q192 570 192 558 L190 534 C193 510 188 486 190 460 C192 430 187 407 188 377 C189 345 187 318 186 290 C184 255 174 221 172 189 C169 154 189 119 218 105 Z";
 
     const shoulderDecor = pattern === "shoulder" ? `
       <path d="M96 84 H504 V178 C425 154 363 145 301 149 C238 144 177 157 96 181 Z" fill="${yokeBase}"/>
@@ -739,13 +756,13 @@
     ` : "";
 
     const sleeveStriping = pattern === "minimal" ? `
-      <path d="M98 328 Q143 332 194 326 L196 347 Q143 353 98 349 Z M502 328 Q457 332 406 326 L404 347 Q457 353 502 349 Z" fill="${stripeA}"/>
+      <path d="M72 328 Q143 332 194 326 L196 347 Q143 353 72 349 Z M528 328 Q457 332 406 326 L404 347 Q457 353 528 349 Z" fill="${stripeA}"/>
     ` : pattern === "diagonal" ? `
-      <path d="M98 304 L196 287 V308 L98 325 Z M502 304 L404 287 V308 L502 325 Z" fill="${stripeA}"/>
-      <path d="M98 331 L196 314 V336 L98 353 Z M502 331 L404 314 V336 L502 353 Z" fill="${stripeB}"/>
+      <path d="M72 304 L196 287 V308 L72 325 Z M528 304 L404 287 V308 L528 325 Z" fill="${stripeA}"/>
+      <path d="M72 331 L196 314 V336 L72 353 Z M528 331 L404 314 V336 L528 353 Z" fill="${stripeB}"/>
     ` : `
-      <path d="M98 299 Q143 302 195 298 V324 Q143 328 98 325 Z M502 299 Q457 302 405 298 V324 Q457 328 502 325 Z" fill="${stripeB}"/>
-      <path d="M98 340 Q143 344 196 340 V366 Q143 370 98 366 Z M502 340 Q457 344 404 340 V366 Q457 370 502 366 Z" fill="${stripeA}"/>
+      <path d="M72 299 Q143 302 195 298 V324 Q143 328 72 325 Z M528 299 Q457 302 405 298 V324 Q457 328 528 325 Z" fill="${stripeB}"/>
+      <path d="M72 340 Q143 344 196 340 V366 Q143 370 72 366 Z M528 340 Q457 344 404 340 V366 Q457 370 528 366 Z" fill="${stripeA}"/>
     `;
 
     const hemStriping = pattern === "minimal" ? `
@@ -765,7 +782,7 @@
     const front = `
       <g>
         ${logo
-          ? `<image href="${esc(logo)}" x="199" y="226" width="202" height="202" preserveAspectRatio="xMidYMid meet"/>`
+          ? `<image href="${esc(logo)}" x="205" y="228" width="190" height="198" preserveAspectRatio="xMidYMid meet"/>`
           : `<text x="300" y="335" text-anchor="middle" fill="${ink}" font-size="74" font-weight="1000">${esc(team.code)}</text>`}
         ${captain}
       </g>
@@ -773,7 +790,7 @@
 
     const back = `
       <g>
-        <text x="300" y="215" text-anchor="middle" fill="${ink}" stroke="${stripeA}" stroke-width="1.5" paint-order="stroke fill" font-size="${compact ? 27 : 30}" font-weight="1000" letter-spacing="2.4">${esc(name)}</text>
+        <text x="300" y="215" text-anchor="middle" fill="${ink}" stroke="${stripeA}" stroke-width="1.5" paint-order="stroke fill" font-size="${compact ? 27 : 30}" font-weight="1000" letter-spacing="2.4"${name.length > 11 ? ' textLength="205" lengthAdjust="spacingAndGlyphs"' : ""}>${esc(name)}</text>
         <text x="300" y="420" text-anchor="middle" fill="${ink}" stroke="${stripeA}" stroke-width="6" paint-order="stroke fill" font-size="${compact ? 174 : 184}" font-weight="1000" letter-spacing="-8">${esc(number)}</text>
       </g>
     `;
@@ -781,6 +798,10 @@
     return `
       <svg viewBox="0 0 600 600" role="img" aria-label="${esc(team.name)} premium ${variant === "away" ? "bortatröja" : "hemmatröja"}" class="seh-jersey-svg seh-jersey-premium${compact ? " is-compact" : ""}">
         <defs>
+          ${fabricDisplacement && !compact ? `<filter id="print-drape-${uid}" x="0" y="0" width="600" height="600" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feImage href="${fabricDisplacement}" x="0" y="0" width="600" height="600" result="cloth-surface"/>
+            <feDisplacementMap in="SourceGraphic" in2="cloth-surface" scale="8" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>` : ""}
           <clipPath id="clip-${uid}">
             <path d="${leftSleeve}"/>
             <path d="${torso}"/>
@@ -849,7 +870,7 @@
             ${shoulderDecor}
             <g mask="url(#sleeves-only-${uid})">${sleeveStriping}</g>
             <g clip-path="url(#torso-clip-${uid})">${hemStriping}</g>
-            ${side === "back" ? back : front}
+            <g${fabricDisplacement && !compact ? ` filter="url(#print-drape-${uid})"` : ""}>${side === "back" ? back : front}</g>
             ${fabricLighting ? `<rect width="600" height="600" fill="url(#chest-light-${uid})" opacity=".48"/><image href="${fabricLighting}" x="0" y="0" width="600" height="600" opacity="${compact ? ".88" : "1"}"/>` : `
             <path d="${leftSleeve}" fill="url(#left-sleeve-${uid})"/>
             <path d="${rightSleeve}" fill="url(#right-sleeve-${uid})"/>
@@ -857,7 +878,7 @@
             <path d="${torso}" fill="url(#torso-drape-${uid})"/>
             <rect width="600" height="600" fill="url(#chest-light-${uid})"/>
             `}
-            <rect width="600" height="600" fill="url(#knit-${uid})" opacity="${compact ? ".16" : ".38"}"/>
+            <rect width="600" height="600" fill="url(#knit-${uid})" opacity="${compact ? ".16" : ".62"}"/>
           </g>
 
           <!-- Sewn hems remain crisp over the continuous cloth lighting. -->
@@ -867,8 +888,9 @@
               <path d="M205 112 C183 139 171 166 174 198 M391 110 C414 140 427 166 424 201" stroke="#fff" stroke-opacity=".16" stroke-width=".7" stroke-dasharray="1.2 2"/>
             </g>
             <g fill="none" stroke-linecap="round">
-              <path d="M104 516 Q136 526 170 520" stroke="#000" stroke-opacity=".14" stroke-width=".75" stroke-dasharray="1 2.1"/>
-              <path d="M430 519 Q462 526 496 516" stroke="#000" stroke-opacity=".14" stroke-width=".75" stroke-dasharray="1 2.1"/>
+              <path d="M90 516 Q123 528 162 521" stroke="#000" stroke-opacity=".18" stroke-width=".75" stroke-dasharray="1 2.1"/>
+              <path d="M439 522 Q477 530 513 518" stroke="#000" stroke-opacity=".18" stroke-width=".75" stroke-dasharray="1 2.1"/>
+              <path d="M91 513 Q124 524 162 518 M439 519 Q478 527 513 515" stroke="#fff" stroke-opacity=".13" stroke-width=".7"/>
               <path d="M196 556 Q247 570 300 572 Q351 570 402 557" stroke="#000" stroke-opacity=".13" stroke-width=".72" stroke-dasharray="1 2.15"/>
               <path d="M198 552 Q249 565 300 567 Q350 565 400 553" stroke="#fff" stroke-opacity=".09" stroke-width=".65" stroke-dasharray=".9 2.2"/>
             </g>
