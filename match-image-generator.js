@@ -264,7 +264,7 @@
   }
 
   async function ensureTeamPalette(team) {
-    if (!team || isPresetTeam(team)) return team;
+    if (!team || team.jerseySettingsSource === "saved" || isPresetTeam(team)) return team;
     const exactUrl = logoUrl(team.name);
     if (!exactUrl) return blackWhiteFallback(team);
 
@@ -319,6 +319,82 @@
     });
     if (!response.ok) throw new Error(name + ": HTTP " + response.status);
     return response.json();
+  }
+
+
+  function restoreAutomaticJerseyStyle(team) {
+    if (!team) return team;
+    const preset = JERSEY_PRESETS.find(item => normalize(item.name) === normalize(team.name));
+    if (preset) {
+      team.primary = preset.primary;
+      team.accent = preset.accent;
+      team.trim = preset.trim;
+      team.pattern = preset.pattern;
+      team.paletteSource = "preset";
+    } else {
+      const index = Math.max(0,teamDirectory.indexOf(team));
+      const [primary,accent,trim,pattern] = fallbackPalette(index);
+      team.primary = primary;
+      team.accent = accent;
+      team.trim = trim;
+      team.pattern = pattern;
+      team.paletteSource = "";
+    }
+    delete team.jerseySettingsSource;
+    return team;
+  }
+
+  function validSavedJerseyRow(row) {
+    if (!row || !Number.isFinite(Number(row.team_id))) return null;
+    const primary = String(row.primary_color || "").trim().toLowerCase();
+    const accent = String(row.accent_color || "").trim().toLowerCase();
+    const trim = String(row.trim_color || "").trim().toLowerCase();
+    const pattern = String(row.pattern || "").trim().toLowerCase();
+    if (![primary,accent,trim].every(value => /^#[0-9a-f]{6}$/.test(value))) return null;
+    if (!["shoulder","classic","minimal","diagonal"].includes(pattern)) return null;
+    return {teamId:Number(row.team_id),primary,accent,trim,pattern};
+  }
+
+  async function hydrateSavedJerseySettings(teams = teamDirectory) {
+    const list = (Array.isArray(teams) ? teams : []).filter(Boolean);
+    const teamIds = [...new Set(
+      list.map(team => Number(team.teamId)).filter(id => Number.isFinite(id) && id > 0)
+    )];
+
+    if (!teamIds.length) return list;
+
+    const rows = await getRpcRows("seh_get_team_jersey_settings_bulk",{p_team_ids:teamIds});
+    const settingsByTeamId = new Map(
+      (Array.isArray(rows) ? rows : [])
+        .map(validSavedJerseyRow)
+        .filter(Boolean)
+        .map(style => [style.teamId,style])
+    );
+
+    list.forEach(team => {
+      const teamId = Number(team.teamId);
+      const saved = settingsByTeamId.get(teamId);
+      if (!saved) {
+        if (team.jerseySettingsSource === "saved") restoreAutomaticJerseyStyle(team);
+        return;
+      }
+
+      team.primary = saved.primary;
+      team.accent = saved.accent;
+      team.trim = saved.trim;
+      team.pattern = saved.pattern;
+      team.jerseySettingsSource = "saved";
+      team.paletteSource = "saved";
+    });
+
+    return list;
+  }
+
+  async function refreshSelectedTeamJerseys() {
+    const selected = [teamById(state.teamId),teamById(state.opponentId)].filter(Boolean);
+    if (!selected.length) return;
+    await hydrateSavedJerseySettings(selected);
+    await Promise.all(selected.map(team => ensureTeamPalette(team)));
   }
 
   function sportsGamerId(value) {
@@ -553,6 +629,12 @@
       if (!rows.length) throw new Error("ECL 27 innehåller inga lag");
 
       teamDirectory = rows.map(buildDynamicTeam);
+
+      try {
+        await hydrateSavedJerseySettings(teamDirectory);
+      } catch (error) {
+        console.warn("[Match Graphics] kunde inte läsa sparade lagtröjor",error);
+      }
 
       const preferred = teamDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen"))
         || teamDirectory[0];
@@ -1748,10 +1830,7 @@
   $("#teamSelect").addEventListener("change",async event => {
     state.teamId = event.target.value;
     ensureDifferentTeams("team");
-    await Promise.all([
-      ensureTeamPalette(teamById(state.teamId)),
-      ensureTeamPalette(teamById(state.opponentId))
-    ]);
+    await refreshSelectedTeamJerseys();
     setDefaultLineup();
     await hydratePlayerPortraits(state.teamId);
     syncForm();
@@ -1761,10 +1840,7 @@
   $("#opponentSelect").addEventListener("change",async event => {
     state.opponentId = event.target.value;
     ensureDifferentTeams("opponent");
-    await Promise.all([
-      ensureTeamPalette(teamById(state.teamId)),
-      ensureTeamPalette(teamById(state.opponentId))
-    ]);
+    await refreshSelectedTeamJerseys();
     syncForm();
     render();
   });
@@ -1850,6 +1926,15 @@
   $("#resetButton").addEventListener("click",reset);
   $("#svgButton").addEventListener("click",exportSvg);
   $("#pngButton").addEventListener("click",exportPng);
+
+  window.addEventListener("focus",async () => {
+    try {
+      await refreshSelectedTeamJerseys();
+      render();
+    } catch (error) {
+      console.warn("[Match Graphics] kunde inte uppdatera sparade lagtröjor",error);
+    }
+  });
 
   syncForm();
   render();
