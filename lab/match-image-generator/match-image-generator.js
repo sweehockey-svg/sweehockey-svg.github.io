@@ -118,7 +118,7 @@
   function backgroundUrl(id = state.background) {
     if (id === "outdoor") return assetPrefix + "assets/bgsommar.png";
     if (id === "arena") return assetPrefix + "assets/bg.jpg";
-    if (id === "smoke") return backgroundPrefix + "smoke.svg?v=38";
+    if (id === "smoke") return backgroundPrefix + "smoke.svg?v=39";
     if (id === "ice") return backgroundPrefix + "ice-texture.svg";
     if (id === "sweden") return backgroundPrefix + "sweden.svg";
     if (id === "neon") return backgroundPrefix + "neon.svg";
