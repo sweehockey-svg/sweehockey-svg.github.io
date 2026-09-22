@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#071522"/><stop offset=".48" stop-color="#15324a"/><stop offset="1" stop-color="#06101b"/></linearGradient>
+  <radialGradient id="glow" cx="48%" cy="42%" r="64%"><stop offset="0" stop-color="#d9f2ff" stop-opacity=".24"/><stop offset=".42" stop-color="#8bc7e9" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></radialGradient>
+  <filter id="noise"><feTurbulence type="fractalNoise" baseFrequency=".018 .055" numOctaves="4" seed="31" result="n"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .20"/></feComponentTransfer></filter>
+  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".68" numOctaves="2" seed="4"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .08"/></feComponentTransfer></filter>
+</defs>
+<rect width="1600" height="900" fill="url(#bg)"/>
+<rect width="1600" height="900" fill="url(#glow)"/>
+<g fill="none" stroke="#dff5ff" stroke-opacity=".13" stroke-linecap="round">
+  <path d="M120 95 C340 210 425 345 585 525 S820 770 990 900" stroke-width="5"/>
+  <path d="M1480 70 C1260 205 1185 330 1050 505 S850 700 730 900" stroke-width="4"/>
+  <path d="M385 0 C470 155 510 260 535 430" stroke-width="3"/>
+  <path d="M1195 0 C1125 140 1085 265 1055 430" stroke-width="3"/>
+  <path d="M585 525 l-120 42 l-86 110 M585 525 l82 106 l36 138 M1050 505 l125 56 l78 100 M1050 505 l-70 110 l-18 132" stroke-width="2.5"/>
+</g>
+<rect width="1600" height="900" filter="url(#noise)" opacity=".68"/>
+<rect y="690" width="1600" height="210" fill="#02070c" opacity=".38"/>
+<ellipse cx="800" cy="780" rx="540" ry="72" fill="#c7efff" opacity=".055"/>
+<rect width="1600" height="900" filter="url(#grain)" opacity=".6"/>
+</svg>
