@@ -61,7 +61,7 @@ button{cursor:pointer}
   padding:0;overflow:hidden;text-align:left;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#0d1218;color:#eef3f7;
   transition:border-color .15s,transform .15s,box-shadow .15s
 }
-.background-card:last-child{grid-column:1/-1}
+.background-card:last-child{grid-column:auto}
 .background-card:hover{transform:translateY(-1px);border-color:rgba(240,196,0,.3)}
 .background-card.is-active{border-color:rgba(240,196,0,.62);box-shadow:0 0 0 3px rgba(240,196,0,.06)}
 .background-thumb{
