@@ -8724,16 +8724,25 @@ function SEH_initTeam() {
     }
 
     function renderPublicTeamJersey(team) {
-      const identity = elements.teamPage?.querySelector(".history-team-identity");
-      if (!identity || !window.SEH_TEAM_JERSEY_V27?.mount) return;
+      const content = elements.teamPage?.querySelector(".history-hero-content");
+      const identity = content?.querySelector(".history-team-identity");
+      const profileCopy = content?.querySelector(".history-profile-copy");
+      const leaders = content?.querySelector(".history-leaders");
+      if (!content || !identity || !profileCopy || !window.SEH_TEAM_JERSEY_V27?.mount) return;
 
-      let jersey = identity.querySelector("#teamPublicJerseyV27");
+      let jersey = content.querySelector("#teamPublicJerseyV27");
       if (!jersey) {
         jersey = document.createElement("div");
         jersey.id = "teamPublicJerseyV27";
-        identity.append(jersey);
       }
-      identity.classList.add("has-public-jersey-v1");
+
+      // Desktop: logga | klubbprofil | tröja.
+      // På smalare vyer styr CSS samma nod till en egen rad.
+      if (leaders) content.insertBefore(jersey, leaders);
+      else profileCopy.after(jersey);
+
+      identity.classList.remove("has-public-jersey-v1");
+      content.classList.add("has-public-jersey-v2");
 
       void window.SEH_TEAM_JERSEY_V27.mount(jersey, {
         id: team.teamId,
