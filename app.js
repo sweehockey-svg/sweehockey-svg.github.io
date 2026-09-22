@@ -13167,6 +13167,15 @@ const SEH_TEAM_LOGO_REMOTE_OVERRIDES = Object.freeze({
   "hc bisons": "https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2019_10/CE821323-0CCE-4C8A-A28D-A39247FDFE0E.thumb.jpeg.af47fb2589046feb52a0a61ec56a3d37.jpeg"
 });
 
+/*
+ * Some historically distinct teams have names that look like accent/spacing
+ * variants of another club. If the database has no explicit logo for these
+ * teams, do not guess a logo from the filename manifest.
+ */
+const SEH_TEAM_LOGO_NAME_FALLBACK_BLOCKLIST = new Set([
+  "linkoping"
+]);
+
 function SEH_normalizeTeamLogoLookupName(value) {
   return String(value || "")
     .normalize("NFC")
@@ -13243,8 +13252,13 @@ function SEH_teamLogoCandidates(primaryUrls, teamName) {
 
   (Array.isArray(primaryUrls) ? primaryUrls : [primaryUrls]).forEach(add);
 
+  const normalizedTeamName = SEH_normalizeTeamLogoLookupName(teamName);
+  if (SEH_TEAM_LOGO_NAME_FALLBACK_BLOCKLIST.has(normalizedTeamName)) {
+    return result;
+  }
+
   const remoteOverride =
-    SEH_TEAM_LOGO_REMOTE_OVERRIDES[SEH_normalizeTeamLogoLookupName(teamName)];
+    SEH_TEAM_LOGO_REMOTE_OVERRIDES[normalizedTeamName];
   if (remoteOverride) add(remoteOverride);
 
   for (const name of SEH_teamLogoNameVariants(teamName)) {
