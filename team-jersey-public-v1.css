@@ -1,17 +1,51 @@
 /* Public team profile jersey – V27 */
-#spaRouteView[data-route="team"] .history-team-identity.has-public-jersey-v1{
-  width:228px;
-  display:grid;
-  gap:14px;
+#spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .team-public-jersey-v1{
+  align-self:start;
+  justify-self:end;
 }
-#spaRouteView[data-route="team"] .history-team-identity.has-public-jersey-v1 .history-team-logo{
-  width:116px;
-  height:116px;
-  margin-inline:auto;
+@media(min-width:1281px){
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2{
+    grid-template-columns:132px minmax(0,1fr) 205px !important;
+    gap:0 18px !important;
+  }
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .history-team-identity{
+    grid-column:1;
+    grid-row:1;
+  }
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .history-profile-copy{
+    grid-column:2;
+    grid-row:1;
+  }
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .team-public-jersey-v1{
+    grid-column:3;
+    grid-row:1;
+    width:205px;
+  }
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .team-public-jersey-v1 .team-public-jersey-v1__stage{
+    height:215px;
+  }
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .team-public-jersey-v1 .team-public-jersey-v1__stage svg{
+    width:194px;
+  }
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .history-leaders,
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .history-hero-footer-v1284{
+    grid-column:1 / -1 !important;
+  }
 }
-#spaRouteView[data-route="team"] .history-team-identity.has-public-jersey-v1 .history-team-logo img{padding:11px}
-#spaRouteView[data-route="team"] .history-hero-content:has(.has-public-jersey-v1){
-  grid-template-columns:228px minmax(0,1fr);
+@media(min-width:921px) and (max-width:1280px){
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .team-public-jersey-v1{
+    grid-column:1 / -1;
+    grid-row:auto;
+    justify-self:start;
+    width:205px;
+    margin-top:14px;
+  }
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .team-public-jersey-v1 .team-public-jersey-v1__stage{
+    height:210px;
+  }
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .team-public-jersey-v1 .team-public-jersey-v1__stage svg{
+    width:190px;
+  }
 }
 .team-public-jersey-v1{
   width:228px;
@@ -68,30 +102,20 @@
   height:auto;
   filter:drop-shadow(0 13px 22px rgba(0,0,0,.34));
 }
-@media(max-width:1180px) and (min-width:681px){
-  #spaRouteView[data-route="team"] .history-team-identity.has-public-jersey-v1{width:190px}
-  #spaRouteView[data-route="team"] .history-hero-content:has(.has-public-jersey-v1){grid-template-columns:190px minmax(0,1fr)}
-  .team-public-jersey-v1{width:190px}
-  .team-public-jersey-v1__stage{height:218px}
-  .team-public-jersey-v1__stage svg{width:188px}
-  .team-public-jersey-v1__head{align-items:flex-start;flex-direction:column}
-}
-@media(max-width:680px){
-  #spaRouteView[data-route="team"] .history-team-identity.has-public-jersey-v1{
-    width:100%;
-    grid-template-columns:96px minmax(0,220px);
-    align-items:start;
-    justify-content:start;
+@media(max-width:920px){
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .team-public-jersey-v1{
+    grid-column:1 / -1;
+    grid-row:auto;
+    justify-self:start;
+    width:min(220px,100%);
+    margin-top:4px;
   }
-  #spaRouteView[data-route="team"] .history-team-identity.has-public-jersey-v1 .history-team-logo{
-    width:96px;height:96px;margin:0;
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .team-public-jersey-v1 .team-public-jersey-v1__stage{
+    height:224px;
   }
-  .team-public-jersey-v1{width:min(220px,100%)}
-  .team-public-jersey-v1__stage{height:224px}
-  .team-public-jersey-v1__stage svg{width:200px}
-}
-@media(max-width:420px){
-  #spaRouteView[data-route="team"] .history-team-identity.has-public-jersey-v1{grid-template-columns:1fr}
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .team-public-jersey-v1 .team-public-jersey-v1__stage svg{
+    width:200px;
+  }
 }
 
 
