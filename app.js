@@ -8807,13 +8807,22 @@ function SEH_initTeam() {
       identity.classList.remove("has-public-jersey-v1");
       content.classList.add("has-public-jersey-v2");
 
+      const renderedLogo = elements.teamProfileAvatar?.querySelector("img");
+      const resolvedLogoUrl = String(
+        renderedLogo?.currentSrc ||
+        renderedLogo?.src ||
+        team.logoUrl ||
+        team.logoPath ||
+        ""
+      ).trim();
+
       void window.SEH_TEAM_JERSEY_V27.mount(jersey, {
         id: team.teamId,
         teamId: team.teamId,
         name: team.currentName,
         currentName: team.currentName,
-        logoUrl: team.logoUrl,
-        logoPath: team.logoPath
+        logoUrl: resolvedLogoUrl,
+        logoPath: resolvedLogoUrl
       });
     }
 
