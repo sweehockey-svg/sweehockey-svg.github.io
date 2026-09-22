@@ -9173,6 +9173,12 @@ function SEH_initTeam() {
       const team = state.team;
       document.title = `${team.currentName} – eHockey Master`;
       elements.teamName.textContent = team.currentName;
+
+      const compactTeamName = String(team.currentName || "").replace(/\s+/g, " ").trim();
+      const teamNameLength = compactTeamName.length;
+      elements.teamName.classList.toggle("is-team-name-long", teamNameLength >= 13 && teamNameLength < 19);
+      elements.teamName.classList.toggle("is-team-name-xlong", teamNameLength >= 19 && teamNameLength < 27);
+      elements.teamName.classList.toggle("is-team-name-xxlong", teamNameLength >= 27);
       elements.playersHeading.textContent = "Spelare – all-time";
   
       renderProfileAvatar(team);
