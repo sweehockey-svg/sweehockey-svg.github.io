@@ -173,7 +173,7 @@
     const y = isWide ? 26 : 22;
 
     const mark = meta.logo
-      ? '<image href="' + esc(meta.logo) + '" x="' + x + '" y="' + y + '" width="' + size + '" height="' + size + '" preserveAspectRatio="xMidYMid meet"/>'
+      ? '<image data-league-logo="' + esc(meta.label) + '" href="' + esc(meta.logo) + '" x="' + x + '" y="' + y + '" width="' + size + '" height="' + size + '" preserveAspectRatio="xMidYMid meet"/>'
       : '<text x="' + (x+size/2) + '" y="' + (y+size*.62) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".82" font-size="' + Math.round(size*.28) + '" font-weight="1000" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="1">' + esc(meta.label) + '</text>';
 
     return '<g class="league-corner-brand" opacity=".92">' + mark + '</g>';
@@ -1850,19 +1850,58 @@
     });
   }
 
+  async function fetchImageDataUrl(href) {
+    const absolute = new URL(href,location.href).href;
+    const candidates = [absolute];
+    if (/^https?:\/\//i.test(absolute) && new URL(absolute).origin !== location.origin) {
+      candidates.push("https://images.weserv.nl/?url=" + encodeURIComponent(absolute) + "&output=png");
+    }
+    for (const url of candidates) {
+      try {
+        const response = await fetch(url,{cache:"force-cache",mode:"cors"});
+        if (!response.ok) continue;
+        const blob = await response.blob();
+        if (!blob.size || !/^image\//i.test(blob.type || "image/png")) continue;
+        return await fileToDataUrl(blob);
+      } catch (_) {}
+    }
+    return "";
+  }
+
+  function replaceMissingLeagueLogo(image,doc) {
+    const label = cleanText(image.getAttribute("data-league-logo") || "",12).toUpperCase();
+    if (!label) return false;
+    const x = Number(image.getAttribute("x") || 0);
+    const y = Number(image.getAttribute("y") || 0);
+    const width = Number(image.getAttribute("width") || 0);
+    const height = Number(image.getAttribute("height") || width || 72);
+    const text = doc.createElementNS("http://www.w3.org/2000/svg","text");
+    text.setAttribute("x",String(x + width/2));
+    text.setAttribute("y",String(y + height*.62));
+    text.setAttribute("text-anchor","middle");
+    text.setAttribute("fill","#ffffff");
+    text.setAttribute("fill-opacity",".82");
+    text.setAttribute("font-size",String(Math.max(18,Math.round(Math.min(width,height)*.28))));
+    text.setAttribute("font-weight","1000");
+    text.setAttribute("font-family","Arial Black,Arial,Helvetica,sans-serif");
+    text.setAttribute("letter-spacing","1");
+    text.textContent = label;
+    image.replaceWith(text);
+    return true;
+  }
+
   async function inlineSvgImages(svgText) {
     const doc = new DOMParser().parseFromString(svgText,"image/svg+xml");
     const images = [...doc.querySelectorAll("image")];
     await Promise.all(images.map(async image => {
       const href = image.getAttribute("href") || image.getAttributeNS("http://www.w3.org/1999/xlink","href");
       if (!href || href.startsWith("data:")) return;
-      try {
-        const absolute = new URL(href,location.href).href;
-        const response = await fetch(absolute,{cache:"force-cache"});
-        if (!response.ok) return;
-        const dataUrl = await fileToDataUrl(await response.blob());
+      const dataUrl = await fetchImageDataUrl(href);
+      if (dataUrl) {
         image.setAttribute("href",dataUrl);
-      } catch (_) {}
+        return;
+      }
+      replaceMissingLeagueLogo(image,doc);
     }));
     return new XMLSerializer().serializeToString(doc.documentElement);
   }
