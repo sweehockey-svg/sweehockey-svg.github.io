@@ -40,9 +40,9 @@
   ];
 
   const LEAGUE_BRANDS = Object.freeze({
-    SCL:{label:"SCL",logo:"",inline:"scl"},
+    SCL:{label:"SCL",logo:"https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2021_08/large.SCL_logo_shading.png.eb94cae29f362f6a451128a25ebfa3ae.png"},
     ECL:{label:"ECL",logo:"Fantasy/assets/leagues/ecl.webp"},
-    ITHL:{label:"ITHL",logo:"",inline:"wordmark"},
+    ITHL:{label:"ITHL",logo:"https://ithl.hockey/assets/images/1ithlwords.png"},
     SEC:{label:"SEC",logo:"assets/SECLOGGA.png"},
     GCL:{label:"GCL",logo:"Fantasy/assets/leagues/gcl.svg"},
     FCL:{label:"FCL",logo:"Fantasy/assets/leagues/fcl.webp"},
@@ -126,7 +126,7 @@
   }
 
 
-  function leagueMeta() {
+  function getLeagueDisplay() {
     const key = LEAGUE_BRANDS[state.league] ? state.league : "CUSTOM";
     const brand = LEAGUE_BRANDS[key] || LEAGUE_BRANDS.CUSTOM;
     const leagueName = key === "CUSTOM"
@@ -135,76 +135,36 @@
     const season = cleanText(state.leagueSeason,18);
     const division = cleanText(state.leagueDivision,12);
     const title = [leagueName,season].filter(Boolean).join(" ").trim();
-    return {
-      key,
-      label:leagueName,
-      season,
-      division,
-      title,
-      display:[title,division].filter(Boolean).join(" · "),
-      logo:brand.logo ? assetPrefix + brand.logo : "",
-      inline:brand.inline || ""
-    };
+    const rawLogo = String(brand.logo || "").trim();
+    const logo = !rawLogo
+      ? ""
+      : (/^(?:https?:)?\/\//i.test(rawLogo) || rawLogo.startsWith("data:") || rawLogo.startsWith("/"))
+        ? rawLogo
+        : assetPrefix + rawLogo;
+    return {key,title,division,logo,label:leagueName,season};
   }
 
   function syncCompetitionState() {
-    const meta = leagueMeta();
-    state.competition = meta.display || "SVENSK eHOCKEY";
+    const meta = getLeagueDisplay();
+    state.competition = meta.title || "SVENSK eHOCKEY";
     return meta;
   }
 
-  function sclLeagueMarkSvg(x,y,size) {
-    const s = Number(size) || 88;
-    const scale = s / 100;
-    return [
-      '<g transform="translate(' + x + ' ' + y + ') scale(' + scale + ')" aria-label="SCL">',
-      '<path d="M50 3 L89 24 L89 62 Q82 86 50 97 Q18 86 11 62 L11 24 Z" fill="#080b0f" stroke="#ffffff" stroke-opacity=".20" stroke-width="2"/>',
-      '<path d="M14 25 Q50 6 86 25 L82 40 Q50 25 18 40 Z" fill="#0879b7"/>',
-      '<path d="M21 69 H79 L73 82 H27 Z" fill="#0879b7"/>',
-      '<rect x="43" y="69" width="6" height="13" fill="#f2c300"/><rect x="21" y="73" width="58" height="5" fill="#f2c300"/>',
-      '<text x="50" y="64" text-anchor="middle" fill="#ffffff" font-size="29" font-weight="1000" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="-2">SCL</text>',
-      '<path d="M27 25 l4 7 l8 1 l-6 5 l2 8 l-8-4 l-7 4 l2-8 l-6-5 l8-1z" fill="#f2c300" transform="scale(.55) translate(28 3)"/>',
-      '<path d="M50 18 l4 7 l8 1 l-6 5 l2 8 l-8-4 l-7 4 l2-8 l-6-5 l8-1z" fill="#f2c300" transform="scale(.62) translate(31 2)"/>',
-      '<path d="M73 25 l4 7 l8 1 l-6 5 l2 8 l-8-4 l-7 4 l2-8 l-6-5 l8-1z" fill="#f2c300" transform="scale(.55) translate(59 3)"/>',
-      '</g>'
-    ].join("");
-  }
-
   function leagueCornerBrandSvg(width,height) {
-    const meta = leagueMeta();
+    const meta = getLeagueDisplay();
     if (meta.key === "CUSTOM" || !meta.label) return "";
 
     const isWide = width > height;
-    const size = isWide ? 84 : (height > width ? 82 : 72);
+    const size = isWide ? 92 : (height > width ? 90 : 78);
     const margin = isWide ? 34 : 24;
     const x = width - margin - size;
-    const y = isWide ? 28 : 22;
-    const platePad = isWide ? 10 : 8;
-    const plateX = x - platePad;
-    const plateY = y - platePad;
-    const plateW = size + platePad * 2;
-    const plateH = size + platePad * 2;
+    const y = isWide ? 26 : 22;
 
-    let mark = "";
-    if (meta.inline === "scl") {
-      mark = sclLeagueMarkSvg(x,y,size);
-    } else if (meta.logo) {
-      mark = '<image href="' + esc(meta.logo) + '" x="' + x + '" y="' + y + '" width="' + size + '" height="' + size + '" preserveAspectRatio="xMidYMid meet"/>';
-    } else {
-      mark = '<text x="' + (x+size/2) + '" y="' + (y+size*.62) + '" text-anchor="middle" fill="#ffffff" font-size="' + Math.round(size*.28) + '" font-weight="1000" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="1">' + esc(meta.label) + '</text>';
-    }
+    const mark = meta.logo
+      ? '<image href="' + esc(meta.logo) + '" x="' + x + '" y="' + y + '" width="' + size + '" height="' + size + '" preserveAspectRatio="xMidYMid meet"/>'
+      : '<text x="' + (x+size/2) + '" y="' + (y+size*.62) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".82" font-size="' + Math.round(size*.28) + '" font-weight="1000" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="1">' + esc(meta.label) + '</text>';
 
-    const division = meta.division
-      ? '<text x="' + (x+size/2) + '" y="' + (plateY+plateH+14) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".60" font-size="' + (isWide?11:9) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1">' + esc(meta.division.toUpperCase()) + '</text>'
-      : "";
-
-    return [
-      '<g class="league-corner-brand">',
-      '<rect x="' + plateX + '" y="' + plateY + '" width="' + plateW + '" height="' + plateH + '" rx="' + (isWide?16:13) + '" fill="#03070b" fill-opacity=".54" stroke="#ffffff" stroke-opacity=".12"/>',
-      mark,
-      division,
-      '</g>'
-    ].join("");
+    return '<g class="league-corner-brand" opacity=".92">' + mark + '</g>';
   }
 
   function decorateLeagueBrand(svgText) {
@@ -1279,7 +1239,9 @@
     const homeName = esc(home.name);
     const awayName = esc(away.name);
     const badge = esc(cleanText(state.badge,20).toUpperCase() || "MATCHDAY");
-    const competition = esc(cleanText(state.competition,28).toUpperCase() || "SVENSK eHOCKEY");
+    const league = getLeagueDisplay();
+    const competition = esc(cleanText(league.title,28).toUpperCase() || "SVENSK eHOCKEY");
+    const competitionDivision = esc(cleanText(league.division,12).toUpperCase());
     const date = esc(formatDate(state.date));
     const time = esc(cleanText(state.time,5) || "20:00");
 
@@ -1344,6 +1306,7 @@
       '<line x1="' + (W/2-(isWide?235:170)) + '" y1="' + (layout.competitionY-9) + '" x2="' + (W/2-(isWide?105:82)) + '" y2="' + (layout.competitionY-9) + '" stroke="#ffffff" stroke-opacity=".48" stroke-width="2"/>',
       '<line x1="' + (W/2+(isWide?105:82)) + '" y1="' + (layout.competitionY-9) + '" x2="' + (W/2+(isWide?235:170)) + '" y2="' + (layout.competitionY-9) + '" stroke="#77bfff" stroke-opacity=".62" stroke-width="2"/>',
       '<text x="' + (W/2) + '" y="' + layout.competitionY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".78" font-size="' + (isWide?20:isStory?19:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="' + (isWide?7:4) + '">' + competition + '</text>',
+      competitionDivision ? '<text x="' + (W/2) + '" y="' + (layout.competitionY+(isWide?24:21)) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".50" font-size="' + (isWide?13:isStory?12:10) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="' + (isWide?4:3) + '">' + competitionDivision + '</text>' : '',
 
       '<text x="' + leftNameX + '" y="' + layout.teamNameY + '" text-anchor="middle" fill="#ffffff" font-size="' + teamSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" filter="url(#classic-title-shadow)">' + homeName + '</text>',
       '<line x1="' + (leftNameX-(isWide?170:120)) + '" y1="' + (layout.teamNameY+22) + '" x2="' + (leftNameX+(isWide?170:120)) + '" y2="' + (layout.teamNameY+22) + '" stroke="' + home.accent + '" stroke-opacity=".62" stroke-width="2"/>',
@@ -1382,12 +1345,14 @@
     const home = state.ownSide === "home" ? own : opponent;
     const away = state.ownSide === "home" ? opponent : own;
     const format = FORMATS[state.format] || FORMATS.square;
+    const league = getLeagueDisplay();
     return {
       own,opponent,home,away,
       ownVariant:state.ownSide === "home" ? "home" : "away",
       W:format.width,H:format.height,
       badge:esc(cleanText(state.badge,20).toUpperCase() || "MATCHDAY"),
-      competition:esc(cleanText(state.competition,28).toUpperCase() || "SVENSK eHOCKEY"),
+      competition:esc(cleanText(league.title,28).toUpperCase() || "SVENSK eHOCKEY"),
+      competitionDivision:esc(cleanText(league.division,12).toUpperCase()),
       date:esc(formatDate(state.date)),
       time:esc(cleanText(state.time,5) || "20:00"),
       stream:esc(streamLabel()),
@@ -1562,6 +1527,7 @@
 
       '<text x="' + (isWide?84:ctx.W/2) + '" y="' + (isStory?92:74) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#ffffff" font-size="' + (isWide?66:isStory?60:48) + '" font-weight="1000" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="2">STARTING SIX</text>',
       '<text x="' + (isWide?86:ctx.W/2) + '" y="' + (isStory?140:112) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#ffffff" fill-opacity=".58" font-size="' + (isWide?17:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="4">' + ctx.competition + '</text>',
+      ctx.competitionDivision ? '<text x="' + (isWide?86:ctx.W/2) + '" y="' + (isStory?166:136) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#ffffff" fill-opacity=".40" font-size="' + (isWide?12:11) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competitionDivision + '</text>' : '',
 
       '<g filter="url(#focus-shadow)">' + placedJersey(hero,heroX,heroY,heroSize) + '</g>',
 
@@ -1619,6 +1585,7 @@
       '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#versus-light)"/>',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?105:65) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?58:isWide?64:46) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.badge + '</text>',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?155:105) + '" text-anchor="middle" fill="#fff" fill-opacity=".55" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
+      ctx.competitionDivision ? '<text x="' + (ctx.W/2) + '" y="' + (isStory?181:129) + '" text-anchor="middle" fill="#fff" fill-opacity=".38" font-size="11" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competitionDivision + '</text>' : '',
       '<text x="' + (leftX+leftSize/2) + '" y="' + (jerseyY-18) + '" text-anchor="middle" fill="#fff" font-size="' + (isWide?34:27) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(leftTeam.name) + '</text>',
       '<text x="' + (rightX+rightSize/2) + '" y="' + (jerseyY-18) + '" text-anchor="middle" fill="#fff" font-size="' + (isWide?34:27) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(rightTeam.name) + '</text>',
       placedJersey(left,leftX,jerseyY,leftSize),
@@ -1653,6 +1620,7 @@
       '<rect width="' + ctx.W + '" height="' + topH + '" fill="url(#broadcast-bg)" opacity=".72"/>',
       '<rect x="0" y="' + (topH-8) + '" width="' + ctx.W + '" height="8" fill="#fff" fill-opacity=".08"/>',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?85:58) + '" text-anchor="middle" fill="#fff" fill-opacity=".58" font-size="15" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="4">' + ctx.competition + '</text>',
+      ctx.competitionDivision ? '<text x="' + (ctx.W/2) + '" y="' + (isStory?109:80) + '" text-anchor="middle" fill="#fff" fill-opacity=".38" font-size="10" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competitionDivision + '</text>' : '',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?145:105) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?54:isWide?56:42) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.badge + '</text>',
       svgLogo(ctx.home,ctx.W*.21-homeLogo/2,logoY,homeLogo,.95),
       svgLogo(ctx.away,ctx.W*.79-homeLogo/2,logoY,homeLogo,.95),
@@ -1691,6 +1659,7 @@
       placedJersey(ownJ,jerseyX,jerseyY,jerseySize),
       '<text x="' + (isWide?ctx.W*.53:54) + '" y="' + (isWide?140:isStory?90:72) + '" fill="' + (isWide?"#101318":"#fff") + '" font-size="' + (isWide?70:isStory?58:44) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">' + ctx.badge + '</text>',
       '<text x="' + (isWide?ctx.W*.53:58) + '" y="' + (isWide?190:isStory?140:110) + '" fill="' + (isWide?"#59616b":"#fff") + '" fill-opacity="' + (isWide?1:.62) + '" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
+      ctx.competitionDivision ? '<text x="' + (isWide?ctx.W*.53:58) + '" y="' + (isWide?216:isStory?164:132) + '" fill="' + (isWide?"#737b84":"#fff") + '" fill-opacity="' + (isWide?1:.42) + '" font-size="11" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competitionDivision + '</text>' : '',
       '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?330:isStory?955:620) + '" fill="' + (isWide?"#101318":"#101318") + '" font-size="' + (isWide?50:isStory?46:36) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.own.name) + '</text>',
       '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?390:isStory?1005:668) + '" fill="#7a828a" font-size="' + (isWide?24:isStory?22:18) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif">mot ' + esc(ctx.opponent.name) + '</text>',
       svgLogo(ctx.opponent,isWide?ctx.W*.84:(ctx.W-130),isWide?255:(isStory?930:590),isWide?135:90,.95),
