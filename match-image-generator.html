@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Match Graphics Lab · Svensk eHockey</title>
-  <link rel="stylesheet" href="match-image-generator.css?v=4">
+  <link rel="stylesheet" href="match-image-generator.css?v=35">
 </head>
 <body>
   <header class="lab-topbar">
@@ -79,9 +79,39 @@
                 <option value="FINAL">FINAL</option>
               </select>
             </div>
+            <div class="field">
+              <label for="leagueSelect">LIGA</label>
+              <select id="leagueSelect">
+                <option value="SCL">SCL</option>
+                <option value="ECL">ECL</option>
+                <option value="ITHL">ITHL</option>
+                <option value="SEC">SEC</option>
+                <option value="GCL">GCL</option>
+                <option value="FCL">FCL</option>
+                <option value="WECL">WECL</option>
+                <option value="CUSTOM">Övrigt / Custom</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="leagueSeasonInput">NUMMER / SÄSONG</label>
+              <input id="leagueSeasonInput" type="text" maxlength="18" value="27" placeholder="27 / 26 Winter">
+            </div>
             <div class="field full">
-              <label for="competitionInput">TURNERING / LIGA</label>
-              <input id="competitionInput" type="text" maxlength="28" value="SCL 27">
+              <label for="leagueDivisionSelect">DIVISION <span class="field-optional">VALFRITT</span></label>
+              <select id="leagueDivisionSelect">
+                <option value="">Ingen</option>
+                <option value="Elite">Elite</option>
+                <option value="Pro">Pro</option>
+                <option value="Lite">Lite</option>
+                <option value="Core">Core</option>
+                <option value="Neo">Neo</option>
+                <option value="Div 1">Div 1</option>
+                <option value="Div 2">Div 2</option>
+              </select>
+            </div>
+            <div class="field full" id="customLeagueField" hidden>
+              <label for="customLeagueInput">EGET LIGANAMN</label>
+              <input id="customLeagueInput" type="text" maxlength="18" placeholder="t.ex. Nordic Cup">
             </div>
             <div class="field">
               <label for="dateInput">DATUM</label>
@@ -166,6 +196,6 @@
   <script src="ecl27-team-builds-v2.js?v=shared-model-1"></script>
   <script src="ecl27-current-roster-snapshot.js?v=20260921-1"></script>
   <script src="match-graphics-player-stats-snapshot.js?v=20260922-1"></script>
-  <script src="match-image-generator.js?v=34"></script>
+  <script src="match-image-generator.js?v=35"></script>
 </body>
 </html>
