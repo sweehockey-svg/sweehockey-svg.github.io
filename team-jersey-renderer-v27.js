@@ -60,13 +60,13 @@
 
   function logoUrl(teamName) {
     const team=teamDirectory.find(item=>normalize(item.name)===normalize(teamName)) || null;
-    const file=logoFileFor(teamName,team?.logoName || "");
-    if(file) return assetPrefix+"teamlogos/"+encodeURIComponent(file).replace(/%2F/gi,"/");
     const path=String(team?.exactLogoUrl || "").trim();
     if(path){
-      if(/^https?:\/\//i.test(path)) return path;
+      if(/^https?:\/\//i.test(path) || /^data:/i.test(path) || /^blob:/i.test(path)) return path;
       return assetPrefix+path.replace(/^\/+/, "");
     }
+    const file=logoFileFor(teamName,team?.logoName || "");
+    if(file) return assetPrefix+"teamlogos/"+encodeURIComponent(file).replace(/%2F/gi,"/");
     return "";
   }
 
@@ -193,6 +193,47 @@
     } catch(error) {
       console.warn("[Team Jersey] kunde inte läsa redigeringsbehörighet",error);
       return null;
+    }
+  }
+
+  function canLoadLogo(url) {
+    return new Promise(resolve=>{
+      const value=String(url||"").trim();
+      if(!value) return resolve(false);
+      const image=new Image();
+      let settled=false;
+      const done=result=>{
+        if(settled) return;
+        settled=true;
+        resolve(result);
+      };
+      image.onload=()=>done(Boolean(image.naturalWidth && image.naturalHeight));
+      image.onerror=()=>done(false);
+      image.src=value;
+      if(image.complete) {
+        queueMicrotask(()=>done(Boolean(image.naturalWidth && image.naturalHeight)));
+      }
+      setTimeout(()=>done(false),4000);
+    });
+  }
+
+  async function ensureRenderableTeamLogo(team) {
+    const candidate=logoUrl(team.name);
+    if(!candidate) return;
+    if(await canLoadLogo(candidate)) return;
+
+    // Never leave a broken <image> in the jersey. Fall back to initials.
+    team.exactLogoUrl="";
+    team.logoName="";
+    teamDirectory=[team];
+
+    const manifestCandidate=logoFileFor(team.name,"");
+    if(manifestCandidate) {
+      const fallback=assetPrefix+"teamlogos/"+encodeURIComponent(manifestCandidate).replace(/%2F/gi,"/");
+      if(await canLoadLogo(fallback)) {
+        team.exactLogoUrl=fallback;
+        teamDirectory=[team];
+      }
     }
   }
 
@@ -426,6 +467,7 @@ function premiumJerseySvg(team, options = {}) {
     const team=buildTeam(input);
     teamDirectory=[team];
 
+    await ensureRenderableTeamLogo(team);
     await ensureTeamPalette(team);
     const automaticStyle={
       primary:team.primary,
