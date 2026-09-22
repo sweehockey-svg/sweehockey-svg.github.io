@@ -28459,3 +28459,100 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     text-transform:uppercase !important;
   }
 }
+
+
+/* ============================================================
+   LAGPROFIL V1.28.6 – LÅNGA LAGNAMN / SMALARE HERO
+   Långa namn får aldrig dominera heron eller trycka sönder
+   klubbprofilen. Kortnamn behåller den godkända storleken.
+   ============================================================ */
+
+#spaRouteView[data-route="team"] #teamName.is-team-name-long {
+  font-size: clamp(2.75rem, 3vw, 3.25rem) !important;
+  letter-spacing: -.038em !important;
+}
+
+#spaRouteView[data-route="team"] #teamName.is-team-name-xlong {
+  font-size: clamp(2.35rem, 2.65vw, 2.9rem) !important;
+  letter-spacing: -.032em !important;
+}
+
+#spaRouteView[data-route="team"] #teamName.is-team-name-xxlong {
+  font-size: clamp(2.05rem, 2.35vw, 2.55rem) !important;
+  letter-spacing: -.026em !important;
+}
+
+@media (max-width: 920px) {
+  #spaRouteView[data-route="team"] .history-hero-main > h1,
+  #spaRouteView[data-route="team"] .history-hero h1 {
+    font-size: clamp(2.55rem, 9vw, 3.6rem) !important;
+    line-height: .96 !important;
+    text-wrap: balance;
+  }
+
+  #spaRouteView[data-route="team"] #teamName.is-team-name-long {
+    font-size: clamp(2.2rem, 7.5vw, 3rem) !important;
+  }
+
+  #spaRouteView[data-route="team"] #teamName.is-team-name-xlong {
+    font-size: clamp(1.95rem, 6.8vw, 2.65rem) !important;
+  }
+
+  #spaRouteView[data-route="team"] #teamName.is-team-name-xxlong {
+    font-size: clamp(1.75rem, 6vw, 2.35rem) !important;
+  }
+}
+
+@media (max-width: 680px) {
+  #spaRouteView[data-route="team"] .history-hero-main > .history-hero-content,
+  #spaRouteView[data-route="team"] .history-hero-content {
+    grid-template-columns: 96px minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-team-identity,
+  #spaRouteView[data-route="team"] .history-team-logo {
+    width: 96px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-team-logo {
+    height: 96px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-team-logo img {
+    padding: 10px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-profile-block p {
+    font-size: .72rem !important;
+    line-height: 1.52 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #spaRouteView[data-route="team"] .history-hero-main > .history-hero-content,
+  #spaRouteView[data-route="team"] .history-hero-content {
+    grid-template-columns: 82px minmax(0, 1fr) !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-team-identity,
+  #spaRouteView[data-route="team"] .history-team-logo {
+    width: 82px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-team-logo {
+    height: 82px !important;
+  }
+
+  #spaRouteView[data-route="team"] #teamName.is-team-name-long {
+    font-size: clamp(1.95rem, 8.5vw, 2.45rem) !important;
+  }
+
+  #spaRouteView[data-route="team"] #teamName.is-team-name-xlong {
+    font-size: clamp(1.72rem, 7.7vw, 2.15rem) !important;
+  }
+
+  #spaRouteView[data-route="team"] #teamName.is-team-name-xxlong {
+    font-size: clamp(1.55rem, 7vw, 1.95rem) !important;
+  }
+}
