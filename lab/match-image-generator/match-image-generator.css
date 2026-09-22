@@ -132,3 +132,19 @@ select:disabled{opacity:.62;cursor:not-allowed}
   .preview-wrap{padding:8px}
   .preview-panel{min-height:380px}
 }
+
+
+/* V35 – structured league controls */
+.field-optional{
+  margin-left:6px;
+  color:#66717d;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.08em;
+}
+#leagueSelect,#leagueDivisionSelect{
+  font-weight:850;
+}
+#customLeagueField[hidden]{
+  display:none!important;
+}
