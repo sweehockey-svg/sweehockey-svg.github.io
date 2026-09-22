@@ -36,7 +36,10 @@
     {id:"arena",label:"Arena"},
     {id:"smoke",label:"Rök"},
     {id:"ice",label:"Ice Texture"},
-    {id:"sweden",label:"Sverige"}
+    {id:"sweden",label:"Sverige"},
+    {id:"neon",label:"Neon"},
+    {id:"tunnel",label:"Spelartunnel"},
+    {id:"frost",label:"Frost"}
   ];
 
   const LEAGUE_BRANDS = Object.freeze({
@@ -118,6 +121,9 @@
     if (id === "smoke") return backgroundPrefix + "smoke.svg";
     if (id === "ice") return backgroundPrefix + "ice-texture.svg";
     if (id === "sweden") return backgroundPrefix + "sweden.svg";
+    if (id === "neon") return backgroundPrefix + "neon.svg";
+    if (id === "tunnel") return backgroundPrefix + "tunnel.svg";
+    if (id === "frost") return backgroundPrefix + "frost.svg";
     return assetPrefix + "assets/bg.jpg";
   }
 
