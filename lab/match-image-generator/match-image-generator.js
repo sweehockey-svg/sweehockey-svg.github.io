@@ -39,11 +39,26 @@
     {id:"sweden",label:"Sverige"}
   ];
 
+  const LEAGUE_BRANDS = Object.freeze({
+    SCL:{label:"SCL",logo:"",inline:"scl"},
+    ECL:{label:"ECL",logo:"Fantasy/assets/leagues/ecl.webp"},
+    ITHL:{label:"ITHL",logo:"",inline:"wordmark"},
+    SEC:{label:"SEC",logo:"assets/SECLOGGA.png"},
+    GCL:{label:"GCL",logo:"Fantasy/assets/leagues/gcl.svg"},
+    FCL:{label:"FCL",logo:"Fantasy/assets/leagues/fcl.webp"},
+    WECL:{label:"WECL",logo:"Fantasy/assets/leagues/wecl.webp"},
+    CUSTOM:{label:"",logo:""}
+  });
+
   const state = {
     teamId:"carolus",
     opponentId:"vasteras",
     ownSide:"home",
-    competition:"ECL 27 Winter",
+    league:"SCL",
+    leagueSeason:"27",
+    leagueDivision:"",
+    customLeague:"",
+    competition:"SCL 27",
     badge:"MATCHDAY",
     date:"2026-10-01",
     time:"20:00",
@@ -108,6 +123,94 @@
 
   function backgroundImageSvg(width,height,opacity=1) {
     return '<image href="' + esc(backgroundUrl()) + '" x="0" y="0" width="' + width + '" height="' + height + '" opacity="' + opacity + '" preserveAspectRatio="xMidYMid slice"/>';
+  }
+
+
+  function leagueMeta() {
+    const key = LEAGUE_BRANDS[state.league] ? state.league : "CUSTOM";
+    const brand = LEAGUE_BRANDS[key] || LEAGUE_BRANDS.CUSTOM;
+    const leagueName = key === "CUSTOM"
+      ? cleanText(state.customLeague,18).toUpperCase()
+      : brand.label;
+    const season = cleanText(state.leagueSeason,18);
+    const division = cleanText(state.leagueDivision,12);
+    const title = [leagueName,season].filter(Boolean).join(" ").trim();
+    return {
+      key,
+      label:leagueName,
+      season,
+      division,
+      title,
+      display:[title,division].filter(Boolean).join(" · "),
+      logo:brand.logo ? assetPrefix + brand.logo : "",
+      inline:brand.inline || ""
+    };
+  }
+
+  function syncCompetitionState() {
+    const meta = leagueMeta();
+    state.competition = meta.display || "SVENSK eHOCKEY";
+    return meta;
+  }
+
+  function sclLeagueMarkSvg(x,y,size) {
+    const s = Number(size) || 88;
+    const scale = s / 100;
+    return [
+      '<g transform="translate(' + x + ' ' + y + ') scale(' + scale + ')" aria-label="SCL">',
+      '<path d="M50 3 L89 24 L89 62 Q82 86 50 97 Q18 86 11 62 L11 24 Z" fill="#080b0f" stroke="#ffffff" stroke-opacity=".20" stroke-width="2"/>',
+      '<path d="M14 25 Q50 6 86 25 L82 40 Q50 25 18 40 Z" fill="#0879b7"/>',
+      '<path d="M21 69 H79 L73 82 H27 Z" fill="#0879b7"/>',
+      '<rect x="43" y="69" width="6" height="13" fill="#f2c300"/><rect x="21" y="73" width="58" height="5" fill="#f2c300"/>',
+      '<text x="50" y="64" text-anchor="middle" fill="#ffffff" font-size="29" font-weight="1000" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="-2">SCL</text>',
+      '<path d="M27 25 l4 7 l8 1 l-6 5 l2 8 l-8-4 l-7 4 l2-8 l-6-5 l8-1z" fill="#f2c300" transform="scale(.55) translate(28 3)"/>',
+      '<path d="M50 18 l4 7 l8 1 l-6 5 l2 8 l-8-4 l-7 4 l2-8 l-6-5 l8-1z" fill="#f2c300" transform="scale(.62) translate(31 2)"/>',
+      '<path d="M73 25 l4 7 l8 1 l-6 5 l2 8 l-8-4 l-7 4 l2-8 l-6-5 l8-1z" fill="#f2c300" transform="scale(.55) translate(59 3)"/>',
+      '</g>'
+    ].join("");
+  }
+
+  function leagueCornerBrandSvg(width,height) {
+    const meta = leagueMeta();
+    if (meta.key === "CUSTOM" || !meta.label) return "";
+
+    const isWide = width > height;
+    const size = isWide ? 84 : (height > width ? 82 : 72);
+    const margin = isWide ? 34 : 24;
+    const x = width - margin - size;
+    const y = isWide ? 28 : 22;
+    const platePad = isWide ? 10 : 8;
+    const plateX = x - platePad;
+    const plateY = y - platePad;
+    const plateW = size + platePad * 2;
+    const plateH = size + platePad * 2;
+
+    let mark = "";
+    if (meta.inline === "scl") {
+      mark = sclLeagueMarkSvg(x,y,size);
+    } else if (meta.logo) {
+      mark = '<image href="' + esc(meta.logo) + '" x="' + x + '" y="' + y + '" width="' + size + '" height="' + size + '" preserveAspectRatio="xMidYMid meet"/>';
+    } else {
+      mark = '<text x="' + (x+size/2) + '" y="' + (y+size*.62) + '" text-anchor="middle" fill="#ffffff" font-size="' + Math.round(size*.28) + '" font-weight="1000" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="1">' + esc(meta.label) + '</text>';
+    }
+
+    const division = meta.division
+      ? '<text x="' + (x+size/2) + '" y="' + (plateY+plateH+14) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".60" font-size="' + (isWide?11:9) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1">' + esc(meta.division.toUpperCase()) + '</text>'
+      : "";
+
+    return [
+      '<g class="league-corner-brand">',
+      '<rect x="' + plateX + '" y="' + plateY + '" width="' + plateW + '" height="' + plateH + '" rx="' + (isWide?16:13) + '" fill="#03070b" fill-opacity=".54" stroke="#ffffff" stroke-opacity=".12"/>',
+      mark,
+      division,
+      '</g>'
+    ].join("");
+  }
+
+  function decorateLeagueBrand(svgText) {
+    const format = FORMATS[state.format] || FORMATS.square;
+    const brand = leagueCornerBrandSvg(format.width,format.height);
+    return brand ? svgText.replace(/<\/svg>\s*$/i,brand + '</svg>') : svgText;
   }
 
   function logoFileFor(teamName, explicitLogoName = "") {
@@ -1601,11 +1704,13 @@
   }
 
   function buildMatchSvg() {
-    if (state.template === "starting-six") return buildStartingSixSvg();
-    if (state.template === "versus") return buildVersusSvg();
-    if (state.template === "broadcast") return buildBroadcastSvg();
-    if (state.template === "minimal") return buildMinimalSvg();
-    return buildClassicSvg();
+    let svg = "";
+    if (state.template === "starting-six") svg = buildStartingSixSvg();
+    else if (state.template === "versus") svg = buildVersusSvg();
+    else if (state.template === "broadcast") svg = buildBroadcastSvg();
+    else if (state.template === "minimal") svg = buildMinimalSvg();
+    else svg = buildClassicSvg();
+    return decorateLeagueBrand(svg);
   }
 
   function render() {
@@ -1671,7 +1776,12 @@
     fillTeamSelect($("#opponentSelect"),state.opponentId);
     fillFormatSelect();
     $("#sideSelect").value = state.ownSide;
-    $("#competitionInput").value = state.competition;
+    $("#leagueSelect").value = LEAGUE_BRANDS[state.league] ? state.league : "CUSTOM";
+    $("#leagueSeasonInput").value = state.leagueSeason || "";
+    $("#leagueDivisionSelect").value = state.leagueDivision || "";
+    $("#customLeagueInput").value = state.customLeague || "";
+    $("#customLeagueField").hidden = state.league !== "CUSTOM";
+    syncCompetitionState();
     $("#badgeSelect").value = state.badge;
     $("#dateInput").value = state.date;
     $("#timeInput").value = state.time;
@@ -1711,7 +1821,11 @@
     state.teamId = preferred?.id || "";
     state.opponentId = teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
     state.ownSide = "home";
-    state.competition = "ECL 27 Winter";
+    state.league = "SCL";
+    state.leagueSeason = "27";
+    state.leagueDivision = "";
+    state.customLeague = "";
+    syncCompetitionState();
     state.badge = "MATCHDAY";
     state.date = "2026-10-01";
     state.time = "20:00";
@@ -1850,8 +1964,28 @@
     render();
   });
 
-  $("#competitionInput").addEventListener("input",event => {
-    state.competition = event.target.value;
+  $("#leagueSelect").addEventListener("change",event => {
+    state.league = LEAGUE_BRANDS[event.target.value] ? event.target.value : "CUSTOM";
+    $("#customLeagueField").hidden = state.league !== "CUSTOM";
+    syncCompetitionState();
+    render();
+  });
+
+  $("#leagueSeasonInput").addEventListener("input",event => {
+    state.leagueSeason = event.target.value;
+    syncCompetitionState();
+    render();
+  });
+
+  $("#leagueDivisionSelect").addEventListener("change",event => {
+    state.leagueDivision = event.target.value;
+    syncCompetitionState();
+    render();
+  });
+
+  $("#customLeagueInput").addEventListener("input",event => {
+    state.customLeague = event.target.value;
+    syncCompetitionState();
     render();
   });
 
