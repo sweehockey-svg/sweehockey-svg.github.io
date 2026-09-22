@@ -28556,3 +28556,42 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     font-size: clamp(1.55rem, 7vw, 1.95rem) !important;
   }
 }
+
+
+/* ============================================================
+   LAGPROFIL V1.28.7 – LOGGANS SÄKRA YTA
+   Bred logotypgrafik får mer luft så den aldrig pressar mot
+   klubbprofilen. Klassning sker på faktisk synlig logoyta.
+   ============================================================ */
+#spaRouteView[data-route="team"] .history-team-logo img.is-logo-wide {
+  width: 84% !important;
+  height: 84% !important;
+  margin: auto !important;
+  padding: 0 !important;
+}
+
+#spaRouteView[data-route="team"] .history-team-logo img.is-logo-ultrawide {
+  width: 74% !important;
+  height: 74% !important;
+  margin: auto !important;
+  padding: 0 !important;
+}
+
+#spaRouteView[data-route="team"] .history-team-logo img.is-logo-tall {
+  width: 88% !important;
+  height: 88% !important;
+  margin: auto !important;
+  padding: 0 !important;
+}
+
+@media (max-width: 680px) {
+  #spaRouteView[data-route="team"] .history-team-logo img.is-logo-wide {
+    width: 80% !important;
+    height: 80% !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-team-logo img.is-logo-ultrawide {
+    width: 70% !important;
+    height: 70% !important;
+  }
+}
