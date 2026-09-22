@@ -28603,3 +28603,30 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
   object-fit: contain !important;
   object-position: center !important;
 }
+
+
+/* ============================================================
+   LAGPROFIL V1.28.9 – KOMPAKT KLUBBPROFIL
+   Tajtare brödtext så profilinformationen håller sig visuellt
+   fri från logga/tröjkort utan att ändra hero-strukturen.
+   ============================================================ */
+@media (min-width: 921px) {
+  #spaRouteView[data-route="team"] .history-profile-copy {
+    min-width: 0 !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-profile-block p {
+    margin-top: 5px !important;
+    font-size: .64rem !important;
+    line-height: 1.38 !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-profile-paragraph-v1282 + .history-profile-paragraph-v1282 {
+    margin-top: 6px !important;
+    padding-top: 6px !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-profile-block {
+    padding-bottom: 10px !important;
+  }
+}
