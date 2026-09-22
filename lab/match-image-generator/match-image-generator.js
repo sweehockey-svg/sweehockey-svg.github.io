@@ -1950,7 +1950,7 @@
     }
   }
 
-  $("[data-background]").forEach(button => {
+  $$("[data-background]").forEach(button => {
     button.addEventListener("click",() => {
       const id = button.dataset.background;
       state.background = BACKGROUNDS.some(item => item.id === id) ? id : "arena";
