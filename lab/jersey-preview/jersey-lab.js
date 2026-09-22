@@ -639,14 +639,14 @@
         [199, 550, 261, 564, 4.5, 2.2], [330, 561, 402, 550, 5, -2.5]
       ].map(([x0,y0,x1,y1,width,relief]) => {
         const dx=x1-x0, dy=y1-y0, length=Math.hypot(dx,dy);
-        return {x0,y0,dx:dx/length,dy:dy/length,length,width:width*1.5,relief:relief*.58};
+        return {x0,y0,dx:dx/length,dy:dy/length,length,width:width*2.1,relief:relief*.34};
       });
       const backShift = side === "back" ? 18 : 0;
       for (let y=86; y<589; y++) {
         const hanging = smooth((y-177)/170);
         for (let x=89; x<511; x++) {
           // Rounded torso/sleeves, joined gradually to avoid a straight panel shadow.
-          const torso = 24 * gaussian(x-296, 112);
+          const torso = 19 * gaussian(x-296, 125);
           const left = 13 * gaussian(x-143, 34);
           const right = 12 * gaussian(x-461, 35);
           const joinL = smooth((x-165)/45), joinR = smooth((435-x)/45);
@@ -654,10 +654,13 @@
           const c1=226+backShift+12*Math.sin((y-195)*.012);
           const c2=298-backShift+9*Math.sin(y*.016+.9);
           const c3=363+10*Math.sin((y-270)*.011);
-          h += hanging * (7.5*gaussian(x-c1,24)-5.8*gaussian(x-c2,30)+8.2*gaussian(x-c3,26));
-          h += .55*Math.sin(x*.071+y*.033)*Math.sin(y*.052-x*.024);
-          h += 4.2*gaussian(x-(132+8*Math.sin(y*.016)),10)*smooth((y-215)/90);
-          h -= 5*gaussian(x-(467+6*Math.sin(y*.013)),12)*smooth((y-238)/80);
+          h += hanging * (6.2*gaussian(x-c1,29)-4.3*gaussian(x-c2,35)+6.8*gaussian(x-c3,31));
+          // Broad, irregular drape and shorter wrinkles near cuffs and hem.
+          h += .8*Math.sin(x*.051+y*.025)*Math.sin(y*.037-x*.019);
+          h += 2.1*gaussian(x-(132+8*Math.sin(y*.016)),16)*smooth((y-215)/90);
+          h -= 2.6*gaussian(x-(467+6*Math.sin(y*.013)),19)*smooth((y-238)/80);
+          h += 1.8*Math.sin(y*.115+x*.028)*gaussian(y-494,42)*(gaussian(x-141,36)+gaussian(x-463,36));
+          h += 1.3*Math.sin(x*.074+y*.048)*gaussian(y-538,37)*gaussian(x-298,105);
           for (const c of creases) {
             const px=x-c.x0, py=y-c.y0, along=(px*c.dx+py*c.dy)/c.length;
             if (along<=0 || along>=1) continue;
@@ -677,14 +680,15 @@
           const sy=(heights[i+size]-heights[i-size])*.5;
           const norm=1/Math.sqrt(1+sx*sx+sy*sy);
           // Large studio softbox above-left, with ambient fill for white and black kits.
-          const light=clamp((sx*.48+sy*.27+.834)*norm,0,1);
-          const tone=(light-.834)*1.08;
-          const weave=(Math.sin(x*2.9+y*.65)*Math.sin(y*3.1-x*.25))*.026;
+          const light=clamp((sx*.42+sy*.23+.875)*norm,0,1);
+          const tone=(light-.875)*.83;
+          // Surface-following knit; soft contrast keeps white polyester matte.
+          const weave=(Math.sin(x*2.9+y*.65+heights[i]*.12)*Math.sin(y*3.1-x*.25))*.035;
           const grain=((((x*73856093)^(y*19349663))>>>0)%101/100-.5)*.018;
           const value=tone+weave+grain;
           const p=i*4, white=value>0;
           pixels.data[p]=pixels.data[p+1]=pixels.data[p+2]=white?255:0;
-          pixels.data[p+3]=Math.round(255*(white?Math.min(.14,value*.46):Math.min(.38,-value)));
+          pixels.data[p+3]=Math.round(255*(white?Math.min(.12,value*.50):Math.min(.25,-value)));
         }
       }
       context.putImageData(pixels,0,0);
@@ -725,8 +729,8 @@
     const dark = variant === "away" ? primary : "#07090a";
 
     // V28: gently sloping shoulders and relaxed sleeve edges with overlapping upper panels.
-    const leftSleeve = "M242 96 C213 99 177 108 152 122 C127 136 114 157 111 188 C107 226 110 247 107 278 C107 318 104 350 103 391 C104 431 98 473 97 516 Q96 524 104 527 C126 535 151 533 171 529 C181 510 184 476 189 439 C194 397 199 348 199 302 C198 252 190 210 186 176 C184 143 208 108 242 96 Z";
-    const rightSleeve = "M358 93 C387 99 421 110 445 125 C470 140 484 161 488 191 C493 226 490 251 493 284 C495 325 495 354 497 393 C496 437 501 477 502 513 Q505 523 497 528 C474 534 449 534 429 529 C420 513 415 480 410 442 C404 399 400 349 401 300 C402 250 411 207 415 177 C418 141 392 106 358 93 Z";
+    const leftSleeve = "M242 96 C216 101 185 109 160 119 C134 130 119 145 114 166 C110 178 111 183 111 188 C107 226 110 247 107 278 C107 318 104 350 103 391 C104 431 98 473 97 516 Q96 524 104 527 C126 535 151 533 171 529 C181 510 184 476 189 439 C194 397 199 348 199 302 C198 252 190 210 186 176 C184 143 208 108 242 96 Z";
+    const rightSleeve = "M358 93 C387 101 414 109 439 121 C463 133 479 150 485 171 C489 182 488 185 488 191 C493 226 490 251 493 284 C495 325 495 354 497 393 C496 437 501 477 502 513 Q505 523 497 528 C474 534 449 534 429 529 C420 513 415 480 410 442 C404 399 400 349 401 300 C402 250 411 207 415 177 C418 141 392 106 358 93 Z";
     const torso = "M242 96 Q297 111 358 93 C390 101 418 126 425 161 C431 194 425 233 419 270 C414 315 413 357 410 398 C407 447 411 500 407 558 C401 570 377 573 352 576 Q298 586 247 578 C219 575 197 570 191 558 C188 510 190 466 185 422 C181 381 177 341 175 305 C170 259 166 214 170 178 C175 135 204 105 242 96 Z";
 
     const shoulderDecor = pattern === "shoulder" ? `
@@ -858,6 +862,10 @@
 
           <!-- Sewn hems remain crisp over the continuous cloth lighting. -->
           <g clip-path="url(#clip-${uid})">
+            <g fill="none" stroke-linecap="round">
+              <path d="M203 111 C181 138 169 165 172 198 M393 109 C416 139 429 165 426 201" stroke="#000" stroke-opacity=".09" stroke-width="1.7"/>
+              <path d="M205 112 C183 139 171 166 174 198 M391 110 C414 140 427 166 424 201" stroke="#fff" stroke-opacity=".16" stroke-width=".7" stroke-dasharray="1.2 2"/>
+            </g>
             <g fill="none" stroke-linecap="round">
               <path d="M104 516 Q136 526 170 520" stroke="#000" stroke-opacity=".14" stroke-width=".75" stroke-dasharray="1 2.1"/>
               <path d="M430 519 Q462 526 496 516" stroke="#000" stroke-opacity=".14" stroke-width=".75" stroke-dasharray="1 2.1"/>
