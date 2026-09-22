@@ -68,6 +68,7 @@
     format:"square",
     template:"classic",
     background:"arena",
+    showPattern:true,
     lineupStyle:"cards",
     streamPlatform:"none",
     streamChannel:"",
@@ -1274,6 +1275,14 @@
     const streamWidth = isWide ? 520 : isStory ? 520 : 380;
     const streamHeight = isStory ? 54 : isWide ? 48 : 42;
     const streamY = layout.metaY + (isStory ? 38 : 24);
+    const graphicPattern = state.showPattern === false ? "" : [
+      '<path d="M' + (W*.5) + ' 0 L' + (W*.39) + ' ' + H + ' H' + (W*.61) + ' Z" fill="#4aaeff" opacity=".035"/>',
+      '<path d="M' + (W*.5) + ' 0 L' + (W*.455) + ' ' + H + '" stroke="#76bdff" stroke-opacity=".11" stroke-width="' + (isWide?3:2) + '"/>',
+      '<path d="M' + (W*.5) + ' 0 L' + (W*.545) + ' ' + H + '" stroke="#76bdff" stroke-opacity=".07" stroke-width="' + (isWide?3:2) + '"/>',
+      '<rect x="0" y="' + (H*.50) + '" width="' + W + '" height="' + (H*.50) + '" fill="url(#classic-ice)"/>',
+      '<ellipse cx="' + (W/2) + '" cy="' + (H*.79) + '" rx="' + (W*.46) + '" ry="' + (H*.13) + '" fill="#7cc7ff" opacity=".10" filter="url(#classic-blue-glow)"/>',
+      '<line x1="' + (W*.08) + '" y1="' + (H*.755) + '" x2="' + (W*.92) + '" y2="' + (H*.755) + '" stroke="#b9dcff" stroke-opacity=".12" stroke-width="2"/>'
+    ].join("");
 
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Matchbild ' + homeName + ' mot ' + awayName + '">',
@@ -1298,12 +1307,7 @@
       '<rect width="' + W + '" height="' + H + '" fill="#02070d" opacity=".15"/>',
       '<rect width="' + W + '" height="' + H + '" fill="url(#classic-overlay)" opacity=".88"/>',
       '<rect width="' + W + '" height="' + H + '" fill="url(#classic-center-glow)"/>',
-      '<path d="M' + (W*.5) + ' 0 L' + (W*.39) + ' ' + H + ' H' + (W*.61) + ' Z" fill="#4aaeff" opacity=".035"/>',
-      '<path d="M' + (W*.5) + ' 0 L' + (W*.455) + ' ' + H + '" stroke="#76bdff" stroke-opacity=".11" stroke-width="' + (isWide?3:2) + '"/>',
-      '<path d="M' + (W*.5) + ' 0 L' + (W*.545) + ' ' + H + '" stroke="#76bdff" stroke-opacity=".07" stroke-width="' + (isWide?3:2) + '"/>',
-      '<rect x="0" y="' + (H*.50) + '" width="' + W + '" height="' + (H*.50) + '" fill="url(#classic-ice)"/>',
-      '<ellipse cx="' + (W/2) + '" cy="' + (H*.79) + '" rx="' + (W*.46) + '" ry="' + (H*.13) + '" fill="#7cc7ff" opacity=".10" filter="url(#classic-blue-glow)"/>',
-      '<line x1="' + (W*.08) + '" y1="' + (H*.755) + '" x2="' + (W*.92) + '" y2="' + (H*.755) + '" stroke="#b9dcff" stroke-opacity=".12" stroke-width="2"/>',
+      graphicPattern,
 
       svgLogo(home,leftWatermarkX,watermarkY,watermarkSize,.075),
       svgLogo(away,rightWatermarkX,watermarkY,watermarkSize,.075),
@@ -1769,6 +1773,8 @@
     $("#dateInput").value = state.date;
     $("#timeInput").value = state.time;
     $("#lineupStyleSelect").value = state.lineupStyle;
+    $("#patternToggle").checked = state.showPattern !== false;
+    $("#patternControl").hidden = state.template !== "classic";
     $("#streamPlatformSelect").value = state.streamPlatform;
     $("#streamChannelInput").value = state.streamChannel;
     $("#streamChannelInput").disabled = state.streamPlatform === "none";
@@ -1815,6 +1821,7 @@
     state.format = "square";
     state.template = "classic";
     state.background = "arena";
+    state.showPattern = true;
     state.lineupStyle = "cards";
     state.lineupNumbers = {...EMPTY_NUMBERS};
     state.streamPlatform = "none";
@@ -1943,13 +1950,18 @@
     }
   }
 
-  $$("[data-background]").forEach(button => {
+  $("[data-background]").forEach(button => {
     button.addEventListener("click",() => {
       const id = button.dataset.background;
       state.background = BACKGROUNDS.some(item => item.id === id) ? id : "arena";
       syncForm();
       render();
     });
+  });
+
+  $("#patternToggle").addEventListener("change",event => {
+    state.showPattern = Boolean(event.target.checked);
+    render();
   });
 
   $$("[data-template]").forEach(button => {
