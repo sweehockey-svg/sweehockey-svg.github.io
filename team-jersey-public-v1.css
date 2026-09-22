@@ -5,7 +5,7 @@
 }
 @media(min-width:1281px){
   #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2{
-    grid-template-columns:132px minmax(0,1fr) 205px !important;
+    grid-template-columns:168px minmax(0,1fr) 205px !important;
     gap:0 18px !important;
   }
   #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .history-team-identity{
@@ -185,4 +185,19 @@ body.seh-content-mode .seh-team-native-jersey .team-public-jersey-v1__owner{
 }
 body.seh-content-mode .seh-team-native-jersey .team-public-jersey-v1__editor{
   padding:10px!important;
+}
+
+
+/* V4 – logo column must match the actual desktop team logo size */
+@media(min-width:1281px){
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .history-team-identity{
+    width:168px !important;
+    min-width:168px !important;
+    overflow:visible !important;
+  }
+
+  #spaRouteView[data-route="team"] .history-hero-content.has-public-jersey-v2 > .history-profile-copy{
+    min-width:0 !important;
+    padding-left:0 !important;
+  }
 }
