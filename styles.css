@@ -28564,34 +28564,42 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
    klubbprofilen. Klassning sker på faktisk synlig logoyta.
    ============================================================ */
 #spaRouteView[data-route="team"] .history-team-logo img.is-logo-wide {
+  width: 72% !important;
+  height: 72% !important;
+  margin: auto !important;
+  padding: 0 !important;
+}
+
+#spaRouteView[data-route="team"] .history-team-logo img.is-logo-ultrawide {
+  width: 62% !important;
+  height: 62% !important;
+  margin: auto !important;
+  padding: 0 !important;
+}
+
+#spaRouteView[data-route="team"] .history-team-logo img.is-logo-tall {
   width: 84% !important;
   height: 84% !important;
   margin: auto !important;
   padding: 0 !important;
 }
 
-#spaRouteView[data-route="team"] .history-team-logo img.is-logo-ultrawide {
-  width: 74% !important;
-  height: 74% !important;
-  margin: auto !important;
-  padding: 0 !important;
-}
-
-#spaRouteView[data-route="team"] .history-team-logo img.is-logo-tall {
-  width: 88% !important;
-  height: 88% !important;
-  margin: auto !important;
-  padding: 0 !important;
-}
-
 @media (max-width: 680px) {
   #spaRouteView[data-route="team"] .history-team-logo img.is-logo-wide {
-    width: 80% !important;
-    height: 80% !important;
-  }
-
-  #spaRouteView[data-route="team"] .history-team-logo img.is-logo-ultrawide {
     width: 70% !important;
     height: 70% !important;
   }
+
+  #spaRouteView[data-route="team"] .history-team-logo img.is-logo-ultrawide {
+    width: 60% !important;
+    height: 60% !important;
+  }
+}
+
+
+/* V1.28.8 – breda lagloggor ska vara identitet, inte huvudmotiv */
+#spaRouteView[data-route="team"] .history-team-logo img.is-logo-wide,
+#spaRouteView[data-route="team"] .history-team-logo img.is-logo-ultrawide {
+  object-fit: contain !important;
+  object-position: center !important;
 }
