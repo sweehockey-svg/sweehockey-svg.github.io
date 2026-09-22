@@ -17357,7 +17357,17 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       dock.appendChild(button);
     });
 
-    shell.append(hero,nativeJersey,dock);
+    const overviewPanel=targets.panels?.overview;
+    if(overviewPanel){
+      const overviewBio=overviewPanel.querySelector('.seh-team-native-bio');
+      const divisionCard=overviewPanel.querySelector('.seh-team-division-card');
+
+      if(divisionCard) overviewPanel.insertBefore(nativeJersey,divisionCard);
+      else if(overviewBio) overviewBio.after(nativeJersey);
+      else overviewPanel.prepend(nativeJersey);
+    }
+
+    shell.append(hero,dock);
     ['overview','stats','history','players','merits'].forEach(key=>{
       const panel=targets.panels?.[key];
       if(panel)shell.appendChild(panel);
