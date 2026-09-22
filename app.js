@@ -8695,6 +8695,68 @@ function SEH_initTeam() {
       element.append(list);
     }
   
+    function classifyTeamProfileLogo(container) {
+      const image = container?.querySelector("img");
+      if (!image) return;
+
+      const apply = () => {
+        image.classList.remove("is-logo-wide", "is-logo-ultrawide", "is-logo-tall");
+
+        let ratio = image.naturalWidth && image.naturalHeight
+          ? image.naturalWidth / image.naturalHeight
+          : 1;
+
+        try {
+          if (image.naturalWidth && image.naturalHeight) {
+            const size = 120;
+            const canvas = document.createElement("canvas");
+            canvas.width = size;
+            canvas.height = size;
+            const context = canvas.getContext("2d", { willReadFrequently: true });
+            if (context) {
+              const scale = Math.min(size / image.naturalWidth, size / image.naturalHeight);
+              const width = Math.max(1, Math.round(image.naturalWidth * scale));
+              const height = Math.max(1, Math.round(image.naturalHeight * scale));
+              const x = Math.round((size - width) / 2);
+              const y = Math.round((size - height) / 2);
+              context.clearRect(0, 0, size, size);
+              context.drawImage(image, x, y, width, height);
+              const pixels = context.getImageData(0, 0, size, size).data;
+
+              let minX = size;
+              let minY = size;
+              let maxX = -1;
+              let maxY = -1;
+
+              for (let py = 0; py < size; py += 1) {
+                for (let px = 0; px < size; px += 1) {
+                  const alpha = pixels[(py * size + px) * 4 + 3];
+                  if (alpha < 24) continue;
+                  minX = Math.min(minX, px);
+                  minY = Math.min(minY, py);
+                  maxX = Math.max(maxX, px);
+                  maxY = Math.max(maxY, py);
+                }
+              }
+
+              if (maxX >= minX && maxY >= minY) {
+                ratio = (maxX - minX + 1) / (maxY - minY + 1);
+              }
+            }
+          }
+        } catch (_error) {
+          // Remote legacy logos can be CORS-tainted; natural ratio is enough as fallback.
+        }
+
+        if (ratio >= 1.72) image.classList.add("is-logo-ultrawide");
+        else if (ratio >= 1.28) image.classList.add("is-logo-wide");
+        else if (ratio <= 0.72) image.classList.add("is-logo-tall");
+      };
+
+      if (image.complete && image.naturalWidth) apply();
+      else image.addEventListener("load", apply, { once: true });
+    }
+
     function renderProfileAvatar(team) {
       SEH_renderTeamLogo(
         elements.teamProfileAvatar,
@@ -8702,6 +8764,7 @@ function SEH_initTeam() {
         team.currentName,
         `${team.currentName} logotyp`
       );
+      classifyTeamProfileLogo(elements.teamProfileAvatar);
 
       const hero = elements.teamPage?.querySelector(".history-hero");
       if (!hero) return;
