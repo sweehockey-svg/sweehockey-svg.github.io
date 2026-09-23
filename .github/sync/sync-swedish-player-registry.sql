@@ -474,11 +474,7 @@ where rule.is_active
 
 commit;
 
-/* Uppdatera SEC-sidans snabba, indexerade spelarunderlag. */
-set statement_timeout = '10min';
-refresh materialized view concurrently
-  public.sec_sommar26_player_card_fast_v1;
-reset statement_timeout;
+/* Den gamla SEC-materialiserade vyn är avvecklad. */
 
 notify pgrst, 'reload schema';
 
