@@ -37,6 +37,7 @@
     {id:"smoke",label:"Rök"},
     {id:"ice",label:"Ice Texture"},
     {id:"sweden",label:"Sverige"},
+    {id:"scl-blue",label:"SCL Blå"},
     {id:"neon",label:"Neon"},
     {id:"tunnel",label:"Spelartunnel"},
     {id:"frost",label:"Frost"}
@@ -130,6 +131,7 @@
     if (id === "smoke") return backgroundPrefix + "smoke.svg?v=39";
     if (id === "ice") return ICE_TEXTURE_DATA_URL;
     if (id === "sweden") return SWEDEN_BACKGROUND_DATA_URL;
+    if (id === "scl-blue") return backgroundPrefix + "scl-blue.webp?v=57";
     if (id === "neon") return backgroundPrefix + "neon.webp?v=51";
     if (id === "tunnel") return backgroundPrefix + "player-tunnel.webp?v=55";
     if (id === "frost") return backgroundPrefix + "frost.webp?v=56";
