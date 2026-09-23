@@ -22,7 +22,17 @@ create temporary table fantasy_pool_stage (
   raw_player jsonb
 ) on commit drop;
 
+create temporary table fantasy_team_stage (
+  source_league_id bigint,
+  source_team_id bigint,
+  team_name text,
+  team_logo_url text,
+  registered_at date,
+  raw_team jsonb
+) on commit drop;
+
 \copy fantasy_pool_stage from '/tmp/fantasy_player_pool.csv' with (format csv, header true, null '');
+\copy fantasy_team_stage from '/tmp/fantasy_team_pool.csv' with (format csv, header true, null '');
 
 select 1 / case when count(*) >= 1 then 1 else 0 end as pool_players_must_exist
 from fantasy_pool_stage;
@@ -31,6 +41,14 @@ select 1 / case
   when count(*) = count(distinct source_player_id)
   then 1 else 0 end as pool_players_must_be_unique
 from fantasy_pool_stage;
+
+select 1 / case when count(*) >= 1 then 1 else 0 end as pool_teams_must_exist
+from fantasy_team_stage;
+
+select 1 / case
+  when count(*) = count(distinct (source_league_id,source_team_id))
+  then 1 else 0 end as pool_teams_must_be_unique
+from fantasy_team_stage;
 
 create temporary table fantasy_pool_meta on commit preserve rows as
 select
@@ -43,6 +61,60 @@ limit 1;
 
 select 1 / case when count(*)=1 then 1 else 0 end as competition_must_exist
 from fantasy_pool_meta;
+
+insert into public.ehockey_fantasy_team_pool (
+  competition_id,
+  source_league_id,
+  sports_gamer_team_id,
+  team_name,
+  team_logo_url,
+  registered_at,
+  is_available,
+  source_snapshot,
+  source_updated_at,
+  updated_at
+)
+select
+  m.competition_id,
+  s.source_league_id,
+  s.source_team_id,
+  coalesce(nullif(trim(s.team_name),''),'Team ' || s.source_team_id::text),
+  nullif(trim(s.team_logo_url),''),
+  s.registered_at,
+  true,
+  jsonb_build_object(
+    'pool_source','sportsgamer_registered_teams',
+    'source_league_id',s.source_league_id,
+    'source_team_id',s.source_team_id,
+    'raw_team',coalesce(s.raw_team,'{}'::jsonb)
+  ),
+  now(),
+  now()
+from fantasy_team_stage s
+cross join fantasy_pool_meta m
+on conflict (competition_id,source_league_id,sports_gamer_team_id)
+do update set
+  team_name=excluded.team_name,
+  team_logo_url=coalesce(excluded.team_logo_url,public.ehockey_fantasy_team_pool.team_logo_url),
+  registered_at=coalesce(excluded.registered_at,public.ehockey_fantasy_team_pool.registered_at),
+  is_available=true,
+  source_snapshot=excluded.source_snapshot,
+  source_updated_at=now(),
+  updated_at=now();
+
+update public.ehockey_fantasy_team_pool t
+set is_available=false,
+    source_updated_at=now(),
+    updated_at=now()
+from fantasy_pool_meta m
+where t.competition_id=m.competition_id
+  and t.source_league_id=any(m.source_league_ids)
+  and not exists (
+    select 1
+    from fantasy_team_stage s
+    where s.source_league_id=t.source_league_id
+      and s.source_team_id=t.sports_gamer_team_id
+  );
 
 with source_rows as (
   select
@@ -231,6 +303,7 @@ update public.ehockey_fantasy_sync_runs r
 set details=coalesce(r.details,'{}'::jsonb) || jsonb_build_object(
       'source_league_ids',to_jsonb(m.source_league_ids),
       'pool_players_upserted',(select count(*) from fantasy_pool_stage),
+      'pool_teams_upserted',(select count(*) from fantasy_team_stage),
       'roster_source',:'roster_source',
       'player_source',:'player_source',
       'team_source',:'team_source'
@@ -243,6 +316,11 @@ where r.competition_id=m.competition_id
 commit;
 
 select
+  (select count(*)
+   from public.ehockey_fantasy_team_pool t
+   join public.ehockey_fantasy_competitions tc on tc.id=t.competition_id
+   where upper(tc.code)=upper(:'competition_code')
+     and t.is_available) as pool_teams_imported,
   count(*) as pool_players_imported
 from public.ehockey_fantasy_player_pool p
 join public.ehockey_fantasy_competitions c on c.id=p.competition_id
