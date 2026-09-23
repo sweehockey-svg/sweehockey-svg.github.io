@@ -12,12 +12,12 @@ on:
       competition_code:
         description: Fantasy competition code
         required: false
-        default: 'SCL27'
+        default: 'SCL2027'
         type: string
       league_ids:
         description: SportsGamer league IDs, comma separated
         required: false
-        default: '447'
+        default: '527'
         type: string
       trigger_type:
         description: manual or schedule
@@ -28,7 +28,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: sync-ehockey-fantasy-${{ inputs.competition_code || 'SCL27' }}
+  group: sync-ehockey-fantasy-${{ inputs.competition_code || 'SCL2027' }}
   cancel-in-progress: false
 
 jobs:
@@ -59,8 +59,8 @@ jobs:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
           EVENT_NAME: ${{ github.event_name }}
           INPUT_REQUEST_ID: ${{ inputs.request_id || '' }}
-          INPUT_COMPETITION_CODE: ${{ inputs.competition_code || 'SCL27' }}
-          INPUT_LEAGUE_IDS: ${{ inputs.league_ids || '447' }}
+          INPUT_COMPETITION_CODE: ${{ inputs.competition_code || 'SCL2027' }}
+          INPUT_LEAGUE_IDS: ${{ inputs.league_ids || '527' }}
           INPUT_TRIGGER_TYPE: ${{ inputs.trigger_type || 'manual' }}
         run: |
           set -euo pipefail
@@ -75,8 +75,8 @@ jobs:
           trigger_type="$INPUT_TRIGGER_TYPE"
           [[ "$trigger_type" =~ ^(manual|schedule)$ ]] || { echo "Invalid trigger_type"; exit 1; }
           should_run="true"
-          competition_code="${INPUT_COMPETITION_CODE:-SCL27}"
-          league_ids="${INPUT_LEAGUE_IDS:-447}"
+          competition_code="${INPUT_COMPETITION_CODE:-SCL2027}"
+          league_ids="${INPUT_LEAGUE_IDS:-527}"
 
           [[ "$competition_code" =~ ^[A-Za-z0-9_-]{3,40}$ ]] || { echo "Invalid competition code"; exit 1; }
           [[ "$league_ids" =~ ^[0-9]+([,[:space:];]+[0-9]+)*$ ]] || { echo "Invalid league ids"; exit 1; }
