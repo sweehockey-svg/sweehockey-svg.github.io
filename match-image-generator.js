@@ -130,7 +130,7 @@
     if (id === "smoke") return backgroundPrefix + "smoke.svg?v=39";
     if (id === "ice") return ICE_TEXTURE_DATA_URL;
     if (id === "sweden") return SWEDEN_BACKGROUND_DATA_URL;
-    if (id === "neon") return backgroundPrefix + "neon.svg";
+    if (id === "neon") return backgroundPrefix + "neon.webp?v=51";
     if (id === "tunnel") return backgroundPrefix + "tunnel.svg";
     if (id === "frost") return backgroundPrefix + "frost.svg";
     return assetPrefix + "assets/bg.jpg";
