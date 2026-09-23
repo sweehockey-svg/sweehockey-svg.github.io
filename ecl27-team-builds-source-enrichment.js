@@ -8,11 +8,12 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "seh_ecl27_shared_source_v2";
+  const CACHE_KEY = "seh_ecl27_shared_source_v3";
   const EMPTY = Object.freeze({
     build:"supabase-loading",updated:"Hämtar ECL27-data…",aliases:{},
     springTeams:[],newTeams:[],moveEvents:[],posterMemberships:[],freeAgentEvents:[],
-    rosterSnapshots:[],recruitment:{},extraTeamIds:{}
+    rosterSnapshots:[],recruitment:{},extraTeamIds:{},
+    officialSclTeams:[],sclLeagueId:527,sclStartsOn:"2026-10-05",sclRegistrationUpdated:""
   });
 
   function readCache() {
@@ -45,15 +46,75 @@
 
   function dateOnly(value) { return String(value || "").slice(0,10); }
 
+  async function loadOfficialSclTeams() {
+    const competitions = await get(
+      "ehockey_fantasy_competitions",
+      "select=id,code,sports_gamer_league_id,starts_on,status,updated_at&code=eq.SCL2027&limit=1"
+    );
+    const competition = Array.isArray(competitions) ? competitions[0] : null;
+    if (!competition?.id) {
+      return {teams:[],leagueId:527,startsOn:"2026-10-05",updatedAt:""};
+    }
+
+    const leagueId = Number(competition.sports_gamer_league_id) || 527;
+    const rows = await get(
+      "ehockey_fantasy_player_pool",
+      "select=real_team_id,real_team_name,display_gamertag,team_logo_url,source_snapshot,source_updated_at&competition_id=eq." +
+        encodeURIComponent(String(competition.id)) +
+        "&is_available=eq.true&order=real_team_name.asc,display_gamertag.asc"
+    );
+
+    const byTeam = new Map();
+    let updatedAt = "";
+    for (const row of rows || []) {
+      const id = Number(row.real_team_id);
+      const name = String(row.real_team_name || "").trim();
+      if (!Number.isFinite(id) || id <= 0 || !name) continue;
+
+      if (!byTeam.has(id)) {
+        const snapshot = row.source_snapshot && typeof row.source_snapshot === "object"
+          ? row.source_snapshot
+          : {};
+        const rawTeam = snapshot?.raw_player?.team || {};
+        byTeam.set(id,{
+          name,
+          sportsGamerTeamId:id,
+          sportsGamerLeagueId:Number(snapshot.source_league_id) || leagueId,
+          logoUrl:String(row.team_logo_url || rawTeam.teamLogo || "").trim(),
+          registeredAt:String(rawTeam.teamRegistered || "").slice(0,10),
+          syncedAt:String(row.source_updated_at || snapshot.roster_imported_at || ""),
+          players:[]
+        });
+      }
+
+      const player = String(row.display_gamertag || "").trim();
+      if (player && !byTeam.get(id).players.includes(player)) byTeam.get(id).players.push(player);
+
+      const rowUpdated = String(row.source_updated_at || "").trim();
+      if (rowUpdated && (!updatedAt || rowUpdated > updatedAt)) updatedAt = rowUpdated;
+    }
+
+    return {
+      teams:Array.from(byTeam.values()).map((team) => ({
+        ...team,
+        players:[...team.players].sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}))
+      })),
+      leagueId,
+      startsOn:String(competition.starts_on || "2026-10-05").slice(0,10),
+      updatedAt:updatedAt || String(competition.updated_at || "")
+    };
+  }
+
   async function loadSharedSource() {
     if (!url || !key) throw new Error("Supabase config missing");
 
-    const [baseline,teams,events,recruitmentRows,aliasRows] = await Promise.all([
+    const [baseline,teams,events,recruitmentRows,aliasRows,officialScl] = await Promise.all([
       get("v_ecl27_spring_baseline","select=team_project_id,team_name,division,source_team_id,player_key,gamertag&order=team_name.asc,gamertag.asc"),
       get("v_ecl27_team_builds_public","select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"),
       get("v_ecl27_events_resolved","select=id,occurred_at,team_project_id,team_name,event_type,subject_key,display_gamertag,source_gamertag,from_team,to_team,source_note&order=occurred_at.asc,id.asc"),
       get("ecl27_recruitment_posts","select=team_project_id,posted_at,text,is_active&is_active=eq.true&order=posted_at.asc,id.asc"),
-      get("ecl27_player_aliases","select=alias_normalized,canonical_display&order=alias_normalized.asc")
+      get("ecl27_player_aliases","select=alias_normalized,canonical_display&order=alias_normalized.asc"),
+      loadOfficialSclTeams()
     ]);
 
     const aliases={};
@@ -144,10 +205,14 @@
     for (const t of teams) if (t.is_new_project && Number(t.source_team_id)>0) extraTeamIds[t.name]=Number(t.source_team_id);
     const latest = events.length ? events[events.length-1] : null;
     const model={
-      build:`supabase-${latest ? String(latest.id) : "0"}`,
+      build:`supabase-${latest ? String(latest.id) : "0"}-scl-${officialScl.teams.length}`,
       updated:latest ? `${dateOnly(latest.occurred_at)} · ${latest.team_name} ${latest.event_type === "in" ? "IN" : "UT"}: ${latest.display_gamertag || latest.source_gamertag}` : "Supabase",
       aliases,springTeams,newTeams,moveEvents,posterMemberships,freeAgentEvents,
-      rosterSnapshots:[],recruitment,extraTeamIds
+      rosterSnapshots:[],recruitment,extraTeamIds,
+      officialSclTeams:officialScl.teams,
+      sclLeagueId:officialScl.leagueId,
+      sclStartsOn:officialScl.startsOn,
+      sclRegistrationUpdated:officialScl.updatedAt
     };
 
     try { localStorage.setItem(CACHE_KEY,JSON.stringify(model)); } catch (_) {}
