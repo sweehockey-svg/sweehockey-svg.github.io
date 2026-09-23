@@ -131,13 +131,16 @@
     if (id === "ice") return ICE_TEXTURE_DATA_URL;
     if (id === "sweden") return SWEDEN_BACKGROUND_DATA_URL;
     if (id === "neon") return backgroundPrefix + "neon.webp?v=51";
-    if (id === "tunnel") return backgroundPrefix + "player-tunnel.webp?v=53";
+    if (id === "tunnel") return backgroundPrefix + "player-tunnel.webp?v=54";
     if (id === "frost") return backgroundPrefix + "frost.svg";
     return assetPrefix + "assets/bg.jpg";
   }
 
   function backgroundImageSvg(width,height,opacity=1) {
-    return '<image href="' + esc(backgroundUrl()) + '" x="0" y="0" width="' + width + '" height="' + height + '" opacity="' + opacity + '" preserveAspectRatio="xMidYMid slice"/>';
+    const primary = '<image href="' + esc(backgroundUrl()) + '" x="0" y="0" width="' + width + '" height="' + height + '" opacity="' + opacity + '" preserveAspectRatio="xMidYMid slice"/>';
+    if (state.background !== "tunnel") return primary;
+    const fallback = '<image href="' + esc(backgroundPrefix + "tunnel.svg?v=54") + '" x="0" y="0" width="' + width + '" height="' + height + '" opacity="' + opacity + '" preserveAspectRatio="xMidYMid slice"/>';
+    return fallback + primary;
   }
 
 
@@ -1922,7 +1925,11 @@
       button.classList.toggle("is-active",id === state.background);
       button.setAttribute("aria-pressed",id === state.background ? "true" : "false");
       const preview = button.querySelector(".background-thumb");
-      if (preview) preview.style.backgroundImage = 'url("' + backgroundUrl(id) + '")';
+      if (preview) {
+        preview.style.backgroundImage = id === "tunnel"
+          ? 'url("' + backgroundUrl(id) + '"), url("' + backgroundPrefix + 'tunnel.svg?v=54")'
+          : 'url("' + backgroundUrl(id) + '")';
+      }
     });
     syncLineupSelects();
     POSITIONS.forEach(pos => {
