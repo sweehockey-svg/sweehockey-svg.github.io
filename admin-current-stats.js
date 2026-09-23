@@ -2,11 +2,13 @@
   "use strict";
 
   const STORAGE_KEY = "seh_current_player_stats_sync_request_id";
+  const SCL_STORAGE_KEY = "seh_scl27_official_teams_sync_request_id";
   const ADMIN_BADGE_STORAGE_KEY = "seh_admin_pending_badge_v1";
   const ADMIN_BADGE_CHANNEL = "seh_admin_pending_badge";
   let adminBadgeChannel = null;
   let client = null;
   let pollTimer = null;
+  let sclPollTimer = null;
   let adminBadgeTimer = null;
   let adminBadgeRefreshBusy = false;
 
@@ -239,6 +241,10 @@
     return sessionStorage.getItem(STORAGE_KEY) || "";
   }
 
+  function sclRequestId() {
+    return sessionStorage.getItem(SCL_STORAGE_KEY) || "";
+  }
+
   function makeId() {
     return window.crypto?.randomUUID
       ? "web_" + window.crypto.randomUUID().replaceAll("-", "")
@@ -325,6 +331,137 @@
     }
   }
 
+  function sclStatusElement() {
+    return document.getElementById("scl27TeamsSyncStatus");
+  }
+
+  function setSclStatus(message, tone, runUrl) {
+    const status = sclStatusElement();
+    if (!status) return;
+    status.textContent = message;
+    status.dataset.tone = tone || "";
+    if (runUrl) {
+      const link = document.createElement("a");
+      link.href = runUrl;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = " Visa körlogg";
+      status.append(link);
+    }
+  }
+
+  function setSclBusy(isBusy) {
+    const start = document.getElementById("startScl27TeamsSync");
+    const refresh = document.getElementById("refreshScl27TeamsSync");
+    if (start) start.disabled = isBusy;
+    if (refresh) refresh.disabled = isBusy || !sclRequestId();
+  }
+
+  async function invokeScl(action) {
+    const supabase = getClient();
+    if (!supabase) throw new Error("Supabase är inte initierat.");
+
+    const sessionResult = await supabase.auth.getSession();
+    if (sessionResult.error) throw sessionResult.error;
+    if (!sessionResult.data.session) throw new Error("Du måste logga in igen.");
+
+    const response = await supabase.functions.invoke("seh-admin-sync", {
+      body: {
+        action,
+        job: "fantasy_sportsgamer",
+        request_id: sclRequestId(),
+        competition_code: "SCL2027",
+        league_ids: [527]
+      }
+    });
+
+    if (response.error) {
+      let message = response.error.message || "Synktjänsten svarade med ett fel.";
+      try {
+        const details = await response.error.context?.json();
+        if (details?.error) message = details.error;
+      } catch (_) {}
+      throw new Error(message);
+    }
+    if (response.data?.error) throw new Error(response.data.error);
+    return response.data || {};
+  }
+
+  async function refreshScl(continuePolling) {
+    if (!sclRequestId() || !sclStatusElement()) return;
+    window.clearTimeout(sclPollTimer);
+    setSclBusy(true);
+    try {
+      const data = await invokeScl("status");
+      const done = data.state === "completed";
+      setSclStatus(
+        done
+          ? (data.conclusion === "success"
+              ? "Klart – SCL 27-lag, registrerade trupper, Lagbygge och Svenska lag är uppdaterade."
+              : "SCL 27-synkningen misslyckades.")
+          : (data.state === "queued" ? "SCL 27-synkningen väntar på att starta…" : "SCL 27-lag och trupper uppdateras…"),
+        done && data.conclusion === "success" ? "success" : done ? "error" : "working",
+        data.run_url || ""
+      );
+      if (continuePolling && !done) {
+        sclPollTimer = window.setTimeout(function () { refreshScl(true); }, 7000);
+      }
+    } catch (error) {
+      setSclStatus("Fel: " + (error?.message || error), "error");
+    } finally {
+      setSclBusy(false);
+    }
+  }
+
+  function buildSclCard() {
+    const card = document.createElement("article");
+    card.className = "admin-card admin-home-card";
+    card.id = "scl27TeamsSyncCard";
+    card.innerHTML = [
+      '<p class="writer-panel-kicker">SCL 27</p>',
+      '<h2>Officiella lag</h2>',
+      '<p>Hämtar anmälda lag och registrerade trupper från SportsGamer liga 527. Lagbygge uppdateras och lagen skrivs även in i Svenska lag-registret. Befintliga lag matchas på namn/alias så att de inte dubblas.</p>',
+      '<div class="admin-actions">',
+      '<button id="startScl27TeamsSync" type="button">Synka SCL 27-lag</button>',
+      '<button id="refreshScl27TeamsSync" class="writer-secondary" type="button" disabled>Kontrollera status</button>',
+      '</div>',
+      '<p id="scl27TeamsSyncStatus" class="admin-status" role="status" aria-live="polite"></p>'
+    ].join("");
+    return card;
+  }
+
+  function mountSclCard() {
+    if (!isAdminHome() || document.getElementById("scl27TeamsSyncCard")) return;
+    const grid = document.querySelector("#adminDashboard .admin-grid");
+    const playerSyncCard = document.getElementById("startPlayerSync")?.closest(".admin-card");
+    if (!grid || !playerSyncCard) return;
+
+    const card = buildSclCard();
+    playerSyncCard.insertAdjacentElement("afterend", card);
+
+    document.getElementById("startScl27TeamsSync")?.addEventListener("click", async function () {
+      if (!window.confirm("Hämta de officiellt anmälda SCL 27-lagen och trupperna från SportsGamer liga 527 nu? Lagbygge och Svenska lag-registret uppdateras.")) return;
+      const id = makeId();
+      sessionStorage.setItem(SCL_STORAGE_KEY, id);
+      setSclBusy(true);
+      setSclStatus("Startar SCL 27-synkningen…", "working");
+      try {
+        await invokeScl("start");
+        await refreshScl(true);
+      } catch (error) {
+        setSclStatus("Fel: " + (error?.message || error), "error");
+        setSclBusy(false);
+      }
+    });
+
+    document.getElementById("refreshScl27TeamsSync")?.addEventListener("click", function () {
+      refreshScl(false);
+    });
+
+    setSclBusy(false);
+    if (sclRequestId()) refreshScl(true);
+  }
+
   function buildCard() {
     const card = document.createElement("article");
     card.className = "admin-card admin-home-card";
@@ -378,6 +515,7 @@
   function mount() {
     mountDownloadStats();
     mountDownloadStats(true);
+    mountSclCard();
     if (!isAdminHome()) return;
     if (document.getElementById("currentStatsSyncCard")) return;
 
@@ -421,6 +559,7 @@
 
   window.addEventListener("hashchange", function () {
     window.clearTimeout(pollTimer);
+    window.clearTimeout(sclPollTimer);
     window.setTimeout(function () {
       mount();
       ensureAdminNavBadges();
