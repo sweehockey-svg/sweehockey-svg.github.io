@@ -132,7 +132,7 @@
     if (id === "sweden") return SWEDEN_BACKGROUND_DATA_URL;
     if (id === "neon") return backgroundPrefix + "neon.webp?v=51";
     if (id === "tunnel") return backgroundPrefix + "player-tunnel.webp?v=55";
-    if (id === "frost") return backgroundPrefix + "frost.svg";
+    if (id === "frost") return backgroundPrefix + "frost.webp?v=56";
     return assetPrefix + "assets/bg.jpg";
   }
 
