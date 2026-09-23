@@ -59,7 +59,7 @@
   };
 
   function activeCompetitionCode() {
-    return clean(state.competition?.code || "SCL27").toUpperCase();
+    return clean(state.competition?.code || "SCL2027").toUpperCase();
   }
 
   function activeLeagueCode() {
@@ -85,7 +85,7 @@
     if (requested && state.competitions.some((row) => clean(row.code).toUpperCase() === requested)) {
       return requested;
     }
-    if (state.competitions.some((row) => clean(row.code).toUpperCase() === "SCL27")) return "SCL27";
+    if (state.competitions.some((row) => clean(row.code).toUpperCase() === "SCL2027")) return "SCL2027";
     return clean(state.competitions[0]?.code || "").toUpperCase();
   }
 
@@ -208,11 +208,11 @@
   }
 
   async function loadSclSimulationStatus() {
-    if (activeCompetitionCode() !== "SCL27") {
+    if (activeCompetitionCode() !== "SCL2027") {
       state.sclSimState = null;
       return;
     }
-    const { data, error } = await sb.rpc("seh_fantasy_admin_scl_sim_status", { p_code: "SCL27" });
+    const { data, error } = await sb.rpc("seh_fantasy_admin_scl_sim_status", { p_code: "SCL2027" });
     if (error) throw error;
     state.sclSimState = data || null;
   }
@@ -267,7 +267,7 @@
     document.body.dataset.fantasyLeague = league.toLowerCase();
 
     const sclBox = document.querySelector(".fa-scl-sim-box");
-    if (sclBox) sclBox.hidden = activeCompetitionCode() !== "SCL27";
+    if (sclBox) sclBox.hidden = activeCompetitionCode() !== "SCL2027";
   }
 
   function renderDashboard() {
@@ -573,7 +573,7 @@
 
       await loadCompetitionList();
       const remaining = state.competitions;
-      const next = remaining.find((row) => clean(row.code).toUpperCase() === "SCL27") || remaining[0];
+      const next = remaining.find((row) => clean(row.code).toUpperCase() === "SCL2027") || remaining[0];
 
       const url = new URL(window.location.href);
       if (next?.code) url.searchParams.set("competition", clean(next.code).toUpperCase());
@@ -778,7 +778,7 @@
 
     try {
       let rpcName = "";
-      let args = { p_code: "SCL27" };
+      let args = { p_code: "SCL2027" };
 
       if (action === "build") rpcName = "seh_fantasy_admin_scl_sim_build";
       else if (action === "next") rpcName = "seh_fantasy_admin_scl_sim_play_next_night";
