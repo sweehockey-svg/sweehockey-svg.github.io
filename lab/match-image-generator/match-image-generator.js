@@ -1378,20 +1378,6 @@
     };
   }
 
-  function sharedGraphicPattern(W,H,strength=1) {
-    if (state.showPattern === false) return "";
-    const s = Math.max(0,Math.min(1,Number(strength) || 0));
-    const stroke = W > H ? 3 : 2;
-    return [
-      '<path d="M' + (W*.5) + ' 0 L' + (W*.39) + ' ' + H + ' H' + (W*.61) + ' Z" fill="#4aaeff" opacity="' + (.028*s).toFixed(3) + '"/>',
-      '<path d="M' + (W*.5) + ' 0 L' + (W*.455) + ' ' + H + '" stroke="#76bdff" stroke-opacity="' + (.10*s).toFixed(3) + '" stroke-width="' + stroke + '"/>',
-      '<path d="M' + (W*.5) + ' 0 L' + (W*.545) + ' ' + H + '" stroke="#76bdff" stroke-opacity="' + (.065*s).toFixed(3) + '" stroke-width="' + stroke + '"/>',
-      '<rect x="0" y="' + (H*.50) + '" width="' + W + '" height="' + (H*.50) + '" fill="#83c7ff" opacity="' + (.026*s).toFixed(3) + '"/>',
-      '<ellipse cx="' + (W/2) + '" cy="' + (H*.79) + '" rx="' + (W*.46) + '" ry="' + (H*.13) + '" fill="#7cc7ff" opacity="' + (.065*s).toFixed(3) + '"/>',
-      '<line x1="' + (W*.08) + '" y1="' + (H*.755) + '" x2="' + (W*.92) + '" y2="' + (H*.755) + '" stroke="#b9dcff" stroke-opacity="' + (.10*s).toFixed(3) + '" stroke-width="2"/>'
-    ].join("");
-  }
-
   function commonTemplateDefs(ctx, id) {
     return [
       '<defs>',
@@ -1550,13 +1536,12 @@
       '</defs>',
       backgroundImageSvg(ctx.W,ctx.H,1),
       '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#02070c" opacity=".34"/>',
-      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-premium-bg)"/>',
-      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-glow)"/>',
-      '<rect x="0" y="' + (ctx.H*.56) + '" width="' + ctx.W + '" height="' + (ctx.H*.44) + '" fill="url(#focus-ice)"/>',
-      sharedGraphicPattern(ctx.W,ctx.H,.62),
+      state.showPattern === false ? '' : '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-premium-bg)"/>',
+      state.showPattern === false ? '' : '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#focus-glow)"/>',
+      state.showPattern === false ? '' : '<rect x="0" y="' + (ctx.H*.56) + '" width="' + ctx.W + '" height="' + (ctx.H*.44) + '" fill="url(#focus-ice)"/>',
 
       isWide ? '<rect x="52" y="118" width="640" height="858" rx="34" fill="url(#focus-panel)" stroke="#ffffff" stroke-opacity=".10"/>' : '',
-      isWide ? svgLogo(ctx.own,-105,280,650,.055) : svgLogo(ctx.own,-90,isStory?290:330,isStory?650:500,.045),
+      state.showPattern === false ? '' : (isWide ? svgLogo(ctx.own,-105,280,650,.055) : svgLogo(ctx.own,-90,isStory?290:330,isStory?650:500,.045)),
 
       '<text x="' + (isWide?84:ctx.W/2) + '" y="' + (isStory?92:74) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#ffffff" font-size="' + (isWide?66:isStory?60:48) + '" font-weight="1000" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="2">STARTING SIX</text>',
       '<text x="' + (isWide?86:ctx.W/2) + '" y="' + (isStory?140:112) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#ffffff" fill-opacity=".58" font-size="' + (isWide?17:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="4">' + ctx.competition + '</text>',
@@ -1612,11 +1597,10 @@
       commonTemplateDefs(ctx,"versus"),
       backgroundImageSvg(ctx.W,ctx.H,1),
       '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#05080c" opacity=".58"/>',
-      '<path d="M0 0 H' + (ctx.W*.56) + ' L' + (ctx.W*.44) + ' ' + ctx.H + ' H0Z" fill="' + leftTeam.primary + '" opacity=".38"/>',
-      '<path d="M' + (ctx.W*.56) + ' 0 H' + ctx.W + ' V' + ctx.H + ' H' + (ctx.W*.44) + 'Z" fill="' + rightTeam.primary + '" opacity=".38"/>',
-      '<path d="M' + (ctx.W*.505) + ' 0 L' + (ctx.W*.46) + ' ' + ctx.H + '" stroke="#fff" stroke-opacity=".08" stroke-width="' + (isWide?18:10) + '"/>',
-      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#versus-light)"/>',
-      sharedGraphicPattern(ctx.W,ctx.H,.78),
+      state.showPattern === false ? '' : '<path d="M0 0 H' + (ctx.W*.56) + ' L' + (ctx.W*.44) + ' ' + ctx.H + ' H0Z" fill="' + leftTeam.primary + '" opacity=".38"/>',
+      state.showPattern === false ? '' : '<path d="M' + (ctx.W*.56) + ' 0 H' + ctx.W + ' V' + ctx.H + ' H' + (ctx.W*.44) + 'Z" fill="' + rightTeam.primary + '" opacity=".38"/>',
+      state.showPattern === false ? '' : '<path d="M' + (ctx.W*.505) + ' 0 L' + (ctx.W*.46) + ' ' + ctx.H + '" stroke="#fff" stroke-opacity=".08" stroke-width="' + (isWide?18:10) + '"/>',
+      state.showPattern === false ? '' : '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#versus-light)"/>',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?105:65) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?58:isWide?64:46) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.badge + '</text>',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?155:105) + '" text-anchor="middle" fill="#fff" fill-opacity=".55" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
       ctx.competitionDivision ? '<text x="' + (ctx.W/2) + '" y="' + (isStory?181:129) + '" text-anchor="middle" fill="#fff" fill-opacity=".38" font-size="11" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competitionDivision + '</text>' : '',
@@ -1651,9 +1635,8 @@
       commonTemplateDefs(ctx,"broadcast"),
       backgroundImageSvg(ctx.W,ctx.H,1),
       '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#05080c" opacity=".72"/>',
-      '<rect width="' + ctx.W + '" height="' + topH + '" fill="url(#broadcast-bg)" opacity=".72"/>',
-      '<rect x="0" y="' + (topH-8) + '" width="' + ctx.W + '" height="8" fill="#fff" fill-opacity=".08"/>',
-      sharedGraphicPattern(ctx.W,ctx.H,.58),
+      state.showPattern === false ? '' : '<rect width="' + ctx.W + '" height="' + topH + '" fill="url(#broadcast-bg)" opacity=".72"/>',
+      state.showPattern === false ? '' : '<rect x="0" y="' + (topH-8) + '" width="' + ctx.W + '" height="8" fill="#fff" fill-opacity=".08"/>',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?85:58) + '" text-anchor="middle" fill="#fff" fill-opacity=".58" font-size="15" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="4">' + ctx.competition + '</text>',
       ctx.competitionDivision ? '<text x="' + (ctx.W/2) + '" y="' + (isStory?109:80) + '" text-anchor="middle" fill="#fff" fill-opacity=".38" font-size="10" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competitionDivision + '</text>' : '',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?145:105) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?54:isWide?56:42) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.badge + '</text>',
@@ -1689,9 +1672,8 @@
       commonTemplateDefs(ctx,"minimal"),
       backgroundImageSvg(ctx.W,ctx.H,1),
       '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#f3f1eb" opacity=".86"/>',
-      '<rect x="0" y="0" width="' + (isWide?ctx.W*.46:ctx.W) + '" height="' + (isWide?ctx.H:ctx.H*.56) + '" fill="' + ctx.own.primary + '" opacity=".91"/>',
-      '<circle cx="' + (isWide?ctx.W*.23:ctx.W*.5) + '" cy="' + (isWide?ctx.H*.44:ctx.H*.27) + '" r="' + (isWide?ctx.W*.20:ctx.W*.38) + '" fill="' + ctx.own.accent + '" opacity=".12"/>',
-      sharedGraphicPattern(ctx.W,ctx.H,.32),
+      state.showPattern === false ? '' : '<rect x="0" y="0" width="' + (isWide?ctx.W*.46:ctx.W) + '" height="' + (isWide?ctx.H:ctx.H*.56) + '" fill="' + ctx.own.primary + '" opacity=".91"/>',
+      state.showPattern === false ? '' : '<circle cx="' + (isWide?ctx.W*.23:ctx.W*.5) + '" cy="' + (isWide?ctx.H*.44:ctx.H*.27) + '" r="' + (isWide?ctx.W*.20:ctx.W*.38) + '" fill="' + ctx.own.accent + '" opacity=".12"/>',
       placedJersey(ownJ,jerseyX,jerseyY,jerseySize),
       '<text x="' + (isWide?ctx.W*.53:54) + '" y="' + (isWide?140:isStory?90:72) + '" fill="' + (isWide?"#101318":"#fff") + '" font-size="' + (isWide?70:isStory?58:44) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">' + ctx.badge + '</text>',
       '<text x="' + (isWide?ctx.W*.53:58) + '" y="' + (isWide?190:isStory?140:110) + '" fill="' + (isWide?"#59616b":"#fff") + '" fill-opacity="' + (isWide?1:.62) + '" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
