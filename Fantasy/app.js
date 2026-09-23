@@ -524,7 +524,7 @@
   };
 
   function competitionCode() {
-    return clean(state.competition?.code || "SCL27");
+    return clean(state.competition?.code || "SCL2027");
   }
 
   function leagueCode() {
