@@ -915,9 +915,11 @@
 
           <!-- Sewn hems remain crisp over the continuous cloth lighting. -->
           <g clip-path="url(#clip-${uid})">
+            <!-- Continuous armhole seam: fabric overlap separates sleeve and body across every pattern. -->
             <g fill="none" stroke-linecap="round">
-              <path d="M203 111 C181 138 169 165 172 198 M393 109 C416 139 429 165 426 201" stroke="#000" stroke-opacity=".09" stroke-width="1.7"/>
-              <path d="M205 112 C183 139 171 166 174 198 M391 110 C414 140 427 166 424 201" stroke="#fff" stroke-opacity=".16" stroke-width=".7" stroke-dasharray="1.2 2"/>
+              <path d="M203 111 C181 138 169 165 172 198 C174 232 183 260 186 290 C188 314 188 339 188 360 M393 109 C416 139 429 165 426 201 C422 230 414 257 410 289 C407 314 409 339 408 360" stroke="#000" stroke-opacity="${variant === "away" ? ".17" : ".26"}" stroke-width="5.5" filter="url(#collar-shade-${uid})"/>
+              <path d="M203 111 C181 138 169 165 172 198 C174 232 183 260 186 290 C188 314 188 339 188 360 M393 109 C416 139 429 165 426 201 C422 230 414 257 410 289 C407 314 409 339 408 360" stroke="#000" stroke-opacity=".22" stroke-width="1.1"/>
+              <path d="M206 112 C184 139 172 166 175 198 C177 231 186 260 189 290 C191 314 191 338 191 355 M390 110 C413 140 426 166 423 201 C419 230 411 257 407 289 C404 314 406 338 405 355" stroke="#fff" stroke-opacity="${variant === "away" ? ".38" : ".22"}" stroke-width=".85" stroke-dasharray="1.3 2.2"/>
             </g>
             <g fill="none" stroke-linecap="round">
               <path d="M90 516 Q123 528 162 521" stroke="#000" stroke-opacity=".18" stroke-width=".75" stroke-dasharray="1 2.1"/>
