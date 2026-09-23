@@ -8,7 +8,7 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "seh_ecl27_shared_source_v3";
+  const CACHE_KEY = "seh_ecl27_shared_source_v4";
   const EMPTY = Object.freeze({
     build:"supabase-loading",updated:"Hämtar ECL27-data…",aliases:{},
     springTeams:[],newTeams:[],moveEvents:[],posterMemberships:[],freeAgentEvents:[],
@@ -57,16 +57,46 @@
     }
 
     const leagueId = Number(competition.sports_gamer_league_id) || 527;
-    const rows = await get(
-      "ehockey_fantasy_player_pool",
-      "select=real_team_id,real_team_name,display_gamertag,team_logo_url,source_snapshot,source_updated_at&competition_id=eq." +
-        encodeURIComponent(String(competition.id)) +
-        "&is_available=eq.true&order=real_team_name.asc,display_gamertag.asc"
-    );
+    const competitionId = encodeURIComponent(String(competition.id));
+    const [teamRows,rosterRows] = await Promise.all([
+      get(
+        "ehockey_fantasy_team_pool",
+        "select=source_league_id,sports_gamer_team_id,team_name,team_logo_url,registered_at,source_snapshot,source_updated_at" +
+          "&competition_id=eq." + competitionId +
+          "&source_league_id=eq." + encodeURIComponent(String(leagueId)) +
+          "&is_available=eq.true&order=team_name.asc"
+      ),
+      get(
+        "ehockey_fantasy_player_pool",
+        "select=real_team_id,real_team_name,display_gamertag,team_logo_url,source_snapshot,source_updated_at&competition_id=eq." +
+          competitionId +
+          "&is_available=eq.true&order=real_team_name.asc,display_gamertag.asc"
+      )
+    ]);
 
     const byTeam = new Map();
     let updatedAt = "";
-    for (const row of rows || []) {
+
+    for (const row of teamRows || []) {
+      const id = Number(row.sports_gamer_team_id);
+      const name = String(row.team_name || "").trim();
+      if (!Number.isFinite(id) || id <= 0 || !name) continue;
+
+      byTeam.set(id,{
+        name,
+        sportsGamerTeamId:id,
+        sportsGamerLeagueId:Number(row.source_league_id) || leagueId,
+        logoUrl:String(row.team_logo_url || "").trim(),
+        registeredAt:String(row.registered_at || "").slice(0,10),
+        syncedAt:String(row.source_updated_at || ""),
+        players:[]
+      });
+
+      const rowUpdated = String(row.source_updated_at || "").trim();
+      if (rowUpdated && (!updatedAt || rowUpdated > updatedAt)) updatedAt = rowUpdated;
+    }
+
+    for (const row of rosterRows || []) {
       const id = Number(row.real_team_id);
       const name = String(row.real_team_name || "").trim();
       if (!Number.isFinite(id) || id <= 0 || !name) continue;
@@ -85,6 +115,8 @@
           syncedAt:String(row.source_updated_at || snapshot.roster_imported_at || ""),
           players:[]
         });
+      } else if (!byTeam.get(id).logoUrl && row.team_logo_url) {
+        byTeam.get(id).logoUrl = String(row.team_logo_url).trim();
       }
 
       const player = String(row.display_gamertag || "").trim();
