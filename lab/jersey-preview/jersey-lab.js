@@ -474,7 +474,7 @@
   }
 
   // Additional patterns share colour roles across both jersey renderers.
-  function extraJerseyPattern(pattern, stripe, secondary, side) {
+  function extraJerseyPattern(pattern, stripe, secondary, side, torsoClip) {
     const bandY = side === "back" ? 450 : 274;
     const designs = {
       chestband: `
@@ -494,8 +494,10 @@
         <path d="M40 465 H560 V471 H40 Z M40 504 H560 V510 H40 Z M150 545 H450 V552 H150 Z" fill="${secondary}"/>
         <path d="M100 142 Q300 77 500 142" fill="none" stroke="${secondary}" stroke-width="5"/>`,
       sash: `
-        <path d="M160 445 L429 183 L459 215 L184 484 Z" fill="${secondary}"/>
-        <path d="M160 452 L433 190 L451 211 L181 477 Z" fill="${stripe}"/>
+        <g clip-path="url(#${torsoClip})">
+          <path d="M455 60 L170 610" fill="none" stroke="${secondary}" stroke-width="64"/>
+          <path d="M455 60 L170 610" fill="none" stroke="${stripe}" stroke-width="46"/>
+        </g>
         <path d="M60 348 L183 330 V355 L60 373 Z M417 330 L540 348 V373 L417 355 Z M160 539 H440 V554 H160 Z" fill="${stripe}"/>`
     };
     return designs[pattern] || "";
@@ -553,7 +555,7 @@
         <path d="M194 96 C229 82 259 77 300 77 C341 77 371 82 406 96" fill="none" stroke="${secondary}" stroke-width="7" opacity=".82"/>
         <path d="M70 367 L151 346 L155 371 L75 392 Z M530 367 L449 346 L445 371 L525 392 Z" fill="${secondary}" opacity=".55"/>
       `
-    }[pattern] || extraJerseyPattern(pattern, stripe, secondary, side);
+    }[pattern] || extraJerseyPattern(pattern, stripe, secondary, side, `sash-torso-${uid}`);
 
     const captainMarkup = captainRole ? `
       <path d="M381 166 h38 v38 h-38 z" fill="${ink}" opacity=".94"/>
@@ -584,6 +586,7 @@
           <clipPath id="clip-${uid}">
             <path d="${silhouette}"/>
           </clipPath>
+          <clipPath id="sash-torso-${uid}"><path d="M199 88 Q300 54 401 88 L440 190 L440 570 H160 V190 Z"/></clipPath>
           <linearGradient id="body-${uid}" x1="0" x2="1">
             <stop offset="0" stop-color="#000000" stop-opacity=".25"/>
             <stop offset=".18" stop-color="#ffffff" stop-opacity=".045"/>
@@ -778,7 +781,7 @@
     const rightSleeve = "M358 93 C387 99 420 110 446 124 C470 137 487 157 492 185 C497 211 493 235 497 261 C499 284 498 308 502 336 C505 361 501 383 506 412 C509 438 506 459 512 483 L515 508 Q519 524 507 529 C486 536 461 535 440 530 C430 512 433 492 426 471 C421 450 425 432 418 407 C411 377 408 348 402 317 C394 277 395 245 401 213 C409 176 414 153 395 128 Z";
     const torso = "M242 96 Q297 111 358 93 C389 101 414 123 421 153 C429 183 420 217 413 249 C406 283 409 315 408 350 C407 385 404 412 408 445 C410 472 406 491 408 513 L405 552 Q407 565 393 570 C365 577 333 579 300 580 C267 581 234 576 207 573 Q192 570 192 558 L190 534 C193 510 188 486 190 460 C192 430 187 407 188 377 C189 345 187 318 186 290 C184 255 174 221 172 189 C169 154 189 119 218 105 Z";
 
-    const extraDesign = extraJerseyPattern(pattern, stripeA, stripeB, side);
+    const extraDesign = extraJerseyPattern(pattern, stripeA, stripeB, side, `torso-clip-${uid}`);
     const shoulderDecor = pattern === "shoulder" ? `
       <path d="M96 84 H504 V178 C425 154 363 145 301 149 C238 144 177 157 96 181 Z" fill="${yokeBase}"/>
       <path d="M99 178 C177 155 238 143 301 148 C363 144 425 152 501 175" fill="none" stroke="${stripeB}" stroke-width="7.5"/>
