@@ -86,7 +86,7 @@
       return requested;
     }
     if (state.competitions.some((row) => clean(row.code).toUpperCase() === "SCL27")) return "SCL27";
-    return clean(state.competitions[0]?.code || "SCL27").toUpperCase();
+    return clean(state.competitions[0]?.code || "").toUpperCase();
   }
 
   function setStatus(id, text, tone = "") {
@@ -144,6 +144,14 @@
 
     await loadCompetitionList();
     const selectedCode = chooseCompetitionCode();
+    // The list RPC already verifies admin access, even when it returns no leagues.
+    if (!selectedCode) {
+      state.competition = null;
+      $("authGate").hidden = true;
+      $("adminApp").hidden = false;
+      $("adminIdentity").textContent = "ADMIN";
+      return true;
+    }
     const { data, error } = await sb.rpc("seh_fantasy_admin_state", { p_code: selectedCode });
 
     if (error) {
@@ -563,17 +571,13 @@
       });
       if (error) throw error;
 
-      const remaining = state.competitions.filter((row) =>
-        clean(row.code).toUpperCase() !== code
-      );
+      await loadCompetitionList();
+      const remaining = state.competitions;
       const next = remaining.find((row) => clean(row.code).toUpperCase() === "SCL27") || remaining[0];
 
-      if (!next?.code) {
-        throw new Error("Fantasy-ligan togs bort, men ingen annan liga kunde väljas.");
-      }
-
       const url = new URL(window.location.href);
-      url.searchParams.set("competition", clean(next.code).toUpperCase());
+      if (next?.code) url.searchParams.set("competition", clean(next.code).toUpperCase());
+      else url.searchParams.delete("competition");
       window.location.replace(url.toString());
     } catch (error) {
       setStatus("deleteCompetitionStatus", "Fel: " + (error?.message || error), "error");
@@ -1318,10 +1322,27 @@
   $("poolPosition")?.addEventListener("change", renderPool);
   $("closeEntryDialog")?.addEventListener("click", () => $("entryDialog").close());
 
+  function renderEmptyCompetitionState() {
+    for (const id of ["adminCompetitionSelect", "heroCompetitionSelect"]) {
+      $(id).innerHTML = '<option value="">Ingen Fantasy-liga</option>';
+      $(id).disabled = true;
+    }
+    $("heroCompetitionName").textContent = "Ingen Fantasy-liga";
+    $("heroStatus").textContent = "SKAPA EN LIGA";
+    $("openFantasyLink").href = "../";
+    $("emptyCompetitionState").hidden = false;
+    $(".fa-tabs, [data-panel]").forEach((element) => { element.hidden = true; });
+    document.title = "eHockey Fantasy Liga · Admin";
+  }
+
   async function init() {
     try {
       const ok = await ensureAdmin();
       if (!ok) return;
+      if (!state.competition) {
+        renderEmptyCompetitionState();
+        return;
+      }
       await Promise.all([loadPool(), loadSyncState(), loadSclSimulationStatus()]);
       renderAll();
       switchTab("dashboard");
