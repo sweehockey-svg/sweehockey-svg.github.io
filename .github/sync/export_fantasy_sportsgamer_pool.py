@@ -40,6 +40,7 @@ def parse_league_ids() -> list[int]:
 
 LEAGUE_IDS = parse_league_ids()
 POOL_OUTPUT = Path(os.environ.get("POOL_OUTPUT", "/tmp/fantasy_player_pool.csv"))
+TEAM_OUTPUT = Path(os.environ.get("TEAM_OUTPUT", "/tmp/fantasy_team_pool.csv"))
 
 POOL_FIELDS = [
     "source_league_id",
@@ -57,6 +58,15 @@ POOL_FIELDS = [
     "history_ppg",
     "team_logo_url",
     "raw_player",
+]
+
+TEAM_FIELDS = [
+    "source_league_id",
+    "source_team_id",
+    "team_name",
+    "team_logo_url",
+    "registered_at",
+    "raw_team",
 ]
 
 POSITION_IDS = {
@@ -296,6 +306,51 @@ def choose_entity_table(
             best = current
 
     return (best[1], best[2]) if best else (None, None)
+
+
+def choose_registered_team_source(
+    connection: Any,
+    inventory: dict[str, list[str]],
+) -> tuple[str, list[dict[str, Any]]]:
+    columns = inventory.get("nhlgamer_leagueTeams", [])
+    league_column = column_name(columns, "leagueID", "league_id")
+    team_column = column_name(columns, "teamID", "team_id")
+    if not league_column or not team_column:
+        raise RuntimeError("SportsGamer nhlgamer_leagueTeams is missing league/team identifiers")
+
+    placeholders = ",".join(["%s"] * len(LEAGUE_IDS))
+    rows = select(
+        connection,
+        "select *, "
+        f"{safe_identifier(league_column)} as __leagueID, "
+        f"{safe_identifier(team_column)} as __teamID "
+        "from `nhlgamer_leagueTeams` "
+        f"where {safe_identifier(league_column)} in ({placeholders})",
+        tuple(LEAGUE_IDS),
+    )
+
+    usable: list[dict[str, Any]] = []
+    seen: set[tuple[int, int]] = set()
+    for row in rows:
+        league_id = integer(first(row, "__leagueID", "leagueID", "league_id"))
+        team_id = integer(first(row, "__teamID", "teamID", "team_id"))
+        key = (league_id, team_id)
+        if league_id not in LEAGUE_IDS or team_id <= 0 or key in seen:
+            continue
+        seen.add(key)
+        usable.append(row)
+
+    if not usable:
+        raise RuntimeError(
+            f"No registered SportsGamer teams found in nhlgamer_leagueTeams for leagues {LEAGUE_IDS}"
+        )
+
+    return "nhlgamer_leagueTeams", usable
+
+
+def date_text(value: Any) -> str:
+    match = re.search(r"\d{4}-\d{2}-\d{2}", str(value or ""))
+    return match.group(0) if match else ""
 
 
 def normalize_country(value: Any) -> str:
@@ -557,6 +612,7 @@ def main() -> int:
 
     try:
         inventory = table_inventory(connection)
+        registered_team_table, registered_team_rows = choose_registered_team_source(connection, inventory)
         roster_table, roster_rows, _ = choose_roster_source(connection, inventory)
 
         # Prefer the first configured source league if a player somehow occurs in multiple divisions.
@@ -575,11 +631,18 @@ def main() -> int:
                 deduped[player_id] = row
 
         player_ids = sorted(deduped)
-        team_ids = sorted({
-            integer(first(row, "__teamID", "teamID", "team_id"))
-            for row in deduped.values()
-            if integer(first(row, "__teamID", "teamID", "team_id")) > 0
-        })
+        team_ids = sorted(
+            {
+                integer(first(row, "__teamID", "teamID", "team_id"))
+                for row in deduped.values()
+                if integer(first(row, "__teamID", "teamID", "team_id")) > 0
+            }
+            | {
+                integer(first(row, "__teamID", "teamID", "team_id"))
+                for row in registered_team_rows
+                if integer(first(row, "__teamID", "teamID", "team_id")) > 0
+            }
+        )
 
         player_table, player_id_column = choose_entity_table(inventory, "player")
         team_table, team_id_column = choose_entity_table(inventory, "team")
@@ -597,6 +660,48 @@ def main() -> int:
                 tid = integer(first(row, "teamID", "team_id", "id"))
                 if tid:
                     team_meta[tid] = row
+
+        team_output_rows: list[dict[str, Any]] = []
+        for registered in registered_team_rows:
+            team_id = integer(first(registered, "__teamID", "teamID", "team_id"))
+            league_id = integer(first(registered, "__leagueID", "leagueID", "league_id"))
+            team = team_meta.get(team_id, {})
+
+            team_name = str(
+                first(team, "teamName", "name", "team_name")
+                or first(registered, "teamName", "team_name")
+                or f"Team {team_id}"
+            ).strip()
+            logo = str(
+                first(team, "teamLogo", "teamLogoUrl", "logo", "logoUrl", "image", "imageUrl")
+                or first(registered, "teamLogo", "teamLogoUrl", "logo", "logoUrl")
+                or ""
+            ).strip()
+            registered_at = date_text(
+                first(
+                    registered,
+                    "teamRegistered",
+                    "registeredAt",
+                    "registered_at",
+                    "dateRegistered",
+                    "createdAt",
+                    "created_at",
+                )
+            )
+
+            team_output_rows.append({
+                "source_league_id": league_id,
+                "source_team_id": team_id,
+                "team_name": team_name,
+                "team_logo_url": logo,
+                "registered_at": registered_at,
+                "raw_team": json_safe({
+                    "registered_team_source": registered_team_table,
+                    "team_source": team_table,
+                    "league_team": registered,
+                    "team": team or None,
+                }),
+            })
 
         # Build prices from each current roster player's SportsGamer match history
         # through the present day. This intentionally also works for older leagues:
@@ -732,16 +837,24 @@ def main() -> int:
         writer.writeheader()
         writer.writerows(output_rows)
 
+    TEAM_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    with TEAM_OUTPUT.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=TEAM_FIELDS)
+        writer.writeheader()
+        writer.writerows(team_output_rows)
+
     print(
-        f"Fantasy roster export complete: {len(output_rows)} current players "
-        f"from {roster_table} for leagues {LEAGUE_IDS}."
+        f"Fantasy SportsGamer export complete: {len(team_output_rows)} registered teams "
+        f"and {len(output_rows)} current players for leagues {LEAGUE_IDS}."
     )
 
     github_output = os.environ.get("GITHUB_OUTPUT")
     if github_output:
         with open(github_output, "a", encoding="utf-8") as handle:
             handle.write(f"player_count={len(output_rows)}\n")
+            handle.write(f"team_count={len(team_output_rows)}\n")
             handle.write(f"roster_source={roster_table}\n")
+            handle.write(f"registered_team_source={registered_team_table}\n")
             handle.write(f"player_source={player_table or ''}\n")
             handle.write(f"team_source={team_table or ''}\n")
 
