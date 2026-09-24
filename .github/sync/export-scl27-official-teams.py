@@ -114,10 +114,10 @@ def fetch_by_ids(connection: Any, table: str, id_column: str, values: list[int])
 
 def connect():
     host = os.environ.get("DB_HOST", "")
-    port = int(os.environ.get("DB_PORT", "3306"))
+    port = int(os.environ.get("DB_PORT") or "3306")
     if os.environ.get("SSH_HOST"):
         host = "127.0.0.1"
-        port = int(os.environ.get("SSH_LOCAL_DB_PORT", "3307"))
+        port = int(os.environ.get("SSH_LOCAL_DB_PORT") or "3307")
     return pymysql.connect(
         host=host,
         port=port,
