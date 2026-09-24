@@ -212,10 +212,29 @@
     return "";
   }
 
+  function usesScl27Teams() {
+    return Boolean(
+      scl27TeamDirectory.length &&
+      (
+        state.template === "team-presentation" ||
+        (state.league === "SCL" && String(state.leagueSeason || "").trim() === "27")
+      )
+    );
+  }
+
   function activeTeamDirectory() {
-    return state.template === "team-presentation" && scl27TeamDirectory.length
-      ? scl27TeamDirectory
-      : teamDirectory;
+    return usesScl27Teams() ? scl27TeamDirectory : teamDirectory;
+  }
+
+  function logoUrlForTeam(team) {
+    if (!team) return "";
+    const path = String(team.exactLogoUrl || "").trim();
+    if (path) {
+      if (/^https?:\/\//i.test(path)) return path;
+      return assetPrefix + path.replace(/^\/+/, "");
+    }
+    const file = logoFileFor(team.name,team.logoName || "");
+    return file ? assetPrefix + "teamlogos/" + encodeURIComponent(file).replace(/%2F/gi,"/") : "";
   }
 
   function logoUrl(teamName) {
@@ -224,13 +243,7 @@
       || teamDirectory.find(item => normalize(item.name) === normalize(teamName))
       || scl27TeamDirectory.find(item => normalize(item.name) === normalize(teamName))
       || null;
-    const path = String(team?.exactLogoUrl || "").trim();
-    if (path) {
-      if (/^https?:\/\//i.test(path)) return path;
-      return assetPrefix + path.replace(/^\/+/, "");
-    }
-    const file = logoFileFor(teamName,team?.logoName || ""); 
-    return file ? assetPrefix + "teamlogos/" + encodeURIComponent(file).replace(/%2F/gi,"/") : "";
+    return logoUrlForTeam(team);
   }
 
   function teamById(id) {
@@ -364,8 +377,14 @@
   }
 
   async function ensureTeamPalette(team) {
-    if (!team || team.jerseySettingsSource === "saved" || isPresetTeam(team)) return team;
-    const exactUrl = logoUrl(team.name);
+    if (
+      !team ||
+      team.jerseySettingsSource === "saved" ||
+      isPresetTeam(team) ||
+      team.paletteSource === "scl-source" ||
+      team.paletteSource === "mapped-team"
+    ) return team;
+    const exactUrl = logoUrlForTeam(team);
     if (!exactUrl) return blackWhiteFallback(team);
 
     const cacheKey = exactUrl;
@@ -458,7 +477,9 @@
   async function hydrateSavedJerseySettings(teams = teamDirectory) {
     const list = (Array.isArray(teams) ? teams : []).filter(Boolean);
     const teamIds = [...new Set(
-      list.map(team => Number(team.teamId)).filter(id => Number.isFinite(id) && id > 0)
+      list
+        .map(team => Number(team.jerseyTeamId || team.teamId))
+        .filter(id => Number.isFinite(id) && id > 0)
     )];
 
     if (!teamIds.length) return list;
@@ -472,8 +493,8 @@
     );
 
     list.forEach(team => {
-      const teamId = Number(team.teamId);
-      const saved = settingsByTeamId.get(teamId);
+      const jerseyTeamId = Number(team.jerseyTeamId || team.teamId);
+      const saved = settingsByTeamId.get(jerseyTeamId);
       if (!saved) {
         if (team.jerseySettingsSource === "saved") restoreAutomaticJerseyStyle(team);
         return;
@@ -778,35 +799,65 @@
   }
 
 
+  function validTeamHex(value) {
+    const hex = String(value || "").trim().toLowerCase();
+    return /^#[0-9a-f]{6}$/.test(hex) ? hex : "";
+  }
+
+  function scl27CanonicalName(name) {
+    const aliases = {
+      "ssk academy esport":"SSK Academy"
+    };
+    return aliases[normalize(name)] || String(name || "").trim();
+  }
+
   function buildScl27PresentationTeam(row,index) {
     const name = String(row?.team_name || "Okänt lag").trim();
     const preset = JERSEY_PRESETS.find(team => normalize(team.name) === normalize(name));
-    const teamId = Number(row?.sports_gamer_team_id) || 0;
+    const sportsGamerTeamId = Number(row?.sports_gamer_team_id) || 0;
     const exactLogoUrl = String(row?.team_logo_url || "").trim();
+    const leagueTeam = row?.source_snapshot?.raw_team?.league_team || {};
+    const sourcePrimary = validTeamHex(leagueTeam.primaryColor);
+    const sourceSecondary = validTeamHex(leagueTeam.secondaryColor);
+    const [fallbackPrimary,fallbackAccent,fallbackTrim,fallbackPattern] = fallbackPalette(index);
+    const sourceHasUsefulPair = Boolean(
+      sourcePrimary &&
+      sourceSecondary &&
+      sourcePrimary !== sourceSecondary
+    );
+    const sourceHasUsefulPrimary = Boolean(sourcePrimary && sourcePrimary !== "#ffffff");
+
+    const primary = sourceHasUsefulPrimary ? sourcePrimary : fallbackPrimary;
+    const accent = sourceHasUsefulPair ? sourceSecondary : fallbackAccent;
+    const trim = primary === "#ffffff" ? "#101214" : fallbackTrim;
+    const pattern = fallbackPattern;
+
     if (preset) {
       return {
         ...preset,
-        id:"scl27-" + teamId,
+        id:"scl27-" + sportsGamerTeamId,
         name,
-        teamId,
+        teamId:sportsGamerTeamId,
+        sportsGamerTeamId,
         division:"",
         exactLogoUrl,
         scl27Registered:true
       };
     }
-    const [primary,accent,trim,pattern] = fallbackPalette(index);
     return {
-      id:"scl27-" + teamId,
+      id:"scl27-" + sportsGamerTeamId,
       name,
       code:initials(name),
       primary,accent,trim,pattern,
       projectId:null,
-      teamId,
+      teamId:sportsGamerTeamId,
+      sportsGamerTeamId,
       division:"",
       logoName:"",
       exactLogoUrl,
       genericJersey:true,
-      scl27Registered:true
+      scl27Registered:true,
+      paletteSource:(sourceHasUsefulPrimary || sourceHasUsefulPair) ? "scl-source" : ""
     };
   }
 
@@ -823,7 +874,7 @@
     const [teamRowsRaw,playerRowsRaw] = await Promise.all([
       getPublicRows(
         "ehockey_fantasy_team_pool",
-        "select=sports_gamer_team_id,team_name,team_logo_url,source_league_id,is_available&competition_id=eq.2&source_league_id=eq.527&is_available=eq.true&order=team_name.asc"
+        "select=sports_gamer_team_id,team_name,team_logo_url,source_league_id,is_available,source_snapshot&competition_id=eq.2&source_league_id=eq.527&is_available=eq.true&order=team_name.asc"
       ),
       getPublicRows(
         "ehockey_fantasy_player_pool",
@@ -872,6 +923,71 @@
     return scl27TeamDirectory.length;
   }
 
+
+  async function syncScl27TeamStylesFromEclDirectory() {
+    if (!scl27TeamDirectory.length || !teamDirectory.length) return;
+
+    const eclByName = new Map(
+      teamDirectory.map(team => [normalize(team.name),team])
+    );
+
+    for (const sclTeam of scl27TeamDirectory) {
+      const canonicalName = scl27CanonicalName(sclTeam.name);
+      const source = eclByName.get(normalize(canonicalName));
+      if (!source) continue;
+
+      try {
+        await ensureTeamPalette(source);
+      } catch (_) {}
+
+      const jerseyTeamId = Number(source.teamId) || 0;
+      if (jerseyTeamId > 0) sclTeam.jerseyTeamId = jerseyTeamId;
+
+      sclTeam.primary = source.primary || sclTeam.primary;
+      sclTeam.accent = source.accent || sclTeam.accent;
+      sclTeam.trim = source.trim || sclTeam.trim;
+      sclTeam.pattern = source.pattern || sclTeam.pattern;
+      sclTeam.logoName = source.logoName || sclTeam.logoName;
+      sclTeam.paletteSource = source.jerseySettingsSource === "saved" ? "saved" : "mapped-team";
+      if (source.jerseySettingsSource === "saved") sclTeam.jerseySettingsSource = "saved";
+    }
+
+    try {
+      await hydrateSavedJerseySettings(scl27TeamDirectory);
+    } catch (error) {
+      console.warn("[Match Graphics] kunde inte mappa sparade SCL 27-tröjor",error);
+    }
+  }
+
+  async function reconcileActiveTeamSelection(preferredTeamName = "", preferredOpponentName = "") {
+    const directory = activeTeamDirectory();
+    if (!directory.length) return;
+
+    const currentTeam = directory.find(team => team.id === state.teamId);
+    const currentOpponent = directory.find(team => team.id === state.opponentId);
+    const preferredTeam = currentTeam
+      || directory.find(team => normalize(team.name) === normalize(preferredTeamName))
+      || directory[0];
+
+    state.teamId = preferredTeam.id;
+
+    const preferredOpponent = currentOpponent && currentOpponent.id !== state.teamId
+      ? currentOpponent
+      : directory.find(team =>
+          team.id !== state.teamId &&
+          normalize(team.name) === normalize(preferredOpponentName)
+        )
+        || directory.find(team => team.id !== state.teamId)
+        || preferredTeam;
+
+    state.opponentId = preferredOpponent.id;
+
+    await refreshSelectedTeamJerseys();
+    setDefaultLineup();
+    if (state.template === "team-presentation") setDefaultPresentationRoster();
+    await hydratePlayerPortraits(state.teamId);
+  }
+
   async function loadLagbyggeData() {
     const status = $("#dataStatus");
     if (status) status.textContent = "Hämtar lagdata…";
@@ -905,10 +1021,14 @@
         console.warn("[Match Graphics] kunde inte läsa sparade lagtröjor",error);
       }
 
-      const preferred = teamDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen"))
+      await syncScl27TeamStylesFromEclDirectory();
+
+      const activeDirectory = activeTeamDirectory();
+      const preferred = activeDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen"))
+        || activeDirectory[0]
         || teamDirectory[0];
       state.teamId = preferred.id;
-      state.opponentId = teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
+      state.opponentId = activeDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
 
       rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
       playerKeysByName = new Map();
@@ -2052,8 +2172,11 @@
     const position = teamPresentationPosition(cleanName);
     const number = teamPresentationNumber(cleanName);
     const clipId = "team-presentation-" + index + "-" + normalize(cleanName).replace(/\s+/g,"-");
-    const footerH = 43;
-    const imageH = height - footerH - 6;
+    const footerH = 31;
+    const portraitW = Math.min(112,width-26);
+    const portraitH = Math.max(112,height-8);
+    const portraitX = x + (width-portraitW)/2;
+    const portraitY = y + 4;
     const badge = position
       ? '<rect x="' + (x+9) + '" y="' + (y+9) + '" width="38" height="22" rx="11" fill="#05090e" fill-opacity=".90" stroke="#ffffff" stroke-opacity=".18"/>' +
         '<text x="' + (x+28) + '" y="' + (y+24) + '" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(position) + '</text>'
@@ -2067,7 +2190,7 @@
       '<defs><clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16"/></clipPath></defs>',
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16" fill="#07101a" fill-opacity=".94" stroke="#b8ddff" stroke-opacity=".18"/>',
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16" fill="' + team.primary + '" opacity=".18"/>',
-      '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + (y+4) + '" width="' + (width-8) + '" height="' + imageH + '" preserveAspectRatio="xMidYMin slice" clip-path="url(#' + clipId + ')"/>',
+      '<image href="' + esc(portrait) + '" x="' + portraitX + '" y="' + portraitY + '" width="' + portraitW + '" height="' + portraitH + '" preserveAspectRatio="xMidYMin meet" clip-path="url(#' + clipId + ')"/>',
       badge,
       numberBadge,
       '<rect x="' + x + '" y="' + (y+height-footerH) + '" width="' + width + '" height="' + footerH + '" fill="#04080d" fill-opacity=".96" clip-path="url(#' + clipId + ')"/>',
@@ -2080,10 +2203,10 @@
   function teamPresentationRosterGrid(players,team) {
     const rows = [players.slice(0,5),players.slice(5,10),players.slice(10,13)].filter(row => row.length);
     const cardW = 174;
-    const cardH = 132;
+    const cardH = 138;
     const gap = 12;
-    const rowGap = 14;
-    const firstY = 574;
+    const rowGap = 9;
+    const firstY = 562;
     return rows.map((row,rowIndex) => {
       const totalW = row.length * cardW + Math.max(0,row.length-1) * gap;
       const startX = (1080-totalW)/2;
@@ -2464,6 +2587,8 @@
         presentationReturnState = {
           teamId:state.teamId,
           opponentId:state.opponentId,
+          teamName:teamById(state.teamId)?.name || "",
+          opponentName:teamById(state.opponentId)?.name || "",
           league:state.league,
           leagueSeason:state.leagueSeason,
           leagueDivision:state.leagueDivision,
@@ -2489,18 +2614,26 @@
       } else if (leavingPresentation) {
         state.template = template;
         const saved = presentationReturnState || {};
-        state.teamId = teamDirectory.some(team => team.id === saved.teamId)
-          ? saved.teamId
-          : (teamDirectory[0]?.id || state.teamId);
-        state.opponentId = teamDirectory.some(team => team.id === saved.opponentId)
-          ? saved.opponentId
-          : (teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId);
         state.league = saved.league || state.league;
         state.leagueSeason = saved.leagueSeason ?? state.leagueSeason;
         state.leagueDivision = saved.leagueDivision ?? state.leagueDivision;
         state.format = FORMATS[saved.format] ? saved.format : "square";
-        presentationReturnState = null;
         syncCompetitionState();
+
+        const directory = activeTeamDirectory();
+        const restoredTeam = directory.find(team => team.id === saved.teamId)
+          || directory.find(team => normalize(team.name) === normalize(saved.teamName))
+          || directory[0];
+        state.teamId = restoredTeam?.id || state.teamId;
+
+        const restoredOpponent = directory.find(team =>
+          team.id !== state.teamId && team.id === saved.opponentId
+        ) || directory.find(team =>
+          team.id !== state.teamId && normalize(team.name) === normalize(saved.opponentName)
+        ) || directory.find(team => team.id !== state.teamId) || restoredTeam;
+        state.opponentId = restoredOpponent?.id || state.teamId;
+
+        presentationReturnState = null;
         await refreshSelectedTeamJerseys();
         setDefaultLineup();
         await hydratePlayerPortraits(state.teamId);
@@ -2537,16 +2670,24 @@
     render();
   });
 
-  $("#leagueSelect").addEventListener("change",event => {
+  $("#leagueSelect").addEventListener("change",async event => {
+    const previousTeamName = teamById(state.teamId)?.name || "";
+    const previousOpponentName = teamById(state.opponentId)?.name || "";
     state.league = LEAGUE_BRANDS[event.target.value] ? event.target.value : "CUSTOM";
     $("#customLeagueField").hidden = state.league !== "CUSTOM";
     syncCompetitionState();
+    await reconcileActiveTeamSelection(previousTeamName,previousOpponentName);
+    syncForm();
     render();
   });
 
-  $("#leagueSeasonInput").addEventListener("input",event => {
+  $("#leagueSeasonInput").addEventListener("input",async event => {
+    const previousTeamName = teamById(state.teamId)?.name || "";
+    const previousOpponentName = teamById(state.opponentId)?.name || "";
     state.leagueSeason = event.target.value;
     syncCompetitionState();
+    await reconcileActiveTeamSelection(previousTeamName,previousOpponentName);
+    syncForm();
     render();
   });
 
