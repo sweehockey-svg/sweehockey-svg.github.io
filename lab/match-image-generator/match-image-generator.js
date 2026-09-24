@@ -624,7 +624,7 @@
   }
 
   function setDefaultPresentationRoster() {
-    const players = state.presentationPlayers.filter(Boolean).slice(0,13);
+    const players = rosterFor(state.teamId).filter(Boolean).slice(0,13);
     state.presentationPlayers = Array.from({length:13},(_,index) => players[index] || "");
     state.presentationNumbers = Array(13).fill("");
   }
