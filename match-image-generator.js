@@ -80,7 +80,9 @@
     playerName:"eSWAHN",
     playerNumber:"21",
     lineup:{...EMPTY_LINEUP},
-    lineupNumbers:{...EMPTY_NUMBERS}
+    lineupNumbers:{...EMPTY_NUMBERS},
+    presentationPlayers:Array(13).fill(""),
+    presentationNumbers:Array(13).fill("")
   };
 
   const normalize = value => String(value || "")
@@ -620,6 +622,59 @@
     state.lineup = next;
     state.lineupNumbers = {...EMPTY_NUMBERS};
   }
+
+  function setDefaultPresentationRoster() {
+    const players = state.presentationPlayers.filter(Boolean).slice(0,13);
+    state.presentationPlayers = Array.from({length:13},(_,index) => players[index] || "");
+    state.presentationNumbers = Array(13).fill("");
+  }
+
+  function presentationRosterOptions(slotIndex) {
+    const players = rosterFor(state.teamId);
+    const selectedElsewhere = new Set(
+      state.presentationPlayers
+        .filter((player,index) => index !== slotIndex && player)
+        .map(normalize)
+    );
+    const current = state.presentationPlayers[slotIndex] || "";
+    return [
+      '<option value="">— Tom plats —</option>',
+      ...players.map(player =>
+        '<option value="' + esc(player) + '"' +
+        (normalize(player) === normalize(current) ? ' selected' : '') +
+        (selectedElsewhere.has(normalize(player)) ? ' disabled' : '') +
+        '>' + esc(player) + '</option>'
+      )
+    ].join("");
+  }
+
+  function syncPresentationRosterControls() {
+    const grid = $("#presentationRosterGrid");
+    if (!grid) return;
+    const roster = rosterFor(state.teamId);
+    for (let i=0;i<13;i++) {
+      const current = state.presentationPlayers[i] || "";
+      if (current && !roster.some(player => normalize(player) === normalize(current))) {
+        state.presentationPlayers[i] = "";
+        state.presentationNumbers[i] = "";
+      }
+    }
+    grid.innerHTML = Array.from({length:13},(_,index) => {
+      const value = esc(state.presentationNumbers[index] || "");
+      return '<div class="lineup-field">' +
+        '<label>SPELARE ' + (index+1) + '</label>' +
+        '<div class="lineup-pick-row">' +
+        '<select data-presentation-player="' + index + '"' + (!roster.length ? ' disabled' : '') + '>' +
+        presentationRosterOptions(index) +
+        '</select>' +
+        '<input class="lineup-number" data-presentation-number="' + index + '" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" value="' + value + '" aria-label="Spelare ' + (index+1) + ' tröjnummer">' +
+        '</div></div>';
+    }).join("");
+    const count = state.presentationPlayers.filter(Boolean).length;
+    const hint = $("#presentationRosterHint");
+    if (hint) hint.textContent = count + " / 13 valda";
+  }
+
 
   function applyAccessMode() {
     const select = $("#teamSelect");
@@ -1981,6 +2036,8 @@
 
   function teamPresentationNumber(name) {
     const normalized = normalize(name);
+    const presentationIndex = state.presentationPlayers.findIndex(player => normalize(player) === normalized);
+    if (presentationIndex >= 0) return cleanText(state.presentationNumbers[presentationIndex],2);
     for (const pos of POSITIONS) {
       if (normalize(state.lineup[pos]) === normalized) return cleanText(state.lineupNumbers[pos],2);
     }
@@ -2162,8 +2219,27 @@
     fillTeamSelect($("#teamSelect"),state.teamId);
     fillTeamSelect($("#opponentSelect"),state.opponentId);
     fillFormatSelect();
-    $("#formatSelect").disabled = state.template === "team-presentation";
+    const isPresentation = state.template === "team-presentation";
+    $("#formatSelect").disabled = isPresentation;
     $("#sideSelect").value = state.ownSide;
+
+    const presentationHiddenFields = [
+      "opponentField","sideField","badgeField","leagueField","leagueSeasonField",
+      "leagueDivisionField","customLeagueField","dateField","timeField","formatField"
+    ];
+    presentationHiddenFields.forEach(id => {
+      const element = $("#" + id);
+      if (element) element.hidden = isPresentation;
+    });
+    const matchTitle = $("#matchSectionTitle");
+    if (matchTitle) matchTitle.textContent = isPresentation ? "Lag" : "Match";
+    const startingSix = $("#startingSixSection");
+    if (startingSix) startingSix.hidden = isPresentation;
+    const streamSection = $("#streamSection");
+    if (streamSection) streamSection.hidden = isPresentation;
+    const presentationSection = $("#presentationRosterSection");
+    if (presentationSection) presentationSection.hidden = !isPresentation;
+    syncPresentationRosterControls();
     $("#leagueSelect").value = LEAGUE_BRANDS[state.league] ? state.league : "CUSTOM";
     $("#leagueSeasonInput").value = state.leagueSeason || "";
     $("#leagueDivisionSelect").value = state.leagueDivision || "";
@@ -2226,6 +2302,8 @@
     state.showPattern = true;
     state.lineupStyle = "cards";
     state.lineupNumbers = {...EMPTY_NUMBERS};
+    state.presentationPlayers = Array(13).fill("");
+    state.presentationNumbers = Array(13).fill("");
     state.streamPlatform = "none";
     state.streamChannel = "";
     applyAccessMode();
@@ -2404,6 +2482,7 @@
         }
         await refreshSelectedTeamJerseys();
         setDefaultLineup();
+        setDefaultPresentationRoster();
         await hydratePlayerPortraits(state.teamId);
       } else if (leavingPresentation) {
         state.template = template;
@@ -2437,6 +2516,7 @@
     ensureDifferentTeams("team");
     await refreshSelectedTeamJerseys();
     setDefaultLineup();
+    if (state.template === "team-presentation") setDefaultPresentationRoster();
     await hydratePlayerPortraits(state.teamId);
     syncForm();
     render();
@@ -2550,6 +2630,38 @@
       render();
     });
   });
+
+  const presentationRosterGrid = $("#presentationRosterGrid");
+  if (presentationRosterGrid) {
+    presentationRosterGrid.addEventListener("change",event => {
+      const select = event.target.closest("[data-presentation-player]");
+      if (!select) return;
+      const index = Number(select.dataset.presentationPlayer);
+      if (!Number.isInteger(index) || index < 0 || index >= 13) return;
+      const player = select.value;
+      if (player) {
+        for (let i=0;i<state.presentationPlayers.length;i++) {
+          if (i !== index && normalize(state.presentationPlayers[i]) === normalize(player)) {
+            state.presentationPlayers[i] = "";
+            state.presentationNumbers[i] = "";
+          }
+        }
+      }
+      state.presentationPlayers[index] = player;
+      syncPresentationRosterControls();
+      render();
+    });
+    presentationRosterGrid.addEventListener("input",event => {
+      const input = event.target.closest("[data-presentation-number]");
+      if (!input) return;
+      const index = Number(input.dataset.presentationNumber);
+      if (!Number.isInteger(index) || index < 0 || index >= 13) return;
+      const value = String(input.value || "").replace(/\D/g,"").slice(0,2);
+      input.value = value;
+      state.presentationNumbers[index] = value;
+      render();
+    });
+  }
 
   $("#resetButton").addEventListener("click",reset);
   $("#svgButton").addEventListener("click",exportSvg);
