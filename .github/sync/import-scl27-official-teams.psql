@@ -136,6 +136,12 @@ do update set
   updated_at=now();
 
 select public.seh_sync_scl27_official_teams();
+
+-- Laghistoriken läser materialiserade snapshots. Uppdatera dem i
+-- beroendeordning så nyregistrerade SCL-lag blir synliga direkt.
+refresh materialized view public.v_ehockey_team_tournaments;
+refresh materialized view public.v_ehockey_team_tournaments_all;
+
 select public.refresh_app_team_latest_leadership_cache();
 
 commit;
