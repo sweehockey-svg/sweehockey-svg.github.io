@@ -406,7 +406,9 @@
   }
 
   const observer = new MutationObserver(() => {
-    if (ensureUi()) schedule(250);
+    const uiMissing = !document.getElementById('seh-notification-button') ||
+      !document.getElementById('seh-notification-center');
+    if (uiMissing && ensureUi()) schedule(250);
   });
 
   function start() {
