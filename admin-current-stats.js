@@ -3,6 +3,11 @@
 
   const STORAGE_KEY = "seh_current_player_stats_sync_request_id";
   const SCL_STORAGE_KEY = "seh_scl27_official_teams_sync_request_id";
+  const STARTED_KEY = "seh_current_player_stats_sync_started_at";
+  const SCL_STARTED_KEY = "seh_scl27_official_teams_sync_started_at";
+  const STATUS_POLL_MS = 15000;
+  const STATUS_POLL_MAX_MS = 50 * 60 * 1000;
+  const ADMIN_BADGE_REFRESH_MS = 5 * 60 * 1000;
   const ADMIN_BADGE_STORAGE_KEY = "seh_admin_pending_badge_v1";
   const ADMIN_BADGE_CHANNEL = "seh_admin_pending_badge";
   let adminBadgeChannel = null;
@@ -221,7 +226,7 @@
   }
 
   function scheduleAdminBadgeWarmup() {
-    [0, 150, 450, 1000, 2200, 4500].forEach(function (delay) {
+    [0, 2000].forEach(function (delay) {
       window.setTimeout(function () {
         ensureAdminNavBadges();
         refreshAdminNavBadge();
@@ -234,7 +239,16 @@
     window.clearInterval(adminBadgeTimer);
     adminBadgeTimer = window.setInterval(function () {
       if (!document.hidden) refreshAdminNavBadge();
-    }, 15000);
+    }, ADMIN_BADGE_REFRESH_MS);
+  }
+
+  function pollingIsFresh(storageKey) {
+    const startedAt = Number(sessionStorage.getItem(storageKey) || 0);
+    return startedAt > 0 && Date.now() - startedAt <= STATUS_POLL_MAX_MS;
+  }
+
+  function stopPolling(storageKey) {
+    sessionStorage.removeItem(storageKey);
   }
 
   function requestId() {
@@ -322,9 +336,15 @@
         data.run_url || ""
       );
       if (continuePolling && !done) {
-        pollTimer = window.setTimeout(function () { refresh(true); }, 7000);
+        if (pollingIsFresh(STARTED_KEY)) {
+          pollTimer = window.setTimeout(function () { refresh(true); }, STATUS_POLL_MS);
+        } else {
+          setStatus("Statuskontrollen stoppades efter 50 minuter. Tryck Kontrollera status för en manuell kontroll.", "error", data.run_url || "");
+        }
       }
+      if (done) stopPolling(STARTED_KEY);
     } catch (error) {
+      stopPolling(STARTED_KEY);
       setStatus("Fel: " + (error?.message || error), "error");
     } finally {
       setBusy(false);
@@ -402,9 +422,15 @@
         data.run_url || ""
       );
       if (continuePolling && !done) {
-        sclPollTimer = window.setTimeout(function () { refreshScl(true); }, 7000);
+        if (pollingIsFresh(SCL_STARTED_KEY)) {
+          sclPollTimer = window.setTimeout(function () { refreshScl(true); }, STATUS_POLL_MS);
+        } else {
+          setSclStatus("Statuskontrollen stoppades efter 50 minuter. Tryck Kontrollera status för en manuell kontroll.", "error", data.run_url || "");
+        }
       }
+      if (done) stopPolling(SCL_STARTED_KEY);
     } catch (error) {
+      stopPolling(SCL_STARTED_KEY);
       setSclStatus("Fel: " + (error?.message || error), "error");
     } finally {
       setSclBusy(false);
@@ -441,12 +467,14 @@
       if (!window.confirm("Hämta SCL 27-lag, kaptener och registrerade trupper direkt från SportsGamer liga 527 nu?")) return;
       const id = makeId();
       sessionStorage.setItem(SCL_STORAGE_KEY, id);
+      sessionStorage.setItem(SCL_STARTED_KEY, String(Date.now()));
       setSclBusy(true);
       setSclStatus("Startar SCL 27-synkningen…", "working");
       try {
         await invokeScl("start");
         await refreshScl(true);
       } catch (error) {
+        stopPolling(SCL_STARTED_KEY);
         setSclStatus("Fel: " + (error?.message || error), "error");
         setSclBusy(false);
       }
@@ -457,7 +485,7 @@
     });
 
     setSclBusy(false);
-    if (sclRequestId()) refreshScl(true);
+    if (sclRequestId()) refreshScl(pollingIsFresh(SCL_STARTED_KEY));
   }
 
   function buildCard() {
@@ -531,12 +559,14 @@
       if (!window.confirm("Hämta ny statistik från aktuella SportsGamer-turneringar nu? Äldre turneringar lämnas orörda och SportsGamer-databasen läses endast.")) return;
       const id = makeId();
       sessionStorage.setItem(STORAGE_KEY, id);
+      sessionStorage.setItem(STARTED_KEY, String(Date.now()));
       setBusy(true);
       setStatus("Startar snabbkörningen…", "working");
       try {
         await invoke("start");
         await refresh(true);
       } catch (error) {
+        stopPolling(STARTED_KEY);
         setStatus("Fel: " + (error?.message || error), "error");
         setBusy(false);
       }
@@ -547,7 +577,7 @@
     });
 
     setBusy(false);
-    if (requestId()) refresh(true);
+    if (requestId()) refresh(pollingIsFresh(STARTED_KEY));
   }
 
   new MutationObserver(function () {
