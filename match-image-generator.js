@@ -2370,7 +2370,7 @@
     render();
   });
 
-  $("[data-template]").forEach(button => {
+  $$("[data-template]").forEach(button => {
     button.addEventListener("click",async () => {
       const requested = button.dataset.template;
       const template = ["classic","team-presentation","starting-six","versus","broadcast","minimal"].includes(requested)
