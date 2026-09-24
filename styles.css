@@ -8211,6 +8211,147 @@ body {
   }
 }
 
+
+/* ============================================================
+   LAGPROFIL V1.28.5 – SENASTE KAPTENER
+   Visar C/A från den senaste registrerade lagupplagan med
+   ledarskapsdata. Sektionen byggs dynamiskt i lagprofilen.
+   ============================================================ */
+#spaRouteView[data-route="team"] .team-leadership-section-v1285 {
+  margin-top: 18px;
+  padding: clamp(18px, 2.2vw, 28px);
+  border: 1px solid rgba(255, 213, 0, .38);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(255, 213, 0, .07), transparent 42%),
+    rgba(5, 14, 23, .78);
+}
+
+#spaRouteView[data-route="team"] .team-leadership-section-v1285[hidden] {
+  display: none !important;
+}
+
+#spaRouteView[data-route="team"] .team-leadership-heading-v1285 {
+  margin-bottom: 18px;
+}
+
+#spaRouteView[data-route="team"] #teamLeadershipEdition a {
+  color: inherit;
+  text-decoration: none;
+}
+
+#spaRouteView[data-route="team"] #teamLeadershipEdition a:hover {
+  color: var(--gold, #ffd500);
+}
+
+#spaRouteView[data-route="team"] .team-leadership-grid-v1285 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+#spaRouteView[data-route="team"] .team-leadership-card-v1285 {
+  position: relative;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  gap: 13px;
+  min-height: 82px;
+  padding: 12px 14px;
+  overflow: hidden;
+  border: 1px solid rgba(109, 181, 218, .26);
+  border-radius: 13px;
+  color: #f5f7fa;
+  text-decoration: none;
+  background: rgba(3, 11, 18, .72);
+  transition: border-color .18s ease, transform .18s ease, background-color .18s ease;
+}
+
+#spaRouteView[data-route="team"] a.team-leadership-card-v1285:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 213, 0, .72);
+  background: rgba(8, 24, 36, .9);
+}
+
+#spaRouteView[data-route="team"] .team-leadership-role-v1285 {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  display: grid;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  border: 1px solid rgba(255, 213, 0, .78);
+  border-radius: 8px;
+  color: #06101a;
+  font-size: .74rem;
+  font-weight: 950;
+  line-height: 1;
+  background: #ffd500;
+}
+
+#spaRouteView[data-route="team"] .team-leadership-role-v1285.is-a {
+  color: #ffd500;
+  background: rgba(255, 213, 0, .08);
+}
+
+#spaRouteView[data-route="team"] .team-leadership-avatar-v1285 {
+  width: 56px;
+  height: 56px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 50%;
+  background: #0b1824;
+}
+
+#spaRouteView[data-route="team"] .team-leadership-avatar-v1285 img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+#spaRouteView[data-route="team"] .team-leadership-copy-v1285 {
+  display: flex;
+  min-width: 0;
+  padding-right: 25px;
+  flex-direction: column;
+  gap: 3px;
+}
+
+#spaRouteView[data-route="team"] .team-leadership-copy-v1285 small {
+  color: #4fe6eb;
+  font-size: .61rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+#spaRouteView[data-route="team"] .team-leadership-copy-v1285 strong {
+  overflow: hidden;
+  color: #fff;
+  font-size: clamp(.94rem, 1.3vw, 1.13rem);
+  font-weight: 900;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  #spaRouteView[data-route="team"] .team-leadership-grid-v1285 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  #spaRouteView[data-route="team"] .team-leadership-grid-v1285 {
+    grid-template-columns: 1fr;
+  }
+
+  #spaRouteView[data-route="team"] .team-leadership-heading-v1285 {
+    align-items: flex-start;
+  }
+}
+
 @media (max-width: 920px) {
   #spaRouteView[data-route="team"] .history-hero {
     grid-template-columns: 1fr !important;

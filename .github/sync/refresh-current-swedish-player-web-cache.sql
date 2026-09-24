@@ -131,6 +131,7 @@ refresh materialized view concurrently
   public.v_ehockey_swedish_player_directory_base_v20;
 select public.refresh_app_player_directory_cache();
 select public.refresh_app_player_ranking_cache();
+select public.refresh_app_team_latest_leadership_cache();
 select pg_advisory_unlock(hashtext('seh_refresh_player_history_cache_v25'));
 
 select

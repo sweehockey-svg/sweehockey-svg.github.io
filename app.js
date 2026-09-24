@@ -6928,7 +6928,7 @@ function SEH_initTeam() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-08-31-v1284-team-hero-recommended";
+    const APP_BUILD = "2026-09-24-v1285-team-leadership";
     const config = window.EHOCKEY_CONFIG || {};
   
     console.info("eHockey Master team build:", APP_BUILD);
@@ -6953,6 +6953,9 @@ function SEH_initTeam() {
       divisionCurve: document.querySelector("#divisionCurve"),
       divisionCurveFirst: document.querySelector("#divisionCurveFirst"),
       divisionCurveLatest: document.querySelector("#divisionCurveLatest"),
+      teamLeadershipSection: null,
+      teamLeadershipGrid: null,
+      teamLeadershipEdition: null,
   
       winsCount: document.querySelector("#winsCount"),
       winsMetricNote: document.querySelector("#winsMetricNote"),
@@ -7011,6 +7014,7 @@ function SEH_initTeam() {
       allTimePlayers: [],
       playerCounts: new Map(),
       playerCache: new Map(),
+      latestLeadership: [],
       showAllPlayerCards: false,
       showAllTimeSkaters: false,
       showAllTimeGoalies: false,
@@ -7079,6 +7083,25 @@ function SEH_initTeam() {
       const stage = document.createElement("div");
       stage.className = "team-profile-tab-stage-v1280";
 
+      const leadership = document.createElement("section");
+      leadership.id = "teamLeadershipSection";
+      leadership.className = "history-section team-leadership-section-v1285";
+      leadership.hidden = true;
+      leadership.innerHTML = `
+        <div class="history-section-heading team-leadership-heading-v1285">
+          <div>
+            <p class="history-kicker history-kicker--gold">Lagledning</p>
+            <h2>Kapten &amp; assisterande</h2>
+            <p>Senast registrerade lagledning i lagets senaste upplaga med kaptensdata.</p>
+          </div>
+          <span class="history-section-count" id="teamLeadershipEdition"></span>
+        </div>
+        <div class="team-leadership-grid-v1285" id="teamLeadershipGrid"></div>
+      `;
+      elements.teamLeadershipSection = leadership;
+      elements.teamLeadershipGrid = leadership.querySelector("#teamLeadershipGrid");
+      elements.teamLeadershipEdition = leadership.querySelector("#teamLeadershipEdition");
+
       const panels = new Map();
       tabDefinitions.forEach(({ key, label }, index) => {
         const button = document.createElement("button");
@@ -7104,7 +7127,7 @@ function SEH_initTeam() {
         panels.set(key, panel);
       });
 
-      panels.get("overview").append(metrics, source);
+      panels.get("overview").append(metrics, leadership, source);
       panels.get("seasons").append(seasons, details);
       panels.get("players").append(players);
       panels.get("merits").append(elements.teamHonoursSection);
@@ -8384,6 +8407,45 @@ function SEH_initTeam() {
   
       return rows.map(normalizeAllTimePlayer);
     }
+
+    async function fetchLatestLeadership(teamId) {
+      const params = new URLSearchParams({
+        select: "*",
+        team_id: `eq.${teamId}`,
+        order: "captain_role.desc,display_gamertag.asc",
+        limit: "10"
+      });
+
+      try {
+        const rows = await fetchJson(
+          "app_team_latest_leadership_cache",
+          params
+        );
+
+        return rows.map((row) => ({
+          playerKey: row.player_key || "",
+          displayGamertag: row.display_gamertag || "Okänd spelare",
+          playerCountry: String(row.player_country || "").trim().toUpperCase(),
+          playerImage: row.player_image || "",
+          sportsGamerPlayerUrl: row.sports_gamer_player_url || "",
+          captainRole: String(row.captain_role || "").trim().toUpperCase(),
+          leagueId: nullableNumber(row.league_id),
+          competitionCode: row.competition_code || "",
+          competitionName: row.competition_name || "",
+          seasonLabel: row.season_label || "",
+          leagueName: row.league_name || "",
+          division: row.division || "",
+          teamNameInTournament: row.team_name_in_tournament || "",
+          leadershipDate: row.leadership_date || ""
+        }));
+      } catch (error) {
+        console.warn(
+          `${APP_BUILD}: kunde inte hämta lagets senaste kaptener; lagprofilen fortsätter utan sektionen.`,
+          error
+        );
+        return [];
+      }
+    }
   
     function teamNameKey(value) {
       return String(value || "")
@@ -9114,6 +9176,76 @@ function SEH_initTeam() {
         bestGoalie,
         bestGoalie ? formatSavePercentage(bestGoalie.totalGoalieSavePercentage) : "–"
       );
+    }
+
+    function renderTeamLeadership() {
+      const section = elements.teamLeadershipSection;
+      const grid = elements.teamLeadershipGrid;
+      const edition = elements.teamLeadershipEdition;
+      if (!section || !grid || !edition) return;
+
+      const leaders = [...state.latestLeadership].sort((a, b) =>
+        (a.captainRole === "C" ? 0 : 1) - (b.captainRole === "C" ? 0 : 1) ||
+        a.displayGamertag.localeCompare(b.displayGamertag, "sv")
+      );
+
+      grid.replaceChildren();
+      if (!leaders.length) {
+        section.hidden = true;
+        return;
+      }
+
+      section.hidden = false;
+      const source = leaders[0];
+      const sourceParts = uniqueValues([
+        source.seasonLabel || source.competitionName || source.leagueName,
+        source.division
+      ]);
+
+      if (source.leagueId) {
+        const link = document.createElement("a");
+        link.href = `#/lag/${encodeURIComponent(state.team.teamId)}/turnering/${encodeURIComponent(source.leagueId)}`;
+        link.textContent = sourceParts.join(" · ") || "Senaste registrerade upplaga";
+        link.title = "Öppna lagets turnering";
+        edition.replaceChildren(link);
+      } else {
+        edition.textContent = sourceParts.join(" · ") || "Senaste registrerade upplaga";
+      }
+
+      const fragment = document.createDocumentFragment();
+      leaders.forEach((player) => {
+        const card = document.createElement(player.playerKey ? "a" : "article");
+        card.className = "team-leadership-card-v1285";
+        if (player.playerKey) {
+          card.href = playerPageUrl(player.playerKey, player.displayGamertag);
+          card.title = `Öppna spelarprofilen för ${player.displayGamertag}`;
+        }
+
+        const role = document.createElement("span");
+        role.className = `team-leadership-role-v1285 is-${player.captainRole.toLowerCase()}`;
+        role.textContent = player.captainRole;
+        role.setAttribute(
+          "aria-label",
+          player.captainRole === "C" ? "Kapten" : "Assisterande kapten"
+        );
+
+        const avatar = createPlayerAvatar(player, "team-leadership-avatar-v1285");
+        const copy = document.createElement("span");
+        copy.className = "team-leadership-copy-v1285";
+
+        const label = document.createElement("small");
+        label.textContent = player.captainRole === "C"
+          ? "Kapten"
+          : "Assisterande kapten";
+
+        const name = document.createElement("strong");
+        name.textContent = player.displayGamertag;
+
+        copy.append(label, name);
+        card.append(role, avatar, copy);
+        fragment.append(card);
+      });
+      grid.append(fragment);
     }
   
   
@@ -11081,12 +11213,14 @@ function SEH_initTeam() {
           tournaments,
           allTimePlayers,
           playerCounts,
-          unlinkedTeamPlayers
+          unlinkedTeamPlayers,
+          latestLeadership
         ] = await Promise.all([
           fetchTournaments(team),
           fetchAllTimePlayers(teamId),
           fetchPlayerCounts(team),
-          fetchUnlinkedTeamPlayers(team)
+          fetchUnlinkedTeamPlayers(team),
+          fetchLatestLeadership(teamId)
         ]);
   
         const canonicalTournamentNames = uniqueValues(
@@ -11117,11 +11251,13 @@ function SEH_initTeam() {
           playerCounts,
           unlinkedTeamPlayers
         );
+        state.latestLeadership = latestLeadership;
         state.showAllPlayerCards = false;
         state.loadedAt = new Date();
   
         renderTeamHeader();
         renderSummary();
+        renderTeamLeadership();
         renderHonours();
         updateTeamMeritsTabVisibility();
         renderSeasonCompetitionFilters();
