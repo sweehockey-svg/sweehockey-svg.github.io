@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const REFRESH_MS = 60000;
+  const REFRESH_MS = 300000;
   let client = null;
   let timer = 0;
   let busy = false;

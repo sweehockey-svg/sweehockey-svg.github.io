@@ -20,7 +20,7 @@ window.EHOCKEY_CONFIG = {
   document.head.appendChild(css);
 
   const script = document.createElement('script');
-  script.src = '/header-admin-pending-v1.js?v=20260924-3-loop-stop';
+  script.src = '/header-admin-pending-v1.js?v=20260924-4-five-minute-poll';
   script.defer = true;
   document.head.appendChild(script);
 })();
