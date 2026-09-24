@@ -23,6 +23,7 @@
   let rostersByTeamId = new Map();
   let playerKeysByName = new Map();
   let playerPortraits = new Map();
+  let playerMetaByName = new Map();
   let dataSource = "testdata";
 
   const FORMATS = {
@@ -500,7 +501,10 @@
 
   async function hydratePlayerPortraits(teamId) {
     const names = rosterFor(teamId).filter(Boolean);
-    const missing = names.filter(name => !playerPortraits.has(normalize(name)));
+    const missing = names.filter(name => {
+      const normalized = normalize(name);
+      return !playerPortraits.has(normalized) || !playerMetaByName.has(normalized);
+    });
     if (!missing.length) return;
 
     await Promise.all(missing.map(async name => {
@@ -512,13 +516,17 @@
           : "display_gamertag=eq." + encodeURIComponent(name);
         const rows = await getPublicRows(
           "app_player_directory_cache",
-          "select=player_key,display_gamertag,player_image,sports_gamer_player_url&" + filter + "&limit=1"
+          "select=player_key,display_gamertag,player_image,sports_gamer_player_url,primary_position&" + filter + "&limit=1"
         );
         const row = Array.isArray(rows) ? rows[0] : null;
         playerPortraits.set(normalized,portraitUrlFromRow(row));
+        playerMetaByName.set(normalized,{
+          primaryPosition:String(row?.primary_position || "").trim().toUpperCase()
+        });
       } catch (error) {
         console.warn("[Match Graphics] kunde inte hämta spelarporträtt för",name,error);
         playerPortraits.set(normalized,defaultPlayerImageUrl());
+        playerMetaByName.set(normalized,{primaryPosition:""});
       }
     }));
   }
@@ -1836,9 +1844,128 @@
     ].join("");
   }
 
+
+  function teamPresentationPosition(name) {
+    const normalized = normalize(name);
+    for (const pos of POSITIONS) {
+      if (normalize(state.lineup[pos]) === normalized) return pos;
+    }
+    return String(playerMetaByName.get(normalized)?.primaryPosition || "").toUpperCase();
+  }
+
+  function teamPresentationNumber(name) {
+    const normalized = normalize(name);
+    for (const pos of POSITIONS) {
+      if (normalize(state.lineup[pos]) === normalized) return cleanText(state.lineupNumbers[pos],2);
+    }
+    return "";
+  }
+
+  function teamPresentationPlayerCard(name,index,x,y,width,height,team) {
+    const cleanName = cleanText(name,20) || "PLAYER";
+    const portrait = portraitUrlForPlayer(cleanName) || defaultPlayerImageUrl();
+    const position = teamPresentationPosition(cleanName);
+    const number = teamPresentationNumber(cleanName);
+    const clipId = "team-presentation-" + index + "-" + normalize(cleanName).replace(/\s+/g,"-");
+    const footerH = 43;
+    const imageH = height - footerH - 6;
+    const badge = position
+      ? '<rect x="' + (x+9) + '" y="' + (y+9) + '" width="38" height="22" rx="11" fill="#05090e" fill-opacity=".90" stroke="#ffffff" stroke-opacity=".18"/>' +
+        '<text x="' + (x+28) + '" y="' + (y+24) + '" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(position) + '</text>'
+      : "";
+    const numberBadge = number
+      ? '<rect x="' + (x+width-44) + '" y="' + (y+9) + '" width="35" height="22" rx="11" fill="#05090e" fill-opacity=".90" stroke="#ffffff" stroke-opacity=".18"/>' +
+        '<text x="' + (x+width-26.5) + '" y="' + (y+24) + '" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>'
+      : "";
+    return [
+      '<g>',
+      '<defs><clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16"/></clipPath></defs>',
+      '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16" fill="#07101a" fill-opacity=".94" stroke="#b8ddff" stroke-opacity=".18"/>',
+      '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16" fill="' + team.primary + '" opacity=".18"/>',
+      '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + (y+4) + '" width="' + (width-8) + '" height="' + imageH + '" preserveAspectRatio="xMidYMin slice" clip-path="url(#' + clipId + ')"/>',
+      badge,
+      numberBadge,
+      '<rect x="' + x + '" y="' + (y+height-footerH) + '" width="' + width + '" height="' + footerH + '" fill="#04080d" fill-opacity=".96" clip-path="url(#' + clipId + ')"/>',
+      '<rect x="' + x + '" y="' + (y+height-footerH) + '" width="' + width + '" height="2.5" fill="' + team.accent + '" fill-opacity=".72" clip-path="url(#' + clipId + ')"/>',
+      '<text x="' + (x+10) + '" y="' + (y+height-16) + '" fill="#ffffff" font-size="13" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanName) + '</text>',
+      '</g>'
+    ].join("");
+  }
+
+  function teamPresentationRosterGrid(players,team) {
+    const rows = [players.slice(0,5),players.slice(5,10),players.slice(10,13)].filter(row => row.length);
+    const cardW = 174;
+    const cardH = 132;
+    const gap = 12;
+    const rowGap = 14;
+    const firstY = 574;
+    return rows.map((row,rowIndex) => {
+      const totalW = row.length * cardW + Math.max(0,row.length-1) * gap;
+      const startX = (1080-totalW)/2;
+      const y = firstY + rowIndex * (cardH + rowGap);
+      return row.map((name,colIndex) =>
+        teamPresentationPlayerCard(
+          name,
+          rowIndex*5+colIndex,
+          startX + colIndex*(cardW+gap),
+          y,
+          cardW,
+          cardH,
+          team
+        )
+      ).join("");
+    }).join("");
+  }
+
+  function buildTeamPresentationSvg() {
+    const team = teamById(state.teamId);
+    const players = rosterFor(state.teamId).filter(Boolean).slice(0,13);
+    const league = getLeagueDisplay();
+    const competition = esc(cleanText(league.title,28).toUpperCase() || "SVENSK eHOCKEY");
+    const division = esc(cleanText(league.division || team.division,16).toUpperCase());
+    const teamName = esc(team.name);
+    const jersey = premiumJerseySvg(team,{variant:state.ownSide === "away" ? "away" : "home",side:"front",compact:false});
+    const rosterCount = players.length;
+    const rosterLabel = rosterCount + (rosterCount === 1 ? " SPELARE" : " SPELARE");
+    const grid = teamPresentationRosterGrid(players,team);
+
+    return [
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" role="img" aria-label="Lagpresentation ' + teamName + '">',
+      '<defs>',
+      '<linearGradient id="team-presentation-overlay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + team.primary + '" stop-opacity=".64"/><stop offset=".50" stop-color="#06101a" stop-opacity=".82"/><stop offset="1" stop-color="#02070c" stop-opacity=".96"/></linearGradient>',
+      '<radialGradient id="team-presentation-glow" cx="35%" cy="34%" r="55%"><stop offset="0" stop-color="' + team.accent + '" stop-opacity=".20"/><stop offset=".52" stop-color="#55aaff" stop-opacity=".08"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></radialGradient>',
+      '<linearGradient id="team-presentation-panel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".065"/><stop offset="1" stop-color="#ffffff" stop-opacity=".015"/></linearGradient>',
+      '<filter id="team-presentation-shadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000000" flood-opacity=".55"/></filter>',
+      '</defs>',
+      backgroundImageSvg(1080,1080,1),
+      '<rect width="1080" height="1080" fill="#02070c" opacity=".34"/>',
+      '<rect width="1080" height="1080" fill="url(#team-presentation-overlay)"/>',
+      '<rect width="1080" height="1080" fill="url(#team-presentation-glow)"/>',
+      state.showPattern === false ? '' : svgLogo(team,610,90,430,.055),
+      state.showPattern === false ? '' : '<path d="M0 495 H1080" stroke="#ffffff" stroke-opacity=".08"/><path d="M70 530 H1010" stroke="' + team.accent + '" stroke-opacity=".20"/>',
+
+      '<text x="540" y="66" text-anchor="middle" fill="#ffffff" font-size="48" font-weight="1000" font-family="Arial Black,Arial,Helvetica,sans-serif" letter-spacing="2">TEAM PRESENTATION</text>',
+      '<text x="540" y="105" text-anchor="middle" fill="#ffffff" fill-opacity=".58" font-size="14" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="4">' + competition + (division ? ' · ' + division : '') + '</text>',
+
+      '<g filter="url(#team-presentation-shadow)">' + placedJersey(jersey,92,150,335) + '</g>',
+      svgLogo(team,700,172,165,.96),
+      '<text x="782" y="384" text-anchor="middle" fill="#ffffff" font-size="43" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + teamName + '</text>',
+      '<line x1="610" y1="409" x2="954" y2="409" stroke="' + team.accent + '" stroke-opacity=".72" stroke-width="3"/>',
+      '<text x="782" y="446" text-anchor="middle" fill="#ffffff" fill-opacity=".52" font-size="13" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">FULL ROSTER · ' + rosterLabel + '</text>',
+
+      '<rect x="54" y="525" width="972" height="482" rx="28" fill="url(#team-presentation-panel)" stroke="#b8ddff" stroke-opacity=".13"/>',
+      '<text x="540" y="558" text-anchor="middle" fill="#ffffff" fill-opacity=".82" font-size="15" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="5">ROSTER</text>',
+      grid || '<text x="540" y="760" text-anchor="middle" fill="#ffffff" fill-opacity=".42" font-size="24" font-weight="800" font-family="Arial,Helvetica,sans-serif">INGA SPELARE I AKTUELL ROSTER</text>',
+
+      '<text x="540" y="1053" text-anchor="middle" fill="#ffffff" fill-opacity=".32" font-size="11" font-weight="800" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">SVENSK eHOCKEY · TEAM PRESENTATION</text>',
+      '</svg>'
+    ].join("");
+  }
+
   function buildMatchSvg() {
     let svg = "";
-    if (state.template === "starting-six") svg = buildStartingSixSvg();
+    if (state.template === "team-presentation") svg = buildTeamPresentationSvg();
+    else if (state.template === "starting-six") svg = buildStartingSixSvg();
     else if (state.template === "versus") svg = buildVersusSvg();
     else if (state.template === "broadcast") svg = buildBroadcastSvg();
     else if (state.template === "minimal") svg = buildMinimalSvg();
@@ -1908,6 +2035,7 @@
     fillTeamSelect($("#teamSelect"),state.teamId);
     fillTeamSelect($("#opponentSelect"),state.opponentId);
     fillFormatSelect();
+    $("#formatSelect").disabled = state.template === "team-presentation";
     $("#sideSelect").value = state.ownSide;
     $("#leagueSelect").value = LEAGUE_BRANDS[state.league] ? state.league : "CUSTOM";
     $("#leagueSeasonInput").value = state.leagueSeason || "";
@@ -2110,12 +2238,16 @@
     render();
   });
 
-  $$("[data-template]").forEach(button => {
-    button.addEventListener("click",() => {
+  $("[data-template]").forEach(button => {
+    button.addEventListener("click",async () => {
       const template = button.dataset.template;
-      state.template = ["classic","starting-six","versus","broadcast","minimal"].includes(template)
+      state.template = ["classic","team-presentation","starting-six","versus","broadcast","minimal"].includes(template)
         ? template
         : "classic";
+      if (state.template === "team-presentation") {
+        state.format = "square";
+        await hydratePlayerPortraits(state.teamId);
+      }
       syncForm();
       render();
     });
@@ -2185,7 +2317,10 @@
   });
 
   $("#formatSelect").addEventListener("change",event => {
-    state.format = FORMATS[event.target.value] ? event.target.value : "square";
+    state.format = state.template === "team-presentation"
+      ? "square"
+      : (FORMATS[event.target.value] ? event.target.value : "square");
+    syncForm();
     render();
   });
 
