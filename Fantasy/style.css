@@ -2745,6 +2745,9 @@ a{color:inherit}
     0 18px 40px rgba(0,0,0,.24),
     0 0 0 1px rgba(219,83,96,.12)!important;
 }
+.fantasy-slot.is-unavailable-player{
+  background:linear-gradient(145deg,rgba(78,12,20,.94),rgba(18,8,13,.96))!important;
+}
 .fantasy-slot__invalid-note{
   margin-top:6px!important;
   color:#ff8f99!important;

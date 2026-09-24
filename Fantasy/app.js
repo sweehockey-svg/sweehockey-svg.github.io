@@ -85,10 +85,10 @@
       owned:"Ägd", captain:"Kapten", form:"FORM", last_5_matches:"Senaste 5 matcher", outcome:"UTFALL", registered_stats:"Registrerad statistik",
       goals:"Mål", assists:"Assist", blocks:"Block", goalie_wins:"MV-vinster", saves:"Räddningar", shutouts:"Nollor",
       leaderboard_empty:"Topplistan är tom. Den fylls när Fantasy-lag börjar skapas.", show_team:"Visa lag →",
-      saved_points:"SPARADE {league}-POÄNG", league_points:"{league}-POÄNG", replace_invalid:"BYT OGILTIG SPELARE",
+      saved_points:"SPARADE {league}-POÄNG", league_points:"{league}-POÄNG", replace_invalid:"BYT OGILTIG SPELARE", replace_unavailable:"BYT BORTTAGEN SPELARE",
       choose_six:"VÄLJ 6 SPELARE", choose_captain:"VÄLJ KAPTEN", over_budget:"ÖVER BUDGET", team_saved:"{league}-LAG SPARAT",
       update_team:"UPPDATERA {league}-LAG", save_league_team:"SPARA {league}-LAG", choose_slot:"Välj {slot}", eligible_count:"{count} valbara",
-      awaiting_real_matches:"Inväntar riktiga matcher", club_upper:"KLUBB", invalid_slot:"Ej giltig som {slot} · välj Byt",
+      awaiting_real_matches:"Inväntar riktiga matcher", club_upper:"KLUBB", invalid_slot:"Ej giltig som {slot} · välj Byt", unavailable_player:"Inte längre i aktuell SCL-trupp · byt gratis före deadline",
       make_captain:"Gör kapten", swap:"Byt", captain_upper_action:"KAPTEN", no_match_points:"Ingen matchpoäng registrerad",
       points_remain:"Poängen ligger kvar i totalen", choose_position:"Välj position", add:"Lägg till", no_pool:"Spelarpoolen är inte publicerad ännu.",
       ownership_period_default:"senast låsta Fantasy-period", locked_fantasy_teams:"{entries} låsta Fantasy-lag",
@@ -177,10 +177,10 @@
       owned:"Owned", captain:"Captain", form:"FORM", last_5_matches:"Last 5 games", outcome:"OUTPUT", registered_stats:"Registered stats",
       goals:"Goals", assists:"Assists", blocks:"Blocks", goalie_wins:"Goalie wins", saves:"Saves", shutouts:"Shutouts",
       leaderboard_empty:"The leaderboard is empty. It fills when Fantasy teams are created.", show_team:"View team →",
-      saved_points:"SAVED {league} POINTS", league_points:"{league} POINTS", replace_invalid:"REPLACE INVALID PLAYER",
+      saved_points:"SAVED {league} POINTS", league_points:"{league} POINTS", replace_invalid:"REPLACE INVALID PLAYER", replace_unavailable:"REPLACE REMOVED PLAYER",
       choose_six:"CHOOSE 6 PLAYERS", choose_captain:"CHOOSE CAPTAIN", over_budget:"OVER BUDGET", team_saved:"{league} TEAM SAVED",
       update_team:"UPDATE {league} TEAM", save_league_team:"SAVE {league} TEAM", choose_slot:"Choose {slot}", eligible_count:"{count} eligible",
-      awaiting_real_matches:"Waiting for real games", club_upper:"CLUB", invalid_slot:"Invalid as {slot} · choose Swap",
+      awaiting_real_matches:"Waiting for real games", club_upper:"CLUB", invalid_slot:"Invalid as {slot} · choose Swap", unavailable_player:"No longer on the current SCL roster · replace for free before the deadline",
       make_captain:"Make captain", swap:"Swap", captain_upper_action:"CAPTAIN", no_match_points:"No match points registered",
       points_remain:"Points remain in the total", choose_position:"Choose position", add:"Add", no_pool:"The player pool has not been published yet.",
       ownership_period_default:"latest locked Fantasy period", locked_fantasy_teams:"{entries} locked Fantasy teams",
@@ -269,10 +269,10 @@
       owned:"Omistus", captain:"Kapteeni", form:"VIRE", last_5_matches:"Viimeiset 5 ottelua", outcome:"TULOS", registered_stats:"Rekisteröidyt tilastot",
       goals:"Maalit", assists:"Syötöt", blocks:"Blokit", goalie_wins:"MV-voitot", saves:"Torjunnat", shutouts:"Nollapelit",
       leaderboard_empty:"Sarjataulukko on tyhjä. Se täyttyy, kun Fantasy-joukkueita luodaan.", show_team:"Näytä joukkue →",
-      saved_points:"TALLENNETUT {league}-PISTEET", league_points:"{league}-PISTEET", replace_invalid:"VAIHDA VIRHEELLINEN PELAAJA",
+      saved_points:"TALLENNETUT {league}-PISTEET", league_points:"{league}-PISTEET", replace_invalid:"VAIHDA VIRHEELLINEN PELAAJA", replace_unavailable:"VAIHDA POISTETTU PELAAJA",
       choose_six:"VALITSE 6 PELAAJAA", choose_captain:"VALITSE KAPTEENI", over_budget:"BUDJETTI YLITTYI", team_saved:"{league}-JOUKKUE TALLENNETTU",
       update_team:"PÄIVITÄ {league}-JOUKKUE", save_league_team:"TALLENNA {league}-JOUKKUE", choose_slot:"Valitse {slot}", eligible_count:"{count} valittavissa",
-      awaiting_real_matches:"Odottaa oikeita otteluita", club_upper:"SEURA", invalid_slot:"Ei kelpaa paikalle {slot} · valitse Vaihda",
+      awaiting_real_matches:"Odottaa oikeita otteluita", club_upper:"SEURA", invalid_slot:"Ei kelpaa paikalle {slot} · valitse Vaihda", unavailable_player:"Ei enää nykyisessä SCL-kokoonpanossa · vaihda ilmaiseksi ennen määräaikaa",
       make_captain:"Tee kapteeniksi", swap:"Vaihda", captain_upper_action:"KAPTEENI", no_match_points:"Ei rekisteröityjä ottelupisteitä",
       points_remain:"Pisteet säilyvät kokonaispisteissä", choose_position:"Valitse pelipaikka", add:"Lisää", no_pool:"Pelaajapoolia ei ole vielä julkaistu.",
       ownership_period_default:"viimeisin lukittu Fantasy-jakso", locked_fantasy_teams:"{entries} lukittua Fantasy-joukkuetta",
@@ -361,10 +361,10 @@
       owned:"Besitz", captain:"Kapitän", form:"FORM", last_5_matches:"Letzte 5 Spiele", outcome:"ERGEBNIS", registered_stats:"Registrierte Statistiken",
       goals:"Tore", assists:"Assists", blocks:"Blocks", goalie_wins:"Torhüter-Siege", saves:"Paraden", shutouts:"Shutouts",
       leaderboard_empty:"Die Rangliste ist leer. Sie füllt sich, sobald Fantasy-Teams erstellt werden.", show_team:"Team ansehen →",
-      saved_points:"GESPEICHERTE {league}-PUNKTE", league_points:"{league}-PUNKTE", replace_invalid:"UNGÜLTIGEN SPIELER ERSETZEN",
+      saved_points:"GESPEICHERTE {league}-PUNKTE", league_points:"{league}-PUNKTE", replace_invalid:"UNGÜLTIGEN SPIELER ERSETZEN", replace_unavailable:"ENTFERNTEN SPIELER ERSETZEN",
       choose_six:"6 SPIELER WÄHLEN", choose_captain:"KAPITÄN WÄHLEN", over_budget:"ÜBER BUDGET", team_saved:"{league}-TEAM GESPEICHERT",
       update_team:"{league}-TEAM AKTUALISIEREN", save_league_team:"{league}-TEAM SPEICHERN", choose_slot:"{slot} wählen", eligible_count:"{count} verfügbar",
-      awaiting_real_matches:"Wartet auf echte Spiele", club_upper:"VEREIN", invalid_slot:"Ungültig als {slot} · Wechseln wählen",
+      awaiting_real_matches:"Wartet auf echte Spiele", club_upper:"VEREIN", invalid_slot:"Ungültig als {slot} · Wechseln wählen", unavailable_player:"Nicht mehr im aktuellen SCL-Kader · vor der Deadline kostenlos ersetzen",
       make_captain:"Zum Kapitän machen", swap:"Wechseln", captain_upper_action:"KAPITÄN", no_match_points:"Keine Spielpunkte registriert",
       points_remain:"Punkte bleiben in der Gesamtsumme", choose_position:"Position wählen", add:"Hinzufügen", no_pool:"Der Spielerpool ist noch nicht veröffentlicht.",
       ownership_period_default:"letzte gesperrte Fantasy-Periode", locked_fantasy_teams:"{entries} gesperrte Fantasy-Teams",
@@ -1300,9 +1300,14 @@
     const used = usedBudget();
     const captainId = [...state.picks.values()].find((pick) => pick.isCaptain)?.player?.id || null;
     const saveButton = $("saveTeam");
+    const unavailableSlots = new Set(
+      [...state.picks.entries()]
+        .filter(([, pick]) => pick.player?.is_available === false)
+        .map(([slot]) => slot)
+    );
     const invalidSlots = new Set(
       [...state.picks.entries()]
-        .filter(([slot, pick]) => !eligibleSlots(pick.player).includes(slot))
+        .filter(([slot, pick]) => pick.player?.is_available === false || !eligibleSlots(pick.player).includes(slot))
         .map(([slot]) => slot)
     );
     const savedRosterIsCurrent = draftMatchesSavedRoster() && invalidSlots.size === 0;
@@ -1337,8 +1342,10 @@
 
       saveButton.disabled = !canSave;
       saveButton.classList.toggle("is-saved", savedAndUnchanged);
-      saveButton.textContent = invalidSlots.size > 0
-        ? t("replace_invalid")
+      saveButton.textContent = unavailableSlots.size > 0
+        ? t("replace_unavailable")
+        : invalidSlots.size > 0
+          ? t("replace_invalid")
         : !complete
           ? t("choose_six")
           : !hasCaptain
@@ -1376,6 +1383,7 @@
       const player = pick.player;
       const captain = Number(captainId) === Number(player.id);
       const invalidSlot = invalidSlots.has(slot);
+      const unavailable = unavailableSlots.has(slot);
       const flag = countryFlagMarkup(player.country_code);
       const savedScore = savedScoreBreakdown(slot, pick);
       const scoreMarkup = savedScore && savedScore.games > 0
@@ -1394,6 +1402,7 @@
       slotEl.classList.add("is-filled");
       slotEl.classList.toggle("is-captain-card", captain);
       slotEl.classList.toggle("is-invalid-slot", invalidSlot);
+      slotEl.classList.toggle("is-unavailable-player", unavailable);
 
       slotEl.innerHTML = `
         <div class="fantasy-slot__player fantasy-slot__player--club">
@@ -1415,7 +1424,11 @@
                 </span>
               </small>
               <small class="fantasy-slot__meta">${escapeHtml(eligibleSlots(player).join(" / "))} · ${format(player.price)} CR</small>
-              ${invalidSlot ? '<small class="fantasy-slot__invalid-note">' + escapeHtml(t("invalid_slot",{slot})) + '</small>' : ""}
+              ${unavailable
+                ? '<small class="fantasy-slot__invalid-note">' + escapeHtml(t("unavailable_player")) + '</small>'
+                : invalidSlot
+                  ? '<small class="fantasy-slot__invalid-note">' + escapeHtml(t("invalid_slot",{slot})) + '</small>'
+                  : ""}
             </div>
           </div>
           ${scoreMarkup}
@@ -2541,6 +2554,7 @@
 
       const transfer = data?.transfer || {};
       const transferCount = number(transfer.count);
+      const forcedReplacementCount = number(transfer.forced_replacement_count);
       const paidCount = number(transfer.paid_count);
       const penalty = number(transfer.penalty_points);
       const unlimited = Boolean(transfer.unlimited);
@@ -2558,13 +2572,17 @@
         ? leagueCode() + "-laget är uppdaterat."
         : leagueCode() + "-laget är sparat.";
 
-      if (transferCount > 0) {
+      if (forcedReplacementCount > 0) {
+        successText += " " + forcedReplacementCount + " borttagen spelare ersattes gratis.";
+      }
+
+      if (transferCount - forcedReplacementCount > 0) {
         successText += unlimited
-          ? " " + transferCount + " byte är gratis inför säsongen/i fri bytesperiod."
+          ? " " + (transferCount - forcedReplacementCount) + " byte är gratis inför säsongen/i fri bytesperiod."
           : paidCount > 0
-            ? " " + transferCount + " byte · straff −" + format(penalty) + " P."
-            : " " + transferCount + " gratis byte använt.";
-      } else if (hadEntry) {
+            ? " " + (transferCount - forcedReplacementCount) + " byte · straff −" + format(penalty) + " P."
+            : " " + (transferCount - forcedReplacementCount) + " gratis byte använt.";
+      } else if (hadEntry && transferCount === 0) {
         successText += " Kaptensbyte/positionsändring kostar inget.";
       }
 
