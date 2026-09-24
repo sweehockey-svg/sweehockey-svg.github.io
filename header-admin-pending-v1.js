@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const REFRESH_MS = 15000;
+  const REFRESH_MS = 60000;
   let client = null;
   let timer = 0;
   let busy = false;
@@ -99,8 +99,8 @@
 
   const observer = new MutationObserver(() => {
     hideLegacyAdminLinks();
-    ensureBadge();
-    schedule();
+    const badgeMissing = !document.getElementById('sehNavAdminPending');
+    if (badgeMissing && ensureBadge()) refresh();
   });
 
   document.addEventListener('DOMContentLoaded', () => {
