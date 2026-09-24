@@ -91,6 +91,7 @@ jobs:
             echo "- SportsGamer league: **527**"
             echo "- Lag hämtade: **${{ steps.export.outputs.team_count || 0 }}**"
             echo "- Roster-spelare hämtade: **${{ steps.export.outputs.player_count || 0 }}**"
+            echo "- Exportsteg: **${{ steps.export.outputs.diagnostic_stage || 'okänt' }}**"
             echo ""
             echo "Källan läses direkt från SportsGamer i read-only-läge."
             echo "Ingen Fantasy-tabell eller Fantasy-workflow används."

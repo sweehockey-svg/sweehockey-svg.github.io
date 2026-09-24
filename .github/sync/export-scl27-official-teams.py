@@ -24,6 +24,13 @@ ROSTER_OUT = Path("/tmp/scl27_official_roster.csv")
 POSITION_BY_ID = {1: "LW", 2: "C", 3: "RW", 4: "LD", 5: "RD", 6: "G"}
 
 
+def diagnostic_stage(value: str) -> None:
+    output = os.environ.get("GITHUB_OUTPUT")
+    if output:
+        with open(output, "a", encoding="utf-8") as handle:
+            handle.write(f"diagnostic_stage={value}\n")
+
+
 def text(value: Any) -> str:
     return "" if value is None else str(value).strip()
 
@@ -128,6 +135,7 @@ def connect():
 
 
 def load_source_rows(connection: Any) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[int, dict[str, Any]], dict[int, dict[str, Any]]]:
+    diagnostic_stage("schema_inventory")
     inventory = table_inventory(connection)
     team_columns = inventory.get("nhlgamer_leagueTeams", [])
     league_column = column_name(team_columns, "leagueID", "league_id")
@@ -135,6 +143,7 @@ def load_source_rows(connection: Any) -> tuple[list[dict[str, Any]], list[dict[s
     if not league_column or not team_column:
         raise RuntimeError("SportsGamer leagueTeams is missing league/team identifiers")
 
+    diagnostic_stage("registered_teams")
     team_rows = select(
         connection,
         "select *, "
@@ -155,6 +164,7 @@ def load_source_rows(connection: Any) -> tuple[list[dict[str, Any]], list[dict[s
         for row in fetch_by_ids(connection, "nhlgamer_teams", global_team_id, team_ids):
             global_teams[integer(first(row, "teamID", "team_id", "id"))] = row
 
+    diagnostic_stage("registered_roster")
     roster_columns = inventory.get("nhlgamer_leagueRosters", [])
     roster_rows: list[dict[str, Any]] = []
     roster_league = column_name(roster_columns, "leagueID", "league_id")
@@ -173,19 +183,70 @@ def load_source_rows(connection: Any) -> tuple[list[dict[str, Any]], list[dict[s
             (LEAGUE_ID,),
         )
     elif roster_link and league_team_link and roster_player:
-        roster_rows = select(
-            connection,
-            "select r.*, "
-            f"lt.{safe_identifier(team_column)} as __teamID "
-            "from `nhlgamer_leagueRosters` r "
-            "join `nhlgamer_leagueTeams` lt "
-            f"on lt.{safe_identifier(league_team_link)}=r.{safe_identifier(roster_link)} "
-            f"where lt.{safe_identifier(league_column)}=%s",
-            (LEAGUE_ID,),
-        )
-    else:
-        raise RuntimeError("SportsGamer leagueRosters has no supported league/team relation")
+        try:
+            roster_rows = select(
+                connection,
+                "select r.*, "
+                f"lt.{safe_identifier(team_column)} as __teamID "
+                "from `nhlgamer_leagueRosters` r "
+                "join `nhlgamer_leagueTeams` lt "
+                f"on lt.{safe_identifier(league_team_link)}=r.{safe_identifier(roster_link)} "
+                f"where lt.{safe_identifier(league_column)}=%s",
+                (LEAGUE_ID,),
+            )
+        except Exception:
+            roster_rows = []
 
+    # Some SportsGamer generations keep the current registered roster in a
+    # participant/invite table rather than leagueRosters. This is the same
+    # fallback order used by the already proven Fantasy roster exporter, but
+    # the resulting data is imported only into the central SCL/team tables.
+    if not roster_rows:
+        candidates: list[tuple[int, str, str]] = []
+        for table, columns in inventory.items():
+            candidate_league = column_name(columns, "leagueID", "league_id")
+            candidate_player = column_name(columns, "playerID", "player_id")
+            candidate_team = column_name(columns, "teamID", "team_id")
+            if not candidate_league or not candidate_player or not candidate_team:
+                continue
+            name = table.lower()
+            score = (100 if name == "nhlgamer_leaguerosters" else 0)
+            score += 60 if "roster" in name else 0
+            score += 30 if "invite" in name else 0
+            score += 10 if "league" in name else 0
+            score += 5 if "participant" in name else 0
+            candidates.append((score, table, candidate_league))
+
+        for _, table, candidate_league in sorted(candidates, reverse=True):
+            try:
+                rows = select(
+                    connection,
+                    f"select * from {safe_identifier(table)} "
+                    f"where {safe_identifier(candidate_league)}=%s",
+                    (LEAGUE_ID,),
+                )
+            except Exception:
+                continue
+            usable = [
+                row for row in rows
+                if integer(first(row, "playerID", "player_id"))
+                and integer(first(row, "teamID", "team_id")) in team_ids
+            ]
+            if "invite" in table.lower():
+                accepted = [
+                    row for row in usable
+                    if integer(first(row, "inviteStatus", "invite_status", "status")) == 2
+                ]
+                if accepted:
+                    usable = accepted
+            if usable:
+                roster_rows = usable
+                break
+
+    if not roster_rows:
+        print(f"Warning: no current roster rows found for SportsGamer league {LEAGUE_ID}; importing teams only.")
+
+    diagnostic_stage("player_profiles")
     player_ids = sorted({integer(first(row, "playerID", "player_id")) for row in roster_rows} - {0})
     players: dict[int, dict[str, Any]] = {}
     player_columns = inventory.get("nhlgamer_players", [])
@@ -197,12 +258,14 @@ def load_source_rows(connection: Any) -> tuple[list[dict[str, Any]], list[dict[s
 
 
 def main() -> int:
+    diagnostic_stage("connect")
     connection = connect()
     try:
         team_rows, roster_rows, global_teams, players = load_source_rows(connection)
     finally:
         connection.close()
 
+    diagnostic_stage("normalize")
     teams: dict[int, dict[str, Any]] = {}
     for row in team_rows:
         team_id = integer(first(row, "__teamID", "teamID", "team_id"))
@@ -244,6 +307,7 @@ def main() -> int:
             "captain_role": role,
         }
 
+    diagnostic_stage("write_csv")
     TEAM_OUT.parent.mkdir(parents=True, exist_ok=True)
     team_fields = ["sports_gamer_league_id", "sports_gamer_team_id", "team_name", "team_logo_url", "captain_player_id", "assistant_1_player_id", "assistant_2_player_id", "registered_at"]
     with TEAM_OUT.open("w", newline="", encoding="utf-8") as handle:
@@ -260,7 +324,7 @@ def main() -> int:
     output = os.environ.get("GITHUB_OUTPUT")
     if output:
         with open(output, "a", encoding="utf-8") as handle:
-            handle.write(f"team_count={len(teams)}\nplayer_count={len(roster)}\nleague_id={LEAGUE_ID}\n")
+            handle.write(f"team_count={len(teams)}\nplayer_count={len(roster)}\nleague_id={LEAGUE_ID}\ndiagnostic_stage=complete\n")
     print(f"Exported {len(teams)} teams and {len(roster)} roster players for league {LEAGUE_ID}.")
     return 0
 
