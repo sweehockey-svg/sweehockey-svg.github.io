@@ -2246,7 +2246,7 @@
     $("#leagueSeasonInput").value = state.leagueSeason || "";
     $("#leagueDivisionSelect").value = state.leagueDivision || "";
     $("#customLeagueInput").value = state.customLeague || "";
-    $("#customLeagueField").hidden = state.league !== "CUSTOM";
+    $("#customLeagueField").hidden = isPresentation || state.league !== "CUSTOM";
     syncCompetitionState();
     $("#badgeSelect").value = state.badge;
     $("#dateInput").value = state.date;
