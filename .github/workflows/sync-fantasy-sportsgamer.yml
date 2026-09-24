@@ -180,14 +180,6 @@ jobs:
               -v team_source="${{ steps.roster.outputs.team_source }}" \
               -f .github/sync/import-fantasy-sportsgamer-pool.psql
 
-      - name: Sync SCL 27 official teams to Swedish team registry
-        if: steps.gate.outputs.should_run == 'true' && steps.gate.outputs.competition_code == 'SCL2027'
-        env:
-          PGURL: ${{ secrets.SUPABASE_DB_URL }}
-        run: |
-          set -euo pipefail
-          psql "$PGURL" -v ON_ERROR_STOP=1 -c "select public.seh_sync_scl27_official_teams();"
-
       - name: Read match-level data from SportsGamer
         if: steps.gate.outputs.should_run == 'true'
         id: export
@@ -279,5 +271,6 @@ jobs:
             echo "- Match source: **${{ steps.export.outputs.match_source || 'participant fallback' }}**"
             echo ""
             echo "SportsGamer access is READ ONLY."
+            echo "This Fantasy workflow only updates Fantasy data; SCL 27 core team/roster sync is handled separately."
             echo "Result: **${{ job.status }}**"
           } >> "$GITHUB_STEP_SUMMARY"
