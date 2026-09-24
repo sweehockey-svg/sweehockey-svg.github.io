@@ -47,30 +47,17 @@
   function dateOnly(value) { return String(value || "").slice(0,10); }
 
   async function loadOfficialSclTeams() {
-    const competitions = await get(
-      "ehockey_fantasy_competitions",
-      "select=id,code,sports_gamer_league_id,starts_on,status,updated_at&code=eq.SCL2027&limit=1"
-    );
-    const competition = Array.isArray(competitions) ? competitions[0] : null;
-    if (!competition?.id) {
-      return {teams:[],leagueId:527,startsOn:"2026-10-05",updatedAt:""};
-    }
-
-    const leagueId = Number(competition.sports_gamer_league_id) || 527;
-    const competitionId = encodeURIComponent(String(competition.id));
+    const leagueId = 527;
     const [teamRows,rosterRows] = await Promise.all([
       get(
-        "ehockey_fantasy_team_pool",
-        "select=source_league_id,sports_gamer_team_id,team_name,team_logo_url,registered_at,source_snapshot,source_updated_at" +
-          "&competition_id=eq." + competitionId +
-          "&source_league_id=eq." + encodeURIComponent(String(leagueId)) +
-          "&is_available=eq.true&order=team_name.asc"
+        "sportsgamer_league_teams_current",
+        "select=sports_gamer_league_id,sports_gamer_team_id,team_name,team_logo_url,registered_at,source_updated_at" +
+          "&sports_gamer_league_id=eq.527&is_available=eq.true&order=team_name.asc"
       ),
       get(
-        "ehockey_fantasy_player_pool",
-        "select=real_team_id,real_team_name,display_gamertag,team_logo_url,source_snapshot,source_updated_at&competition_id=eq." +
-          competitionId +
-          "&is_available=eq.true&order=real_team_name.asc,display_gamertag.asc"
+        "sportsgamer_league_roster_current",
+        "select=sports_gamer_league_id,sports_gamer_team_id,sports_gamer_player_id,display_gamertag,source_updated_at" +
+          "&sports_gamer_league_id=eq.527&is_available=eq.true&order=sports_gamer_team_id.asc,display_gamertag.asc"
       )
     ]);
 
@@ -85,7 +72,7 @@
       byTeam.set(id,{
         name,
         sportsGamerTeamId:id,
-        sportsGamerLeagueId:Number(row.source_league_id) || leagueId,
+        sportsGamerLeagueId:Number(row.sports_gamer_league_id) || leagueId,
         logoUrl:String(row.team_logo_url || "").trim(),
         registeredAt:String(row.registered_at || "").slice(0,10),
         syncedAt:String(row.source_updated_at || ""),
@@ -97,27 +84,8 @@
     }
 
     for (const row of rosterRows || []) {
-      const id = Number(row.real_team_id);
-      const name = String(row.real_team_name || "").trim();
-      if (!Number.isFinite(id) || id <= 0 || !name) continue;
-
-      if (!byTeam.has(id)) {
-        const snapshot = row.source_snapshot && typeof row.source_snapshot === "object"
-          ? row.source_snapshot
-          : {};
-        const rawTeam = snapshot?.raw_player?.team || {};
-        byTeam.set(id,{
-          name,
-          sportsGamerTeamId:id,
-          sportsGamerLeagueId:Number(snapshot.source_league_id) || leagueId,
-          logoUrl:String(row.team_logo_url || rawTeam.teamLogo || "").trim(),
-          registeredAt:String(rawTeam.teamRegistered || "").slice(0,10),
-          syncedAt:String(row.source_updated_at || snapshot.roster_imported_at || ""),
-          players:[]
-        });
-      } else if (!byTeam.get(id).logoUrl && row.team_logo_url) {
-        byTeam.get(id).logoUrl = String(row.team_logo_url).trim();
-      }
+      const id = Number(row.sports_gamer_team_id);
+      if (!Number.isFinite(id) || id <= 0 || !byTeam.has(id)) continue;
 
       const player = String(row.display_gamertag || "").trim();
       if (player && !byTeam.get(id).players.includes(player)) byTeam.get(id).players.push(player);
@@ -132,8 +100,8 @@
         players:[...team.players].sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}))
       })),
       leagueId,
-      startsOn:String(competition.starts_on || "2026-10-05").slice(0,10),
-      updatedAt:updatedAt || String(competition.updated_at || "")
+      startsOn:"2026-10-05",
+      updatedAt
     };
   }
 
