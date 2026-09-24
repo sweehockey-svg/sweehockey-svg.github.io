@@ -24,6 +24,9 @@
   let playerKeysByName = new Map();
   let playerPortraits = new Map();
   let playerMetaByName = new Map();
+  let scl27TeamDirectory = [];
+  let scl27RostersByTeamId = new Map();
+  let presentationReturnState = null;
   let dataSource = "testdata";
 
   const FORMATS = {
@@ -207,8 +210,18 @@
     return "";
   }
 
+  function activeTeamDirectory() {
+    return state.template === "team-presentation" && scl27TeamDirectory.length
+      ? scl27TeamDirectory
+      : teamDirectory;
+  }
+
   function logoUrl(teamName) {
-    const team = teamDirectory.find(item => normalize(item.name) === normalize(teamName)) || null;
+    const active = activeTeamDirectory();
+    const team = active.find(item => normalize(item.name) === normalize(teamName))
+      || teamDirectory.find(item => normalize(item.name) === normalize(teamName))
+      || scl27TeamDirectory.find(item => normalize(item.name) === normalize(teamName))
+      || null;
     const path = String(team?.exactLogoUrl || "").trim();
     if (path) {
       if (/^https?:\/\//i.test(path)) return path;
@@ -219,7 +232,11 @@
   }
 
   function teamById(id) {
-    return teamDirectory.find(team => team.id === id) || teamDirectory[0] || JERSEY_PRESETS[0];
+    return teamDirectory.find(team => team.id === id)
+      || scl27TeamDirectory.find(team => team.id === id)
+      || activeTeamDirectory()[0]
+      || teamDirectory[0]
+      || JERSEY_PRESETS[0];
   }
 
   function initials(name) {
@@ -557,6 +574,7 @@
   }
 
   function rosterFor(teamId) {
+    if (scl27RostersByTeamId.has(teamId)) return scl27RostersByTeamId.get(teamId) || [];
     return rostersByTeamId.get(teamId) || [];
   }
 
@@ -607,11 +625,14 @@
     const select = $("#teamSelect");
     const badge = $("#accessBadge");
     if (access.mode === "captain" && access.teamName) {
-      const locked = teamDirectory.find(team => normalize(team.name) === normalize(access.teamName));
+      const directory = activeTeamDirectory();
+      const locked = directory.find(team => normalize(team.name) === normalize(access.teamName))
+        || teamDirectory.find(team => normalize(team.name) === normalize(access.teamName))
+        || scl27TeamDirectory.find(team => normalize(team.name) === normalize(access.teamName));
       if (locked) {
         state.teamId = locked.id;
         if (state.opponentId === locked.id) {
-          state.opponentId = teamDirectory.find(team => team.id !== locked.id)?.id || locked.id;
+          state.opponentId = directory.find(team => team.id !== locked.id)?.id || locked.id;
         }
         if (select) select.disabled = true;
         if (badge) badge.textContent = "KAPTEN · " + locked.name;
@@ -701,8 +722,113 @@
     return true;
   }
 
+
+  function buildScl27PresentationTeam(row,index) {
+    const name = String(row?.team_name || "Okänt lag").trim();
+    const preset = JERSEY_PRESETS.find(team => normalize(team.name) === normalize(name));
+    const teamId = Number(row?.sports_gamer_team_id) || 0;
+    const exactLogoUrl = String(row?.team_logo_url || "").trim();
+    if (preset) {
+      return {
+        ...preset,
+        id:"scl27-" + teamId,
+        name,
+        teamId,
+        division:"",
+        exactLogoUrl,
+        scl27Registered:true
+      };
+    }
+    const [primary,accent,trim,pattern] = fallbackPalette(index);
+    return {
+      id:"scl27-" + teamId,
+      name,
+      code:initials(name),
+      primary,accent,trim,pattern,
+      projectId:null,
+      teamId,
+      division:"",
+      logoName:"",
+      exactLogoUrl,
+      genericJersey:true,
+      scl27Registered:true
+    };
+  }
+
+  function portraitUrlFromSclPoolRow(row) {
+    const id = String(row?.sports_gamer_player_id || "").trim();
+    if (id && Array.isArray(window.SEH_PLAYER_IMAGE_FILES) && window.SEH_PLAYER_IMAGE_FILES.includes(id + ".png")) {
+      return assetPrefix + "players/" + encodeURIComponent(id + ".png");
+    }
+    const raw = String(row?.player_image || "").trim();
+    return /^https?:\/\//i.test(raw) ? raw : defaultPlayerImageUrl();
+  }
+
+  async function loadScl27PresentationData() {
+    const [teamRowsRaw,playerRowsRaw] = await Promise.all([
+      getPublicRows(
+        "ehockey_fantasy_team_pool",
+        "select=sports_gamer_team_id,team_name,team_logo_url,source_league_id,is_available&competition_id=eq.2&source_league_id=eq.527&is_available=eq.true&order=team_name.asc"
+      ),
+      getPublicRows(
+        "ehockey_fantasy_player_pool",
+        "select=player_key,sports_gamer_player_id,display_gamertag,real_team_id,real_team_name,primary_position,player_image,is_available&competition_id=eq.2&is_available=eq.true&order=real_team_name.asc,display_gamertag.asc"
+      )
+    ]);
+
+    const teamRows = Array.isArray(teamRowsRaw) ? teamRowsRaw : [];
+    const playerRows = Array.isArray(playerRowsRaw) ? playerRowsRaw : [];
+    scl27TeamDirectory = teamRows
+      .filter(row => Number(row?.sports_gamer_team_id) > 0 && String(row?.team_name || "").trim())
+      .map(buildScl27PresentationTeam);
+
+    scl27RostersByTeamId = new Map(scl27TeamDirectory.map(team => [team.id,[]]));
+    const bySportsGamerId = new Map(
+      scl27TeamDirectory.map(team => [Number(team.teamId),team])
+    );
+
+    for (const row of playerRows) {
+      const team = bySportsGamerId.get(Number(row?.real_team_id));
+      const player = String(row?.display_gamertag || "").trim();
+      if (!team || !player) continue;
+      const list = scl27RostersByTeamId.get(team.id) || [];
+      if (!list.some(name => normalize(name) === normalize(player))) list.push(player);
+      scl27RostersByTeamId.set(team.id,list);
+
+      const normalized = normalize(player);
+      const key = String(row?.player_key || "").trim();
+      if (key) playerKeysByName.set(normalized,key);
+      playerPortraits.set(normalized,portraitUrlFromSclPoolRow(row));
+      playerMetaByName.set(normalized,{
+        primaryPosition:String(row?.primary_position || "").trim().toUpperCase()
+      });
+    }
+
+    for (const list of scl27RostersByTeamId.values()) {
+      list.sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
+    }
+
+    try {
+      await hydrateSavedJerseySettings(scl27TeamDirectory);
+    } catch (error) {
+      console.warn("[Match Graphics] kunde inte läsa SCL 27-tröjor",error);
+    }
+
+    return scl27TeamDirectory.length;
+  }
+
   async function loadLagbyggeData() {
     const status = $("#dataStatus");
+    if (status) status.textContent = "Hämtar lagdata…";
+
+    try {
+      await loadScl27PresentationData();
+    } catch (error) {
+      console.warn("[Match Graphics] kunde inte läsa SCL 27-lag",error);
+      scl27TeamDirectory = [];
+      scl27RostersByTeamId = new Map();
+    }
+
     if (status) status.textContent = "Hämtar ECL 27-lag…";
 
     // Team list is the authoritative first step. Nothing after this point is
@@ -1985,7 +2111,8 @@
   }
 
   function fillTeamSelect(select, selected) {
-    select.innerHTML = teamDirectory.map(team =>
+    const directory = activeTeamDirectory();
+    select.innerHTML = directory.map(team =>
       '<option value="' + esc(team.id) + '"' + (team.id === selected ? ' selected' : '') + '>' +
       esc(team.name) + (team.division ? ' · ' + esc(team.division) : '') +
       '</option>'
@@ -2073,7 +2200,8 @@
 
   function ensureDifferentTeams(changed) {
     if (state.teamId !== state.opponentId) return;
-    const replacement = teamDirectory.find(team => team.id !== (changed === "team" ? state.teamId : state.opponentId));
+    const directory = activeTeamDirectory();
+    const replacement = directory.find(team => team.id !== (changed === "team" ? state.teamId : state.opponentId));
     if (!replacement) return;
     if (changed === "team") state.opponentId = replacement.id;
     else state.teamId = replacement.id;
@@ -2120,7 +2248,9 @@
   function exportSvg() {
     const own = teamById(state.teamId);
     const opponent = teamById(state.opponentId);
-    const filename = "seh-" + safeFilePart(own.name) + "-vs-" + safeFilePart(opponent.name) + "-" + state.format + ".svg";
+    const filename = state.template === "team-presentation"
+      ? "seh-" + safeFilePart(own.name) + "-team-presentation-" + state.format + ".svg"
+      : "seh-" + safeFilePart(own.name) + "-vs-" + safeFilePart(opponent.name) + "-" + state.format + ".svg";
     downloadBlob(new Blob([buildMatchSvg()],{type:"image/svg+xml;charset=utf-8"}),filename);
   }
 
@@ -2214,7 +2344,9 @@
       if (!blob) throw new Error("PNG-export misslyckades");
       const own = teamById(state.teamId);
       const opponent = teamById(state.opponentId);
-      downloadBlob(blob,"seh-" + safeFilePart(own.name) + "-vs-" + safeFilePart(opponent.name) + "-" + state.format + ".png");
+      downloadBlob(blob,state.template === "team-presentation"
+        ? "seh-" + safeFilePart(own.name) + "-team-presentation-" + state.format + ".png"
+        : "seh-" + safeFilePart(own.name) + "-vs-" + safeFilePart(opponent.name) + "-" + state.format + ".png");
     } catch (error) {
       console.error(error);
       alert("Kunde inte skapa PNG. SVG-exporten fungerar fortfarande.");
@@ -2240,14 +2372,61 @@
 
   $("[data-template]").forEach(button => {
     button.addEventListener("click",async () => {
-      const template = button.dataset.template;
-      state.template = ["classic","team-presentation","starting-six","versus","broadcast","minimal"].includes(template)
-        ? template
+      const requested = button.dataset.template;
+      const template = ["classic","team-presentation","starting-six","versus","broadcast","minimal"].includes(requested)
+        ? requested
         : "classic";
-      if (state.template === "team-presentation") {
+      const leavingPresentation = state.template === "team-presentation" && template !== "team-presentation";
+      const enteringPresentation = state.template !== "team-presentation" && template === "team-presentation";
+
+      if (enteringPresentation) {
+        const currentTeamName = teamById(state.teamId)?.name || "";
+        presentationReturnState = {
+          teamId:state.teamId,
+          opponentId:state.opponentId,
+          league:state.league,
+          leagueSeason:state.leagueSeason,
+          leagueDivision:state.leagueDivision,
+          format:state.format
+        };
+        state.template = template;
         state.format = "square";
+        state.league = "SCL";
+        state.leagueSeason = "27";
+        state.leagueDivision = "";
+        syncCompetitionState();
+
+        const matching = scl27TeamDirectory.find(team => normalize(team.name) === normalize(currentTeamName));
+        const preferred = matching || scl27TeamDirectory[0];
+        if (preferred) {
+          state.teamId = preferred.id;
+          state.opponentId = scl27TeamDirectory.find(team => team.id !== preferred.id)?.id || preferred.id;
+        }
+        await refreshSelectedTeamJerseys();
+        setDefaultLineup();
         await hydratePlayerPortraits(state.teamId);
+      } else if (leavingPresentation) {
+        state.template = template;
+        const saved = presentationReturnState || {};
+        state.teamId = teamDirectory.some(team => team.id === saved.teamId)
+          ? saved.teamId
+          : (teamDirectory[0]?.id || state.teamId);
+        state.opponentId = teamDirectory.some(team => team.id === saved.opponentId)
+          ? saved.opponentId
+          : (teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId);
+        state.league = saved.league || state.league;
+        state.leagueSeason = saved.leagueSeason ?? state.leagueSeason;
+        state.leagueDivision = saved.leagueDivision ?? state.leagueDivision;
+        state.format = FORMATS[saved.format] ? saved.format : "square";
+        presentationReturnState = null;
+        syncCompetitionState();
+        await refreshSelectedTeamJerseys();
+        setDefaultLineup();
+        await hydratePlayerPortraits(state.teamId);
+      } else {
+        state.template = template;
       }
+
       syncForm();
       render();
     });
