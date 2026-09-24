@@ -2,7 +2,11 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.2";
 
 const WORKFLOWS = {
   swedish_players: "sync-swedish-players.yml",
+  current_swedish_player_stats: "sync-current-swedish-player-stats.yml",
   swedish_player_stats: "sync-swedish-player-stats.yml",
+  sec_site_data: "sync-sec-site-data.yml",
+  fantasy_sportsgamer: "sync-fantasy-sportsgamer.yml",
+  scl27_official_teams: "sync-scl27-official-teams.yml",
 } as const;
 const DEFAULT_ORIGINS = [
   "https://www.svenskehockey.se",
@@ -15,6 +19,9 @@ type RequestBody = {
   action?: "start" | "status";
   job?: keyof typeof WORKFLOWS;
   request_id?: string;
+  league_id?: number | string;
+  league_ids?: Array<number | string> | string;
+  competition_code?: string;
 };
 
 function json(body: unknown, status: number, origin: string | null) {
@@ -84,6 +91,16 @@ async function requireAdmin(request: Request) {
   return { user: userData.user, writer };
 }
 
+function parseLeagueIds(value: unknown, fallback?: unknown): number[] {
+  const raw = Array.isArray(value)
+    ? value
+    : String(value ?? fallback ?? "")
+        .split(/[\s,;]+/)
+        .filter(Boolean);
+  const ids = [...new Set(raw.map((item) => Number(item)).filter((id) => Number.isInteger(id) && id > 0))];
+  return ids.slice(0, 10);
+}
+
 async function findRun(repo: string, workflowFile: string, requestId: string) {
   const response = await github(
     `/repos/${repo}/actions/workflows/${workflowFile}/runs?event=workflow_dispatch&per_page=30`,
@@ -139,10 +156,26 @@ Deno.serve(async (request) => {
     }
     if (body.action !== "start") return json({ error: "Unknown action." }, 400, origin);
 
+    const inputs: Record<string, string> = { request_id: requestId };
+
+    if (body.job === "fantasy_sportsgamer") {
+      const competitionCode = String(body.competition_code || "").trim().toUpperCase();
+      if (!/^[A-Z0-9_-]{3,40}$/.test(competitionCode)) {
+        return json({ error: "Ogiltig Fantasy-tävlingskod." }, 400, origin);
+      }
+      const leagueIds = parseLeagueIds(body.league_ids, body.league_id);
+      if (!leagueIds.length) {
+        return json({ error: "Ange minst ett giltigt SportsGamer League ID." }, 400, origin);
+      }
+      inputs.competition_code = competitionCode;
+      inputs.league_ids = leagueIds.join(",");
+      inputs.trigger_type = "manual";
+    }
+
     await github(`/repos/${repo}/actions/workflows/${workflowFile}/dispatches`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ref, inputs: { request_id: requestId } }),
+      body: JSON.stringify({ ref, inputs }),
     });
     return json({ state: "queued", request_id: requestId }, 202, origin);
   } catch (error) {
