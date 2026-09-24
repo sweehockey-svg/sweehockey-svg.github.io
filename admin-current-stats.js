@@ -368,10 +368,8 @@
     const response = await supabase.functions.invoke("seh-admin-sync", {
       body: {
         action,
-        job: "fantasy_sportsgamer",
-        request_id: sclRequestId(),
-        competition_code: "SCL2027",
-        league_ids: [527]
+        job: "scl27_official_teams",
+        request_id: sclRequestId()
       }
     });
 
@@ -397,7 +395,7 @@
       setSclStatus(
         done
           ? (data.conclusion === "success"
-              ? "Klart – SCL 27-lag, registrerade trupper, Lagbygge och Svenska lag är uppdaterade."
+              ? "Klart – SCL 27-lag och registrerade trupper är synkade direkt från SportsGamer."
               : "SCL 27-synkningen misslyckades.")
           : (data.state === "queued" ? "SCL 27-synkningen väntar på att starta…" : "SCL 27-lag och trupper uppdateras…"),
         done && data.conclusion === "success" ? "success" : done ? "error" : "working",
@@ -419,8 +417,8 @@
     card.id = "scl27TeamsSyncCard";
     card.innerHTML = [
       '<p class="writer-panel-kicker">SCL 27</p>',
-      '<h2>Officiella lag</h2>',
-      '<p>Hämtar anmälda lag och registrerade trupper från SportsGamer liga 527. Lagbygge uppdateras och lagen skrivs även in i Svenska lag-registret. Befintliga lag matchas på namn/alias så att de inte dubblas.</p>',
+      '<h2>Lag & trupper</h2>',
+      '<p>Hämtar officiellt anmälda lag, kaptener och registrerade trupper direkt från SportsGamer liga 527. Uppdaterar SCL 27-data, Lagbygge och Svenska lag-registret. Fantasy används inte i den här synken.</p>',
       '<div class="admin-actions">',
       '<button id="startScl27TeamsSync" type="button">Synka SCL 27-lag</button>',
       '<button id="refreshScl27TeamsSync" class="writer-secondary" type="button" disabled>Kontrollera status</button>',
@@ -440,7 +438,7 @@
     playerSyncCard.insertAdjacentElement("afterend", card);
 
     document.getElementById("startScl27TeamsSync")?.addEventListener("click", async function () {
-      if (!window.confirm("Hämta de officiellt anmälda SCL 27-lagen och trupperna från SportsGamer liga 527 nu? Lagbygge och Svenska lag-registret uppdateras.")) return;
+      if (!window.confirm("Hämta SCL 27-lag, kaptener och registrerade trupper direkt från SportsGamer liga 527 nu?")) return;
       const id = makeId();
       sessionStorage.setItem(SCL_STORAGE_KEY, id);
       setSclBusy(true);
@@ -469,7 +467,7 @@
     card.innerHTML = [
       '<p class="writer-panel-kicker">AKTUELL STATISTIK</p>',
       '<h2>Pågående turneringar</h2>',
-      '<p>Snabbkörning som bara hämtar ny statistik från aktuella SportsGamer-turneringar. Äldre historik lämnas orörd.</p>',
+      '<p>Snabbkörning som hämtar ny spelarstatistik från aktuella SportsGamer-turneringar, inklusive SCL 27 när liga 527 är aktiv. Äldre historik lämnas orörd.</p>',
       '<div class="admin-actions">',
       '<button id="startCurrentStatsSync" type="button">Uppdatera aktuell statistik</button>',
       '<button id="refreshCurrentStatsSync" class="writer-secondary" type="button" disabled>Kontrollera status</button>',
