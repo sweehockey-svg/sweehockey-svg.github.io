@@ -2028,10 +2028,12 @@
 
   function teamPresentationPosition(name) {
     const normalized = normalize(name);
+    const primary = String(playerMetaByName.get(normalized)?.primaryPosition || "").toUpperCase();
+    if (primary) return primary;
     for (const pos of POSITIONS) {
       if (normalize(state.lineup[pos]) === normalized) return pos;
     }
-    return String(playerMetaByName.get(normalized)?.primaryPosition || "").toUpperCase();
+    return "";
   }
 
   function teamPresentationNumber(name) {
