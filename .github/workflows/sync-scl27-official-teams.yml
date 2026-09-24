@@ -1,0 +1,99 @@
+name: Sync SCL 27 official teams and rosters
+run-name: SCL 27 official teams · ${{ inputs.request_id || 'manual' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: Request id from the Svensk eHockey admin page
+        required: false
+        default: manual
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-scl27-official-teams
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PGCONNECT_TIMEOUT: 20
+      PGTCP_USER_TIMEOUT: 30000
+      PGKEEPALIVES: 1
+      PGKEEPALIVES_IDLE: 30
+      PGKEEPALIVES_INTERVAL: 10
+      PGKEEPALIVES_COUNT: 3
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install database clients
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client openssh-client
+          python -m pip install --disable-pip-version-check --no-cache-dir pymysql==1.1.2
+
+      - name: Open read-only SSH tunnel to SportsGamer
+        env:
+          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+          SSH_PORT: ${{ secrets.SVENSK_SSH_PORT }}
+          SSH_USER: ${{ secrets.SVENSK_SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SVENSK_SSH_PRIVATE_KEY }}
+          SSH_REMOTE_DB_HOST: ${{ secrets.SVENSK_SSH_REMOTE_DB_HOST }}
+          SSH_REMOTE_DB_PORT: ${{ secrets.SVENSK_SSH_REMOTE_DB_PORT }}
+          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SSH_HOST:-}" ]; then exit 0; fi
+          : "${SSH_USER:?Missing SVENSK_SSH_USER secret}"
+          : "${SSH_PRIVATE_KEY:?Missing SVENSK_SSH_PRIVATE_KEY secret}"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/svensk_db_tunnel_key
+          chmod 600 ~/.ssh/svensk_db_tunnel_key
+          ssh-keyscan -p "${SSH_PORT:-22}" "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh -fN -i ~/.ssh/svensk_db_tunnel_key -p "${SSH_PORT:-22}" \
+            -L "${SSH_LOCAL_DB_PORT:-3307}:${SSH_REMOTE_DB_HOST:-127.0.0.1}:${SSH_REMOTE_DB_PORT:-3306}" \
+            "$SSH_USER@$SSH_HOST"
+
+      - name: Read SCL 27 teams and rosters directly from SportsGamer
+        id: export
+        env:
+          DB_HOST: ${{ secrets.SVENSK_DB_HOST }}
+          DB_PORT: ${{ secrets.SVENSK_DB_PORT }}
+          DB_NAME: ${{ secrets.SVENSK_DB_NAME }}
+          DB_USER: ${{ secrets.SVENSK_DB_USER }}
+          DB_PASSWORD: ${{ secrets.SVENSK_DB_PASSWORD }}
+          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+        run: python .github/sync/export-scl27-official-teams.py
+
+      - name: Import SCL 27 teams and rosters into Svensk eHockey
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          : "${PGURL:?Missing SUPABASE_DB_URL secret}"
+          timeout --foreground --kill-after=30s 10m \
+            psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-scl27-official-teams.psql
+
+      - name: Write summary
+        if: always()
+        run: |
+          {
+            echo "## SCL 27 officiella lag och trupper"
+            echo ""
+            echo "- SportsGamer league: **527**"
+            echo "- Lag hämtade: **${{ steps.export.outputs.team_count || 0 }}**"
+            echo "- Roster-spelare hämtade: **${{ steps.export.outputs.player_count || 0 }}**"
+            echo ""
+            echo "Källan läses direkt från SportsGamer i read-only-läge."
+            echo "Ingen Fantasy-tabell eller Fantasy-workflow används."
+            echo ""
+            echo "Resultat: **${{ job.status }}**"
+          } >> "$GITHUB_STEP_SUMMARY"
