@@ -40,6 +40,7 @@ button{cursor:pointer}
   box-shadow:0 24px 70px rgba(0,0,0,.24)
 }
 .controls{padding:18px;position:sticky;top:90px;max-height:calc(100vh - 108px);overflow:auto}
+[hidden]{display:none!important}
 .control-section{padding:0 0 17px;margin:0 0 17px;border-bottom:1px solid var(--line)}
 .control-section:last-of-type{border-bottom:0;margin-bottom:8px}
 .section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
