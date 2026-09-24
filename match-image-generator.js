@@ -2104,7 +2104,7 @@
 
   function buildTeamPresentationSvg() {
     const team = teamById(state.teamId);
-    const players = rosterFor(state.teamId).filter(Boolean).slice(0,13);
+    const players = state.presentationPlayers.filter(Boolean).slice(0,13);
     const league = getLeagueDisplay();
     const competition = esc(cleanText(league.title,28).toUpperCase() || "SVENSK eHOCKEY");
     const division = esc(cleanText(league.division || team.division,16).toUpperCase());
