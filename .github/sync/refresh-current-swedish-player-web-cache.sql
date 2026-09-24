@@ -31,6 +31,9 @@ insert into current_player_history_stage
 select (jsonb_populate_record(
   null::public.ehockey_player_history_cache_v25,
   to_jsonb(source.*) || jsonb_build_object(
+    'player_key', canonical.player_key,
+    'display_gamertag', coalesce(identity_override.display_gamertag, registry.display_gamertag, source.display_gamertag),
+    'sports_gamer_player_url', 'https://sportsgamer.gg/players/' || registry.sports_gamer_player_id::text,
     'team_id', coalesce(existing.team_id, source.team_id),
     'team_is_linkable', coalesce(existing.team_is_linkable, source.team_is_linkable),
     'team_current_name', coalesce(existing.team_current_name, source.team_current_name),
@@ -47,14 +50,7 @@ select (jsonb_populate_record(
     'division', coalesce(existing.division, source.division),
     'division_key', coalesce(existing.division_key, source.division_key),
     'sort_date', coalesce(source.sort_date, existing.sort_date),
-    'effective_sports_gamer_player_id', coalesce(
-      existing.effective_sports_gamer_player_id,
-      case
-        when source.sports_gamer_player_url ~ '/players/[0-9]+'
-          then substring(source.sports_gamer_player_url from '/players/([0-9]+)')::bigint
-        else null
-      end
-    ),
+    'effective_sports_gamer_player_id', registry.sports_gamer_player_id,
     'chronology_date', coalesce(existing.chronology_date, source.sort_date, source.start_date, source.end_date),
     'chronology_source', coalesce(existing.chronology_source, 'current_sportsgamer_sync'),
     'appearance_games', greatest(coalesce(source.total_skater_games, 0), coalesce(source.total_goalie_games, 0)),
@@ -78,18 +74,32 @@ select (jsonb_populate_record(
 from public.v_ehockey_player_tournaments source
 join current_league_ids selected
   on selected.league_id = source.league_id
+cross join lateral (
+  select case
+           when source.sports_gamer_player_url ~ '/players/[0-9]+'
+             then substring(source.sports_gamer_player_url from '/players/([0-9]+)')::bigint
+           else null
+         end as sports_gamer_player_id
+) parsed
+left join public.player_identity_overrides identity_override
+  on identity_override.player_key = source.player_key
 join public.v_ehockey_player_registry registry
-  on registry.sports_gamer_player_id = case
-       when source.sports_gamer_player_url ~ '/players/[0-9]+'
-         then substring(source.sports_gamer_player_url from '/players/([0-9]+)')::bigint
-       else null
-     end
+  on registry.sports_gamer_player_id = coalesce(
+       identity_override.sports_gamer_player_id,
+       parsed.sports_gamer_player_id
+     )
  and registry.country_code = 'SE'
+cross join lateral (
+  select encode(
+           digest('SPORTSGAMER:' || registry.sports_gamer_player_id::text, 'sha256'),
+           'hex'
+         ) as player_key
+) canonical
 left join lateral (
   select cached.*
   from public.ehockey_player_history_cache_v25 cached
   where cached.player_source = 'SPORTSGAMER'
-    and cached.player_key = source.player_key
+    and cached.player_key = canonical.player_key
     and cached.external_league_id = source.external_league_id
     and coalesce(cached.team_external_id, '') = coalesce(source.team_external_id, '')
   order by cached.sort_date desc nulls last
