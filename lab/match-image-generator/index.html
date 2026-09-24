@@ -59,25 +59,25 @@
           </label>
         </div>
 
-        <div class="control-section">
-          <div class="section-title"><strong>Match</strong><span id="dataStatus">Hämtar aktuellt lagbygge…</span></div>
+        <div class="control-section" id="matchControlSection">
+          <div class="section-title"><strong id="matchSectionTitle">Match</strong><span id="dataStatus">Hämtar aktuellt lagbygge…</span></div>
           <div class="field-grid">
-            <div class="field full">
+            <div class="field full" id="teamField">
               <label for="teamSelect">DITT LAG</label>
               <select id="teamSelect"></select>
             </div>
-            <div class="field full">
+            <div class="field full" id="opponentField">
               <label for="opponentSelect">MOTSTÅNDARE</label>
               <select id="opponentSelect"></select>
             </div>
-            <div class="field">
+            <div class="field" id="sideField">
               <label for="sideSelect">DITT LAG SPELAR</label>
               <select id="sideSelect">
                 <option value="home">Hemma</option>
                 <option value="away">Borta</option>
               </select>
             </div>
-            <div class="field">
+            <div class="field" id="badgeField">
               <label for="badgeSelect">RUBRIK</label>
               <select id="badgeSelect">
                 <option value="MATCHDAY">MATCHDAY</option>
@@ -88,7 +88,7 @@
                 <option value="FINAL">FINAL</option>
               </select>
             </div>
-            <div class="field">
+            <div class="field" id="leagueField">
               <label for="leagueSelect">LIGA</label>
               <select id="leagueSelect">
                 <option value="SCL">SCL</option>
@@ -101,11 +101,11 @@
                 <option value="CUSTOM">Övrigt / Custom</option>
               </select>
             </div>
-            <div class="field">
+            <div class="field" id="leagueSeasonField">
               <label for="leagueSeasonInput">NUMMER / SÄSONG</label>
               <input id="leagueSeasonInput" type="text" maxlength="18" value="27" placeholder="27 / 26 Winter">
             </div>
-            <div class="field full">
+            <div class="field full" id="leagueDivisionField">
               <label for="leagueDivisionSelect">DIVISION <span class="field-optional">VALFRITT</span></label>
               <select id="leagueDivisionSelect">
                 <option value="">Ingen</option>
@@ -122,22 +122,28 @@
               <label for="customLeagueInput">EGET LIGANAMN</label>
               <input id="customLeagueInput" type="text" maxlength="18" placeholder="t.ex. Nordic Cup">
             </div>
-            <div class="field">
+            <div class="field" id="dateField">
               <label for="dateInput">DATUM</label>
               <input id="dateInput" type="date" value="2026-10-01">
             </div>
-            <div class="field">
+            <div class="field" id="timeField">
               <label for="timeInput">TID</label>
               <input id="timeInput" type="time" value="20:00">
             </div>
-            <div class="field full">
+            <div class="field full" id="formatField">
               <label for="formatSelect">FORMAT</label>
               <select id="formatSelect"></select>
             </div>
           </div>
         </div>
 
-        <div class="control-section">
+        <div class="control-section" id="presentationRosterSection" hidden>
+          <div class="section-title"><strong>Lagtrupp</strong><span id="presentationRosterHint">0 / 13 valda</span></div>
+          <div class="generator-note" style="margin:0 0 12px">Välj upp till 13 spelare från lagets registrerade SCL 27-roster. Position hämtas automatiskt. Nummer är valfritt.</div>
+          <div class="lineup-grid" id="presentationRosterGrid"></div>
+        </div>
+
+        <div class="control-section" id="startingSixSection">
           <div class="section-title"><strong>Starting Six</strong><span id="ownTeamHint"></span></div>
           <div class="field full" style="margin-bottom:10px">
             <label for="lineupStyleSelect">VISNING I MATCHBILD</label>
@@ -157,7 +163,7 @@
           </div>
         </div>
 
-        <div class="control-section">
+        <div class="control-section" id="streamSection">
           <div class="section-title"><strong>Sändning</strong><span>Valfritt</span></div>
           <div class="field-grid">
             <div class="field">
@@ -183,7 +189,7 @@
           <button id="resetButton" class="ghost" type="button">Återställ testdata</button>
         </div>
 
-        <p class="generator-note"><strong>Adminläge:</strong> alla lag och aktuella spelare kommer från ECL 27-lagbygget. Starting Six kan visas som kort, tröjryggar med manuella nummer eller spelarporträtt, och matchbilden kan kompletteras med streamingkanal. Kaptensläget är förberett för att låsa “Ditt lag” till kaptenens eget lag.</p>
+        <p class="generator-note"><strong>Adminläge:</strong> matchmallarna använder ECL 27-lagbygget. Team Presentation använder registrerade SCL 27-lag och låter dig välja upp till 13 spelare från lagets aktuella SCL-roster.</p>
       </aside>
 
       <section class="preview-panel">
@@ -205,6 +211,6 @@
   <script src="../../ecl27-team-builds-v2.js?v=shared-model-1"></script>
   <script src="../../ecl27-current-roster-snapshot.js?v=20260921-1"></script>
   <script src="../../match-graphics-player-stats-snapshot.js?v=20260922-1"></script>
-  <script src="match-image-generator.js?v=62"></script>
+  <script src="match-image-generator.js?v=63"></script>
 </body>
 </html>
