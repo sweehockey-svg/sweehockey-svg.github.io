@@ -2134,13 +2134,13 @@
       startX = 790;
       startY = 154;
     } else if (isStory) {
-      cardWidth = 410;
-      cardHeight = 310;
-      gapX = 24;
-      gapY = 24;
-      cols = 2;
-      startX = (ctx.W - (cardWidth * 2 + gapX)) / 2;
-      startY = 585;
+      cardWidth = 300;
+      cardHeight = 350;
+      gapX = 18;
+      gapY = 18;
+      cols = 3;
+      startX = (ctx.W - (cardWidth * 3 + gapX * 2)) / 2;
+      startY = 720;
     } else {
       cardWidth = 286;
       cardHeight = 300;
@@ -2169,23 +2169,23 @@
     const ownName=esc(ctx.own.name),oppName=esc(ctx.opponent.name);
     const isStory=state.format==="story",isWide=state.format==="landscape";
     const portraitMode=state.lineupStyle==="portraits";
-    const heroSize=isWide?450:isStory?470:225;
-    const heroX=isWide?140:isStory?(ctx.W-heroSize)/2:48;
-    const heroY=isWide?178:isStory?210:118;
+    const heroSize=isWide?450:isStory?350:225;
+    const heroX=isWide?140:isStory?72:48;
+    const heroY=isWide?178:isStory?230:118;
     const hero=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"front",compact:false});
     const lineup=portraitMode
       ? startingSixPortraitGrid(ctx)
       : focusLineupMarkup(ctx,isWide?630:(isStory?875:500));
 
-    const opponentLogoSize=isWide?84:isStory?112:64;
-    const opponentLogoX=isWide?128:isStory?ctx.W-opponentLogoSize-74:ctx.W-opponentLogoSize-42;
-    const opponentLogoY=isWide?716:isStory?350:106;
+    const opponentLogoSize=isWide?84:isStory?88:64;
+    const opponentLogoX=isWide?128:isStory?ctx.W-opponentLogoSize-82:ctx.W-opponentLogoSize-42;
+    const opponentLogoY=isWide?716:isStory?270:106;
 
     const infoX=isWide?102:isStory?ctx.W/2:ctx.W/2;
-    const infoY=isWide?806:isStory?400:224;
+    const infoY=isWide?806:isStory?300:224;
     const infoAnchor=isWide?"start":"middle";
     const gridTitleX=isWide?1314:ctx.W/2;
-    const gridTitleY=isWide?128:isStory?535:358;
+    const gridTitleY=isWide?128:isStory?665:358;
 
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '" role="img" aria-label="Starting Six ' + ownName + '">',
@@ -2214,7 +2214,7 @@
 
       isWide
         ? '<text x="102" y="654" fill="#ffffff" font-size="42" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text><line x1="102" y1="676" x2="610" y2="676" stroke="' + ctx.own.accent + '" stroke-opacity=".55" stroke-width="2"/>'
-        : '<text x="' + (ctx.W/2) + '" y="' + (isStory?720:330) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?38:30) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>',
+        : '<text x="' + (ctx.W/2) + '" y="' + (isStory?610:330) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?38:30) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>',
 
       '<g>',
       isWide
