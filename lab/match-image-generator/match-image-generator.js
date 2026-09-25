@@ -2172,18 +2172,24 @@
     const position = teamPresentationPosition(cleanName);
     const number = teamPresentationNumber(cleanName);
     const clipId = "team-presentation-" + index + "-" + normalize(cleanName).replace(/\s+/g,"-");
-    const footerH = 31;
-    const portraitW = Math.min(112,width-26);
-    const portraitH = Math.max(112,height-8);
-    const portraitX = x + (width-portraitW)/2;
-    const portraitY = y + 4;
+    const footerH = Math.max(30,Math.round(height*.17));
+    const portraitInsetX = Math.max(5,Math.round(width*.045));
+    const portraitTop = Math.max(4,Math.round(height*.025));
+    const portraitW = width - portraitInsetX*2;
+    const portraitH = height - footerH - portraitTop + 5;
+    const portraitX = x + portraitInsetX;
+    const portraitY = y + portraitTop;
+    const badgeW = Math.max(32,Math.min(40,Math.round(width*.23)));
+    const badgeH = Math.max(20,Math.min(24,Math.round(height*.12)));
+    const badgeFont = Math.max(9,Math.min(11,Math.round(width*.06)));
+    const nameFont = Math.max(11,Math.min(14,Math.round(width*.075)));
     const badge = position
-      ? '<rect x="' + (x+9) + '" y="' + (y+9) + '" width="38" height="22" rx="11" fill="#05090e" fill-opacity=".90" stroke="#ffffff" stroke-opacity=".18"/>' +
-        '<text x="' + (x+28) + '" y="' + (y+24) + '" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(position) + '</text>'
+      ? '<rect x="' + (x+8) + '" y="' + (y+8) + '" width="' + badgeW + '" height="' + badgeH + '" rx="' + (badgeH/2) + '" fill="#05090e" fill-opacity=".90" stroke="#ffffff" stroke-opacity=".18"/>' +
+        '<text x="' + (x+8+badgeW/2) + '" y="' + (y+8+badgeH*.68) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFont + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(position) + '</text>'
       : "";
     const numberBadge = number
-      ? '<rect x="' + (x+width-44) + '" y="' + (y+9) + '" width="35" height="22" rx="11" fill="#05090e" fill-opacity=".90" stroke="#ffffff" stroke-opacity=".18"/>' +
-        '<text x="' + (x+width-26.5) + '" y="' + (y+24) + '" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>'
+      ? '<rect x="' + (x+width-badgeW-8) + '" y="' + (y+8) + '" width="' + badgeW + '" height="' + badgeH + '" rx="' + (badgeH/2) + '" fill="#05090e" fill-opacity=".90" stroke="#ffffff" stroke-opacity=".18"/>' +
+        '<text x="' + (x+width-8-badgeW/2) + '" y="' + (y+8+badgeH*.68) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFont + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>'
       : "";
     return [
       '<g>',
@@ -2195,18 +2201,41 @@
       numberBadge,
       '<rect x="' + x + '" y="' + (y+height-footerH) + '" width="' + width + '" height="' + footerH + '" fill="#04080d" fill-opacity=".96" clip-path="url(#' + clipId + ')"/>',
       '<rect x="' + x + '" y="' + (y+height-footerH) + '" width="' + width + '" height="2.5" fill="' + team.accent + '" fill-opacity=".72" clip-path="url(#' + clipId + ')"/>',
-      '<text x="' + (x+10) + '" y="' + (y+height-16) + '" fill="#ffffff" font-size="13" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanName) + '</text>',
+      '<text x="' + (x+9) + '" y="' + (y+height-footerH*.36) + '" fill="#ffffff" font-size="' + nameFont + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanName) + '</text>',
       '</g>'
     ].join("");
   }
 
   function teamPresentationRosterGrid(players,team) {
-    const rows = [players.slice(0,6),players.slice(6,12)].filter(row => row.length);
-    const cardW = 142;
-    const cardH = 128;
-    const gap = 10;
-    const rowGap = 12;
-    const firstY = 582;
+    const count = Math.min(12,players.length);
+    if (!count) return "";
+
+    const columns = count === 1 ? 1 : Math.min(6,Math.ceil(count/2));
+    const rows = [
+      players.slice(0,columns),
+      players.slice(columns,Math.min(count,columns*2))
+    ].filter(row => row.length);
+
+    const panelInnerW = 912;
+    const gap = columns >= 6 ? 9 : columns === 5 ? 12 : 16;
+    const widthByGrid = Math.floor((panelInnerW - Math.max(0,columns-1)*gap)/columns);
+    const maxCardW = columns <= 3 ? 190 : columns === 4 ? 175 : columns === 5 ? 160 : 142;
+    const cardW = Math.min(maxCardW,widthByGrid);
+    const targetRatio = columns >= 6 ? 1.28 : 1.22;
+    const rowGap = 16;
+    const gridTop = 575;
+    const gridBottom = 1012;
+    const maxCardHByGrid = Math.floor(
+      (gridBottom-gridTop-Math.max(0,rows.length-1)*rowGap) / rows.length
+    );
+    const cardH = Math.min(
+      218,
+      maxCardHByGrid,
+      Math.max(174,Math.round(cardW*targetRatio))
+    );
+    const gridHeight = rows.length*cardH + Math.max(0,rows.length-1)*rowGap;
+    const firstY = gridTop + Math.max(0,(gridBottom-gridTop-gridHeight)/2);
+
     return rows.map((row,rowIndex) => {
       const totalW = row.length * cardW + Math.max(0,row.length-1) * gap;
       const startX = (1080-totalW)/2;
@@ -2214,7 +2243,7 @@
       return row.map((name,colIndex) =>
         teamPresentationPlayerCard(
           name,
-          rowIndex*6+colIndex,
+          rowIndex*columns+colIndex,
           startX + colIndex*(cardW+gap),
           y,
           cardW,
@@ -2261,7 +2290,7 @@
       '<line x1="610" y1="409" x2="954" y2="409" stroke="' + team.accent + '" stroke-opacity=".72" stroke-width="3"/>',
       '<text x="782" y="446" text-anchor="middle" fill="#ffffff" fill-opacity=".52" font-size="13" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">FULL ROSTER · ' + rosterLabel + '</text>',
 
-      '<rect x="54" y="525" width="972" height="360" rx="28" fill="url(#team-presentation-panel)" stroke="#b8ddff" stroke-opacity=".13"/>',
+      '<rect x="54" y="525" width="972" height="500" rx="28" fill="url(#team-presentation-panel)" stroke="#b8ddff" stroke-opacity=".13"/>',
       '<text x="540" y="558" text-anchor="middle" fill="#ffffff" fill-opacity=".82" font-size="15" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="5">ROSTER</text>',
       grid || '<text x="540" y="760" text-anchor="middle" fill="#ffffff" fill-opacity=".42" font-size="24" font-weight="800" font-family="Arial,Helvetica,sans-serif">INGA SPELARE I AKTUELL ROSTER</text>',
 
