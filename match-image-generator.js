@@ -1014,13 +1014,24 @@
     const status = $("#dataStatus");
     if (status) status.textContent = "Hämtar hela laghistoriken…";
 
-    const [teamRowsRaw,playerRowsRaw] = await Promise.all([
-      getPublicRows(
-        "v_local_team_list",
-        "select=team_id,current_name,logo_path,logo_url&order=current_name.asc&limit=5000"
-      ),
-      getRpcRows("seh_match_graphics_history_players",{})
-    ]);
+    const teamRowsRaw = await getPublicRows(
+      "v_local_team_list",
+      "select=team_id,current_name,logo_path,logo_url&order=current_name.asc&limit=5000"
+    );
+
+    // PostgREST defaults to 1000 rows per response. The all-time player history
+    // is much larger, so fetch it in explicit pages instead of silently losing
+    // every player after row 1000.
+    const playerRowsRaw = [];
+    for (let offset = 0; ; offset += 1000) {
+      const page = await getPublicRows(
+        "v_ehockey_team_all_time_players_public",
+        "select=team_id,player_key,display_gamertag,primary_position,player_image,sports_gamer_player_url&order=team_id.asc,display_gamertag.asc&limit=1000&offset=" + offset
+      );
+      if (!Array.isArray(page) || !page.length) break;
+      playerRowsRaw.push(...page);
+      if (page.length < 1000) break;
+    }
 
     const teamRows = Array.isArray(teamRowsRaw) ? teamRowsRaw : [];
     const playerRows = Array.isArray(playerRowsRaw) ? playerRowsRaw : [];
