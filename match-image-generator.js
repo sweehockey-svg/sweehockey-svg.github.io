@@ -1797,14 +1797,32 @@
 
   function lineupPortraitSquare(width, y, team, variant) {
     const landscape = width === 1920;
-    const cardWidth = landscape ? 220 : 148;
-    const cardHeight = landscape ? 254 : 206;
-    const gap = landscape ? 20 : 9;
-    const totalWidth = cardWidth * 6 + gap * 5;
+    if (landscape) {
+      const cardWidth = 220;
+      const cardHeight = 254;
+      const gap = 20;
+      const totalWidth = cardWidth * 6 + gap * 5;
+      const startX = (width - totalWidth) / 2;
+      return POSITIONS.map((pos,index) => {
+        const x = startX + index * (cardWidth + gap);
+        return portraitCard(pos,state.lineup[pos],x,y,cardWidth,cardHeight,team,variant);
+      }).join("");
+    }
+
+    // Square graphics: 3 + 3 gives the portraits enough room to actually
+    // look like players instead of postage stamps.
+    const cardWidth = 205;
+    const cardHeight = 238;
+    const gapX = 14;
+    const gapY = 14;
+    const totalWidth = cardWidth * 3 + gapX * 2;
     const startX = (width - totalWidth) / 2;
     return POSITIONS.map((pos,index) => {
-      const x = startX + index * (cardWidth + gap);
-      return portraitCard(pos,state.lineup[pos],x,y,cardWidth,cardHeight,team,variant);
+      const col = index % 3;
+      const row = Math.floor(index / 3);
+      const x = startX + col * (cardWidth + gapX);
+      const yy = y + row * (cardHeight + gapY);
+      return portraitCard(pos,state.lineup[pos],x,yy,cardWidth,cardHeight,team,variant);
     }).join("");
   }
 
