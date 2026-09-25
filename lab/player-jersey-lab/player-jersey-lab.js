@@ -28,8 +28,8 @@ function render(){
 }
 async function init(){
  try{
-  teams=await q("v_local_team_list?select=*&order=team_name.asc&limit=500");
-  $("#team").innerHTML=teams.map(t=>'<option value="'+esc(t.team_id||t.id)+'">'+esc(t.team_name||t.name)+'</option>').join("");
+  teams=await q("v_local_team_list?select=team_id,current_name,logo_path,logo_url&order=current_name.asc&limit=5000");
+  $("#team").innerHTML=teams.map(t=>'<option value="'+esc(t.team_id)+'">'+esc(t.current_name)+'</option>').join("");
   async function loadPlayers(){
    const id=$("#team").value;
    players=await q("v_ehockey_team_all_time_players_public?select=team_id,player_key,display_gamertag,player_image,primary_position&team_id=eq."+encodeURIComponent(id)+"&order=display_gamertag.asc&limit=250");
