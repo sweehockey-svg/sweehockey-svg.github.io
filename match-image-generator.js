@@ -136,9 +136,9 @@
     if (id === "smoke") return backgroundPrefix + "smoke.svg?v=39";
     if (id === "ice") return ICE_TEXTURE_DATA_URL;
     if (id === "sweden") return SWEDEN_BACKGROUND_DATA_URL;
-    if (id === "scl-blue") return assetPrefix + "assets/bg.jpg";
-    if (id === "neon") return assetPrefix + "assets/bg.jpg";
-    if (id === "tunnel") return assetPrefix + "assets/bg.jpg";
+    if (id === "scl-blue") return backgroundPrefix + "smoke.svg?v=39";
+    if (id === "neon") return backgroundPrefix + "frost.svg";
+    if (id === "tunnel") return backgroundPrefix + "smoke.svg?v=39";
     if (id === "frost") return backgroundPrefix + "frost.svg";
     return assetPrefix + "assets/bg.jpg";
   }
@@ -1011,10 +1011,7 @@
         "v_local_team_list",
         "select=team_id,current_name,logo_path,logo_url&order=current_name.asc&limit=5000"
       ),
-      getPublicRows(
-        "v_ehockey_team_all_time_players_public",
-        "select=team_id,player_key,display_gamertag,primary_position,player_image,sports_gamer_player_url&order=team_id.asc,display_gamertag.asc&limit=20000"
-      )
+      getRpcRows("seh_match_graphics_history_players",{})
     ]);
 
     const teamRows = Array.isArray(teamRowsRaw) ? teamRowsRaw : [];
