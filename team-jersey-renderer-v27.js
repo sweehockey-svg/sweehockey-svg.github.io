@@ -786,5 +786,12 @@
     }
   }
 
-  window.SEH_TEAM_JERSEY_V27={mount};
+  async function prepareTeam(input) {
+    const team=buildTeam(input);
+    teamDirectory=[team];
+    await ensureRenderableTeamLogo(team);
+    await ensureTeamPalette(team);
+    return team;
+  }
+  window.SEH_TEAM_JERSEY_V27={mount,render:premiumJerseySvg,prepareTeam};
 })();
