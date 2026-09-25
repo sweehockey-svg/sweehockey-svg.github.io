@@ -2134,13 +2134,13 @@
       startX = 790;
       startY = 154;
     } else if (isStory) {
-      cardWidth = 300;
-      cardHeight = 350;
+      cardWidth = 276;
+      cardHeight = 430;
       gapX = 18;
       gapY = 18;
       cols = 3;
       startX = (ctx.W - (cardWidth * 3 + gapX * 2)) / 2;
-      startY = 720;
+      startY = 690;
     } else {
       cardWidth = 286;
       cardHeight = 300;
