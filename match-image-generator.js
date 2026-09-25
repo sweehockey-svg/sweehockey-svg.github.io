@@ -1797,45 +1797,27 @@
 
   function lineupPortraitSquare(width, y, team, variant) {
     const landscape = width === 1920;
-    if (landscape) {
-      const cardWidth = 220;
-      const cardHeight = 254;
-      const gap = 20;
-      const totalWidth = cardWidth * 6 + gap * 5;
-      const startX = (width - totalWidth) / 2;
-      return POSITIONS.map((pos,index) => {
-        const x = startX + index * (cardWidth + gap);
-        return portraitCard(pos,state.lineup[pos],x,y,cardWidth,cardHeight,team,variant);
-      }).join("");
-    }
-
-    // Square graphics: 3 + 3 gives the portraits enough room to actually
-    // look like players instead of postage stamps.
-    const cardWidth = 205;
-    const cardHeight = 238;
-    const gapX = 14;
-    const gapY = 14;
-    const totalWidth = cardWidth * 3 + gapX * 2;
+    const cardWidth = landscape ? 220 : 148;
+    const cardHeight = landscape ? 254 : 206;
+    const gap = landscape ? 20 : 9;
+    const totalWidth = cardWidth * 6 + gap * 5;
     const startX = (width - totalWidth) / 2;
     return POSITIONS.map((pos,index) => {
-      const col = index % 3;
-      const row = Math.floor(index / 3);
-      const x = startX + col * (cardWidth + gapX);
-      const yy = y + row * (cardHeight + gapY);
-      return portraitCard(pos,state.lineup[pos],x,yy,cardWidth,cardHeight,team,variant);
+      const x = startX + index * (cardWidth + gap);
+      return portraitCard(pos,state.lineup[pos],x,y,cardWidth,cardHeight,team,variant);
     }).join("");
   }
 
   function lineupPortraitStory(y, team, variant) {
-    const cardWidth = 220;
-    const cardHeight = 240;
-    const gapX = 20;
+    const cardWidth = 260;
+    const cardHeight = 286;
+    const gapX = 18;
     const gapY = 18;
-    const totalWidth = cardWidth * 2 + gapX;
+    const totalWidth = cardWidth * 3 + gapX * 2;
     const startX = (1080 - totalWidth) / 2;
     return POSITIONS.map((pos,index) => {
-      const col = index % 2;
-      const row = Math.floor(index / 2);
+      const col = index % 3;
+      const row = Math.floor(index / 3);
       const x = startX + col * (cardWidth + gapX);
       const yy = y + row * (cardHeight + gapY);
       return portraitCard(pos,state.lineup[pos],x,yy,cardWidth,cardHeight,team,variant);
