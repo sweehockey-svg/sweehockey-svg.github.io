@@ -2263,15 +2263,22 @@
     const ctx=templateContext();
     const isStory=state.format==="story",isWide=state.format==="landscape";
     const leftTeam=ctx.home,rightTeam=ctx.away;
-    const leftSize=isWide?560:isStory?520:460;
+    const leftSize=isWide?520:isStory?520:460;
     const rightSize=leftSize;
-    const leftX=isWide?110:isStory?30:20;
-    const rightX=isWide?ctx.W-rightSize-110:isStory?ctx.W-rightSize-30:ctx.W-rightSize-20;
-    const jerseyY=isStory?410:(isWide?190:205);
-    const lineupY=isStory?1160:(isWide?855:855);
+    const leftX=isWide?130:isStory?30:20;
+    const rightX=isWide?ctx.W-rightSize-130:isStory?ctx.W-rightSize-30:ctx.W-rightSize-20;
+    const jerseyY=isStory?410:(isWide?180:205);
+    const lineupY=isStory?1160:(isWide?785:855);
     const left=premiumJerseySvg(leftTeam,{variant:"home",side:"front",compact:false});
     const right=premiumJerseySvg(rightTeam,{variant:"away",side:"front",compact:false});
-    const lineup=lineupForTemplate(ctx.W,lineupY,ctx.own,ctx.ownVariant);
+    const lineup = isWide && state.lineupStyle === "portraits"
+      ? (() => {
+          const cardWidth=235, cardHeight=255, gap=16;
+          const total=cardWidth*6+gap*5;
+          const start=(ctx.W-total)/2;
+          return POSITIONS.map((pos,index) => portraitCard(pos,state.lineup[pos],start+index*(cardWidth+gap),lineupY,cardWidth,cardHeight,ctx.own,ctx.ownVariant)).join("");
+        })()
+      : lineupForTemplate(ctx.W,lineupY,ctx.own,ctx.ownVariant);
 
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
