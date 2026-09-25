@@ -598,10 +598,12 @@
   }
 
   function rosterFor(teamId) {
-    // Admin history teams must keep their historical roster even when the
-    // graphic is branded SCL 27. SCL roster IDs can collide with history IDs.
-    if (access.mode === "admin" && String(teamId || "").startsWith("history-")) {
-      return rostersByTeamId.get(teamId) || [];
+    // Admin works against the all-time history directory. Resolve both the
+    // synthetic history-* id and any accidental raw numeric id to that roster.
+    if (access.mode === "admin") {
+      const raw = String(teamId || "");
+      const historyId = raw.startsWith("history-") ? raw : "history-" + raw;
+      return rostersByTeamId.get(historyId) || rostersByTeamId.get(raw) || [];
     }
     if (scl27RostersByTeamId.has(teamId)) return scl27RostersByTeamId.get(teamId) || [];
     return rostersByTeamId.get(teamId) || [];
