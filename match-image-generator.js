@@ -2055,15 +2055,17 @@
     ].join("");
   }
 
-  function templateStream(ctx, y, wide = false) {
+  function templateStream(ctx, y, wide = false, options = {}) {
     if (!ctx.stream) return "";
-    const width = wide ? Math.min(ctx.W * .62,720) : Math.min(ctx.W * .44,520);
-    const height = state.format === "story" ? 54 : 44;
+    const width = options.width || (wide ? Math.min(ctx.W * .62,720) : Math.min(ctx.W * .44,520));
+    const height = options.height || (state.format === "story" ? 54 : 44);
+    const streamText = options.maxChars ? esc(cleanText(String(ctx.stream).replace(/&amp;/g,"&"),options.maxChars)) : ctx.stream;
+    const fontSize = options.fontSize || (state.format === "story" ? 20 : 16);
     return [
       '<g>',
       '<rect x="' + (ctx.W/2-width/2) + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="' + (height/2) + '" fill="#090d12" fill-opacity=".84" stroke="#fff" stroke-opacity=".13"/>',
       '<circle cx="' + (ctx.W/2-width/2+28) + '" cy="' + (y+height/2) + '" r="7" fill="#ff4d5f"/>',
-      '<text x="' + (ctx.W/2+8) + '" y="' + (y+height/2+6) + '" text-anchor="middle" fill="#fff" font-size="' + (state.format === "story" ? 20 : 16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1.1">' + ctx.stream + '</text>',
+      '<text x="' + (ctx.W/2+8) + '" y="' + (y+height/2+6) + '" text-anchor="middle" fill="#fff" font-size="' + fontSize + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1.1">' + streamText + '</text>',
       '</g>'
     ].join("");
   }
@@ -2239,7 +2241,7 @@
       ctx.stream
         ? (isWide
           ? '<g><rect x="102" y="' + (infoY+54) + '" width="520" height="46" rx="23" fill="#07101a" fill-opacity=".88" stroke="#8fc8ff" stroke-opacity=".30"/><circle cx="132" cy="' + (infoY+77) + '" r="7" fill="#ff4d5f"/><circle cx="132" cy="' + (infoY+77) + '" r="14" fill="#ff4d5f" opacity=".14"/><text x="362" y="' + (infoY+83) + '" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1.2">' + ctx.stream + '</text></g>'
-          : templateStream(ctx,isStory?370:infoY+116,false))
+          : templateStream(ctx,isStory?405:infoY+116,false,isStory?{width:360,height:46,fontSize:15,maxChars:34}:{}))
         : '',
 
       portraitMode ? '<text x="' + gridTitleX + '" y="' + gridTitleY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".82" font-size="' + (isWide?17:isStory?20:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="5">LINEUP</text>' : '',
