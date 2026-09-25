@@ -44,6 +44,7 @@ jobs:
       PGKEEPALIVES_COUNT: 3
       FANTASY_PRICE_HISTORY_MAX_LEAGUE_ID: 511
       FANTASY_PRICE_HISTORY_LABEL: "ECL '26: Spring"
+      FANTASY_PRICE_CONFIDENCE_GAMES: 30
 
     steps:
       - name: Check out repository
