@@ -1781,7 +1781,7 @@
       '<defs><clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18"/></clipPath></defs>',
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="#0a0f15" stroke="#ffffff" stroke-opacity=".14"/>',
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="' + team.primary + '" opacity=".22"/>',
-      '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + (y+4) + '" width="' + (width-8) + '" height="' + imageHeight + '" preserveAspectRatio="xMidYMin meet" clip-path="url(#' + clipId + ')"/>',
+      '<image href="' + esc(portrait) + '" x="' + (showStats ? (x-10) : (x+4)) + '" y="' + (y+4) + '" width="' + (showStats ? (width+20) : (width-8)) + '" height="' + (showStats ? (imageHeight*1.12) : imageHeight) + '" preserveAspectRatio="xMidYMin meet" clip-path="url(#' + clipId + ')"/>',
       '<rect x="' + (x+10) + '" y="' + (y+10) + '" width="' + posBadgeWidth + '" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>',
       '<text x="' + (x+10+posBadgeWidth/2) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" letter-spacing=".8" font-family="Arial,Helvetica,sans-serif">' + esc(pos) + '</text>',
       playerFlagSvg(cleanName,flagX,y+12,flagW,flagH),
@@ -2219,7 +2219,9 @@
       '<g>',
       isWide
         ? '<text x="102" y="' + (opponentLogoY-8) + '" fill="#ffffff" fill-opacity=".45" font-size="12" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">MOT</text>' + svgLogo(ctx.opponent,opponentLogoX,opponentLogoY,opponentLogoSize,.94) + '<text x="' + (opponentLogoX+opponentLogoSize+18) + '" y="' + (opponentLogoY+opponentLogoSize*.58) + '" fill="#ffffff" font-size="22" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + oppName + '</text>'
-        : '<text x="' + (ctx.W-77) + '" y="' + (opponentLogoY-14) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".45" font-size="11" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">MOT</text>' + svgLogo(ctx.opponent,ctx.W-opponentLogoSize-42,opponentLogoY,opponentLogoSize,.94) + '<text x="' + (ctx.W-77) + '" y="' + (opponentLogoY+opponentLogoSize+22) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?17:13) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanText(ctx.opponent.name,isStory?16:11)) + '</text>',
+        : isStory
+          ? '<text x="' + (ctx.W-77) + '" y="' + (opponentLogoY-14) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".45" font-size="11" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">MOT</text>' + svgLogo(ctx.opponent,ctx.W-opponentLogoSize-42,opponentLogoY,opponentLogoSize,.94) + '<text x="' + (ctx.W-77) + '" y="' + (opponentLogoY+opponentLogoSize+22) + '" text-anchor="middle" fill="#ffffff" font-size="17" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanText(ctx.opponent.name,16)) + '</text>'
+          : '<text x="735" y="177" text-anchor="middle" fill="#ffffff" fill-opacity=".42" font-size="10" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">MOT</text>' + svgLogo(ctx.opponent,705,184,60,.96) + '<text x="735" y="260" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanText(ctx.opponent.name,14)) + '</text>',
       '</g>',
 
       '<text x="' + infoX + '" y="' + (infoY+28) + '" text-anchor="' + infoAnchor + '" fill="#ffffff" font-size="' + (isWide?27:isStory?26:20) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
