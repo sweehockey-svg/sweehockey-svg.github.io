@@ -15,9 +15,10 @@
   const POSITIONS = ["LW","C","RW","LD","RD","G"];
   const EMPTY_LINEUP = Object.freeze({LW:"",C:"",RW:"",LD:"",RD:"",G:""});
   const EMPTY_NUMBERS = Object.freeze({LW:"",C:"",RW:"",LD:"",RD:"",G:""});
+  const accessQuery = new URLSearchParams(location.search);
   const access = {
-    mode:String(window.SEH_MATCH_GRAPHICS_ACCESS?.mode || "admin").toLowerCase(),
-    teamName:String(window.SEH_MATCH_GRAPHICS_ACCESS?.teamName || "").trim()
+    mode:String(window.SEH_MATCH_GRAPHICS_ACCESS?.mode || accessQuery.get("mode") || "admin").toLowerCase(),
+    teamName:String(window.SEH_MATCH_GRAPHICS_ACCESS?.teamName || accessQuery.get("team") || "").trim()
   };
   let teamDirectory = [...JERSEY_PRESETS];
   let rostersByTeamId = new Map();
@@ -247,8 +248,8 @@
   }
 
   function teamById(id) {
-    return teamDirectory.find(team => team.id === id)
-      || scl27TeamDirectory.find(team => team.id === id)
+    return scl27TeamDirectory.find(team => team.id === id)
+      || teamDirectory.find(team => team.id === id)
       || activeTeamDirectory()[0]
       || teamDirectory[0]
       || JERSEY_PRESETS[0];
@@ -708,10 +709,23 @@
         || scl27TeamDirectory.find(team => normalize(team.name) === normalize(access.teamName));
       if (locked) {
         state.teamId = locked.id;
+        state.ownSide = "home";
+        if (state.league !== "SCL" || String(state.leagueSeason || "").trim() !== "27") {
+          state.league = "SCL";
+          state.leagueSeason = "27";
+          state.leagueDivision = "";
+          syncCompetitionState();
+        }
         if (state.opponentId === locked.id) {
           state.opponentId = directory.find(team => team.id !== locked.id)?.id || locked.id;
         }
         if (select) select.disabled = true;
+        const sideSelect = $("#sideSelect");
+        if (sideSelect) sideSelect.disabled = true;
+        const leagueSelect = $("#leagueSelect");
+        const seasonInput = $("#leagueSeasonInput");
+        if (leagueSelect) leagueSelect.disabled = true;
+        if (seasonInput) seasonInput.disabled = true;
         if (badge) badge.textContent = "KAPTEN · " + locked.name;
       }
     } else {
@@ -988,6 +1002,86 @@
     setDefaultLineup();
     if (state.template === "team-presentation") setDefaultPresentationRoster();
     await hydratePlayerPortraits(state.teamId);
+  }
+
+  async function loadAdminHistoryData() {
+    const status = $("#dataStatus");
+    if (status) status.textContent = "Hämtar hela laghistoriken…";
+
+    const [teamRowsRaw,playerRowsRaw] = await Promise.all([
+      getPublicRows(
+        "v_local_team_list",
+        "select=team_id,current_name,logo_path,logo_url&order=current_name.asc&limit=5000"
+      ),
+      getPublicRows(
+        "v_ehockey_team_all_time_players_chronological",
+        "select=team_id,player_key,display_gamertag,primary_position,player_image,sports_gamer_player_url&order=team_id.asc,display_gamertag.asc&limit=20000"
+      )
+    ]);
+
+    const teamRows = Array.isArray(teamRowsRaw) ? teamRowsRaw : [];
+    const playerRows = Array.isArray(playerRowsRaw) ? playerRowsRaw : [];
+    if (!teamRows.length) throw new Error("Laghistoriken innehåller inga lag");
+
+    teamDirectory = teamRows
+      .filter(row => Number(row?.team_id) > 0 && String(row?.current_name || "").trim())
+      .map((row,index) => {
+        const preset = JERSEY_PRESETS.find(team => normalize(team.name) === normalize(row.current_name));
+        const [primary,accent,trim,pattern] = fallbackPalette(index);
+        return {
+          ...(preset || {}),
+          id:"history-" + Number(row.team_id),
+          name:String(row.current_name || "Okänt lag"),
+          code:preset?.code || initials(row.current_name),
+          primary:preset?.primary || primary,
+          accent:preset?.accent || accent,
+          trim:preset?.trim || trim,
+          pattern:preset?.pattern || pattern,
+          teamId:Number(row.team_id),
+          jerseyTeamId:Number(row.team_id),
+          exactLogoUrl:String(row.logo_url || row.logo_path || "").trim(),
+          genericJersey:!preset
+        };
+      });
+
+    rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
+    const byTeamId = new Map(teamDirectory.map(team => [Number(team.teamId),team]));
+    playerKeysByName = new Map();
+
+    for (const row of playerRows) {
+      const team = byTeamId.get(Number(row?.team_id));
+      const player = String(row?.display_gamertag || "").trim();
+      if (!team || !player) continue;
+      const list = rostersByTeamId.get(team.id) || [];
+      if (!list.some(name => normalize(name) === normalize(player))) list.push(player);
+      rostersByTeamId.set(team.id,list);
+      const normalized = normalize(player);
+      const key = String(row?.player_key || "").trim();
+      if (key) playerKeysByName.set(normalized,key);
+      if (row?.primary_position || row?.player_image || row?.sports_gamer_player_url) {
+        playerPortraits.set(normalized,portraitUrlFromRow(row));
+        playerMetaByName.set(normalized,{
+          primaryPosition:String(row?.primary_position || "").trim().toUpperCase(),
+          countryCode:""
+        });
+      }
+    }
+    for (const list of rostersByTeamId.values()) list.sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
+
+    try { await hydrateSavedJerseySettings(teamDirectory); }
+    catch (error) { console.warn("[Match Graphics] kunde inte läsa historiska lagtröjor",error); }
+
+    const preferred = teamDirectory.find(team => normalize(team.name) === normalize(access.teamName))
+      || teamDirectory.find(team => normalize(team.name) === normalize("Västerås IK"))
+      || teamDirectory[0];
+    state.teamId = preferred.id;
+    state.opponentId = teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
+    setDefaultLineup();
+    await hydratePlayerPortraits(state.teamId);
+    syncForm();
+    render();
+    dataSource = "Laghistorik · alla lag och spelare";
+    if (status) status.textContent = teamDirectory.length + " historiska lag · " + rosterPlayerCount() + " spelare";
   }
 
   async function loadLagbyggeData() {
@@ -2428,7 +2522,9 @@
   }
 
   function fillTeamSelect(select, selected) {
-    const directory = activeTeamDirectory();
+    const directory = access.mode === "captain" && select?.id === "opponentSelect" && scl27TeamDirectory.length
+      ? scl27TeamDirectory
+      : activeTeamDirectory();
     select.innerHTML = directory.map(team =>
       '<option value="' + esc(team.id) + '"' + (team.id === selected ? ' selected' : '') + '>' +
       esc(team.name) + (team.division ? ' · ' + esc(team.division) : '') +
@@ -2956,5 +3052,13 @@
 
   syncForm();
   render();
-  loadLagbyggeData();
+  if (access.mode === "admin") {
+    loadAdminHistoryData().catch(error => {
+      console.error("[Match Graphics] kunde inte läsa laghistoriken",error);
+      const status = $("#dataStatus");
+      if (status) status.textContent = "Laghistoriken kunde inte laddas";
+    });
+  } else {
+    loadLagbyggeData();
+  }
 })();
