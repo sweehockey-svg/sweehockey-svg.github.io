@@ -619,7 +619,7 @@
       '<button type="button" class="is-active" data-jersey-variant="home">Hemma</button>'+
       '<button type="button" data-jersey-variant="away">Borta</button></div></div>'+
       '<div class="team-public-jersey-v1__stage"></div>'+
-      '<div class="team-public-jersey-v1__owner" hidden><button type="button" data-jersey-edit>Redigera tröja</button><span data-jersey-role></span></div>'+
+      '<div class="team-public-jersey-v1__owner" hidden><button type="button" data-jersey-edit>Redigera tröja</button><a data-match-graphics hidden>Match Graphics</a><span data-jersey-role></span></div>'+
       '<form class="team-public-jersey-v1__editor" data-jersey-editor hidden>'+
         '<div class="team-public-jersey-v1__editor-head"><strong>Tröjeditor</strong><button type="button" data-jersey-close aria-label="Stäng">×</button></div>'+
         '<label><span>Grundfärg</span><input type="color" name="primary" value="#0c0f12"></label>'+
@@ -649,6 +649,7 @@
     const owner=container.querySelector(".team-public-jersey-v1__owner");
     const editButton=container.querySelector("[data-jersey-edit]");
     const roleLabel=container.querySelector("[data-jersey-role]");
+    const matchGraphics=container.querySelector("[data-match-graphics]");
     const editor=container.querySelector("[data-jersey-editor]");
     const closeButton=container.querySelector("[data-jersey-close]");
     const autoButton=container.querySelector("[data-jersey-auto]");
@@ -704,6 +705,11 @@
           : access.staff_role==="assistant_captain"
             ? "ASSISTERANDE KAPTEN"
             : "LAGLEDARE";
+
+      if(matchGraphics && (access.is_admin || access.staff_role==="captain" || access.staff_role==="assistant_captain")) {
+        matchGraphics.hidden=false;
+        matchGraphics.href="match-image-generator.html?mode="+(access.is_admin ? "admin" : "captain")+"&team="+encodeURIComponent(team.name);
+      }
 
       editButton?.addEventListener("click",()=>{
         syncEditor(team);
