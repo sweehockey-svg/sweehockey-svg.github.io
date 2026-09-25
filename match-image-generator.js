@@ -81,8 +81,8 @@
     playerNumber:"21",
     lineup:{...EMPTY_LINEUP},
     lineupNumbers:{...EMPTY_NUMBERS},
-    presentationPlayers:Array(13).fill(""),
-    presentationNumbers:Array(13).fill("")
+    presentationPlayers:Array(12).fill(""),
+    presentationNumbers:Array(12).fill("")
   };
 
   const normalize = value => String(value || "")
@@ -645,9 +645,9 @@
   }
 
   function setDefaultPresentationRoster() {
-    const players = rosterFor(state.teamId).filter(Boolean).slice(0,13);
-    state.presentationPlayers = Array.from({length:13},(_,index) => players[index] || "");
-    state.presentationNumbers = Array(13).fill("");
+    const players = rosterFor(state.teamId).filter(Boolean).slice(0,12);
+    state.presentationPlayers = Array.from({length:12},(_,index) => players[index] || "");
+    state.presentationNumbers = Array(12).fill("");
   }
 
   function presentationRosterOptions(slotIndex) {
@@ -673,14 +673,14 @@
     const grid = $("#presentationRosterGrid");
     if (!grid) return;
     const roster = rosterFor(state.teamId);
-    for (let i=0;i<13;i++) {
+    for (let i=0;i<12;i++) {
       const current = state.presentationPlayers[i] || "";
       if (current && !roster.some(player => normalize(player) === normalize(current))) {
         state.presentationPlayers[i] = "";
         state.presentationNumbers[i] = "";
       }
     }
-    grid.innerHTML = Array.from({length:13},(_,index) => {
+    grid.innerHTML = Array.from({length:12},(_,index) => {
       const value = esc(state.presentationNumbers[index] || "");
       return '<div class="lineup-field">' +
         '<label>SPELARE ' + (index+1) + '</label>' +
@@ -693,7 +693,7 @@
     }).join("");
     const count = state.presentationPlayers.filter(Boolean).length;
     const hint = $("#presentationRosterHint");
-    if (hint) hint.textContent = count + " / 13 valda";
+    if (hint) hint.textContent = count + " / 12 valda";
   }
 
 
@@ -2201,12 +2201,12 @@
   }
 
   function teamPresentationRosterGrid(players,team) {
-    const rows = [players.slice(0,5),players.slice(5,10),players.slice(10,13)].filter(row => row.length);
-    const cardW = 174;
-    const cardH = 138;
-    const gap = 12;
-    const rowGap = 9;
-    const firstY = 562;
+    const rows = [players.slice(0,6),players.slice(6,12)].filter(row => row.length);
+    const cardW = 142;
+    const cardH = 128;
+    const gap = 10;
+    const rowGap = 12;
+    const firstY = 582;
     return rows.map((row,rowIndex) => {
       const totalW = row.length * cardW + Math.max(0,row.length-1) * gap;
       const startX = (1080-totalW)/2;
@@ -2214,7 +2214,7 @@
       return row.map((name,colIndex) =>
         teamPresentationPlayerCard(
           name,
-          rowIndex*5+colIndex,
+          rowIndex*6+colIndex,
           startX + colIndex*(cardW+gap),
           y,
           cardW,
@@ -2227,7 +2227,7 @@
 
   function buildTeamPresentationSvg() {
     const team = teamById(state.teamId);
-    const players = state.presentationPlayers.filter(Boolean).slice(0,13);
+    const players = state.presentationPlayers.filter(Boolean).slice(0,12);
     const league = getLeagueDisplay();
     const competition = esc(cleanText(league.title,28).toUpperCase() || "SVENSK eHOCKEY");
     const division = esc(cleanText(league.division || team.division,16).toUpperCase());
@@ -2261,7 +2261,7 @@
       '<line x1="610" y1="409" x2="954" y2="409" stroke="' + team.accent + '" stroke-opacity=".72" stroke-width="3"/>',
       '<text x="782" y="446" text-anchor="middle" fill="#ffffff" fill-opacity=".52" font-size="13" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">FULL ROSTER · ' + rosterLabel + '</text>',
 
-      '<rect x="54" y="525" width="972" height="482" rx="28" fill="url(#team-presentation-panel)" stroke="#b8ddff" stroke-opacity=".13"/>',
+      '<rect x="54" y="525" width="972" height="360" rx="28" fill="url(#team-presentation-panel)" stroke="#b8ddff" stroke-opacity=".13"/>',
       '<text x="540" y="558" text-anchor="middle" fill="#ffffff" fill-opacity=".82" font-size="15" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="5">ROSTER</text>',
       grid || '<text x="540" y="760" text-anchor="middle" fill="#ffffff" fill-opacity=".42" font-size="24" font-weight="800" font-family="Arial,Helvetica,sans-serif">INGA SPELARE I AKTUELL ROSTER</text>',
 
@@ -2427,8 +2427,8 @@
     state.showPattern = true;
     state.lineupStyle = "cards";
     state.lineupNumbers = {...EMPTY_NUMBERS};
-    state.presentationPlayers = Array(13).fill("");
-    state.presentationNumbers = Array(13).fill("");
+    state.presentationPlayers = Array(12).fill("");
+    state.presentationNumbers = Array(12).fill("");
     state.streamPlatform = "none";
     state.streamChannel = "";
     applyAccessMode();
@@ -2780,7 +2780,7 @@
       const select = event.target.closest("[data-presentation-player]");
       if (!select) return;
       const index = Number(select.dataset.presentationPlayer);
-      if (!Number.isInteger(index) || index < 0 || index >= 13) return;
+      if (!Number.isInteger(index) || index < 0 || index >= 12) return;
       const player = select.value;
       if (player) {
         for (let i=0;i<state.presentationPlayers.length;i++) {
@@ -2798,7 +2798,7 @@
       const input = event.target.closest("[data-presentation-number]");
       if (!input) return;
       const index = Number(input.dataset.presentationNumber);
-      if (!Number.isInteger(index) || index < 0 || index >= 13) return;
+      if (!Number.isInteger(index) || index < 0 || index >= 12) return;
       const value = String(input.value || "").replace(/\D/g,"").slice(0,2);
       input.value = value;
       state.presentationNumbers[index] = value;
