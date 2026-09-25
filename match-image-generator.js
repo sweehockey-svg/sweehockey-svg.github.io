@@ -75,7 +75,7 @@
     template:"classic",
     background:"arena",
     showPattern:true,
-    lineupStyle:"cards",
+    lineupStyle:"portraits",
     streamPlatform:"none",
     streamChannel:"",
     playerName:"eSWAHN",
@@ -2670,7 +2670,7 @@
     state.template = "classic";
     state.background = "arena";
     state.showPattern = true;
-    state.lineupStyle = "cards";
+    state.lineupStyle = "portraits";
     state.lineupNumbers = {...EMPTY_NUMBERS};
     state.presentationPlayers = Array(12).fill("");
     state.presentationNumbers = Array(12).fill("");
