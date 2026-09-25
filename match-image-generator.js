@@ -2355,32 +2355,34 @@
   function buildMinimalSvg() {
     const ctx=templateContext();
     const isStory=state.format==="story",isWide=state.format==="landscape";
-    const jerseySize=isWide?520:isStory?600:470;
-    const jerseyX=isWide?ctx.W*.08:isStory?(ctx.W-jerseySize)/2:-15;
-    const jerseyY=isWide?205:isStory?320:225;
-    const ownJ=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"front",compact:false});
-    const lineupY=isStory?1150:isWide?790:825;
+    const jerseySize=isWide?500:isStory?560:390;
+    const jerseyX=isWide?120:isStory?80:70;
+    const jerseyY=isWide?210:isStory?310:210;
+    const infoX=isWide?ctx.W*.55:isStory?610:565;
+    const infoY=isWide?300:isStory?430:300;
+    const lineupY=isStory?1190:isWide?760:720;
     const lineup=lineupForTemplate(ctx.W,lineupY,ctx.own,ctx.ownVariant);
+    const subtleAccent=state.showPattern === false ? "" :
+      '<defs><linearGradient id="minimal-accent" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + ctx.own.primary + '" stop-opacity=".28"/><stop offset=".55" stop-color="' + ctx.own.accent + '" stop-opacity=".08"/><stop offset="1" stop-color="#05080c" stop-opacity="0"/></linearGradient></defs><rect width="' + ctx.W + '" height="' + ctx.H + '" fill="url(#minimal-accent)"/>';
 
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
       commonTemplateDefs(ctx,"minimal"),
       backgroundImageSvg(ctx.W,ctx.H,1),
-      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#f3f1eb" opacity=".86"/>',
-      state.showPattern === false ? '' : '<rect x="0" y="0" width="' + (isWide?ctx.W*.46:ctx.W) + '" height="' + (isWide?ctx.H:ctx.H*.56) + '" fill="' + ctx.own.primary + '" opacity=".91"/>',
-      state.showPattern === false ? '' : '<circle cx="' + (isWide?ctx.W*.23:ctx.W*.5) + '" cy="' + (isWide?ctx.H*.44:ctx.H*.27) + '" r="' + (isWide?ctx.W*.20:ctx.W*.38) + '" fill="' + ctx.own.accent + '" opacity=".12"/>',
+      '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#071019" opacity=".90"/>',
+      subtleAccent,
+      '<text x="54" y="' + (isStory?88:70) + '" fill="#fff" font-size="' + (isWide?58:isStory?54:44) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">' + ctx.badge + '</text>',
+      '<text x="58" y="' + (isStory?138:108) + '" fill="#fff" fill-opacity=".58" font-size="15" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
+      ctx.competitionDivision ? '<text x="58" y="' + (isStory?162:130) + '" fill="#fff" fill-opacity=".38" font-size="10" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competitionDivision + '</text>' : '',
       teamHeroVisual(ctx.own,ctx.ownVariant,jerseyX,jerseyY,jerseySize),
-      '<text x="' + (isWide?ctx.W*.53:54) + '" y="' + (isWide?140:isStory?90:72) + '" fill="' + (isWide?"#101318":"#fff") + '" font-size="' + (isWide?70:isStory?58:44) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">' + ctx.badge + '</text>',
-      '<text x="' + (isWide?ctx.W*.53:58) + '" y="' + (isWide?190:isStory?140:110) + '" fill="' + (isWide?"#59616b":"#fff") + '" fill-opacity="' + (isWide?1:.62) + '" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
-      ctx.competitionDivision ? '<text x="' + (isWide?ctx.W*.53:58) + '" y="' + (isWide?216:isStory?164:132) + '" fill="' + (isWide?"#737b84":"#fff") + '" fill-opacity="' + (isWide?1:.42) + '" font-size="11" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competitionDivision + '</text>' : '',
-      '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?330:isStory?955:620) + '" fill="' + (isWide?"#101318":"#101318") + '" font-size="' + (isWide?50:isStory?46:36) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.own.name) + '</text>',
-      '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?390:isStory?1005:668) + '" fill="#7a828a" font-size="' + (isWide?24:isStory?22:18) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif">mot ' + esc(ctx.opponent.name) + '</text>',
-      svgLogo(ctx.opponent,isWide?ctx.W*.84:(ctx.W-130),isWide?255:(isStory?930:590),isWide?135:90,.95),
-      '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?475:isStory?1070:735) + '" fill="#101318" font-size="' + (isWide?32:isStory?30:24) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
-      ctx.stream ? '<text x="' + (isWide?ctx.W*.53:ctx.W*.52) + '" y="' + (isWide?525:isStory?1110:775) + '" fill="#c43543" font-size="' + (isWide?20:isStory?19:15) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.stream + '</text>' : '',
-      '<rect x="' + (isWide?ctx.W*.48:24) + '" y="' + (lineupY-62) + '" width="' + (isWide?ctx.W*.49:ctx.W-48) + '" height="' + (ctx.H-lineupY+34) + '" rx="24" fill="#101318"/>',
-      '<text x="' + (isWide?ctx.W*.725:ctx.W/2) + '" y="' + (lineupY-26) + '" text-anchor="middle" fill="#ffffff" fill-opacity=".58" font-size="' + (isStory?22:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">STARTING SIX</text>',
+      '<text x="' + infoX + '" y="' + infoY + '" fill="#fff" font-size="' + (isWide?54:isStory?46:38) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.own.name) + '</text>',
+      '<text x="' + infoX + '" y="' + (infoY+52) + '" fill="#fff" fill-opacity=".48" font-size="' + (isWide?22:isStory?21:18) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif">vs ' + esc(ctx.opponent.name) + '</text>',
+      svgLogo(ctx.opponent,infoX,isWide?infoY+88:infoY+82,isWide?100:82,.92),
+      '<text x="' + (infoX+(isWide?126:105)) + '" y="' + (isWide?infoY+145:infoY+132) + '" fill="#fff" font-size="' + (isWide?30:isStory?28:23) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
+      ctx.stream ? templateStream(ctx,isWide?infoY+205:isStory?infoY+190:infoY+175,false,{width:isWide?470:360,height:46,fontSize:isWide?16:14,maxChars:30}) : '',
+      '<text x="' + (ctx.W/2) + '" y="' + (lineupY-34) + '" text-anchor="middle" fill="#fff" fill-opacity=".52" font-size="' + (isStory?21:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="4">STARTING SIX</text>',
       '<g>' + lineup + '</g>',
+      '<text x="54" y="' + (ctx.H-30) + '" fill="#fff" fill-opacity=".28" font-size="11" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">SVENSK eHOCKEY · MINIMAL</text>',
       '</svg>'
     ].join("");
   }
