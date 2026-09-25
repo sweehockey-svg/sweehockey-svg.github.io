@@ -707,8 +707,16 @@
             : "LAGLEDARE";
 
       if(matchGraphics && (access.is_admin || access.staff_role==="captain" || access.staff_role==="assistant_captain")) {
-        matchGraphics.hidden=false;
-        matchGraphics.href="match-image-generator.html?mode="+(access.is_admin ? "admin" : "captain")+"&team="+encodeURIComponent(team.name);
+        let isScl27Team=false;
+        try {
+          isScl27Team=Boolean(await rpc("seh_is_scl27_registered_team",{p_team_name:team.name}));
+        } catch(error) {
+          console.warn("[Team Jersey] kunde inte kontrollera SCL 27-registrering",error);
+        }
+        if(isScl27Team) {
+          matchGraphics.hidden=false;
+          matchGraphics.href="match-image-generator.html?mode="+(access.is_admin ? "admin" : "captain")+"&team="+encodeURIComponent(team.name);
+        }
       }
 
       editButton?.addEventListener("click",()=>{
