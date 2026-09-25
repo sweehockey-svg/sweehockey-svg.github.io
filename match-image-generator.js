@@ -1781,7 +1781,7 @@
       '<defs><clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18"/></clipPath></defs>',
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="#0a0f15" stroke="#ffffff" stroke-opacity=".14"/>',
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="' + team.primary + '" opacity=".22"/>',
-      '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + (y+4) + '" width="' + (width-8) + '" height="' + imageHeight + '" preserveAspectRatio="' + (showStats ? 'xMidYMid meet' : 'xMidYMin slice') + '" clip-path="url(#' + clipId + ')"/>',
+      '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + (y+4) + '" width="' + (width-8) + '" height="' + imageHeight + '" preserveAspectRatio="xMidYMin meet" clip-path="url(#' + clipId + ')"/>',
       '<rect x="' + (x+10) + '" y="' + (y+10) + '" width="' + posBadgeWidth + '" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>',
       '<text x="' + (x+10+posBadgeWidth/2) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" letter-spacing=".8" font-family="Arial,Helvetica,sans-serif">' + esc(pos) + '</text>',
       playerFlagSvg(cleanName,flagX,y+12,flagW,flagH),
@@ -2142,13 +2142,13 @@
       startX = (ctx.W - (cardWidth * 2 + gapX)) / 2;
       startY = 585;
     } else {
-      cardWidth = 304;
-      cardHeight = 272;
-      gapX = 16;
-      gapY = 16;
+      cardWidth = 286;
+      cardHeight = 300;
+      gapX = 18;
+      gapY = 18;
       cols = 3;
       startX = (ctx.W - (cardWidth * 3 + gapX * 2)) / 2;
-      startY = 414;
+      startY = 405;
     }
 
     const displayPositions = cols === 3
@@ -2169,23 +2169,23 @@
     const ownName=esc(ctx.own.name),oppName=esc(ctx.opponent.name);
     const isStory=state.format==="story",isWide=state.format==="landscape";
     const portraitMode=state.lineupStyle==="portraits";
-    const heroSize=isWide?450:isStory?470:250;
-    const heroX=isWide?140:isStory?(ctx.W-heroSize)/2:54;
-    const heroY=isWide?178:isStory?210:128;
+    const heroSize=isWide?450:isStory?470:225;
+    const heroX=isWide?140:isStory?(ctx.W-heroSize)/2:48;
+    const heroY=isWide?178:isStory?210:118;
     const hero=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"front",compact:false});
     const lineup=portraitMode
       ? startingSixPortraitGrid(ctx)
       : focusLineupMarkup(ctx,isWide?630:(isStory?875:500));
 
-    const opponentLogoSize=isWide?84:isStory?112:70;
+    const opponentLogoSize=isWide?84:isStory?112:64;
     const opponentLogoX=isWide?128:isStory?ctx.W-opponentLogoSize-74:ctx.W-opponentLogoSize-42;
-    const opponentLogoY=isWide?716:isStory?350:108;
+    const opponentLogoY=isWide?716:isStory?350:106;
 
     const infoX=isWide?102:isStory?ctx.W/2:ctx.W/2;
-    const infoY=isWide?806:isStory?400:238;
+    const infoY=isWide?806:isStory?400:224;
     const infoAnchor=isWide?"start":"middle";
     const gridTitleX=isWide?1314:ctx.W/2;
-    const gridTitleY=isWide?128:isStory?535:370;
+    const gridTitleY=isWide?128:isStory?535:358;
 
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '" role="img" aria-label="Starting Six ' + ownName + '">',
@@ -2214,7 +2214,7 @@
 
       isWide
         ? '<text x="102" y="654" fill="#ffffff" font-size="42" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text><line x1="102" y1="676" x2="610" y2="676" stroke="' + ctx.own.accent + '" stroke-opacity=".55" stroke-width="2"/>'
-        : '<text x="' + (ctx.W/2) + '" y="' + (isStory?720:348) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?38:30) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>',
+        : '<text x="' + (ctx.W/2) + '" y="' + (isStory?720:330) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?38:30) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>',
 
       '<g>',
       isWide
