@@ -1026,7 +1026,7 @@
     for (let offset = 0; ; offset += 1000) {
       const page = await getPublicRows(
         "v_ehockey_team_all_time_players_public",
-        "select=team_id,player_key,display_gamertag,primary_position,player_image,sports_gamer_player_url&order=team_id.asc,display_gamertag.asc&limit=1000&offset=" + offset
+        "select=team_id,player_key,display_gamertag,primary_position,player_country,player_image,sports_gamer_player_url&order=team_id.asc,display_gamertag.asc&limit=1000&offset=" + offset
       );
       if (!Array.isArray(page) || !page.length) break;
       playerRowsRaw.push(...page);
@@ -1076,7 +1076,7 @@
         playerPortraits.set(normalized,portraitUrlFromRow(row));
         playerMetaByName.set(normalized,{
           primaryPosition:String(row?.primary_position || "").trim().toUpperCase(),
-          countryCode:""
+          countryCode:String(row?.player_country || "").trim().toUpperCase()
         });
       }
     }
