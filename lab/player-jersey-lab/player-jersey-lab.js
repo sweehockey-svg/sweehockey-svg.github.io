@@ -15,15 +15,30 @@ function portrait(p){
  const raw=String(p.player_image||p.image_url||p.portrait_url||"").trim();
  return /^https?:\/\//i.test(raw)?raw:"../../players/1DEFAULTBILDID.png";
 }
-function jerseySvg(team,variant){
-  if(typeof window.SEH_TEAM_JERSEY_RENDERER_V27?.render==="function") return window.SEH_TEAM_JERSEY_RENDERER_V27.render(team,{variant,side:"front"});
-  return "";
+async function rpc(name,payload){
+ const r=await fetch(SUPA+"rpc/"+name,{method:"POST",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify(payload||{})});
+ if(!r.ok) return null;
+ const data=await r.json(); return Array.isArray(data)?(data[0]||null):data;
+}
+async function jerseySvg(team,variant){
+ const api=window.SEH_TEAM_JERSEY_V27;
+ if(!api?.render||!api?.prepareTeam) return "";
+ const prepared=await api.prepareTeam({id:Number(team.team_id),name:team.current_name,logoUrl:team.logo_url||team.logo_path||""});
+ const saved=await rpc("seh_get_team_jersey_settings",{p_team_id:Number(team.team_id)});
+ if(saved&&typeof saved==="object"){
+   const row=Array.isArray(saved)?saved[0]:saved;
+   if(row?.primary_color) prepared.primary=row.primary_color;
+   if(row?.accent_color) prepared.accent=row.accent_color;
+   if(row?.trim_color) prepared.trim=row.trim_color;
+   if(row?.pattern) prepared.pattern=row.pattern;
+ }
+ return api.render(prepared,{variant,side:"front",compact:false});
 }
 function dataUrl(svg){return svg?"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg):""}
-function render(){
+async function render(){
  const team=teams.find(t=>String(t.team_id||t.id)===$("#team").value)||teams[0], p=players.find(x=>String(x.player_key)===$("#player").value)||players[0];
  if(!team||!p)return;
- const pic=portrait(p), variant=$("#variant").value, off=Number($("#offset").value)||0, jersey=dataUrl(jerseySvg(team,variant));
+ const pic=portrait(p), variant=$("#variant").value, off=Number($("#offset").value)||0, jersey=dataUrl(await jerseySvg(team,variant));
  const modes=[
   ["Overlay","Grundtest: porträtt bakom tröjan",""],
   ["Mask-look","Lite större tröja över axlar/bröst","mask"],
