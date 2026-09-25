@@ -2311,11 +2311,11 @@
     const isStory=state.format==="story",isWide=state.format==="landscape";
     const topH=isStory?560:state.format==="square"?430:350;
     const homeLogo=isStory?150:state.format==="square"?170:110;
-    const logoY=isStory?185:state.format==="square"?155:120;
-    const jerseySize=isStory?250:isWide?250:state.format==="square"?255:190;
+    const logoY=isStory?185:state.format==="square"?135:120;
+    const jerseySize=isStory?250:isWide?250:state.format==="square"?285:190;
     const leftJ=premiumJerseySvg(ctx.home,{variant:"home",side:"front",compact:true});
     const rightJ=premiumJerseySvg(ctx.away,{variant:"away",side:"front",compact:true});
-    const lineupY=isStory?1040:isWide?725:650;
+    const lineupY=isStory?1040:isWide?725:530;
     const lineup = state.format === "square" && state.lineupStyle === "portraits"
       ? (() => {
           const cardWidth=150, cardHeight=245, gap=12;
