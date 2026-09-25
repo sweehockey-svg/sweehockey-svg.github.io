@@ -51,7 +51,13 @@ async function render(){
   ["Tight fit","Mer aggressiv zoom och högre tröja","tight"],
   ["Blend","Overlay med mjukare kroppsområde","fade"]
  ];
- $("#grid").innerHTML=modes.map(([n,d,cl])=>'<article class="card"><div class="stage '+cl+'">'+(pic?'<img class="player" src="'+esc(pic)+'">':'')+(jersey?'<img class="jersey" style="margin-top:'+off+'px" src="'+jersey+'">':'')+'</div><div class="meta"><b>'+n+'</b><span>'+d+'</span></div></article>').join("");
+ const basic=modes.map(([n,d,cl])=>'<article class="card"><div class="stage '+cl+'">'+(pic?'<img class="player" src="'+esc(pic)+'">':'')+(jersey?'<img class="jersey" style="margin-top:'+off+'px" src="'+jersey+'">':'')+'</div><div class="meta"><b>'+n+'</b><span>'+d+'</span></div></article>').join("");
+ const worn='<article class="card worn-card"><div class="stage worn">'+
+   (pic?'<img class="player" src="'+esc(pic)+'">':'')+
+   (jersey?'<img class="worn-jersey" style="margin-top:'+off+'px" src="'+jersey+'">':'')+
+   (pic?'<div class="head-cut"><img src="'+esc(pic)+'"></div><i class="neck-shadow"></i>':'')+
+   '</div><div class="meta"><b>Worn Jersey · prototyp</b><span>Huvud/hals ovanpå, hockeytröjan ersätter visuellt originalets överkropp. Detta är spåret vi testar för automatisk lagtröja.</span></div></article>';
+ $("#grid").innerHTML=basic+worn;
 }
 async function init(){
  try{
