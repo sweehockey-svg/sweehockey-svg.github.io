@@ -212,6 +212,7 @@
   }
 
   function usesScl27Teams() {
+    if (access.mode === "admin") return false;
     return Boolean(
       scl27TeamDirectory.length &&
       (
@@ -597,6 +598,11 @@
   }
 
   function rosterFor(teamId) {
+    // Admin history teams must keep their historical roster even when the
+    // graphic is branded SCL 27. SCL roster IDs can collide with history IDs.
+    if (access.mode === "admin" && String(teamId || "").startsWith("history-")) {
+      return rostersByTeamId.get(teamId) || [];
+    }
     if (scl27RostersByTeamId.has(teamId)) return scl27RostersByTeamId.get(teamId) || [];
     return rostersByTeamId.get(teamId) || [];
   }
