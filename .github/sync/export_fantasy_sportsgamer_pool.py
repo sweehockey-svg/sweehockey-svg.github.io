@@ -43,6 +43,8 @@ LEAGUE_IDS = parse_league_ids()
 PRICE_HISTORY_MAX_LEAGUE_ID = int(os.environ.get("FANTASY_PRICE_HISTORY_MAX_LEAGUE_ID") or "511")
 PRICE_HISTORY_LABEL = (os.environ.get("FANTASY_PRICE_HISTORY_LABEL") or "ECL '26: Spring").strip()
 PRICE_CONFIDENCE_GAMES = int(os.environ.get("FANTASY_PRICE_CONFIDENCE_GAMES") or "30")
+PRICE_RECENCY_HALF_LIFE_LEAGUE_IDS = float(os.environ.get("FANTASY_PRICE_RECENCY_HALF_LIFE_LEAGUE_IDS") or "60")
+PRICE_RECENCY_FLOOR = float(os.environ.get("FANTASY_PRICE_RECENCY_FLOOR") or "0.10")
 PRICE_DIVISION_WEIGHTS = {
     "Elite": 1.00,
     "Pro": 0.90,
@@ -501,6 +503,14 @@ def league_strength(league_name: str) -> tuple[str, float]:
     return "Other", PRICE_DIVISION_WEIGHTS["Other"]
 
 
+def history_recency_weight(league_id: int) -> float:
+    """Decay older SportsGamer leagues while keeping a small historical floor."""
+    distance = max(0, PRICE_HISTORY_MAX_LEAGUE_ID - integer(league_id))
+    if PRICE_RECENCY_HALF_LIFE_LEAGUE_IDS <= 0:
+        return 1.0
+    return max(PRICE_RECENCY_FLOOR, 0.5 ** (distance / PRICE_RECENCY_HALF_LIFE_LEAGUE_IDS))
+
+
 def fetch_historical_league_names(
     connection: Any,
     inventory: dict[str, list[str]],
@@ -578,6 +588,7 @@ def fetch_historical_performance(
         "positions": Counter(),
         "roles": defaultdict(lambda: {
             "games": 0,
+            "effective_games": 0.0,
             "points": 0.0,
             "raw_points": 0.0,
             "division_games": Counter(),
@@ -586,6 +597,7 @@ def fetch_historical_performance(
                 "saves": 0.0,
                 "goals_allowed": 0.0,
                 "strength": 0.0,
+                "recency": 0.0,
             }),
         }),
         "seen": set(),
@@ -622,18 +634,21 @@ def fetch_historical_performance(
 
         role = history_role(position)
         division, strength = league_strength(league_names.get(league_id, ""))
-        weighted_points = points * strength
+        recency = history_recency_weight(league_id)
+        weighted_points = points * strength * recency
         role_values = totals[player_id]["roles"][role]
         role_values["games"] += 1
+        role_values["effective_games"] += recency
         role_values["points"] += weighted_points
         role_values["raw_points"] += points
         role_values["division_games"][division] += 1
         if role == "G":
-            goalie_division = role_values["goalie_divisions"][division]
+            goalie_division = role_values["goalie_divisions"][f"{league_id}:{division}"]
             goalie_division["games"] += 1
             goalie_division["saves"] += saves
             goalie_division["goals_allowed"] += goals_allowed
             goalie_division["strength"] = strength
+            goalie_division["recency"] = recency
 
         totals[player_id]["games"] += 1
         totals[player_id]["points"] += weighted_points
@@ -646,6 +661,7 @@ def fetch_historical_performance(
         roles = {}
         for role, role_values in values["roles"].items():
             role_games = integer(role_values["games"])
+            effective_games = number(role_values["effective_games"])
             role_points = float(role_values["points"])
             extra: dict[str, Any] = {}
             if role == "G" and role_games:
@@ -666,7 +682,12 @@ def fetch_historical_performance(
                         save_percentage * GOALIE_SAVE_PERCENTAGE_WEIGHT
                         - goals_against_average * GOALIE_GAA_PENALTY,
                     )
-                    quality_points += quality * number(goalie_values["strength"]) * tier_games
+                    quality_points += (
+                        quality
+                        * number(goalie_values["strength"])
+                        * number(goalie_values["recency"])
+                        * tier_games
+                    )
                     total_saves += tier_saves
                     total_goals_allowed += tier_goals_allowed
                 role_points = quality_points
@@ -679,9 +700,10 @@ def fetch_historical_performance(
                 }
             roles[role] = {
                 "games": role_games,
+                "effective_games": round(effective_games, 4),
                 "points": round(role_points, 2),
                 "raw_points": round(float(role_values["raw_points"]), 2),
-                "ppg": round(role_points / role_games, 4) if role_games else 0.0,
+                "ppg": round(role_points / effective_games, 4) if effective_games else 0.0,
                 "division_games": dict(role_values["division_games"]),
                 **extra,
             }
@@ -699,9 +721,10 @@ def fetch_historical_performance(
 
 def role_performance(performance: dict[str, Any] | None, role: str) -> dict[str, Any]:
     if not performance:
-        return {"games": 0, "points": 0.0, "ppg": 0.0, "division_games": {}}
+        return {"games": 0, "effective_games": 0.0, "points": 0.0, "ppg": 0.0, "division_games": {}}
     return dict((performance.get("roles") or {}).get(role) or {
         "games": 0,
+        "effective_games": 0.0,
         "points": 0.0,
         "ppg": 0.0,
         "division_games": {},
@@ -722,7 +745,7 @@ def build_frozen_price_reference(
     player_rows: list[dict[str, Any]],
     history: dict[int, dict[str, Any]],
 ) -> tuple[dict[str, float], dict[str, list[float]]]:
-    raw_by_role: dict[str, list[tuple[int, float]]] = defaultdict(list)
+    raw_by_role: dict[str, list[tuple[float, float]]] = defaultdict(list)
 
     for player in player_rows:
         player_id = integer(first(player, "playerID", "player_id", "id"))
@@ -732,7 +755,7 @@ def build_frozen_price_reference(
         for role in ("F", "D", "G"):
             role_perf = role_performance(perf, role)
             if integer(role_perf.get("games")) >= 3:
-                raw_by_role[role].append((integer(role_perf.get("games")), number(role_perf.get("ppg"))))
+                raw_by_role[role].append((number(role_perf.get("effective_games")), number(role_perf.get("ppg"))))
 
     centers: dict[str, float] = {}
     scores: dict[str, list[float]] = {}
@@ -768,12 +791,13 @@ def assign_history_prices(
         for role in candidate_roles:
             perf = role_performance(performance, role)
             games = integer(perf.get("games"))
+            effective_games = number(perf.get("effective_games"))
             center = reference_centers.get(role, 0.0)
             adjusted = center
             if games < 3:
                 price = 15
             else:
-                confidence = games / (games + PRICE_CONFIDENCE_GAMES)
+                confidence = effective_games / (effective_games + PRICE_CONFIDENCE_GAMES)
                 adjusted = center + (number(perf.get("ppg")) - center) * confidence
                 distribution = reference_scores.get(role, [])
                 if len(distribution) <= 1:
@@ -786,6 +810,7 @@ def assign_history_prices(
             role_prices[role] = {
                 "price": price,
                 "games": games,
+                "effective_games": round(effective_games, 2),
                 "points": round(number(perf.get("points")), 2),
                 "ppg": round(number(perf.get("ppg")), 4),
                 "ranking_points": round(number(adjusted), 4),
@@ -1089,11 +1114,16 @@ def main() -> int:
         for row in output_rows:
             raw = json.loads(row["raw_player"])
             raw["fantasy_pricing"] = {
-                "model": "sports_gamer_division_role_quality_v4",
+                "model": "sports_gamer_division_role_recency_v5",
                 "history_through": PRICE_HISTORY_LABEL,
                 "history_max_league_id": PRICE_HISTORY_MAX_LEAGUE_ID,
                 "reference_population": "all_swedish_sportsgamer_players",
                 "confidence_games": PRICE_CONFIDENCE_GAMES,
+                "recency": {
+                    "method": "sports_gamer_league_id_half_life",
+                    "half_life_league_ids": PRICE_RECENCY_HALF_LIFE_LEAGUE_IDS,
+                    "floor": PRICE_RECENCY_FLOOR,
+                },
                 "division_weights": PRICE_DIVISION_WEIGHTS,
                 "goalie_quality_formula": {
                     "save_percentage_weight": GOALIE_SAVE_PERCENTAGE_WEIGHT,
