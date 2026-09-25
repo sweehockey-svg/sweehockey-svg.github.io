@@ -34,11 +34,17 @@ async function jerseySvg(team,variant){
  }
  return api.render(prepared,{variant,side:"front",compact:false});
 }
-function dataUrl(svg){return svg?"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg):""}
+let jerseyObjectUrl="";
+function jerseyUrl(svg){
+ if(jerseyObjectUrl){URL.revokeObjectURL(jerseyObjectUrl);jerseyObjectUrl="";}
+ if(!svg)return "";
+ jerseyObjectUrl=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml;charset=utf-8"}));
+ return jerseyObjectUrl;
+}
 async function render(){
  const team=teams.find(t=>String(t.team_id||t.id)===$("#team").value)||teams[0], p=players.find(x=>String(x.player_key)===$("#player").value)||players[0];
  if(!team||!p)return;
- const pic=portrait(p), variant=$("#variant").value, off=Number($("#offset").value)||0, jersey=dataUrl(await jerseySvg(team,variant));
+ const pic=portrait(p), variant=$("#variant").value, off=Number($("#offset").value)||0, jersey=jerseyUrl(await jerseySvg(team,variant));
  const modes=[
   ["Overlay","Grundtest: porträtt bakom tröjan",""],
   ["Mask-look","Lite större tröja över axlar/bröst","mask"],
