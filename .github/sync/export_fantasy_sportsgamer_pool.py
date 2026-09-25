@@ -52,6 +52,8 @@ PRICE_DIVISION_WEIGHTS = {
     "National": 0.85,
     "Other": 0.75,
 }
+GOALIE_SAVE_PERCENTAGE_WEIGHT = 20.0
+GOALIE_GAA_PENALTY = 1.5
 POOL_OUTPUT = Path(os.environ.get("POOL_OUTPUT", "/tmp/fantasy_player_pool.csv"))
 TEAM_OUTPUT = Path(os.environ.get("TEAM_OUTPUT", "/tmp/fantasy_team_pool.csv"))
 
@@ -579,6 +581,12 @@ def fetch_historical_performance(
             "points": 0.0,
             "raw_points": 0.0,
             "division_games": Counter(),
+            "goalie_divisions": defaultdict(lambda: {
+                "games": 0,
+                "saves": 0.0,
+                "goals_allowed": 0.0,
+                "strength": 0.0,
+            }),
         }),
         "seen": set(),
     })
@@ -620,6 +628,12 @@ def fetch_historical_performance(
         role_values["points"] += weighted_points
         role_values["raw_points"] += points
         role_values["division_games"][division] += 1
+        if role == "G":
+            goalie_division = role_values["goalie_divisions"][division]
+            goalie_division["games"] += 1
+            goalie_division["saves"] += saves
+            goalie_division["goals_allowed"] += goals_allowed
+            goalie_division["strength"] = strength
 
         totals[player_id]["games"] += 1
         totals[player_id]["points"] += weighted_points
@@ -633,12 +647,43 @@ def fetch_historical_performance(
         for role, role_values in values["roles"].items():
             role_games = integer(role_values["games"])
             role_points = float(role_values["points"])
+            extra: dict[str, Any] = {}
+            if role == "G" and role_games:
+                quality_points = 0.0
+                total_saves = 0.0
+                total_goals_allowed = 0.0
+                for goalie_values in role_values["goalie_divisions"].values():
+                    tier_games = integer(goalie_values["games"])
+                    tier_saves = number(goalie_values["saves"])
+                    tier_goals_allowed = number(goalie_values["goals_allowed"])
+                    tier_shots = tier_saves + tier_goals_allowed
+                    if not tier_games or not tier_shots:
+                        continue
+                    save_percentage = tier_saves / tier_shots
+                    goals_against_average = tier_goals_allowed / tier_games
+                    quality = max(
+                        0.0,
+                        save_percentage * GOALIE_SAVE_PERCENTAGE_WEIGHT
+                        - goals_against_average * GOALIE_GAA_PENALTY,
+                    )
+                    quality_points += quality * number(goalie_values["strength"]) * tier_games
+                    total_saves += tier_saves
+                    total_goals_allowed += tier_goals_allowed
+                role_points = quality_points
+                total_shots = total_saves + total_goals_allowed
+                extra = {
+                    "saves": round(total_saves, 2),
+                    "goals_allowed": round(total_goals_allowed, 2),
+                    "save_percentage": round(total_saves / total_shots, 4) if total_shots else 0.0,
+                    "goals_against_average": round(total_goals_allowed / role_games, 4),
+                }
             roles[role] = {
                 "games": role_games,
                 "points": round(role_points, 2),
                 "raw_points": round(float(role_values["raw_points"]), 2),
                 "ppg": round(role_points / role_games, 4) if role_games else 0.0,
                 "division_games": dict(role_values["division_games"]),
+                **extra,
             }
         result[player_id] = {
             "games": games,
@@ -745,6 +790,8 @@ def assign_history_prices(
                 "ppg": round(number(perf.get("ppg")), 4),
                 "ranking_points": round(number(adjusted), 4),
                 "division_games": perf.get("division_games") or {},
+                "save_percentage": perf.get("save_percentage"),
+                "goals_against_average": perf.get("goals_against_average"),
             }
 
         # A hybrid keeps one public price. Use the highest eligible role price so
@@ -1042,12 +1089,17 @@ def main() -> int:
         for row in output_rows:
             raw = json.loads(row["raw_player"])
             raw["fantasy_pricing"] = {
-                "model": "sports_gamer_division_weighted_roles_v3",
+                "model": "sports_gamer_division_role_quality_v4",
                 "history_through": PRICE_HISTORY_LABEL,
                 "history_max_league_id": PRICE_HISTORY_MAX_LEAGUE_ID,
                 "reference_population": "all_swedish_sportsgamer_players",
                 "confidence_games": PRICE_CONFIDENCE_GAMES,
                 "division_weights": PRICE_DIVISION_WEIGHTS,
+                "goalie_quality_formula": {
+                    "save_percentage_weight": GOALIE_SAVE_PERCENTAGE_WEIGHT,
+                    "gaa_penalty": GOALIE_GAA_PENALTY,
+                    "save_volume_bonus": 0,
+                },
                 "reference_player_counts": {
                     role: len(reference_scores.get(role, []))
                     for role in ("F", "D", "G")
