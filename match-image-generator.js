@@ -75,6 +75,7 @@
     template:"classic",
     background:"arena",
     showPattern:true,
+    teamVisual:"jersey",
     lineupStyle:"portraits",
     streamPlatform:"none",
     streamChannel:"",
@@ -2073,6 +2074,16 @@
     return '<image href="' + esc(url) + '" x="' + x + '" y="' + y + '" width="' + size + '" height="' + size + '" opacity="' + opacity + '" preserveAspectRatio="xMidYMid meet"/>';
   }
 
+  function teamHeroVisual(team,variant,x,y,size,options={}) {
+    if (state.teamVisual === "logo") {
+      const logoScale = Number(options.logoScale) || .72;
+      const logoSize = size * logoScale;
+      return svgLogo(team,x + (size-logoSize)/2,y + (size-logoSize)/2,logoSize,.98);
+    }
+    const jersey = premiumJerseySvg(team,{variant:variant || "home",side:"front",compact:Boolean(options.compact)});
+    return placedJersey(jersey,x,y,size);
+  }
+
   function focusLineupMarkup(ctx, y) {
     if (state.lineupStyle === "portraits") {
       return state.format === "story"
@@ -2210,7 +2221,7 @@
       '<text x="' + (isWide?86:ctx.W/2) + '" y="' + (isStory?140:112) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#ffffff" fill-opacity=".58" font-size="' + (isWide?17:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="4">' + ctx.competition + '</text>',
       ctx.competitionDivision ? '<text x="' + (isWide?86:ctx.W/2) + '" y="' + (isStory?166:136) + '" text-anchor="' + (isWide?"start":"middle") + '" fill="#ffffff" fill-opacity=".40" font-size="' + (isWide?12:11) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competitionDivision + '</text>' : '',
 
-      '<g filter="url(#focus-shadow)">' + placedJersey(hero,heroX,heroY,heroSize) + '</g>',
+      '<g filter="url(#focus-shadow)">' + teamHeroVisual(ctx.own,ctx.ownVariant,heroX,heroY,heroSize) + '</g>',
 
       isWide
         ? '<text x="102" y="654" fill="#ffffff" font-size="42" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text><line x1="102" y1="676" x2="610" y2="676" stroke="' + ctx.own.accent + '" stroke-opacity=".55" stroke-width="2"/>'
@@ -2271,8 +2282,8 @@
       ctx.competitionDivision ? '<text x="' + (ctx.W/2) + '" y="' + (isStory?181:129) + '" text-anchor="middle" fill="#fff" fill-opacity=".38" font-size="11" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competitionDivision + '</text>' : '',
       '<text x="' + (leftX+leftSize/2) + '" y="' + (jerseyY-18) + '" text-anchor="middle" fill="#fff" font-size="' + (isWide?34:27) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(leftTeam.name) + '</text>',
       '<text x="' + (rightX+rightSize/2) + '" y="' + (jerseyY-18) + '" text-anchor="middle" fill="#fff" font-size="' + (isWide?34:27) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(rightTeam.name) + '</text>',
-      placedJersey(left,leftX,jerseyY,leftSize),
-      placedJersey(right,rightX,jerseyY,rightSize),
+      teamHeroVisual(leftTeam,"home",leftX,jerseyY,leftSize),
+      teamHeroVisual(rightTeam,"away",rightX,jerseyY,rightSize),
       '<circle cx="' + (ctx.W/2) + '" cy="' + (isStory?700:isWide?460:450) + '" r="' + (isWide?92:68) + '" fill="#07090c" stroke="#fff" stroke-opacity=".16"/>',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?723:isWide?490:473) + '" text-anchor="middle" fill="#fff" font-size="' + (isWide?104:76) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">VS</text>',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?835:isWide?585:570) + '" text-anchor="middle" fill="#fff" font-size="' + (isWide?38:isStory?32:26) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
@@ -2307,8 +2318,8 @@
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?145:105) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?54:isWide?56:42) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.badge + '</text>',
       svgLogo(ctx.home,ctx.W*.21-homeLogo/2,logoY,homeLogo,.95),
       svgLogo(ctx.away,ctx.W*.79-homeLogo/2,logoY,homeLogo,.95),
-      placedJersey(leftJ,ctx.W*.21-jerseySize/2,logoY+homeLogo-20,jerseySize),
-      placedJersey(rightJ,ctx.W*.79-jerseySize/2,logoY+homeLogo-20,jerseySize),
+      teamHeroVisual(ctx.home,"home",ctx.W*.21-jerseySize/2,logoY+homeLogo-20,jerseySize),
+      teamHeroVisual(ctx.away,"away",ctx.W*.79-jerseySize/2,logoY+homeLogo-20,jerseySize),
       '<text x="' + (ctx.W*.21) + '" y="' + (logoY+homeLogo+jerseySize+10) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?25:19) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.home.name) + '</text>',
       '<text x="' + (ctx.W*.79) + '" y="' + (logoY+homeLogo+jerseySize+10) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?25:19) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.away.name) + '</text>',
       '<text x="' + (ctx.W/2) + '" y="' + (logoY+homeLogo+55) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?58:48) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">VS</text>',
@@ -2339,7 +2350,7 @@
       '<rect width="' + ctx.W + '" height="' + ctx.H + '" fill="#f3f1eb" opacity=".86"/>',
       state.showPattern === false ? '' : '<rect x="0" y="0" width="' + (isWide?ctx.W*.46:ctx.W) + '" height="' + (isWide?ctx.H:ctx.H*.56) + '" fill="' + ctx.own.primary + '" opacity=".91"/>',
       state.showPattern === false ? '' : '<circle cx="' + (isWide?ctx.W*.23:ctx.W*.5) + '" cy="' + (isWide?ctx.H*.44:ctx.H*.27) + '" r="' + (isWide?ctx.W*.20:ctx.W*.38) + '" fill="' + ctx.own.accent + '" opacity=".12"/>',
-      placedJersey(ownJ,jerseyX,jerseyY,jerseySize),
+      teamHeroVisual(ctx.own,ctx.ownVariant,jerseyX,jerseyY,jerseySize),
       '<text x="' + (isWide?ctx.W*.53:54) + '" y="' + (isWide?140:isStory?90:72) + '" fill="' + (isWide?"#101318":"#fff") + '" font-size="' + (isWide?70:isStory?58:44) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">' + ctx.badge + '</text>',
       '<text x="' + (isWide?ctx.W*.53:58) + '" y="' + (isWide?190:isStory?140:110) + '" fill="' + (isWide?"#59616b":"#fff") + '" fill-opacity="' + (isWide?1:.62) + '" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competition + '</text>',
       ctx.competitionDivision ? '<text x="' + (isWide?ctx.W*.53:58) + '" y="' + (isWide?216:isStory?164:132) + '" fill="' + (isWide?"#737b84":"#fff") + '" fill-opacity="' + (isWide?1:.42) + '" font-size="11" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competitionDivision + '</text>' : '',
@@ -2623,6 +2634,7 @@
     $("#timeInput").value = state.time;
     $("#lineupStyleSelect").value = state.lineupStyle;
     $("#patternToggle").checked = state.showPattern !== false;
+    $("#teamVisualSelect").value = state.teamVisual || "jersey";
     $("#patternControl").hidden = false;
     $("#streamPlatformSelect").value = state.streamPlatform;
     $("#streamChannelInput").value = state.streamChannel;
@@ -2672,6 +2684,7 @@
     state.template = "classic";
     state.background = "arena";
     state.showPattern = true;
+    state.teamVisual = "jersey";
     state.lineupStyle = "portraits";
     state.lineupNumbers = {...EMPTY_NUMBERS};
     state.presentationPlayers = Array(12).fill("");
@@ -2813,6 +2826,11 @@
       syncForm();
       render();
     });
+  });
+
+  $("#teamVisualSelect").addEventListener("change",event => {
+    state.teamVisual = event.target.value === "logo" ? "logo" : "jersey";
+    render();
   });
 
   $("#patternToggle").addEventListener("change",event => {
