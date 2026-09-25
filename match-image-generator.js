@@ -136,9 +136,9 @@
     if (id === "smoke") return backgroundPrefix + "smoke.svg?v=39";
     if (id === "ice") return ICE_TEXTURE_DATA_URL;
     if (id === "sweden") return SWEDEN_BACKGROUND_DATA_URL;
-    if (id === "scl-blue") return backgroundPrefix + "smoke.svg?v=39";
-    if (id === "neon") return backgroundPrefix + "frost.svg";
-    if (id === "tunnel") return backgroundPrefix + "smoke.svg?v=39";
+    if (id === "scl-blue") return "lab/match-image-generator/backgrounds/scl-blue.webp?v=58";
+    if (id === "neon") return "lab/match-image-generator/backgrounds/neon.webp?v=51";
+    if (id === "tunnel") return "lab/match-image-generator/backgrounds/player-tunnel.webp?v=53";
     if (id === "frost") return backgroundPrefix + "frost.svg";
     return assetPrefix + "assets/bg.jpg";
   }
