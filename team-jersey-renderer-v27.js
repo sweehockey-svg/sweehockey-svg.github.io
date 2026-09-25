@@ -619,7 +619,7 @@
       '<button type="button" class="is-active" data-jersey-variant="home">Hemma</button>'+
       '<button type="button" data-jersey-variant="away">Borta</button></div></div>'+
       '<div class="team-public-jersey-v1__stage"></div>'+
-      '<div class="team-public-jersey-v1__owner" hidden><button type="button" data-jersey-edit>Redigera tröja</button><a data-match-graphics hidden>Match Graphics</a><span data-jersey-role></span></div>'+
+      '<div class="team-public-jersey-v1__owner" hidden><button type="button" data-jersey-edit>Redigera tröja</button><a data-match-graphics hidden style="display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:0 12px;border:1px solid rgba(244,196,0,.55);border-radius:9px;background:rgba(244,196,0,.08);color:#f4c400;font:800 10px/1 system-ui,sans-serif;letter-spacing:.02em;text-decoration:none;white-space:nowrap">Match Graphics</a><span data-jersey-role></span></div>'+
       '<form class="team-public-jersey-v1__editor" data-jersey-editor hidden>'+
         '<div class="team-public-jersey-v1__editor-head"><strong>Tröjeditor</strong><button type="button" data-jersey-close aria-label="Stäng">×</button></div>'+
         '<label><span>Grundfärg</span><input type="color" name="primary" value="#0c0f12"></label>'+
