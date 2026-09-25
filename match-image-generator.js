@@ -2239,7 +2239,7 @@
       ctx.stream
         ? (isWide
           ? '<g><rect x="102" y="' + (infoY+54) + '" width="520" height="46" rx="23" fill="#07101a" fill-opacity=".88" stroke="#8fc8ff" stroke-opacity=".30"/><circle cx="132" cy="' + (infoY+77) + '" r="7" fill="#ff4d5f"/><circle cx="132" cy="' + (infoY+77) + '" r="14" fill="#ff4d5f" opacity=".14"/><text x="362" y="' + (infoY+83) + '" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1.2">' + ctx.stream + '</text></g>'
-          : templateStream(ctx,infoY+116,false))
+          : templateStream(ctx,isStory?370:infoY+116,false))
         : '',
 
       portraitMode ? '<text x="' + gridTitleX + '" y="' + gridTitleY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".82" font-size="' + (isWide?17:isStory?20:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="5">LINEUP</text>' : '',
