@@ -2315,7 +2315,7 @@
     const jerseySize=isStory?250:isWide?250:state.format==="square"?285:190;
     const leftJ=premiumJerseySvg(ctx.home,{variant:"home",side:"front",compact:true});
     const rightJ=premiumJerseySvg(ctx.away,{variant:"away",side:"front",compact:true});
-    const lineupY=isStory?1040:isWide?725:530;
+    const lineupY=isStory?1040:isWide?725:570;
     const lineup = state.format === "square" && state.lineupStyle === "portraits"
       ? (() => {
           const cardWidth=150, cardHeight=245, gap=12;
@@ -2341,7 +2341,9 @@
       '<text x="' + (ctx.W*.79) + '" y="' + (logoY+(state.teamVisual === "logo" ? homeLogo : jerseySize)+30) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?25:19) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.away.name) + '</text>',
       '<text x="' + (ctx.W/2) + '" y="' + (state.format === "square" ? 270 : (logoY+homeLogo+55)) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?58:48) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">VS</text>',
       '<text x="' + (ctx.W/2) + '" y="' + (state.format === "square" ? 365 : (topH+75)) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?34:isWide?34:27) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
-      ctx.stream ? '<g><rect x="' + (ctx.W*.12) + '" y="' + (topH+108) + '" width="' + (ctx.W*.76) + '" height="' + (isStory?92:72) + '" rx="18" fill="#ff4d5f" fill-opacity=".12" stroke="#ff6c78" stroke-opacity=".45"/><text x="' + (ctx.W*.16) + '" y="' + (topH+(isStory?165:153)) + '" fill="#ff6c78" font-size="' + (isStory?23:18) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">LIVE</text><text x="' + (ctx.W*.25) + '" y="' + (topH+(isStory?165:153)) + '" fill="#fff" font-size="' + (isStory?26:isWide?25:20) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.stream.replace(/^LIVE · /,"") + '</text></g>' : '',
+      ctx.stream ? (state.format === "square"
+        ? templateStream(ctx,438,false,{width:430,height:48,fontSize:15,maxChars:34})
+        : '<g><rect x="' + (ctx.W*.12) + '" y="' + (topH+108) + '" width="' + (ctx.W*.76) + '" height="' + (isStory?92:72) + '" rx="18" fill="#ff4d5f" fill-opacity=".12" stroke="#ff6c78" stroke-opacity=".45"/><text x="' + (ctx.W*.16) + '" y="' + (topH+(isStory?165:153)) + '" fill="#ff6c78" font-size="' + (isStory?23:18) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">LIVE</text><text x="' + (ctx.W*.25) + '" y="' + (topH+(isStory?165:153)) + '" fill="#fff" font-size="' + (isStory?26:isWide?25:20) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.stream.replace(/^LIVE · /,"") + '</text></g>') : '',
       '<text x="' + (state.format === "square" ? ctx.W/2 : ctx.W*.08) + '" y="' + (lineupY-30) + '" text-anchor="' + (state.format === "square" ? "middle" : "start") + '" fill="#fff" fill-opacity=".54" font-size="' + (isStory?22:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">LINEUP · ' + esc(ctx.own.name).toUpperCase() + '</text>',
       lineup,
       '<rect x="0" y="' + (ctx.H-58) + '" width="' + ctx.W + '" height="58" fill="#fff" fill-opacity=".035"/>',
