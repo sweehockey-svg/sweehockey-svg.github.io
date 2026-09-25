@@ -2219,13 +2219,20 @@
     const panelInnerW = 912;
     const gap = columns >= 6 ? 9 : columns === 5 ? 12 : 16;
     const widthByGrid = Math.floor((panelInnerW - Math.max(0,columns-1)*gap)/columns);
-    const maxCardW = columns <= 3 ? 210 : columns === 4 ? 190 : columns === 5 ? 170 : 142;
+    const maxCardW = columns <= 3 ? 190 : columns === 4 ? 175 : columns === 5 ? 160 : 142;
     const cardW = Math.min(maxCardW,widthByGrid);
-    const targetRatio = columns >= 6 ? 1.28 : columns === 5 ? 1.25 : 1.20;
-    const cardH = Math.min(220,Math.max(174,Math.round(cardW*targetRatio)));
+    const targetRatio = columns >= 6 ? 1.28 : 1.22;
     const rowGap = 16;
-    const gridTop = 588;
-    const gridBottom = 1008;
+    const gridTop = 575;
+    const gridBottom = 1012;
+    const maxCardHByGrid = Math.floor(
+      (gridBottom-gridTop-Math.max(0,rows.length-1)*rowGap) / rows.length
+    );
+    const cardH = Math.min(
+      218,
+      maxCardHByGrid,
+      Math.max(174,Math.round(cardW*targetRatio))
+    );
     const gridHeight = rows.length*cardH + Math.max(0,rows.length-1)*rowGap;
     const firstY = gridTop + Math.max(0,(gridBottom-gridTop-gridHeight)/2);
 
