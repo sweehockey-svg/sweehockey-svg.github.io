@@ -25,7 +25,7 @@
       choose_fantasy_league:"Välj Fantasy-liga", choose_language:"Välj språk", powered_by:"DRIVS AV",
       login_discord:"Logga in med Discord", see_rules:"Se regler", players_upper:"SPELARE", budget_upper:"BUDGET",
       max_per_team_upper:"MAX / LAG", captain_upper:"KAPTEN", start_upper:"START", status_upper:"STATUS",
-      fantasy_teams_upper:"FANTASY-LAG", beta_source_upper:"BETAKÄLLA", mode_upper:"LÄGE", player_pool_upper:"SPELARPOOL",
+      fantasy_teams_upper:"FANTASY-LAG", beta_source_upper:"BETAKÄLLA", selection_upper:"URVAL", mode_upper:"LÄGE", player_pool_upper:"SPELARPOOL",
       price_range_upper:"PRISINTERVALL", access_upper:"ÅTKOMST", access_value:"DISCORD + KOPPLAD PROFIL",
       matches_upper:"MATCHER", registered:"registrerade", created:"skapade", ownership_info_upper:"ÄGARINFO",
       locked_period:"låst period", deadline_upper:"DEADLINE", swedish_time:"svensk tid", my_team:"Mitt lag",
@@ -72,7 +72,7 @@
       max_team_rule:"Du får välja högst {max} spelare från samma riktiga lag.", captain_rule_title:"Kapten {multiplier}×",
       captain_rule:"En spelare utses till kapten och får {percent} procent extra Fantasy-poäng.",
       setup_period_rules:"{season} kommer att använda Fantasy-perioder. Deadlines, fria byten och eventuellt slutspelsreset publiceras innan ligan öppnar.",
-      scl_period_rules:"SCL spelas inte i fasta omgångar, så Fantasy delas i tidsbestämda perioder. Varje ny Fantasy-period låses kl. 18:00 svensk tid och matcherna räknas efter sin faktiska starttid. Före första perioden är byten obegränsade. Därefter får du 1 gratis byte per period och kan spara upp till 2. Extra byten kostar −10 Fantasy-poäng och kaptensbyte är gratis.",
+      scl_period_rules:"SCL spelas inte i fasta omgångar, så Fantasy delas i tidsbestämda perioder. Varje ny Fantasy-period låses kl. 18:00 svensk tid och matcherna räknas efter sin faktiska starttid. Före första perioden är byten obegränsade. Därefter får du 1 gratis byte per period och kan spara upp till 2. Inför slutspelet återställs de fria bytena. Extra byten kostar −10 Fantasy-poäng och kaptensbyte är gratis.",
       generic_period_rules:"Fantasy delas i tidsbestämda perioder. Matcherna räknas efter sin faktiska starttid och byten gäller från nästa låsta period.",
       login_to_build:"Logga in för att bygga ditt lag", checking_discord:"Kontrollerar Discord-inloggning och kopplad spelarprofil.",
       link_pending:"Spelarkopplingen väntar på godkännande", link_pending_text:"Din valda spelarprofil måste godkännas innan du kan skapa ett Fantasy-lag.",
@@ -117,7 +117,7 @@
       choose_fantasy_league:"Choose Fantasy league", choose_language:"Choose language", powered_by:"POWERED BY",
       login_discord:"Log in with Discord", see_rules:"View rules", players_upper:"PLAYERS", budget_upper:"BUDGET",
       max_per_team_upper:"MAX / TEAM", captain_upper:"CAPTAIN", start_upper:"START", status_upper:"STATUS",
-      fantasy_teams_upper:"FANTASY TEAMS", beta_source_upper:"BETA SOURCE", mode_upper:"MODE", player_pool_upper:"PLAYER POOL",
+      fantasy_teams_upper:"FANTASY TEAMS", beta_source_upper:"BETA SOURCE", selection_upper:"SELECTION", mode_upper:"MODE", player_pool_upper:"PLAYER POOL",
       price_range_upper:"PRICE RANGE", access_upper:"ACCESS", access_value:"DISCORD + LINKED PROFILE", matches_upper:"MATCHES",
       registered:"registered", created:"created", ownership_info_upper:"OWNERSHIP", locked_period:"locked period", deadline_upper:"DEADLINE",
       swedish_time:"Swedish time", my_team:"My team", players:"Players", leaderboard:"Leaderboard", rules:"Rules",
@@ -164,7 +164,7 @@
       max_team_rule:"You may select at most {max} players from the same real team.", captain_rule_title:"Captain {multiplier}×",
       captain_rule:"One player is captain and receives {percent} percent extra Fantasy points.",
       setup_period_rules:"{season} will use Fantasy periods. Deadlines, free transfers and any playoff reset will be published before the league opens.",
-      scl_period_rules:"SCL is not played in fixed rounds, so Fantasy uses timed periods. Each new Fantasy period locks at 18:00 Swedish time and games are assigned by their actual start time. Transfers are unlimited before the first period. After that you get 1 free transfer per period and can bank up to 2. Extra transfers cost −10 Fantasy points and captain changes are free.",
+      scl_period_rules:"SCL is not played in fixed rounds, so Fantasy uses timed periods. Each new Fantasy period locks at 18:00 Swedish time and games are assigned by their actual start time. Transfers are unlimited before the first period. After that you get 1 free transfer per period and can bank up to 2. Free transfers reset when the playoffs begin. Extra transfers cost −10 Fantasy points and captain changes are free.",
       generic_period_rules:"Fantasy uses timed periods. Games are assigned by actual start time and transfers take effect from the next locked period.",
       login_to_build:"Log in to build your team", checking_discord:"Checking Discord login and linked player profile.",
       link_pending:"Player link awaiting approval", link_pending_text:"Your selected player profile must be approved before you can create a Fantasy team.",
@@ -209,7 +209,7 @@
       choose_fantasy_league:"Valitse Fantasy-liiga", choose_language:"Valitse kieli", powered_by:"PALVELUN TARJOAA",
       login_discord:"Kirjaudu Discordilla", see_rules:"Katso säännöt", players_upper:"PELAAJAT", budget_upper:"BUDJETTI",
       max_per_team_upper:"MAX / JOUKKUE", captain_upper:"KAPTEENI", start_upper:"ALKU", status_upper:"TILA",
-      fantasy_teams_upper:"FANTASY-JOUKKUEET", beta_source_upper:"BETA-LÄHDE", mode_upper:"TILA", player_pool_upper:"PELAAJAPOOLI",
+      fantasy_teams_upper:"FANTASY-JOUKKUEET", beta_source_upper:"BETA-LÄHDE", selection_upper:"VALINTA", mode_upper:"TILA", player_pool_upper:"PELAAJAPOOLI",
       price_range_upper:"HINTAHAARUKKA", access_upper:"PÄÄSY", access_value:"DISCORD + LINKITETTY PROFIILI", matches_upper:"OTTELUT",
       registered:"rekisteröity", created:"luotu", ownership_info_upper:"OMISTUS", locked_period:"lukittu jakso", deadline_upper:"DEADLINE",
       swedish_time:"Ruotsin aika", my_team:"Joukkueeni", players:"Pelaajat", leaderboard:"Sarjataulukko", rules:"Säännöt",
@@ -256,7 +256,7 @@
       max_team_rule:"Voit valita enintään {max} pelaajaa samasta oikeasta joukkueesta.", captain_rule_title:"Kapteeni {multiplier}×",
       captain_rule:"Yksi pelaaja nimetään kapteeniksi ja saa {percent} prosenttia ylimääräisiä Fantasy-pisteitä.",
       setup_period_rules:"{season} käyttää Fantasy-jaksoja. Deadlinet, ilmaiset vaihdot ja mahdollinen pudotuspelien nollaus julkaistaan ennen liigan avaamista.",
-      scl_period_rules:"SCL:ää ei pelata kiinteissä kierroksissa, joten Fantasy käyttää aikajaksoja. Jokainen uusi jakso lukitaan klo 18.00 Ruotsin aikaa ja ottelut sijoitetaan todellisen alkamisajan mukaan. Ennen ensimmäistä jaksoa vaihdot ovat rajattomia. Sen jälkeen saat 1 ilmaisen vaihdon per jakso ja voit säästää enintään 2. Ylimääräiset vaihdot maksavat −10 Fantasy-pistettä ja kapteenin vaihto on ilmainen.",
+      scl_period_rules:"SCL:ää ei pelata kiinteissä kierroksissa, joten Fantasy käyttää aikajaksoja. Jokainen uusi jakso lukitaan klo 18.00 Ruotsin aikaa ja ottelut sijoitetaan todellisen alkamisajan mukaan. Ennen ensimmäistä jaksoa vaihdot ovat rajattomia. Sen jälkeen saat 1 ilmaisen vaihdon per jakso ja voit säästää enintään 2. Ilmaiset vaihdot palautetaan pudotuspelien alkaessa. Ylimääräiset vaihdot maksavat −10 Fantasy-pistettä ja kapteenin vaihto on ilmainen.",
       generic_period_rules:"Fantasy käyttää aikajaksoja. Ottelut sijoitetaan todellisen alkamisajan mukaan ja vaihdot astuvat voimaan seuraavasta lukitusta jaksosta.",
       login_to_build:"Kirjaudu rakentaaksesi joukkueesi", checking_discord:"Tarkistetaan Discord-kirjautuminen ja linkitetty pelaajaprofiili.",
       link_pending:"Pelaajalinkitys odottaa hyväksyntää", link_pending_text:"Valittu pelaajaprofiili on hyväksyttävä ennen Fantasy-joukkueen luomista.",
@@ -301,7 +301,7 @@
       choose_fantasy_league:"Fantasy-Liga wählen", choose_language:"Sprache wählen", powered_by:"BETRIEBEN VON",
       login_discord:"Mit Discord anmelden", see_rules:"Regeln ansehen", players_upper:"SPIELER", budget_upper:"BUDGET",
       max_per_team_upper:"MAX / TEAM", captain_upper:"KAPITÄN", start_upper:"START", status_upper:"STATUS",
-      fantasy_teams_upper:"FANTASY-TEAMS", beta_source_upper:"BETA-QUELLE", mode_upper:"MODUS", player_pool_upper:"SPIELERPOOL",
+      fantasy_teams_upper:"FANTASY-TEAMS", beta_source_upper:"BETA-QUELLE", selection_upper:"AUSWAHL", mode_upper:"MODUS", player_pool_upper:"SPIELERPOOL",
       price_range_upper:"PREISSPANNE", access_upper:"ZUGANG", access_value:"DISCORD + VERKNÜPFTES PROFIL", matches_upper:"SPIELE",
       registered:"erfasst", created:"erstellt", ownership_info_upper:"BESITZ", locked_period:"gesperrte Periode", deadline_upper:"DEADLINE",
       swedish_time:"schwedische Zeit", my_team:"Mein Team", players:"Spieler", leaderboard:"Rangliste", rules:"Regeln",
@@ -348,7 +348,7 @@
       max_team_rule:"Du darfst höchstens {max} Spieler aus demselben echten Team wählen.", captain_rule_title:"Kapitän {multiplier}×",
       captain_rule:"Ein Spieler wird zum Kapitän und erhält {percent} Prozent zusätzliche Fantasy-Punkte.",
       setup_period_rules:"{season} wird Fantasy-Perioden verwenden. Deadlines, Gratis-Transfers und ein möglicher Playoff-Reset werden vor dem Start veröffentlicht.",
-      scl_period_rules:"SCL wird nicht in festen Runden gespielt, daher nutzt Fantasy Zeitperioden. Jede neue Periode wird um 18:00 Uhr schwedischer Zeit gesperrt; Spiele werden nach ihrer tatsächlichen Startzeit zugeordnet. Vor der ersten Periode sind Transfers unbegrenzt. Danach gibt es 1 Gratis-Transfer pro Periode, maximal 2 ansparbar. Zusätzliche Transfers kosten −10 Fantasy-Punkte, Kapitänswechsel sind gratis.",
+      scl_period_rules:"SCL wird nicht in festen Runden gespielt, daher nutzt Fantasy Zeitperioden. Jede neue Periode wird um 18:00 Uhr schwedischer Zeit gesperrt; Spiele werden nach ihrer tatsächlichen Startzeit zugeordnet. Vor der ersten Periode sind Transfers unbegrenzt. Danach gibt es 1 Gratis-Transfer pro Periode, maximal 2 ansparbar. Zum Beginn der Playoffs werden die Gratis-Transfers zurückgesetzt. Zusätzliche Transfers kosten −10 Fantasy-Punkte, Kapitänswechsel sind gratis.",
       generic_period_rules:"Fantasy nutzt Zeitperioden. Spiele werden nach ihrer tatsächlichen Startzeit zugeordnet; Transfers gelten ab der nächsten gesperrten Periode.",
       login_to_build:"Anmelden, um dein Team zu bauen", checking_discord:"Discord-Anmeldung und verknüpftes Spielerprofil werden geprüft.",
       link_pending:"Spielerverknüpfung wartet auf Freigabe", link_pending_text:"Dein ausgewähltes Spielerprofil muss genehmigt werden, bevor du ein Fantasy-Team erstellen kannst.",
@@ -675,9 +675,16 @@
       status === "finished" ? t("latest_period") :
       t("next_period");
     $("periodHubName").textContent = clean(period.name) || ("Period " + (period.round_no || "–"));
+    const phaseLabels = {
+      regular:{sv:"Gruppspel",en:"Group stage",fi:"Lohkovaihe",de:"Gruppenphase"},
+      playoffs:{sv:"Slutspel",en:"Playoffs",fi:"Pudotuspelit",de:"Playoffs"},
+      finals:{sv:"Final",en:"Final",fi:"Finaali",de:"Finale"},
+    };
+    const phase = clean(period.phase).toLowerCase();
+    const phaseLabel = phaseLabels[phase]?.[state.language] || clean(period.phase) || "SCL";
     $("periodHubWindow").textContent =
       formatDate(period.starts_at) + " – " + formatDate(period.ends_at) +
-      " · " + (clean(period.phase) || "SCL");
+      " · " + phaseLabel;
     $("periodHubMatches").textContent = String(number(period.matches_played));
     $("periodHubEntries").textContent = String(entries);
     $("periodHubOwnership").textContent = ownershipVisible
@@ -1162,6 +1169,12 @@
       $("scoreboardSource").textContent = betaSource
         ? betaSource.toUpperCase()
         : (comp.status === "setup" ? t("pool_not_published_upper") : scopeText.toUpperCase());
+    }
+    if ($("scoreboardBetaTag")) $("scoreboardBetaTag").hidden = settings.beta_mode === false;
+    if ($("scoreboardSourceLabel")) {
+      const sourceLabelKey = betaSource ? "beta_source_upper" : "selection_upper";
+      $("scoreboardSourceLabel").dataset.i18n = sourceLabelKey;
+      $("scoreboardSourceLabel").textContent = t(sourceLabelKey);
     }
     if ($("commandMode")) {
       $("commandMode").textContent =

@@ -426,6 +426,39 @@ def explicit_roster_slots(roster: dict[str, Any], player: dict[str, Any]) -> lis
     return result
 
 
+def validated_cross_role_slots(
+    slots: list[str],
+    primary: str,
+    performance: dict[str, float] | None,
+) -> list[str]:
+    """Keep real goalie/skater hybrids but reject unchecked cross-role flags.
+
+    SportsGamer position checkboxes are useful within the skater role, but old or
+    accidental G flags occur. A player needs at least three recorded games in
+    each role to be selectable in both. With no history, use the preferred role.
+    """
+    ordered = list(dict.fromkeys(slot for slot in slots if slot in {"LW", "C", "RW", "LD", "RD", "G"}))
+    has_goalie = "G" in ordered
+    has_skater = any(slot != "G" for slot in ordered)
+    if not (has_goalie and has_skater):
+        return ordered
+
+    perf = performance or {}
+    goalie_games = integer(perf.get("goalie_games"))
+    skater_games = integer(perf.get("skater_games"))
+    if goalie_games >= 3 and skater_games >= 3:
+        return ordered
+    if goalie_games >= 3:
+        return ["G"]
+    if skater_games >= 3:
+        return [slot for slot in ordered if slot != "G"]
+    if primary == "G":
+        return ["G"]
+    if primary in ordered:
+        return [primary]
+    return ordered[:1]
+
+
 def json_safe(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, default=str, separators=(",", ":"))
 
@@ -483,6 +516,8 @@ def fetch_historical_performance(
     totals: dict[int, dict[str, Any]] = defaultdict(lambda: {
         "games": 0,
         "points": 0.0,
+        "skater_games": 0,
+        "goalie_games": 0,
         "seen": set(),
     })
 
@@ -506,10 +541,13 @@ def fetch_historical_performance(
 
         if position == "G":
             points = 1.0 + saves * 0.35 - goals_allowed * 0.50
+            totals[player_id]["goalie_games"] += 1
         elif position in {"LD", "RD"}:
             points = 1.0 + goals * 6.0 + assists * 4.0 + blocked * 0.25
+            totals[player_id]["skater_games"] += 1
         else:
             points = 1.0 + goals * 5.0 + assists * 3.0
+            totals[player_id]["skater_games"] += 1
 
         totals[player_id]["games"] += 1
         totals[player_id]["points"] += points
@@ -522,6 +560,8 @@ def fetch_historical_performance(
             "games": games,
             "points": round(points, 2),
             "ppg": round(points / games, 4) if games else 0.0,
+            "skater_games": integer(values["skater_games"]),
+            "goalie_games": integer(values["goalie_games"]),
         }
     return result
 
@@ -777,6 +817,8 @@ def main() -> int:
 
             explicit_slots = explicit_roster_slots(roster, player)
             slots = explicit_slots or slots_for_position(position)
+
+            slots = validated_cross_role_slots(slots, position, historical_performance.get(player_id))
 
             primary = position if position in {"LW", "C", "RW", "LD", "RD", "G"} else ""
             if not primary and slots:
