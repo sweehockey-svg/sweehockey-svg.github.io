@@ -556,17 +556,18 @@
           : "display_gamertag=eq." + encodeURIComponent(name);
         const rows = await getPublicRows(
           "app_player_directory_cache",
-          "select=player_key,display_gamertag,player_image,sports_gamer_player_url,primary_position&" + filter + "&limit=1"
+          "select=player_key,display_gamertag,player_image,sports_gamer_player_url,primary_position,player_country&" + filter + "&limit=1"
         );
         const row = Array.isArray(rows) ? rows[0] : null;
         playerPortraits.set(normalized,portraitUrlFromRow(row));
         playerMetaByName.set(normalized,{
-          primaryPosition:String(row?.primary_position || "").trim().toUpperCase()
+          primaryPosition:String(row?.primary_position || "").trim().toUpperCase(),
+          countryCode:String(row?.player_country || "").trim().toUpperCase()
         });
       } catch (error) {
         console.warn("[Match Graphics] kunde inte hämta spelarporträtt för",name,error);
         playerPortraits.set(normalized,defaultPlayerImageUrl());
-        playerMetaByName.set(normalized,{primaryPosition:""});
+        playerMetaByName.set(normalized,{primaryPosition:"",countryCode:""});
       }
     }));
   }
@@ -878,7 +879,7 @@
       ),
       getPublicRows(
         "ehockey_fantasy_player_pool",
-        "select=player_key,sports_gamer_player_id,display_gamertag,real_team_id,real_team_name,primary_position,player_image,is_available&competition_id=eq.2&is_available=eq.true&order=real_team_name.asc,display_gamertag.asc"
+        "select=player_key,sports_gamer_player_id,display_gamertag,real_team_id,real_team_name,primary_position,country_code,player_image,is_available&competition_id=eq.2&is_available=eq.true&order=real_team_name.asc,display_gamertag.asc"
       )
     ]);
 
@@ -906,7 +907,8 @@
       if (key) playerKeysByName.set(normalized,key);
       playerPortraits.set(normalized,portraitUrlFromSclPoolRow(row));
       playerMetaByName.set(normalized,{
-        primaryPosition:String(row?.primary_position || "").trim().toUpperCase()
+        primaryPosition:String(row?.primary_position || "").trim().toUpperCase(),
+        countryCode:String(row?.country_code || "").trim().toUpperCase()
       });
     }
 
@@ -1439,6 +1441,94 @@
     return String(value || "").trim().slice(0,max);
   }
 
+
+  function playerCountryCode(name) {
+    return String(playerMetaByName.get(normalize(name))?.countryCode || "")
+      .trim()
+      .toUpperCase()
+      .slice(0,2);
+  }
+
+  function playerFlagSvg(name,x,y,w=30,h=20) {
+    const code = playerCountryCode(name);
+    if (!code) return "";
+
+    const rx = Math.max(2,Math.min(4,h*.18));
+    const border = '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '" fill="none" stroke="#ffffff" stroke-opacity=".30" stroke-width="1"/>';
+    const rect = (xx,yy,ww,hh,fill) => '<rect x="' + xx + '" y="' + yy + '" width="' + ww + '" height="' + hh + '" fill="' + fill + '"/>';
+    const clipId = "flag-" + code + "-" + Math.round(x) + "-" + Math.round(y);
+    let body = "";
+
+    if (code === "SE") {
+      body = rect(x,y,w,h,"#006AA7") +
+        rect(x+w*.31,y,w*.13,h,"#FECC00") +
+        rect(x,y+h*.42,w,h*.16,"#FECC00");
+    } else if (code === "FI") {
+      body = rect(x,y,w,h,"#ffffff") +
+        rect(x+w*.29,y,w*.14,h,"#003580") +
+        rect(x,y+h*.42,w,h*.16,"#003580");
+    } else if (code === "NO") {
+      body = rect(x,y,w,h,"#BA0C2F") +
+        rect(x+w*.28,y,w*.18,h,"#ffffff") +
+        rect(x,y+h*.38,w,h*.24,"#ffffff") +
+        rect(x+w*.32,y,w*.10,h,"#00205B") +
+        rect(x,y+h*.43,w,h*.14,"#00205B");
+    } else if (code === "DK") {
+      body = rect(x,y,w,h,"#C60C30") +
+        rect(x+w*.31,y,w*.12,h,"#ffffff") +
+        rect(x,y+h*.43,w,h*.14,"#ffffff");
+    } else if (code === "DE") {
+      body = rect(x,y,w,h/3,"#000000") +
+        rect(x,y+h/3,w,h/3,"#DD0000") +
+        rect(x,y+h*2/3,w,h/3,"#FFCE00");
+    } else if (code === "AT") {
+      body = rect(x,y,w,h/3,"#ED2939") +
+        rect(x,y+h/3,w,h/3,"#ffffff") +
+        rect(x,y+h*2/3,w,h/3,"#ED2939");
+    } else if (code === "CH") {
+      body = rect(x,y,w,h,"#D52B1E") +
+        rect(x+w*.43,y+h*.20,w*.14,h*.60,"#ffffff") +
+        rect(x+w*.28,y+h*.38,w*.44,h*.24,"#ffffff");
+    } else if (code === "CZ") {
+      body = rect(x,y,w,h/2,"#ffffff") +
+        rect(x,y+h/2,w,h/2,"#D7141A") +
+        '<path d="M ' + x + ' ' + y + ' L ' + (x+w*.46) + ' ' + (y+h/2) + ' L ' + x + ' ' + (y+h) + ' Z" fill="#11457E"/>';
+    } else if (code === "SK") {
+      body = rect(x,y,w,h/3,"#ffffff") +
+        rect(x,y+h/3,w,h/3,"#0B4EA2") +
+        rect(x,y+h*2/3,w,h/3,"#EE1C25");
+    } else if (code === "LV") {
+      body = rect(x,y,w,h,"#9E3039") +
+        rect(x,y+h*.40,w,h*.20,"#ffffff");
+    } else if (code === "EE") {
+      body = rect(x,y,w,h/3,"#4891D9") +
+        rect(x,y+h/3,w,h/3,"#000000") +
+        rect(x,y+h*2/3,w,h/3,"#ffffff");
+    } else if (code === "PL") {
+      body = rect(x,y,w,h/2,"#ffffff") +
+        rect(x,y+h/2,w,h/2,"#DC143C");
+    } else if (code === "RU") {
+      body = rect(x,y,w,h/3,"#ffffff") +
+        rect(x,y+h/3,w,h/3,"#0039A6") +
+        rect(x,y+h*2/3,w,h/3,"#D52B1E");
+    } else {
+      return [
+        '<g>',
+        '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".24"/>',
+        '<text x="' + (x+w/2) + '" y="' + (y+h*.70) + '" text-anchor="middle" fill="#ffffff" font-size="' + Math.max(8,h*.52) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(code) + '</text>',
+        '</g>'
+      ].join("");
+    }
+
+    return [
+      '<g>',
+      '<defs><clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '"/></clipPath></defs>',
+      '<g clip-path="url(#' + clipId + ')">' + body + '</g>',
+      border,
+      '</g>'
+    ].join("");
+  }
+
   function formatDate(value) {
     if (!value) return "DATUM EJ SATT";
     const parts = value.split("-");
@@ -1467,12 +1557,16 @@
     const cardHeight = width === 1920 ? 118 : 104;
     return POSITIONS.map((pos,index) => {
       const x = margin + index * (cardWidth + gap);
-      const name = esc(cleanText(state.lineup[pos],18) || "—");
+      const rawName = cleanText(state.lineup[pos],18) || "—";
+      const name = esc(rawName);
+      const flagW = width === 1920 ? 34 : 28;
+      const flagH = width === 1920 ? 22 : 18;
       return [
         '<g transform="translate(' + x + ' ' + y + ')">',
         '<rect width="' + cardWidth + '" height="' + cardHeight + '" rx="18" fill="#ffffff" fill-opacity=".072" stroke="#ffffff" stroke-opacity=".12"/>',
         '<rect x="12" y="12" width="42" height="26" rx="8" fill="#ffffff" fill-opacity=".14"/>',
         '<text x="33" y="31" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text>',
+        playerFlagSvg(rawName,cardWidth-flagW-12,14,flagW,flagH),
         '<text x="14" y="' + (cardHeight - 24) + '" fill="#ffffff" font-size="' + (width === 1920 ? 24 : 17) + '" font-weight="800" font-family="Arial,Helvetica,sans-serif">' + name + '</text>',
         '</g>'
       ].join("");
@@ -1489,12 +1583,14 @@
       const row = Math.floor(index / 2);
       const x = 100 + col * (cardWidth + gapX);
       const yy = y + row * (cardHeight + gapY);
-      const name = esc(cleanText(state.lineup[pos],20) || "—");
+      const rawName = cleanText(state.lineup[pos],20) || "—";
+      const name = esc(rawName);
       return [
         '<g transform="translate(' + x + ' ' + yy + ')">',
         '<rect width="' + cardWidth + '" height="' + cardHeight + '" rx="22" fill="#ffffff" fill-opacity=".072" stroke="#ffffff" stroke-opacity=".12"/>',
         '<rect x="18" y="18" width="52" height="32" rx="9" fill="#ffffff" fill-opacity=".14"/>',
         '<text x="44" y="41" text-anchor="middle" fill="#ffffff" font-size="17" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + pos + '</text>',
+        playerFlagSvg(rawName,cardWidth-58,20,38,24),
         '<text x="20" y="92" fill="#ffffff" font-size="25" font-weight="800" font-family="Arial,Helvetica,sans-serif">' + name + '</text>',
         '</g>'
       ].join("");
@@ -1568,6 +1664,9 @@
     const posBadgeWidth = pos.length > 1 ? 42 : 34;
     const badgeFontSize = showStats && width >= 320 ? 12 : 11;
     const statSize = width >= 320 ? 12 : width >= 250 ? 11 : 9;
+    const flagW = width >= 250 ? 34 : 28;
+    const flagH = width >= 250 ? 22 : 18;
+    const flagX = number ? (x+width-50-flagW-7) : (x+width-flagW-10);
 
     return [
       '<g>',
@@ -1577,6 +1676,7 @@
       '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + (y+4) + '" width="' + (width-8) + '" height="' + imageHeight + '" preserveAspectRatio="xMidYMin slice" clip-path="url(#' + clipId + ')"/>',
       '<rect x="' + (x+10) + '" y="' + (y+10) + '" width="' + posBadgeWidth + '" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>',
       '<text x="' + (x+10+posBadgeWidth/2) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" letter-spacing=".8" font-family="Arial,Helvetica,sans-serif">' + esc(pos) + '</text>',
+      playerFlagSvg(cleanName,flagX,y+12,flagW,flagH),
       number ? '<rect x="' + (x+width-50) + '" y="' + (y+10) + '" width="40" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>' : '',
       number ? '<text x="' + (x+width-30) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
       '<rect x="' + x + '" y="' + (y+height-footerHeight) + '" width="' + width + '" height="' + footerHeight + '" fill="#05080c" fill-opacity=".94" clip-path="url(#' + clipId + ')"/>',
@@ -2183,6 +2283,11 @@
     const badgeH = Math.max(20,Math.min(24,Math.round(height*.12)));
     const badgeFont = Math.max(9,Math.min(11,Math.round(width*.06)));
     const nameFont = Math.max(11,Math.min(14,Math.round(width*.075)));
+    const flagW = Math.max(25,Math.min(32,Math.round(width*.18)));
+    const flagH = Math.max(16,Math.min(21,Math.round(flagW*.63)));
+    const flagX = number
+      ? x+width-badgeW-8-flagW-6
+      : x+width-flagW-8;
     const badge = position
       ? '<rect x="' + (x+8) + '" y="' + (y+8) + '" width="' + badgeW + '" height="' + badgeH + '" rx="' + (badgeH/2) + '" fill="#05090e" fill-opacity=".90" stroke="#ffffff" stroke-opacity=".18"/>' +
         '<text x="' + (x+8+badgeW/2) + '" y="' + (y+8+badgeH*.68) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFont + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + esc(position) + '</text>'
@@ -2198,6 +2303,7 @@
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16" fill="' + team.primary + '" opacity=".18"/>',
       '<image href="' + esc(portrait) + '" x="' + portraitX + '" y="' + portraitY + '" width="' + portraitW + '" height="' + portraitH + '" preserveAspectRatio="xMidYMin meet" clip-path="url(#' + clipId + ')"/>',
       badge,
+      playerFlagSvg(cleanName,flagX,y+9,flagW,flagH),
       numberBadge,
       '<rect x="' + x + '" y="' + (y+height-footerH) + '" width="' + width + '" height="' + footerH + '" fill="#04080d" fill-opacity=".96" clip-path="url(#' + clipId + ')"/>',
       '<rect x="' + x + '" y="' + (y+height-footerH) + '" width="' + width + '" height="2.5" fill="' + team.accent + '" fill-opacity=".72" clip-path="url(#' + clipId + ')"/>',
