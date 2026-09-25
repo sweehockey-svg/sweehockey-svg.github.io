@@ -1,8 +1,10 @@
 (()=>{"use strict";
 const $=s=>document.querySelector(s);
-const SUPA="https://oujqnvrczdavqbqaavuh.supabase.co/rest/v1/";
-const key=(window.SEH_SUPABASE_ANON_KEY||"");
-const headers=key?{apikey:key,Authorization:"Bearer "+key}:{};
+const cfg=window.SEH_CONFIG||window.EHOCKEY_CONFIG||window.APP_CONFIG||window.config||{};
+const SUPA=String(cfg.supabaseUrl||cfg.SUPABASE_URL||"").replace(/\/+$/,"")+"/rest/v1/";
+const key=String(cfg.supabasePublishableKey||cfg.supabaseAnonKey||cfg.SUPABASE_ANON_KEY||cfg.SUPABASE_PUBLISHABLE_KEY||"");
+const headers=key?{apikey:key,Accept:"application/json"}:{};
+if(/^eyJ/i.test(key)) headers.Authorization="Bearer "+key;
 let teams=[],players=[];
 const esc=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 async function q(path){const r=await fetch(SUPA+path,{headers});if(!r.ok)throw Error(await r.text());return r.json()}
