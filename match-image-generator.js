@@ -2309,14 +2309,21 @@
   function buildBroadcastSvg() {
     const ctx=templateContext();
     const isStory=state.format==="story",isWide=state.format==="landscape";
-    const topH=isStory?560:state.format==="square"?380:350;
-    const homeLogo=isStory?150:110;
-    const logoY=isStory?185:120;
-    const jerseySize=isStory?250:isWide?250:190;
+    const topH=isStory?560:state.format==="square"?430:350;
+    const homeLogo=isStory?150:state.format==="square"?170:110;
+    const logoY=isStory?185:state.format==="square"?155:120;
+    const jerseySize=isStory?250:isWide?250:state.format==="square"?255:190;
     const leftJ=premiumJerseySvg(ctx.home,{variant:"home",side:"front",compact:true});
     const rightJ=premiumJerseySvg(ctx.away,{variant:"away",side:"front",compact:true});
-    const lineupY=isStory?1040:isWide?725:700;
-    const lineup=lineupForTemplate(ctx.W,lineupY,ctx.own,ctx.ownVariant);
+    const lineupY=isStory?1040:isWide?725:650;
+    const lineup = state.format === "square" && state.lineupStyle === "portraits"
+      ? (() => {
+          const cardWidth=150, cardHeight=245, gap=12;
+          const total=cardWidth*6+gap*5;
+          const start=(ctx.W-total)/2;
+          return POSITIONS.map((pos,index) => portraitCard(pos,state.lineup[pos],start+index*(cardWidth+gap),lineupY,cardWidth,cardHeight,ctx.own,ctx.ownVariant)).join("");
+        })()
+      : lineupForTemplate(ctx.W,lineupY,ctx.own,ctx.ownVariant);
 
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '">',
@@ -2328,16 +2335,14 @@
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?85:58) + '" text-anchor="middle" fill="#fff" fill-opacity=".58" font-size="15" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="4">' + ctx.competition + '</text>',
       ctx.competitionDivision ? '<text x="' + (ctx.W/2) + '" y="' + (isStory?109:80) + '" text-anchor="middle" fill="#fff" fill-opacity=".38" font-size="10" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">' + ctx.competitionDivision + '</text>' : '',
       '<text x="' + (ctx.W/2) + '" y="' + (isStory?145:105) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?54:isWide?56:42) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ctx.badge + '</text>',
-      svgLogo(ctx.home,ctx.W*.21-homeLogo/2,logoY,homeLogo,.95),
-      svgLogo(ctx.away,ctx.W*.79-homeLogo/2,logoY,homeLogo,.95),
-      teamHeroVisual(ctx.home,"home",ctx.W*.21-jerseySize/2,logoY+homeLogo-20,jerseySize),
-      teamHeroVisual(ctx.away,"away",ctx.W*.79-jerseySize/2,logoY+homeLogo-20,jerseySize),
-      '<text x="' + (ctx.W*.21) + '" y="' + (logoY+homeLogo+jerseySize+10) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?25:19) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.home.name) + '</text>',
-      '<text x="' + (ctx.W*.79) + '" y="' + (logoY+homeLogo+jerseySize+10) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?25:19) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.away.name) + '</text>',
-      '<text x="' + (ctx.W/2) + '" y="' + (logoY+homeLogo+55) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?58:48) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">VS</text>',
-      '<text x="' + (ctx.W/2) + '" y="' + (topH+75) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?34:isWide?34:27) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
+      state.teamVisual === "logo" ? svgLogo(ctx.home,ctx.W*.21-homeLogo/2,logoY,homeLogo,.98) : teamHeroVisual(ctx.home,"home",ctx.W*.21-jerseySize/2,logoY,jerseySize),
+      state.teamVisual === "logo" ? svgLogo(ctx.away,ctx.W*.79-homeLogo/2,logoY,homeLogo,.98) : teamHeroVisual(ctx.away,"away",ctx.W*.79-jerseySize/2,logoY,jerseySize),
+      '<text x="' + (ctx.W*.21) + '" y="' + (logoY+(state.teamVisual === "logo" ? homeLogo : jerseySize)+30) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?25:19) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.home.name) + '</text>',
+      '<text x="' + (ctx.W*.79) + '" y="' + (logoY+(state.teamVisual === "logo" ? homeLogo : jerseySize)+30) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?25:19) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(ctx.away.name) + '</text>',
+      '<text x="' + (ctx.W/2) + '" y="' + (state.format === "square" ? 270 : (logoY+homeLogo+55)) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?58:48) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">VS</text>',
+      '<text x="' + (ctx.W/2) + '" y="' + (state.format === "square" ? 365 : (topH+75)) + '" text-anchor="middle" fill="#fff" font-size="' + (isStory?34:isWide?34:27) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.date + ' · ' + ctx.time + '</text>',
       ctx.stream ? '<g><rect x="' + (ctx.W*.12) + '" y="' + (topH+108) + '" width="' + (ctx.W*.76) + '" height="' + (isStory?92:72) + '" rx="18" fill="#ff4d5f" fill-opacity=".12" stroke="#ff6c78" stroke-opacity=".45"/><text x="' + (ctx.W*.16) + '" y="' + (topH+(isStory?165:153)) + '" fill="#ff6c78" font-size="' + (isStory?23:18) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">LIVE</text><text x="' + (ctx.W*.25) + '" y="' + (topH+(isStory?165:153)) + '" fill="#fff" font-size="' + (isStory?26:isWide?25:20) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + ctx.stream.replace(/^LIVE · /,"") + '</text></g>' : '',
-      '<text x="' + (ctx.W*.08) + '" y="' + (lineupY-30) + '" fill="#fff" fill-opacity=".54" font-size="' + (isStory?22:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">LINEUP · ' + esc(ctx.own.name).toUpperCase() + '</text>',
+      '<text x="' + (state.format === "square" ? ctx.W/2 : ctx.W*.08) + '" y="' + (lineupY-30) + '" text-anchor="' + (state.format === "square" ? "middle" : "start") + '" fill="#fff" fill-opacity=".54" font-size="' + (isStory?22:16) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">LINEUP · ' + esc(ctx.own.name).toUpperCase() + '</text>',
       lineup,
       '<rect x="0" y="' + (ctx.H-58) + '" width="' + ctx.W + '" height="58" fill="#fff" fill-opacity=".035"/>',
       '<text x="' + (ctx.W*.06) + '" y="' + (ctx.H-22) + '" fill="#fff" fill-opacity=".42" font-size="13" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="3">SVENSK eHOCKEY BROADCAST</text>',
