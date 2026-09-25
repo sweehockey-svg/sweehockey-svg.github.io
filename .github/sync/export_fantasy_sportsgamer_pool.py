@@ -13,6 +13,7 @@ import json
 import os
 import re
 import sys
+from bisect import bisect_right
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Iterable
@@ -39,6 +40,8 @@ def parse_league_ids() -> list[int]:
 
 
 LEAGUE_IDS = parse_league_ids()
+PRICE_HISTORY_MAX_LEAGUE_ID = int(os.environ.get("FANTASY_PRICE_HISTORY_MAX_LEAGUE_ID") or "511")
+PRICE_HISTORY_LABEL = (os.environ.get("FANTASY_PRICE_HISTORY_LABEL") or "ECL '26: Spring").strip()
 POOL_OUTPUT = Path(os.environ.get("POOL_OUTPUT", "/tmp/fantasy_player_pool.csv"))
 TEAM_OUTPUT = Path(os.environ.get("TEAM_OUTPUT", "/tmp/fantasy_team_pool.csv"))
 
@@ -475,12 +478,13 @@ def fetch_historical_performance(
     connection: Any,
     inventory: dict[str, list[str]],
     player_ids: list[int],
-) -> dict[int, dict[str, float]]:
+) -> dict[int, dict[str, Any]]:
     columns = inventory.get("nhlgamer_participants", [])
     player_col = column_name(columns, "playerID", "player_id")
     match_col = column_name(columns, "matchID", "match_id")
     pos_col = column_name(columns, "positionID", "position", "position_id")
-    if not player_col or not match_col or not pos_col:
+    league_col = column_name(columns, "leagueID", "league_id")
+    if not player_col or not match_col or not pos_col or not league_col:
         return {}
 
     def optional(*names: str) -> str | None:
@@ -509,8 +513,9 @@ def fetch_historical_performance(
             connection,
             "select " + ",".join(selected) +
             f" from `nhlgamer_participants` where {safe_identifier(player_col)} in ({placeholders}) "
-            f"and {safe_identifier(match_col)}>0 and {safe_identifier(pos_col)} between 1 and 6",
-            tuple(part),
+            f"and {safe_identifier(match_col)}>0 and {safe_identifier(pos_col)} between 1 and 6 "
+            f"and {safe_identifier(league_col)}<=%s",
+            tuple(part) + (PRICE_HISTORY_MAX_LEAGUE_ID,),
         ))
 
     totals: dict[int, dict[str, Any]] = defaultdict(lambda: {
@@ -518,6 +523,7 @@ def fetch_historical_performance(
         "points": 0.0,
         "skater_games": 0,
         "goalie_games": 0,
+        "positions": Counter(),
         "seen": set(),
     })
 
@@ -551,8 +557,9 @@ def fetch_historical_performance(
 
         totals[player_id]["games"] += 1
         totals[player_id]["points"] += points
+        totals[player_id]["positions"][position] += 1
 
-    result: dict[int, dict[str, float]] = {}
+    result: dict[int, dict[str, Any]] = {}
     for player_id, values in totals.items():
         games = integer(values["games"])
         points = float(values["points"])
@@ -562,15 +569,64 @@ def fetch_historical_performance(
             "ppg": round(points / games, 4) if games else 0.0,
             "skater_games": integer(values["skater_games"]),
             "goalie_games": integer(values["goalie_games"]),
+            "primary_position": values["positions"].most_common(1)[0][0] if values["positions"] else "",
         }
     return result
 
 
-def assign_history_prices(rows: list[dict[str, Any]], history: dict[int, dict[str, float]]) -> None:
-    by_role: dict[str, list[tuple[int, float]]] = defaultdict(list)
-    centers: dict[str, float] = {}
+def median(values: list[float]) -> float:
+    ordered = sorted(values)
+    if not ordered:
+        return 0.0
+    middle = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[middle]
+    return (ordered[middle - 1] + ordered[middle]) / 2.0
 
-    for index, row in enumerate(rows):
+
+def build_frozen_price_reference(
+    player_rows: list[dict[str, Any]],
+    history: dict[int, dict[str, Any]],
+) -> tuple[dict[str, float], dict[str, list[float]]]:
+    raw_by_role: dict[str, list[tuple[int, float]]] = defaultdict(list)
+
+    for player in player_rows:
+        player_id = integer(first(player, "playerID", "player_id", "id"))
+        perf = history.get(player_id)
+        if not perf or integer(perf.get("games")) < 3:
+            continue
+        position = normalize_position(first(
+            player,
+            "preferredPositionID",
+            "positionID",
+            "position",
+            "primaryPosition",
+            "mainPosition",
+            "preferredPosition",
+        )) or str(perf.get("primary_position") or "")
+        raw_by_role[history_role(position)].append((integer(perf.get("games")), number(perf.get("ppg"))))
+
+    centers: dict[str, float] = {}
+    scores: dict[str, list[float]] = {}
+
+    for role in ("F", "D", "G"):
+        centers[role] = median([ppg for _, ppg in raw_by_role.get(role, [])])
+        center = centers[role]
+        scores[role] = sorted(
+            center + (ppg - center) * (games / (games + 12.0))
+            for games, ppg in raw_by_role.get(role, [])
+        )
+    return centers, scores
+
+
+def assign_history_prices(
+    rows: list[dict[str, Any]],
+    history: dict[int, dict[str, Any]],
+    reference_centers: dict[str, float],
+    reference_scores: dict[str, list[float]],
+) -> None:
+
+    for row in rows:
         player_id = integer(row["source_player_id"])
         perf = history.get(player_id, {"games": 0, "points": 0.0, "ppg": 0.0})
         row["_history_games"] = integer(perf.get("games"))
@@ -578,58 +634,32 @@ def assign_history_prices(rows: list[dict[str, Any]], history: dict[int, dict[st
         row["_history_ppg"] = number(perf.get("ppg"))
         row["_pricing_role"] = history_role(str(row.get("primary_position") or ""))
 
-    for role in ("F", "D", "G"):
-        values = sorted(
-            row["_history_ppg"]
-            for row in rows
-            if row["_pricing_role"] == role and row["_history_games"] >= 3
-        )
-        if not values:
-            centers[role] = 0.0
-        elif len(values) % 2:
-            centers[role] = values[len(values) // 2]
-        else:
-            mid = len(values) // 2
-            centers[role] = (values[mid - 1] + values[mid]) / 2.0
-
-    for index, row in enumerate(rows):
+    for row in rows:
         games = row["_history_games"]
         role = row["_pricing_role"]
-        center = centers.get(role, 0.0)
-        if games >= 3:
-            confidence = games / (games + 12.0)
-            adjusted = center + (row["_history_ppg"] - center) * confidence
-            by_role[role].append((index, adjusted))
-            row["_adjusted_score"] = adjusted
-        else:
-            row["_adjusted_score"] = center
-
-    percentiles: dict[int, float] = {}
-    for role, items in by_role.items():
-        ordered = sorted(items, key=lambda item: (item[1], item[0]))
-        total = len(ordered)
-        if total == 1:
-            percentiles[ordered[0][0]] = 0.5
-            continue
-        for rank, (index, _) in enumerate(ordered):
-            percentiles[index] = rank / (total - 1)
-
-    for index, row in enumerate(rows):
-        games = row["_history_games"]
+        center = reference_centers.get(role, 0.0)
+        adjusted = center
         if games < 3:
             price = 15
         else:
-            pct = percentiles.get(index, 0.5)
+            confidence = games / (games + 12.0)
+            adjusted = center + (row["_history_ppg"] - center) * confidence
+            distribution = reference_scores.get(role, [])
+            if len(distribution) <= 1:
+                pct = 0.5
+            else:
+                rank = max(0, bisect_right(distribution, adjusted) - 1)
+                pct = min(1.0, rank / (len(distribution) - 1))
             price = int(round(8 + 22 * (pct ** 1.8)))
             price = max(8, min(30, price))
 
         row["suggested_price"] = price
-        row["suggested_ranking_points"] = round(number(row["_adjusted_score"]), 4)
+        row["suggested_ranking_points"] = round(number(adjusted), 4)
         row["history_games"] = games
         row["history_fantasy_points"] = round(row["_history_points"], 2)
         row["history_ppg"] = round(row["_history_ppg"], 4)
 
-        for key in ("_history_games", "_history_points", "_history_ppg", "_pricing_role", "_adjusted_score"):
+        for key in ("_history_games", "_history_points", "_history_ppg", "_pricing_role"):
             row.pop(key, None)
 
 
@@ -694,6 +724,22 @@ def main() -> int:
                 if pid:
                     player_meta[pid] = row
 
+        if not player_table or not player_id_column:
+            raise RuntimeError("SportsGamer player table is required for the frozen Swedish price reference")
+
+        all_player_rows = select(connection, f"select * from {safe_identifier(player_table)}")
+        swedish_reference_rows = [
+            row for row in all_player_rows
+            if normalize_country(first(row, "country", "countryCode", "country_code", "nationality")) == "SE"
+            and integer(first(row, "playerID", "player_id", "id")) > 0
+        ]
+        swedish_reference_ids = sorted({
+            integer(first(row, "playerID", "player_id", "id"))
+            for row in swedish_reference_rows
+        })
+        if not swedish_reference_ids:
+            raise RuntimeError("No Swedish SportsGamer players found for the frozen Fantasy price reference")
+
         team_meta: dict[int, dict[str, Any]] = {}
         if team_table and team_id_column:
             for row in fetch_by_ids(connection, team_table, team_id_column, team_ids):
@@ -743,10 +789,26 @@ def main() -> int:
                 }),
             })
 
-        # Build prices from each current roster player's SportsGamer match history
-        # through the present day. This intentionally also works for older leagues:
-        # the roster comes from that league, while valuation uses everything known now.
-        historical_performance = fetch_historical_performance(connection, inventory, player_ids)
+        # Freeze the market against every Swedish SportsGamer player's history through
+        # the configured cutoff. Current SCL registrations therefore cannot move prices.
+        reference_history = fetch_historical_performance(connection, inventory, swedish_reference_ids)
+        reference_centers, reference_scores = build_frozen_price_reference(
+            swedish_reference_rows,
+            reference_history,
+        )
+        if any(len(reference_scores.get(role, [])) < 2 for role in ("F", "D", "G")):
+            raise RuntimeError("Frozen Fantasy price reference is missing enough Swedish F/D/G history")
+        print(
+            "Frozen Fantasy price reference: "
+            f"through {PRICE_HISTORY_LABEL} (league <= {PRICE_HISTORY_MAX_LEAGUE_ID}); "
+            + ", ".join(f"{role}={len(reference_scores[role])}" for role in ("F", "D", "G"))
+        )
+
+        historical_performance = dict(reference_history)
+        foreign_or_missing_ids = [player_id for player_id in player_ids if player_id not in historical_performance]
+        historical_performance.update(
+            fetch_historical_performance(connection, inventory, foreign_or_missing_ids)
+        )
 
         # If games already exist, use observed current-league positions as another hint.
         observed_positions: dict[int, Counter[str]] = defaultdict(Counter)
@@ -855,13 +917,24 @@ def main() -> int:
                 }),
             })
 
-        assign_history_prices(output_rows, historical_performance)
+        assign_history_prices(
+            output_rows,
+            historical_performance,
+            reference_centers,
+            reference_scores,
+        )
 
         for row in output_rows:
             raw = json.loads(row["raw_player"])
             raw["fantasy_pricing"] = {
-                "model": "sports_gamer_history_v1",
-                "history_through": "current_sync",
+                "model": "sports_gamer_frozen_swedish_reference_v2",
+                "history_through": PRICE_HISTORY_LABEL,
+                "history_max_league_id": PRICE_HISTORY_MAX_LEAGUE_ID,
+                "reference_population": "all_swedish_sportsgamer_players",
+                "reference_player_counts": {
+                    role: len(reference_scores.get(role, []))
+                    for role in ("F", "D", "G")
+                },
                 "games": row["history_games"],
                 "fantasy_points": row["history_fantasy_points"],
                 "ppg": row["history_ppg"],

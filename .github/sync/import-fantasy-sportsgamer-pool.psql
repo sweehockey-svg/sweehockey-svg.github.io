@@ -205,18 +205,18 @@ select
     else array['LW','C','RW','LD','RD','G']::text[]
   end,
   case
-    when p.pricing_model='sports_gamer_history_v1'
+    when p.pricing_model in ('sports_gamer_history_v1','sports_gamer_frozen_swedish_reference_v2')
       then coalesce(p.suggested_price,15)::numeric
     else coalesce(p.prior_price,15)::numeric
   end,
   p.prior_player_image,
   case
-    when p.pricing_model='sports_gamer_history_v1'
+    when p.pricing_model in ('sports_gamer_history_v1','sports_gamer_frozen_swedish_reference_v2')
       then null
     else p.prior_ranking_position
   end,
   case
-    when p.pricing_model='sports_gamer_history_v1'
+    when p.pricing_model in ('sports_gamer_history_v1','sports_gamer_frozen_swedish_reference_v2')
       then coalesce(p.suggested_ranking_points,0)::numeric
     else p.prior_ranking_points
   end,
@@ -255,18 +255,18 @@ do update set
     else public.ehockey_fantasy_player_pool.eligible_slots
   end,
   price=case
-    when coalesce(excluded.source_snapshot->>'pricing_model','')='sports_gamer_history_v1'
+    when coalesce(excluded.source_snapshot->>'pricing_model','') in ('sports_gamer_history_v1','sports_gamer_frozen_swedish_reference_v2')
       then excluded.price
     else public.ehockey_fantasy_player_pool.price
   end,
   player_image=coalesce(public.ehockey_fantasy_player_pool.player_image,excluded.player_image),
   ranking_position=case
-    when coalesce(excluded.source_snapshot->>'pricing_model','')='sports_gamer_history_v1'
+    when coalesce(excluded.source_snapshot->>'pricing_model','') in ('sports_gamer_history_v1','sports_gamer_frozen_swedish_reference_v2')
       then null
     else coalesce(public.ehockey_fantasy_player_pool.ranking_position,excluded.ranking_position)
   end,
   ranking_points=case
-    when coalesce(excluded.source_snapshot->>'pricing_model','')='sports_gamer_history_v1'
+    when coalesce(excluded.source_snapshot->>'pricing_model','') in ('sports_gamer_history_v1','sports_gamer_frozen_swedish_reference_v2')
       then excluded.ranking_points
     else coalesce(public.ehockey_fantasy_player_pool.ranking_points,excluded.ranking_points)
   end,
