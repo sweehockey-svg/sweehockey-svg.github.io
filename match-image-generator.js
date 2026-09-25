@@ -2142,13 +2142,13 @@
       startX = (ctx.W - (cardWidth * 2 + gapX)) / 2;
       startY = 585;
     } else {
-      cardWidth = 292;
-      cardHeight = 250;
-      gapX = 18;
-      gapY = 18;
+      cardWidth = 304;
+      cardHeight = 272;
+      gapX = 16;
+      gapY = 16;
       cols = 3;
       startX = (ctx.W - (cardWidth * 3 + gapX * 2)) / 2;
-      startY = 420;
+      startY = 414;
     }
 
     const displayPositions = cols === 3
@@ -2169,23 +2169,23 @@
     const ownName=esc(ctx.own.name),oppName=esc(ctx.opponent.name);
     const isStory=state.format==="story",isWide=state.format==="landscape";
     const portraitMode=state.lineupStyle==="portraits";
-    const heroSize=isWide?450:isStory?470:275;
-    const heroX=isWide?140:isStory?(ctx.W-heroSize)/2:62;
-    const heroY=isWide?178:isStory?210:130;
+    const heroSize=isWide?450:isStory?470:250;
+    const heroX=isWide?140:isStory?(ctx.W-heroSize)/2:54;
+    const heroY=isWide?178:isStory?210:128;
     const hero=premiumJerseySvg(ctx.own,{variant:ctx.ownVariant,side:"front",compact:false});
     const lineup=portraitMode
       ? startingSixPortraitGrid(ctx)
       : focusLineupMarkup(ctx,isWide?630:(isStory?875:500));
 
-    const opponentLogoSize=isWide?84:isStory?112:78;
-    const opponentLogoX=isWide?128:isStory?ctx.W-opponentLogoSize-74:ctx.W-opponentLogoSize-54;
-    const opponentLogoY=isWide?716:isStory?350:112;
+    const opponentLogoSize=isWide?84:isStory?112:70;
+    const opponentLogoX=isWide?128:isStory?ctx.W-opponentLogoSize-74:ctx.W-opponentLogoSize-42;
+    const opponentLogoY=isWide?716:isStory?350:108;
 
     const infoX=isWide?102:isStory?ctx.W/2:ctx.W/2;
-    const infoY=isWide?806:isStory?400:250;
+    const infoY=isWide?806:isStory?400:238;
     const infoAnchor=isWide?"start":"middle";
     const gridTitleX=isWide?1314:ctx.W/2;
-    const gridTitleY=isWide?128:isStory?535:382;
+    const gridTitleY=isWide?128:isStory?535:370;
 
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '" role="img" aria-label="Starting Six ' + ownName + '">',
@@ -2214,7 +2214,7 @@
 
       isWide
         ? '<text x="102" y="654" fill="#ffffff" font-size="42" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text><line x1="102" y1="676" x2="610" y2="676" stroke="' + ctx.own.accent + '" stroke-opacity=".55" stroke-width="2"/>'
-        : '<text x="' + (ctx.W/2) + '" y="' + (isStory?720:360) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?38:28) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>',
+        : '<text x="' + (ctx.W/2) + '" y="' + (isStory?720:348) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?38:30) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>',
 
       '<g>',
       '<text x="' + (isWide?102:opponentLogoX) + '" y="' + (isWide?opponentLogoY-8:opponentLogoY-18) + '" fill="#ffffff" fill-opacity=".45" font-size="12" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="2">MOT</text>',
