@@ -2059,7 +2059,10 @@
     if (!ctx.stream) return "";
     const width = options.width || (wide ? Math.min(ctx.W * .62,720) : Math.min(ctx.W * .44,520));
     const height = options.height || (state.format === "story" ? 54 : 44);
-    const streamText = options.maxChars ? esc(cleanText(String(ctx.stream).replace(/&amp;/g,"&"),options.maxChars)) : ctx.stream;
+    const rawStreamText = String(ctx.stream).replace(/&amp;/g,"&");
+    const streamText = options.maxChars
+      ? esc(rawStreamText.length > options.maxChars ? cleanText(rawStreamText,options.maxChars-1) + "…" : cleanText(rawStreamText,options.maxChars))
+      : ctx.stream;
     const fontSize = options.fontSize || (state.format === "story" ? 20 : 16);
     return [
       '<g>',
@@ -2147,13 +2150,13 @@
       startX = 790;
       startY = 154;
     } else if (isStory) {
-      cardWidth = 292;
-      cardHeight = 454;
+      cardWidth = 310;
+      cardHeight = 500;
       gapX = 18;
-      gapY = 20;
+      gapY = 22;
       cols = 3;
       startX = (ctx.W - (cardWidth * 3 + gapX * 2)) / 2;
-      startY = 790;
+      startY = 820;
     } else {
       cardWidth = 286;
       cardHeight = 300;
@@ -2198,7 +2201,7 @@
     const infoY=isWide?806:isStory?300:224;
     const infoAnchor=isWide?"start":"middle";
     const gridTitleX=isWide?1314:ctx.W/2;
-    const gridTitleY=isWide?128:isStory?755:358;
+    const gridTitleY=isWide?128:isStory?780:358;
 
     return [
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + ctx.W + '" height="' + ctx.H + '" viewBox="0 0 ' + ctx.W + ' ' + ctx.H + '" role="img" aria-label="Starting Six ' + ownName + '">',
@@ -2227,7 +2230,7 @@
 
       isWide
         ? '<text x="102" y="654" fill="#ffffff" font-size="42" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text><line x1="102" y1="676" x2="610" y2="676" stroke="' + ctx.own.accent + '" stroke-opacity=".55" stroke-width="2"/>'
-        : '<text x="' + (ctx.W/2) + '" y="' + (isStory?690:330) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?38:30) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>',
+        : '<text x="' + (ctx.W/2) + '" y="' + (isStory?710:330) + '" text-anchor="middle" fill="#ffffff" font-size="' + (isStory?38:30) + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">' + ownName + '</text>',
 
       '<g>',
       isWide
@@ -2241,7 +2244,7 @@
       ctx.stream
         ? (isWide
           ? '<g><rect x="102" y="' + (infoY+54) + '" width="520" height="46" rx="23" fill="#07101a" fill-opacity=".88" stroke="#8fc8ff" stroke-opacity=".30"/><circle cx="132" cy="' + (infoY+77) + '" r="7" fill="#ff4d5f"/><circle cx="132" cy="' + (infoY+77) + '" r="14" fill="#ff4d5f" opacity=".14"/><text x="362" y="' + (infoY+83) + '" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="1.2">' + ctx.stream + '</text></g>'
-          : templateStream(ctx,isStory?405:infoY+116,false,isStory?{width:360,height:46,fontSize:15,maxChars:34}:{}))
+          : templateStream(ctx,isStory?405:infoY+116,false,isStory?{width:330,height:46,fontSize:14,maxChars:28}:{}))
         : '',
 
       portraitMode ? '<text x="' + gridTitleX + '" y="' + gridTitleY + '" text-anchor="middle" fill="#ffffff" fill-opacity=".82" font-size="' + (isWide?17:isStory?20:15) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif" letter-spacing="5">LINEUP</text>' : '',
