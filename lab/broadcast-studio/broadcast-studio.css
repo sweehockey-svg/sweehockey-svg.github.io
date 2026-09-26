@@ -116,12 +116,12 @@
 .goalie-name span{min-width:0}.goalie-name b{display:block;font-size:clamp(14px,1.25vw,21px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.goalie-name small{display:block;color:#9db0bf;margin-top:3px}
 .goalie-center{align-self:center;background:#07131de8;border:2px solid #ffffff35;box-shadow:0 12px 30px #0007;padding:18px 12px}
 .goalie-center-title{text-align:center;color:#f4b21b;font-size:clamp(17px,1.55vw,26px);font-weight:950;letter-spacing:.05em;padding:2px 0 16px;border-bottom:2px solid #f4b21b}
-.goalie-columns,.goalie-row{display:grid;grid-template-columns:1fr 1fr 82px 1fr 1fr;align-items:center;text-align:center}
+.goalie-columns,.goalie-row{display:grid;grid-template-columns:minmax(58px,1fr) minmax(58px,1fr) 64px minmax(58px,1fr) minmax(58px,1fr);align-items:center;text-align:center;column-gap:8px}
 .goalie-columns{background:#f4b21b;color:#07131d;font-size:9px;font-weight:950;padding:7px 0}
 .goalie-columns i{height:100%}
 .goalie-row{border-bottom:1px solid #f4b21b99;padding:11px 0}
 .goalie-row span{font-size:10px;color:#c3ced6;font-weight:950}
-.goalie-row b{font-size:clamp(18px,1.7vw,29px);line-height:1;color:#f4f7fa}
+.goalie-row b{font-size:clamp(17px,1.45vw,25px);line-height:1;color:#f4f7fa;white-space:nowrap}
 .goalie-row b:nth-child(-n+2){color:#f4b21b}
 .goalie-row b:nth-last-child(-n+2){color:#f4b21b}
 
