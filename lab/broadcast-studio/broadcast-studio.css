@@ -37,3 +37,5 @@
 
 /* Players to Watch: normalize portrait crop/scale */
 .leader-card>img{width:100%;height:100%;object-fit:contain;object-position:center top;transform:scale(1.22);transform-origin:center top}
+
+.leader-copy{position:relative}.leader-team-logo{position:absolute;right:16px;top:14px;width:54px;height:54px;object-fit:contain;filter:drop-shadow(0 5px 8px #0007);opacity:.95}.leader-copy small,.leader-copy b,.leader-copy span,.leader-copy em{padding-right:64px}
