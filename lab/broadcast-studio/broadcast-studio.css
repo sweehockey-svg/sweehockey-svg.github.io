@@ -239,3 +239,15 @@
 .broadcast-stage .scene.lowerthird.active,
 .broadcast-stage .scene.role-matchup.active,
 .broadcast-stage .scene.spotlight.active{display:block!important}
+
+
+/* v53: screen is the scene root; enforce one active scene without relying on a nonexistent wrapper */
+.screen>.scene{display:none!important}
+.screen>.scene.active{display:flex!important}
+.screen>.scene.table.active,
+.screen>.scene.teamcompare.active,
+.screen>.scene.scorers.active,
+.screen>.scene.formguide.active,
+.screen>.scene.offense.active,
+.screen>.scene.defenseleaders.active,
+.screen>.scene.goalieleaders.active{display:block!important}
