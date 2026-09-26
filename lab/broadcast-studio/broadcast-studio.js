@@ -3,6 +3,9 @@
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
   const LEAGUE = 520;
+  const REMOTE_CHANNEL = "sec21-bronze-test";
+  const OBS_MODE = new URLSearchParams(location.search).get("obs") === "1";
+  let activeScene = "opening", remoteApplying = false, remoteTimer = 0;
   const SLOTS = ["LW", "C", "RW", "LD", "G", "RD"];
   // Match identity is editorial. Historical numbers only come from Supabase.
   const MATCH_TEAMS = [
@@ -338,15 +341,16 @@
     renderStatus();
   }
 
+  function studioState(){return {scene:activeScene,lineupSide:$("#lineupSide").value,home:$("#home").value,away:$("#away").value,hs:$("#hs").value,as:$("#as").value,headline:$("#headline").value,subline:$("#subline").value,commentator1:$("#commentator1").value,commentator2:$("#commentator2").value,person:$("#person").value,role:$("#role").value};}
+  function applyScene(name,side){activeScene=name||"opening";if(side){$("#lineupSide").value=side;renderLineup();}$("[data-scene]").forEach(x=>x.classList.toggle("active",x.dataset.scene===activeScene&&(!x.dataset.lineupSide||x.dataset.lineupSide===$("#lineupSide").value)));$(".scene").forEach(x=>x.classList.toggle("active",x.classList.contains(activeScene)));}
+  function applyRemoteState(s){if(!s||typeof s!=="object")return;remoteApplying=true;["home","away","hs","as","headline","subline","commentator1","commentator2","person","role"].forEach(id=>{if(s[id]!==undefined&&$("#"+id))$("#"+id).value=s[id];});applyScene(s.scene,s.lineupSide);renderMatch();renderLineup();renderStats();renderTable();renderTeamCompare();renderScorers();renderFormGuide();renderOffense();renderDefenseLeaders();renderGoalieLeaders();renderRoad();renderLeaders();renderRoleMatchups();remoteApplying=false;}
+  async function remoteRequest(method,body){const cfg=window.EHOCKEY_CONFIG||{};if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)return;const key=String(cfg.supabasePublishableKey),headers={apikey:key,Authorization:"Bearer "+key,Accept:"application/json","Content-Type":"application/json"},url=String(cfg.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/broadcast_studio_state?channel=eq."+encodeURIComponent(REMOTE_CHANNEL);const res=await fetch(url,{method,headers,body:body?JSON.stringify(body):undefined,cache:"no-store"});if(!res.ok)throw new Error("Broadcast state HTTP "+res.status);return method==="GET"?res.json():null;}
+  function publishState(){if(OBS_MODE||remoteApplying)return;clearTimeout(remoteTimer);remoteTimer=setTimeout(()=>remoteRequest("PATCH",{state:studioState(),updated_at:new Date().toISOString()}).catch(console.error),120);}
+  async function pullState(){try{const rows=await remoteRequest("GET");if(rows&&rows[0]&&rows[0].state&&Object.keys(rows[0].state).length)applyRemoteState(rows[0].state);}catch(e){console.error("Broadcast remote:",e);}}
+  if(OBS_MODE){void pullState();setInterval(pullState,750);}else setTimeout(publishState,800);
+
   // Controls are installed synchronously, before any data request starts.
-  document.querySelectorAll("[data-scene]").forEach(button => button.addEventListener("click", () => {
-    if (button.dataset.lineupSide) {
-      $("#lineupSide").value = button.dataset.lineupSide;
-      renderLineup();
-    }
-    document.querySelectorAll("[data-scene]").forEach(item => item.classList.toggle("active", item === button));
-    document.querySelectorAll(".scene").forEach(scene => scene.classList.toggle("active", scene.classList.contains(button.dataset.scene)));
-  }));
+  document.querySelectorAll("[data-scene]").forEach(button => button.addEventListener("click", () => { applyScene(button.dataset.scene,button.dataset.lineupSide); publishState(); }));
   $("#lineupEditors").addEventListener("change", event => {
     const select = event.target.closest("[data-lineup-slot]");
     if (!select) return;
@@ -376,8 +380,8 @@
     renderLeaders();
     renderRoleMatchups();
   }));
-  ["hs", "as", "headline", "subline", "person", "role"].forEach(id => $("#" + id).addEventListener("input", renderMatch));
-  ["commentator1","commentator2"].forEach(id => $("#" + id).addEventListener("change", renderCommentators));
+  ["hs", "as", "headline", "subline", "person", "role"].forEach(id => $("#" + id).addEventListener("input", () => { renderMatch(); publishState(); }));
+  ["commentator1","commentator2"].forEach(id => $("#" + id).addEventListener("change", () => { renderCommentators(); publishState(); }));
   $("#screen").addEventListener("error", event => {
     if (event.target.tagName === "IMG") event.target.hidden = true;
   }, true);
