@@ -342,7 +342,24 @@
   }
 
   function studioState(){return {scene:activeScene,lineupSide:$("#lineupSide").value,home:$("#home").value,away:$("#away").value,hs:$("#hs").value,as:$("#as").value,headline:$("#headline").value,subline:$("#subline").value,commentator1:$("#commentator1").value,commentator2:$("#commentator2").value,person:$("#person").value,role:$("#role").value};}
-  function applyScene(name,side){activeScene=name||"opening";if(side){$("#lineupSide").value=side;renderLineup();}document.querySelectorAll("[data-scene]").forEach(x=>x.classList.toggle("active",x.dataset.scene===activeScene&&(!x.dataset.lineupSide||x.dataset.lineupSide===$("#lineupSide").value)));document.querySelectorAll(".scene").forEach(x=>x.classList.toggle("active",x.classList.contains(activeScene)));}
+  function applyScene(name,side){
+    const next=name||"opening";
+    if(side){$("#lineupSide").value=side;renderLineup();}
+    document.querySelectorAll("[data-scene]").forEach(x=>x.classList.toggle("active",x.dataset.scene===next&&(!x.dataset.lineupSide||x.dataset.lineupSide===$("#lineupSide").value)));
+    const current=document.querySelector(".scene.active");
+    const target=document.querySelector(".scene."+next);
+    activeScene=next;
+    if(!target)return;
+    if(!current||current===target){
+      document.querySelectorAll(".scene").forEach(x=>x.classList.toggle("active",x===target));
+      return;
+    }
+    current.classList.add("scene-out");
+    target.classList.add("active","scene-in");
+    window.setTimeout(()=>{
+      document.querySelectorAll(".scene").forEach(x=>{if(x!==target)x.classList.remove("active");x.classList.remove("scene-out","scene-in");});
+    },260);
+  }
   function applyRemoteState(s){if(!s||typeof s!=="object")return;remoteApplying=true;["home","away","hs","as","headline","subline","commentator1","commentator2","person","role"].forEach(id=>{if(s[id]!==undefined&&$("#"+id))$("#"+id).value=s[id];});applyScene(s.scene,s.lineupSide);renderMatch();renderLineup();renderStats();renderTable();renderTeamCompare();renderScorers();renderFormGuide();renderOffense();renderDefenseLeaders();renderGoalieLeaders();renderRoad();renderLeaders();renderRoleMatchups();remoteApplying=false;}
   async function remoteRequest(method,body){const cfg=window.EHOCKEY_CONFIG||{};if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)return;const key=String(cfg.supabasePublishableKey),headers={apikey:key,Accept:"application/json","Content-Type":"application/json"};if(/^eyJ[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$/.test(key))headers.Authorization="Bearer "+key;const url=String(cfg.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/broadcast_studio_state?channel=eq."+encodeURIComponent(REMOTE_CHANNEL);const res=await fetch(url,{method,headers,body:body?JSON.stringify(body):undefined,cache:"no-store"});if(!res.ok)throw new Error("Broadcast state HTTP "+res.status);return method==="GET"?res.json():null;}
   function publishState(){if(OBS_MODE||remoteApplying)return;clearTimeout(remoteTimer);remoteTimer=setTimeout(()=>remoteRequest("PATCH",{state:studioState(),updated_at:new Date().toISOString()}).catch(console.error),120);}
