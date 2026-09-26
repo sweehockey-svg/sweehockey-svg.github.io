@@ -84,3 +84,7 @@
 .defense .role-stat{padding:1px 0;min-height:18px}
 .defense .role-stat span{font-size:8px;line-height:1}
 .defense .role-stat b{font-size:clamp(10px,.92vw,15px);line-height:1}
+
+
+/* Blue Line Battle v37: narrower broadcast panel, centered instead of edge-to-edge */
+.defense .role-grid{width:88%;max-width:1500px;align-self:center;margin-inline:auto}
