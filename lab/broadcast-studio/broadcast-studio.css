@@ -561,3 +561,7 @@ body.obs-preview .lowerthird .bug{display:none!important}
 body.obs-preview .texture{display:block!important}
 body.obs-preview .top{display:flex!important}
 body.obs-preview .bug{display:flex!important}
+
+/* v76: optical balance for the opening/Game Night scene.
+   Keep the OBS/studio geometry identical; move only the opening composition down. */
+.opening{transform:translateY(3.5%)}
