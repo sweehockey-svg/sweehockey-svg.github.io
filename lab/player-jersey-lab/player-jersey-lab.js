@@ -34,13 +34,23 @@ async function jerseySvg(team,variant){
  }
  return api.render(prepared,{variant,side:"front",compact:false});
 }
+let svgInstance=0;
 function inlineJersey(svg,cls,off){
  if(!svg)return "";
- const safe=String(svg)
-   .replace(/<svg\b([^>]*)>/i,(m,a)=>'<svg class="'+cls+'" style="margin-top:'+off+'px" '+a.replace(/\s(?:width|height)="[^"]*"/gi,"")+'>');
- return safe;
+ const suffix="pjl"+(++svgInstance);
+ let safe=String(svg);
+ const ids=[...safe.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+ for(const id of ids){
+   const next=id+"-"+suffix;
+   safe=safe.split('id="'+id+'"').join('id="'+next+'"');
+   safe=safe.split('url(#'+id+')').join('url(#'+next+')');
+   safe=safe.split('href="#'+id+'"').join('href="#'+next+'"');
+   safe=safe.split('xlink:href="#'+id+'"').join('xlink:href="#'+next+'"');
+ }
+ return safe.replace(/<svg\b([^>]*)>/i,(m,a)=>'<svg class="'+cls+'" style="margin-top:'+off+'px" '+a.replace(/\s(?:width|height)="[^"]*"/gi,"")+'>');
 }
 async function render(){
+ svgInstance=0;
  const team=teams.find(t=>String(t.team_id||t.id)===$("#team").value)||teams[0], p=players.find(x=>String(x.player_key)===$("#player").value)||players[0];
  if(!team||!p)return;
  const pic=portrait(p), variant=$("#variant").value, off=Number($("#offset").value)||0, jersey=await jerseySvg(team,variant);
