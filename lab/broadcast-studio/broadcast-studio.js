@@ -10,6 +10,10 @@
     { sports_gamer_team_id: 3252, team_name_in_league: "Västerås IK", team_logo_in_league: "https://sportsgamer.gg/storage/team-logos/520/3252/VIK-prima%CC%88r@4x_20260612-174642.png" }
   ];
   const data = { teams: [], players: [], playoffs: [] };
+  const COMMENTATORS = {
+    flacken: { name: 'Peter “Fläcken” Novara', image: '../../players/flacken.png' },
+    wizrob: { name: 'Wizrob', image: '' }
+  };
   const status = { teams: "loading", players: "loading", playoffs: "loading" };
   const lineups = new Map();
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
@@ -63,6 +67,16 @@
     renderMatch();
   }
 
+  function renderCommentators() {
+    const ids = ["commentator1","commentator2"].map(id => $("#" + id)?.value).filter(Boolean);
+    const people = ids.map(id => COMMENTATORS[id]).filter(Boolean);
+    $("#openingCommentators").innerHTML = people.map(c =>
+      '<div class="opening-commentator">' +
+      (c.image ? '<img src="' + esc(c.image) + '" alt="" onerror="this.style.display=\'none\'">' : '<div class="commentator-placeholder">MIC</div>') +
+      '<div><small>KOMMENTATOR</small><b>' + esc(c.name) + '</b></div></div>'
+    ).join("");
+  }
+
   function renderMatch() {
     fill(".homeTeam", selectedTeam("home"));
     fill(".awayTeam", selectedTeam("away"));
@@ -72,6 +86,7 @@
     $("#awayScore").textContent = $("#as").value || "0";
     $("#personOut").textContent = $("#person").value;
     $("#roleOut").textContent = $("#role").value;
+    renderCommentators();
   }
 
   function lineupFor(side) {
@@ -362,6 +377,7 @@
     renderRoleMatchups();
   }));
   ["hs", "as", "headline", "subline", "person", "role"].forEach(id => $("#" + id).addEventListener("input", renderMatch));
+  ["commentator1","commentator2"].forEach(id => $("#" + id).addEventListener("change", renderCommentators));
   $("#screen").addEventListener("error", event => {
     if (event.target.tagName === "IMG") event.target.hidden = true;
   }, true);
