@@ -225,3 +225,17 @@
 .lb-player{grid-template-columns:30px 66px minmax(120px,1fr) 54px 58px 62px;gap:8px;min-height:96px}
 .lb-player>img{width:66px;height:90px}.lb-player div b{font-size:16px}.lb-player>span{font-size:13px}.lb-player>em{font-size:19px}
 .goalie-lb .lb-player{grid-template-columns:30px 66px minmax(120px,1fr) 58px 72px 58px}
+
+
+/* v52: only the active broadcast scene may participate in layout */
+.broadcast-stage .scene{display:none!important}
+.broadcast-stage .scene.active{display:block!important}
+.broadcast-stage .scene.lineup.active,
+.broadcast-stage .scene.matchup.active,
+.broadcast-stage .scene.stats.active,
+.broadcast-stage .scene.road.active,
+.broadcast-stage .scene.player.active,
+.broadcast-stage .scene.pause.active,
+.broadcast-stage .scene.lowerthird.active,
+.broadcast-stage .scene.role-matchup.active,
+.broadcast-stage .scene.spotlight.active{display:block!important}
