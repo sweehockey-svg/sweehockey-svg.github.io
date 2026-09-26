@@ -138,3 +138,15 @@
 .key-center-title{text-align:center;color:#f4b21b;font-size:clamp(17px,1.55vw,26px);font-weight:950;letter-spacing:.05em;padding:2px 0 16px;border-bottom:2px solid #f4b21b}
 .key-columns,.key-row{display:grid;grid-template-columns:minmax(58px,1fr) minmax(58px,1fr) 64px minmax(58px,1fr) minmax(58px,1fr);align-items:center;text-align:center;column-gap:8px}.key-columns{background:#f4b21b;color:#07131d;font-size:9px;font-weight:950;padding:7px 0}.key-columns i{height:100%}
 .key-row{border-bottom:1px solid #f4b21b99;padding:9px 0}.key-row span{font-size:10px;color:#c3ced6;font-weight:950}.key-row b{font-size:clamp(16px,1.45vw,25px);line-height:1;color:#f4b21b;white-space:nowrap}
+
+
+/* Player Spotlight v45: keep full stat block inside 16:9 safe area */
+.spotlight-player{align-items:end}
+.spotlight-player>img{height:90%}
+.spotlight-copy{align-self:center;padding:18px 40px 12px;transform:translateY(-18px)}
+.spotlight-copy h2{font-size:clamp(36px,3.75vw,64px);line-height:.98;margin:8px 0 4px}
+.spotlight-copy h3{margin:0 0 14px}
+.spotlight-total{padding-bottom:10px;margin-bottom:10px}
+.spotlight-total b{font-size:64px;line-height:1}
+.spotlight-stats b{font-size:27px;line-height:1.05}
+.spotlight-stats span{display:block;margin-top:3px}
