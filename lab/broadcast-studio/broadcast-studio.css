@@ -473,3 +473,7 @@ aside{
 .twocol>*{min-width:0}
 .twocol input,.twocol select{width:100%;min-width:0}
 aside input,aside select{max-width:100%}
+
+
+/* v68: lower commentator strip slightly on Game Night */
+.opening-commentators{bottom:36px}
