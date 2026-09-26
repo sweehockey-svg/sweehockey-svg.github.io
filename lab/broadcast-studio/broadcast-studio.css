@@ -690,3 +690,37 @@ body.obs-preview[data-theme="impact"] .screen{background:
   linear-gradient(118deg,transparent 0 18%,rgba(255,180,0,.12) 18.1% 18.8%,transparent 18.9% 70%,rgba(255,180,0,.07) 70.1% 71.2%,transparent 71.3%),
   radial-gradient(circle at 78% 18%,rgba(255,180,0,.12),transparent 25%),
   linear-gradient(145deg,#111827 0%,#07111e 48%,#0b1018 100%)!important}
+
+/* v80: true home/away transition within the shared lineup scene. */
+.screen.lineup-side-switching>.scene.lineup.active{
+  animation:sehLineupSideIn .54s cubic-bezier(.2,.7,.2,1) both!important;
+}
+.screen>.lineup-transition-old{
+  display:flex!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:8!important;
+  pointer-events:none!important;
+  animation:sehLineupSideOut .54s cubic-bezier(.4,0,.6,1) both!important;
+}
+.screen.lineup-side-switching:after{
+  content:"";position:absolute;inset:0;z-index:9;pointer-events:none;
+  background:linear-gradient(90deg,transparent 0 43%,rgba(255,180,0,.20) 49%,rgba(255,255,255,.12) 50%,transparent 57%);
+  animation:sehLineupSideWipe .54s ease-in-out both;
+}
+@keyframes sehLineupSideOut{
+  0%,15%{opacity:1;transform:translateX(0)}
+  65%,100%{opacity:0;transform:translateX(-38px)}
+}
+@keyframes sehLineupSideIn{
+  0%,28%{opacity:0;transform:translateX(38px)}
+  100%{opacity:1;transform:translateX(0)}
+}
+@keyframes sehLineupSideWipe{
+  from{transform:translateX(-110%)}to{transform:translateX(110%)}
+}
+@media(prefers-reduced-motion:reduce){
+  .screen.lineup-side-switching>.scene.lineup.active,
+  .screen>.lineup-transition-old,
+  .screen.lineup-side-switching:after{animation-duration:.01ms!important}
+}
