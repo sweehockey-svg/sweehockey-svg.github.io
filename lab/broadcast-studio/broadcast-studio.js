@@ -137,16 +137,38 @@
   }
 
   function renderLeaders() {
-    const sides = ["home", "away"];
-    const leaders = sides.flatMap(side => {
-      const team = selectedTeam(side);
-      return data.players
-        .filter(p => same(p.sports_gamer_team_id, team.sports_gamer_team_id) && ((p.regular_skater_games || 0) + (p.playoff_skater_games || 0) > 0))
-        .sort((a, b) => (total(b.regular_points, b.playoff_points) ?? 0) - (total(a.regular_points, a.playoff_points) ?? 0))
-        .slice(0, 2)
-        .map(p => ({ ...p, team_name_in_league: team.team_name_in_league }));
-    });
-    $("#leaderGrid").innerHTML = leaders.length ? leaders.map(p => '<div class="leader-card">' + image(playerImage(p)) + '<div><small>' + esc(p.team_name_in_league) + '</small><b>' + esc(p.display_gamertag) + '</b><span>' + stat(total(p.regular_goals, p.playoff_goals)) + ' G · ' + stat(total(p.regular_assists, p.playoff_assists)) + ' A · <strong>' + stat(total(p.regular_points, p.playoff_points)) + ' P</strong></span><em>Grupp ' + stat(p.regular_points) + ' · Slutspel ' + stat(p.playoff_points) + '</em></div></div>').join("") : '<p>Spelarstatistik saknas.</p>';
+    const playerPoints = p => total(p.regular_points, p.playoff_points) ?? 0;
+    const playerGoals = p => total(p.regular_goals, p.playoff_goals) ?? 0;
+    const goalieGames = p => total(p.regular_goalie_games, p.playoff_goalie_games) ?? 0;
+    const goalieSave = p => {
+      const rg = number(p.regular_goalie_games) ?? 0, pg = number(p.playoff_goalie_games) ?? 0;
+      const rs = number(p.regular_goalie_save_percentage), ps = number(p.playoff_goalie_save_percentage);
+      const parts = [[rs, rg], [ps, pg]].filter(([sv, gp]) => sv !== null && gp > 0);
+      return parts.length ? parts.reduce((sum,[sv,gp]) => sum + sv * gp, 0) / parts.reduce((sum,[,gp]) => sum + gp, 0) : null;
+    };
+    const pickForTeam = side => {
+      const t = selectedTeam(side);
+      const ps = data.players.filter(p => same(p.sports_gamer_team_id, t.sports_gamer_team_id));
+      const skaters = ps.filter(p => ((p.regular_skater_games || 0) + (p.playoff_skater_games || 0) > 0));
+      const top = [...skaters].sort((a,b) => playerPoints(b) - playerPoints(a))[0];
+      const candidates = skaters.filter(p => p !== top);
+      const defenders = candidates.filter(p => /^(LD|RD|D)$/i.test(position(p)));
+      const standoutD = [...defenders].sort((a,b) => (playerGoals(b)*4 + playerPoints(b)) - (playerGoals(a)*4 + playerPoints(a)))[0];
+      const goalies = ps.filter(p => goalieGames(p) >= 3 && goalieSave(p) !== null).sort((a,b) => goalieSave(b) - goalieSave(a));
+      let special = goalies[0] || standoutD || [...candidates].sort((a,b) => playerPoints(b) - playerPoints(a))[0];
+      if (special === top) special = candidates[0];
+      return [top && {p:top, reason:"POÄNGLIGAN"}, special && {p:special, reason: goalies[0] === special ? "MÅLVAKT" : standoutD === special ? "BACK" : "POÄNGLIGAN"}]
+        .filter(Boolean).map(x => ({...x.p, team_name_in_league:t.team_name_in_league, watch_reason:x.reason, watch_save:goalieSave(x.p)}));
+    };
+    const leaders = ["home","away"].flatMap(pickForTeam);
+    $("#leaderGrid").innerHTML = leaders.length ? leaders.map(p => {
+      const isGoalie = p.watch_reason === "MÅLVAKT";
+      const main = isGoalie && p.watch_save !== null
+        ? (p.watch_save * (p.watch_save <= 1 ? 100 : 1)).toFixed(1).replace(".", ",") + "% SV · " + stat(total(p.regular_goalie_shutouts,p.playoff_goalie_shutouts)) + " SO"
+        : stat(playerGoals(p)) + " G · " + stat(total(p.regular_assists,p.playoff_assists)) + " A · <strong>" + stat(playerPoints(p)) + " P</strong>";
+      const detail = isGoalie ? stat(goalieGames(p)) + " matcher" : "Grupp " + stat(p.regular_points) + " · Slutspel " + stat(p.playoff_points);
+      return '<div class="leader-card">' + image(playerImage(p)) + '<div><small>' + esc(p.team_name_in_league) + ' · ' + esc(p.watch_reason) + '</small><b>' + esc(p.display_gamertag) + '</b><span>' + main + '</span><em>' + detail + '</em></div></div>';
+    }).join("") : '<p>Spelarstatistik saknas.</p>';
   }
 
   function renderStatus() {
