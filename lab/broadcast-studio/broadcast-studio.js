@@ -156,8 +156,9 @@
       const top = [...skaters].sort((a,b) => playerPoints(b) - playerPoints(a))[0];
       const candidates = skaters.filter(p => p !== top);
       const defenders = candidates.filter(p => /^(LD|RD|D)$/i.test(position(p)));
-      const standoutD = [...defenders].sort((a,b) => (playerGoals(b)*4 + playerPoints(b)) - (playerGoals(a)*4 + playerPoints(a)))[0];
-      const goalies = eligible.filter(p => goalieGames(p) >= 3 && goalieSave(p) !== null).sort((a,b) => goalieSave(b) - goalieSave(a));
+      const bestD = [...defenders].sort((a,b) => (playerGoals(b)*4 + playerPoints(b)) - (playerGoals(a)*4 + playerPoints(a)))[0];
+      const standoutD = bestD && (playerGoals(bestD) >= 3 || playerPoints(bestD) >= Math.max(10, playerPoints(top) * 0.65)) ? bestD : null;
+      const goalies = eligible.filter(p => goalieGames(p) >= 3 && goalieSave(p) !== null && goalieSave(p) >= 0.82).sort((a,b) => goalieSave(b) - goalieSave(a));
       let special = goalies[0] || standoutD || [...candidates].sort((a,b) => playerPoints(b) - playerPoints(a))[0];
       if (special === top) special = candidates[0];
       return [top && {p:top, reason:"POÄNGLIGAN"}, special && {p:special, reason: goalies[0] === special ? "MÅLVAKT" : standoutD === special ? "BACK" : "POÄNGLIGAN"}]
