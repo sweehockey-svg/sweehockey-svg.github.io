@@ -206,11 +206,28 @@
     }
     return '<div class="role-card">' + image(playerImage(p)) + '<div class="role-info"><div class="role-team">' + (logo(t)?'<img src="'+esc(logo(t))+'" alt="">':"") + '<small>'+esc(t.team_name_in_league)+'</small></div><strong>'+slot+' #'+esc(p.player_number ?? "")+' · '+esc(p.display_gamertag)+'</strong><div class="role-head"><i></i><b>GRUPP</b><b>SLUTSPEL</b></div>'+rows.map(r=>'<div class="role-stat"><span>'+r[0]+'</span><b>'+r[1]+'</b><b>'+r[2]+'</b></div>').join("")+'</div></div>';
   }
+  function bestLineupSkater(side) {
+    return ["LW","C","RW","LD","RD"].map(slot => ({slot,p:lineupPlayer(side,slot)})).filter(x=>x.p)
+      .sort((a,b)=>(total(b.p.regular_points,b.p.playoff_points)??0)-(total(a.p.regular_points,a.p.playoff_points)??0))[0];
+  }
+  function keyCard(side) {
+    const x=bestLineupSkater(side);
+    return x ? matchupCard(side,x.slot,x.slot==="C"?"center":"skater") : '<div class="role-card empty"><span>INGEN SPELARE</span></div>';
+  }
+  function spotlightHtml() {
+    const h=bestLineupSkater("home"), a=bestLineupSkater("away");
+    const x=[h&&{...h,side:"home"},a&&{...a,side:"away"}].filter(Boolean)
+      .sort((x,y)=>(total(y.p.regular_points,y.p.playoff_points)??0)-(total(x.p.regular_points,x.p.playoff_points)??0))[0];
+    if(!x) return '<div class="role-card empty"><span>INGEN SPELARE</span></div>';
+    const p=x.p,t=selectedTeam(x.side), pts=total(p.regular_points,p.playoff_points), goals=total(p.regular_goals,p.playoff_goals), assists=total(p.regular_assists,p.playoff_assists);
+    return '<div class="spotlight-player">'+image(playerImage(p))+'<div class="spotlight-copy"><div class="eyebrow">PLAYER SPOTLIGHT</div><div class="spotlight-team">'+(logo(t)?'<img src="'+esc(logo(t))+'" alt="">':"")+'<span>'+esc(t.team_name_in_league)+'</span></div><h2>'+esc(p.display_gamertag)+'</h2><h3>'+x.slot+' · #'+esc(p.player_number??"")+'</h3><div class="spotlight-total"><b>'+stat(pts)+'</b><span>POÄNG TOTALT</span></div><div class="spotlight-stats"><div><b>'+stat(goals)+'</b><span>MÅL</span></div><div><b>'+stat(assists)+'</b><span>ASSISTS</span></div><div><b>'+stat(p.regular_points)+'</b><span>GRUPPSPEL P</span></div><div><b>'+stat(p.playoff_points)+'</b><span>SLUTSPEL P</span></div></div></div></div>';
+  }
   function renderRoleMatchups() {
-    $("#forwardsGrid").innerHTML = matchupCard("home","LW","skater")+matchupCard("home","RW","skater")+matchupCard("away","LW","skater")+matchupCard("away","RW","skater");
-    $("#centersGrid").innerHTML = matchupCard("home","C","center")+matchupCard("away","C","center");
+    $("#forwardsGrid").innerHTML = ["home","away"].flatMap(side=>["LW","C","RW"].map(slot=>matchupCard(side,slot,slot==="C"?"center":"skater"))).join("");
     $("#defenseGrid").innerHTML = matchupCard("home","LD","skater")+matchupCard("home","RD","skater")+matchupCard("away","LD","skater")+matchupCard("away","RD","skater");
     $("#goaliesGrid").innerHTML = matchupCard("home","G","goalie")+matchupCard("away","G","goalie");
+    $("#keyGrid").innerHTML = keyCard("home")+keyCard("away");
+    $("#spotlightCard").innerHTML = spotlightHtml();
   }
 
   function renderStatus() {
