@@ -12,3 +12,6 @@
 .lineup .player-info{min-height:25%;margin:-10px;padding:18px 10px 12px;background:linear-gradient(180deg,#08131ef2,#08131e 55%)}
 .lineup .player-info strong{font-size:clamp(11px,1.05vw,18px);white-space:normal;line-height:1.12;overflow:visible;text-overflow:clip}
 .lineup .player-info small{font-size:9px;line-height:1.35;margin-top:7px;white-space:normal}
+
+/* Normalize lineup portraits to the tighter Feerlezz-style crop */
+.lineup .players .player img{inset:5% 3% auto;width:94%;height:61%;object-fit:contain;object-position:center top;transform:scale(1.18);transform-origin:center top}
