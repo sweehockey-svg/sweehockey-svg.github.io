@@ -347,7 +347,14 @@
   async function remoteRequest(method,body){const cfg=window.EHOCKEY_CONFIG||{};if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)return;const key=String(cfg.supabasePublishableKey),headers={apikey:key,Accept:"application/json","Content-Type":"application/json"};if(/^eyJ[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$/.test(key))headers.Authorization="Bearer "+key;const url=String(cfg.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/broadcast_studio_state?channel=eq."+encodeURIComponent(REMOTE_CHANNEL);const res=await fetch(url,{method,headers,body:body?JSON.stringify(body):undefined,cache:"no-store"});if(!res.ok)throw new Error("Broadcast state HTTP "+res.status);return method==="GET"?res.json():null;}
   function publishState(){if(OBS_MODE||remoteApplying)return;clearTimeout(remoteTimer);remoteTimer=setTimeout(()=>remoteRequest("PATCH",{state:studioState(),updated_at:new Date().toISOString()}).catch(console.error),120);}
   async function pullState(){try{const rows=await remoteRequest("GET");if(rows&&rows[0]&&rows[0].state&&Object.keys(rows[0].state).length)applyRemoteState(rows[0].state);}catch(e){console.error("Broadcast remote:",e);}}
-  if(OBS_MODE){void pullState();setInterval(pullState,750);}else setTimeout(publishState,800);
+  if(OBS_MODE){
+    const obsPoll=()=>{void pullState();};
+    obsPoll();
+    setInterval(obsPoll,500);
+    document.addEventListener("visibilitychange",obsPoll);
+    window.addEventListener("focus",obsPoll);
+    window.addEventListener("pageshow",obsPoll);
+  }else setTimeout(publishState,800);
 
   // Controls are installed synchronously, before any data request starts.
   document.querySelectorAll("[data-scene]").forEach(button => button.addEventListener("click", () => { applyScene(button.dataset.scene,button.dataset.lineupSide); publishState(); }));
