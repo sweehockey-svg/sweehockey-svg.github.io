@@ -251,3 +251,23 @@
 .screen>.scene.offense.active,
 .screen>.scene.defenseleaders.active,
 .screen>.scene.goalieleaders.active{display:block!important}
+
+
+/* v54: new context scenes align exactly with the established Starting Six title origin */
+.table.active,.teamcompare.active,.scorers.active,.formguide.active,.offense.active,.defenseleaders.active,.goalieleaders.active{
+  padding-top:0!important;
+}
+.table .scene-title,
+.teamcompare .scene-title,.scorers .scene-title,.formguide .scene-title,.offense .scene-title,.defenseleaders .scene-title,.goalieleaders .scene-title{
+  margin:2% 0 18px!important;
+}
+.table .scene-title b,
+.teamcompare .scene-title b,.scorers .scene-title b,.formguide .scene-title b,.offense .scene-title b,.defenseleaders .scene-title b,.goalieleaders .scene-title b{
+  font-size:clamp(28px,4vw,58px)!important;
+  line-height:normal!important;
+  letter-spacing:normal!important;
+}
+.table .broadcast-table,.team-compare,.scorer-grid,.form-grid,.offense-grid,.leaderboard-dual{
+  width:100%;
+  max-width:none;
+}
