@@ -518,3 +518,15 @@ body.obs-preview{
 body.obs-preview .screen{
   background-color:#06263a!important;
 }
+
+
+/* v71: OBS page background fix. The normal .screen background is composed partly
+   by page/workspace layers, so keep every OBS viewport layer on the broadcast navy. */
+html.obs-preview,
+html.obs-preview body,
+body.obs-preview,
+body.obs-preview main,
+body.obs-preview .workspace,
+body.obs-preview .screen{
+  background-color:#06263a!important;
+}
