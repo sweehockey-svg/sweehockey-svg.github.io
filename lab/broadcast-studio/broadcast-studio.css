@@ -175,3 +175,13 @@
 .off-big{text-align:center;padding:20px 0}.off-big b{display:block;font-size:58px;color:#f4b21b;line-height:1}.off-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.off-row div{text-align:center;background:#0b2d42;padding:12px}.off-row b{display:block;font-size:24px}
 .off-top{height:116px;margin-top:12px;display:grid;grid-template-columns:90px 1fr auto;align-items:center;gap:14px;border-top:1px solid #ffffff20}.off-top>img{width:90px;height:112px;object-fit:contain;object-position:center bottom}.off-top span small{display:block;color:#f4b21b;font-weight:950}.off-top span b{font-size:20px}.off-top strong{font-size:28px;color:#f4b21b}
 .lb-player{display:grid;grid-template-columns:34px 74px minmax(0,1fr) 64px 70px 72px;align-items:center;gap:10px;min-height:112px;border-bottom:1px solid #ffffff1c}.lb-player>strong{font-size:28px;color:#f4b21b;text-align:center}.lb-player>img{width:74px;height:104px;object-fit:contain;object-position:center bottom}.lb-player div b{display:block;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lb-player div small{color:#9db0bf}.lb-player>span{font-size:15px;font-weight:850;text-align:center}.lb-player>em{font-style:normal;font-size:22px;font-weight:950;color:#f4b21b;text-align:center}.goalie-lb .lb-player{grid-template-columns:34px 74px minmax(0,1fr) 66px 84px 70px}
+
+
+/* Table scene v48: deliberate title/table split */
+.table .scene-title{left:3%;top:34%;width:21%;max-width:330px;transform:none}
+.table .scene-title small{white-space:nowrap}
+.table .scene-title b{font-size:clamp(38px,4.1vw,70px);line-height:.95;white-space:nowrap}
+.table .broadcast-table{width:72%;max-width:none;margin:20px 3% 0 auto}
+.table .bt-row.selected{background:#f4b21b12;border-left:0}
+.table .bt-row.selected .bt-team{position:relative}
+.table .bt-row.selected .bt-team:before{content:"";position:absolute;left:-18px;top:8px;bottom:8px;width:4px;background:#f4b21b}
