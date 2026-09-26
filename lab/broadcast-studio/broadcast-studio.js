@@ -103,7 +103,12 @@
   function renderLineup() {
     const side = $("#lineupSide").value;
     const t = selectedTeam(side), ps = roster(t), lineup = lineupFor(side);
-    $("#lineupTeam").textContent = t.team_name_in_league;\n    const lineupLogo = $("#lineupTeamLogo"); lineupLogo.src = logo(t); lineupLogo.alt = t.team_name_in_league || ""; lineupLogo.style.display = lineupLogo.src ? "" : "none";
+    $("#lineupTeam").textContent = t.team_name_in_league;
+    const lineupLogo = $("#lineupTeamLogo");
+    const lineupLogoUrl = logo(t);
+    lineupLogo.src = lineupLogoUrl;
+    lineupLogo.alt = t.team_name_in_league || "";
+    lineupLogo.style.display = lineupLogoUrl ? "" : "none";
     $("#lineupEditors").innerHTML = SLOTS.map(slot => '<label>' + slot + '<select data-lineup-slot="' + slot + '"' + (!ps.length ? " disabled" : "") + '><option value="">Välj spelare</option>' + ps.map(p => '<option value="' + esc(p.sports_gamer_player_id) + '"' + (same(lineup[slot], p.sports_gamer_player_id) ? " selected" : "") + '>' + esc(p.display_gamertag) + ' · ' + esc(position(p) || "–") + '</option>').join("") + '</select></label>').join("");
     $(".players").innerHTML = SLOTS.map(slot => {
       const p = ps.find(p => same(p.sports_gamer_player_id, lineup[slot]));
