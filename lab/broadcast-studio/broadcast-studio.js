@@ -166,11 +166,14 @@
   }
 
   // Controls are installed synchronously, before any data request starts.
-  $("[data-scene]").forEach(button => button.addEventListener("click", () => {
-    $("[data-scene]").forEach(b => b.classList.toggle("active", b === button));
-    $(".scene").forEach(scene => scene.classList.toggle("active", scene.classList.contains(button.dataset.scene)));
+  document.querySelectorAll("[data-scene]").forEach(button => button.addEventListener("click", () => {
+    if (button.dataset.lineupSide) {
+      $("#lineupSide").value = button.dataset.lineupSide;
+      renderLineup();
+    }
+    document.querySelectorAll("[data-scene]").forEach(item => item.classList.toggle("active", item === button));
+    document.querySelectorAll(".scene").forEach(scene => scene.classList.toggle("active", scene.classList.contains(button.dataset.scene)));
   }));
-  $("#lineupSide").addEventListener("change", renderLineup);
   $("#lineupEditors").addEventListener("change", event => {
     const select = event.target.closest("[data-lineup-slot]");
     if (!select) return;
