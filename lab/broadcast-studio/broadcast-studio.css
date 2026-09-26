@@ -378,3 +378,25 @@
 .goalieleaders .lb-player div small{font-size:10px}
 .goalieleaders .lb-player>span{font-size:15px}
 .goalieleaders .lb-player>em{font-size:23px}
+
+
+/* v63: Lower third studio preview. OBS/browser-source mode remains clean via ?obs=1 */
+.lowerthird .camera-placeholder{
+  background:
+    radial-gradient(circle at 68% 38%,#23465b55 0,#0b1a25cc 38%,#050a0f 100%),
+    linear-gradient(135deg,#102633 0 35%,#08131c 35% 65%,#142b38 65% 100%);
+  border:0;
+  color:transparent;
+}
+.lowerthird .camera-placeholder:before{
+  content:"PREVIEW · LIVE VIDEO";
+  position:absolute;top:4%;right:3%;
+  color:#ffffff55;font-size:10px;letter-spacing:.16em;font-weight:900;
+}
+body.obs-preview .lowerthird .camera-placeholder{background:transparent!important}
+body.obs-preview .lowerthird .camera-placeholder:before{display:none}
+body.obs-preview .screen{background:transparent!important;box-shadow:none;border-color:transparent}
+body.obs-preview .texture,
+body.obs-preview .top,
+body.obs-preview .bug{display:none!important}
+body.obs-preview .lowerthird{inset:0}
