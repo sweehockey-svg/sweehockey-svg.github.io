@@ -271,3 +271,15 @@
   width:100%;
   max-width:none;
 }
+
+
+/* v55: tighten Team Comparison into a denser broadcast card */
+.teamcompare .scene-title{margin-bottom:10px!important}
+.teamcompare .team-compare{width:88%;max-width:1450px;margin:0 auto;grid-template-columns:minmax(220px,.78fr) minmax(410px,1.18fr) minmax(220px,.78fr);gap:12px}
+.teamcompare .tc-team{height:245px}
+.teamcompare .tc-team img{width:112px;height:112px}
+.teamcompare .tc-team b{font-size:20px}
+.teamcompare .tc-center{padding:10px}
+.teamcompare .tc-cols{padding:7px 0}
+.teamcompare .tc-row{padding:9px 0}
+.teamcompare .tc-row b{font-size:20px}
