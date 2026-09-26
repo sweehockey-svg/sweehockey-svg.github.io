@@ -287,3 +287,19 @@
 
 /* v56: consistent Swedish scene naming */
 .teamcompare .scene-title b{text-transform:uppercase}
+
+
+/* v57: scoring leaders - stronger player hierarchy and portrait treatment */
+.scorers .scene-title{margin-bottom:12px!important}
+.scorers .scorer-grid{width:92%;max-width:1540px}
+.scorers .scorer-side{padding:14px 16px}
+.scorers .scorer-team{padding:2px 8px 12px}
+.scorers .scorer-team img{width:50px;height:50px}
+.scorers .scorer-team b{font-size:22px}
+.scorers .scorer{grid-template-columns:34px 82px minmax(150px,1fr) 58px 58px 72px;min-height:104px;gap:10px}
+.scorers .scorer>strong{font-size:30px}
+.scorers .scorer>img{width:82px;height:98px;object-fit:contain;object-position:center bottom}
+.scorers .scorer div b{font-size:17px}
+.scorers .scorer div small{font-size:10px}
+.scorers .scorer>span{font-size:15px}
+.scorers .scorer>em{font-size:22px}
