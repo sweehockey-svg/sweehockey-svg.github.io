@@ -177,6 +177,42 @@
     }).join("") : '<p>Spelarstatistik saknas.</p>';
   }
 
+  function lineupPlayer(side, slot) {
+    const t = selectedTeam(side), id = lineupFor(side)[slot];
+    return roster(t).find(p => same(p.sports_gamer_player_id, id));
+  }
+  function faceoffPct(p, stageName) {
+    const w = number(p[stageName + "_faceoff_wins"]) ?? 0, l = number(p[stageName + "_faceoff_losses"]) ?? 0;
+    return w + l ? (100 * w / (w + l)).toFixed(1).replace(".", ",") + "%" : "–";
+  }
+  function goaliePct(v) {
+    const n = number(v); if (n === null) return "–";
+    return (n * (n <= 1 ? 100 : 1)).toFixed(1).replace(".", ",") + "%";
+  }
+  function matchupCard(side, slot, kind) {
+    const t = selectedTeam(side), p = lineupPlayer(side, slot);
+    if (!p) return '<div class="role-card empty"><b>' + slot + '</b><span>EJ VALD</span></div>';
+    let rows;
+    if (kind === "goalie") rows = [
+      ["GP", stat(p.regular_goalie_games), stat(p.playoff_goalie_games)],
+      ["SV%", goaliePct(p.regular_goalie_save_percentage), goaliePct(p.playoff_goalie_save_percentage)],
+      ["GAA", stat(p.regular_goalie_goals_against_average), stat(p.playoff_goalie_goals_against_average)],
+      ["SO", stat(p.regular_goalie_shutouts), stat(p.playoff_goalie_shutouts)]
+    ];
+    else {
+      rows = [["GP",stat(p.regular_skater_games),stat(p.playoff_skater_games)]];
+      if (kind === "center") rows.push(["FO%",faceoffPct(p,"regular"),faceoffPct(p,"playoff")]);
+      rows.push(["G",stat(p.regular_goals),stat(p.playoff_goals)],["A",stat(p.regular_assists),stat(p.playoff_assists)],["P",stat(p.regular_points),stat(p.playoff_points)]);
+    }
+    return '<div class="role-card">' + image(playerImage(p)) + '<div class="role-info"><div class="role-team">' + (logo(t)?'<img src="'+esc(logo(t))+'" alt="">':"") + '<small>'+esc(t.team_name_in_league)+'</small></div><strong>'+slot+' #'+esc(p.player_number ?? "")+' · '+esc(p.display_gamertag)+'</strong><div class="role-head"><i></i><b>GRUPP</b><b>SLUTSPEL</b></div>'+rows.map(r=>'<div class="role-stat"><span>'+r[0]+'</span><b>'+r[1]+'</b><b>'+r[2]+'</b></div>').join("")+'</div></div>';
+  }
+  function renderRoleMatchups() {
+    $("#forwardsGrid").innerHTML = matchupCard("home","LW","skater")+matchupCard("home","RW","skater")+matchupCard("away","LW","skater")+matchupCard("away","RW","skater");
+    $("#centersGrid").innerHTML = matchupCard("home","C","center")+matchupCard("away","C","center");
+    $("#defenseGrid").innerHTML = matchupCard("home","LD","skater")+matchupCard("home","RD","skater")+matchupCard("away","LD","skater")+matchupCard("away","RD","skater");
+    $("#goaliesGrid").innerHTML = matchupCard("home","G","goalie")+matchupCard("away","G","goalie");
+  }
+
   function renderStatus() {
     const labels = { teams: "Lagstatistik", players: "Trupp/spelare", playoffs: "Slutspel" };
     $("#dataStatus").textContent = Object.entries(status).map(([key, state]) => labels[key] + ": " + ({ loading: "laddar…", ready: "klar", empty: "saknas", error: "kunde inte laddas" }[state])).join(" · ");
@@ -224,6 +260,7 @@
     lineup[slot] = select.value;
     renderLineup();
     renderLeaders();
+    renderRoleMatchups();
   });
   ["home", "away"].forEach(side => $("#" + side).addEventListener("change", () => {
     $("#subline").value = selectedTeam("home").team_name_in_league.toLocaleUpperCase("sv") + " vs " + selectedTeam("away").team_name_in_league.toLocaleUpperCase("sv");
@@ -232,6 +269,7 @@
     renderStats();
     renderRoad();
     renderLeaders();
+    renderRoleMatchups();
   }));
   ["hs", "as", "headline", "subline", "person", "role"].forEach(id => $("#" + id).addEventListener("input", renderMatch));
   $("#screen").addEventListener("error", event => {
@@ -242,8 +280,9 @@
   renderStats();
   renderRoad();
   renderLeaders();
+  renderRoleMatchups();
   renderStatus();
   void loadPart("teams", "v_sec21_broadcast_teams_public", () => { renderTeams(); renderStats(); renderRoad(); renderLineup(); });
-  void loadPart("players", "v_sec21_broadcast_players_public", () => { renderLineup(); renderLeaders(); });
+  void loadPart("players", "v_sec21_broadcast_players_public", () => { renderLineup(); renderLeaders(); renderRoleMatchups(); });
   void loadPart("playoffs", "v_sec21_broadcast_playoffs_public", renderRoad);
 })();
