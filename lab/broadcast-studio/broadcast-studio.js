@@ -129,6 +129,25 @@
     $(".statrows").innerHTML = rows.map(r => '<div><b>' + r[0] + '</b><span>' + r[2] + '</span><b>' + r[1] + '</b></div>').join("");
   }
 
+  function renderTable() {
+    const selected = new Set([String(selectedTeam("home").sports_gamer_team_id), String(selectedTeam("away").sports_gamer_team_id)]);
+    const rows = data.teams.filter(r => r.statistics_stage === "regular")
+      .sort((a,b)=>(number(b.table_points)??0)-(number(a.table_points)??0) || (number(b.goal_difference)??0)-(number(a.goal_difference)??0) || (number(b.goals_for)??0)-(number(a.goals_for)??0));
+    $("#broadcastTable").innerHTML = '<div class="bt-head"><span>#</span><span>LAG</span><span>GP</span><span>W</span><span>L</span><span>GD</span><span>PTS</span></div>'+rows.map((r,i)=>'<div class="bt-row '+(selected.has(String(r.sports_gamer_team_id))?"selected":"")+'"><b>'+(i+1)+'</b><span class="bt-team">'+(logo(r)?'<img src="'+esc(logo(r))+'" alt="">':"")+'<strong>'+esc(r.team_name_in_league)+'</strong></span><span>'+stat(r.games_played)+'</span><span>'+stat(r.total_wins)+'</span><span>'+stat(r.losses)+'</span><span>'+((number(r.goal_difference)??0)>0?"+":"")+stat(r.goal_difference)+'</span><b>'+stat(r.table_points)+'</b></div>').join("");
+  }
+  function renderTeamCompare() {
+    const sides=["home","away"].map(side=>({side,t:selectedTeam(side)}));
+    const vals=(x,key)=>{const r=stage(x.t,"regular"),p=stage(x.t,"playoffs"); if(key==="WIN%") return [rate(r.total_wins,r.games_played,true),rate(p.total_wins,p.games_played,true)]; if(key==="GF/G") return [rate(r.goals_for,r.games_played),rate(p.goals_for,p.games_played)]; if(key==="GA/G") return [rate(r.goals_against,r.games_played),rate(p.goals_against,p.games_played)]; return [stat(r[key]),stat(p[key])];};
+    const rows=[["WIN%","WIN%"],["GF/G","MÅL / MATCH"],["GA/G","INSLÄPPT / MATCH"],["goal_difference","MÅLSKILLNAD"]];
+    const sideHead=x=>'<div class="tc-team">'+(logo(x.t)?'<img src="'+esc(logo(x.t))+'" alt="">':"")+'<b>'+esc(x.t.team_name_in_league)+'</b></div>';
+    $("#teamCompare").innerHTML=sideHead(sides[0])+'<div class="tc-center"><div class="tc-cols"><span>GRUPP</span><span>SLUTSPEL</span><i></i><span>GRUPP</span><span>SLUTSPEL</span></div>'+rows.map(r=>{const a=vals(sides[0],r[0]),b=vals(sides[1],r[0]);return '<div class="tc-row"><b>'+a[0]+'</b><b>'+a[1]+'</b><span>'+r[1]+'</span><b>'+b[0]+'</b><b>'+b[1]+'</b></div>'}).join("")+'</div>'+sideHead(sides[1]);
+  }
+  function renderScorers() {
+    const card=side=>{const t=selectedTeam(side), ps=roster(t).filter(p=>(total(p.regular_skater_games,p.playoff_skater_games)??0)>0).sort((a,b)=>(total(b.regular_points,b.playoff_points)??0)-(total(a.regular_points,a.playoff_points)??0)).slice(0,3);
+      return '<div class="scorer-side"><div class="scorer-team">'+(logo(t)?'<img src="'+esc(logo(t))+'" alt="">':"")+'<b>'+esc(t.team_name_in_league)+'</b></div>'+ps.map((p,i)=>'<div class="scorer"><strong>'+(i+1)+'</strong>'+image(playerImage(p))+'<div><b>'+esc(p.display_gamertag)+'</b><small>'+esc(position(p)||"")+' · #'+esc(p.player_number??"")+'</small></div><span>'+stat(total(p.regular_goals,p.playoff_goals))+' G</span><span>'+stat(total(p.regular_assists,p.playoff_assists))+' A</span><em>'+stat(total(p.regular_points,p.playoff_points))+' P</em></div>').join("")+'</div>'};
+    $("#scorerGrid").innerHTML=card("home")+card("away");
+  }
+
   function renderRoad() {
     $("#roadGrid").innerHTML = ["home", "away"].map(side => {
       const t = selectedTeam(side), r = stage(t, "regular"), po = playoff(t);
@@ -304,6 +323,9 @@
     renderMatch();
     renderLineup();
     renderStats();
+    renderTable();
+    renderTeamCompare();
+    renderScorers();
     renderRoad();
     renderLeaders();
     renderRoleMatchups();
@@ -315,11 +337,14 @@
   renderTeams();
   renderLineup();
   renderStats();
+  renderTable();
+  renderTeamCompare();
+  renderScorers();
   renderRoad();
   renderLeaders();
   renderRoleMatchups();
   renderStatus();
-  void loadPart("teams", "v_sec21_broadcast_teams_public", () => { renderTeams(); renderStats(); renderRoad(); renderLineup(); });
-  void loadPart("players", "v_sec21_broadcast_players_public", () => { renderLineup(); renderLeaders(); renderRoleMatchups(); });
+  void loadPart("teams", "v_sec21_broadcast_teams_public", () => { renderTeams(); renderStats(); renderTable(); renderTeamCompare(); renderRoad(); renderLineup(); });
+  void loadPart("players", "v_sec21_broadcast_players_public", () => { renderLineup(); renderLeaders(); renderScorers(); renderRoleMatchups(); });
   void loadPart("playoffs", "v_sec21_broadcast_playoffs_public", renderRoad);
 })();
