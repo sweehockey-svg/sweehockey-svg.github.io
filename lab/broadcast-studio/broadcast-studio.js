@@ -11,7 +11,7 @@
   ];
   const data = { teams: [], players: [], playoffs: [] };
   const COMMENTATORS = {
-    flacken: { name: 'Peter “Fläcken” Novara', image: '../../players/flacken.png' },
+    flacken: { name: 'Peter “Flacken” Novara', image: '../../players/flacken.png' },
     wizrob: { name: 'Wizrob', image: '' }
   };
   const status = { teams: "loading", players: "loading", playoffs: "loading" };
