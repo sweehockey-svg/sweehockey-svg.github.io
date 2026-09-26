@@ -555,3 +555,9 @@ body.obs-preview .bug{display:block!important}
 body.obs-preview .lowerthird .texture,
 body.obs-preview .lowerthird .top,
 body.obs-preview .lowerthird .bug{display:none!important}
+
+/* v75: preserve each chrome element's intended display type in OBS.
+   v74 restored visibility with display:block, which broke the flex header layout. */
+body.obs-preview .texture{display:block!important}
+body.obs-preview .top{display:flex!important}
+body.obs-preview .bug{display:flex!important}
