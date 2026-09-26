@@ -507,3 +507,14 @@ body.obs-preview .screen{
   border:0!important;
   box-shadow:none!important;
 }
+
+
+/* v70: OBS browser source must preserve the designed dark 1920x1080 canvas.
+   Do not make the broadcast screen transparent; transparency belongs outside overlays only. */
+html.obs-preview,
+body.obs-preview{
+  background:#06111a!important;
+}
+body.obs-preview .screen{
+  background-color:#06263a!important;
+}
