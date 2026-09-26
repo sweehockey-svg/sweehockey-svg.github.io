@@ -597,3 +597,96 @@ body.obs-preview .bug{display:flex!important}
 @media (prefers-reduced-motion:reduce){
   .scene.scene-enter,.scene.scene-leave,.screen.scene-switching::after{animation-duration:.01ms!important}
 }
+
+
+/* v79: four synchronized broadcast themes. Layout/data stay shared; only the visual package changes. */
+body[data-theme="broadcast"] .screen{--theme-accent:#f4b21b;--theme-panel:#061521e8;--theme-line:#365063}
+body[data-theme] .screen{transition:background-color .25s ease,filter .25s ease}
+body[data-theme] .scene-title small,
+body[data-theme] .player>span,
+body[data-theme] .opening h1 span,
+body[data-theme] .opening-match em,
+body[data-theme] .opening-commentator small{color:var(--theme-accent,#f4b21b)}
+body[data-theme] .opening-commentator{border-left-color:var(--theme-accent,#f4b21b);background:var(--theme-panel,#061521d9);border-color:var(--theme-line,#365063);border-left-width:5px}
+body[data-theme] .screen.scene-switching::after{background:linear-gradient(110deg,transparent 0 43%,color-mix(in srgb,var(--theme-accent,#f4b21b) 18%,transparent) 49%,rgba(255,255,255,.08) 50%,transparent 57%)}
+
+/* Arena: dark rink-night package with spotlight pools and warmer broadcast gold. */
+body[data-theme="arena"] .screen{
+  --theme-accent:#ffc229;--theme-panel:#090e14ed;--theme-line:#4d5963;
+  background:
+    radial-gradient(ellipse at 50% -12%,rgba(255,255,255,.13) 0,rgba(255,255,255,.035) 25%,transparent 48%),
+    radial-gradient(circle at 16% 42%,rgba(244,178,27,.10),transparent 28%),
+    radial-gradient(circle at 84% 42%,rgba(244,178,27,.08),transparent 28%),
+    linear-gradient(180deg,#101922 0%,#071019 58%,#04090e 100%)!important;
+}
+body[data-theme="arena"] .texture{
+  opacity:.42;background:
+  linear-gradient(90deg,transparent 49.8%,rgba(255,255,255,.055) 50%,transparent 50.2%),
+  repeating-linear-gradient(90deg,transparent 0 159px,rgba(255,255,255,.025) 160px),
+  linear-gradient(160deg,transparent 0 43%,rgba(244,178,27,.08) 43.2%,transparent 43.5%);
+}
+body[data-theme="arena"] .top{border-bottom-color:#ffffff22}
+body[data-theme="arena"] .player,
+body[data-theme="arena"] .scorer-side,
+body[data-theme="arena"] .lb-side{background:#080f16e8}
+
+/* Ice: colder, brighter TV package with rink geometry. */
+body[data-theme="ice"] .screen{
+  --theme-accent:#7fd7ff;--theme-panel:#0a2638e8;--theme-line:#72b9d4;
+  background:
+    radial-gradient(circle at 50% 48%,rgba(151,220,244,.16),transparent 35%),
+    linear-gradient(135deg,#12384c 0%,#09283a 48%,#0d3447 100%)!important;
+}
+body[data-theme="ice"] .texture{
+  opacity:.7;background:
+    radial-gradient(circle at 50% 50%,transparent 0 112px,rgba(164,225,245,.10) 113px 116px,transparent 117px),
+    linear-gradient(90deg,transparent 49.85%,rgba(224,248,255,.13) 50%,transparent 50.15%),
+    repeating-linear-gradient(90deg,transparent 0 191px,rgba(196,234,246,.045) 192px);
+}
+body[data-theme="ice"] .top{border-bottom-color:#b9ecff35}
+body[data-theme="ice"] .opening h1 span{color:#9ce4ff}
+body[data-theme="ice"] .opening-match em{color:#9ce4ff}
+
+/* Impact: high-energy eSports package, heavier diagonals and giant ghost marks. */
+body[data-theme="impact"] .screen{
+  --theme-accent:#ffb400;--theme-panel:#11111aee;--theme-line:#66532b;
+  background:
+    linear-gradient(118deg,transparent 0 18%,rgba(255,180,0,.12) 18.1% 18.8%,transparent 18.9% 70%,rgba(255,180,0,.07) 70.1% 71.2%,transparent 71.3%),
+    radial-gradient(circle at 78% 18%,rgba(255,180,0,.12),transparent 25%),
+    linear-gradient(145deg,#111827 0%,#07111e 48%,#0b1018 100%)!important;
+}
+body[data-theme="impact"] .texture{
+  opacity:.75;background:
+    repeating-linear-gradient(118deg,transparent 0 110px,rgba(255,255,255,.025) 111px 112px),
+    linear-gradient(90deg,transparent 0 62%,rgba(255,180,0,.055) 62% 100%);
+}
+body[data-theme="impact"] .scene-title b,
+body[data-theme="impact"] .opening h1{letter-spacing:-.045em}
+body[data-theme="impact"] .player{border-color:#7b6330;background:#0b1320e8}
+body[data-theme="impact"] .top{border-bottom-color:#ffb40038}
+
+/* OBS overrides previously forced Broadcast navy. Let the selected theme own the canvas. */
+html.obs-preview body[data-theme="arena"],
+body.obs-preview[data-theme="arena"],
+body.obs-preview[data-theme="arena"] main,
+body.obs-preview[data-theme="arena"] .workspace{background:#071019!important}
+body.obs-preview[data-theme="arena"] .screen{background:
+  radial-gradient(ellipse at 50% -12%,rgba(255,255,255,.13) 0,rgba(255,255,255,.035) 25%,transparent 48%),
+  radial-gradient(circle at 16% 42%,rgba(244,178,27,.10),transparent 28%),
+  radial-gradient(circle at 84% 42%,rgba(244,178,27,.08),transparent 28%),
+  linear-gradient(180deg,#101922 0%,#071019 58%,#04090e 100%)!important}
+html.obs-preview body[data-theme="ice"],
+body.obs-preview[data-theme="ice"],
+body.obs-preview[data-theme="ice"] main,
+body.obs-preview[data-theme="ice"] .workspace{background:#09283a!important}
+body.obs-preview[data-theme="ice"] .screen{background:
+  radial-gradient(circle at 50% 48%,rgba(151,220,244,.16),transparent 35%),
+  linear-gradient(135deg,#12384c 0%,#09283a 48%,#0d3447 100%)!important}
+html.obs-preview body[data-theme="impact"],
+body.obs-preview[data-theme="impact"],
+body.obs-preview[data-theme="impact"] main,
+body.obs-preview[data-theme="impact"] .workspace{background:#07111e!important}
+body.obs-preview[data-theme="impact"] .screen{background:
+  linear-gradient(118deg,transparent 0 18%,rgba(255,180,0,.12) 18.1% 18.8%,transparent 18.9% 70%,rgba(255,180,0,.07) 70.1% 71.2%,transparent 71.3%),
+  radial-gradient(circle at 78% 18%,rgba(255,180,0,.12),transparent 25%),
+  linear-gradient(145deg,#111827 0%,#07111e 48%,#0b1018 100%)!important}
