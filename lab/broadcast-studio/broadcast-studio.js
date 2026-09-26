@@ -137,9 +137,15 @@
   }
 
   function renderLeaders() {
-    const ids = [$("#home").value, $("#away").value];
-    const leaders = data.players.filter(p => ids.includes(String(p.sports_gamer_team_id)) && ((p.regular_skater_games || 0) + (p.playoff_skater_games || 0) > 0))
-      .sort((a, b) => (total(b.regular_points, b.playoff_points) ?? 0) - (total(a.regular_points, a.playoff_points) ?? 0)).slice(0, 4);
+    const sides = ["home", "away"];
+    const leaders = sides.flatMap(side => {
+      const team = selectedTeam(side);
+      return data.players
+        .filter(p => same(p.sports_gamer_team_id, team.sports_gamer_team_id) && ((p.regular_skater_games || 0) + (p.playoff_skater_games || 0) > 0))
+        .sort((a, b) => (total(b.regular_points, b.playoff_points) ?? 0) - (total(a.regular_points, a.playoff_points) ?? 0))
+        .slice(0, 2)
+        .map(p => ({ ...p, team_name_in_league: team.team_name_in_league }));
+    });
     $("#leaderGrid").innerHTML = leaders.length ? leaders.map(p => '<div class="leader-card">' + image(playerImage(p)) + '<div><small>' + esc(p.team_name_in_league) + '</small><b>' + esc(p.display_gamertag) + '</b><span>' + stat(total(p.regular_goals, p.playoff_goals)) + ' G · ' + stat(total(p.regular_assists, p.playoff_assists)) + ' A · <strong>' + stat(total(p.regular_points, p.playoff_points)) + ' P</strong></span><em>Grupp ' + stat(p.regular_points) + ' · Slutspel ' + stat(p.playoff_points) + '</em></div></div>').join("") : '<p>Spelarstatistik saknas.</p>';
   }
 
