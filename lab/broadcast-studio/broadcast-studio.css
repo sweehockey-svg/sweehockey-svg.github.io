@@ -400,3 +400,26 @@ body.obs-preview .texture,
 body.obs-preview .top,
 body.obs-preview .bug{display:none!important}
 body.obs-preview .lowerthird{inset:0}
+
+
+/* v64: Game Night commentator selectors and portraits */
+.opening{padding-bottom:54px}
+.opening-commentators{
+  position:absolute;left:50%;bottom:54px;transform:translateX(-50%);
+  display:flex;gap:18px;justify-content:center;align-items:flex-end;width:88%;
+}
+.opening-commentator{
+  width:330px;height:94px;display:grid;grid-template-columns:88px 1fr;align-items:center;
+  background:#061521ee;border:1px solid #365063;border-left:5px solid #ffb400;
+  box-shadow:0 12px 28px #0005;text-align:left;overflow:hidden;
+}
+.opening-commentator>img,.opening-commentator>.commentator-placeholder{
+  width:88px;height:94px;object-fit:contain;object-position:center bottom;background:#12364b;
+}
+.opening-commentator>.commentator-placeholder{
+  display:grid;place-items:center;color:#ffffff45;font-size:12px;font-weight:900;letter-spacing:.12em;
+}
+.opening-commentator>div:last-child{padding:0 14px;min-width:0}
+.opening-commentator small{display:block;color:#ffb400;font-size:10px;font-weight:900;letter-spacing:.09em;margin-bottom:5px}
+.opening-commentator b{display:block;color:#f7f9fb;font-size:20px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opening:has(.opening-commentators:not(:empty)) .opening-match{transform:translateY(-18px)}
