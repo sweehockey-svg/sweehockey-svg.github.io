@@ -331,3 +331,18 @@
 .scorers .scorer div small{font-size:10px}
 .scorers .scorer>span{font-size:16px}
 .scorers .scorer>em{font-size:25px}
+
+
+/* v60: scoring leaders must stay inside the 1920x1080 safe area */
+.scorers .scene-title{margin-bottom:8px!important}
+.scorers .scorer-grid{height:calc(100% - 128px);max-height:620px}
+.scorers .scorer-side{height:100%;padding:12px 16px;box-sizing:border-box}
+.scorers .scorer-team{min-height:54px;padding:0 8px 10px}
+.scorers .scorer-team img{width:48px;height:48px}
+.scorers .scorer-team b{font-size:21px}
+.scorers .scorer{grid-template-columns:36px 90px minmax(155px,1fr) 60px 60px 76px;min-height:0;height:calc((100% - 66px)/3);gap:10px}
+.scorers .scorer>strong{font-size:31px}
+.scorers .scorer>img{width:90px;height:100%;max-height:112px}
+.scorers .scorer div b{font-size:17px}
+.scorers .scorer>span{font-size:15px}
+.scorers .scorer>em{font-size:23px}
