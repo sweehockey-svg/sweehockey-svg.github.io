@@ -198,3 +198,30 @@
 .table .scene-title small{display:block;white-space:normal}
 .table .scene-title b{display:block;font-size:clamp(42px,4.8vw,76px);line-height:.98;letter-spacing:-.025em;white-space:normal}
 .table .broadcast-table{width:82%;max-width:1320px;margin:0 auto;position:relative;z-index:3}
+
+
+/* Context scenes v51: full-width broadcast layout, no title/content collisions */
+.teamcompare,.scorers,.formguide,.offense,.defenseleaders,.goalieleaders{padding-top:118px!important;display:block!important}
+.teamcompare .scene-title,.scorers .scene-title,.formguide .scene-title,.offense .scene-title,.defenseleaders .scene-title,.goalieleaders .scene-title{
+  position:relative;left:auto;top:auto;width:auto;max-width:none;transform:none;margin:0 3% 18px;z-index:2
+}
+.teamcompare .scene-title small,.scorers .scene-title small,.formguide .scene-title small,.offense .scene-title small,.defenseleaders .scene-title small,.goalieleaders .scene-title small{display:block;white-space:normal}
+.teamcompare .scene-title b,.scorers .scene-title b,.formguide .scene-title b,.offense .scene-title b,.defenseleaders .scene-title b,.goalieleaders .scene-title b{
+  display:block;font-size:clamp(38px,4.15vw,66px);line-height:.96;letter-spacing:-.025em;white-space:normal
+}
+.team-compare,.scorer-grid,.form-grid,.offense-grid,.leaderboard-dual{width:94%;max-width:1660px;margin:0 auto}
+.team-compare{grid-template-columns:minmax(250px,.8fr) minmax(430px,1.15fr) minmax(250px,.8fr);gap:14px}
+.tc-team{height:270px}.tc-team img{width:125px;height:125px}.tc-team b{font-size:21px}
+.tc-center{padding:12px}.tc-row{padding:10px 0}.tc-row b{font-size:21px}
+.scorer-grid,.leaderboard-dual{gap:16px}
+.scorer-side,.lb-side{min-width:0;overflow:hidden}
+.scorer{grid-template-columns:30px 66px minmax(130px,1fr) 52px 52px 62px;gap:8px;min-height:98px}
+.scorer>img{width:66px;height:90px}.scorer div b{font-size:16px}.scorer>span{font-size:14px}.scorer>em{font-size:20px}
+.form-grid,.offense-grid{grid-template-columns:1fr 1fr}
+.form-card,.off-card{min-width:0}
+.form-record{padding:12px 0}.form-record strong{font-size:50px}
+.form-stats div{padding:10px}.form-stats b{font-size:21px}
+.off-big{padding:12px 0}.off-big b{font-size:50px}.off-row div{padding:10px}.off-top{height:100px}.off-top>img{height:96px}
+.lb-player{grid-template-columns:30px 66px minmax(120px,1fr) 54px 58px 62px;gap:8px;min-height:96px}
+.lb-player>img{width:66px;height:90px}.lb-player div b{font-size:16px}.lb-player>span{font-size:13px}.lb-player>em{font-size:19px}
+.goalie-lb .lb-player{grid-template-columns:30px 66px minmax(120px,1fr) 58px 72px 58px}
