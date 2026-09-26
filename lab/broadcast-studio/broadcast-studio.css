@@ -565,3 +565,19 @@ body.obs-preview .bug{display:flex!important}
 /* v76: optical balance for the opening/Game Night scene.
    Keep the OBS/studio geometry identical; move only the opening composition down. */
 .opening{transform:translateY(3.5%)}
+
+
+/* v77: short broadcast transition between remote/studio scene changes */
+.scene{transition:opacity .22s ease,transform .22s ease}
+.scene.scene-in{animation:sehSceneIn .26s ease both}
+.scene.scene-out{opacity:0!important;transform:translateY(-6px)!important;pointer-events:none}
+@keyframes sehSceneIn{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+/* Opening keeps its optical offset after the generic transition. */
+.opening.scene-in{animation-name:sehOpeningIn}
+@keyframes sehOpeningIn{
+  from{opacity:0;transform:translateY(calc(3.5% + 6px))}
+  to{opacity:1;transform:translateY(3.5%)}
+}
