@@ -1,9 +1,9 @@
-<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Broadcast Studio · Svensk eHockey</title><link rel="stylesheet" href="broadcast-studio.css?v=3"></head><body>
+<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Broadcast Studio · Svensk eHockey</title><link rel="stylesheet" href="broadcast-studio.css?v=4"></head><body>
 <header><div class="brand"><b>SEH</b><span>SVENSK eHOCKEY<small>BROADCAST STUDIO · PROTOTYP</small></span></div><div class="live-dot">DOLD TESTMILJÖ</div></header>
 <main><aside>
 <div class="block"><h3>SCEN</h3><div class="scene-grid"><button class="active" data-scene="opening">Opening</button><button data-scene="matchup">Matchup</button><button data-scene="lineup">Lineup</button><button data-scene="stats">Stats</button><button data-scene="road">Bronsvägen</button><button data-scene="leaders">Spelare</button><button data-scene="intermission">Paus</button><button data-scene="lowerthird">Lower third</button></div></div>
 <div class="block"><h3>MATCH</h3><label>TURNERING<select id="tournament"><option value="520">SEC 21 · BRONSMATCH TEST</option></select></label><label>HEMMALAG<select id="home"></select></label><label>BORTALAG<select id="away"></select></label><div class="twocol"><label>HEMMA<input id="hs" type="number" min="0" value="0"></label><label>BORTA<input id="as" type="number" min="0" value="0"></label></div><label>RUBRIK<input id="headline" value="SCL 27 · MATCHDAY"></label><label>INFO<input id="subline" value="20:00 · SVENSK eHOCKEY"></label></div>
-<div class="block"><h3>SÄNDNING</h3><label>NAMN / LOWER THIRD<input id="person" value="Peter &quot;Fläcken&quot; Novara"></label><label>ROLL<input id="role" value="KOMMENTATOR"></label></div>
+<div class="block lineup-control"><h3>LINEUP</h3><label>VISA LAG<select id="lineupSide"><option value="home">Hemmalag</option><option value="away">Bortalag</option></select></label><div id="lineupEditors"></div><small class="control-note">Förslag hämtas från SEC 21. Ändra manuellt när lagens riktiga lineup kommer.</small></div><div class="block"><h3>SÄNDNING</h3><label>NAMN / LOWER THIRD<input id="person" value="Peter &quot;Fläcken&quot; Novara"></label><label>ROLL<input id="role" value="KOMMENTATOR"></label></div>
 </aside>
 <section class="workspace"><div class="screen" id="screen">
 <div class="texture"></div><div class="top"><div class="seh">SEH</div><div><strong id="topTitle">SCL 27 · MATCHDAY</strong><small id="topSub">20:00 · SVENSK eHOCKEY</small></div><div class="onair"><i></i> ON AIR</div></div>
@@ -15,4 +15,4 @@
 <div class="scene lowerthird"><div class="camera-placeholder"><span>LIVE VIDEO / OBS</span></div><div class="lower"><div class="seh mini">SEH</div><div><small id="roleOut">KOMMENTATOR</small><b id="personOut">Peter “Fläcken” Novara</b></div></div></div>
 <div class="bug"><b>SVENSK eHOCKEY</b><span>6V6 · NHL 27</span></div>
 </div><div class="hint">1920×1080-komposition · tänkt som browser source/OBS-scen, inte som en kopia av gamla finalbilder.</div></section></main>
-<script src="../../config.js?v=20260918-team-aliases-v1"></script><script src="broadcast-studio.js?v=4"></script></body></html>
+<script src="../../config.js?v=20260918-team-aliases-v1"></script><script src="broadcast-studio.js?v=5"></script></body></html>
