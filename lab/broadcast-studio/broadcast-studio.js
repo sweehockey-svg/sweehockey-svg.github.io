@@ -12,7 +12,7 @@
   const data = { teams: [], players: [], playoffs: [] };
   const COMMENTATORS = {
     flacken: { name: 'Peter “Flacken” Novara', image: '../../players/flacken.png' },
-    wizrob: { name: 'Wizrob', image: '' }
+    wizrob: { name: 'Robert “Wizrob” Olovsson', image: '../../players/Wizrob.png' }
   };
   const status = { teams: "loading", players: "loading", playoffs: "loading" };
   const lineups = new Map();
