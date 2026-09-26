@@ -187,7 +187,7 @@
   }
   function goaliePct(v) {
     const n = number(v); if (n === null) return "–";
-    return (n * (n <= 1 ? 100 : 1)).toFixed(1).replace(".", ",") + "%";
+    return (n * (n <= 1 ? 100 : 1)).toFixed(1).replace(".", ",");
   }
   function matchupCard(side, slot, kind) {
     const t = selectedTeam(side), p = lineupPlayer(side, slot);
