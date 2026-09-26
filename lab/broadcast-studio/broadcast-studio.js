@@ -183,7 +183,7 @@
   }
   function faceoffPct(p, stageName) {
     const w = number(p[stageName + "_faceoff_wins"]) ?? 0, l = number(p[stageName + "_faceoff_losses"]) ?? 0;
-    return w + l ? (100 * w / (w + l)).toFixed(1).replace(".", ",") + "%" : "–";
+    return w + l ? (100 * w / (w + l)).toFixed(1).replace(".", ",") : "–";
   }
   function goaliePct(v) {
     const n = number(v); if (n === null) return "–";
