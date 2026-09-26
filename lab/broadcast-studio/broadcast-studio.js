@@ -6,8 +6,8 @@
   const SLOTS = ["LW", "C", "RW", "LD", "G", "RD"];
   // Match identity is editorial. Historical numbers only come from Supabase.
   const MATCH_TEAMS = [
-    { sports_gamer_team_id: 7046, team_name_in_league: "Daankerzquad" },
-    { sports_gamer_team_id: 3252, team_name_in_league: "Västerås IK" }
+    { sports_gamer_team_id: 7046, team_name_in_league: "Daankerzquad", team_logo_in_league: "https://sportsgamer.gg/storage/team-logos/520/7046/Daankerzquad_20260610-013637.png" },
+    { sports_gamer_team_id: 3252, team_name_in_league: "Västerås IK", team_logo_in_league: "https://sportsgamer.gg/storage/team-logos/520/3252/VIK-prima%CC%88r@4x_20260612-174642.png" }
   ];
   const data = { teams: [], players: [], playoffs: [] };
   const status = { teams: "loading", players: "loading", playoffs: "loading" };
