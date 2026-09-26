@@ -1,29 +1,206 @@
-(()=>{"use strict";
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const cfg=window.SEH_CONFIG||window.EHOCKEY_CONFIG||window.APP_CONFIG||window.config||{},BASE=String(cfg.supabaseUrl||cfg.SUPABASE_URL||"").replace(/\/+$/,"")+"/rest/v1/",KEY=String(cfg.supabasePublishableKey||cfg.supabaseAnonKey||cfg.SUPABASE_ANON_KEY||cfg.SUPABASE_PUBLISHABLE_KEY||""),headers=KEY?{apikey:KEY,Accept:"application/json"}:{};if(/^eyJ/i.test(KEY))headers.Authorization="Bearer "+KEY;
-const LEAGUE=520,SLOTS=["LW","C","RW","LD","G","RD"];let teams=[],players=[],playoffs=[],lineups={home:{},away:{}};
-const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-async function get(path){const r=await fetch(BASE+path,{headers});if(!r.ok)throw new Error(path+" "+r.status);return r.json()}
-async function safeGet(path){try{return await get(path)}catch(e){console.error("Broadcast data:",e);return []}}
-function logo(t){return String(t?.team_logo_in_league||t?.current_global_team_logo||"")}
-function team(id){return teams.find(t=>String(t.sports_gamer_team_id)===String(id))||{team_name_in_league:"LAG"}}
-function fill(cls,t){$$(cls).forEach(el=>{const im=el.querySelector("img"),b=el.querySelector("b");if(im){im.src=logo(t);im.alt=""}if(b)b.textContent=t.team_name_in_league})}
-function pct(n,d){return d?Math.round(100*n/d)+"%":"0%"}function one(n){return Number(n||0).toFixed(1)}
-function pimg(p){const id=p?.sports_gamer_player_id;return id?"../../players/"+id+".png":""}
-function pos(p){return p.playoff_skater_position_abbreviation||p.roster_preferred_position_abbreviation||p.regular_skater_position_abbreviation||((p.playoff_goalie_games||p.regular_goalie_games)?"G":"")}
-function playerCard(p,position){if(!p)return '<div class="player empty"><span>'+position+'</span><div class="sil">?</div><b>SAKNAS</b></div>';return '<div class="player"><span>'+esc(position)+'</span><img src="'+esc(pimg(p))+'" onerror="this.style.display=\'none\'"><div class="player-info"><strong>#'+esc(p.player_number||"")+" "+esc(p.display_gamertag)+'</strong><small>GRUPP '+(p.regular_points||0)+' P · SLUTSPEL '+(p.playoff_points||0)+' P</small></div></div>'}
-function candidates(t,slot){const ps=players.filter(p=>String(p.sports_gamer_team_id)===String(t.sports_gamer_team_id));let exact=ps.filter(p=>pos(p)===slot);if(slot==="G")exact.sort((a,b)=>(b.playoff_goalie_games||0)-(a.playoff_goalie_games||0));else exact.sort((a,b)=>(b.playoff_skater_games||0)-(a.playoff_skater_games||0)||(b.playoff_points||0)-(a.playoff_points||0));const rest=ps.filter(p=>!exact.includes(p)).sort((a,b)=>((b.playoff_skater_games||0)+(b.playoff_goalie_games||0))-((a.playoff_skater_games||0)+(a.playoff_goalie_games||0)));return [...exact,...rest]}
-function autoLineup(side,t){const used=new Set;SLOTS.forEach(slot=>{const p=candidates(t,slot).find(x=>!used.has(x.sports_gamer_player_id));lineups[side][slot]=p?.sports_gamer_player_id||"";if(p)used.add(p.sports_gamer_player_id)})}
-function lineupPlayer(side,slot){const id=lineups[side]?.[slot];return players.find(p=>String(p.sports_gamer_player_id)===String(id))}
-function lineup(side){return SLOTS.map(slot=>playerCard(lineupPlayer(side,slot),slot)).join("")}
-function renderLineupEditors(){const side=$("#lineupSide").value,t=team(side==="home"?$("#home").value:$("#away").value),ps=players.filter(p=>String(p.sports_gamer_team_id)===String(t.sports_gamer_team_id));$("#lineupEditors").innerHTML=SLOTS.map(slot=>'<label>'+slot+'<select data-lineup-slot="'+slot+'">'+ps.map(p=>'<option value="'+p.sports_gamer_player_id+'" '+(String(lineups[side]?.[slot])===String(p.sports_gamer_player_id)?"selected":"")+'>'+esc(p.display_gamertag)+' · '+esc(pos(p)||"–")+'</option>').join("")+'</select></label>').join("");$("[data-lineup-slot]").forEach(el=>el.onchange=()=>{lineups[side][el.dataset.lineupSlot]=el.value;render()})}
-function stage(t,s){return teams.find(x=>x.sports_gamer_team_id===t.sports_gamer_team_id&&x.statistics_stage===s)||{}}
-function playoff(t){return playoffs.find(x=>x.sports_gamer_team_id===t.sports_gamer_team_id)||{}}
-function renderStats(h,a){const hr=stage(h,"regular"),ar=stage(a,"regular"),hp=stage(h,"playoffs"),ap=stage(a,"playoffs");const rows=[[pct(hr.total_wins,hr.games_played),pct(ar.total_wins,ar.games_played),"GRUPP WIN RATE"],[one((hr.goals_for||0)/(hr.games_played||1)),one((ar.goals_for||0)/(ar.games_played||1)),"GRUPP MÅL / MATCH"],[pct(hp.total_wins,hp.games_played),pct(ap.total_wins,ap.games_played),"SLUTSPEL WIN RATE"],[hp.goals_for||0,ap.goals_for||0,"SLUTSPEL MÅL"]];$(".statrows").innerHTML=rows.map(r=>'<div><b>'+r[0]+'</b><span>'+r[2]+'</span><b>'+r[1]+'</b></div>').join("")}
-function roadCard(t){const r=stage(t,"regular"),p=stage(t,"playoffs"),po=playoff(t);return '<div class="road-card"><div class="road-team"><img src="'+esc(logo(t))+'"><b>'+esc(t.team_name_in_league)+'</b></div><div class="road-step"><small>GRUPPSPEL</small><strong>#'+esc(po.regular_season_seed||"–")+'</strong><span>'+(r.total_wins||0)+' vinster · '+(r.goals_for||0)+'–'+(r.goals_against||0)+'</span></div><i></i><div class="road-step"><small>SLUTSPEL</small><strong>'+esc(po.series_won||0)+'–'+esc(po.series_lost||0)+' serier</strong><span>'+(p.matched_playoff_game_wins||po.matched_playoff_game_wins||0)+' matchvinster</span></div><i></i><div class="road-step final"><small>NU</small><strong>FINAL</strong><span>'+esc(po.playoff_status_name||"Final")+'</span></div></div>'}
-function leaderCard(p){const g=(p.regular_goals||0)+(p.playoff_goals||0),a=(p.regular_assists||0)+(p.playoff_assists||0),pts=(p.regular_points||0)+(p.playoff_points||0);return '<div class="leader-card"><img src="'+esc(pimg(p))+'" onerror="this.style.display=\'none\'"><div><small>'+esc(p.team_name_in_league)+'</small><b>'+esc(p.display_gamertag)+'</b><span>'+g+' G · '+a+' A · <strong>'+pts+' P</strong></span><em>Grupp '+(p.regular_points||0)+' · Slutspel '+(p.playoff_points||0)+'</em></div></div>'}
-function render(){const h=team($("#home").value),a=team($("#away").value),side=$("#lineupSide").value,lt=side==="home"?h:a;fill(".homeTeam",h);fill(".awayTeam",a);$("#lineupTeam").textContent=lt.team_name_in_league;$(".players").innerHTML=lineup(side);$("#topTitle").textContent=$("#headline").value;$("#topSub").textContent=$("#subline").value;$("#homeScore").textContent=$("#hs").value||0;$("#awayScore").textContent=$("#as").value||0;$("#personOut").textContent=$("#person").value;$("#roleOut").textContent=$("#role").value;renderStats(h,a);$("#roadGrid").innerHTML=roadCard(h)+roadCard(a);const ids=new Set([String(h.sports_gamer_team_id),String(a.sports_gamer_team_id)]);const leaders=players.filter(p=>ids.has(String(p.sports_gamer_team_id))&&((p.regular_skater_games||0)+(p.playoff_skater_games||0)>0)).sort((a,b)=>((b.regular_points||0)+(b.playoff_points||0))-((a.regular_points||0)+(a.playoff_points||0))).slice(0,4);$("#leaderGrid").innerHTML=leaders.map(leaderCard).join("")}
-async function load(){try{const [ts0,ps,po]=await Promise.all([safeGet("v_sec21_broadcast_teams_public?select=*&sports_gamer_league_id=eq."+LEAGUE),safeGet("v_sec21_broadcast_players_public?select=*&sports_gamer_league_id=eq."+LEAGUE),safeGet("v_sec21_broadcast_playoffs_public?select=*&sports_gamer_league_id=eq."+LEAGUE)]);const fallback=[{sports_gamer_team_id:7046,team_name_in_league:"Daankerzquad",team_logo_in_league:"",statistics_stage:"regular",games_played:10,total_wins:6,goals_for:33,goals_against:24},{sports_gamer_team_id:3252,team_name_in_league:"Västerås IK",team_logo_in_league:"",statistics_stage:"regular",games_played:10,total_wins:5,goals_for:30,goals_against:22}];const ts=ts0.length?ts0:fallback;teams=ts;players=ps;playoffs=po;const uniq=[...new Map(ts.map(t=>[t.sports_gamer_team_id,t])).values()].sort((a,b)=>a.team_name_in_league.localeCompare(b.team_name_in_league,"sv"));const opts=uniq.map(t=>'<option value="'+t.sports_gamer_team_id+'">'+esc(t.team_name_in_league)+'</option>').join("");$("#home").innerHTML=opts;$("#away").innerHTML=opts;$("#home").value="7046";$("#away").value="3252";$("#headline").value="SEC 21 · BRONSMATCH";$("#subline").value="DAANKERZQUAD vs VÄSTERÅS IK";autoLineup("home",team("7046"));autoLineup("away",team("3252"));try{renderLineupEditors()}catch(e){console.error("Lineup editor:",e)}render()}catch(e){console.error("Broadcast load:",e);teams=[{sports_gamer_team_id:7046,team_name_in_league:"Daankerzquad",statistics_stage:"regular"},{sports_gamer_team_id:3252,team_name_in_league:"Västerås IK",statistics_stage:"regular"}];const opts=teams.map(t=>'<option value="'+t.sports_gamer_team_id+'">'+esc(t.team_name_in_league)+'</option>').join("");$("#home").innerHTML=opts;$("#away").innerHTML=opts;$("#home").value="7046";$("#away").value="3252";render()}
-$$("[data-scene]").forEach(b=>b.onclick=()=>{$$("[data-scene]").forEach(x=>x.classList.toggle("active",x===b));$$(".scene").forEach(x=>x.classList.toggle("active",x.classList.contains(b.dataset.scene)))});
-$("#lineupSide").addEventListener("change",()=>{renderLineupEditors();render()});["home","away"].forEach(id=>$("#"+id).addEventListener("change",()=>{const side=id==="home"?"home":"away";autoLineup(side,team($("#"+id).value));renderLineupEditors();render()}));["hs","as","headline","subline","person","role"].forEach(id=>$("#"+id).addEventListener("input",render));load();
+(() => {
+  "use strict";
+  const $ = selector => document.querySelector(selector);
+  const $$ = selector => [...document.querySelectorAll(selector)];
+  const LEAGUE = 520;
+  const SLOTS = ["LW", "C", "RW", "LD", "G", "RD"];
+  // Match identity is editorial. Historical numbers only come from Supabase.
+  const MATCH_TEAMS = [
+    { sports_gamer_team_id: 7046, team_name_in_league: "Daankerzquad" },
+    { sports_gamer_team_id: 3252, team_name_in_league: "Västerås IK" }
+  ];
+  const data = { teams: [], players: [], playoffs: [] };
+  const status = { teams: "loading", players: "loading", playoffs: "loading" };
+  const lineups = new Map();
+  const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+  const same = (a, b) => String(a) === String(b);
+  const number = value => value != null && value !== "" && Number.isFinite(Number(value)) ? Number(value) : null;
+  const stat = value => number(value) ?? "–";
+  const rate = (n, d, percent = false) => number(n) !== null && number(d) > 0
+    ? (percent ? Math.round(100 * Number(n) / Number(d)) + "%" : (Number(n) / Number(d)).toFixed(1)) : "–";
+  const total = (a, b) => number(a) === null && number(b) === null ? null : (number(a) ?? 0) + (number(b) ?? 0);
+  const logo = t => t.team_logo_in_league || t.current_global_team_logo || "";
+  const team = id => data.teams.find(t => same(t.sports_gamer_team_id, id)) || MATCH_TEAMS.find(t => same(t.sports_gamer_team_id, id)) || { team_name_in_league: "LAG" };
+  const selectedTeam = side => team($("#" + side).value);
+  const roster = t => data.players.filter(p => same(p.sports_gamer_team_id, t.sports_gamer_team_id));
+  const position = p => p.playoff_skater_position_abbreviation || p.regular_skater_position_abbreviation || p.roster_preferred_position_abbreviation || ((p.playoff_goalie_games || p.regular_goalie_games) ? "G" : "");
+  const stage = (t, name) => data.teams.find(r => same(r.sports_gamer_team_id, t.sports_gamer_team_id) && r.statistics_stage === name) || {};
+  const playoff = t => data.playoffs.find(r => same(r.sports_gamer_team_id, t.sports_gamer_team_id)) || {};
+
+  const portraitFiles = new Set(window.SEH_PLAYER_IMAGE_FILES || []);
+  const playerImage = p => p.player_image || "../../players/" + (portraitFiles.has(p.sports_gamer_player_id + ".png") ? p.sports_gamer_player_id + ".png" : "1DEFAULTBILDID.png");
+
+  function image(src) {
+    return src ? '<img src="' + esc(src) + '" alt="">' : '<div class="sil">?</div>';
+  }
+
+  function fill(selector, t) {
+    $$(selector).forEach(el => {
+      const img = el.querySelector("img");
+      if (img) {
+        const src = logo(t);
+        img.hidden = !src;
+        if (src && img.getAttribute("src") !== src) img.src = src;
+        if (!src) img.removeAttribute("src");
+        img.alt = "";
+      }
+      const label = el.querySelector("b");
+      if (label) label.textContent = t.team_name_in_league;
+    });
+  }
+
+  function renderTeams() {
+    const unique = [...new Map([...MATCH_TEAMS, ...data.teams].map(t => [String(t.sports_gamer_team_id), t])).values()]
+      .sort((a, b) => a.team_name_in_league.localeCompare(b.team_name_in_league, "sv"));
+    ["home", "away"].forEach((side, index) => {
+      const select = $("#" + side);
+      const value = select.value || String(MATCH_TEAMS[index].sports_gamer_team_id);
+      select.replaceChildren(...unique.map(t => new Option(t.team_name_in_league, String(t.sports_gamer_team_id))));
+      select.value = value;
+    });
+    renderMatch();
+  }
+
+  function renderMatch() {
+    fill(".homeTeam", selectedTeam("home"));
+    fill(".awayTeam", selectedTeam("away"));
+    $("#topTitle").textContent = $("#headline").value;
+    $("#topSub").textContent = $("#subline").value;
+    $("#homeScore").textContent = $("#hs").value || "0";
+    $("#awayScore").textContent = $("#as").value || "0";
+    $("#personOut").textContent = $("#person").value;
+    $("#roleOut").textContent = $("#role").value;
+  }
+
+  function lineupFor(side) {
+    const t = selectedTeam(side);
+    const key = side + ":" + t.sports_gamer_team_id;
+    if (lineups.has(key)) return lineups.get(key);
+    const ps = roster(t);
+    const result = Object.fromEntries(SLOTS.map(slot => [slot, ""]));
+    // Do not cache an empty roster while its independent request is pending.
+    if (!ps.length) return result;
+    const used = new Set();
+    const candidates = slot => [...ps].sort((a, b) => {
+      const games = p => slot === "G" ? (p.playoff_goalie_games || 0) : (p.playoff_skater_games || 0);
+      const regular = p => slot === "G" ? (p.regular_goalie_games || 0) : (p.regular_skater_games || 0);
+      return games(b) - games(a) || regular(b) - regular(a) || (b.playoff_points || 0) - (a.playoff_points || 0);
+    });
+    const assign = (slot, p) => {
+      if (!p) return;
+      result[slot] = String(p.sports_gamer_player_id);
+      used.add(result[slot]);
+    };
+    // Reserve exact positions first so a missing winger cannot consume the goalie.
+    SLOTS.forEach(slot => assign(slot, candidates(slot).find(p => position(p) === slot && !used.has(String(p.sports_gamer_player_id)))));
+    SLOTS.filter(slot => !result[slot]).forEach(slot => assign(slot, candidates(slot).find(p => !used.has(String(p.sports_gamer_player_id)) && (slot === "G" ? position(p) === "G" : position(p) !== "G"))));
+    lineups.set(key, result);
+    return result;
+  }
+
+  function renderLineup() {
+    const side = $("#lineupSide").value;
+    const t = selectedTeam(side), ps = roster(t), lineup = lineupFor(side);
+    $("#lineupTeam").textContent = t.team_name_in_league;
+    $("#lineupEditors").innerHTML = SLOTS.map(slot => '<label>' + slot + '<select data-lineup-slot="' + slot + '"' + (!ps.length ? " disabled" : "") + '><option value="">Välj spelare</option>' + ps.map(p => '<option value="' + esc(p.sports_gamer_player_id) + '"' + (same(lineup[slot], p.sports_gamer_player_id) ? " selected" : "") + '>' + esc(p.display_gamertag) + ' · ' + esc(position(p) || "–") + '</option>').join("") + '</select></label>').join("");
+    $(".players").innerHTML = SLOTS.map(slot => {
+      const p = ps.find(p => same(p.sports_gamer_player_id, lineup[slot]));
+      if (!p) return '<div class="player empty"><span>' + slot + '</span><div class="sil">?</div><b>EJ VALD</b></div>';
+      return '<div class="player"><span>' + slot + '</span>' + image(playerImage(p)) + '<div class="player-info"><strong>#' + esc(p.player_number ?? "") + ' ' + esc(p.display_gamertag) + '</strong><small>GRUPP ' + stat(p.regular_points) + ' P · SLUTSPEL ' + stat(p.playoff_points) + ' P</small></div></div>';
+    }).join("");
+  }
+
+  function renderStats() {
+    const h = selectedTeam("home"), a = selectedTeam("away");
+    const hr = stage(h, "regular"), ar = stage(a, "regular"), hp = stage(h, "playoffs"), ap = stage(a, "playoffs");
+    const rows = [
+      [rate(hr.total_wins, hr.games_played, true), rate(ar.total_wins, ar.games_played, true), "GRUPP WIN RATE"],
+      [rate(hr.goals_for, hr.games_played), rate(ar.goals_for, ar.games_played), "GRUPP MÅL / MATCH"],
+      [rate(hp.total_wins, hp.games_played, true), rate(ap.total_wins, ap.games_played, true), "SLUTSPEL WIN RATE"],
+      [stat(hp.goals_for), stat(ap.goals_for), "SLUTSPEL MÅL"]
+    ];
+    $(".statrows").innerHTML = rows.map(r => '<div><b>' + r[0] + '</b><span>' + r[2] + '</span><b>' + r[1] + '</b></div>').join("");
+  }
+
+  function renderRoad() {
+    $("#roadGrid").innerHTML = ["home", "away"].map(side => {
+      const t = selectedTeam(side), r = stage(t, "regular"), po = playoff(t);
+      return '<div class="road-card"><div class="road-team">' + (logo(t) ? image(logo(t)) : "") + '<b>' + esc(t.team_name_in_league) + '</b></div><div class="road-step"><small>GRUPPSPEL</small><strong>#' + stat(po.regular_season_seed) + '</strong><span>' + stat(r.total_wins) + ' vinster · ' + stat(r.goals_for) + '–' + stat(r.goals_against) + '</span></div><i></i><div class="road-step"><small>SLUTSPEL · ' + esc(po.playoff_round_name || "DATA SAKNAS") + '</small><strong>' + stat(po.series_won) + '–' + stat(po.series_lost) + ' serier</strong><span>' + stat(po.matched_playoff_game_wins) + ' matchvinster</span></div><i></i><div class="road-step final"><small>FIKTIV TESTMATCH</small><strong>BRONS</strong><span>Ingen historisk bronsmatch</span></div></div>';
+    }).join("");
+  }
+
+  function renderLeaders() {
+    const ids = [$("#home").value, $("#away").value];
+    const leaders = data.players.filter(p => ids.includes(String(p.sports_gamer_team_id)) && ((p.regular_skater_games || 0) + (p.playoff_skater_games || 0) > 0))
+      .sort((a, b) => (total(b.regular_points, b.playoff_points) ?? 0) - (total(a.regular_points, a.playoff_points) ?? 0)).slice(0, 4);
+    $("#leaderGrid").innerHTML = leaders.length ? leaders.map(p => '<div class="leader-card">' + image(playerImage(p)) + '<div><small>' + esc(p.team_name_in_league) + '</small><b>' + esc(p.display_gamertag) + '</b><span>' + stat(total(p.regular_goals, p.playoff_goals)) + ' G · ' + stat(total(p.regular_assists, p.playoff_assists)) + ' A · <strong>' + stat(total(p.regular_points, p.playoff_points)) + ' P</strong></span><em>Grupp ' + stat(p.regular_points) + ' · Slutspel ' + stat(p.playoff_points) + '</em></div></div>').join("") : '<p>Spelarstatistik saknas.</p>';
+  }
+
+  function renderStatus() {
+    const labels = { teams: "Lagstatistik", players: "Trupp/spelare", playoffs: "Slutspel" };
+    $("#dataStatus").textContent = Object.entries(status).map(([key, state]) => labels[key] + ": " + ({ loading: "laddar…", ready: "klar", empty: "saknas", error: "kunde inte laddas" }[state])).join(" · ");
+  }
+
+  async function loadPart(key, view, render) {
+    try {
+      const cfg = window.EHOCKEY_CONFIG || {};
+      if (!cfg.supabaseUrl || !cfg.supabasePublishableKey) throw new Error("Supabase-konfiguration saknas");
+      const apiKey = String(cfg.supabasePublishableKey);
+      const headers = { apikey: apiKey, Accept: "application/json" };
+      if (/^eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(apiKey)) headers.Authorization = "Bearer " + apiKey;
+      const url = String(cfg.supabaseUrl).replace(/\/+$/, "") + "/rest/v1/" + view + "?select=*&sports_gamer_league_id=eq." + LEAGUE;
+      const response = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
+      if (!response.ok) throw new Error(view + " HTTP " + response.status);
+      const rows = await response.json();
+      if (!Array.isArray(rows) || rows.some(row => !row || !same(row.sports_gamer_league_id, LEAGUE) || row.sports_gamer_team_id == null || typeof row.team_name_in_league !== "string" || (key === "players" && (row.sports_gamer_player_id == null || typeof row.display_gamertag !== "string")))) throw new Error(view + ": oväntat dataformat");
+      data[key] = key === "players" ? [...new Map(rows.map(p => [p.sports_gamer_team_id + ":" + p.sports_gamer_player_id, p])).values()] : rows;
+      status[key] = rows.length ? "ready" : "empty";
+      render();
+    } catch (error) {
+      status[key] = "error";
+      console.error("Broadcast " + key + ":", error);
+    }
+    renderStatus();
+  }
+
+  // Controls are installed synchronously, before any data request starts.
+  $$("[data-scene]").forEach(button => button.addEventListener("click", () => {
+    $$("[data-scene]").forEach(b => b.classList.toggle("active", b === button));
+    $$(".scene").forEach(scene => scene.classList.toggle("active", scene.classList.contains(button.dataset.scene)));
+  }));
+  $("#lineupSide").addEventListener("change", renderLineup);
+  $("#lineupEditors").addEventListener("change", event => {
+    const select = event.target.closest("[data-lineup-slot]");
+    if (!select) return;
+    const side = $("#lineupSide").value, lineup = lineupFor(side), slot = select.dataset.lineupSlot;
+    if (select.value && !roster(selectedTeam(side)).some(p => same(p.sports_gamer_player_id, select.value))) return;
+    // Move an already selected player by swapping positions, never duplicating them.
+    const other = SLOTS.find(s => s !== slot && select.value && lineup[s] === select.value);
+    if (other) lineup[other] = lineup[slot];
+    lineup[slot] = select.value;
+    renderLineup();
+  });
+  ["home", "away"].forEach(side => $("#" + side).addEventListener("change", () => {
+    $("#subline").value = selectedTeam("home").team_name_in_league.toLocaleUpperCase("sv") + " vs " + selectedTeam("away").team_name_in_league.toLocaleUpperCase("sv");
+    renderMatch();
+    renderLineup();
+    renderStats();
+    renderRoad();
+    renderLeaders();
+  }));
+  ["hs", "as", "headline", "subline", "person", "role"].forEach(id => $("#" + id).addEventListener("input", renderMatch));
+  $("#screen").addEventListener("error", event => {
+    if (event.target.tagName === "IMG") event.target.hidden = true;
+  }, true);
+  renderTeams();
+  renderLineup();
+  renderStats();
+  renderRoad();
+  renderLeaders();
+  renderStatus();
+  void loadPart("teams", "v_sec21_broadcast_teams_public", () => { renderTeams(); renderStats(); renderRoad(); renderLineup(); });
+  void loadPart("players", "v_sec21_broadcast_players_public", () => { renderLineup(); renderLeaders(); });
+  void loadPart("playoffs", "v_sec21_broadcast_playoffs_public", renderRoad);
 })();
