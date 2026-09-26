@@ -18,3 +18,5 @@
 
 /* Lineup portrait zoom +20% */
 .lineup .players .player img{transform:scale(1.42)}
+
+.lineup-title{display:flex;align-items:center;justify-content:space-between;gap:24px}.lineup-title>div{min-width:0}.lineup-title #lineupTeamLogo{width:92px;height:92px;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 7px 14px #0008)}
