@@ -3,7 +3,8 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const cfg=window.SEH_CONFIG||window.EHOCKEY_CONFIG||window.APP_CONFIG||window.config||{},BASE=String(cfg.supabaseUrl||cfg.SUPABASE_URL||"").replace(/\/+$/,"")+"/rest/v1/",KEY=String(cfg.supabasePublishableKey||cfg.supabaseAnonKey||cfg.SUPABASE_ANON_KEY||cfg.SUPABASE_PUBLISHABLE_KEY||""),headers=KEY?{apikey:KEY,Accept:"application/json"}:{};if(/^eyJ/i.test(KEY))headers.Authorization="Bearer "+KEY;
 const LEAGUE=520,SLOTS=["LW","C","RW","LD","G","RD"];let teams=[],players=[],playoffs=[],lineups={home:{},away:{}};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-async function get(path){const r=await fetch(BASE+path,{headers});if(!r.ok)throw new Error(path+" "+r.status);return r.json()}\nasync function safeGet(path){try{return await get(path)}catch(e){console.error("Broadcast data:",e);return []}}
+async function get(path){const r=await fetch(BASE+path,{headers});if(!r.ok)throw new Error(path+" "+r.status);return r.json()}
+async function safeGet(path){try{return await get(path)}catch(e){console.error("Broadcast data:",e);return []}}
 function logo(t){return String(t?.team_logo_in_league||t?.current_global_team_logo||"")}
 function team(id){return teams.find(t=>String(t.sports_gamer_team_id)===String(id))||{team_name_in_league:"LAG"}}
 function fill(cls,t){$$(cls).forEach(el=>{const im=el.querySelector("img"),b=el.querySelector("b");if(im){im.src=logo(t);im.alt=""}if(b)b.textContent=t.team_name_in_league})}
