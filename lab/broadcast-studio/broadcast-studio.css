@@ -423,3 +423,13 @@ body.obs-preview .lowerthird{inset:0}
 .opening-commentator small{display:block;color:#ffb400;font-size:10px;font-weight:900;letter-spacing:.09em;margin-bottom:5px}
 .opening-commentator b{display:block;color:#f7f9fb;font-size:20px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .opening:has(.opening-commentators:not(:empty)) .opening-match{transform:translateY(-18px)}
+
+
+/* v65: commentator cards - give names room and make 1/2 commentator states deliberate */
+.opening-commentators{gap:16px;width:760px;bottom:50px}
+.opening-commentator{width:372px;height:94px;grid-template-columns:92px minmax(0,1fr)}
+.opening-commentator>img,.opening-commentator>.commentator-placeholder{width:92px;height:94px}
+.opening-commentator>div:last-child{padding:0 12px}
+.opening-commentator b{font-size:17px;white-space:normal;overflow:visible;text-overflow:clip;line-height:1.12}
+.opening-commentators .opening-commentator:only-child{width:420px}
+.opening-commentators .opening-commentator:only-child b{font-size:19px}
