@@ -477,3 +477,33 @@ aside input,aside select{max-width:100%}
 
 /* v68: lower commentator strip slightly on Game Night */
 .opening-commentators{bottom:36px}
+
+
+/* v69: dedicated OBS Browser Source mode */
+body.obs-preview{margin:0;background:transparent!important;overflow:hidden!important}
+body.obs-preview>header,
+body.obs-preview main>aside{display:none!important}
+body.obs-preview main{
+  display:block!important;
+  width:100vw!important;
+  height:100vh!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+body.obs-preview .workspace{
+  width:100vw!important;
+  height:100vh!important;
+  padding:0!important;
+  margin:0!important;
+  overflow:hidden!important;
+  display:block!important;
+}
+body.obs-preview .screen{
+  width:100vw!important;
+  height:100vh!important;
+  max-width:none!important;
+  aspect-ratio:auto!important;
+  margin:0!important;
+  border:0!important;
+  box-shadow:none!important;
+}
