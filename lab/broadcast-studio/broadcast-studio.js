@@ -220,6 +220,7 @@
     if (other) lineup[other] = lineup[slot];
     lineup[slot] = select.value;
     renderLineup();
+    renderLeaders();
   });
   ["home", "away"].forEach(side => $("#" + side).addEventListener("change", () => {
     $("#subline").value = selectedTeam("home").team_name_in_league.toLocaleUpperCase("sv") + " vs " + selectedTeam("away").team_name_in_league.toLocaleUpperCase("sv");
