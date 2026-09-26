@@ -54,19 +54,12 @@ async function render(){
  const team=teams.find(t=>String(t.team_id||t.id)===$("#team").value)||teams[0], p=players.find(x=>String(x.player_key)===$("#player").value)||players[0];
  if(!team||!p)return;
  const pic=portrait(p), variant=$("#variant").value, off=Number($("#offset").value)||0, jersey=await jerseySvg(team,variant);
- const modes=[
-  ["Overlay","Grundtest: porträtt bakom tröjan",""],
-  ["Mask-look","Lite större tröja över axlar/bröst","mask"],
-  ["Tight fit","Mer aggressiv zoom och högre tröja","tight"],
-  ["Blend","Overlay med mjukare kroppsområde","fade"]
- ];
- const basic=modes.map(([n,d,cl])=>'<article class="card"><div class="stage '+cl+'">'+(pic?'<img class="player" src="'+esc(pic)+'">':'')+(jersey?inlineJersey(jersey,"jersey",off):'')+'</div><div class="meta"><b>'+n+'</b><span>'+d+'</span></div></article>').join("");
  const worn='<article class="card worn-card"><div class="stage worn">'+
    (pic?'<img class="player" src="'+esc(pic)+'">':'')+
    (jersey?inlineJersey(jersey,"worn-jersey",off):'')+
-   (pic?'<div class="head-cut"><img src="'+esc(pic)+'"></div><i class="neck-shadow"></i>':'')+
+   (pic?'<div class="arms-cut"><img src="'+esc(pic)+'"></div><div class="head-cut"><img src="'+esc(pic)+'"></div><i class="neck-shadow"></i>':'')+
    '</div><div class="meta"><b>Worn Jersey · prototyp</b><span>Huvud/hals ovanpå, hockeytröjan ersätter visuellt originalets överkropp. Detta är spåret vi testar för automatisk lagtröja.</span></div></article>';
- $("#grid").innerHTML=basic+worn;
+ $("#grid").innerHTML=worn;
 }
 async function init(){
  try{
