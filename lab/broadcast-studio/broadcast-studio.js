@@ -6,6 +6,7 @@
   const REMOTE_CHANNEL = "sec21-bronze-test";
   const OBS_MODE = new URLSearchParams(location.search).get("obs") === "1";
   let activeScene = "opening", remoteApplying = false, remoteTimer = 0;
+  let displayedLineupSide = "home", sceneTransitionTimer = 0, lineupTransitionTimer = 0;
   const SLOTS = ["LW", "C", "RW", "LD", "G", "RD"];
   // Match identity is editorial. Historical numbers only come from Supabase.
   const MATCH_TEAMS = [
@@ -346,23 +347,49 @@
   function studioState(){const ls={};["home","away"].forEach(side=>{const l=lineupFor(side);ls[side]={};SLOTS.forEach(slot=>ls[side][slot]=l[slot]||"");});return {theme:$("#theme")?.value||"broadcast",scene:activeScene,lineupSide:$("#lineupSide").value,home:$("#home").value,away:$("#away").value,hs:$("#hs").value,as:$("#as").value,headline:$("#headline").value,subline:$("#subline").value,commentator1:$("#commentator1").value,commentator2:$("#commentator2").value,person:$("#person").value,role:$("#role").value,lineups:ls};}
   function applyScene(name,side){
     const next=name||"opening";
-    if(side){$("#lineupSide").value=side;renderLineup();}
-    document.querySelectorAll("[data-scene]").forEach(x=>x.classList.toggle("active",x.dataset.scene===next&&(!x.dataset.lineupSide||x.dataset.lineupSide===$("#lineupSide").value)));
+    const nextSide=side||$("#lineupSide").value;
     const current=document.querySelector(".scene.active");
     const target=document.querySelector(".scene."+next);
+    const sideChanged=next==="lineup"&&activeScene==="lineup"&&nextSide!==displayedLineupSide;
+    // The home and away lineups share one DOM scene. Snapshot the old side
+    // before rendering the new one so the broadcast cut can animate both.
+    const oldLineup=sideChanged&&current===target?target.cloneNode(true):null;
+    if(side)$("#lineupSide").value=side;
+    if(next==="lineup")renderLineup();
+    displayedLineupSide=next==="lineup"?nextSide:displayedLineupSide;
+    document.querySelectorAll("[data-scene]").forEach(x=>x.classList.toggle("active",x.dataset.scene===next&&(!x.dataset.lineupSide||x.dataset.lineupSide===$("#lineupSide").value)));
     activeScene=next;
     if(!target)return;
+    const screen=$("#screen");
+    clearTimeout(sceneTransitionTimer);
+    clearTimeout(lineupTransitionTimer);
+    screen.querySelectorAll(".lineup-transition-old").forEach(x=>x.remove());
+    document.querySelectorAll(".scene").forEach(x=>x.classList.remove("scene-leave","scene-enter"));
+    screen.classList.remove("scene-switching","lineup-side-switching");
+    if(sideChanged&&oldLineup){
+      oldLineup.classList.add("lineup-transition-old");
+      oldLineup.classList.remove("active");
+      oldLineup.removeAttribute("id");
+      oldLineup.querySelectorAll("[id]").forEach(x=>x.removeAttribute("id"));
+      screen.appendChild(oldLineup);
+      target.classList.add("active");
+      void screen.offsetWidth;
+      screen.classList.add("lineup-side-switching");
+      lineupTransitionTimer=window.setTimeout(()=>{
+        oldLineup.remove();
+        screen.classList.remove("lineup-side-switching");
+      },540);
+      return;
+    }
     if(!current||current===target){
       document.querySelectorAll(".scene").forEach(x=>x.classList.toggle("active",x===target));
       return;
     }
-    const screen=$("#screen");
-    screen.classList.remove("scene-switching");
     void screen.offsetWidth;
     screen.classList.add("scene-switching");
     current.classList.add("scene-leave");
     target.classList.add("active","scene-enter");
-    window.setTimeout(()=>{
+    sceneTransitionTimer=window.setTimeout(()=>{
       document.querySelectorAll(".scene").forEach(x=>{if(x!==target)x.classList.remove("active");x.classList.remove("scene-leave","scene-enter");});
       screen.classList.remove("scene-switching");
     },420);
