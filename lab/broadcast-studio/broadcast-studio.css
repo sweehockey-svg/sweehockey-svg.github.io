@@ -544,3 +544,14 @@ body.obs-preview .screen{
   margin:0!important;
   overflow:hidden!important;
 }
+
+/* v74: OBS must be the exact same composed scene as studio preview.
+   v63 hid global chrome (.texture/.top/.bug) for lower-third overlay use; that
+   accidentally stripped those elements from every OBS scene. Restore them except
+   when the active scene itself is lower third. */
+body.obs-preview .texture,
+body.obs-preview .top,
+body.obs-preview .bug{display:block!important}
+body.obs-preview .lowerthird .texture,
+body.obs-preview .lowerthird .top,
+body.obs-preview .lowerthird .bug{display:none!important}
