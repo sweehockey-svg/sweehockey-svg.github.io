@@ -303,3 +303,15 @@
 .scorers .scorer div small{font-size:10px}
 .scorers .scorer>span{font-size:15px}
 .scorers .scorer>em{font-size:22px}
+
+
+/* v58: scoring leaders use the available broadcast width and larger player treatment */
+.scorers .scorer-grid{width:100%;max-width:none;gap:14px}
+.scorers .scorer-side{padding:14px 16px}
+.scorers .scorer{grid-template-columns:38px 94px minmax(155px,1fr) 62px 62px 78px;min-height:112px;gap:10px}
+.scorers .scorer>strong{font-size:32px}
+.scorers .scorer>img{width:94px;height:106px}
+.scorers .scorer div b{font-size:18px}
+.scorers .scorer div small{font-size:10px}
+.scorers .scorer>span{font-size:16px}
+.scorers .scorer>em{font-size:24px}
