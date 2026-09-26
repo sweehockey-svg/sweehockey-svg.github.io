@@ -283,3 +283,7 @@
 .teamcompare .tc-cols{padding:7px 0}
 .teamcompare .tc-row{padding:9px 0}
 .teamcompare .tc-row b{font-size:20px}
+
+
+/* v56: consistent Swedish scene naming */
+.teamcompare .scene-title b{text-transform:uppercase}
