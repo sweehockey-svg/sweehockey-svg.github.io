@@ -232,7 +232,7 @@
     };
     const gh = goalieSide("home"), ga = goalieSide("away");
     const goalieVal = (x, key) => x.p ? (key === "sv" ? goaliePct(x.p.regular_goalie_save_percentage) : key === "psv" ? goaliePct(x.p.playoff_goalie_save_percentage) : stat(x.p[key])) : "–";
-    const goaliePortrait = x => x.p ? '<div class="goalie-person goalie-'+x.side+'>'+image(playerImage(x.p))+'<div class="goalie-name">'+(logo(x.t)?'<img src="'+esc(logo(x.t))+'" alt="">':"")+'<span><b>G #'+esc(x.p.player_number ?? "")+' · '+esc(x.p.display_gamertag)+'</b><small>'+esc(x.t.team_name_in_league)+'</small></span></div></div>' : '<div class="goalie-person empty"><span>INGEN MÅLVAKT</span></div>';
+    const goaliePortrait = x => x.p ? '<div class="goalie-person goalie-'+x.side+'">'+image(playerImage(x.p))+'<div class="goalie-name">'+(logo(x.t)?'<img src="'+esc(logo(x.t))+'" alt="">':"")+'<span><b>G #'+esc(x.p.player_number ?? "")+' · '+esc(x.p.display_gamertag)+'</b><small>'+esc(x.t.team_name_in_league)+'</small></span></div></div>' : '<div class="goalie-person empty"><span>INGEN MÅLVAKT</span></div>';
     const goalieRows = [
       ["GP","regular_goalie_games","playoff_goalie_games"],
       ["SV%","sv","psv"],
@@ -243,7 +243,7 @@
     const kh=bestLineupSkater("home"), ka=bestLineupSkater("away");
     const keySide=(side,x)=>({side,t:selectedTeam(side),slot:x?.slot||"",p:x?.p||null});
     const kHome=keySide("home",kh), kAway=keySide("away",ka);
-    const keyPortrait=x=>x.p?'<div class="key-person key-'+x.side+'>'+image(playerImage(x.p))+'<div class="key-name">'+(logo(x.t)?'<img src="'+esc(logo(x.t))+'" alt="">':"")+'<span><b>'+esc(x.slot)+' #'+esc(x.p.player_number??"")+' · '+esc(x.p.display_gamertag)+'</b><small>'+esc(x.t.team_name_in_league)+'</small></span></div></div>':'<div class="key-person empty"><span>INGEN SPELARE</span></div>';
+    const keyPortrait=x=>x.p?'<div class="key-person key-'+x.side+'">'+image(playerImage(x.p))+'<div class="key-name">'+(logo(x.t)?'<img src="'+esc(logo(x.t))+'" alt="">':"")+'<span><b>'+esc(x.slot)+' #'+esc(x.p.player_number??"")+' · '+esc(x.p.display_gamertag)+'</b><small>'+esc(x.t.team_name_in_league)+'</small></span></div></div>':'<div class="key-person empty"><span>INGEN SPELARE</span></div>';
     const keyValue=(x,key,stageName)=>{if(!x.p)return "–";if(key==="FO%")return x.slot==="C"?faceoffPct(x.p,stageName):"–";const prefix=stageName==="regular"?"regular_":"playoff_";return stat(x.p[prefix+key]);};
     const keyRows=[["GP","skater_games"],["FO%","FO%"],["G","goals"],["A","assists"],["P","points"]];
     $("#keyGrid").innerHTML=keyPortrait(kHome)+'<div class="key-center"><div class="key-center-title">KEY MATCHUP</div><div class="key-columns"><span>GRUPP</span><span>SLUTSPEL</span><i></i><span>GRUPP</span><span>SLUTSPEL</span></div>'+keyRows.map(r=>'<div class="key-row"><b>'+keyValue(kHome,r[1],"regular")+'</b><b>'+keyValue(kHome,r[1],"playoff")+'</b><span>'+r[0]+'</span><b>'+keyValue(kAway,r[1],"regular")+'</b><b>'+keyValue(kAway,r[1],"playoff")+'</b></div>').join("")+'</div>'+keyPortrait(kAway);
