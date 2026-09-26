@@ -433,3 +433,17 @@ body.obs-preview .lowerthird{inset:0}
 .opening-commentator b{font-size:17px;white-space:normal;overflow:visible;text-overflow:clip;line-height:1.12}
 .opening-commentators .opening-commentator:only-child{width:420px}
 .opening-commentators .opening-commentator:only-child b{font-size:19px}
+
+
+/* v66: integrate commentators into the Game Night lockup instead of hanging below it */
+.opening{padding-bottom:28px}
+.opening-commentators{bottom:58px;width:720px;gap:12px}
+.opening-commentator{width:354px;height:78px;grid-template-columns:76px minmax(0,1fr);box-shadow:none;background:#061521d9}
+.opening-commentator>img,.opening-commentator>.commentator-placeholder{width:76px;height:78px}
+.opening-commentator>div:last-child{padding:0 11px}
+.opening-commentator small{font-size:9px;margin-bottom:3px}
+.opening-commentator b{font-size:16px;line-height:1.08}
+.opening-commentators .opening-commentator:only-child{width:390px}
+.opening-commentators .opening-commentator:only-child b{font-size:17px}
+.opening:has(.opening-commentators:not(:empty)) h1{transform:translateY(-12px)}
+.opening:has(.opening-commentators:not(:empty)) .opening-match{transform:translateY(-26px)}
