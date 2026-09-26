@@ -530,3 +530,8 @@ body.obs-preview .workspace,
 body.obs-preview .screen{
   background-color:#06263a!important;
 }
+
+
+/* v72: OBS renders the exact 1920x1080 studio composition and scales it uniformly to the viewport */
+body.obs-preview .workspace{position:relative!important;display:block!important}
+body.obs-preview .screen{position:absolute!important;left:50%!important;top:50%!important;width:1920px!important;height:1080px!important;max-width:none!important;aspect-ratio:16/9!important;transform:translate(-50%,-50%) scale(min(calc(100vw / 1920),calc(100vh / 1080)))!important;transform-origin:center center!important}
