@@ -315,3 +315,19 @@
 .scorers .scorer div small{font-size:10px}
 .scorers .scorer>span{font-size:16px}
 .scorers .scorer>em{font-size:24px}
+
+
+/* v59: scoring leaders - fill the vertical composition instead of leaving a dead lower third */
+.scorers .scene-title{margin-bottom:10px!important}
+.scorers .scorer-grid{width:100%;max-width:none;gap:14px}
+.scorers .scorer-side{padding:16px}
+.scorers .scorer-team{min-height:62px;padding:2px 10px 14px}
+.scorers .scorer-team img{width:54px;height:54px}
+.scorers .scorer-team b{font-size:23px}
+.scorers .scorer{grid-template-columns:40px 108px minmax(160px,1fr) 64px 64px 82px;min-height:132px;gap:12px}
+.scorers .scorer>strong{font-size:34px}
+.scorers .scorer>img{width:108px;height:126px;object-fit:contain;object-position:center bottom}
+.scorers .scorer div b{font-size:19px}
+.scorers .scorer div small{font-size:10px}
+.scorers .scorer>span{font-size:16px}
+.scorers .scorer>em{font-size:25px}
