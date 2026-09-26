@@ -88,3 +88,18 @@
 
 /* Blue Line Battle v37: narrower broadcast panel, centered instead of edge-to-edge */
 .defense .role-grid{width:88%;max-width:1500px;align-self:center;margin-inline:auto}
+
+
+/* Blue Line Battle v38: broadcast legibility + normalized portrait/fallback scale */
+.defense .role-info{padding:8px 15px}
+.defense .role-team{gap:8px}
+.defense .role-team img{width:30px;height:30px}
+.defense .role-team small{font-size:10px}
+.defense .role-info>strong{font-size:clamp(15px,1.38vw,23px);line-height:1.05;margin:5px 0 6px}
+.defense .role-head,.defense .role-stat{grid-template-columns:minmax(0,1fr) 58px 64px;gap:7px}
+.defense .role-head{font-size:8px}
+.defense .role-stat{padding:2px 0;min-height:21px}
+.defense .role-stat span{font-size:9px}
+.defense .role-stat b{font-size:clamp(12px,1.02vw,17px)}
+.defense .role-card>img{transform:scale(1.02);transform-origin:center bottom}
+.defense .role-card .sil{transform:scale(.86);transform-origin:center bottom}
