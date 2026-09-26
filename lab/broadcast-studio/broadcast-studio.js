@@ -149,12 +149,15 @@
     const pickForTeam = side => {
       const t = selectedTeam(side);
       const ps = data.players.filter(p => same(p.sports_gamer_team_id, t.sports_gamer_team_id));
-      const skaters = ps.filter(p => ((p.regular_skater_games || 0) + (p.playoff_skater_games || 0) > 0));
+      const selectedIds = new Set(Object.values(lineupFor(side)).filter(Boolean).map(String));
+      const lineupPlayers = ps.filter(p => selectedIds.has(String(p.sports_gamer_player_id)));
+      const eligible = lineupPlayers.length ? lineupPlayers : ps;
+      const skaters = eligible.filter(p => ((p.regular_skater_games || 0) + (p.playoff_skater_games || 0) > 0));
       const top = [...skaters].sort((a,b) => playerPoints(b) - playerPoints(a))[0];
       const candidates = skaters.filter(p => p !== top);
       const defenders = candidates.filter(p => /^(LD|RD|D)$/i.test(position(p)));
       const standoutD = [...defenders].sort((a,b) => (playerGoals(b)*4 + playerPoints(b)) - (playerGoals(a)*4 + playerPoints(a)))[0];
-      const goalies = ps.filter(p => goalieGames(p) >= 3 && goalieSave(p) !== null).sort((a,b) => goalieSave(b) - goalieSave(a));
+      const goalies = eligible.filter(p => goalieGames(p) >= 3 && goalieSave(p) !== null).sort((a,b) => goalieSave(b) - goalieSave(a));
       let special = goalies[0] || standoutD || [...candidates].sort((a,b) => playerPoints(b) - playerPoints(a))[0];
       if (special === top) special = candidates[0];
       return [top && {p:top, reason:"POÄNGLIGAN"}, special && {p:special, reason: goalies[0] === special ? "MÅLVAKT" : standoutD === special ? "BACK" : "POÄNGLIGAN"}]
