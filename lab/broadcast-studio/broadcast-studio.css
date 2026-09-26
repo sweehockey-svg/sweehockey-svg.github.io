@@ -124,3 +124,17 @@
 .goalie-row b{font-size:clamp(18px,1.7vw,29px);line-height:1;color:#f4f7fa}
 .goalie-row b:nth-child(-n+2){color:#f4b21b}
 .goalie-row b:nth-last-child(-n+2){color:#f4b21b}
+
+
+/* Key Matchup v40: direct player-v-player comparison */
+.keymatchup .scene-title{margin-bottom:18px}
+.keymatchup #keyGrid{width:94%;max-width:1660px;margin-inline:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(420px,.82fr) minmax(0,1fr);grid-template-rows:1fr;gap:16px;align-items:stretch}
+.key-person{position:relative;min-width:0;overflow:hidden;background:linear-gradient(135deg,#123d59,#071621);border:1px solid #ffffff24;display:flex;align-items:flex-end;justify-content:center}
+.key-person>img{width:100%;height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 12px 18px #0009)}
+.key-person.empty{display:grid;place-items:center;color:#70808e;font-weight:900}
+.key-name{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(0deg,#07131df7 58%,#07131d00)}
+.key-name>img{width:44px;height:44px;object-fit:contain;flex:0 0 auto}.key-name span{min-width:0}.key-name b{display:block;font-size:clamp(14px,1.25vw,21px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.key-name small{display:block;color:#9db0bf;margin-top:3px}
+.key-center{align-self:center;background:#07131de8;border:2px solid #ffffff35;box-shadow:0 12px 30px #0007;padding:18px 12px}
+.key-center-title{text-align:center;color:#f4b21b;font-size:clamp(17px,1.55vw,26px);font-weight:950;letter-spacing:.05em;padding:2px 0 16px;border-bottom:2px solid #f4b21b}
+.key-columns,.key-row{display:grid;grid-template-columns:1fr 1fr 82px 1fr 1fr;align-items:center;text-align:center}.key-columns{background:#f4b21b;color:#07131d;font-size:9px;font-weight:950;padding:7px 0}.key-columns i{height:100%}
+.key-row{border-bottom:1px solid #f4b21b99;padding:9px 0}.key-row span{font-size:10px;color:#c3ced6;font-weight:950}.key-row b{font-size:clamp(16px,1.55vw,26px);line-height:1;color:#f4b21b}
