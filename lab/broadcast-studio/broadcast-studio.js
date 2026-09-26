@@ -225,7 +225,21 @@
   function renderRoleMatchups() {
     $("#forwardsGrid").innerHTML = ["home","away"].flatMap(side=>["LW","C","RW"].map(slot=>matchupCard(side,slot,slot==="C"?"center":"skater"))).join("");
     $("#defenseGrid").innerHTML = matchupCard("home","LD","skater")+matchupCard("home","RD","skater")+matchupCard("away","LD","skater")+matchupCard("away","RD","skater");
-    $("#goaliesGrid").innerHTML = matchupCard("home","G","goalie")+matchupCard("away","G","goalie");
+    const goalieSide = side => {
+      const t = selectedTeam(side), p = lineupPlayer(side, "G");
+      if (!p) return { side, t, p: null };
+      return { side, t, p };
+    };
+    const gh = goalieSide("home"), ga = goalieSide("away");
+    const goalieVal = (x, key) => x.p ? (key === "sv" ? goaliePct(x.p.regular_goalie_save_percentage) : key === "psv" ? goaliePct(x.p.playoff_goalie_save_percentage) : stat(x.p[key])) : "–";
+    const goaliePortrait = x => x.p ? '<div class="goalie-person goalie-'+x.side+'>'+image(playerImage(x.p))+'<div class="goalie-name">'+(logo(x.t)?'<img src="'+esc(logo(x.t))+'" alt="">':"")+'<span><b>G #'+esc(x.p.player_number ?? "")+' · '+esc(x.p.display_gamertag)+'</b><small>'+esc(x.t.team_name_in_league)+'</small></span></div></div>' : '<div class="goalie-person empty"><span>INGEN MÅLVAKT</span></div>';
+    const goalieRows = [
+      ["GP","regular_goalie_games","playoff_goalie_games"],
+      ["SV%","sv","psv"],
+      ["GAA","regular_goalie_goals_against_average","playoff_goalie_goals_against_average"],
+      ["SO","regular_goalie_shutouts","playoff_goalie_shutouts"]
+    ];
+    $("#goaliesGrid").innerHTML = goaliePortrait(gh)+'<div class="goalie-center"><div class="goalie-center-title">GOALIE MATCHUP</div><div class="goalie-columns"><span>GRUPP</span><span>SLUTSPEL</span><i></i><span>GRUPP</span><span>SLUTSPEL</span></div>'+goalieRows.map(r=>'<div class="goalie-row"><b>'+goalieVal(gh,r[1])+'</b><b>'+goalieVal(gh,r[2])+'</b><span>'+r[0]+'</span><b>'+goalieVal(ga,r[1])+'</b><b>'+goalieVal(ga,r[2])+'</b></div>').join("")+'</div>'+goaliePortrait(ga);
     $("#keyGrid").innerHTML = keyCard("home")+keyCard("away");
     $("#spotlightCard").innerHTML = spotlightHtml();
   }
