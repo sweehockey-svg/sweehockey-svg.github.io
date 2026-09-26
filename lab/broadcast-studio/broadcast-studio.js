@@ -354,11 +354,16 @@
       document.querySelectorAll(".scene").forEach(x=>x.classList.toggle("active",x===target));
       return;
     }
-    current.classList.add("scene-out");
-    target.classList.add("active","scene-in");
+    const screen=$("#screen");
+    screen.classList.remove("scene-switching");
+    void screen.offsetWidth;
+    screen.classList.add("scene-switching");
+    current.classList.add("scene-leave");
+    target.classList.add("active","scene-enter");
     window.setTimeout(()=>{
-      document.querySelectorAll(".scene").forEach(x=>{if(x!==target)x.classList.remove("active");x.classList.remove("scene-out","scene-in");});
-    },260);
+      document.querySelectorAll(".scene").forEach(x=>{if(x!==target)x.classList.remove("active");x.classList.remove("scene-leave","scene-enter");});
+      screen.classList.remove("scene-switching");
+    },420);
   }
   function applyRemoteState(s){if(!s||typeof s!=="object")return;remoteApplying=true;["home","away","hs","as","headline","subline","commentator1","commentator2","person","role"].forEach(id=>{if(s[id]!==undefined&&$("#"+id))$("#"+id).value=s[id];});applyScene(s.scene,s.lineupSide);renderMatch();renderLineup();renderStats();renderTable();renderTeamCompare();renderScorers();renderFormGuide();renderOffense();renderDefenseLeaders();renderGoalieLeaders();renderRoad();renderLeaders();renderRoleMatchups();remoteApplying=false;}
   async function remoteRequest(method,body){const cfg=window.EHOCKEY_CONFIG||{};if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)return;const key=String(cfg.supabasePublishableKey),headers={apikey:key,Accept:"application/json","Content-Type":"application/json"};if(/^eyJ[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$/.test(key))headers.Authorization="Bearer "+key;const url=String(cfg.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/broadcast_studio_state?channel=eq."+encodeURIComponent(REMOTE_CHANNEL);const res=await fetch(url,{method,headers,body:body?JSON.stringify(body):undefined,cache:"no-store"});if(!res.ok)throw new Error("Broadcast state HTTP "+res.status);return method==="GET"?res.json():null;}
