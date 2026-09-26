@@ -447,3 +447,29 @@ body.obs-preview .lowerthird{inset:0}
 .opening-commentators .opening-commentator:only-child b{font-size:17px}
 .opening:has(.opening-commentators:not(:empty)) h1{transform:translateY(-12px)}
 .opening:has(.opening-commentators:not(:empty)) .opening-match{transform:translateY(-26px)}
+
+
+/* v67: fixed studio preview + independently scrollable control rail */
+html,body{height:100%;overflow:hidden}
+header{position:relative;z-index:100}
+main{height:calc(100vh - 70px);min-height:0;overflow:hidden}
+aside{
+  height:100%;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-gutter:stable;
+  overscroll-behavior:contain;
+}
+.workspace{
+  height:100%;
+  min-height:0;
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+}
+.twocol{min-width:0}
+.twocol>*{min-width:0}
+.twocol input,.twocol select{width:100%;min-width:0}
+aside input,aside select{max-width:100%}
