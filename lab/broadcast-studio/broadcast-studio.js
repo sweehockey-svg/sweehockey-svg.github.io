@@ -583,9 +583,21 @@
      hls.on(Hls.Events.MANIFEST_PARSED,()=>{setStatus("HLS LADDAD");tryDirectPlay()});
      hls.on(Hls.Events.ERROR,(_,data)=>{
        if(!data?.fatal)return;
-       if(data.type===Hls.ErrorTypes.NETWORK_ERROR){setStatus("HLS NÄTVERKSFEL · FÖRSÖKER IGEN");hls.startLoad()}
-       else if(data.type===Hls.ErrorTypes.MEDIA_ERROR){setStatus("HLS MEDIAFEL · ÅTERSTÄLLER");hls.recoverMediaError()}
-       else{setStatus("HLS FEL");try{hls.destroy()}catch(e){}hls=null;if(meta.kind==="twitch"&&lastTwitchRaw)setTimeout(()=>resolveTwitchHls(lastTwitchRaw,muted),1200)}
+       const detail=String(data?.details||data?.type||"okänt");
+       const code=data?.response?.code||data?.networkDetails?.status||"";
+       const failed=data?.url||data?.response?.url||"";
+       console.warn("[SEH HLS]",{type:data?.type,details:data?.details,code,failed,data});
+       if(data.type===Hls.ErrorTypes.NETWORK_ERROR){
+         setStatus("HLS NÄTVERKSFEL"+(code?" "+code:"")+" · "+detail);
+         hls.startLoad();
+       }else if(data.type===Hls.ErrorTypes.MEDIA_ERROR){
+         setStatus("HLS MEDIAFEL · "+detail);
+         hls.recoverMediaError();
+       }else{
+         setStatus("HLS FEL · "+detail);
+         try{hls.destroy()}catch(e){}hls=null;
+         if(meta.kind==="twitch"&&lastTwitchRaw)setTimeout(()=>resolveTwitchHls(lastTwitchRaw,muted),1200);
+       }
      });
    }else{
      video.src=url;
