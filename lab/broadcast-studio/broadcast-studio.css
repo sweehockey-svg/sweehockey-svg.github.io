@@ -1079,3 +1079,12 @@ body:not(.obs-preview) .screen:not(.live-mode)>.twitch-layer,
 body.obs-preview .screen:not(.live-mode)>.twitch-layer{display:none!important}
 body:not(.obs-preview) .screen.live-mode>.twitch-layer,
 body.obs-preview .screen.live-mode>.twitch-layer{display:block!important}
+
+
+/* v109: Match Live must allow direct Twitch player interaction in studio preview.
+   Only the video layer gets pointer events; broadcast graphics stay click-through. */
+@media(min-width:901px){
+ body:not(.obs-preview) .screen.live-mode{pointer-events:none!important}
+ body:not(.obs-preview) .screen.live-mode>.twitch-layer{pointer-events:auto!important}
+ body:not(.obs-preview) .screen.live-mode>.twitch-layer iframe{pointer-events:auto!important}
+}
