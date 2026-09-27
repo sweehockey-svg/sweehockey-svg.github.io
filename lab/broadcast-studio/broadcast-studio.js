@@ -505,43 +505,46 @@
  const clear=()=>{sdkPlayer=null;mounted="";playing=false;host?.replaceChildren();layer?.classList.remove("has-stream");if(OBS_MODE_LOCAL){document.documentElement.classList.remove("obs-twitch-booting","obs-twitch-playing")}};
  const mount=(raw,muted=true)=>{
    wantedMute=muted;
-   const channel=parse(raw); if(!channel){if(host)host.replaceChildren();sdkPlayer=null;mounted="";layer?.classList.remove("has-stream");setStatus("INGEN STREAM LADDAD");return false}
-   if(channel===mounted&&(host?.querySelector("iframe")||sdkPlayer)){if(sdkPlayer&&playing&&sdkPlayer.getMuted()!==wantedMute)sdkPlayer.setMuted(wantedMute);return true;}
+   const channel=parse(raw);
+   if(!channel){
+     host?.replaceChildren();mounted="";playing=false;layer?.classList.remove("has-stream");
+     if(OBS_MODE_LOCAL)document.documentElement.classList.remove("obs-twitch-booting","obs-twitch-playing");
+     setStatus("INGEN STREAM LADDAD");return false;
+   }
+   if(channel===mounted&&host?.querySelector("iframe"))return true;
    const parents=[location.hostname,"svenskehockey.se","www.svenskehockey.se"].filter((v,i,a)=>v&&a.indexOf(v)===i);
    clear();
-   if(OBS_MODE_LOCAL){document.documentElement.classList.add("obs-twitch-booting");document.documentElement.classList.remove("obs-twitch-playing")}
-   if(OBS_MODE_LOCAL&&window.Twitch?.Player){
-     sdkPlayer=new Twitch.Player("twitchPlayer",{width:"100%",height:"100%",channel,parent:parents,autoplay:true,muted:true});
-     const player=sdkPlayer;
-     let recovering=false;
-     const resume=()=>{
-       if(sdkPlayer!==player||!document.getElementById("screen")?.classList.contains("live-mode"))return;
-       try{
-         player.setMuted(true);
-         player.play();
-         recovering=true;
-         setStatus("TWITCH ÅTERSTARTAR · "+channel.toUpperCase());
-       }catch(e){console.warn("[SEH Twitch] resume failed",e);}
-     };
-     sdkPlayer.addEventListener(Twitch.Player.READY,()=>{setStatus("TWITCH-SPELARE LADDAD · "+channel.toUpperCase(),true);setTimeout(resume,100)});
-     sdkPlayer.addEventListener(Twitch.Player.PLAYING,()=>{if(sdkPlayer!==player)return;playing=true;recovering=false;player.setMuted(true);document.documentElement.classList.remove("obs-twitch-booting");document.documentElement.classList.add("obs-twitch-playing");setStatus("TWITCH SPELAR · "+channel.toUpperCase(),true)});
-     sdkPlayer.addEventListener(Twitch.Player.PAUSE,()=>{if(sdkPlayer!==player)return;playing=false;setTimeout(resume,120)});
-     sdkPlayer.addEventListener(Twitch.Player.OFFLINE,()=>{if(sdkPlayer===player){playing=false;document.documentElement.classList.remove("obs-twitch-playing");document.documentElement.classList.add("obs-twitch-booting");setStatus("TWITCH-KANALEN ÄR OFFLINE");}});
-     if(Twitch.Player.PLAYBACK_BLOCKED)sdkPlayer.addEventListener(Twitch.Player.PLAYBACK_BLOCKED,()=>{playing=false;document.documentElement.classList.remove("obs-twitch-playing");document.documentElement.classList.add("obs-twitch-booting");setTimeout(resume,350);setStatus("TWITCH AUTOPLAY BLOCKERAD")});
-     const watchdog=()=>{
-       if(sdkPlayer!==player)return;
-       try{
-         if(document.getElementById("screen")?.classList.contains("live-mode")&&player.isPaused()&&!recovering)resume();
-       }catch(e){}
-     };
-     setInterval(watchdog,1000);
-   }else{
-     const qs=new URLSearchParams({channel,autoplay:"true",muted:muted?"true":"false"});parents.forEach(p=>qs.append("parent",p));
-     const f=document.createElement("iframe");f.src="https://player.twitch.tv/?"+qs.toString();f.title="Twitch matchstream";f.allow="autoplay; fullscreen; picture-in-picture";f.allowFullscreen=true;
-     f.addEventListener("load",()=>setStatus("TWITCH-SPELARE LADDAD · "+channel.toUpperCase(),true),{once:true});
-     host?.appendChild(f);
+   if(OBS_MODE_LOCAL){
+     document.documentElement.classList.add("obs-twitch-booting");
+     document.documentElement.classList.remove("obs-twitch-playing");
    }
-   layer?.classList.add("has-stream");mounted=channel;setStatus("LADDAR TWITCH · "+channel.toUpperCase());return true;
+   const qs=new URLSearchParams({channel,autoplay:"true",muted:muted?"true":"false"});
+   parents.forEach(p=>qs.append("parent",p));
+   const f=document.createElement("iframe");
+   f.src="https://player.twitch.tv/?"+qs.toString();
+   f.title="Twitch matchstream";
+   f.allow="autoplay; fullscreen; picture-in-picture";
+   f.allowFullscreen=true;
+   f.setAttribute("scrolling","no");
+   f.addEventListener("load",()=>{
+     if(host?.firstElementChild!==f)return;
+     playing=true;
+     setStatus("TWITCH-SPELARE LADDAD · "+channel.toUpperCase(),true);
+     if(OBS_MODE_LOCAL){
+       // Use the exact same iframe playback path as the working studio preview.
+       // Give Twitch a short unobscured startup window before revealing graphics.
+       setTimeout(()=>{
+         if(host?.firstElementChild!==f)return;
+         document.documentElement.classList.remove("obs-twitch-booting");
+         document.documentElement.classList.add("obs-twitch-playing");
+       },1500);
+     }
+   },{once:true});
+   host?.appendChild(f);
+   layer?.classList.add("has-stream");
+   mounted=channel;
+   setStatus("LADDAR TWITCH · "+channel.toUpperCase());
+   return true;
  };
  const apply=s=>{
    if(!s)return;
