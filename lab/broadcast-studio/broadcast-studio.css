@@ -1003,3 +1003,27 @@ body.obs-preview .scene-dock,body.obs-preview .director-dock{display:none!import
  body:not(.obs-preview) .lineup-control #lineupEditors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10px}
  body:not(.obs-preview) .lineup-control #lineupEditors>label{min-width:0}
 }
+
+
+/* v103: Twitch matchfeed behind the scaled studio graphics preview. OBS output untouched. */
+@media(min-width:901px){
+ body:not(.obs-preview) .preview-scale{position:relative;background:#02070b}
+ body:not(.obs-preview) .twitch-layer{position:absolute;inset:0;z-index:0;background:#02070b;overflow:hidden}
+ body:not(.obs-preview) .twitch-layer>div:first-child,
+ body:not(.obs-preview) .twitch-layer iframe{width:100%!important;height:100%!important;border:0}
+ body:not(.obs-preview) .preview-scale>.screen{position:relative;z-index:2;pointer-events:none}
+ body:not(.obs-preview) .twitch-layer.is-hidden{display:none}
+ body:not(.obs-preview) .stream-empty{position:absolute;inset:0;display:grid;place-items:center;color:#334653;font-size:10px;font-weight:950;letter-spacing:.2em;background:linear-gradient(135deg,#07121b,#02070b)}
+ body:not(.obs-preview) .twitch-layer.has-stream .stream-empty{display:none}
+ body:not(.obs-preview) .stream-dock{width:min(100%,620px);margin:14px auto 0;padding:14px 16px;background:#081119;border:1px solid #1f303d;border-radius:9px}
+ body:not(.obs-preview) .stream-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}
+ body:not(.obs-preview) .stream-controls>label:first-child{margin:0}
+ body:not(.obs-preview) #loadTwitch{height:34px;padding:0 13px;border:1px solid #d79c13;border-radius:6px;background:#15140c;color:#f4b21b;font-size:9px;font-weight:950;letter-spacing:.08em;cursor:pointer}
+ body:not(.obs-preview) .stream-check{display:flex;align-items:center;gap:7px;margin:2px 0 0;font-size:8px}
+ body:not(.obs-preview) .stream-check input{width:15px;height:15px;margin:0;padding:0}
+ body:not(.obs-preview) .stream-status{display:flex;align-items:center;gap:7px;margin-top:9px;color:#647887;font-size:8px;font-weight:900;letter-spacing:.1em}
+ body:not(.obs-preview) .stream-status i{width:7px;height:7px;border-radius:50%;background:#566672}
+ body:not(.obs-preview) .stream-status.ready{color:#a9c8b5}
+ body:not(.obs-preview) .stream-status.ready i{background:#4fc47a;box-shadow:0 0 9px #4fc47a88}
+}
+body.obs-preview .twitch-layer,body.obs-preview .stream-dock{display:none!important}
