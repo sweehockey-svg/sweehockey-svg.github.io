@@ -1149,3 +1149,25 @@ html.obs-preview.obs-twitch-playing body #screen.live-mode>.bug{
   opacity:1!important;
   visibility:visible!important;
 }
+
+
+/* v114: first-class direct HLS/video source for one-page OBS composition. */
+.screen>.twitch-layer #directVideo{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  object-fit:cover;background:#000;z-index:1;border:0;
+}
+.screen>.twitch-layer #directVideo[hidden]{display:none!important}
+.stream-source-controls{grid-template-columns:minmax(0,1fr) auto!important}
+.stream-source-controls .source-field{grid-column:1/-1}
+.stream-source-controls .stream-check{grid-column:auto}
+.source-field[hidden]{display:none!important}
+@media(min-width:901px){
+ body:not(.obs-preview) .screen.live-mode>.twitch-layer #directVideo{pointer-events:none!important}
+}
+body.obs-preview .screen.live-mode>.twitch-layer #directVideo{
+  display:block;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover;
+}
+html.obs-preview.obs-twitch-booting body #screen>.twitch-layer #directVideo,
+html.obs-preview.obs-twitch-playing body #screen>.twitch-layer #directVideo{
+  opacity:1!important;visibility:visible!important;
+}
