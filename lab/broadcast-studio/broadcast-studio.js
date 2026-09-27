@@ -40,7 +40,7 @@
   ];
   const data = { teams: [], players: [], playoffs: [] };
   const COMMENTATORS = {
-    mkine: { name: 'Marko “mkine” Mäkinen', image: '../../players/1DEFAULTBILDID.png' },
+    mkine: { name: 'Marko “mkine” Mäkinen', image: '' },
     flacken: { name: 'Peter “Flacken” Novara', image: '../../players/flacken.png' },
     wizrob: { name: 'Robert “Wizrob” Olovsson', image: '../../players/Wizrob.png' }
   };
@@ -107,7 +107,7 @@
     const people = ids.map(id => COMMENTATORS[id]).filter(Boolean);
     $("#openingCommentators").innerHTML = people.map(c =>
       '<div class="opening-commentator">' +
-      (c.image ? '<img src="' + esc(c.image) + '" alt="" onerror="this.style.display=\'none\'">' : '<div class="commentator-placeholder">MIC</div>') +
+      (c.image ? '<img src="' + esc(c.image) + '" alt="">' : '<div class="commentator-placeholder">MIC</div>') +
       '<div><small>'+esc(tx("commentator"))+'</small><b>' + esc(c.name) + '</b></div></div>'
     ).join("");
   }
@@ -529,6 +529,13 @@
   ["hs", "as", "headline", "subline", "person", "role"].forEach(id => $("#" + id).addEventListener("input", () => { renderMatch(); publishState(); }));
   ["commentator1","commentator2"].forEach(id => $("#" + id).addEventListener("change", () => { renderCommentators(); publishState(); }));
   $("#screen").addEventListener("error", event => {
+    if (event.target.matches?.(".opening-commentator > img")) {
+      const placeholder=document.createElement("div");
+      placeholder.className="commentator-placeholder";
+      placeholder.textContent="MIC";
+      event.target.replaceWith(placeholder);
+      return;
+    }
     if (event.target.tagName === "IMG") event.target.hidden = true;
   }, true);
   renderTeams();

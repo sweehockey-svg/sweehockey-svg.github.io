@@ -1606,3 +1606,101 @@ html[lang="de"] body:not(.obs-preview) .dock-head span{color:#f2c500!important}
 html[lang="de"] body:not(.obs-preview) #loadTwitch{
   border-color:#f2c500!important;background:#1b1510!important;color:#f2c500!important;
 }
+
+
+/* v122: complete regional accent pass. Remove remaining SCL-yellow bleed. */
+html[lang="fi"] body[data-theme] .scene-title small,
+html[lang="fi"] body[data-theme] .player>span,
+html[lang="fi"] body[data-theme] .vs strong,
+html[lang="fi"] body[data-theme] .role-head,
+html[lang="fi"] body[data-theme] .spotlight-copy h3,
+html[lang="fi"] body[data-theme] .spotlight-total b,
+html[lang="fi"] body[data-theme] .goalie-center-title,
+html[lang="fi"] body[data-theme] .goalie-row b:nth-child(-n+2),
+html[lang="fi"] body[data-theme] .goalie-row b:nth-last-child(-n+2),
+html[lang="fi"] body[data-theme] .key-center-title,
+html[lang="fi"] body[data-theme] .key-row b,
+html[lang="fi"] body[data-theme] .bt-row>b:last-child,
+html[lang="fi"] body[data-theme] .tc-row b,
+html[lang="fi"] body[data-theme] .scorer>strong,
+html[lang="fi"] body[data-theme] .scorer>em,
+html[lang="fi"] body[data-theme] .form-record strong,
+html[lang="fi"] body[data-theme] .off-big b,
+html[lang="fi"] body[data-theme] .off-top span small,
+html[lang="fi"] body[data-theme] .off-top strong,
+html[lang="fi"] body[data-theme] .lb-player>strong,
+html[lang="fi"] body[data-theme] .lb-player>em{
+  color:#5ba2f2!important;
+}
+html[lang="fi"] body[data-theme] .bt-head,
+html[lang="fi"] body[data-theme] .tc-cols,
+html[lang="fi"] body[data-theme] .goalie-columns,
+html[lang="fi"] body[data-theme] .key-columns{
+  background:#5ba2f2!important;color:#06182a!important;
+}
+html[lang="fi"] body[data-theme] .goalie-center-title,
+html[lang="fi"] body[data-theme] .key-center-title,
+html[lang="fi"] body[data-theme] .scorer-team,
+html[lang="fi"] body[data-theme] .form-team,
+html[lang="fi"] body[data-theme] .off-team,
+html[lang="fi"] body[data-theme] .lb-team{
+  border-color:#5ba2f2!important;
+}
+html[lang="fi"] body[data-theme] .goalie-row,
+html[lang="fi"] body[data-theme] .key-row,
+html[lang="fi"] body[data-theme] .tc-row{
+  border-bottom-color:rgba(91,162,242,.48)!important;
+}
+html[lang="fi"] body[data-theme] .bt-row.selected{background:rgba(91,162,242,.09)!important}
+html[lang="fi"] body[data-theme] .bt-row.selected .bt-team:before{background:#5ba2f2!important}
+html[lang="fi"] body[data-theme] .spotlight-stats div{border-left-color:#5ba2f2!important}
+html[lang="fi"] body:not(.obs-preview) .dock-head span{color:#70aff4!important}
+html[lang="fi"] body:not(.obs-preview) #loadTwitch{border-color:#397fc5!important;color:#bdddff!important;background:#0b2034!important}
+
+html[lang="de"] body[data-theme] .scene-title small,
+html[lang="de"] body[data-theme] .player>span,
+html[lang="de"] body[data-theme] .vs strong,
+html[lang="de"] body[data-theme] .role-head,
+html[lang="de"] body[data-theme] .spotlight-copy h3,
+html[lang="de"] body[data-theme] .spotlight-total b,
+html[lang="de"] body[data-theme] .goalie-center-title,
+html[lang="de"] body[data-theme] .goalie-row b:nth-child(-n+2),
+html[lang="de"] body[data-theme] .goalie-row b:nth-last-child(-n+2),
+html[lang="de"] body[data-theme] .key-center-title,
+html[lang="de"] body[data-theme] .key-row b,
+html[lang="de"] body[data-theme] .bt-row>b:last-child,
+html[lang="de"] body[data-theme] .tc-row b,
+html[lang="de"] body[data-theme] .scorer>strong,
+html[lang="de"] body[data-theme] .scorer>em,
+html[lang="de"] body[data-theme] .form-record strong,
+html[lang="de"] body[data-theme] .off-big b,
+html[lang="de"] body[data-theme] .off-top span small,
+html[lang="de"] body[data-theme] .off-top strong,
+html[lang="de"] body[data-theme] .lb-player>strong,
+html[lang="de"] body[data-theme] .lb-player>em{
+  color:#f2c500!important;
+}
+html[lang="de"] body[data-theme] .bt-head,
+html[lang="de"] body[data-theme] .tc-cols,
+html[lang="de"] body[data-theme] .goalie-columns,
+html[lang="de"] body[data-theme] .key-columns{
+  background:#f2c500!important;color:#0b0b0c!important;
+}
+html[lang="de"] body[data-theme] .goalie-center-title,
+html[lang="de"] body[data-theme] .key-center-title,
+html[lang="de"] body[data-theme] .scorer-team,
+html[lang="de"] body[data-theme] .form-team,
+html[lang="de"] body[data-theme] .off-team,
+html[lang="de"] body[data-theme] .lb-team{
+  border-color:#d91f2d!important;
+}
+html[lang="de"] body[data-theme] .goalie-row,
+html[lang="de"] body[data-theme] .key-row,
+html[lang="de"] body[data-theme] .tc-row{
+  border-bottom-color:rgba(217,31,45,.46)!important;
+}
+html[lang="de"] body[data-theme] .bt-row.selected{background:rgba(217,31,45,.10)!important}
+html[lang="de"] body[data-theme] .bt-row.selected .bt-team:before{background:#d91f2d!important}
+html[lang="de"] body[data-theme] .spotlight-stats div{border-left-color:#d91f2d!important}
+html[lang="de"] body:not(.obs-preview) .dock-head span{color:#f2c500!important}
+html[lang="de"] body:not(.obs-preview) #loadTwitch{border-color:#8b6f00!important;color:#f2c500!important;background:#17140b!important}
