@@ -815,3 +815,11 @@ body.obs-preview[data-theme="impact"] .screen{background:
 .forwards .role-info{justify-content:flex-start!important}
 .forwards .role-head{margin-top:10px!important;padding-top:0!important}
 .forwards .role-stat{padding:3px 0!important;min-height:21px!important}
+
+
+/* v94: Forward Battle polish only. Preserve geometry. */
+.forwards .role-team{font-size:12px!important;line-height:1.15!important;gap:6px!important}
+.forwards .role-team img{width:25px!important;height:25px!important}
+.forwards .role-head{margin-top:15px!important;margin-bottom:3px!important}
+.forwards .role-head span{line-height:1.1!important}
+.forwards .role-stat{border-top-color:rgba(255,255,255,.10)!important}
