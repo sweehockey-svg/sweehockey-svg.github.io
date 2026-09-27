@@ -756,3 +756,21 @@ body.obs-preview[data-theme="impact"] .screen{background:
 .offense .role-stat{padding:1px 0;min-height:16px;line-height:1}
 .offense .role-stat span{font-size:8px}
 .offense .role-stat b{font-size:clamp(10px,.9vw,14px)}
+
+
+/* v89: FORWARD BATTLE is .forwards, not .offense. Keep all five center rows visible. */
+.forwards{padding-top:96px!important}
+.forwards .scene-title{margin-bottom:8px!important}
+.forwards .scene-title b{font-size:clamp(38px,4vw,64px)!important;line-height:.95}
+.forwards .role-grid-six{height:calc(100% - 104px)!important;min-height:0!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+.forwards .role-card{min-height:0!important;overflow:hidden!important;grid-template-columns:42% 58%!important}
+.forwards .role-info{padding:6px 12px!important;justify-content:center!important;overflow:hidden!important}
+.forwards .role-team{gap:6px!important;line-height:1!important}
+.forwards .role-team img{width:23px!important;height:23px!important}
+.forwards .role-team small{font-size:9px!important}
+.forwards .role-info>strong{font-size:clamp(13px,1.22vw,20px)!important;line-height:1!important;margin:3px 0 4px!important}
+.forwards .role-head,.forwards .role-stat{grid-template-columns:minmax(0,1fr) 54px 60px!important;gap:5px!important}
+.forwards .role-head{font-size:7px!important;line-height:1!important;margin:0!important}
+.forwards .role-stat{padding:1px 0!important;min-height:17px!important;line-height:1!important}
+.forwards .role-stat span{font-size:8px!important;line-height:1!important}
+.forwards .role-stat b{font-size:clamp(10px,.95vw,15px)!important;line-height:1!important}
