@@ -976,3 +976,30 @@ body.obs-preview .preview-scale{display:contents}
  body:not(.obs-preview) .dock-note{display:block;margin-top:8px}
 }
 body.obs-preview .scene-dock,body.obs-preview .director-dock{display:none!important}
+
+
+/* v102: desktop controller uses two-column forms instead of wasteful full-width fields. */
+@media(min-width:901px){
+ body:not(.obs-preview) aside>.block:not(.theme-control):not(.lineup-control):not(.series-control){
+   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:10px;align-items:end
+ }
+ body:not(.obs-preview) aside>.block:not(.theme-control):not(.lineup-control):not(.series-control)>h3,
+ body:not(.obs-preview) aside>.block:not(.theme-control):not(.lineup-control):not(.series-control)>.control-note{
+   grid-column:1/-1
+ }
+ body:not(.obs-preview) aside>.block:not(.theme-control):not(.lineup-control):not(.series-control)>.twocol{
+   grid-column:1/-1
+ }
+ body:not(.obs-preview) .theme-control{display:grid;grid-template-columns:1fr 1fr;column-gap:10px;align-items:end}
+ body:not(.obs-preview) .theme-control>h3,
+ body:not(.obs-preview) .theme-control>.control-note{grid-column:1/-1}
+ body:not(.obs-preview) .theme-control>label{grid-column:1/2}
+ body:not(.obs-preview) .series-control{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:10px;align-items:end}
+ body:not(.obs-preview) .series-control>h3,
+ body:not(.obs-preview) .series-control>.series-results-toggle,
+ body:not(.obs-preview) .series-control>.series-result-inputs,
+ body:not(.obs-preview) .series-control>.control-note{grid-column:1/-1}
+ body:not(.obs-preview) .series-control>.twocol{grid-column:1/-1}
+ body:not(.obs-preview) .lineup-control #lineupEditors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10px}
+ body:not(.obs-preview) .lineup-control #lineupEditors>label{min-width:0}
+}
