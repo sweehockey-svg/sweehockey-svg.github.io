@@ -1333,3 +1333,57 @@ html.obs-preview.obs-twitch-playing body #screen>.scene.active{
   height:6px!important;
   margin-right:5px!important;
 }
+
+
+/* v120: Match Live compact top-right box, sized like the NHL scoreboard. */
+.screen.live-mode>.top{
+  left:auto!important;
+  right:3%!important;
+  top:3%!important;
+  width:26%!important;
+  height:7.2%!important;
+  min-height:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:10px!important;
+  padding:0 10px 0 12px!important;
+  background:linear-gradient(180deg,rgba(4,13,20,.92),rgba(4,13,20,.78))!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  border-bottom-color:rgba(255,255,255,.16)!important;
+  border-radius:2px!important;
+}
+.screen.live-mode>.top>.onair{
+  display:none!important;
+}
+.screen.live-mode>.top>div:nth-child(2){
+  order:1!important;
+  flex:1 1 auto!important;
+  min-width:0!important;
+  text-align:right!important;
+}
+.screen.live-mode>.top>.event-logo{
+  order:2!important;
+  width:42px!important;
+  height:42px!important;
+  flex:0 0 42px!important;
+  margin:0!important;
+}
+.screen.live-mode>.top strong{
+  display:block!important;
+  font-size:15px!important;
+  line-height:1.02!important;
+  letter-spacing:.035em!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.screen.live-mode>.top small{
+  display:block!important;
+  font-size:8px!important;
+  line-height:1.0!important;
+  margin-top:4px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
