@@ -823,3 +823,21 @@ body.obs-preview[data-theme="impact"] .screen{background:
 .forwards .role-head{margin-top:15px!important;margin-bottom:3px!important}
 .forwards .role-head span{line-height:1.1!important}
 .forwards .role-stat{border-top-color:rgba(255,255,255,.10)!important}
+
+
+/* v95: manual playoff series scene for between-game broadcast use */
+.series{align-items:center;justify-content:center;text-align:center;padding:8% 5% 6%!important}
+.series-kicker{font-size:clamp(15px,1.35vw,22px);font-weight:900;letter-spacing:.16em;color:var(--theme-accent,#f4b21b);margin-bottom:5px}
+.series-title{font-size:clamp(38px,4.2vw,70px);font-weight:1000;letter-spacing:-.045em;text-transform:uppercase;line-height:1;margin-bottom:34px}
+.series-board{width:100%;display:grid;grid-template-columns:1fr 320px 1fr;align-items:center;gap:34px}
+.series-team{display:flex;flex-direction:column;align-items:center;min-width:0}
+.series-team>img{width:150px;height:150px;object-fit:contain;filter:drop-shadow(0 14px 18px #0009);margin-bottom:14px}
+.series-team>b{font-size:clamp(21px,2vw,34px);font-weight:1000;line-height:1.05;max-width:100%;text-transform:uppercase}
+.series-score{display:grid;grid-template-columns:1fr 36px 1fr;align-items:center}
+.series-score strong{font-size:clamp(80px,9vw,145px);font-weight:1000;line-height:.85}
+.series-score>span{font-size:52px;font-weight:300;opacity:.5}
+.series-score small{grid-column:1/-1;font-size:12px;font-weight:900;letter-spacing:.2em;color:#ffffff88;margin-top:15px}
+.series-dots{display:flex;gap:9px;margin-top:20px;min-height:14px}
+.series-dots i{display:block;width:42px;height:7px;border-radius:10px;background:#ffffff22;border:1px solid #ffffff25}
+.series-dots i.won{background:var(--theme-accent,#f4b21b);border-color:var(--theme-accent,#f4b21b);box-shadow:0 0 14px color-mix(in srgb,var(--theme-accent,#f4b21b) 38%,transparent)}
+.series-next{margin-top:38px;padding:12px 26px;border:1px solid #ffffff20;background:#061521b8;font-size:13px;font-weight:900;letter-spacing:.16em}
