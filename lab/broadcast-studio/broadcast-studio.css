@@ -1252,3 +1252,38 @@ html.obs-preview.obs-twitch-playing body #screen>.scene.active{
   height:7px!important;
   margin-right:6px!important;
 }
+
+
+/* v118: Match Live top-right lockup.
+   Keep NHL's scoreboard area clear on the left; put match text immediately left of the SEC logo. */
+.screen.live-mode>.top{
+  left:30%!important;
+  right:2.2%!important;
+  top:2.2%!important;
+  height:8.2%!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  padding-left:0!important;
+}
+.screen.live-mode>.top>.onair{
+  order:1!important;
+  margin-left:0!important;
+  margin-right:auto!important;
+}
+.screen.live-mode>.top>div:nth-child(2){
+  order:2!important;
+  text-align:right!important;
+  min-width:0!important;
+}
+.screen.live-mode>.top>.event-logo{
+  order:3!important;
+  width:50px!important;
+  height:46px!important;
+  margin-left:4px!important;
+  flex:0 0 50px!important;
+}
+.screen.live-mode>.top>div:nth-child(2)>strong,
+.screen.live-mode>.top>div:nth-child(2)>small{
+  text-align:right!important;
+}
