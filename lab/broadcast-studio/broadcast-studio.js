@@ -515,6 +515,18 @@
  mute?.addEventListener("change",()=>{mounted="";mount(input?.value,mute.checked);window.__sehPublishBroadcastState?.()});
  window.addEventListener("seh:twitch-state",e=>apply(e.detail));
  if(window.__sehTwitchState)apply(window.__sehTwitchState);
+ if(OBS_MODE){
+   // OBS-safe fallback: applyRemoteState always writes the hidden channel input.
+   // Poll that canonical value directly so Twitch does not depend on CustomEvent timing.
+   const syncObsTwitch=()=>{
+     const raw=input?.value||window.__sehTwitchState?.twitchChannel||"";
+     const ch=parse(raw);
+     if(ch&&ch!==mounted){mounted="";host?.replaceChildren();mount(raw,true)}
+     else if(!ch&&mounted){mounted="";host?.replaceChildren();layer?.classList.remove("has-stream")}
+   };
+   syncObsTwitch();
+   setInterval(syncObsTwitch,500);
+ }
  const syncLiveMode=()=>screen?.classList.toggle("live-mode",!!screen?.querySelector(".scene.live.active"));
  screen?.querySelectorAll(".scene").forEach(s=>new MutationObserver(syncLiveMode).observe(s,{attributes:true,attributeFilter:["class"]}));
  syncLiveMode();
