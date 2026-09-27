@@ -501,7 +501,7 @@
  const source=$id("videoSource"),twitchInput=$id("twitchChannel"),hlsInput=$id("hlsUrl"),btn=$id("loadTwitch"),
        layer=$id("twitchLayer"),host=$id("twitchPlayer"),video=$id("directVideo"),status=$id("streamStatus"),
        show=$id("showTwitch"),mute=$id("muteTwitch"),screen=$id("screen");
- let mountedKey="",hls=null,directPlaying=false;
+ let mountedKey="",hls=null,directPlaying=false,activeTwitchChannel="",pendingTwitchChannel="";
 
  const parseTwitch=raw=>{let v=String(raw||"").trim();if(!v)return "";try{if(/^https?:\/\//i.test(v)){const u=new URL(v);return u.pathname.split("/").filter(Boolean)[0]||""}}catch(e){}return v.replace(/^@/,"").replace(/^www\.twitch\.tv\//i,"").replace(/^twitch\.tv\//i,"").split(/[/?#]/)[0].trim()};
  const setStatus=(t,ok=false)=>{if(OBS_MODE_LOCAL){document.documentElement.dataset.playback=t;console.info("[SEH Video]",t)}if(status){status.classList.toggle("ready",ok);const x=status.querySelector("span");if(x)x.textContent=t}};
@@ -509,7 +509,7 @@
  const obsPlaying=()=>{if(!OBS_MODE_LOCAL)return;document.documentElement.classList.remove("obs-twitch-booting");document.documentElement.classList.add("obs-twitch-playing")};
 
  const destroy=()=>{
-   clearTimeout(twitchResolveTimer);
+   clearTimeout(twitchResolveTimer);twitchResolveSeq++;pendingTwitchChannel="";activeTwitchChannel="";
    if(hls){try{hls.destroy()}catch(e){}hls=null}
    host?.replaceChildren();
    if(video){
@@ -525,7 +525,10 @@
  const resolveTwitchHls=async(raw,muted=true)=>{
    const channel=parseTwitch(raw);
    if(!channel){destroy();setStatus("OGILTIG TWITCH-KANAL / URL");return false}
+   if(channel===pendingTwitchChannel)return true;
+   if(channel===activeTwitchChannel&&video&&!video.hidden&&(hls||video.currentSrc))return true;
    lastTwitchRaw=raw;
+   pendingTwitchChannel=channel;
    const seq=++twitchResolveSeq;
    clearTimeout(twitchResolveTimer);
    setStatus("HÄMTAR TWITCH-STRÖM · "+channel.toUpperCase());
@@ -541,12 +544,15 @@
      }
      setStatus("TWITCH HLS KLAR · "+channel.toUpperCase(),true);
      const ok=mountDirect(data.hlsUrl,muted,{label:"TWITCH · "+channel.toUpperCase(),kind:"twitch"});
+     pendingTwitchChannel="";
+     if(ok)activeTwitchChannel=channel;
      if(ok&&data.expiresAt){
        const ms=Math.max(300000,Math.min(7200000,(Number(data.expiresAt)*1000-Date.now())-300000));
        twitchResolveTimer=setTimeout(()=>{if(lastTwitchRaw&&screen?.classList.contains("live-mode"))resolveTwitchHls(lastTwitchRaw,muted)},ms);
      }
      return ok;
    }catch(e){
+     if(seq===twitchResolveSeq)pendingTwitchChannel="";
      setStatus("TWITCH RESOLVER NÄTVERKSFEL");
      console.error("[SEH Video] Twitch resolver",e);
      return false;
