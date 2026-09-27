@@ -571,7 +571,7 @@
    video.onplaying=onPlaying;video.onpause=onPause;video.onstalled=()=>setStatus("DIREKTVIDEO BUFFRAR");video.onwaiting=()=>setStatus("DIREKTVIDEO BUFFRAR");
    video.onerror=()=>setStatus("VIDEO FEL · KONTROLLERA URL/CORS");
 
-   if(/\.m3u8(?:$|[?#])/i.test(url)&&window.Hls?.isSupported()){
+   if((meta.kind==="twitch"||/\.m3u8(?:$|[?#])/i.test(url))&&window.Hls?.isSupported()){
      hls=new Hls({lowLatencyMode:true,backBufferLength:30,liveSyncDurationCount:3});
      hls.loadSource(url);hls.attachMedia(video);
      hls.on(Hls.Events.MANIFEST_PARSED,()=>{setStatus("HLS LADDAD");tryDirectPlay()});
