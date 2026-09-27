@@ -1387,3 +1387,124 @@ html.obs-preview.obs-twitch-playing body #screen>.scene.active{
   overflow:hidden!important;
   text-overflow:ellipsis!important;
 }
+
+
+/* v121: regional broadcast skins.
+   FI/FCL = blue + white ice package. DE/GCL = black + red + gold package.
+   Layout and scene geometry stay shared. */
+
+/* ---------- FINLAND / FCL ---------- */
+html[lang="fi"] body[data-theme] .screen{
+  --theme-accent:#2f7ee6;
+  --theme-panel:#061b33ee;
+  --theme-line:#6aa8ef;
+  background:
+    radial-gradient(circle at 72% 20%,rgba(255,255,255,.11),transparent 28%),
+    radial-gradient(circle at 20% 82%,rgba(39,112,207,.20),transparent 34%),
+    linear-gradient(135deg,#07192c 0%,#0b3159 48%,#06182a 100%)!important;
+  border-color:#487fb9!important;
+}
+html[lang="fi"] body[data-theme] .texture{
+  opacity:.26!important;
+  background:
+    linear-gradient(118deg,transparent 0 44%,rgba(255,255,255,.16) 44.15%,transparent 44.45%),
+    repeating-linear-gradient(90deg,transparent 0 127px,rgba(255,255,255,.055) 128px,transparent 129px),
+    linear-gradient(180deg,rgba(255,255,255,.035),transparent 32%)!important;
+}
+html[lang="fi"] .opening h1 span,
+html[lang="fi"] .opening-match em,
+html[lang="fi"] .vs strong,
+html[lang="fi"] .period,
+html[lang="fi"] .statrows b,
+html[lang="fi"] .road-step strong,
+html[lang="fi"] .leader-card span,
+html[lang="fi"] .lower small{color:#5ba2f2!important}
+html[lang="fi"] .player,
+html[lang="fi"] .leader-card,
+html[lang="fi"] .scorer-side,
+html[lang="fi"] .lb-side,
+html[lang="fi"] .road-card{
+  background:linear-gradient(145deg,rgba(15,58,103,.94),rgba(5,23,42,.96))!important;
+  border-color:rgba(113,172,236,.30)!important;
+}
+html[lang="fi"] .lower{border-left-color:#2f7ee6!important;background:#071c31ee!important}
+html[lang="fi"] .bug{background:rgba(5,24,43,.82)!important;border-color:rgba(94,156,221,.28)!important}
+html[lang="fi"] .screen.live-mode>.top{
+  background:linear-gradient(180deg,rgba(7,33,60,.95),rgba(8,26,45,.84))!important;
+  border-color:rgba(113,172,236,.32)!important;
+  box-shadow:inset 0 -2px 0 rgba(255,255,255,.08)!important;
+}
+html[lang="fi"] body:not(.obs-preview)>header{background:#071521!important;border-bottom-color:#234e75!important}
+html[lang="fi"] body:not(.obs-preview) aside{background:linear-gradient(180deg,#081725,#06111d)!important;border-right-color:#234565!important}
+html[lang="fi"] body:not(.obs-preview) .workspace{background:radial-gradient(circle at 54% 12%,#0d2c49 0,#07131f 52%,#040b12 100%)!important}
+html[lang="fi"] body:not(.obs-preview) .brand>b{background:#fff!important;color:#175ea9!important}
+html[lang="fi"] body:not(.obs-preview) .live-dot:before{background:#5ba2f2!important}
+html[lang="fi"] body:not(.obs-preview) .control-hero span{color:#70aff4!important}
+html[lang="fi"] body:not(.obs-preview) .scene-grid button.active{
+  border-color:#5ba2f2!important;color:#dcecff!important;background:#0b2845!important;
+  box-shadow:inset 0 0 0 1px rgba(91,162,242,.18)!important;
+}
+html[lang="fi"] body:not(.obs-preview) select,
+html[lang="fi"] body:not(.obs-preview) input{background:#0b1d2d!important;border-color:#294c69!important}
+html[lang="fi"] body:not(.obs-preview) .obs-open:hover{border-color:#5ba2f2!important;color:#bdddff!important}
+
+/* ---------- GERMANY / GCL ---------- */
+html[lang="de"] body[data-theme] .screen{
+  --theme-accent:#f2c500;
+  --theme-panel:#100e0fee;
+  --theme-line:#8a262d;
+  background:
+    radial-gradient(circle at 76% 18%,rgba(224,31,46,.12),transparent 30%),
+    radial-gradient(circle at 20% 82%,rgba(242,197,0,.08),transparent 28%),
+    linear-gradient(135deg,#111214 0%,#090a0c 48%,#171011 100%)!important;
+  border-color:#5b2529!important;
+}
+html[lang="de"] body[data-theme] .texture{
+  opacity:.30!important;
+  background:
+    linear-gradient(118deg,transparent 0 44%,rgba(218,32,45,.26) 44.1%,rgba(242,197,0,.12) 44.25%,transparent 44.55%),
+    repeating-linear-gradient(90deg,transparent 0 127px,rgba(255,255,255,.03) 128px,transparent 129px),
+    linear-gradient(180deg,rgba(0,0,0,.10),transparent 28%)!important;
+}
+html[lang="de"] .opening h1 span,
+html[lang="de"] .opening-match em,
+html[lang="de"] .vs strong,
+html[lang="de"] .period,
+html[lang="de"] .statrows b,
+html[lang="de"] .road-step strong,
+html[lang="de"] .leader-card span,
+html[lang="de"] .lower small{color:#f2c500!important}
+html[lang="de"] .scene-title small,
+html[lang="de"] .opening-commentator small{color:#f2c500!important}
+html[lang="de"] .player,
+html[lang="de"] .leader-card,
+html[lang="de"] .scorer-side,
+html[lang="de"] .lb-side,
+html[lang="de"] .road-card{
+  background:linear-gradient(145deg,rgba(33,19,20,.96),rgba(9,10,12,.97))!important;
+  border-color:rgba(208,40,50,.28)!important;
+}
+html[lang="de"] .lower{border-left-color:#d82432!important;background:#111011ee!important}
+html[lang="de"] .bug{background:rgba(12,12,13,.88)!important;border-color:rgba(242,197,0,.22)!important}
+html[lang="de"] .screen.live-mode>.top{
+  background:linear-gradient(180deg,rgba(17,17,18,.96),rgba(11,11,12,.88))!important;
+  border-color:rgba(242,197,0,.24)!important;
+  box-shadow:inset 0 -2px 0 #c91d2a!important;
+}
+html[lang="de"] .onair i{background:#d91f2d!important;box-shadow:0 0 14px rgba(217,31,45,.75)!important}
+html[lang="de"] body:not(.obs-preview)>header{background:#0d0d0f!important;border-bottom-color:#492126!important}
+html[lang="de"] body:not(.obs-preview) aside{background:linear-gradient(180deg,#111113,#09090b)!important;border-right-color:#3d2024!important}
+html[lang="de"] body:not(.obs-preview) .workspace{background:radial-gradient(circle at 55% 12%,#221619 0,#0c0d0f 50%,#050506 100%)!important}
+html[lang="de"] body:not(.obs-preview) .brand>b{
+  background:linear-gradient(180deg,#f2c500 0 34%,#d91f2d 34% 67%,#111 67%)!important;
+  color:#fff!important;text-shadow:0 1px 2px #000!important;
+}
+html[lang="de"] body:not(.obs-preview) .live-dot:before{background:#d91f2d!important}
+html[lang="de"] body:not(.obs-preview) .control-hero span{color:#f2c500!important}
+html[lang="de"] body:not(.obs-preview) .scene-grid button.active{
+  border-color:#f2c500!important;color:#f2c500!important;background:#201817!important;
+  box-shadow:inset 3px 0 0 #d91f2d!important;
+}
+html[lang="de"] body:not(.obs-preview) select,
+html[lang="de"] body:not(.obs-preview) input{background:#141416!important;border-color:#402a2d!important}
+html[lang="de"] body:not(.obs-preview) .obs-open:hover{border-color:#f2c500!important;color:#f2c500!important}
