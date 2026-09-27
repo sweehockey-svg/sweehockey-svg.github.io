@@ -267,7 +267,7 @@
     else {
       rows = [["GP",stat(p.regular_skater_games),stat(p.playoff_skater_games)]];
       if (kind === "center") rows.push(["FO%",faceoffPct(p,"regular"),faceoffPct(p,"playoff")]);
-      rows.push(["G",stat(p.regular_goals),stat(p.playoff_goals)],["A",stat(p.regular_assists),stat(p.playoff_assists)],["P",stat(p.regular_points),stat(p.playoff_points)]);
+      rows.push(["G",stat(p.regular_goals),stat(p.playoff_goals)],["A",stat(p.regular_assists),stat(p.playoff_assists)],["P",stat(p.regular_points),stat(p.playoff_points)],["PIM",stat(p.regular_penalty_minutes),stat(p.playoff_penalty_minutes)]);
     }
     return '<div class="role-card">' + image(playerImage(p)) + '<div class="role-info"><div class="role-team">' + (logo(t)?'<img src="'+esc(logo(t))+'" alt="">':"") + '<small>'+esc(t.team_name_in_league)+'</small></div><strong>'+slot+' #'+esc(p.player_number ?? "")+' · '+esc(p.display_gamertag)+'</strong><div class="role-head"><i></i><b>GRUPP</b><b>SLUTSPEL</b></div>'+rows.map(r=>'<div class="role-stat"><span>'+r[0]+'</span><b>'+r[1]+'</b><b>'+r[2]+'</b></div>').join("")+'</div></div>';
   }
@@ -285,7 +285,7 @@
       .sort((x,y)=>(total(y.p.regular_points,y.p.playoff_points)??0)-(total(x.p.regular_points,x.p.playoff_points)??0))[0];
     if(!x) return '<div class="role-card empty"><span>INGEN SPELARE</span></div>';
     const p=x.p,t=selectedTeam(x.side), pts=total(p.regular_points,p.playoff_points), goals=total(p.regular_goals,p.playoff_goals), assists=total(p.regular_assists,p.playoff_assists);
-    return '<div class="spotlight-player">'+image(playerImage(p))+'<div class="spotlight-copy"><div class="eyebrow">PLAYER SPOTLIGHT</div><div class="spotlight-team">'+(logo(t)?'<img src="'+esc(logo(t))+'" alt="">':"")+'<span>'+esc(t.team_name_in_league)+'</span></div><h2>'+esc(p.display_gamertag)+'</h2><h3>'+x.slot+' · #'+esc(p.player_number??"")+'</h3><div class="spotlight-total"><b>'+stat(pts)+'</b><span>POÄNG TOTALT</span></div><div class="spotlight-stats"><div><b>'+stat(goals)+'</b><span>MÅL</span></div><div><b>'+stat(assists)+'</b><span>ASSISTS</span></div><div><b>'+stat(p.regular_points)+'</b><span>GRUPPSPEL P</span></div><div><b>'+stat(p.playoff_points)+'</b><span>SLUTSPEL P</span></div></div></div></div>';
+    return '<div class="spotlight-player">'+image(playerImage(p))+'<div class="spotlight-copy"><div class="eyebrow">PLAYER SPOTLIGHT</div><div class="spotlight-team">'+(logo(t)?'<img src="'+esc(logo(t))+'" alt="">':"")+'<span>'+esc(t.team_name_in_league)+'</span></div><h2>'+esc(p.display_gamertag)+'</h2><h3>'+x.slot+' · #'+esc(p.player_number??"")+'</h3><div class="spotlight-total"><b>'+stat(pts)+'</b><span>POÄNG TOTALT</span></div><div class="spotlight-stats"><div><b>'+stat(goals)+'</b><span>MÅL</span></div><div><b>'+stat(assists)+'</b><span>ASSISTS</span></div><div><b>'+stat(p.regular_points)+'</b><span>GRUPPSPEL P</span></div><div><b>'+stat(p.playoff_points)+'</b><span>SLUTSPEL P</span></div><div><b>'+stat(total(p.regular_penalty_minutes,p.playoff_penalty_minutes))+'</b><span>PIM TOTALT</span></div></div></div></div>';
   }
   function renderRoleMatchups() {
     $("#forwardsGrid").innerHTML = ["home","away"].flatMap(side=>["LW","C","RW"].map(slot=>matchupCard(side,slot,slot==="C"?"center":"skater"))).join("");
