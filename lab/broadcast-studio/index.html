@@ -37,6 +37,14 @@ a.obs{border-color:#8f6a0d;color:var(--yellow);background:#17170e}
 .path{margin-top:10px;color:#607786;font:10px/1.4 Consolas,monospace;word-break:break-all}
 .footer{margin-top:22px;padding-top:16px;border-top:1px solid #182935;color:#5f7686;font-size:10px;text-align:center}
 @media(max-width:700px){body{padding:18px}.grid{grid-template-columns:1fr}.actions{grid-template-columns:1fr}.card{padding:17px}}
+.data-panel{margin-top:22px;padding:18px;background:linear-gradient(180deg,rgba(10,24,35,.97),rgba(6,16,24,.97));border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 38px rgba(0,0,0,.18)}
+.data-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding-bottom:13px;margin-bottom:13px;border-bottom:1px solid #1b2d39}
+.data-head span{display:block;color:var(--yellow);font-size:9px;font-weight:950;letter-spacing:.18em}.data-head h2{margin:4px 0 2px;font-size:20px}.data-head p{margin:0;color:var(--muted);font-size:11px}
+.auth-state{flex:0 0 auto;padding:7px 9px;border:1px solid #304654;border-radius:7px;color:#8da1af;font-size:9px;font-weight:900;letter-spacing:.08em}.auth-state.ok{border-color:#285f45;color:#6dd5a1;background:#0b2118}.auth-state.bad{border-color:#65452d;color:#d9a06e;background:#20150e}
+.sync-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.sync-card{padding:11px;border:1px solid #243744;border-radius:9px;background:#081722}.sync-card strong{display:block;font-size:13px}.sync-meta{min-height:28px;margin-top:4px;color:#718797;font-size:9px;line-height:1.45}
+.sync-card button{width:100%;min-height:38px;margin-top:9px;border:1px solid #365064;border-radius:7px;background:#0c1d29;color:#edf4f8;font-size:9px;font-weight:950;letter-spacing:.055em;cursor:pointer}.sync-card button:hover{border-color:#6b879a;background:#102634}.sync-card button:disabled{opacity:.45;cursor:not-allowed}.sync-card button.running{border-color:#8f6a0d;color:var(--yellow);background:#17170e}.sync-card.all{border-color:#705817}
+.sync-note{margin-top:10px;color:#627888;font-size:9px}
+@media(max-width:900px){.sync-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.data-head{align-items:flex-start;flex-direction:column}.sync-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -69,7 +77,23 @@ a.obs{border-color:#8f6a0d;color:var(--yellow);background:#17170e}
       <div class="path">/lab/broadcast-studio/en/?obs=1</div>
     </article>
   </section>
+  <section class="data-panel" aria-labelledby="syncTitle">
+    <div class="data-head">
+      <div><span>ADMIN · DATA</span><h2 id="syncTitle">Uppdatera ligadata</h2><p>Hämtar hela lag och trupper direkt från SportsGamer i read-only-läge.</p></div>
+      <div class="auth-state" id="authState">KONTROLLERAR ADMIN…</div>
+    </div>
+    <div class="sync-grid">
+      <div class="sync-card"><strong>SCL 27</strong><div class="sync-meta" id="meta-scl">Laddar status…</div><button data-sync="527">UPPDATERA SCL</button></div>
+      <div class="sync-card"><strong>FCL 27</strong><div class="sync-meta" id="meta-fcl">Laddar status…</div><button data-sync="529">UPPDATERA FCL</button></div>
+      <div class="sync-card"><strong>GCL 13</strong><div class="sync-meta" id="meta-gcl">Laddar status…</div><button data-sync="524,525,526">UPPDATERA GCL</button></div>
+      <div class="sync-card"><strong>WECL</strong><div class="sync-meta" id="meta-wecl">Laddar status…</div><button data-sync="523">UPPDATERA WECL</button></div>
+      <div class="sync-card all"><strong>Alla ligor</strong><div class="sync-meta" id="meta-all">SCL · FCL · GCL · WECL</div><button data-sync="523,524,525,526,527,529">UPPDATERA ALLA</button></div>
+    </div>
+    <div class="sync-note" id="syncNote">Synkknapparna kräver ett inloggat adminkonto. Själva sidan låser vi till admins senare.</div>
+  </section>
   <div class="footer">Broadcast Studio · dold testmiljö</div>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="launcher-admin.js?v=20260927-1"></script>
 </body>
 </html>

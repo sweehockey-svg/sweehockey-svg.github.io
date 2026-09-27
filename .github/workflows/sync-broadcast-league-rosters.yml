@@ -1,8 +1,19 @@
 name: Sync Broadcast Studio league rosters
-run-name: Broadcast rosters · ${{ github.event_name }}
+run-name: Broadcast rosters · ${{ inputs.request_id || github.event_name }}
 
 on:
   workflow_dispatch:
+    inputs:
+      request_id:
+        description: Request id from Broadcast Studio
+        required: false
+        default: manual
+        type: string
+      league_ids:
+        description: SportsGamer league IDs, comma-separated
+        required: false
+        default: '523,524,525,526,527,529'
+        type: string
   push:
     branches: [main]
     paths:
@@ -18,14 +29,43 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - id: matrix
+        env:
+          REQUESTED: ${{ inputs.league_ids || '523,524,525,526,527,529' }}
+        run: |
+          python - <<'PY'
+          import json, os
+          allowed={523,524,525,526,527,529}
+          raw=os.environ.get("REQUESTED","")
+          ids=[]
+          for part in raw.replace(";",",").replace(" ",",").split(","):
+              if not part:
+                  continue
+              value=int(part)
+              if value not in allowed:
+                  raise SystemExit(f"Unsupported league id: {value}")
+              if value not in ids:
+                  ids.append(value)
+          if not ids:
+              raise SystemExit("No league ids selected")
+          with open(os.environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as fh:
+              fh.write("matrix="+json.dumps(ids,separators=(",",":"))+"\n")
+          PY
+
   sync:
+    needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       max-parallel: 1
       fail-fast: false
       matrix:
-        league_id: [523, 524, 525, 526, 529]
+        league_id: ${{ fromJson(needs.prepare.outputs.matrix) }}
 
     env:
       PGCONNECT_TIMEOUT: 20
