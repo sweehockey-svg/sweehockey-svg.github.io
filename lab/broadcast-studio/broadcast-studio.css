@@ -1058,3 +1058,12 @@ body.obs-preview .scene.live .live-safe{display:none!important}
 .screen.live-mode>.bug{background:rgba(4,13,20,.72);padding:5px 8px;border-radius:3px}
 body:not(.obs-preview) .screen.live-mode{box-shadow:none!important}
 body:not(.obs-preview) .preview-scale:has(.screen.live-mode){background:#02070b}
+
+
+/* v107: Match Live owns its video layer in OBS too. */
+body.obs-preview .twitch-layer{display:block!important;position:absolute;inset:0;z-index:0;background:#000;overflow:hidden}
+body.obs-preview #twitchPlayer,body.obs-preview #twitchPlayer iframe{position:absolute;inset:0;width:100%!important;height:100%!important;border:0}
+body.obs-preview .screen{position:relative}
+body.obs-preview .screen>.texture,body.obs-preview .screen>.top,body.obs-preview .screen>.scene,body.obs-preview .screen>.bug{position:absolute;z-index:2}
+body.obs-preview .screen.live-mode{background:transparent!important}
+body.obs-preview .screen:not(.live-mode) .twitch-layer{display:none!important}
