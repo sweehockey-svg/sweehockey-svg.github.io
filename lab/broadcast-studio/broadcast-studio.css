@@ -1130,3 +1130,22 @@ html.obs-preview.obs-twitch-playing body #screen>.scene.active{
   opacity:1!important;
   visibility:visible!important;
 }
+
+
+/* v113: in OBS Match Live, never place the full-size transparent live scene above Twitch.
+   The scene has no visible OBS content, but it covers most of the iframe and can trigger
+   Chromium/Twitch occlusion behavior. Keep only the small visible broadcast chrome above video. */
+html.obs-preview body #screen.live-mode>.scene.live,
+html.obs-preview.obs-twitch-playing body #screen.live-mode>.scene.live,
+html.obs-preview.obs-twitch-booting body #screen.live-mode>.scene.live{
+  display:none!important;
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+html.obs-preview.obs-twitch-playing body #screen.live-mode>.top,
+html.obs-preview.obs-twitch-playing body #screen.live-mode>.bug{
+  display:flex!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
