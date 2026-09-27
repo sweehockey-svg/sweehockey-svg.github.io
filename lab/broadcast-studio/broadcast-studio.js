@@ -531,6 +531,22 @@
 })();
 
 
+/* v69: load the saved Twitch feed in OBS when Match Live is active. */
+(()=>{
+ const host=$("#twitchPlayer"),layer=$("#twitchLayer");
+ const parse=(raw)=>{let v=(raw||"").trim();if(!v)return "";try{if(/^https?:\/\//i.test(v)){const u=new URL(v);return u.pathname.split("/").filter(Boolean)[0]||""}}catch(e){}return v.replace(/^@/,"").split(/[/?#]/)[0]};
+ const saved=()=>{try{return parse(localStorage.getItem("sehBroadcastTwitch")||"")}catch(e){return ""}};
+ const mount=()=>{
+   if(!OBS_MODE||!host||host.querySelector("iframe"))return;
+   const channel=saved(); if(!channel)return;
+   const qs=new URLSearchParams({channel,autoplay:"true",muted:"true"});
+   [location.hostname,"svenskehockey.se","www.svenskehockey.se"].filter((v,i,a)=>v&&a.indexOf(v)===i).forEach(x=>qs.append("parent",x));
+   const f=document.createElement("iframe");f.src="https://player.twitch.tv/?"+qs;f.title="Twitch matchstream";f.allow="autoplay; fullscreen";f.allowFullscreen=true;
+   host.replaceChildren(f);layer?.classList.add("has-stream");
+ };
+ if(OBS_MODE){mount();setInterval(mount,3000)}
+})();
+
 /* v67: make Match Live switch the broadcast canvas into transparent overlay mode. */
 (()=>{
  const screen=document.getElementById("screen");
