@@ -501,7 +501,7 @@
  const source=$id("videoSource"),twitchInput=$id("twitchChannel"),hlsInput=$id("hlsUrl"),btn=$id("loadTwitch"),
        layer=$id("twitchLayer"),host=$id("twitchPlayer"),video=$id("directVideo"),status=$id("streamStatus"),
        show=$id("showTwitch"),mute=$id("muteTwitch"),screen=$id("screen");
- let mountedKey="",hls=null,directPlaying=false,activeTwitchChannel="",pendingTwitchChannel="";
+ let mountedKey="",hls=null,directPlaying=false,activeTwitchChannel="",pendingTwitchChannel="",liveWatchTimer=0,lastVideoTime=0,lastVideoProgressAt=0;
 
  const parseTwitch=raw=>{let v=String(raw||"").trim();if(!v)return "";try{if(/^https?:\/\//i.test(v)){const u=new URL(v);return u.pathname.split("/").filter(Boolean)[0]||""}}catch(e){}return v.replace(/^@/,"").replace(/^www\.twitch\.tv\//i,"").replace(/^twitch\.tv\//i,"").split(/[/?#]/)[0].trim()};
  const setStatus=(t,ok=false)=>{if(OBS_MODE_LOCAL){document.documentElement.dataset.playback=t;console.info("[SEH Video]",t)}if(status){status.classList.toggle("ready",ok);const x=status.querySelector("span");if(x)x.textContent=t}};
@@ -509,7 +509,7 @@
  const obsPlaying=()=>{if(!OBS_MODE_LOCAL)return;document.documentElement.classList.remove("obs-twitch-booting");document.documentElement.classList.add("obs-twitch-playing")};
 
  const destroy=()=>{
-   clearTimeout(twitchResolveTimer);twitchResolveSeq++;pendingTwitchChannel="";activeTwitchChannel="";
+   clearTimeout(twitchResolveTimer);clearInterval(liveWatchTimer);liveWatchTimer=0;lastVideoTime=0;lastVideoProgressAt=0;twitchResolveSeq++;pendingTwitchChannel="";activeTwitchChannel="";
    if(hls){try{hls.destroy()}catch(e){}hls=null}
    host?.replaceChildren();
    if(video){
@@ -572,15 +572,37 @@
    video.hidden=false;
    video.autoplay=true;video.playsInline=true;video.preload="auto";video.controls=false;
    video.muted=OBS_MODE_LOCAL?false:!!muted;
-   const onPlaying=()=>{directPlaying=true;obsPlaying();setStatus((meta.label||"DIREKTVIDEO")+" SPELAR",true)};
+   const onPlaying=()=>{directPlaying=true;lastVideoTime=video.currentTime||0;lastVideoProgressAt=Date.now();obsPlaying();setStatus((meta.label||"DIREKTVIDEO")+" SPELAR",true)};
    const onPause=()=>{directPlaying=false;if(screen?.classList.contains("live-mode"))setTimeout(tryDirectPlay,150)};
    video.onplaying=onPlaying;video.onpause=onPause;video.onstalled=()=>setStatus("DIREKTVIDEO BUFFRAR");video.onwaiting=()=>setStatus("DIREKTVIDEO BUFFRAR");
    video.onerror=()=>setStatus("VIDEO FEL · KONTROLLERA URL/CORS");
 
    if((meta.kind==="twitch"||/\.m3u8(?:$|[?#])/i.test(url))&&window.Hls?.isSupported()){
-     hls=new Hls({lowLatencyMode:true,backBufferLength:30,liveSyncDurationCount:3});
+     hls=new Hls({lowLatencyMode:false,backBufferLength:15,maxBufferLength:18,maxMaxBufferLength:30,liveSyncDurationCount:3,liveMaxLatencyDurationCount:8,highBufferWatchdogPeriod:2,nudgeOffset:.1,nudgeMaxRetry:10});
      hls.loadSource(url);hls.attachMedia(video);
      hls.on(Hls.Events.MANIFEST_PARSED,()=>{setStatus("HLS LADDAD");tryDirectPlay()});
+     if(meta.kind==="twitch"){
+       const recoverLive=()=>{
+         if(!hls||!video||video.hidden||!screen?.classList.contains("live-mode"))return;
+         const now=Date.now(),current=Number(video.currentTime||0);
+         if(current>lastVideoTime+.08){lastVideoTime=current;lastVideoProgressAt=now;return}
+         if(!lastVideoProgressAt)lastVideoProgressAt=now;
+         if(now-lastVideoProgressAt<4500)return;
+         const live=Number(hls.liveSyncPosition);
+         setStatus("TWITCH ÅTERHÄMTAR LIVE");
+         try{
+           if(Number.isFinite(live)&&live>0&&Math.abs(live-current)>1.5)video.currentTime=Math.max(0,live-1);
+           hls.startLoad(-1);
+           const p=video.play();if(p&&typeof p.catch==="function")p.catch(()=>{});
+         }catch(e){console.warn("[SEH HLS] live recover",e)}
+         lastVideoTime=Number(video.currentTime||0);lastVideoProgressAt=now;
+       };
+       clearInterval(liveWatchTimer);
+       liveWatchTimer=setInterval(recoverLive,1500);
+       const softRecover=()=>setTimeout(recoverLive,350);
+       video.onstalled=()=>{setStatus("TWITCH BUFFRAR");softRecover()};
+       video.onwaiting=()=>{setStatus("TWITCH BUFFRAR");softRecover()};
+     }
      hls.on(Hls.Events.ERROR,(_,data)=>{
        if(!data?.fatal)return;
        const detail=String(data?.details||data?.type||"okänt");
