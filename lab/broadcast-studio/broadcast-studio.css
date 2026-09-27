@@ -1027,3 +1027,13 @@ body.obs-preview .scene-dock,body.obs-preview .director-dock{display:none!import
  body:not(.obs-preview) .stream-status.ready i{background:#4fc47a;box-shadow:0 0 9px #4fc47a88}
 }
 body.obs-preview .twitch-layer,body.obs-preview .stream-dock{display:none!important}
+
+
+/* v104: preview wrapper must keep its 16:9 height inside flex workspace. */
+@media(min-width:901px){
+ body:not(.obs-preview) .preview-shell{flex:0 0 auto!important;min-height:338.4px!important;height:338.4px!important;box-sizing:border-box}
+ body:not(.obs-preview) .preview-scale{flex:none!important;display:block!important}
+}
+@media(min-width:901px) and (max-width:1300px){
+ body:not(.obs-preview) .preview-shell{min-height:277.2px!important;height:277.2px!important}
+}
