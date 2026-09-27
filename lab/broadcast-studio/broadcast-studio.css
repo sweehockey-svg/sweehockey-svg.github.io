@@ -865,3 +865,33 @@ body.obs-preview[data-theme="impact"] .screen{background:
 .series-result-inputs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .series-result-inputs label{margin:2px 0}
 .series-result-inputs input{width:100%;min-width:0;padding:8px}
+
+
+/* v98: Director-first control desk. Preview is deliberately compact. */
+@media(min-width:901px){
+  body:not(.obs-preview){height:100vh;overflow:hidden;background:#05090e}
+  body:not(.obs-preview) header{height:58px;padding:0 20px;background:#080e14;border-bottom-color:#1b2731}
+  body:not(.obs-preview) main{height:calc(100vh - 58px);min-height:0;grid-template-columns:minmax(560px,46vw) minmax(0,1fr)}
+  body:not(.obs-preview) aside{height:100%;overflow-y:auto;padding:18px 22px 50px;background:linear-gradient(180deg,#091119,#070d13);border-right:1px solid #22303b;scrollbar-width:thin;scrollbar-color:#334655 #091119}
+  body:not(.obs-preview) .workspace{height:100%;overflow-y:auto;padding:22px 28px;background:radial-gradient(circle at 50% 12%,#101c26 0,#070c11 54%,#05080c 100%)}
+  body:not(.obs-preview) .control-hero{padding:4px 2px 18px;margin-bottom:16px;border-bottom:1px solid #1f2b35}
+  body:not(.obs-preview) .control-hero span{display:block;color:#f4b21b;font-size:9px;font-weight:950;letter-spacing:.2em}
+  body:not(.obs-preview) .control-hero strong{display:block;margin-top:3px;font-size:22px;letter-spacing:-.02em}
+  body:not(.obs-preview) .control-hero small{display:block;margin-top:2px;color:#728392;font-size:10px}
+  body:not(.obs-preview) .block{padding:0 0 16px;margin-bottom:16px}
+  body:not(.obs-preview) .block h3{margin:0 0 9px;font-size:9px}
+  body:not(.obs-preview) .scene-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  body:not(.obs-preview) .scene-grid button{min-width:0;padding:9px 8px;border-radius:6px;font-size:11px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body:not(.obs-preview) label{margin:8px 0}
+  body:not(.obs-preview) select,body:not(.obs-preview) input{padding:8px 9px;border-radius:6px}
+  body:not(.obs-preview) .preview-toolbar{width:min(100%,760px);display:flex;align-items:center;justify-content:space-between;margin:0 auto 12px}
+  body:not(.obs-preview) .preview-toolbar span{display:block;color:#728392;font-size:8px;font-weight:950;letter-spacing:.2em}
+  body:not(.obs-preview) .preview-toolbar strong{display:block;margin-top:2px;font-size:11px;letter-spacing:.06em}
+  body:not(.obs-preview) .obs-open{display:inline-flex;align-items:center;padding:9px 12px;border:1px solid #314555;border-radius:6px;background:#0b151e;color:#dce7ef;text-decoration:none;font-size:9px;font-weight:950;letter-spacing:.08em}
+  body:not(.obs-preview) .obs-open:hover{border-color:#f4b21b;color:#f4b21b}
+  body:not(.obs-preview) .preview-shell{width:min(100%,760px);margin:0 auto;padding:10px;background:#090f15;border:1px solid #1f2c36;border-radius:10px;box-shadow:0 18px 45px #0008}
+  body:not(.obs-preview) .preview-shell .screen{width:100%;max-width:none;box-shadow:none}
+  body:not(.obs-preview) .hint{width:min(100%,760px);margin:9px auto 0;text-align:center;font-size:9px;color:#586977}
+}
+body.obs-preview .control-hero,body.obs-preview .preview-toolbar{display:none!important}
+body.obs-preview .preview-shell{display:contents}
