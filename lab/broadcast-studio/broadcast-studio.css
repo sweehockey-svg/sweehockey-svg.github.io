@@ -1174,3 +1174,45 @@ html.obs-preview.obs-twitch-playing body #screen>.twitch-layer #directVideo{
 
 /* v115: Twitch resolver status/UI */
 .stream-dock code{font:inherit;color:#c9d9e6;background:#0a151e;border:1px solid #263845;border-radius:4px;padding:1px 4px}
+
+
+/* v116: OBS output is literally the same 1280x720 program-preview canvas.
+   Only the surrounding controller UI is removed and the complete canvas is scaled to the viewport. */
+html.obs-preview,html.obs-preview body{
+  margin:0!important;padding:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:#000!important;
+}
+body.obs-preview>header,
+body.obs-preview aside,
+body.obs-preview .preview-toolbar,
+body.obs-preview .hint,
+body.obs-preview .scene-dock,
+body.obs-preview .director-dock,
+body.obs-preview .stream-dock{
+  display:none!important;
+}
+body.obs-preview main,
+body.obs-preview .workspace,
+body.obs-preview .preview-shell,
+body.obs-preview .preview-scale{
+  position:relative!important;
+  width:100vw!important;height:100vh!important;max-width:none!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  background:#000!important;overflow:hidden!important;
+}
+body.obs-preview .preview-scale>.screen{
+  position:absolute!important;
+  left:50%!important;top:50%!important;
+  width:1280px!important;height:720px!important;
+  min-width:1280px!important;min-height:720px!important;
+  max-width:none!important;
+  margin:0!important;
+  transform:translate(-50%,-50%) scale(var(--obs-preview-scale,1))!important;
+  transform-origin:center center!important;
+}
+/* Never apply the old OBS boot/reveal masking. Preview and output now share the same composition. */
+html.obs-preview.obs-twitch-booting body #screen>:not(#twitchLayer),
+html.obs-preview.obs-twitch-playing body #screen>.top,
+html.obs-preview.obs-twitch-playing body #screen>.bug,
+html.obs-preview.obs-twitch-playing body #screen>.scene.active{
+  opacity:revert!important;visibility:revert!important;
+}
