@@ -1095,3 +1095,25 @@ body.obs-preview .screen.live-mode>.twitch-layer.has-stream .stream-empty{displa
 body.obs-preview .screen.live-mode>.twitch-layer #twitchPlayer{display:block!important;position:absolute!important;inset:0!important;z-index:1!important}
 body.obs-preview .screen.live-mode>.twitch-layer iframe{display:block!important;position:absolute!important;inset:0!important;z-index:1!important;width:100%!important;height:100%!important;opacity:1!important;visibility:visible!important}
 body.obs-preview .screen.live-mode>.twitch-layer{z-index:0!important}
+
+/* OBS composes an unobscured Twitch source below a separate graphics source. */
+html.obs-overlay.obs-live,
+html.obs-overlay.obs-live body,
+html.obs-overlay.obs-live body main,
+html.obs-overlay.obs-live body .workspace,
+html.obs-overlay.obs-live body .preview-shell,
+html.obs-overlay.obs-live body .preview-scale,
+html.obs-overlay.obs-live body #screen{background:transparent!important}
+body.obs-overlay #screen>.twitch-layer{display:none!important}
+html.obs-overlay.obs-live body #screen>.texture{display:none!important}
+html.obs-video,
+html.obs-video body,
+html.obs-video body main,
+html.obs-video body .workspace,
+html.obs-video body #screen{background:#000!important}
+body.obs-video #screen>:not(#twitchLayer),
+body.obs-video #screen::before,
+body.obs-video #screen::after{display:none!important}
+body.obs-video #screen>.twitch-layer.is-hidden,
+body.obs-video #screen>.twitch-layer .stream-empty{display:none!important}
+body:not(.obs-preview) #screen>.twitch-layer.is-hidden{display:none!important}
