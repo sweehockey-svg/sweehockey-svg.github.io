@@ -1067,3 +1067,15 @@ body.obs-preview .screen{position:relative}
 body.obs-preview .screen>.texture,body.obs-preview .screen>.top,body.obs-preview .screen>.scene,body.obs-preview .screen>.bug{position:absolute;z-index:2}
 body.obs-preview .screen.live-mode{background:transparent!important}
 body.obs-preview .screen:not(.live-mode) .twitch-layer{display:none!important}
+
+
+/* v108: Twitch layer lives inside the 1280x720 broadcast canvas.
+   It must fill the output in OBS and sit below every graphic layer. */
+.screen>.twitch-layer{position:absolute!important;inset:0!important;z-index:0!important;width:100%!important;height:100%!important;background:#000;overflow:hidden}
+.screen>.twitch-layer #twitchPlayer,.screen>.twitch-layer iframe{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;border:0!important}
+.screen>.twitch-layer .stream-empty{position:absolute;inset:0;z-index:0}
+.screen>.texture,.screen>.top,.screen>.scene,.screen>.bug{z-index:2}
+body:not(.obs-preview) .screen:not(.live-mode)>.twitch-layer,
+body.obs-preview .screen:not(.live-mode)>.twitch-layer{display:none!important}
+body:not(.obs-preview) .screen.live-mode>.twitch-layer,
+body.obs-preview .screen.live-mode>.twitch-layer{display:block!important}
