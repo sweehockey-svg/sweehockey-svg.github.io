@@ -363,7 +363,7 @@
     document.querySelectorAll("[data-scene]").forEach(x=>x.classList.toggle("active",x.dataset.scene===next&&(!x.dataset.lineupSide||x.dataset.lineupSide===$("#lineupSide").value)));
     activeScene=next;
     if(!target)return;
-    const screen=$("#screen");
+    const screen=$("#screen");screen?.classList.toggle("live-mode",next==="live");
     clearTimeout(sceneTransitionTimer);
     clearTimeout(lineupTransitionTimer);
     screen.querySelectorAll(".lineup-transition-old").forEach(x=>x.remove());
