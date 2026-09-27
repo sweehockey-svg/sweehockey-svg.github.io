@@ -490,23 +490,41 @@
 
 
 
-/* v66: Twitch feed for studio preview. Uses official iframe player and an explicit Match Live scene. */
+/* v68: Twitch feed. Robust URL parsing + correct parent chain for official embed. */
 (()=>{
  if(OBS_MODE)return;
  const channelEl=$("#twitchChannel"),layer=$("#twitchLayer"),status=$("#streamStatus"),show=$("#showTwitch"),mute=$("#muteTwitch"),host=$("#twitchPlayer");
- const channelFrom=(v)=>{v=(v||"").trim();if(!v)return "";try{if(/^https?:\/\//i.test(v)){const u=new URL(v);const hn=u.hostname.replace(/^www\./,"");if(hn==="twitch.tv"||hn.endsWith(".twitch.tv"))return u.pathname.split("/").filter(Boolean)[0]||""}}catch(e){}return v.replace(/^@/,"").replace(/\s/g,"")};
+ const channelFrom=(raw)=>{
+   let v=(raw||"").trim(); if(!v)return "";
+   v=v.replace(/^https?:\\\/\\\//i,"https://");
+   try{
+     if(/^https?:\/\//i.test(v)){
+       const u=new URL(v),hn=u.hostname.replace(/^www\./,"").toLowerCase();
+       if(hn==="twitch.tv"||hn.endsWith(".twitch.tv"))return u.pathname.split("/").filter(Boolean)[0]||"";
+     }
+   }catch(e){}
+   return v.replace(/^@/,"").replace(/\s/g,"").replace(/^www\.twitch\.tv\//i,"").replace(/^twitch\.tv\//i,"").split(/[/?#]/)[0];
+ };
  const setStatus=(txt,ready=false)=>{if(!status)return;status.classList.toggle("ready",ready);const s=status.querySelector("span");if(s)s.textContent=txt};
  const load=()=>{
-  const channel=channelFrom(channelEl?.value); if(!channel){setStatus("ANGE EN TWITCH-KANAL");return}
-  const parent=location.hostname||"www.svenskehockey.se";
-  const src="https://player.twitch.tv/?channel="+encodeURIComponent(channel)+"&parent="+encodeURIComponent(parent)+"&autoplay=true&muted="+(mute?.checked!==false?"true":"false");
-  if(host)host.innerHTML='<iframe title="Twitch matchstream" src="'+src+'" width="1280" height="720" allow="autoplay; fullscreen" allowfullscreen></iframe>';
-  layer?.classList.add("has-stream"); layer?.classList.toggle("is-hidden",show?.checked===false);
-  setStatus("STREAM LADDAD · "+channel.toUpperCase(),true);
-  try{localStorage.setItem("sehBroadcastTwitch",channel)}catch(e){}
+   const channel=channelFrom(channelEl?.value);
+   if(!channel){setStatus("OGILTIG TWITCH-KANAL / URL");return}
+   if(location.protocol!=="https:"&&!/^(localhost|127\.)/.test(location.hostname)){setStatus("TWITCH KRÄVER HTTPS");return}
+   const parents=[location.hostname,"svenskehockey.se","www.svenskehockey.se"].filter((v,i,a)=>v&&a.indexOf(v)===i);
+   const qs=new URLSearchParams({channel,autoplay:"true",muted:mute?.checked!==false?"true":"false"});
+   parents.forEach(x=>qs.append("parent",x));
+   const iframe=document.createElement("iframe");
+   iframe.title="Twitch matchstream"; iframe.src="https://player.twitch.tv/?"+qs.toString();
+   iframe.width="1280"; iframe.height="720"; iframe.allow="autoplay; fullscreen; picture-in-picture"; iframe.allowFullscreen=true;
+   iframe.referrerPolicy="strict-origin-when-cross-origin";
+   iframe.addEventListener("load",()=>setStatus("TWITCH-SPELARE LADDAD · "+channel.toUpperCase(),true),{once:true});
+   if(host){host.replaceChildren(iframe)}
+   layer?.classList.add("has-stream"); layer?.classList.toggle("is-hidden",show?.checked===false);
+   setStatus("LADDAR TWITCH · "+channel.toUpperCase());
+   try{localStorage.setItem("sehBroadcastTwitch",channel)}catch(e){}
  };
  $("#loadTwitch")?.addEventListener("click",load);
- channelEl?.addEventListener("keydown",e=>{if(e.key==="Enter")load()});
+ channelEl?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();load()}});
  show?.addEventListener("change",()=>layer?.classList.toggle("is-hidden",!show.checked));
  mute?.addEventListener("change",()=>{if(host?.querySelector("iframe"))load()});
  try{const saved=localStorage.getItem("sehBroadcastTwitch");if(saved&&channelEl)channelEl.value=saved}catch(e){}
