@@ -742,3 +742,17 @@ body.obs-preview[data-theme="impact"] .screen{background:
 .offense .role-stat{padding:2px 0;min-height:20px}
 .offense .role-stat span{font-size:9px}
 .offense .role-stat b{font-size:clamp(11px,1vw,16px)}
+
+
+/* v88: Forward Battle hard-fit: P must be visible on every card, including centers. */
+.offense .role-grid{height:calc(100% - 108px)}
+.offense .scene-title{margin-bottom:4px}
+.offense .role-info{padding:4px 12px;justify-content:flex-start}
+.offense .role-team{margin-top:3px}
+.offense .role-team img{width:22px;height:22px}
+.offense .role-info>strong{font-size:clamp(13px,1.2vw,20px);margin:2px 0 3px}
+.offense .role-head,.offense .role-stat{grid-template-columns:minmax(0,1fr) 52px 58px;gap:4px}
+.offense .role-head{font-size:7px;line-height:1}
+.offense .role-stat{padding:1px 0;min-height:16px;line-height:1}
+.offense .role-stat span{font-size:8px}
+.offense .role-stat b{font-size:clamp(10px,.9vw,14px)}
