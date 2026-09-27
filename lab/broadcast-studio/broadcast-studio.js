@@ -40,6 +40,7 @@
   ];
   const data = { teams: [], players: [], playoffs: [] };
   const COMMENTATORS = {
+    mkine: { name: 'Marko “mkine” Mäkinen', image: '../../players/1DEFAULTBILDID.png' },
     flacken: { name: 'Peter “Flacken” Novara', image: '../../players/flacken.png' },
     wizrob: { name: 'Robert “Wizrob” Olovsson', image: '../../players/Wizrob.png' }
   };
