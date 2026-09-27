@@ -8,7 +8,7 @@
     525:{id:525,code:"GCL",label:"GCL 13 · DIV II",logo:"https://fhr.fra1.cdn.digitaloceanspaces.com/SportsGamer/leagues/GCL/Season_12/GCL_logo_new_350x350.png"},
     526:{id:526,code:"GCL",label:"GCL 13 · POKAL",logo:"https://fhr.fra1.cdn.digitaloceanspaces.com/SportsGamer/leagues/GCL/Season_12/GCL_logo_new_350x350.png"},
     527:{id:527,code:"SCL",label:"SCL 27",logo:"https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2021_08/small.SCL_logo_shading.png.f99772ef717dcd328c35b5469ac1cbc2.png"},
-    528:{id:528,code:"WECL",label:"WECL",logo:"https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/WECL/WECL_logo.png"},
+    523:{id:523,code:"WECL",label:"WECL",logo:"https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/WECL/WECL_logo.png"},
     529:{id:529,code:"FCL",label:"FCL 27",logo:"https://sportsgamer.gg/community/gallery/image/374-fcl_logopng/?do=download"}
   };
   let activeLeagueId = Number($("#tournament")?.value || 520);

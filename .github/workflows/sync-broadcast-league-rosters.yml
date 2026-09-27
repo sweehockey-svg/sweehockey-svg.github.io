@@ -25,7 +25,7 @@ jobs:
       max-parallel: 1
       fail-fast: false
       matrix:
-        league_id: [524, 525, 526, 528, 529]
+        league_id: [523, 524, 525, 526, 529]
 
     env:
       PGCONNECT_TIMEOUT: 20
