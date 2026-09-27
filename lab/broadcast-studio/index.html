@@ -1,4 +1,4 @@
-<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Broadcast Studio · Svensk eHockey</title><link rel="stylesheet" href="broadcast-studio.css?v=20260927-111"></head><body class=""><script>(function(){var p=new URLSearchParams(location.search);if(p.get("obs")==="1"){var c=p.get("output")==="video"?"obs-video":"obs-overlay";document.documentElement.classList.add("obs-preview",c);document.body.classList.add("obs-preview",c)}})()</script>
+<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Broadcast Studio · Svensk eHockey</title><link rel="stylesheet" href="broadcast-studio.css?v=20260927-112"></head><body class=""><script>(function(){var p=new URLSearchParams(location.search);if(p.get("obs")==="1"){document.documentElement.classList.add("obs-preview");document.body.classList.add("obs-preview")}})()</script>
 <header><div class="brand"><b>SEH</b><span>SVENSK eHOCKEY<small>BROADCAST STUDIO · PROTOTYP</small></span></div><div class="live-dot">DOLD TESTMILJÖ</div></header>
 <main><aside><div class="control-hero"><span>CONTROL DESK</span><strong>Broadcast Director</strong><small>Scener, matchdata och grafikstyrning</small></div>
 
@@ -19,7 +19,7 @@
 <div class="stream-dock">
  <div class="dock-head"><span>LIVE VIDEO</span><strong>Twitch matchfeed</strong><small>Visas bakom transparent broadcastgrafik i studiopreviewn.</small></div>
  <div class="stream-controls"><label>KANAL / TWITCH-URL<input id="twitchChannel" placeholder="t.ex. svensk_ehockey"></label><button id="loadTwitch" type="button">LADDA STREAM</button><label class="stream-check"><input id="showTwitch" type="checkbox" checked> VISA VIDEO</label><label class="stream-check"><input id="muteTwitch" type="checkbox" checked> MUTE</label></div>
- <p class="control-note">OBS: använd två Browser Sources, båda 1920 × 1080. Lägg <a href="?obs=1&amp;output=video" target="_blank" rel="noopener">matchvideo</a> underst och <a href="?obs=1" target="_blank" rel="noopener">broadcastgrafik</a> ovanför. Match Live, kanal, VISA VIDEO och MUTE styrs här.</p>
+ <p class="control-note">OBS: använd <a href="?obs=1" target="_blank" rel="noopener">?obs=1</a> som en enda 1920 × 1080 Browser Source. Matchvideo och Svensk eHockey-grafik kompositeras i samma källa.</p>
  <div class="stream-status" id="streamStatus"><i></i><span>INGEN STREAM LADDAD</span></div>
 </div><div class="director-dock">
   <div class="dock-head"><span>SCENVERKTYG</span><strong>Snabbkontroller</strong><small>Match och sändningskontroller utan att lämna programvyn.</small></div>
@@ -30,4 +30,4 @@
   </div>
   <small class="dock-note">Snabbkontrollerna speglar huvudinställningarna.</small>
 </div></section></main>
-<script src="../../config.js?v=20260918-team-aliases-v1"></script><script src="https://player.twitch.tv/js/embed/v1.js"></script><script src="../../playerimages-manifest.js?v=20260926-13"></script><script src="broadcast-studio.js?v=20260927-78"></script></body></html>
+<script src="../../config.js?v=20260918-team-aliases-v1"></script><script src="https://player.twitch.tv/js/embed/v1.js"></script><script src="../../playerimages-manifest.js?v=20260926-13"></script><script src="broadcast-studio.js?v=20260927-79"></script></body></html>
