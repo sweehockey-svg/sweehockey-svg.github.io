@@ -921,3 +921,35 @@ body.obs-preview .preview-shell{display:contents}
   }
 }
 body.obs-preview .preview-scale{display:contents}
+
+
+/* v100: fix preview scaling math. Percentage-based calc inside a custom property
+   was resolving against the 1280px child, producing an oversized cropped canvas. */
+@media(min-width:901px){
+  body:not(.obs-preview) .preview-shell{width:min(100%,620px)}
+  body:not(.obs-preview) .preview-scale{
+    --preview-scale:.445;
+    width:569.6px;
+    height:320.4px;
+    max-width:100%;
+    margin:0 auto;
+    overflow:hidden;
+  }
+  body:not(.obs-preview) .preview-scale>.screen{
+    width:1280px!important;
+    height:720px!important;
+    min-width:1280px!important;
+    min-height:720px!important;
+    max-width:none!important;
+    transform:scale(.445)!important;
+    transform-origin:0 0!important;
+  }
+}
+@media(min-width:901px) and (max-width:1300px){
+  body:not(.obs-preview) .preview-scale{
+    --preview-scale:.36;
+    width:460.8px;
+    height:259.2px;
+  }
+  body:not(.obs-preview) .preview-scale>.screen{transform:scale(.36)!important}
+}
