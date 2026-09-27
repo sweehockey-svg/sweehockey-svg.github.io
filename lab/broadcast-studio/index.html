@@ -1,40 +1,75 @@
-<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Broadcast Studio · Svensk eHockey</title><link rel="stylesheet" href="broadcast-studio.css?v=20260927-120"></head><body class=""><script>(function(){var p=new URLSearchParams(location.search);if(p.get("obs")==="1"){document.documentElement.classList.add("obs-preview");document.body.classList.add("obs-preview")}})()</script>
-<header><div class="brand"><b>SEH</b><span>SVENSK eHOCKEY<small>BROADCAST STUDIO · PROTOTYP</small></span></div><div class="live-dot">DOLD TESTMILJÖ</div></header>
-<main><aside><div class="control-hero"><span>CONTROL DESK</span><strong>Broadcast Director</strong><small>Scener, matchdata och grafikstyrning</small></div>
-
-<div class="block theme-control"><h3>TEMA</h3><label>GRAFIKPAKET<select id="theme"><option value="broadcast">Broadcast</option><option value="arena">Arena</option><option value="ice">Ice</option><option value="impact">Impact</option></select></label><small class="control-note">Byter hela grafikpaketet i studio och OBS.</small></div><div class="block"><h3>MATCH</h3><small id="dataStatus" class="control-note" role="status" aria-live="polite">Laddar turneringsdata…</small><label>TURNERING<select id="tournament"><option value="520">SEC 21</option><option value="524">GCL 13 · Div I</option><option value="525">GCL 13 · Div II</option><option value="526">GCL 13 · Pokal</option><option value="527">SCL 27</option><option value="528">WECL</option><option value="529">FCL 27</option></select></label><label>HEMMALAG<select id="home"><option value="7046">Daankerzquad</option><option value="3252">Västerås IK</option></select></label><label>BORTALAG<select id="away"><option value="7046">Daankerzquad</option><option value="3252" selected>Västerås IK</option></select></label><div class="twocol"><label>HEMMA<input id="hs" type="number" min="0" value="0"></label><label>BORTA<input id="as" type="number" min="0" value="0"></label></div><label>RUBRIK<input id="headline" value="SEC 21 · BRONSMATCH"></label><label>INFO<input id="subline" value="DAANKERZQUAD vs VÄSTERÅS IK"></label></div>
-<div class="block series-control"><h3>SLUTSPELSSERIE</h3><label>FORMAT<select id="seriesFormat"><option value="3">BO3</option><option value="5" selected>BO5</option><option value="7">BO7</option></select></label><label>RUNDA<input id="seriesRound" value="SLUTSPEL"></label><div class="twocol"><label>HEMMA VINSTER<input id="seriesHome" type="number" min="0" max="3" value="0"></label><label>BORTA VINSTER<input id="seriesAway" type="number" min="0" max="3" value="0"></label></div><label class="series-results-toggle"><input id="seriesShowResults" type="checkbox"> VISA MATCHRESULTAT</label><div class="series-result-inputs" id="seriesResultInputs"><label>M1<input id="seriesR1" placeholder="3-1"></label><label>M2<input id="seriesR2" placeholder="2-4"></label><label>M3<input id="seriesR3" placeholder="5-2"></label><label>M4<input id="seriesR4" placeholder="1-3"></label><label>M5<input id="seriesR5" placeholder=""></label><label>M6<input id="seriesR6" placeholder=""></label><label>M7<input id="seriesR7" placeholder=""></label></div><small class="control-note">Serieläget styrs manuellt mellan matcherna. Tomma matchresultat visas inte.</small></div><div class="block"><h3>KOMMENTATORER</h3><label>KOMMENTATOR 1<select id="commentator1"><option value="flacken">Peter “Fläcken” Novara</option><option value="wizrob">Robert “Wizrob” Olovsson</option><option value="">Ingen</option></select></label><label>KOMMENTATOR 2<select id="commentator2"><option value="">Ingen</option><option value="flacken">Peter “Fläcken” Novara</option><option value="wizrob">Robert “Wizrob” Olovsson</option></select></label><small class="control-note">Kommentatorsbilder hämtas från players/.</small></div><div class="block lineup-control"><h3>LINEUP</h3><input id="lineupSide" type="hidden" value="home"><div id="lineupEditors"></div><small class="control-note">Förslag hämtas från vald turnering. Ändra manuellt när lagens riktiga lineup kommer. En redan vald spelare byter plats.</small></div><div class="block"><h3>SÄNDNING</h3><label>NAMN / LOWER THIRD<input id="person" value="Peter &quot;Fläcken&quot; Novara"></label><label>ROLL<input id="role" value="KOMMENTATOR"></label></div>
-</aside>
-<section class="workspace"><div class="preview-toolbar"><div><span>PROGRAM PREVIEW</span><strong>16:9 · LIVE OUTPUT</strong></div><a class="obs-open" href="?obs=1" target="_blank" rel="noopener">ÖPPNA OBS-OUTPUT ↗</a></div><div class="preview-shell"><div class="preview-scale"><div class="screen" id="screen"><div class="twitch-layer" id="twitchLayer"><div id="twitchPlayer"></div><video id="directVideo" autoplay playsinline preload="auto"></video><div class="stream-empty">MATCHSTREAM</div></div>
-<div class="texture"></div><div class="top"><div class="event-logo"><img id="eventLogo" src="../../assets/SECLOGGA.png" alt="SEC"></div><div><strong id="topTitle">SEC 21 · BRONSMATCH</strong><small id="topSub">DAANKERZQUAD vs VÄSTERÅS IK</small></div><div class="onair"><i></i> ON AIR</div></div>
-<div class="scene live"><div class="live-safe"><span>LIVE MATCH</span></div></div><div class="scene opening active"><div class="eyebrow">SVENSK eHOCKEY PRESENTERAR</div><h1>GAME<br><span>NIGHT</span></h1><div class="opening-match"><div class="team homeTeam"><img><b>HEMMALAG</b></div><em>VS</em><div class="team awayTeam"><img><b>BORTALAG</b></div></div><div class="opening-commentators" id="openingCommentators"></div></div>
-<div class="scene series"><div class="series-kicker" id="seriesKicker">SLUTSPEL · BEST OF 5</div><div class="series-title" id="seriesTitle">SERIELÄGE</div><div class="series-board"><div class="series-team homeTeam"><img><b>HEMMALAG</b><div class="series-dots" id="seriesHomeDots"></div></div><div class="series-score"><strong id="seriesHomeScore">0</strong><span>–</span><strong id="seriesAwayScore">0</strong><small>MATCHER</small></div><div class="series-team awayTeam"><img><b>BORTALAG</b><div class="series-dots" id="seriesAwayDots"></div></div></div><div class="series-results" id="seriesResults" hidden><small>TIDIGARE MATCHER</small><div id="seriesResultsList"></div></div><div class="series-next" id="seriesNext">NÄSTA MATCH · MATCH 1</div></div><div class="scene matchup"><div class="versus"><div class="side homeTeam"><img><b>HEMMALAG</b></div><div class="vs"><small>LIVE</small><strong>VS</strong><span id="matchTime">20:00</span></div><div class="side awayTeam"><img><b>BORTALAG</b></div></div></div>
-<div class="scene lineup"><div class="scene-title lineup-title"><div><small>STARTING SIX</small><b id="lineupTeam">HEMMALAG</b></div><img id="lineupTeamLogo" alt=""></div><div class="players"><div class="player"><span>LW</span><div class="sil">1</div><b>LEFT WING</b></div><div class="player"><span>C</span><div class="sil">2</div><b>CENTER</b></div><div class="player"><span>RW</span><div class="sil">3</div><b>RIGHT WING</b></div><div class="player"><span>LD</span><div class="sil">4</div><b>LEFT DEF</b></div><div class="player"><span>G</span><div class="sil">5</div><b>GOALIE</b></div><div class="player"><span>RD</span><div class="sil">6</div><b>RIGHT DEF</b></div></div></div>
-<div class="scene stats"><div class="scene-title"><small>HEAD TO HEAD</small><b>MATCHUP</b></div><div class="stat-head"><div class="homeTeam"><img><b>HEMMALAG</b></div><div class="awayTeam"><img><b>BORTALAG</b></div></div><div class="statrows"></div></div>
-<div class="scene table"><div class="scene-title"><small id="tableKicker">SEC 21 · GRUPPSPEL</small><b>TABELLEN</b></div><div class="broadcast-table" id="broadcastTable"></div></div><div class="scene teamcompare"><div class="scene-title"><small>TEAM COMPARISON</small><b>LAGDUELLEN</b></div><div class="team-compare" id="teamCompare"></div></div><div class="scene scorers"><div class="scene-title"><small>OFFENSIVE LEADERS</small><b>POÄNGLIGAN</b></div><div class="scorer-grid" id="scorerGrid"></div></div><div class="scene formguide"><div class="scene-title"><small>GRUPPSPEL + SLUTSPEL</small><b>FORM GUIDE</b></div><div class="form-grid" id="formGrid"></div></div><div class="scene offense"><div class="scene-title"><small>SCORING PROFILE</small><b>OFFENSIV KRAFT</b></div><div class="offense-grid" id="offenseGrid"></div></div><div class="scene defenseleaders"><div class="scene-title"><small>DEFENSIVE LEADERS</small><b>BACKLIGAN</b></div><div class="leaderboard-dual" id="defenseLeaderGrid"></div></div><div class="scene goalieleaders"><div class="scene-title"><small>BETWEEN THE PIPES</small><b>MÅLVAKTSLIGAN</b></div><div class="leaderboard-dual" id="goalieLeaderGrid"></div></div><div class="scene road"><div class="scene-title"><small id="roadKicker">ROAD TO BRONZE</small><b id="roadTitle">VÄGEN TILL BRONSMATCHEN</b></div><div class="road-grid" id="roadGrid"></div></div><div class="scene leaders"><div class="scene-title"><small id="leadersKicker">SEC 21 · GRUPPSPEL + SLUTSPEL</small><b>PLAYERS TO WATCH</b></div><div class="leader-grid" id="leaderGrid"></div></div><div class="scene intermission"><div class="period">PAUS</div><div class="score"><div class="homeTeam"><img><b>HEMMALAG</b><strong id="homeScore">0</strong></div><span>–</span><div class="awayTeam"><strong id="awayScore">0</strong><b>BORTALAG</b><img></div></div><div class="next">VI ÄR STRAX TILLBAKA</div></div>
-<div class="scene rolematch forwards"><div class="scene-title"><small>OFFENSIVE UNITS</small><b>FORWARD BATTLE</b></div><div class="role-grid role-grid-six" id="forwardsGrid"></div></div><div class="scene rolematch defense"><div class="scene-title"><small>DEFENSIVE PAIRS</small><b>BLUE LINE BATTLE</b></div><div class="role-grid" id="defenseGrid"></div></div><div class="scene rolematch goalies"><div class="scene-title"><small>BETWEEN THE PIPES</small><b>GOALIE BATTLE</b></div><div class="role-grid two" id="goaliesGrid"></div></div><div class="scene rolematch keymatchup"><div class="scene-title"><small>DATA-DRIVEN DUEL</small><b>KEY MATCHUP</b></div><div class="role-grid two key-grid" id="keyGrid"></div></div><div class="scene spotlight"><div class="spotlight-wrap" id="spotlightCard"></div></div><div class="scene lowerthird"><div class="camera-placeholder"><span>LIVE VIDEO / OBS</span></div><div class="lower"><div class="event-logo mini"><img src="../../assets/SECLOGGA.png" alt="SEC"></div><div><small id="roleOut">KOMMENTATOR</small><b id="personOut">Peter “Fläcken” Novara</b></div></div></div>
-<div class="bug"><b>SVENSK eHOCKEY</b><span>6V6 · NHL 27</span></div>
-</div></div></div><div class="hint">Kompakt program-preview. Full 1920×1080-output öppnas separat för OBS.</div>
-<div class="scene-dock"><div class="block scene-block"><h3>SCEN</h3><div class="scene-grid"><button class="active" data-scene="opening">Opening</button><button data-scene="live">Match Live</button><button data-scene="matchup">Matchup</button><button data-scene="series">Serieläge</button><button data-scene="lineup" data-lineup-side="home">Lineup H</button><button data-scene="lineup" data-lineup-side="away">Lineup B</button><button data-scene="stats">Stats</button><button data-scene="table">Tabell</button><button data-scene="teamcompare">Lagduell</button><button data-scene="scorers">Poängliga</button><button data-scene="formguide">Form</button><button data-scene="offense">Offensiv</button><button data-scene="defenseleaders">Backar</button><button data-scene="goalieleaders">Målvaktsliga</button><button id="roadSceneButton" data-scene="road">Bronsvägen</button><button data-scene="leaders">Spelare</button><button data-scene="intermission">Paus</button><button data-scene="lowerthird">Lower third</button><button data-scene="forwards">Forwards</button><button data-scene="defense">Blue Line</button><button data-scene="goalies">Goalies</button><button data-scene="keymatchup">Key Matchup</button><button data-scene="spotlight">Spotlight</button></div></div></div>
-<div class="stream-dock">
- <div class="dock-head"><span>LIVE VIDEO</span><strong>Matchfeed</strong><small>Klistra in en Twitch-kanal eller URL. Broadcast Studio löser automatiskt ut HLS-flödet och spelar det som vanlig video.</small></div>
- <div class="stream-controls stream-source-controls">
-   <label>VIDEOKÄLLA<select id="videoSource"><option value="twitch">Twitch (automatisk)</option><option value="direct">Direkt HLS / video</option></select></label>
-   <button id="loadTwitch" type="button">LADDA VIDEO</button>
-   <label class="source-field source-twitch">KANAL / TWITCH-URL<input id="twitchChannel" placeholder="t.ex. svensk_ehockey"></label>
-   <label class="source-field source-direct" hidden>HLS / VIDEO-URL<input id="hlsUrl" placeholder="https://…/stream.m3u8"></label>
-   <label class="stream-check"><input id="showTwitch" type="checkbox" checked> VISA VIDEO</label>
-   <label class="stream-check"><input id="muteTwitch" type="checkbox" checked> MUTE I PREVIEW</label>
- </div>
- <p class="control-note"><b>Twitch (automatisk)</b>: klistra in t.ex. <code>https://www.twitch.tv/lucasiooo04</code> och klicka LADDA VIDEO. Systemet hämtar den riktiga HLS-strömmen via vår resolver. <b>Direkt HLS / video</b> finns kvar för egna .m3u8/video-källor.</p>
- <div class="stream-status" id="streamStatus"><i></i><span>INGEN STREAM LADDAD</span></div>
-</div><div class="director-dock">
-  <div class="dock-head"><span>SCENVERKTYG</span><strong>Snabbkontroller</strong><small>Match och sändningskontroller utan att lämna programvyn.</small></div>
-  <div class="dock-grid">
-    <label>HEMMA<input id="dockHs" type="number" min="0" value="0"></label>
-    <label>BORTA<input id="dockAs" type="number" min="0" value="0"></label>
-    <label>GRAFIKPAKET<select id="dockTheme"><option value="broadcast">Broadcast</option><option value="arena">Arena</option><option value="ice">Ice</option><option value="impact">Impact</option></select></label>
-  </div>
-  <small class="dock-note">Snabbkontrollerna speglar huvudinställningarna.</small>
-</div></section></main>
-<script src="../../config.js?v=20260918-team-aliases-v1"></script><script src="../../playerimages-manifest.js?v=20260926-13"></script><script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script><script src="broadcast-studio.js?v=20260927-96"></script></body></html>
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#06111a">
+<title>Broadcast Studio · Välj studio</title>
+<style>
+:root{color-scheme:dark;--bg:#06111a;--panel:#0a1823;--line:#223543;--text:#f4f7f9;--muted:#7890a1;--yellow:#f4b21b}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:
+radial-gradient(circle at 70% 20%,rgba(31,71,95,.18),transparent 36%),
+linear-gradient(180deg,#07131d,#040b11);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+body{display:grid;place-items:center;padding:28px}
+.wrap{width:min(980px,100%)}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:30px}
+.badge{width:48px;height:52px;display:grid;place-items:center;background:var(--yellow);color:#07111a;font-weight:1000;font-size:13px;clip-path:polygon(50% 0,100% 18%,90% 82%,50% 100%,10% 82%,0 18%)}
+.brand strong{display:block;font-size:20px;letter-spacing:.02em}
+.brand small{display:block;margin-top:4px;color:#8ca0af;font-size:10px;font-weight:900;letter-spacing:.16em}
+.hero{margin-bottom:22px}
+.hero span{color:var(--yellow);font-size:10px;font-weight:950;letter-spacing:.18em}
+.hero h1{margin:6px 0 5px;font-size:clamp(28px,5vw,48px);line-height:1}
+.hero p{margin:0;color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.card{padding:20px;background:linear-gradient(180deg,rgba(13,29,41,.96),rgba(7,19,28,.96));border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 38px rgba(0,0,0,.18)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.lang{display:flex;align-items:center;gap:11px}
+.flag{width:40px;height:40px;border:1px solid #324754;border-radius:8px;display:grid;place-items:center;background:#0d1b25;font-size:19px}
+.lang small{display:block;color:var(--muted);font-size:9px;font-weight:900;letter-spacing:.15em}
+.lang strong{display:block;margin-top:2px;font-size:18px}
+.brandtag{color:#8aa0af;font-size:9px;font-weight:950;letter-spacing:.12em}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:10px 12px;border-radius:8px;border:1px solid #304654;color:var(--text);text-decoration:none;font-size:11px;font-weight:950;letter-spacing:.035em;background:#0c1a25}
+a:hover{border-color:#536d7e;background:#102331}
+a.obs{border-color:#8f6a0d;color:var(--yellow);background:#17170e}
+.path{margin-top:10px;color:#607786;font:10px/1.4 Consolas,monospace;word-break:break-all}
+.footer{margin-top:22px;padding-top:16px;border-top:1px solid #182935;color:#5f7686;font-size:10px;text-align:center}
+@media(max-width:700px){body{padding:18px}.grid{grid-template-columns:1fr}.actions{grid-template-columns:1fr}.card{padding:17px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="brand"><div class="badge">SG</div><div><strong>Broadcast Studio</strong><small>SVENSK eHOCKEY · SPORTSGAMER</small></div></div>
+  <section class="hero">
+    <span>STUDIO SELECT</span>
+    <h1>Välj sändningsstudio</h1>
+    <p>Varje språk har egen kontrollstudio och egen OBS-output.</p>
+  </section>
+  <section class="grid">
+    <article class="card">
+      <div class="card-head"><div class="lang"><div class="flag">🇸🇪</div><div><small>SVENSKA</small><strong>Svensk eHockey</strong></div></div><div class="brandtag">SEH</div></div>
+      <div class="actions"><a href="SV/">ÖPPNA STUDIO</a><a class="obs" href="SV/?obs=1" target="_blank" rel="noopener">OBS OUTPUT ↗</a></div>
+      <div class="path">/lab/broadcast-studio/SV/?obs=1</div>
+    </article>
+    <article class="card">
+      <div class="card-head"><div class="lang"><div class="flag">🇫🇮</div><div><small>SUOMI</small><strong>SportsGamer</strong></div></div><div class="brandtag">SG</div></div>
+      <div class="actions"><a href="fi/">AVAA STUDIO</a><a class="obs" href="fi/?obs=1" target="_blank" rel="noopener">OBS OUTPUT ↗</a></div>
+      <div class="path">/lab/broadcast-studio/fi/?obs=1</div>
+    </article>
+    <article class="card">
+      <div class="card-head"><div class="lang"><div class="flag">🇩🇪</div><div><small>DEUTSCH</small><strong>SportsGamer</strong></div></div><div class="brandtag">SG</div></div>
+      <div class="actions"><a href="de/">STUDIO ÖFFNEN</a><a class="obs" href="de/?obs=1" target="_blank" rel="noopener">OBS OUTPUT ↗</a></div>
+      <div class="path">/lab/broadcast-studio/de/?obs=1</div>
+    </article>
+    <article class="card">
+      <div class="card-head"><div class="lang"><div class="flag">🇬🇧</div><div><small>ENGLISH</small><strong>SportsGamer</strong></div></div><div class="brandtag">SG</div></div>
+      <div class="actions"><a href="en/">OPEN STUDIO</a><a class="obs" href="en/?obs=1" target="_blank" rel="noopener">OBS OUTPUT ↗</a></div>
+      <div class="path">/lab/broadcast-studio/en/?obs=1</div>
+    </article>
+  </section>
+  <div class="footer">Broadcast Studio · dold testmiljö</div>
+</main>
+</body>
+</html>
