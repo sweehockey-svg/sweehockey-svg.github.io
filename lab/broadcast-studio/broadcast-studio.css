@@ -809,3 +809,9 @@ body.obs-preview[data-theme="impact"] .screen{background:
 .forwards .role-stat{padding:2px 0!important;min-height:19px!important;line-height:1!important;flex:0 0 auto!important}
 .forwards .role-stat span{line-height:1!important}
 .forwards .role-stat b{line-height:1!important}
+
+
+/* v93: Forward Battle: remove wasted gap; stats begin below identity instead of bottom anchoring. */
+.forwards .role-info{justify-content:flex-start!important}
+.forwards .role-head{margin-top:10px!important;padding-top:0!important}
+.forwards .role-stat{padding:3px 0!important;min-height:21px!important}
