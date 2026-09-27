@@ -895,3 +895,29 @@ body.obs-preview[data-theme="impact"] .screen{background:
 }
 body.obs-preview .control-hero,body.obs-preview .preview-toolbar{display:none!important}
 body.obs-preview .preview-shell{display:contents}
+
+
+/* v99: Studio preview renders the exact 1280x720 composition, then scales it.
+   OBS mode remains untouched at native output rules. */
+@media(min-width:901px){
+  body:not(.obs-preview) .preview-shell{width:min(100%,620px);padding:9px;overflow:hidden}
+  body:not(.obs-preview) .preview-toolbar,
+  body:not(.obs-preview) .hint{width:min(100%,620px)}
+  body:not(.obs-preview) .preview-scale{
+    --preview-scale:min(.47, calc((100vw - 46vw - 90px) / 1280));
+    width:calc(1280px * var(--preview-scale));
+    height:calc(720px * var(--preview-scale));
+    margin:0 auto;
+    overflow:hidden;
+  }
+  body:not(.obs-preview) .preview-scale>.screen{
+    width:1280px!important;
+    height:720px!important;
+    aspect-ratio:auto!important;
+    max-width:none!important;
+    transform:scale(var(--preview-scale));
+    transform-origin:top left;
+    box-shadow:none!important;
+  }
+}
+body.obs-preview .preview-scale{display:contents}
