@@ -488,27 +488,26 @@
 })();
 
 
-/* v65: optional Twitch matchfeed for controller preview only. */
+
+
+/* v66: Twitch feed for studio preview. Uses official iframe player and an explicit Match Live scene. */
 (()=>{
  if(OBS_MODE)return;
- let player=null;
- const channelEl=$("#twitchChannel"),layer=$("#twitchLayer"),status=$("#streamStatus"),show=$("#showTwitch"),mute=$("#muteTwitch");
- const channelFrom=(v)=>{v=(v||"").trim();if(!v)return "";try{if(/^https?:\/\//i.test(v)){const u=new URL(v);if(/(^|\.)twitch\.tv$/i.test(u.hostname.replace(/^www\./,"")))return u.pathname.split("/").filter(Boolean)[0]||""}}catch(e){}return v.replace(/^@/,"").replace(/\s/g,"")};
+ const channelEl=$("#twitchChannel"),layer=$("#twitchLayer"),status=$("#streamStatus"),show=$("#showTwitch"),mute=$("#muteTwitch"),host=$("#twitchPlayer");
+ const channelFrom=(v)=>{v=(v||"").trim();if(!v)return "";try{if(/^https?:\/\//i.test(v)){const u=new URL(v);const hn=u.hostname.replace(/^www\./,"");if(hn==="twitch.tv"||hn.endsWith(".twitch.tv"))return u.pathname.split("/").filter(Boolean)[0]||""}}catch(e){}return v.replace(/^@/,"").replace(/\s/g,"")};
  const setStatus=(txt,ready=false)=>{if(!status)return;status.classList.toggle("ready",ready);const s=status.querySelector("span");if(s)s.textContent=txt};
  const load=()=>{
-   const channel=channelFrom(channelEl?.value);if(!channel){setStatus("ANGE EN TWITCH-KANAL");return}
-   if(!window.Twitch?.Player){setStatus("TWITCH-SPELAREN KUNDE INTE LADDAS");return}
-   const host=document.getElementById("twitchPlayer");host.innerHTML="";
-   player=new Twitch.Player("twitchPlayer",{width:"100%",height:"100%",channel,parent:[location.hostname],autoplay:true,muted:mute?.checked!==false});
-   layer?.classList.add("has-stream");
-   player.addEventListener(Twitch.Player.READY,()=>{try{player.setMuted(mute?.checked!==false)}catch(e){}setStatus("STREAM ANSLUTEN · "+channel.toUpperCase(),true)});
-   player.addEventListener(Twitch.Player.ONLINE,()=>setStatus("LIVE · "+channel.toUpperCase(),true));
-   player.addEventListener(Twitch.Player.OFFLINE,()=>setStatus("KANALEN ÄR OFFLINE"));
-   try{localStorage.setItem("sehBroadcastTwitch",channel)}catch(e){}
+  const channel=channelFrom(channelEl?.value); if(!channel){setStatus("ANGE EN TWITCH-KANAL");return}
+  const parent=location.hostname||"www.svenskehockey.se";
+  const src="https://player.twitch.tv/?channel="+encodeURIComponent(channel)+"&parent="+encodeURIComponent(parent)+"&autoplay=true&muted="+(mute?.checked!==false?"true":"false");
+  if(host)host.innerHTML='<iframe title="Twitch matchstream" src="'+src+'" width="1280" height="720" allow="autoplay; fullscreen" allowfullscreen></iframe>';
+  layer?.classList.add("has-stream"); layer?.classList.toggle("is-hidden",show?.checked===false);
+  setStatus("STREAM LADDAD · "+channel.toUpperCase(),true);
+  try{localStorage.setItem("sehBroadcastTwitch",channel)}catch(e){}
  };
  $("#loadTwitch")?.addEventListener("click",load);
  channelEl?.addEventListener("keydown",e=>{if(e.key==="Enter")load()});
  show?.addEventListener("change",()=>layer?.classList.toggle("is-hidden",!show.checked));
- mute?.addEventListener("change",()=>{try{player?.setMuted(mute.checked)}catch(e){}});
+ mute?.addEventListener("change",()=>{if(host?.querySelector("iframe"))load()});
  try{const saved=localStorage.getItem("sehBroadcastTwitch");if(saved&&channelEl)channelEl.value=saved}catch(e){}
 })();
