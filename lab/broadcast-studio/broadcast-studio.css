@@ -695,3 +695,6 @@ body.obs-preview[data-theme="impact"] .screen{background:
    Snapshot logo keeps the normal lineup-logo geometry while the outgoing frame fades. */
 .lineup-transition-old{display:flex!important;position:absolute!important;inset:14% 3% 8%!important;z-index:2!important;pointer-events:none!important}
 .lineup-team-logo-snapshot{width:150px;height:110px;object-fit:contain;filter:drop-shadow(0 8px 8px #0008)}
+
+/* v83: freeze outgoing lineup logo geometry during H/B crossfade. */
+.lineup-transition-old .lineup-head>img,.lineup-transition-old .lineup-head img{width:150px!important;height:110px!important;max-width:150px!important;max-height:110px!important;object-fit:contain!important;position:static!important;transform:none!important;margin:0!important}
