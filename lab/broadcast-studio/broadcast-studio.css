@@ -693,5 +693,5 @@ body.obs-preview[data-theme="impact"] .screen{background:
 
 /* v81: lineup H/B uses the same broadcast transition as every other scene.
    Snapshot logo keeps the normal lineup-logo geometry while the outgoing frame fades. */
-.lineup-transition-old{display:flex!important;position:absolute!important;inset:0!important;z-index:2!important;pointer-events:none!important}
+.lineup-transition-old{display:flex!important;position:absolute!important;inset:14% 3% 8%!important;z-index:2!important;pointer-events:none!important}
 .lineup-team-logo-snapshot{width:150px;height:110px;object-fit:contain;filter:drop-shadow(0 8px 8px #0008)}
