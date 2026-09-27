@@ -219,7 +219,7 @@
   function renderRoad() {
     $("#roadGrid").innerHTML = ["home", "away"].map(side => {
       const t = selectedTeam(side), r = stage(t, "regular"), po = playoff(t);
-      return '<div class="road-card"><div class="road-team">' + (logo(t) ? image(logo(t)) : "") + '<b>' + esc(t.team_name_in_league) + '</b></div><div class="road-step"><small>GRUPPSPEL</small><strong>#' + stat(po.regular_season_seed) + '</strong><span>' + stat(r.total_wins) + ' vinster · ' + stat(r.goals_for) + '–' + stat(r.goals_against) + '</span></div><i></i><div class="road-step"><small>SLUTSPEL · ' + esc(po.playoff_round_name || "DATA SAKNAS") + '</small><strong>' + stat(po.series_won) + '–' + stat(po.series_lost) + ' serier</strong><span>' + stat(po.matched_playoff_game_wins) + ' matchvinster</span></div><i></i><div class="road-step final"><small>${activeLeagueId===520?"FIKTIV TESTMATCH":"AKTUELL TURNERING"}</small><strong>${activeLeagueId===520?"BRONS":"SLUTSPEL"}</strong><span>${activeLeagueId===520?"Ingen historisk bronsmatch":"Live turneringsdata"}</span></div></div>';
+      return '<div class="road-card"><div class="road-team">' + (logo(t) ? image(logo(t)) : "") + '<b>' + esc(t.team_name_in_league) + '</b></div><div class="road-step"><small>GRUPPSPEL</small><strong>#' + stat(po.regular_season_seed) + '</strong><span>' + stat(r.total_wins) + ' vinster · ' + stat(r.goals_for) + '–' + stat(r.goals_against) + '</span></div><i></i><div class="road-step"><small>SLUTSPEL · ' + esc(po.playoff_round_name || "DATA SAKNAS") + '</small><strong>' + stat(po.series_won) + '–' + stat(po.series_lost) + ' serier</strong><span>' + stat(po.matched_playoff_game_wins) + ' matchvinster</span></div><i></i><div class="road-step final"><small>' + (activeLeagueId===520?"FIKTIV TESTMATCH":"AKTUELL TURNERING") + '</small><strong>' + (activeLeagueId===520?"BRONS":"SLUTSPEL") + '</strong><span>' + (activeLeagueId===520?"Ingen historisk bronsmatch":"Live turneringsdata") + '</span></div></div>';
     }).join("");
   }
 
@@ -384,13 +384,15 @@
     renderStatus();
   }
 
-  function loadTournamentData(){
+  async function loadTournamentData(){
     data.teams=[];data.players=[];data.playoffs=[];lineups.clear();
     status.teams="loading";status.players="loading";status.playoffs="loading";
     renderStatus();renderAllCompetitionData();
-    void loadPart("teams","v_broadcast_teams_public",()=>{renderTeams();renderStats();renderTable();renderTeamCompare();renderFormGuide();renderOffense();renderRoad();renderLineup();});
-    void loadPart("players","v_broadcast_players_public",()=>{renderLineup();renderLeaders();renderScorers();renderDefenseLeaders();renderGoalieLeaders();renderOffense();renderRoleMatchups();});
-    void loadPart("playoffs","v_broadcast_playoffs_public",renderRoad);
+    await Promise.all([
+      loadPart("teams","v_broadcast_teams_public",()=>{renderTeams();renderStats();renderTable();renderTeamCompare();renderFormGuide();renderOffense();renderRoad();renderLineup();}),
+      loadPart("players","v_broadcast_players_public",()=>{renderLineup();renderLeaders();renderScorers();renderDefenseLeaders();renderGoalieLeaders();renderOffense();renderRoleMatchups();}),
+      loadPart("playoffs","v_broadcast_playoffs_public",renderRoad)
+    ]);
   }
 
   function setTheme(name){const theme=["broadcast","arena","ice","impact"].includes(name)?name:"broadcast";document.body.dataset.theme=theme;if($("#theme"))$("#theme").value=theme;}
@@ -466,19 +468,17 @@
 
   // Controls are installed synchronously, before any data request starts.
   document.querySelectorAll("[data-scene]").forEach(button => button.addEventListener("click", () => { applyScene(button.dataset.scene,button.dataset.lineupSide); publishState(); }));
-  $("#tournament")?.addEventListener("change",()=>{
+  $("#tournament")?.addEventListener("change",async()=>{
     const next=Number($("#tournament").value);
     if(!COMPETITIONS[next]||next===activeLeagueId)return;
     activeLeagueId=next;
     applyCompetitionChrome(true);
     $("#home").replaceChildren();$("#away").replaceChildren();
     $("#subline").value="";
-    loadTournamentData();
-    setTimeout(()=>{
-      const h=selectedTeam("home"),a=selectedTeam("away");
-      if($("#home").value&&$("#away").value)$("#subline").value=String(h.team_name_in_league||"").toLocaleUpperCase("sv")+" vs "+String(a.team_name_in_league||"").toLocaleUpperCase("sv");
-      renderAllCompetitionData();publishState();
-    },450);
+    await loadTournamentData();
+    const h=selectedTeam("home"),a=selectedTeam("away");
+    if($("#home").value&&$("#away").value)$("#subline").value=String(h.team_name_in_league||"").toLocaleUpperCase("sv")+" vs "+String(a.team_name_in_league||"").toLocaleUpperCase("sv");
+    renderAllCompetitionData();publishState();
   });
   $("#theme")?.addEventListener("change",()=>{setTheme($("#theme").value);publishState();});
   ["seriesFormat","seriesHome","seriesAway","seriesShowResults"].forEach(id=>$("#"+id)?.addEventListener("change",()=>{renderSeries();publishState();}));
