@@ -1171,3 +1171,6 @@ html.obs-preview.obs-twitch-booting body #screen>.twitch-layer #directVideo,
 html.obs-preview.obs-twitch-playing body #screen>.twitch-layer #directVideo{
   opacity:1!important;visibility:visible!important;
 }
+
+/* v115: Twitch resolver status/UI */
+.stream-dock code{font:inherit;color:#c9d9e6;background:#0a151e;border:1px solid #263845;border-radius:4px;padding:1px 4px}
