@@ -518,7 +518,8 @@
      document.documentElement.classList.add("obs-twitch-booting");
      document.documentElement.classList.remove("obs-twitch-playing");
    }
-   const qs=new URLSearchParams({channel,autoplay:"true",muted:muted?"true":"false"});
+   const embedMuted=OBS_MODE_LOCAL?false:!!muted;
+   const qs=new URLSearchParams({channel,autoplay:"true",muted:embedMuted?"true":"false"});
    parents.forEach(p=>qs.append("parent",p));
    const f=document.createElement("iframe");
    f.src="https://player.twitch.tv/?"+qs.toString();
