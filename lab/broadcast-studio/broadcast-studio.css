@@ -1216,3 +1216,39 @@ html.obs-preview.obs-twitch-playing body #screen>.bug,
 html.obs-preview.obs-twitch-playing body #screen>.scene.active{
   opacity:revert!important;visibility:revert!important;
 }
+
+
+/* v117: Match Live safe area.
+   NHL's match clock/scoreboard occupies the upper-left corner, so live broadcast chrome starts farther right.
+   Other full-screen scenes keep the original header geometry. */
+.screen.live-mode>.top{
+  left:30%!important;
+  right:3%!important;
+  top:2.2%!important;
+  height:8.2%!important;
+  gap:10px!important;
+  padding-left:8px!important;
+  background:linear-gradient(180deg,rgba(4,13,20,.88),rgba(4,13,20,.52) 70%,transparent)!important;
+  border-bottom-color:rgba(255,255,255,.12)!important;
+}
+.screen.live-mode>.top .event-logo{
+  width:46px!important;
+  height:42px!important;
+}
+.screen.live-mode>.top strong{
+  font-size:18px!important;
+  line-height:1.05!important;
+}
+.screen.live-mode>.top small{
+  font-size:9px!important;
+  margin-top:2px!important;
+}
+.screen.live-mode>.top .onair{
+  font-size:9px!important;
+  white-space:nowrap!important;
+}
+.screen.live-mode>.top .onair i{
+  width:7px!important;
+  height:7px!important;
+  margin-right:6px!important;
+}
