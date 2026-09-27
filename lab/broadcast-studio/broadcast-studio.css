@@ -849,3 +849,19 @@ body.obs-preview[data-theme="impact"] .screen{background:
 .series-title{flex:0 0 auto!important;width:100%!important;margin:6px 0 30px!important;text-align:center!important}
 .series-board{flex:0 0 auto!important}
 .series-next{flex:0 0 auto!important;margin-top:34px!important}
+
+
+/* v97: optional individual game results in series scene */
+.series-results{margin-top:22px;text-align:center;min-height:45px}
+.series-results[hidden]{display:none!important}
+.series-results>small{display:block;font-size:9px;font-weight:900;letter-spacing:.2em;color:#8fa6b7;margin-bottom:8px}
+#seriesResultsList{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}
+#seriesResultsList span{padding:6px 11px;border:1px solid #ffffff1d;background:#061521a8;font-size:12px;font-weight:800;letter-spacing:.04em}
+#seriesResultsList b{color:var(--theme-accent,#f4b21b);margin-right:4px}
+.series-results+.series-next{margin-top:18px!important}
+.series-results[hidden]+.series-next{margin-top:34px!important}
+.series-results-toggle{display:flex;grid-template-columns:auto 1fr;align-items:center;gap:8px;margin-top:14px}
+.series-results-toggle input{width:16px;height:16px;margin:0;padding:0}
+.series-result-inputs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.series-result-inputs label{margin:2px 0}
+.series-result-inputs input{width:100%;min-width:0;padding:8px}
