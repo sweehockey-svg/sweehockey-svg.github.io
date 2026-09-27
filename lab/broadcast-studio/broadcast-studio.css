@@ -1037,3 +1037,14 @@ body.obs-preview .twitch-layer,body.obs-preview .stream-dock{display:none!import
 @media(min-width:901px) and (max-width:1300px){
  body:not(.obs-preview) .preview-shell{min-height:277.2px!important;height:277.2px!important}
 }
+
+
+/* v105: explicit LIVE MATCH scene + Twitch player at supported native embed size. */
+body:not(.obs-preview) .scene.live{background:transparent!important}
+body:not(.obs-preview) .scene.live.active{display:flex!important}
+body:not(.obs-preview) .live-safe{position:absolute;inset:auto 0 0;display:flex;justify-content:flex-end;pointer-events:none}
+body:not(.obs-preview) .live-safe span{padding:7px 10px;background:#07121bcc;border-left:2px solid var(--theme-accent,#f4b21b);font-size:9px;font-weight:950;letter-spacing:.14em}
+body:not(.obs-preview) #twitchPlayer{position:absolute;inset:0}
+body:not(.obs-preview) #twitchPlayer iframe{width:100%;height:100%;display:block}
+body.obs-preview .scene.live{background:transparent!important}
+body.obs-preview .scene.live .live-safe{display:none!important}
