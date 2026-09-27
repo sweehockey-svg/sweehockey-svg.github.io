@@ -799,3 +799,13 @@ body.obs-preview[data-theme="impact"] .screen{background:
 .forwards .role-stat{padding:3px 0!important;min-height:21px!important}
 .forwards .role-stat span{font-size:9px!important}
 .forwards .role-stat b{font-size:clamp(11px,1.02vw,16px)!important}
+
+
+/* v92: Forward Battle final geometry fix: keep identity high, stats block low but fully inside cards. */
+.forwards .role-info{display:flex!important;flex-direction:column!important;padding:10px 12px 10px!important;min-height:0!important;overflow:hidden!important}
+.forwards .role-team{flex:0 0 auto!important;margin:0 0 2px!important}
+.forwards .role-info>strong{flex:0 0 auto!important;margin:0!important;line-height:1.08!important}
+.forwards .role-head{margin-top:auto!important;padding-top:5px!important;margin-bottom:0!important;flex:0 0 auto!important}
+.forwards .role-stat{padding:2px 0!important;min-height:19px!important;line-height:1!important;flex:0 0 auto!important}
+.forwards .role-stat span{line-height:1!important}
+.forwards .role-stat b{line-height:1!important}
