@@ -509,6 +509,7 @@
  const obsPlaying=()=>{if(!OBS_MODE_LOCAL)return;document.documentElement.classList.remove("obs-twitch-booting");document.documentElement.classList.add("obs-twitch-playing")};
 
  const destroy=()=>{
+   clearTimeout(twitchResolveTimer);
    if(hls){try{hls.destroy()}catch(e){}hls=null}
    host?.replaceChildren();
    if(video){
@@ -520,30 +521,52 @@
    if(OBS_MODE_LOCAL)document.documentElement.classList.remove("obs-twitch-booting","obs-twitch-playing");
  };
 
- const mountTwitch=(raw,muted=true)=>{
-   const channel=parseTwitch(raw);if(!channel){destroy();setStatus("OGILTIG TWITCH-KANAL / URL");return false}
-   const key="twitch:"+channel;if(key===mountedKey&&host?.querySelector("iframe"))return true;
-   destroy();obsBoot();
-   const parents=[location.hostname,"svenskehockey.se","www.svenskehockey.se"].filter((v,i,a)=>v&&a.indexOf(v)===i);
-   const qs=new URLSearchParams({channel,autoplay:"true",muted:(OBS_MODE_LOCAL?false:!!muted)?"true":"false"});parents.forEach(p=>qs.append("parent",p));
-   const f=document.createElement("iframe");f.src="https://player.twitch.tv/?"+qs.toString();f.title="Twitch matchstream";f.allow="autoplay; fullscreen; picture-in-picture";f.allowFullscreen=true;f.setAttribute("scrolling","no");
-   f.addEventListener("load",()=>{if(host?.firstElementChild!==f)return;setStatus("TWITCH-SPELARE LADDAD · "+channel.toUpperCase(),true);setTimeout(()=>{if(host?.firstElementChild===f)obsPlaying()},1500)},{once:true});
-   host?.appendChild(f);layer?.classList.add("has-stream");mountedKey=key;setStatus("LADDAR TWITCH · "+channel.toUpperCase());return true;
+ let twitchResolveTimer=0,twitchResolveSeq=0,lastTwitchRaw="";
+ const resolveTwitchHls=async(raw,muted=true)=>{
+   const channel=parseTwitch(raw);
+   if(!channel){destroy();setStatus("OGILTIG TWITCH-KANAL / URL");return false}
+   lastTwitchRaw=raw;
+   const seq=++twitchResolveSeq;
+   clearTimeout(twitchResolveTimer);
+   setStatus("HÄMTAR TWITCH-STRÖM · "+channel.toUpperCase());
+   const base=String(window.EHOCKEY_CONFIG?.supabaseUrl||"").replace(/\/+$/,"");
+   if(!base){setStatus("SAKNAR SUPABASE-CONFIG");return false}
+   try{
+     const res=await fetch(base+"/functions/v1/seh-twitch-resolve?channel="+encodeURIComponent(channel),{cache:"no-store"});
+     const data=await res.json().catch(()=>({}));
+     if(seq!==twitchResolveSeq)return false;
+     if(!res.ok||!data?.hlsUrl){
+       setStatus(data?.detail?("TWITCH RESOLVER · "+String(data.detail).slice(0,90)):"KUNDE INTE HÄMTA TWITCH-STRÖM");
+       return false;
+     }
+     setStatus("TWITCH HLS KLAR · "+channel.toUpperCase(),true);
+     const ok=mountDirect(data.hlsUrl,muted,{label:"TWITCH · "+channel.toUpperCase(),kind:"twitch"});
+     if(ok&&data.expiresAt){
+       const ms=Math.max(300000,Math.min(7200000,(Number(data.expiresAt)*1000-Date.now())-300000));
+       twitchResolveTimer=setTimeout(()=>{if(lastTwitchRaw&&screen?.classList.contains("live-mode"))resolveTwitchHls(lastTwitchRaw,muted)},ms);
+     }
+     return ok;
+   }catch(e){
+     setStatus("TWITCH RESOLVER NÄTVERKSFEL");
+     console.error("[SEH Video] Twitch resolver",e);
+     return false;
+   }
  };
+ const mountTwitch=(raw,muted=true)=>{void resolveTwitchHls(raw,muted);return true;};
 
  const tryDirectPlay=()=>{
    if(!video||!screen?.classList.contains("live-mode")||layer?.classList.contains("is-hidden"))return;
    const p=video.play();if(p&&typeof p.catch==="function")p.catch(()=>{});
  };
 
- const mountDirect=(raw,muted=true)=>{
+ const mountDirect=(raw,muted=true,meta={})=>{
    const url=String(raw||"").trim();if(!/^https?:\/\//i.test(url)){destroy();setStatus("ANGE EN GILTIG HLS / VIDEO-URL");return false}
-   const key="direct:"+url;if(key===mountedKey&&video&&!video.hidden)return true;
+   const key=(meta.kind||"direct")+":"+url;if(key===mountedKey&&video&&!video.hidden)return true;
    destroy();obsBoot();
    video.hidden=false;
    video.autoplay=true;video.playsInline=true;video.preload="auto";video.controls=false;
    video.muted=OBS_MODE_LOCAL?false:!!muted;
-   const onPlaying=()=>{directPlaying=true;obsPlaying();setStatus("DIREKTVIDEO SPELAR",true)};
+   const onPlaying=()=>{directPlaying=true;obsPlaying();setStatus((meta.label||"DIREKTVIDEO")+" SPELAR",true)};
    const onPause=()=>{directPlaying=false;if(screen?.classList.contains("live-mode"))setTimeout(tryDirectPlay,150)};
    video.onplaying=onPlaying;video.onpause=onPause;video.onstalled=()=>setStatus("DIREKTVIDEO BUFFRAR");video.onwaiting=()=>setStatus("DIREKTVIDEO BUFFRAR");
    video.onerror=()=>setStatus("VIDEO FEL · KONTROLLERA URL/CORS");
@@ -556,7 +579,7 @@
        if(!data?.fatal)return;
        if(data.type===Hls.ErrorTypes.NETWORK_ERROR){setStatus("HLS NÄTVERKSFEL · FÖRSÖKER IGEN");hls.startLoad()}
        else if(data.type===Hls.ErrorTypes.MEDIA_ERROR){setStatus("HLS MEDIAFEL · ÅTERSTÄLLER");hls.recoverMediaError()}
-       else{setStatus("HLS FEL");try{hls.destroy()}catch(e){}hls=null}
+       else{setStatus("HLS FEL");try{hls.destroy()}catch(e){}hls=null;if(meta.kind==="twitch"&&lastTwitchRaw)setTimeout(()=>resolveTwitchHls(lastTwitchRaw,muted),1200)}
      });
    }else{
      video.src=url;
@@ -582,13 +605,13 @@
    const enabled=s.scene==="live"&&s.twitchShow!==false;
    layer?.classList.toggle("is-hidden",!enabled);
    if(!enabled){destroy();return}
-   if((s.videoSource||"twitch")==="direct")mountDirect(s.hlsUrl,s.twitchMute!==false);
+   if((s.videoSource||"twitch")==="direct")mountDirect(s.hlsUrl,s.twitchMute!==false,{label:"DIREKTVIDEO",kind:"direct"});
    else mountTwitch(s.twitchChannel,s.twitchMute!==false);
  };
 
  const loadFromControls=()=>{
    const mode=source?.value||"twitch";
-   const ok=mode==="direct"?mountDirect(hlsInput?.value,mute?.checked!==false):mountTwitch(twitchInput?.value,mute?.checked!==false);
+   const ok=mode==="direct"?mountDirect(hlsInput?.value,mute?.checked!==false,{label:"DIREKTVIDEO",kind:"direct"}):mountTwitch(twitchInput?.value,mute?.checked!==false);
    if(ok)window.__sehPublishBroadcastState?.();
  };
 
