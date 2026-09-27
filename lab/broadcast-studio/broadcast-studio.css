@@ -1048,3 +1048,13 @@ body:not(.obs-preview) #twitchPlayer{position:absolute;inset:0}
 body:not(.obs-preview) #twitchPlayer iframe{width:100%;height:100%;display:block}
 body.obs-preview .scene.live{background:transparent!important}
 body.obs-preview .scene.live .live-safe{display:none!important}
+
+
+/* v106: LIVE MATCH is a transparent overlay, not a full broadcast background.
+   Studio shows Twitch beneath it; OBS remains transparent for a video source below. */
+.screen.live-mode{background:transparent!important}
+.screen.live-mode>.texture{display:none!important}
+.screen.live-mode>.top{background:linear-gradient(180deg,rgba(4,13,20,.90),rgba(4,13,20,.58) 72%,transparent)!important;border-bottom-color:rgba(255,255,255,.13)!important}
+.screen.live-mode>.bug{background:rgba(4,13,20,.72);padding:5px 8px;border-radius:3px}
+body:not(.obs-preview) .screen.live-mode{box-shadow:none!important}
+body:not(.obs-preview) .preview-scale:has(.screen.live-mode){background:#02070b}
