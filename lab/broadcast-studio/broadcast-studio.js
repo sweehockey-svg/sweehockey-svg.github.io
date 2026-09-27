@@ -475,3 +475,14 @@
   void loadPart("players", "v_sec21_broadcast_players_public", () => { renderLineup(); renderLeaders(); renderScorers(); renderDefenseLeaders(); renderGoalieLeaders(); renderOffense(); renderRoleMatchups(); });
   void loadPart("playoffs", "v_sec21_broadcast_playoffs_public", renderRoad);
 })();
+
+
+/* v64: right-column quick controls mirror canonical controls. */
+(()=>{const pairs=[["dockHs","hs"],["dockAs","as"],["dockTheme","theme"]];
+ const sync=()=>pairs.forEach(([d,s])=>{const a=document.getElementById(d),b=document.getElementById(s);if(a&&b&&a.value!==b.value)a.value=b.value});
+ pairs.forEach(([d,s])=>{const a=document.getElementById(d),b=document.getElementById(s);if(!a||!b)return;
+   a.addEventListener("change",()=>{b.value=a.value;b.dispatchEvent(new Event("change",{bubbles:true}));sync()});
+   a.addEventListener("input",()=>{if(a.type==="number"){b.value=a.value;b.dispatchEvent(new Event("input",{bubbles:true}))}});
+   b.addEventListener("change",sync);b.addEventListener("input",sync);
+ }); sync(); setInterval(sync,1000);
+})();
