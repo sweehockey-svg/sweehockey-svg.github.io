@@ -511,3 +511,17 @@
  mute?.addEventListener("change",()=>{if(host?.querySelector("iframe"))load()});
  try{const saved=localStorage.getItem("sehBroadcastTwitch");if(saved&&channelEl)channelEl.value=saved}catch(e){}
 })();
+
+
+/* v67: make Match Live switch the broadcast canvas into transparent overlay mode. */
+(()=>{
+ const screen=document.getElementById("screen");
+ const syncLiveMode=()=>{
+   const live=!!screen?.querySelector(".scene.live.active");
+   screen?.classList.toggle("live-mode",live);
+ };
+ document.addEventListener("click",e=>{if(e.target.closest("[data-scene]"))setTimeout(syncLiveMode,0)});
+ const mo=screen?new MutationObserver(syncLiveMode):null;
+ screen?.querySelectorAll(".scene").forEach(s=>mo?.observe(s,{attributes:true,attributeFilter:["class"]}));
+ syncLiveMode();
+})();
