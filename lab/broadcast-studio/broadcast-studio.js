@@ -5,6 +5,11 @@
   const LEAGUE = 520;
   const REMOTE_CHANNEL = "sec21-bronze-test";
   const OBS_MODE = new URLSearchParams(location.search).get("obs") === "1";
+  if (OBS_MODE) {
+    const fitObsPreview = () => document.documentElement.style.setProperty("--obs-preview-scale", String(Math.min(window.innerWidth / 1280, window.innerHeight / 720)));
+    fitObsPreview();
+    window.addEventListener("resize", fitObsPreview);
+  }
   let activeScene = "opening", remoteApplying = false, remoteTimer = 0;
   let displayedLineupSide = "home", sceneTransitionTimer = 0, lineupTransitionTimer = 0;
   const SLOTS = ["LW", "C", "RW", "LD", "G", "RD"];
@@ -505,8 +510,8 @@
 
  const parseTwitch=raw=>{let v=String(raw||"").trim();if(!v)return "";try{if(/^https?:\/\//i.test(v)){const u=new URL(v);return u.pathname.split("/").filter(Boolean)[0]||""}}catch(e){}return v.replace(/^@/,"").replace(/^www\.twitch\.tv\//i,"").replace(/^twitch\.tv\//i,"").split(/[/?#]/)[0].trim()};
  const setStatus=(t,ok=false)=>{if(OBS_MODE_LOCAL){document.documentElement.dataset.playback=t;console.info("[SEH Video]",t)}if(status){status.classList.toggle("ready",ok);const x=status.querySelector("span");if(x)x.textContent=t}};
- const obsBoot=()=>{if(!OBS_MODE_LOCAL)return;document.documentElement.classList.add("obs-twitch-booting");document.documentElement.classList.remove("obs-twitch-playing")};
- const obsPlaying=()=>{if(!OBS_MODE_LOCAL)return;document.documentElement.classList.remove("obs-twitch-booting");document.documentElement.classList.add("obs-twitch-playing")};
+ const obsBoot=()=>{};
+ const obsPlaying=()=>{};
 
  const destroy=()=>{
    clearTimeout(twitchResolveTimer);clearInterval(liveWatchTimer);liveWatchTimer=0;lastVideoTime=0;lastVideoProgressAt=0;twitchResolveSeq++;pendingTwitchChannel="";activeTwitchChannel="";
@@ -571,7 +576,7 @@
    destroy();obsBoot();
    video.hidden=false;
    video.autoplay=true;video.playsInline=true;video.preload="auto";video.controls=false;
-   video.muted=OBS_MODE_LOCAL?false:!!muted;
+   video.muted=!!muted;
    const onPlaying=()=>{directPlaying=true;lastVideoTime=video.currentTime||0;lastVideoProgressAt=Date.now();obsPlaying();setStatus((meta.label||"DIREKTVIDEO")+" SPELAR",true)};
    const onPause=()=>{directPlaying=false;if(screen?.classList.contains("live-mode"))setTimeout(tryDirectPlay,150)};
    video.onplaying=onPlaying;video.onpause=onPause;video.onstalled=()=>setStatus("DIREKTVIDEO BUFFRAR");video.onwaiting=()=>setStatus("DIREKTVIDEO BUFFRAR");
@@ -659,16 +664,12 @@
  [twitchInput,hlsInput].forEach(el=>el?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadFromControls()}}));
  source?.addEventListener("change",()=>{syncSourceUi();window.__sehPublishBroadcastState?.();if(screen?.classList.contains("live-mode"))loadFromControls()});
  show?.addEventListener("change",()=>{layer?.classList.toggle("is-hidden",!show.checked);window.__sehPublishBroadcastState?.();if(show.checked)loadFromControls()});
- mute?.addEventListener("change",()=>{if(video&&!video.hidden)video.muted=OBS_MODE_LOCAL?false:mute.checked;window.__sehPublishBroadcastState?.()});
+ mute?.addEventListener("change",()=>{if(video&&!video.hidden)video.muted=mute.checked;window.__sehPublishBroadcastState?.()});
 
  window.addEventListener("seh:twitch-state",e=>apply(e.detail));
  if(window.__sehTwitchState)apply(window.__sehTwitchState);
  syncSourceUi();
 
- if(OBS_MODE_LOCAL){
-   setInterval(()=>{if(video&&!video.hidden&&screen?.classList.contains("live-mode")&&video.paused)tryDirectPlay()},1000);
-   return;
- }
  const syncLiveMode=()=>screen?.classList.toggle("live-mode",!!screen?.querySelector(".scene.live.active"));
  screen?.querySelectorAll(".scene").forEach(s=>new MutationObserver(syncLiveMode).observe(s,{attributes:true,attributeFilter:["class"]}));
  syncLiveMode();
