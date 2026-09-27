@@ -841,3 +841,11 @@ body.obs-preview[data-theme="impact"] .screen{background:
 .series-dots i{display:block;width:42px;height:7px;border-radius:10px;background:#ffffff22;border:1px solid #ffffff25}
 .series-dots i.won{background:var(--theme-accent,#f4b21b);border-color:var(--theme-accent,#f4b21b);box-shadow:0 0 14px color-mix(in srgb,var(--theme-accent,#f4b21b) 38%,transparent)}
 .series-next{margin-top:38px;padding:12px 26px;border:1px solid #ffffff20;background:#061521b8;font-size:13px;font-weight:900;letter-spacing:.16em}
+
+
+/* v96: Series scene is a vertical composition. The base active scene is flex-row. */
+.screen>.scene.series.active{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;padding:2% 5% 3%!important}
+.series-kicker{flex:0 0 auto!important;white-space:nowrap!important}
+.series-title{flex:0 0 auto!important;width:100%!important;margin:6px 0 30px!important;text-align:center!important}
+.series-board{flex:0 0 auto!important}
+.series-next{flex:0 0 auto!important;margin-top:34px!important}
