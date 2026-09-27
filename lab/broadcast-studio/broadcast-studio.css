@@ -725,3 +725,20 @@ body.obs-preview[data-theme="impact"] .screen{background:
 .offense .role-stat{padding:1px 0;min-height:17px}
 .offense .role-stat span{font-size:8px}
 .offense .role-stat b{font-size:clamp(10px,.95vw,15px)}
+
+
+/* v87: Forward Battle needs actual vertical room, not microscopic stats. */
+.offense{padding-top:104px!important}
+.offense .scene-title{margin-bottom:8px}
+.offense .scene-title b{font-size:clamp(36px,3.75vw,60px)}
+.offense .role-grid{min-height:0;height:calc(100% - 126px);grid-template-rows:repeat(2,minmax(0,1fr));gap:10px}
+.offense .role-card{min-height:0}
+.offense .role-info{padding:8px 14px;justify-content:center}
+.offense .role-team img{width:27px;height:27px}
+.offense .role-team small{font-size:9px}
+.offense .role-info>strong{font-size:clamp(14px,1.3vw,22px);margin:3px 0 5px;line-height:1.03}
+.offense .role-head,.offense .role-stat{grid-template-columns:minmax(0,1fr) 56px 62px;gap:6px}
+.offense .role-head{font-size:8px}
+.offense .role-stat{padding:2px 0;min-height:20px}
+.offense .role-stat span{font-size:9px}
+.offense .role-stat b{font-size:clamp(11px,1vw,16px)}
