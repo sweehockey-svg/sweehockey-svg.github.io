@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#06111a">
+<title>Mobil scenstyrning · Svensk eHockey</title>
+<style>
+:root{color-scheme:dark;--bg:#06111a;--panel:#091722;--line:#20313e;--text:#f5f8fa;--muted:#718697;--yellow:#f4b21b;--green:#51d88a}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(18px + env(safe-area-inset-bottom)) env(safe-area-inset-left)}
+header{position:sticky;top:0;z-index:10;background:rgba(6,17,26,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:14px 14px 12px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:38px;height:42px;display:grid;place-items:center;background:var(--yellow);color:#07111a;font-size:12px;font-weight:1000;clip-path:polygon(50% 0,100% 18%,90% 82%,50% 100%,10% 82%,0 18%)}
+.brand b{font-size:15px;letter-spacing:.02em}.brand small{display:block;margin-top:2px;color:#8ea1af;font-size:9px;font-weight:800;letter-spacing:.16em}
+.statusbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid #172833}
+.current small,.connection{font-size:9px;font-weight:900;letter-spacing:.14em;color:var(--muted)}
+.current strong{display:block;margin-top:3px;font-size:20px;line-height:1.1}
+.connection{display:flex;align-items:center;gap:6px;white-space:nowrap}.connection i{width:8px;height:8px;border-radius:50%;background:#718697}.connection.ok i{background:var(--green);box-shadow:0 0 10px #51d88a66}.connection.busy i{background:var(--yellow)}
+main{max-width:720px;margin:0 auto;padding:14px}
+.group{margin:0 0 18px}.group h2{margin:0 0 8px;color:#8296a5;font-size:9px;letter-spacing:.18em}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+button{appearance:none;border:1px solid #2a3d4c;background:#0b1924;color:#f1f6f9;border-radius:9px;min-height:58px;padding:10px 8px;font:900 12px/1.1 Arial,Helvetica,sans-serif;letter-spacing:.01em;touch-action:manipulation}
+button:active{transform:scale(.985)}
+button.active{border-color:var(--yellow);background:#17170d;color:var(--yellow);box-shadow:inset 0 0 0 1px #f4b21b55}
+button.pending{opacity:.7}
+button[disabled]{cursor:wait}
+.foot{margin-top:4px;padding:12px 4px;color:#617686;font-size:10px;line-height:1.45;text-align:center}
+@media(min-width:560px) and (orientation:landscape){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}button{min-height:54px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">SEH</div><div><b>SVENSK eHOCKEY</b><small>MOBIL SCENSTYRNING</small></div></div>
+  <div class="statusbar">
+    <div class="current"><small>AKTIV SCEN</small><strong id="currentScene">Laddar…</strong></div>
+    <div class="connection" id="connection"><i></i><span>ANSLUTER</span></div>
+  </div>
+</header>
+<main>
+  <section class="group"><h2>SÄNDNING</h2><div class="grid">
+    <button data-scene="live">Match Live</button>
+    <button data-scene="intermission">Paus</button>
+    <button data-scene="opening">Opening</button>
+    <button data-scene="series">Serieläge</button>
+  </div></section>
+
+  <section class="group"><h2>MATCH</h2><div class="grid">
+    <button data-scene="matchup">Matchup</button>
+    <button data-scene="lineup" data-lineup-side="home">Lineup H</button>
+    <button data-scene="lineup" data-lineup-side="away">Lineup B</button>
+    <button data-scene="stats">Stats</button>
+    <button data-scene="table">Tabell</button>
+    <button data-scene="teamcompare">Lagduell</button>
+    <button data-scene="scorers">Poängliga</button>
+    <button data-scene="formguide">Form</button>
+    <button data-scene="offense">Offensiv</button>
+    <button data-scene="defenseleaders">Backar</button>
+    <button data-scene="goalieleaders">Målvaktsliga</button>
+    <button data-scene="road">Bronsvägen</button>
+  </div></section>
+
+  <section class="group"><h2>SPELARE / OVERLAYS</h2><div class="grid">
+    <button data-scene="leaders">Spelare</button>
+    <button data-scene="lowerthird">Lower third</button>
+    <button data-scene="forwards">Forwards</button>
+    <button data-scene="defense">Blue Line</button>
+    <button data-scene="goalies">Goalies</button>
+    <button data-scene="keymatchup">Key Matchup</button>
+    <button data-scene="spotlight">Spotlight</button>
+  </div></section>
+
+  <div class="foot">Den här sidan ändrar bara aktiv scen. Lag, score, Twitch, lineups och övriga sändningsinställningar lämnas orörda.</div>
+</main>
+<script src="../../config.js?v=20260918-team-aliases-v1"></script>
+<script>
+(()=>{
+"use strict";
+const CHANNEL="sec21-bronze-test";
+const labels={
+ opening:"Opening",live:"Match Live",matchup:"Matchup",series:"Serieläge",lineup:"Lineup",
+ stats:"Stats",table:"Tabell",teamcompare:"Lagduell",scorers:"Poängliga",formguide:"Form",
+ offense:"Offensiv",defenseleaders:"Backar",goalieleaders:"Målvaktsliga",road:"Bronsvägen",
+ leaders:"Spelare",intermission:"Paus",lowerthird:"Lower third",forwards:"Forwards",
+ defense:"Blue Line",goalies:"Goalies",keymatchup:"Key Matchup",spotlight:"Spotlight"
+};
+const buttons=[...document.querySelectorAll("[data-scene]")];
+const current=document.getElementById("currentScene");
+const connection=document.getElementById("connection");
+let busy=false,lastKey="";
+
+function cfg(){
+ const c=window.EHOCKEY_CONFIG||{};
+ if(!c.supabaseUrl||!c.supabasePublishableKey)throw new Error("Supabase-config saknas");
+ return c;
+}
+function headers(){
+ const c=cfg(),key=String(c.supabasePublishableKey);
+ const h={apikey:key,Accept:"application/json","Content-Type":"application/json"};
+ if(/^eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(key))h.Authorization="Bearer "+key;
+ return h;
+}
+function base(){return String(cfg().supabaseUrl).replace(/\/+$/,"")}
+function setConnection(text,mode=""){
+ connection.className="connection"+(mode?" "+mode:"");
+ connection.querySelector("span").textContent=text;
+}
+function sceneKey(state){
+ if(!state)return "";
+ return state.scene==="lineup" ? "lineup:"+(state.lineupSide||"home") : String(state.scene||"");
+}
+function render(state){
+ if(!state)return;
+ const key=sceneKey(state);lastKey=key;
+ buttons.forEach(b=>{
+   const bkey=b.dataset.scene==="lineup"?"lineup:"+(b.dataset.lineupSide||"home"):b.dataset.scene;
+   b.classList.toggle("active",bkey===key);
+   b.classList.remove("pending");
+ });
+ const name=labels[state.scene]||state.scene||"Okänd";
+ current.textContent=state.scene==="lineup" ? name+" "+(state.lineupSide==="away"?"B":"H") : name;
+}
+async function pull(){
+ try{
+   const res=await fetch(base()+"/rest/v1/broadcast_studio_state?channel=eq."+encodeURIComponent(CHANNEL)+"&select=state,updated_at",{headers:headers(),cache:"no-store"});
+   if(!res.ok)throw new Error("HTTP "+res.status);
+   const rows=await res.json();
+   if(rows?.[0]?.state)render(rows[0].state);
+   setConnection("ANSLUTEN","ok");
+ }catch(e){
+   console.error(e);setConnection("OFFLINE");
+ }
+}
+async function setScene(button){
+ if(busy)return;
+ busy=true;buttons.forEach(b=>b.disabled=true);button.classList.add("pending");setConnection("BYTER…","busy");
+ const scene=button.dataset.scene;
+ const lineupSide=button.dataset.lineupSide||null;
+ try{
+   const res=await fetch(base()+"/rest/v1/rpc/broadcast_studio_set_scene",{
+     method:"POST",headers:headers(),cache:"no-store",
+     body:JSON.stringify({p_channel:CHANNEL,p_scene:scene,p_lineup_side:lineupSide})
+   });
+   if(!res.ok)throw new Error("HTTP "+res.status+" "+await res.text());
+   const state=await res.json();
+   if(state)render(state);
+   navigator.vibrate?.(18);
+   setConnection("SKICKAT","ok");
+   setTimeout(()=>setConnection("ANSLUTEN","ok"),500);
+ }catch(e){
+   console.error(e);setConnection("FEL");
+   await pull();
+ }finally{
+   busy=false;buttons.forEach(b=>b.disabled=false);
+ }
+}
+buttons.forEach(b=>b.addEventListener("click",()=>setScene(b)));
+pull();
+setInterval(()=>{if(!busy)pull()},1000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)pull()});
+window.addEventListener("focus",pull);
+window.addEventListener("pageshow",pull);
+})();
+</script>
+</body>
+</html>
