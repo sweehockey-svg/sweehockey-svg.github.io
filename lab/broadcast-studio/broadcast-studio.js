@@ -351,8 +351,9 @@
     const current=document.querySelector(".scene.active");
     const target=document.querySelector(".scene."+next);
     const sideChanged=next==="lineup"&&activeScene==="lineup"&&nextSide!==displayedLineupSide;
-    // The home and away lineups share one DOM scene. Snapshot the old side
-    // before rendering the new one so the broadcast cut can animate both.
+    // Home and away share the same lineup DOM node. Keep a visual snapshot of
+    // the outgoing lineup, but run it through the exact same transition classes
+    // as every other scene change.
     const oldLineup=sideChanged&&current===target?target.cloneNode(true):null;
     if(side)$("#lineupSide").value=side;
     if(next==="lineup")renderLineup();
@@ -367,18 +368,20 @@
     document.querySelectorAll(".scene").forEach(x=>x.classList.remove("scene-leave","scene-enter"));
     screen.classList.remove("scene-switching","lineup-side-switching");
     if(sideChanged&&oldLineup){
-      oldLineup.classList.add("lineup-transition-old");
-      oldLineup.classList.remove("active");
-      oldLineup.removeAttribute("id");
+      oldLineup.classList.add("lineup-transition-old","scene-leave","active");
+      // Keep the outgoing logo constrained exactly like the live lineup logo.
+      const oldLogo=oldLineup.querySelector("#lineupTeamLogo");
+      if(oldLogo) oldLogo.classList.add("lineup-team-logo-snapshot");
       oldLineup.querySelectorAll("[id]").forEach(x=>x.removeAttribute("id"));
       screen.appendChild(oldLineup);
-      target.classList.add("active");
+      target.classList.add("active","scene-enter");
       void screen.offsetWidth;
-      screen.classList.add("lineup-side-switching");
+      screen.classList.add("scene-switching");
       lineupTransitionTimer=window.setTimeout(()=>{
         oldLineup.remove();
-        screen.classList.remove("lineup-side-switching");
-      },540);
+        target.classList.remove("scene-enter");
+        screen.classList.remove("scene-switching");
+      },420);
       return;
     }
     if(!current||current===target){
