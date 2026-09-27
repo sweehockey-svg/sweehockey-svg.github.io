@@ -698,3 +698,19 @@ body.obs-preview[data-theme="impact"] .screen{background:
 
 /* v83: freeze outgoing lineup logo geometry during H/B crossfade. */
 .lineup-transition-old .lineup-title>img{width:92px!important;height:92px!important;max-width:92px!important;max-height:92px!important;object-fit:contain!important;flex:0 0 auto!important;filter:drop-shadow(0 7px 14px #0008)!important;transform:none!important;margin:0!important}
+
+
+/* v85: Forward Battle compact stat stack. Centers have FO% and must still show P. */
+.offense .scene-title{margin-bottom:12px}
+.offense .role-grid{gap:10px;grid-template-rows:repeat(2,minmax(0,1fr))}
+.offense .role-card{grid-template-columns:42% 58%;overflow:hidden}
+.offense .role-info{padding:7px 14px;justify-content:center;overflow:hidden}
+.offense .role-team{gap:7px;line-height:1}
+.offense .role-team img{width:27px;height:27px}
+.offense .role-team small{font-size:9px}
+.offense .role-info>strong{font-size:clamp(14px,1.32vw,22px);line-height:1.05;margin:4px 0 5px}
+.offense .role-head,.offense .role-stat{grid-template-columns:minmax(0,1fr) 56px 62px;gap:6px}
+.offense .role-head{font-size:8px;line-height:1;margin-bottom:0}
+.offense .role-stat{padding:2px 0;min-height:20px;line-height:1}
+.offense .role-stat span{font-size:9px;line-height:1}
+.offense .role-stat b{font-size:clamp(11px,1vw,16px);line-height:1}
