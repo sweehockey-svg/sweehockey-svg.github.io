@@ -583,9 +583,25 @@
    video.onerror=()=>setStatus("VIDEO FEL · KONTROLLERA URL/CORS");
 
    if((meta.kind==="twitch"||/\.m3u8(?:$|[?#])/i.test(url))&&window.Hls?.isSupported()){
-     hls=new Hls({lowLatencyMode:false,backBufferLength:15,maxBufferLength:18,maxMaxBufferLength:30,liveSyncDurationCount:3,liveMaxLatencyDurationCount:8,highBufferWatchdogPeriod:2,nudgeOffset:.1,nudgeMaxRetry:10});
+     hls=new Hls({lowLatencyMode:false,capLevelToPlayerSize:OBS_MODE_LOCAL,backBufferLength:10,maxBufferLength:12,maxMaxBufferLength:20,liveSyncDurationCount:3,liveMaxLatencyDurationCount:8,highBufferWatchdogPeriod:2,nudgeOffset:.1,nudgeMaxRetry:10});
      hls.loadSource(url);hls.attachMedia(video);
-     hls.on(Hls.Events.MANIFEST_PARSED,()=>{setStatus("HLS LADDAD");tryDirectPlay()});
+     hls.on(Hls.Events.MANIFEST_PARSED,()=>{
+       let qualityLabel="";
+       if(OBS_MODE_LOCAL&&Array.isArray(hls.levels)&&hls.levels.length){
+         const candidates=hls.levels.map((level,index)=>({index,height:Number(level.height||0),width:Number(level.width||0),bitrate:Number(level.bitrate||0)}))
+           .filter(x=>x.height>0&&x.height<=720&&(!x.width||x.width<=1280));
+         const chosen=(candidates.length?candidates:hls.levels.map((level,index)=>({index,height:Number(level.height||0),width:Number(level.width||0),bitrate:Number(level.bitrate||0)})))
+           .sort((a,b)=>(b.height-a.height)||(b.bitrate-a.bitrate))[0];
+         if(chosen){
+           hls.autoLevelCapping=chosen.index;
+           hls.startLevel=chosen.index;
+           hls.nextAutoLevel=chosen.index;
+           qualityLabel=chosen.height?" · "+chosen.height+"p":" · OPTIMERAD";
+         }
+       }
+       setStatus("HLS LADDAD"+qualityLabel);
+       tryDirectPlay();
+     });
      if(meta.kind==="twitch"){
        const recoverLive=()=>{
          if(!hls||!video||video.hidden||!screen?.classList.contains("live-mode"))return;
