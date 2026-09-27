@@ -494,6 +494,7 @@
 /* v70: Twitch is part of canonical remote broadcast state. Controller loads/publishes it;
    OBS receives the same channel through Supabase, so browser-local storage is irrelevant. */
 (()=>{
+ const OBS_MODE_LOCAL=new URLSearchParams(location.search).get("obs")==="1";
  const $id=id=>document.getElementById(id);
  const input=$id("twitchChannel"),btn=$id("loadTwitch"),layer=$id("twitchLayer"),host=$id("twitchPlayer"),status=$id("streamStatus"),show=$id("showTwitch"),mute=$id("muteTwitch"),screen=$id("screen");
  let mounted="";
@@ -508,14 +509,14 @@
    f.addEventListener("load",()=>setStatus("TWITCH-SPELARE LADDAD · "+channel.toUpperCase(),true),{once:true});
    host?.replaceChildren(f);layer?.classList.add("has-stream");mounted=channel;setStatus("LADDAR TWITCH · "+channel.toUpperCase());return true;
  };
- const apply=s=>{if(!s)return;const raw=s.twitchChannel||"";if(OBS_MODE){const ch=parse(raw);if(ch&&ch!==mounted){mounted="";host?.replaceChildren();mount(raw,true)}else if(!ch){mounted="";host?.replaceChildren();layer?.classList.remove("has-stream")}}else if(raw&&input&&input.value!==raw)input.value=raw;layer?.classList.toggle("is-hidden",s.twitchShow===false)};
+ const apply=s=>{if(!s)return;const raw=s.twitchChannel||"";if(OBS_MODE_LOCAL){const ch=parse(raw);if(ch&&ch!==mounted){mounted="";host?.replaceChildren();mount(raw,true)}else if(!ch){mounted="";host?.replaceChildren();layer?.classList.remove("has-stream")}}else if(raw&&input&&input.value!==raw)input.value=raw;layer?.classList.toggle("is-hidden",s.twitchShow===false)};
  btn?.addEventListener("click",e=>{e.preventDefault();const raw=input?.value||"";if(!parse(raw)){setStatus("OGILTIG TWITCH-KANAL / URL");return}mount(raw,mute?.checked!==false);window.__sehPublishBroadcastState?.()});
  input?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();btn?.click()}});
  show?.addEventListener("change",()=>{layer?.classList.toggle("is-hidden",!show.checked);window.__sehPublishBroadcastState?.()});
  mute?.addEventListener("change",()=>{mounted="";mount(input?.value,mute.checked);window.__sehPublishBroadcastState?.()});
  window.addEventListener("seh:twitch-state",e=>apply(e.detail));
  if(window.__sehTwitchState)apply(window.__sehTwitchState);
- if(OBS_MODE){
+ if(OBS_MODE_LOCAL){
    // OBS-safe fallback: applyRemoteState always writes the hidden channel input.
    // Poll that canonical value directly so Twitch does not depend on CustomEvent timing.
    const syncObsTwitch=()=>{
