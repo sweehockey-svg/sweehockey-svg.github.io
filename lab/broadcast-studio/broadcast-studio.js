@@ -17,10 +17,10 @@
   const competitionLogo = c => c.logo || competitionBadge(c.code);
   const LOCALE = (document.documentElement.lang || "sv").toLowerCase().split("-")[0];
   const STRINGS = {
-    sv:{commentator:"KOMMENTATOR",group:"GRUPP",groupstage:"GRUPPSPEL",playoffs:"SLUTSPEL",goals:"MÅL",goalsPerGame:"MÅL / MATCH",goalsAgainstPerGame:"INSLÄPPT / MATCH",goalDiff:"MÅLSKILLNAD",totalResult:"TOTALT RESULTAT",teamGoals:"LAGMÅL",playerGoals:"SPELARMÅL",mostGoals:"FLERST MÅL",wins:"vinster",series:"serier",matchWins:"matchvinster",dataMissing:"DATA SAKNAS",currentTournament:"AKTUELL TURNERING",liveTournamentData:"Live turneringsdata",testMatch:"FIKTIV TESTMATCH",bronze:"BRONS",seriesState:"SERIELÄGE",winsSeries:"VINNER SERIEN",seriesDone:"SERIEN AVGJORD",nextMatch:"NÄSTA MATCH",matches:"MATCHER",previousMatches:"TIDIGARE MATCHER",selectPlayer:"Välj spelare",teamStats:"Lagstatistik",rosterPlayers:"Trupp/spelare",loading:"laddar…",ready:"klar",empty:"saknas",loadError:"kunde inte laddas",goalie:"MÅLVAKT",defender:"BACK",pointsLeader:"POÄNGLIGAN",roadBronze:"Bronsvägen",roadPlayoffs:"Slutspelsvägen"},
-    en:{commentator:"COMMENTATOR",group:"GROUP",groupstage:"GROUP STAGE",playoffs:"PLAYOFFS",goals:"GOALS",goalsPerGame:"GOALS / GAME",goalsAgainstPerGame:"GOALS AGAINST / GAME",goalDiff:"GOAL DIFFERENCE",totalResult:"OVERALL RECORD",teamGoals:"TEAM GOALS",playerGoals:"PLAYER GOALS",mostGoals:"MOST GOALS",wins:"wins",series:"series",matchWins:"game wins",dataMissing:"NO DATA",currentTournament:"CURRENT TOURNAMENT",liveTournamentData:"Live tournament data",testMatch:"TEST MATCH",bronze:"BRONZE",seriesState:"SERIES",winsSeries:"WINS THE SERIES",seriesDone:"SERIES COMPLETE",nextMatch:"NEXT GAME",matches:"GAMES",previousMatches:"PREVIOUS GAMES",selectPlayer:"Select player",teamStats:"Team stats",rosterPlayers:"Roster/players",loading:"loading…",ready:"ready",empty:"missing",loadError:"could not load",goalie:"GOALIE",defender:"DEFENSE",pointsLeader:"POINTS LEADER",roadBronze:"Bronze road",roadPlayoffs:"Playoff road"},
-    fi:{commentator:"SELOSTAJA",group:"LOHKO",groupstage:"LOHKOVAIHE",playoffs:"PUDOTUSPELIT",goals:"MAALIT",goalsPerGame:"MAALIT / OTTELU",goalsAgainstPerGame:"PÄÄSTETYT / OTTELU",goalDiff:"MAALIERO",totalResult:"KOKONAISTULOS",teamGoals:"JOUKKUEEN MAALIT",playerGoals:"PELAAJIEN MAALIT",mostGoals:"ENITEN MAALEJA",wins:"voittoa",series:"ottelusarjaa",matchWins:"otteluvoittoa",dataMissing:"EI DATAA",currentTournament:"NYKYINEN TURNAUS",liveTournamentData:"Live-turnausdata",testMatch:"TESTIOTTELU",bronze:"PRONSSI",seriesState:"OTTELUSARJA",winsSeries:"VOITTAA OTTELUSARJAN",seriesDone:"OTTELUSARJA RATKENNUT",nextMatch:"SEURAAVA OTTELU",matches:"OTTELUT",previousMatches:"AIEMMAT OTTELUT",selectPlayer:"Valitse pelaaja",teamStats:"Joukkuetilastot",rosterPlayers:"Kokoonpano/pelaajat",loading:"ladataan…",ready:"valmis",empty:"puuttuu",loadError:"lataus epäonnistui",goalie:"MAALIVAHTI",defender:"PUOLUSTAJA",pointsLeader:"PISTEPÖRSSI",roadBronze:"Tie pronssille",roadPlayoffs:"Pudotuspelitie"},
-    de:{commentator:"KOMMENTATOR",group:"GRUPPE",groupstage:"GRUPPENPHASE",playoffs:"PLAYOFFS",goals:"TORE",goalsPerGame:"TORE / SPIEL",goalsAgainstPerGame:"GEGENTORE / SPIEL",goalDiff:"TORDIFFERENZ",totalResult:"GESAMTBILANZ",teamGoals:"TEAMTORE",playerGoals:"SPIELERTORE",mostGoals:"MEISTE TORE",wins:"Siege",series:"Serien",matchWins:"Spielsiege",dataMissing:"KEINE DATEN",currentTournament:"AKTUELLES TURNIER",liveTournamentData:"Live-Turnierdaten",testMatch:"TESTSPIEL",bronze:"BRONZE",seriesState:"SERIENSTAND",winsSeries:"GEWINNT DIE SERIE",seriesDone:"SERIE ENTSCHIEDEN",nextMatch:"NÄCHSTES SPIEL",matches:"SPIELE",previousMatches:"BISHERIGE SPIELE",selectPlayer:"Spieler wählen",teamStats:"Teamstatistik",rosterPlayers:"Kader/Spieler",loading:"lädt…",ready:"bereit",empty:"fehlt",loadError:"konnte nicht geladen werden",goalie:"TORWART",defender:"VERTEIDIGER",pointsLeader:"PUNKTELEADER",roadBronze:"Weg zu Bronze",roadPlayoffs:"Playoff-Weg"}
+    sv:{commentator:"KOMMENTATOR",group:"GRUPP",groupstage:"GRUPPSPEL",playoffs:"SLUTSPEL",goals:"MÅL",goalsPerGame:"MÅL / MATCH",goalsAgainstPerGame:"INSLÄPPT / MATCH",goalDiff:"MÅLSKILLNAD",totalResult:"TOTALT RESULTAT",teamGoals:"LAGMÅL",playerGoals:"SPELARMÅL",mostGoals:"FLERST MÅL",wins:"vinster",series:"serier",matchWins:"matchvinster",dataMissing:"DATA SAKNAS",currentTournament:"AKTUELL TURNERING",liveTournamentData:"Live turneringsdata",testMatch:"FIKTIV TESTMATCH",bronze:"BRONS",seriesState:"SERIELÄGE",winsSeries:"VINNER SERIEN",seriesDone:"SERIEN AVGJORD",nextMatch:"NÄSTA MATCH",matches:"MATCHER",previousMatches:"TIDIGARE MATCHER",selectPlayer:"Välj spelare",teamStats:"Lagstatistik",rosterPlayers:"Trupp/spelare",loading:"laddar…",ready:"klar",empty:"saknas",loadError:"kunde inte laddas",goalie:"MÅLVAKT",defender:"BACK",pointsLeader:"POÄNGLIGAN",roadBronze:"Bronsvägen",roadPlayoffs:"Slutspelsvägen",team:"LAG",notSelected:"EJ VALD",noPlayer:"INGEN SPELARE",noGoalie:"INGEN MÅLVAKT",totalPoints:"POÄNG TOTALT",gamesLower:"matcher",invalidTwitch:"OGILTIG TWITCH-KANAL / URL",fetchingTwitch:"HÄMTAR TWITCH-STRÖM",missingSupabase:"SAKNAR SUPABASE-CONFIG",twitchFetchFail:"KUNDE INTE HÄMTA TWITCH-STRÖM",twitchReady:"TWITCH HLS KLAR",twitchNetwork:"TWITCH RESOLVER NÄTVERKSFEL",twitchRecovering:"TWITCH ÅTERHÄMTAR LIVE",unknown:"okänt",hlsNetworkError:"HLS NÄTVERKSFEL",loadingDirectVideo:"LADDAR DIREKTVIDEO",directVideo:"DIREKTVIDEO"},
+    en:{commentator:"COMMENTATOR",group:"GROUP",groupstage:"GROUP STAGE",playoffs:"PLAYOFFS",goals:"GOALS",goalsPerGame:"GOALS / GAME",goalsAgainstPerGame:"GOALS AGAINST / GAME",goalDiff:"GOAL DIFFERENCE",totalResult:"OVERALL RECORD",teamGoals:"TEAM GOALS",playerGoals:"PLAYER GOALS",mostGoals:"MOST GOALS",wins:"wins",series:"series",matchWins:"game wins",dataMissing:"NO DATA",currentTournament:"CURRENT TOURNAMENT",liveTournamentData:"Live tournament data",testMatch:"TEST MATCH",bronze:"BRONZE",seriesState:"SERIES",winsSeries:"WINS THE SERIES",seriesDone:"SERIES COMPLETE",nextMatch:"NEXT GAME",matches:"GAMES",previousMatches:"PREVIOUS GAMES",selectPlayer:"Select player",teamStats:"Team stats",rosterPlayers:"Roster/players",loading:"loading…",ready:"ready",empty:"missing",loadError:"could not load",goalie:"GOALIE",defender:"DEFENSE",pointsLeader:"POINTS LEADER",roadBronze:"Bronze road",roadPlayoffs:"Playoff road",team:"TEAM",notSelected:"NOT SELECTED",noPlayer:"NO PLAYER",noGoalie:"NO GOALIE",totalPoints:"TOTAL POINTS",gamesLower:"games",invalidTwitch:"INVALID TWITCH CHANNEL / URL",fetchingTwitch:"FETCHING TWITCH STREAM",missingSupabase:"SUPABASE CONFIG MISSING",twitchFetchFail:"COULD NOT FETCH TWITCH STREAM",twitchReady:"TWITCH HLS READY",twitchNetwork:"TWITCH RESOLVER NETWORK ERROR",twitchRecovering:"TWITCH RECOVERING LIVE",unknown:"unknown",hlsNetworkError:"HLS NETWORK ERROR",loadingDirectVideo:"LOADING DIRECT VIDEO",directVideo:"DIRECT VIDEO"},
+    fi:{commentator:"SELOSTAJA",group:"LOHKO",groupstage:"LOHKOVAIHE",playoffs:"PUDOTUSPELIT",goals:"MAALIT",goalsPerGame:"MAALIT / OTTELU",goalsAgainstPerGame:"PÄÄSTETYT / OTTELU",goalDiff:"MAALIERO",totalResult:"KOKONAISTULOS",teamGoals:"JOUKKUEEN MAALIT",playerGoals:"PELAAJIEN MAALIT",mostGoals:"ENITEN MAALEJA",wins:"voittoa",series:"ottelusarjaa",matchWins:"otteluvoittoa",dataMissing:"EI DATAA",currentTournament:"NYKYINEN TURNAUS",liveTournamentData:"Live-turnausdata",testMatch:"TESTIOTTELU",bronze:"PRONSSI",seriesState:"OTTELUSARJA",winsSeries:"VOITTAA OTTELUSARJAN",seriesDone:"OTTELUSARJA RATKENNUT",nextMatch:"SEURAAVA OTTELU",matches:"OTTELUT",previousMatches:"AIEMMAT OTTELUT",selectPlayer:"Valitse pelaaja",teamStats:"Joukkuetilastot",rosterPlayers:"Kokoonpano/pelaajat",loading:"ladataan…",ready:"valmis",empty:"puuttuu",loadError:"lataus epäonnistui",goalie:"MAALIVAHTI",defender:"PUOLUSTAJA",pointsLeader:"PISTEPÖRSSI",roadBronze:"Tie pronssille",roadPlayoffs:"Pudotuspelitie",team:"JOUKKUE",notSelected:"EI VALITTU",noPlayer:"EI PELAAJAA",noGoalie:"EI MAALIVAHTIA",totalPoints:"PISTEET YHTEENSÄ",gamesLower:"ottelua",invalidTwitch:"VIRHEELLINEN TWITCH-KANAVA / URL",fetchingTwitch:"HAETAAN TWITCH-STRIIMIÄ",missingSupabase:"SUPABASE-ASETUS PUUTTUU",twitchFetchFail:"TWITCH-STRIIMIÄ EI VOITU HAKEA",twitchReady:"TWITCH HLS VALMIS",twitchNetwork:"TWITCH RESOLVER -VERKKOVIRHE",twitchRecovering:"TWITCH PALAUTTAA LIVE-STRIIMIÄ",unknown:"tuntematon",hlsNetworkError:"HLS-VERKKOVIRHE",loadingDirectVideo:"LADATAAN SUORAA VIDEOTA",directVideo:"SUORA VIDEO"},
+    de:{commentator:"KOMMENTATOR",group:"GRUPPE",groupstage:"GRUPPENPHASE",playoffs:"PLAYOFFS",goals:"TORE",goalsPerGame:"TORE / SPIEL",goalsAgainstPerGame:"GEGENTORE / SPIEL",goalDiff:"TORDIFFERENZ",totalResult:"GESAMTBILANZ",teamGoals:"TEAMTORE",playerGoals:"SPIELERTORE",mostGoals:"MEISTE TORE",wins:"Siege",series:"Serien",matchWins:"Spielsiege",dataMissing:"KEINE DATEN",currentTournament:"AKTUELLES TURNIER",liveTournamentData:"Live-Turnierdaten",testMatch:"TESTSPIEL",bronze:"BRONZE",seriesState:"SERIENSTAND",winsSeries:"GEWINNT DIE SERIE",seriesDone:"SERIE ENTSCHIEDEN",nextMatch:"NÄCHSTES SPIEL",matches:"SPIELE",previousMatches:"BISHERIGE SPIELE",selectPlayer:"Spieler wählen",teamStats:"Teamstatistik",rosterPlayers:"Kader/Spieler",loading:"lädt…",ready:"bereit",empty:"fehlt",loadError:"konnte nicht geladen werden",goalie:"TORWART",defender:"VERTEIDIGER",pointsLeader:"PUNKTELEADER",roadBronze:"Weg zu Bronze",roadPlayoffs:"Playoff-Weg",team:"TEAM",notSelected:"NICHT GEWÄHLT",noPlayer:"KEIN SPIELER",noGoalie:"KEIN TORWART",totalPoints:"PUNKTE GESAMT",gamesLower:"Spiele",invalidTwitch:"UNGÜLTIGER TWITCH-KANAL / URL",fetchingTwitch:"TWITCH-STREAM WIRD GELADEN",missingSupabase:"SUPABASE-KONFIGURATION FEHLT",twitchFetchFail:"TWITCH-STREAM KONNTE NICHT GELADEN WERDEN",twitchReady:"TWITCH HLS BEREIT",twitchNetwork:"TWITCH-RESOLVER NETZWERKFEHLER",twitchRecovering:"TWITCH STELLT LIVE-STREAM WIEDER HER",unknown:"unbekannt",hlsNetworkError:"HLS-NETZWERKFEHLER",loadingDirectVideo:"DIREKTVIDEO WIRD GELADEN",directVideo:"DIREKTVIDEO"}
   };
   const tx = key => (STRINGS[LOCALE] || STRINGS.sv)[key] ?? STRINGS.sv[key] ?? key;
   const REMOTE_CHANNEL = ({sv:"sec21-bronze-test",en:"broadcast-en",fi:"broadcast-fi",de:"broadcast-de"}[LOCALE] || "sec21-bronze-test");
@@ -56,7 +56,7 @@
   const total = (a, b) => number(a) === null && number(b) === null ? null : (number(a) ?? 0) + (number(b) ?? 0);
   const logo = t => t.team_logo_in_league || t.current_global_team_logo || "";
   const fallbackTeams = () => activeLeagueId === 520 ? SEC_MATCH_TEAMS : [];
-  const team = id => data.teams.find(t => same(t.sports_gamer_team_id, id)) || fallbackTeams().find(t => same(t.sports_gamer_team_id, id)) || { sports_gamer_team_id:id||"", team_name_in_league:"LAG" };
+  const team = id => data.teams.find(t => same(t.sports_gamer_team_id, id)) || fallbackTeams().find(t => same(t.sports_gamer_team_id, id)) || { sports_gamer_team_id:id||"", team_name_in_league:tx("team") };
   const selectedTeam = side => team($("#" + side).value);
   const roster = t => data.players.filter(p => same(p.sports_gamer_team_id, t.sports_gamer_team_id));
   const position = p => p.playoff_skater_position_abbreviation || p.regular_skater_position_abbreviation || p.roster_preferred_position_abbreviation || ((p.playoff_goalie_games || p.regular_goalie_games) ? "G" : "");
@@ -161,8 +161,8 @@
     $("#lineupEditors").innerHTML = SLOTS.map(slot => '<label>' + slot + '<select data-lineup-slot="' + slot + '"' + (!ps.length ? " disabled" : "") + '><option value="">'+esc(tx("selectPlayer"))+'</option>' + ps.map(p => '<option value="' + esc(p.sports_gamer_player_id) + '"' + (same(lineup[slot], p.sports_gamer_player_id) ? " selected" : "") + '>' + esc(p.display_gamertag) + ' · ' + esc(position(p) || "–") + '</option>').join("") + '</select></label>').join("");
     $(".players").innerHTML = SLOTS.map(slot => {
       const p = ps.find(p => same(p.sports_gamer_player_id, lineup[slot]));
-      if (!p) return '<div class="player empty"><span>' + slot + '</span><div class="sil">?</div><b>EJ VALD</b></div>';
-      return '<div class="player"><span>' + slot + '</span>' + image(playerImage(p)) + '<div class="player-info"><strong>#' + esc(p.player_number ?? "") + ' ' + esc(p.display_gamertag) + '</strong><small>GRUPP ' + stat(p.regular_points) + ' P · SLUTSPEL ' + stat(p.playoff_points) + ' P</small></div></div>';
+      if (!p) return '<div class="player empty"><span>' + slot + '</span><div class="sil">?</div><b>'+esc(tx("notSelected"))+'</b></div>';
+      return '<div class="player"><span>' + slot + '</span>' + image(playerImage(p)) + '<div class="player-info"><strong>#' + esc(p.player_number ?? "") + ' ' + esc(p.display_gamertag) + '</strong><small>'+esc(tx("group"))+' ' + stat(p.regular_points) + ' P · '+esc(tx("playoffs"))+' ' + stat(p.playoff_points) + ' P</small></div></div>';
     }).join("");
   }
 
@@ -182,7 +182,7 @@
     const selected = new Set([String(selectedTeam("home").sports_gamer_team_id), String(selectedTeam("away").sports_gamer_team_id)]);
     const rows = data.teams.filter(r => r.statistics_stage === "regular")
       .sort((a,b)=>(number(b.table_points)??0)-(number(a.table_points)??0) || (number(b.goal_difference)??0)-(number(a.goal_difference)??0) || (number(b.goals_for)??0)-(number(a.goals_for)??0));
-    $("#broadcastTable").innerHTML = '<div class="bt-head"><span>#</span><span>LAG</span><span>GP</span><span>W</span><span>L</span><span>GD</span><span>PTS</span></div>'+rows.map((r,i)=>'<div class="bt-row '+(selected.has(String(r.sports_gamer_team_id))?"selected":"")+'"><b>'+(i+1)+'</b><span class="bt-team">'+(logo(r)?'<img src="'+esc(logo(r))+'" alt="">':"")+'<strong>'+esc(r.team_name_in_league)+'</strong></span><span>'+stat(r.games_played)+'</span><span>'+stat(r.total_wins)+'</span><span>'+stat(r.losses)+'</span><span>'+((number(r.goal_difference)??0)>0?"+":"")+stat(r.goal_difference)+'</span><b>'+stat(r.table_points)+'</b></div>').join("");
+    $("#broadcastTable").innerHTML = '<div class="bt-head"><span>#</span><span>'+esc(tx("team"))+'</span><span>GP</span><span>W</span><span>L</span><span>GD</span><span>PTS</span></div>'+rows.map((r,i)=>'<div class="bt-row '+(selected.has(String(r.sports_gamer_team_id))?"selected":"")+'"><b>'+(i+1)+'</b><span class="bt-team">'+(logo(r)?'<img src="'+esc(logo(r))+'" alt="">':"")+'<strong>'+esc(r.team_name_in_league)+'</strong></span><span>'+stat(r.games_played)+'</span><span>'+stat(r.total_wins)+'</span><span>'+stat(r.losses)+'</span><span>'+((number(r.goal_difference)??0)>0?"+":"")+stat(r.goal_difference)+'</span><b>'+stat(r.table_points)+'</b></div>').join("");
   }
   function renderTeamCompare() {
     const sides=["home","away"].map(side=>({side,t:selectedTeam(side)}));
@@ -261,11 +261,11 @@
     };
     const leaders = ["home","away"].flatMap(pickForTeam);
     $("#leaderGrid").innerHTML = leaders.length ? leaders.map(p => {
-      const isGoalie = p.watch_reason === "MÅLVAKT";
+      const isGoalie = p.watch_reason === tx("goalie");
       const main = isGoalie && p.watch_save !== null
         ? (p.watch_save * (p.watch_save <= 1 ? 100 : 1)).toFixed(1).replace(".", ",") + "% SV · " + stat(total(p.regular_goalie_shutouts,p.playoff_goalie_shutouts)) + " SO"
         : stat(playerGoals(p)) + " G · " + stat(total(p.regular_assists,p.playoff_assists)) + " A · <strong>" + stat(playerPoints(p)) + " P</strong>";
-      const detail = isGoalie ? stat(goalieGames(p)) + " matcher" : "Grupp " + stat(p.regular_points) + " · Slutspel " + stat(p.playoff_points);
+      const detail = isGoalie ? stat(goalieGames(p)) + " " + tx("gamesLower") : tx("group") + " " + stat(p.regular_points) + " · " + tx("playoffs") + " " + stat(p.playoff_points);
       const team = SEC_MATCH_TEAMS.find(t => same(t.sports_gamer_team_id, p.sports_gamer_team_id)) || {};
       const teamLogo = logo(team);
       return '<div class="leader-card">' + image(playerImage(p)) + '<div class="leader-copy">' + (teamLogo ? '<img class="leader-team-logo" src="' + esc(teamLogo) + '" alt="">' : '') + '<small>' + esc(p.team_name_in_league) + ' · ' + esc(p.watch_reason) + '</small><b>' + esc(p.display_gamertag) + '</b><span>' + main + '</span><em>' + detail + '</em></div></div>';
@@ -286,7 +286,7 @@
   }
   function matchupCard(side, slot, kind) {
     const t = selectedTeam(side), p = lineupPlayer(side, slot);
-    if (!p) return '<div class="role-card empty"><b>' + slot + '</b><span>EJ VALD</span></div>';
+    if (!p) return '<div class="role-card empty"><b>' + slot + '</b><span>'+esc(tx("notSelected"))+'</span></div>';
     let rows;
     if (kind === "goalie") rows = [
       ["GP", stat(p.regular_goalie_games), stat(p.playoff_goalie_games)],
@@ -307,15 +307,15 @@
   }
   function keyCard(side) {
     const x=bestLineupSkater(side);
-    return x ? matchupCard(side,x.slot,x.slot==="C"?"center":"skater") : '<div class="role-card empty"><span>INGEN SPELARE</span></div>';
+    return x ? matchupCard(side,x.slot,x.slot==="C"?"center":"skater") : '<div class="role-card empty"><span>'+esc(tx("noPlayer"))+'</span></div>';
   }
   function spotlightHtml() {
     const h=bestLineupSkater("home"), a=bestLineupSkater("away");
     const x=[h&&{...h,side:"home"},a&&{...a,side:"away"}].filter(Boolean)
       .sort((x,y)=>(total(y.p.regular_points,y.p.playoff_points)??0)-(total(x.p.regular_points,x.p.playoff_points)??0))[0];
-    if(!x) return '<div class="role-card empty"><span>INGEN SPELARE</span></div>';
+    if(!x) return '<div class="role-card empty"><span>'+esc(tx("noPlayer"))+'</span></div>';
     const p=x.p,t=selectedTeam(x.side), pts=total(p.regular_points,p.playoff_points), goals=total(p.regular_goals,p.playoff_goals), assists=total(p.regular_assists,p.playoff_assists);
-    return '<div class="spotlight-player">'+image(playerImage(p))+'<div class="spotlight-copy"><div class="eyebrow">PLAYER SPOTLIGHT</div><div class="spotlight-team">'+(logo(t)?'<img src="'+esc(logo(t))+'" alt="">':"")+'<span>'+esc(t.team_name_in_league)+'</span></div><h2>'+esc(p.display_gamertag)+'</h2><h3>'+x.slot+' · #'+esc(p.player_number??"")+'</h3><div class="spotlight-total"><b>'+stat(pts)+'</b><span>POÄNG TOTALT</span></div><div class="spotlight-stats"><div><b>'+stat(goals)+'</b><span>MÅL</span></div><div><b>'+stat(assists)+'</b><span>ASSISTS</span></div><div><b>'+stat(p.regular_points)+'</b><span>'+tx("groupstage")+' P</span></div><div><b>'+stat(p.playoff_points)+'</b><span>'+tx("playoffs")+' P</span></div><div><b>'+stat(total(p.regular_penalty_minutes,p.playoff_penalty_minutes))+'</b><span>PIM TOTAL</span></div></div></div></div>';
+    return '<div class="spotlight-player">'+image(playerImage(p))+'<div class="spotlight-copy"><div class="eyebrow">PLAYER SPOTLIGHT</div><div class="spotlight-team">'+(logo(t)?'<img src="'+esc(logo(t))+'" alt="">':"")+'<span>'+esc(t.team_name_in_league)+'</span></div><h2>'+esc(p.display_gamertag)+'</h2><h3>'+x.slot+' · #'+esc(p.player_number??"")+'</h3><div class="spotlight-total"><b>'+stat(pts)+'</b><span>'+esc(tx("totalPoints"))+'</span></div><div class="spotlight-stats"><div><b>'+stat(goals)+'</b><span>'+esc(tx("goals"))+'</span></div><div><b>'+stat(assists)+'</b><span>ASSISTS</span></div><div><b>'+stat(p.regular_points)+'</b><span>'+tx("groupstage")+' P</span></div><div><b>'+stat(p.playoff_points)+'</b><span>'+tx("playoffs")+' P</span></div><div><b>'+stat(total(p.regular_penalty_minutes,p.playoff_penalty_minutes))+'</b><span>PIM TOTAL</span></div></div></div></div>';
   }
   function renderRoleMatchups() {
     $("#forwardsGrid").innerHTML = ["home","away"].flatMap(side=>["LW","C","RW"].map(slot=>matchupCard(side,slot,slot==="C"?"center":"skater"))).join("");
@@ -327,21 +327,21 @@
     };
     const gh = goalieSide("home"), ga = goalieSide("away");
     const goalieVal = (x, key) => x.p ? (key === "sv" ? goaliePct(x.p.regular_goalie_save_percentage) : key === "psv" ? goaliePct(x.p.playoff_goalie_save_percentage) : stat(x.p[key])) : "–";
-    const goaliePortrait = x => x.p ? '<div class="goalie-person goalie-'+x.side+'">'+image(playerImage(x.p))+'<div class="goalie-name">'+(logo(x.t)?'<img src="'+esc(logo(x.t))+'" alt="">':"")+'<span><b>G #'+esc(x.p.player_number ?? "")+' · '+esc(x.p.display_gamertag)+'</b><small>'+esc(x.t.team_name_in_league)+'</small></span></div></div>' : '<div class="goalie-person empty"><span>INGEN MÅLVAKT</span></div>';
+    const goaliePortrait = x => x.p ? '<div class="goalie-person goalie-'+x.side+'">'+image(playerImage(x.p))+'<div class="goalie-name">'+(logo(x.t)?'<img src="'+esc(logo(x.t))+'" alt="">':"")+'<span><b>G #'+esc(x.p.player_number ?? "")+' · '+esc(x.p.display_gamertag)+'</b><small>'+esc(x.t.team_name_in_league)+'</small></span></div></div>' : '<div class="goalie-person empty"><span>'+esc(tx("noGoalie"))+'</span></div>';
     const goalieRows = [
       ["GP","regular_goalie_games","playoff_goalie_games"],
       ["SV%","sv","psv"],
       ["GAA","regular_goalie_goals_against_average","playoff_goalie_goals_against_average"],
       ["SO","regular_goalie_shutouts","playoff_goalie_shutouts"]
     ];
-    $("#goaliesGrid").innerHTML = goaliePortrait(gh)+'<div class="goalie-center"><div class="goalie-center-title">GOALIE MATCHUP</div><div class="goalie-columns"><span>GRUPP</span><span>SLUTSPEL</span><i></i><span>GRUPP</span><span>SLUTSPEL</span></div>'+goalieRows.map(r=>'<div class="goalie-row"><b>'+goalieVal(gh,r[1])+'</b><b>'+goalieVal(gh,r[2])+'</b><span>'+r[0]+'</span><b>'+goalieVal(ga,r[1])+'</b><b>'+goalieVal(ga,r[2])+'</b></div>').join("")+'</div>'+goaliePortrait(ga);
+    $("#goaliesGrid").innerHTML = goaliePortrait(gh)+'<div class="goalie-center"><div class="goalie-center-title">GOALIE MATCHUP</div><div class="goalie-columns"><span>'+esc(tx("group"))+'</span><span>'+esc(tx("playoffs"))+'</span><i></i><span>'+esc(tx("group"))+'</span><span>'+esc(tx("playoffs"))+'</span></div>'+goalieRows.map(r=>'<div class="goalie-row"><b>'+goalieVal(gh,r[1])+'</b><b>'+goalieVal(gh,r[2])+'</b><span>'+r[0]+'</span><b>'+goalieVal(ga,r[1])+'</b><b>'+goalieVal(ga,r[2])+'</b></div>').join("")+'</div>'+goaliePortrait(ga);
     const kh=bestLineupSkater("home"), ka=bestLineupSkater("away");
     const keySide=(side,x)=>({side,t:selectedTeam(side),slot:x?.slot||"",p:x?.p||null});
     const kHome=keySide("home",kh), kAway=keySide("away",ka);
-    const keyPortrait=x=>x.p?'<div class="key-person key-'+x.side+'">'+image(playerImage(x.p))+'<div class="key-name">'+(logo(x.t)?'<img src="'+esc(logo(x.t))+'" alt="">':"")+'<span><b>'+esc(x.slot)+' #'+esc(x.p.player_number??"")+' · '+esc(x.p.display_gamertag)+'</b><small>'+esc(x.t.team_name_in_league)+'</small></span></div></div>':'<div class="key-person empty"><span>INGEN SPELARE</span></div>';
+    const keyPortrait=x=>x.p?'<div class="key-person key-'+x.side+'">'+image(playerImage(x.p))+'<div class="key-name">'+(logo(x.t)?'<img src="'+esc(logo(x.t))+'" alt="">':"")+'<span><b>'+esc(x.slot)+' #'+esc(x.p.player_number??"")+' · '+esc(x.p.display_gamertag)+'</b><small>'+esc(x.t.team_name_in_league)+'</small></span></div></div>':'<div class="key-person empty"><span>'+esc(tx("noPlayer"))+'</span></div>';
     const keyValue=(x,key,stageName)=>{if(!x.p)return "–";if(key==="FO%")return x.slot==="C"?faceoffPct(x.p,stageName):"–";const prefix=stageName==="regular"?"regular_":"playoff_";return stat(x.p[prefix+key]);};
     const keyRows=[["GP","skater_games"],["FO%","FO%"],["G","goals"],["A","assists"],["P","points"]];
-    $("#keyGrid").innerHTML=keyPortrait(kHome)+'<div class="key-center"><div class="key-center-title">KEY MATCHUP</div><div class="key-columns"><span>GRUPP</span><span>SLUTSPEL</span><i></i><span>GRUPP</span><span>SLUTSPEL</span></div>'+keyRows.map(r=>'<div class="key-row"><b>'+keyValue(kHome,r[1],"regular")+'</b><b>'+keyValue(kHome,r[1],"playoff")+'</b><span>'+r[0]+'</span><b>'+keyValue(kAway,r[1],"regular")+'</b><b>'+keyValue(kAway,r[1],"playoff")+'</b></div>').join("")+'</div>'+keyPortrait(kAway);
+    $("#keyGrid").innerHTML=keyPortrait(kHome)+'<div class="key-center"><div class="key-center-title">KEY MATCHUP</div><div class="key-columns"><span>'+esc(tx("group"))+'</span><span>'+esc(tx("playoffs"))+'</span><i></i><span>'+esc(tx("group"))+'</span><span>'+esc(tx("playoffs"))+'</span></div>'+keyRows.map(r=>'<div class="key-row"><b>'+keyValue(kHome,r[1],"regular")+'</b><b>'+keyValue(kHome,r[1],"playoff")+'</b><span>'+r[0]+'</span><b>'+keyValue(kAway,r[1],"regular")+'</b><b>'+keyValue(kAway,r[1],"playoff")+'</b></div>').join("")+'</div>'+keyPortrait(kAway);
     $("#spotlightCard").innerHTML = spotlightHtml();
   }
 
@@ -351,7 +351,7 @@
     if($("#tableKicker"))$("#tableKicker").textContent=c.label+" · "+(activeLeagueId===526?"POKAL":tx("groupstage"));
     if($("#leadersKicker"))$("#leadersKicker").textContent=c.label+" · "+tx("groupstage")+" + "+tx("playoffs");
     const bronze=activeLeagueId===520;
-    if($("#roadKicker"))$("#roadKicker").textContent=bronze?"ROAD TO BRONZE":"PLAYOFF ROAD";
+    if($("#roadKicker"))$("#roadKicker").textContent=(bronze?tx("roadBronze"):tx("roadPlayoffs")).toLocaleUpperCase(LOCALE);
     if($("#roadTitle"))$("#roadTitle").textContent=bronze?(LOCALE==="sv"?"VÄGEN TILL BRONSMATCHEN":tx("roadBronze").toLocaleUpperCase(LOCALE)):(LOCALE==="sv"?"VÄGEN GENOM SLUTSPELET":tx("roadPlayoffs").toLocaleUpperCase(LOCALE));
     if($("#roadSceneButton"))$("#roadSceneButton").textContent=bronze?tx("roadBronze"):tx("roadPlayoffs");
     if(resetHeadline&&$("#headline"))$("#headline").value=c.label;
@@ -371,7 +371,7 @@
     const leagueId=activeLeagueId;
     try {
       const cfg=window.EHOCKEY_CONFIG||{};
-      if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)throw new Error("Supabase-konfiguration saknas");
+      if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)throw new Error(tx("missingSupabase"));
       const apiKey=String(cfg.supabasePublishableKey);
       const headers={apikey:apiKey,Accept:"application/json"};
       if(/^eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(apiKey))headers.Authorization="Bearer "+apiKey;
@@ -380,7 +380,7 @@
       if(!response.ok)throw new Error(view+" HTTP "+response.status);
       const rows=await response.json();
       if(activeLeagueId!==leagueId)return;
-      if(!Array.isArray(rows)||rows.some(row=>!row||!same(row.sports_gamer_league_id,leagueId)||row.sports_gamer_team_id==null||typeof row.team_name_in_league!=="string"||(key==="players"&&(row.sports_gamer_player_id==null||typeof row.display_gamertag!=="string"))))throw new Error(view+": oväntat dataformat");
+      if(!Array.isArray(rows)||rows.some(row=>!row||!same(row.sports_gamer_league_id,leagueId)||row.sports_gamer_team_id==null||typeof row.team_name_in_league!=="string"||(key==="players"&&(row.sports_gamer_player_id==null||typeof row.display_gamertag!=="string"))))throw new Error(view+": "+tx("loadError"));
       data[key]=key==="players"?[...new Map(rows.map(p=>[p.sports_gamer_team_id+":"+p.sports_gamer_player_id,p])).values()]:rows;
       status[key]=rows.length?"ready":"empty";
       render();
@@ -407,7 +407,7 @@
 
   function renderSeries(){const bo=Number($("#seriesFormat")?.value||5),need=Math.ceil(bo/2),hw=Math.max(0,Math.min(need,Number($("#seriesHome")?.value||0))),aw=Math.max(0,Math.min(need,Number($("#seriesAway")?.value||0))),round=($("#seriesRound")?.value||tx("playoffs")).trim().toLocaleUpperCase(LOCALE),h=selectedTeam("home"),a=selectedTeam("away");$("#seriesHomeScore").textContent=hw;$("#seriesAwayScore").textContent=aw;$("#seriesKicker").textContent=round+" · BEST OF "+bo;const dots=(wins)=>Array.from({length:need},(_,i)=>'<i class="'+(i<wins?"won":"")+'"></i>').join("");$("#seriesHomeDots").innerHTML=dots(hw);$("#seriesAwayDots").innerHTML=dots(aw);const done=hw===need||aw===need;$("#seriesTitle").textContent=done?(hw===need?h.team_name_in_league:a.team_name_in_league)+" "+tx("winsSeries"):tx("seriesState");$("#seriesNext").textContent=done?tx("seriesDone")+" · "+hw+"–"+aw:tx("nextMatch")+" · "+(hw+aw+1);const showResults=!!$("#seriesShowResults")?.checked,results=Array.from({length:bo},(_,i)=>($("#seriesR"+(i+1))?.value||"").trim()).map((v,i)=>v?'<span><b>M'+(i+1)+'</b> '+esc(v.replace(/\s+/g,""))+'</span>':"").filter(Boolean),resultBox=$("#seriesResults");if(resultBox){resultBox.hidden=!showResults||!results.length;$("#seriesResultsList").innerHTML=results.join("");}for(let i=1;i<=7;i++){const label=$("#seriesR"+i)?.closest("label");if(label)label.hidden=i>bo;}["seriesHome","seriesAway"].forEach(id=>{const el=$("#"+id);if(el)el.max=need;});}
 
-  function studioState(){const ls={};["home","away"].forEach(side=>{const l=lineupFor(side);ls[side]={};SLOTS.forEach(slot=>ls[side][slot]=l[slot]||"");});return {leagueId:activeLeagueId,theme:$("#theme")?.value||"broadcast",seriesFormat:$("#seriesFormat")?.value||"5",seriesRound:$("#seriesRound")?.value||"SLUTSPEL",seriesHome:$("#seriesHome")?.value||"0",seriesAway:$("#seriesAway")?.value||"0",seriesShowResults:!!$("#seriesShowResults")?.checked,seriesResults:Array.from({length:7},(_,i)=>$("#seriesR"+(i+1))?.value||""),scene:activeScene,lineupSide:$("#lineupSide").value,home:$("#home").value,away:$("#away").value,hs:$("#hs").value,as:$("#as").value,headline:$("#headline").value,subline:$("#subline").value,commentator1:$("#commentator1").value,commentator2:$("#commentator2").value,person:$("#person").value,role:$("#role").value,videoSource:$("#videoSource")?.value||"twitch",hlsUrl:$("#hlsUrl")?.value||"",twitchChannel:$("#twitchChannel")?.value||"",twitchShow:$("#showTwitch")?.checked!==false,twitchMute:$("#muteTwitch")?.checked!==false,lineups:ls};}
+  function studioState(){const ls={};["home","away"].forEach(side=>{const l=lineupFor(side);ls[side]={};SLOTS.forEach(slot=>ls[side][slot]=l[slot]||"");});return {leagueId:activeLeagueId,theme:$("#theme")?.value||"broadcast",seriesFormat:$("#seriesFormat")?.value||"5",seriesRound:$("#seriesRound")?.value||tx("playoffs"),seriesHome:$("#seriesHome")?.value||"0",seriesAway:$("#seriesAway")?.value||"0",seriesShowResults:!!$("#seriesShowResults")?.checked,seriesResults:Array.from({length:7},(_,i)=>$("#seriesR"+(i+1))?.value||""),scene:activeScene,lineupSide:$("#lineupSide").value,home:$("#home").value,away:$("#away").value,hs:$("#hs").value,as:$("#as").value,headline:$("#headline").value,subline:$("#subline").value,commentator1:$("#commentator1").value,commentator2:$("#commentator2").value,person:$("#person").value,role:$("#role").value,videoSource:$("#videoSource")?.value||"twitch",hlsUrl:$("#hlsUrl")?.value||"",twitchChannel:$("#twitchChannel")?.value||"",twitchShow:$("#showTwitch")?.checked!==false,twitchMute:$("#muteTwitch")?.checked!==false,lineups:ls};}
   function applyScene(name,side){
     const next=name||"opening";
     const nextSide=side||$("#lineupSide").value;
@@ -461,7 +461,7 @@
       screen.classList.remove("scene-switching");
     },420);
   }
-  function applyRemoteState(s){if(!s||typeof s!=="object")return;remoteApplying=true;const incomingLeague=Number(s.leagueId||activeLeagueId);if(COMPETITIONS[incomingLeague]&&incomingLeague!==activeLeagueId){activeLeagueId=incomingLeague;if($("#tournament"))$("#tournament").value=String(activeLeagueId);applyCompetitionChrome(false);loadTournamentData();}setTheme(s.theme||"broadcast");if($("#videoSource")&&s.videoSource!==undefined)$("#videoSource").value=s.videoSource||"twitch";if($("#hlsUrl")&&s.hlsUrl!==undefined)$("#hlsUrl").value=s.hlsUrl||"";if($("#twitchChannel")&&s.twitchChannel!==undefined)$("#twitchChannel").value=s.twitchChannel||"";if($("#showTwitch")&&s.twitchShow!==undefined)$("#showTwitch").checked=!!s.twitchShow;if($("#muteTwitch")&&s.twitchMute!==undefined)$("#muteTwitch").checked=!!s.twitchMute;window.__sehTwitchState=s;["home","away"].forEach(id=>{if(s[id]!==undefined&&$("#"+id)){const el=$("#"+id),v=String(s[id]);if(v&&![...el.options].some(o=>o.value===v))el.add(new Option("LAG",v));el.value=v;}});["hs","as","headline","subline","commentator1","commentator2","person","role","seriesFormat","seriesRound","seriesHome","seriesAway"].forEach(id=>{if(s[id]!==undefined&&$("#"+id))$("#"+id).value=s[id];});if($("#seriesShowResults")&&s.seriesShowResults!==undefined)$("#seriesShowResults").checked=!!s.seriesShowResults;if(Array.isArray(s.seriesResults))s.seriesResults.slice(0,7).forEach((v,i)=>{const el=$("#seriesR"+(i+1));if(el)el.value=v||"";});if(s.lineups){["home","away"].forEach(side=>{if(!s.lineups[side])return;const key=side+":"+String(selectedTeam(side).sports_gamer_team_id);const next={};SLOTS.forEach(slot=>next[slot]=String(s.lineups[side][slot]||""));lineups.set(key,next);});}applyScene(s.scene,s.lineupSide);window.dispatchEvent(new CustomEvent("seh:twitch-state",{detail:s}));renderMatch();renderSeries();renderLineup();renderStats();renderTable();renderTeamCompare();renderScorers();renderFormGuide();renderOffense();renderDefenseLeaders();renderGoalieLeaders();renderRoad();renderLeaders();renderRoleMatchups();remoteApplying=false;}
+  function applyRemoteState(s){if(!s||typeof s!=="object")return;remoteApplying=true;const incomingLeague=Number(s.leagueId||activeLeagueId);if(COMPETITIONS[incomingLeague]&&incomingLeague!==activeLeagueId){activeLeagueId=incomingLeague;if($("#tournament"))$("#tournament").value=String(activeLeagueId);applyCompetitionChrome(false);loadTournamentData();}setTheme(s.theme||"broadcast");if($("#videoSource")&&s.videoSource!==undefined)$("#videoSource").value=s.videoSource||"twitch";if($("#hlsUrl")&&s.hlsUrl!==undefined)$("#hlsUrl").value=s.hlsUrl||"";if($("#twitchChannel")&&s.twitchChannel!==undefined)$("#twitchChannel").value=s.twitchChannel||"";if($("#showTwitch")&&s.twitchShow!==undefined)$("#showTwitch").checked=!!s.twitchShow;if($("#muteTwitch")&&s.twitchMute!==undefined)$("#muteTwitch").checked=!!s.twitchMute;window.__sehTwitchState=s;["home","away"].forEach(id=>{if(s[id]!==undefined&&$("#"+id)){const el=$("#"+id),v=String(s[id]);if(v&&![...el.options].some(o=>o.value===v))el.add(new Option(tx("team"),v));el.value=v;}});["hs","as","headline","subline","commentator1","commentator2","person","role","seriesFormat","seriesRound","seriesHome","seriesAway"].forEach(id=>{if(s[id]!==undefined&&$("#"+id))$("#"+id).value=s[id];});if($("#seriesShowResults")&&s.seriesShowResults!==undefined)$("#seriesShowResults").checked=!!s.seriesShowResults;if(Array.isArray(s.seriesResults))s.seriesResults.slice(0,7).forEach((v,i)=>{const el=$("#seriesR"+(i+1));if(el)el.value=v||"";});if(s.lineups){["home","away"].forEach(side=>{if(!s.lineups[side])return;const key=side+":"+String(selectedTeam(side).sports_gamer_team_id);const next={};SLOTS.forEach(slot=>next[slot]=String(s.lineups[side][slot]||""));lineups.set(key,next);});}applyScene(s.scene,s.lineupSide);window.dispatchEvent(new CustomEvent("seh:twitch-state",{detail:s}));renderMatch();renderSeries();renderLineup();renderStats();renderTable();renderTeamCompare();renderScorers();renderFormGuide();renderOffense();renderDefenseLeaders();renderGoalieLeaders();renderRoad();renderLeaders();renderRoleMatchups();remoteApplying=false;}
   async function remoteRequest(method,body){const cfg=window.EHOCKEY_CONFIG||{};if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)return;const key=String(cfg.supabasePublishableKey),headers={apikey:key,Accept:"application/json","Content-Type":"application/json"};if(/^eyJ[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$/.test(key))headers.Authorization="Bearer "+key;const url=String(cfg.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/broadcast_studio_state?channel=eq."+encodeURIComponent(REMOTE_CHANNEL);const res=await fetch(url,{method,headers,body:body?JSON.stringify(body):undefined,cache:"no-store"});if(!res.ok)throw new Error("Broadcast state HTTP "+res.status);return method==="GET"?res.json():null;}
   function publishState(){if(OBS_MODE||remoteApplying)return;clearTimeout(remoteTimer);remoteTimer=setTimeout(()=>remoteRequest("PATCH",{state:studioState(),updated_at:new Date().toISOString()}).catch(console.error),120);} window.__sehPublishBroadcastState=publishState;
   async function pullState(){try{const rows=await remoteRequest("GET");if(rows&&rows[0]&&rows[0].state&&Object.keys(rows[0].state).length)applyRemoteState(rows[0].state);}catch(e){console.error("Broadcast remote:",e);}}
@@ -596,25 +596,25 @@
  let twitchResolveTimer=0,twitchResolveSeq=0,lastTwitchRaw="";
  const resolveTwitchHls=async(raw,muted=true)=>{
    const channel=parseTwitch(raw);
-   if(!channel){destroy();setStatus("OGILTIG TWITCH-KANAL / URL");return false}
+   if(!channel){destroy();setStatus(tx("invalidTwitch"));return false}
    if(channel===pendingTwitchChannel)return true;
    if(channel===activeTwitchChannel&&video&&!video.hidden&&(hls||video.currentSrc))return true;
    lastTwitchRaw=raw;
    pendingTwitchChannel=channel;
    const seq=++twitchResolveSeq;
    clearTimeout(twitchResolveTimer);
-   setStatus("HÄMTAR TWITCH-STRÖM · "+channel.toUpperCase());
+   setStatus(tx("fetchingTwitch")+" · "+channel.toUpperCase());
    const base=String(window.EHOCKEY_CONFIG?.supabaseUrl||"").replace(/\/+$/,"");
-   if(!base){setStatus("SAKNAR SUPABASE-CONFIG");return false}
+   if(!base){setStatus(tx("missingSupabase"));return false}
    try{
      const res=await fetch(base+"/functions/v1/seh-twitch-resolve?channel="+encodeURIComponent(channel),{cache:"no-store"});
      const data=await res.json().catch(()=>({}));
      if(seq!==twitchResolveSeq)return false;
      if(!res.ok||!data?.hlsUrl){
-       setStatus(data?.detail?("TWITCH RESOLVER · "+String(data.detail).slice(0,90)):"KUNDE INTE HÄMTA TWITCH-STRÖM");
+       setStatus(data?.detail?("TWITCH RESOLVER · "+String(data.detail).slice(0,90)):tx("twitchFetchFail"));
        return false;
      }
-     setStatus("TWITCH HLS KLAR · "+channel.toUpperCase(),true);
+     setStatus(tx("twitchReady")+" · "+channel.toUpperCase(),true);
      const ok=mountDirect(data.hlsUrl,muted,{label:"TWITCH · "+channel.toUpperCase(),kind:"twitch"});
      pendingTwitchChannel="";
      if(ok)activeTwitchChannel=channel;
@@ -625,7 +625,7 @@
      return ok;
    }catch(e){
      if(seq===twitchResolveSeq)pendingTwitchChannel="";
-     setStatus("TWITCH RESOLVER NÄTVERKSFEL");
+     setStatus(tx("twitchNetwork"));
      console.error("[SEH Video] Twitch resolver",e);
      return false;
    }
@@ -693,7 +693,7 @@
      }
      hls.on(Hls.Events.ERROR,(_,data)=>{
        if(!data?.fatal)return;
-       const detail=String(data?.details||data?.type||"okänt");
+       const detail=String(data?.details||data?.type||tx("unknown"));
        const code=data?.response?.code||data?.networkDetails?.status||"";
        const failed=data?.url||data?.response?.url||"";
        console.warn("[SEH HLS]",{type:data?.type,details:data?.details,code,failed,data});
@@ -714,7 +714,7 @@
      video.oncanplay=()=>tryDirectPlay();
      video.load();
    }
-   layer?.classList.add("has-stream");mountedKey=key;setStatus("LADDAR DIREKTVIDEO");
+   layer?.classList.add("has-stream");mountedKey=key;setStatus(tx("loadingDirectVideo"));
    setTimeout(tryDirectPlay,100);
    return true;
  };
@@ -733,13 +733,13 @@
    const enabled=s.scene==="live"&&s.twitchShow!==false;
    layer?.classList.toggle("is-hidden",!enabled);
    if(!enabled){destroy();return}
-   if((s.videoSource||"twitch")==="direct")mountDirect(s.hlsUrl,s.twitchMute!==false,{label:"DIREKTVIDEO",kind:"direct"});
+   if((s.videoSource||"twitch")==="direct")mountDirect(s.hlsUrl,s.twitchMute!==false,{label:tx("directVideo"),kind:"direct"});
    else mountTwitch(s.twitchChannel,s.twitchMute!==false);
  };
 
  const loadFromControls=()=>{
    const mode=source?.value||"twitch";
-   const ok=mode==="direct"?mountDirect(hlsInput?.value,mute?.checked!==false,{label:"DIREKTVIDEO",kind:"direct"}):mountTwitch(twitchInput?.value,mute?.checked!==false);
+   const ok=mode==="direct"?mountDirect(hlsInput?.value,mute?.checked!==false,{label:tx("directVideo"),kind:"direct"}):mountTwitch(twitchInput?.value,mute?.checked!==false);
    if(ok)window.__sehPublishBroadcastState?.();
  };
 

@@ -1508,3 +1508,101 @@ html[lang="de"] body:not(.obs-preview) .scene-grid button.active{
 html[lang="de"] body:not(.obs-preview) select,
 html[lang="de"] body:not(.obs-preview) input{background:#141416!important;border-color:#402a2d!important}
 html[lang="de"] body:not(.obs-preview) .obs-open:hover{border-color:#f2c500!important;color:#f2c500!important}
+
+
+/* v122: regional skin polish.
+   Remove Swedish yellow from FI and make DE surfaces consistently black/red/gold. */
+
+/* FI / FCL: blue + white throughout all shared scene components */
+html[lang="fi"] .player span,
+html[lang="fi"] .role-head,
+html[lang="fi"] .spotlight-copy h3,
+html[lang="fi"] .spotlight-total b,
+html[lang="fi"] .goalie-center-title,
+html[lang="fi"] .goalie-row b:nth-child(-n+2),
+html[lang="fi"] .goalie-row b:nth-last-child(-n+2),
+html[lang="fi"] .key-center-title,
+html[lang="fi"] .key-row b,
+html[lang="fi"] .bt-row>b:last-child,
+html[lang="fi"] .tc-row b,
+html[lang="fi"] .scorer>strong,
+html[lang="fi"] .scorer>em,
+html[lang="fi"] .form-record strong,
+html[lang="fi"] .off-big b,
+html[lang="fi"] .off-top span small,
+html[lang="fi"] .off-top strong,
+html[lang="fi"] .lb-player>strong,
+html[lang="fi"] .lb-player>em{
+  color:#69adf7!important;
+}
+html[lang="fi"] .spotlight-stats div{border-left-color:#69adf7!important}
+html[lang="fi"] .goalie-center-title,
+html[lang="fi"] .key-center-title{border-bottom-color:#69adf7!important}
+html[lang="fi"] .goalie-row,
+html[lang="fi"] .key-row,
+html[lang="fi"] .tc-row{border-bottom-color:rgba(105,173,247,.42)!important}
+html[lang="fi"] .goalie-columns,
+html[lang="fi"] .key-columns,
+html[lang="fi"] .bt-head,
+html[lang="fi"] .tc-cols{
+  background:#f5f9ff!important;
+  color:#082846!important;
+}
+html[lang="fi"] .bt-row.selected{background:rgba(91,162,242,.12)!important;border-left-color:#f5f9ff!important}
+html[lang="fi"] .table .bt-row.selected .bt-team:before{background:#f5f9ff!important}
+html[lang="fi"] .scorer-team,
+html[lang="fi"] .form-team,
+html[lang="fi"] .off-team,
+html[lang="fi"] .lb-team{border-bottom-color:#69adf7!important}
+html[lang="fi"] .broadcast-table,
+html[lang="fi"] .tc-center,
+html[lang="fi"] .scorer-side,
+html[lang="fi"] .form-card,
+html[lang="fi"] .off-card,
+html[lang="fi"] .lb-side,
+html[lang="fi"] .goalie-center,
+html[lang="fi"] .key-center{
+  background:linear-gradient(145deg,rgba(9,39,70,.96),rgba(4,20,37,.98))!important;
+  border-color:rgba(111,174,239,.30)!important;
+}
+html[lang="fi"] .tc-team,
+html[lang="fi"] .role-card{
+  background:linear-gradient(145deg,#123f70,#071d34)!important;
+  border-color:rgba(111,174,239,.30)!important;
+}
+html[lang="fi"] body:not(.obs-preview) .dock-head span{color:#70aff4!important}
+html[lang="fi"] body:not(.obs-preview) #loadTwitch{
+  border-color:#5ba2f2!important;background:#0b2845!important;color:#eef7ff!important;
+}
+html[lang="fi"] body:not(.obs-preview) #loadTwitch:hover{background:#12385d!important;border-color:#eef7ff!important}
+
+/* DE / GCL: remove leftover blue surfaces, retain deliberate German gold accents */
+html[lang="de"] .broadcast-table,
+html[lang="de"] .tc-center,
+html[lang="de"] .scorer-side,
+html[lang="de"] .form-card,
+html[lang="de"] .off-card,
+html[lang="de"] .lb-side,
+html[lang="de"] .goalie-center,
+html[lang="de"] .key-center{
+  background:linear-gradient(145deg,rgba(24,17,18,.97),rgba(8,9,10,.99))!important;
+  border-color:rgba(205,38,48,.28)!important;
+}
+html[lang="de"] .tc-team,
+html[lang="de"] .role-card{
+  background:linear-gradient(145deg,#2b1719,#0d0d0f)!important;
+  border-color:rgba(205,38,48,.30)!important;
+}
+html[lang="de"] .bt-row.selected{background:rgba(217,31,45,.10)!important;border-left-color:#d91f2d!important}
+html[lang="de"] .table .bt-row.selected .bt-team:before{background:#d91f2d!important}
+html[lang="de"] .scorer-team,
+html[lang="de"] .form-team,
+html[lang="de"] .off-team,
+html[lang="de"] .lb-team{border-bottom-color:#d91f2d!important}
+html[lang="de"] .goalie-row,
+html[lang="de"] .key-row,
+html[lang="de"] .tc-row{border-bottom-color:rgba(217,31,45,.38)!important}
+html[lang="de"] body:not(.obs-preview) .dock-head span{color:#f2c500!important}
+html[lang="de"] body:not(.obs-preview) #loadTwitch{
+  border-color:#f2c500!important;background:#1b1510!important;color:#f2c500!important;
+}
