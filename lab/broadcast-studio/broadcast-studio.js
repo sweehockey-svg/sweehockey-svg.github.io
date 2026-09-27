@@ -2,7 +2,19 @@
   "use strict";
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
-  const LEAGUE = 520;
+  const COMPETITIONS = {
+    520:{id:520,code:"SEC",label:"SEC 21",logo:"../../assets/SECLOGGA.png"},
+    524:{id:524,code:"GCL",label:"GCL 13 · DIV I",logo:"https://fhr.fra1.cdn.digitaloceanspaces.com/SportsGamer/leagues/GCL/Season_12/GCL_logo_new_350x350.png"},
+    525:{id:525,code:"GCL",label:"GCL 13 · DIV II",logo:"https://fhr.fra1.cdn.digitaloceanspaces.com/SportsGamer/leagues/GCL/Season_12/GCL_logo_new_350x350.png"},
+    526:{id:526,code:"GCL",label:"GCL 13 · POKAL",logo:"https://fhr.fra1.cdn.digitaloceanspaces.com/SportsGamer/leagues/GCL/Season_12/GCL_logo_new_350x350.png"},
+    527:{id:527,code:"SCL",label:"SCL 27",logo:""},
+    528:{id:528,code:"WECL",label:"WECL",logo:"https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/WECL/WECL_logo.png"},
+    529:{id:529,code:"FCL",label:"FCL 2027",logo:""}
+  };
+  let activeLeagueId = Number($("#tournament")?.value || 520);
+  const competition = () => COMPETITIONS[activeLeagueId] || COMPETITIONS[520];
+  const competitionBadge = code => "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 112"><path fill="#f4b21b" d="M50 2 96 19 88 88 50 110 12 88 4 19z"/><path fill="#07111a" d="M50 10 87 24 80 82 50 100 20 82 13 24z"/><text x="50" y="64" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="25" fill="#f4b21b">'+code+'</text></svg>');
+  const competitionLogo = c => c.logo || competitionBadge(c.code);
   const REMOTE_CHANNEL = "sec21-bronze-test";
   const OBS_MODE = new URLSearchParams(location.search).get("obs") === "1";
   if (OBS_MODE) {
@@ -14,7 +26,7 @@
   let displayedLineupSide = "home", sceneTransitionTimer = 0, lineupTransitionTimer = 0;
   const SLOTS = ["LW", "C", "RW", "LD", "G", "RD"];
   // Match identity is editorial. Historical numbers only come from Supabase.
-  const MATCH_TEAMS = [
+  const SEC_MATCH_TEAMS = [
     { sports_gamer_team_id: 7046, team_name_in_league: "Daankerzquad", team_logo_in_league: "https://sportsgamer.gg/storage/team-logos/520/7046/Daankerzquad_20260610-013637.png" },
     { sports_gamer_team_id: 3252, team_name_in_league: "Västerås IK", team_logo_in_league: "https://sportsgamer.gg/storage/team-logos/520/3252/VIK-prima%CC%88r@4x_20260612-174642.png" }
   ];
@@ -35,7 +47,8 @@
     ? (percent ? Math.round(100 * Number(n) / Number(d)) + "%" : (Number(n) / Number(d)).toFixed(1)) : "–";
   const total = (a, b) => number(a) === null && number(b) === null ? null : (number(a) ?? 0) + (number(b) ?? 0);
   const logo = t => t.team_logo_in_league || t.current_global_team_logo || "";
-  const team = id => data.teams.find(t => same(t.sports_gamer_team_id, id)) || MATCH_TEAMS.find(t => same(t.sports_gamer_team_id, id)) || { team_name_in_league: "LAG" };
+  const fallbackTeams = () => activeLeagueId === 520 ? SEC_MATCH_TEAMS : [];
+  const team = id => data.teams.find(t => same(t.sports_gamer_team_id, id)) || fallbackTeams().find(t => same(t.sports_gamer_team_id, id)) || { sports_gamer_team_id:id||"", team_name_in_league:"LAG" };
   const selectedTeam = side => team($("#" + side).value);
   const roster = t => data.players.filter(p => same(p.sports_gamer_team_id, t.sports_gamer_team_id));
   const position = p => p.playoff_skater_position_abbreviation || p.regular_skater_position_abbreviation || p.roster_preferred_position_abbreviation || ((p.playoff_goalie_games || p.regular_goalie_games) ? "G" : "");
@@ -65,14 +78,18 @@
   }
 
   function renderTeams() {
-    const unique = [...new Map([...MATCH_TEAMS, ...data.teams].map(t => [String(t.sports_gamer_team_id), t])).values()]
-      .sort((a, b) => a.team_name_in_league.localeCompare(b.team_name_in_league, "sv"));
-    ["home", "away"].forEach((side, index) => {
-      const select = $("#" + side);
-      const value = select.value || String(MATCH_TEAMS[index].sports_gamer_team_id);
-      select.replaceChildren(...unique.map(t => new Option(t.team_name_in_league, String(t.sports_gamer_team_id))));
-      select.value = value;
+    const unique = [...new Map([...fallbackTeams(), ...data.teams].map(t => [String(t.sports_gamer_team_id), t])).values()]
+      .sort((a, b) => String(a.team_name_in_league||"").localeCompare(String(b.team_name_in_league||""), "sv"));
+    ["home","away"].forEach((side,index)=>{
+      const select=$("#"+side), previous=select.value;
+      select.replaceChildren(...unique.map(t=>new Option(t.team_name_in_league,String(t.sports_gamer_team_id))));
+      if(previous && unique.some(t=>same(t.sports_gamer_team_id,previous))) select.value=previous;
+      else if(unique.length) select.value=String((unique[index]||unique[0]).sports_gamer_team_id);
     });
+    if($("#home").value && $("#away").value && $("#home").value===$("#away").value && unique.length>1){
+      const other=unique.find(t=>!same(t.sports_gamer_team_id,$("#home").value));
+      if(other)$("#away").value=String(other.sports_gamer_team_id);
+    }
     renderMatch();
   }
 
@@ -202,7 +219,7 @@
   function renderRoad() {
     $("#roadGrid").innerHTML = ["home", "away"].map(side => {
       const t = selectedTeam(side), r = stage(t, "regular"), po = playoff(t);
-      return '<div class="road-card"><div class="road-team">' + (logo(t) ? image(logo(t)) : "") + '<b>' + esc(t.team_name_in_league) + '</b></div><div class="road-step"><small>GRUPPSPEL</small><strong>#' + stat(po.regular_season_seed) + '</strong><span>' + stat(r.total_wins) + ' vinster · ' + stat(r.goals_for) + '–' + stat(r.goals_against) + '</span></div><i></i><div class="road-step"><small>SLUTSPEL · ' + esc(po.playoff_round_name || "DATA SAKNAS") + '</small><strong>' + stat(po.series_won) + '–' + stat(po.series_lost) + ' serier</strong><span>' + stat(po.matched_playoff_game_wins) + ' matchvinster</span></div><i></i><div class="road-step final"><small>FIKTIV TESTMATCH</small><strong>BRONS</strong><span>Ingen historisk bronsmatch</span></div></div>';
+      return '<div class="road-card"><div class="road-team">' + (logo(t) ? image(logo(t)) : "") + '<b>' + esc(t.team_name_in_league) + '</b></div><div class="road-step"><small>GRUPPSPEL</small><strong>#' + stat(po.regular_season_seed) + '</strong><span>' + stat(r.total_wins) + ' vinster · ' + stat(r.goals_for) + '–' + stat(r.goals_against) + '</span></div><i></i><div class="road-step"><small>SLUTSPEL · ' + esc(po.playoff_round_name || "DATA SAKNAS") + '</small><strong>' + stat(po.series_won) + '–' + stat(po.series_lost) + ' serier</strong><span>' + stat(po.matched_playoff_game_wins) + ' matchvinster</span></div><i></i><div class="road-step final"><small>${activeLeagueId===520?"FIKTIV TESTMATCH":"AKTUELL TURNERING"}</small><strong>${activeLeagueId===520?"BRONS":"SLUTSPEL"}</strong><span>${activeLeagueId===520?"Ingen historisk bronsmatch":"Live turneringsdata"}</span></div></div>';
     }).join("");
   }
 
@@ -241,7 +258,7 @@
         ? (p.watch_save * (p.watch_save <= 1 ? 100 : 1)).toFixed(1).replace(".", ",") + "% SV · " + stat(total(p.regular_goalie_shutouts,p.playoff_goalie_shutouts)) + " SO"
         : stat(playerGoals(p)) + " G · " + stat(total(p.regular_assists,p.playoff_assists)) + " A · <strong>" + stat(playerPoints(p)) + " P</strong>";
       const detail = isGoalie ? stat(goalieGames(p)) + " matcher" : "Grupp " + stat(p.regular_points) + " · Slutspel " + stat(p.playoff_points);
-      const team = MATCH_TEAMS.find(t => same(t.sports_gamer_team_id, p.sports_gamer_team_id)) || {};
+      const team = SEC_MATCH_TEAMS.find(t => same(t.sports_gamer_team_id, p.sports_gamer_team_id)) || {};
       const teamLogo = logo(team);
       return '<div class="leader-card">' + image(playerImage(p)) + '<div class="leader-copy">' + (teamLogo ? '<img class="leader-team-logo" src="' + esc(teamLogo) + '" alt="">' : '') + '<small>' + esc(p.team_name_in_league) + ' · ' + esc(p.watch_reason) + '</small><b>' + esc(p.display_gamertag) + '</b><span>' + main + '</span><em>' + detail + '</em></div></div>';
     }).join("") : '<p>Spelarstatistik saknas.</p>';
@@ -320,38 +337,67 @@
     $("#spotlightCard").innerHTML = spotlightHtml();
   }
 
+  function applyCompetitionChrome(resetHeadline=false) {
+    const c=competition(), logoSrc=competitionLogo(c);
+    document.querySelectorAll(".event-logo img").forEach(img=>{img.src=logoSrc;img.alt=c.code;img.hidden=false;});
+    if($("#tableKicker"))$("#tableKicker").textContent=c.label+" · "+(activeLeagueId===526?"POKAL":"GRUPPSPEL");
+    if($("#leadersKicker"))$("#leadersKicker").textContent=c.label+" · GRUPPSPEL + SLUTSPEL";
+    const bronze=activeLeagueId===520;
+    if($("#roadKicker"))$("#roadKicker").textContent=bronze?"ROAD TO BRONZE":"PLAYOFF ROAD";
+    if($("#roadTitle"))$("#roadTitle").textContent=bronze?"VÄGEN TILL BRONSMATCHEN":"VÄGEN GENOM SLUTSPELET";
+    if($("#roadSceneButton"))$("#roadSceneButton").textContent=bronze?"Bronsvägen":"Slutspelsvägen";
+    if(resetHeadline&&$("#headline"))$("#headline").value=c.label;
+  }
+
+  function renderAllCompetitionData(){
+    renderTeams();renderSeries();renderLineup();renderStats();renderTable();renderTeamCompare();renderScorers();
+    renderFormGuide();renderOffense();renderDefenseLeaders();renderGoalieLeaders();renderRoad();renderLeaders();renderRoleMatchups();
+  }
+
   function renderStatus() {
     const labels = { teams: "Lagstatistik", players: "Trupp/spelare", playoffs: "Slutspel" };
     $("#dataStatus").textContent = Object.entries(status).map(([key, state]) => labels[key] + ": " + ({ loading: "laddar…", ready: "klar", empty: "saknas", error: "kunde inte laddas" }[state])).join(" · ");
   }
 
   async function loadPart(key, view, render) {
+    const leagueId=activeLeagueId;
     try {
-      const cfg = window.EHOCKEY_CONFIG || {};
-      if (!cfg.supabaseUrl || !cfg.supabasePublishableKey) throw new Error("Supabase-konfiguration saknas");
-      const apiKey = String(cfg.supabasePublishableKey);
-      const headers = { apikey: apiKey, Accept: "application/json" };
-      if (/^eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(apiKey)) headers.Authorization = "Bearer " + apiKey;
-      const url = String(cfg.supabaseUrl).replace(/\/+$/, "") + "/rest/v1/" + view + "?select=*&sports_gamer_league_id=eq." + LEAGUE;
-      const response = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
-      if (!response.ok) throw new Error(view + " HTTP " + response.status);
-      const rows = await response.json();
-      if (!Array.isArray(rows) || rows.some(row => !row || !same(row.sports_gamer_league_id, LEAGUE) || row.sports_gamer_team_id == null || typeof row.team_name_in_league !== "string" || (key === "players" && (row.sports_gamer_player_id == null || typeof row.display_gamertag !== "string")))) throw new Error(view + ": oväntat dataformat");
-      data[key] = key === "players" ? [...new Map(rows.map(p => [p.sports_gamer_team_id + ":" + p.sports_gamer_player_id, p])).values()] : rows;
-      status[key] = rows.length ? "ready" : "empty";
+      const cfg=window.EHOCKEY_CONFIG||{};
+      if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)throw new Error("Supabase-konfiguration saknas");
+      const apiKey=String(cfg.supabasePublishableKey);
+      const headers={apikey:apiKey,Accept:"application/json"};
+      if(/^eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(apiKey))headers.Authorization="Bearer "+apiKey;
+      const url=String(cfg.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/"+view+"?select=*&sports_gamer_league_id=eq."+leagueId;
+      const response=await fetch(url,{headers,signal:AbortSignal.timeout(15000),cache:"no-store"});
+      if(!response.ok)throw new Error(view+" HTTP "+response.status);
+      const rows=await response.json();
+      if(activeLeagueId!==leagueId)return;
+      if(!Array.isArray(rows)||rows.some(row=>!row||!same(row.sports_gamer_league_id,leagueId)||row.sports_gamer_team_id==null||typeof row.team_name_in_league!=="string"||(key==="players"&&(row.sports_gamer_player_id==null||typeof row.display_gamertag!=="string"))))throw new Error(view+": oväntat dataformat");
+      data[key]=key==="players"?[...new Map(rows.map(p=>[p.sports_gamer_team_id+":"+p.sports_gamer_player_id,p])).values()]:rows;
+      status[key]=rows.length?"ready":"empty";
       render();
-    } catch (error) {
-      status[key] = "error";
-      console.error("Broadcast " + key + ":", error);
+    } catch(error) {
+      if(activeLeagueId!==leagueId)return;
+      status[key]="error";
+      console.error("Broadcast "+key+":",error);
     }
     renderStatus();
+  }
+
+  function loadTournamentData(){
+    data.teams=[];data.players=[];data.playoffs=[];lineups.clear();
+    status.teams="loading";status.players="loading";status.playoffs="loading";
+    renderStatus();renderAllCompetitionData();
+    void loadPart("teams","v_broadcast_teams_public",()=>{renderTeams();renderStats();renderTable();renderTeamCompare();renderFormGuide();renderOffense();renderRoad();renderLineup();});
+    void loadPart("players","v_broadcast_players_public",()=>{renderLineup();renderLeaders();renderScorers();renderDefenseLeaders();renderGoalieLeaders();renderOffense();renderRoleMatchups();});
+    void loadPart("playoffs","v_broadcast_playoffs_public",renderRoad);
   }
 
   function setTheme(name){const theme=["broadcast","arena","ice","impact"].includes(name)?name:"broadcast";document.body.dataset.theme=theme;if($("#theme"))$("#theme").value=theme;}
 
   function renderSeries(){const bo=Number($("#seriesFormat")?.value||5),need=Math.ceil(bo/2),hw=Math.max(0,Math.min(need,Number($("#seriesHome")?.value||0))),aw=Math.max(0,Math.min(need,Number($("#seriesAway")?.value||0))),round=($("#seriesRound")?.value||"SLUTSPEL").trim().toLocaleUpperCase("sv"),h=selectedTeam("home"),a=selectedTeam("away");$("#seriesHomeScore").textContent=hw;$("#seriesAwayScore").textContent=aw;$("#seriesKicker").textContent=round+" · BEST OF "+bo;const dots=(wins)=>Array.from({length:need},(_,i)=>'<i class="'+(i<wins?"won":"")+'"></i>').join("");$("#seriesHomeDots").innerHTML=dots(hw);$("#seriesAwayDots").innerHTML=dots(aw);const done=hw===need||aw===need;$("#seriesTitle").textContent=done?(hw===need?h.team_name_in_league:a.team_name_in_league)+" VINNER SERIEN":"SERIELÄGE";$("#seriesNext").textContent=done?"SERIEN AVGJORD · "+hw+"–"+aw:"NÄSTA MATCH · MATCH "+(hw+aw+1);const showResults=!!$("#seriesShowResults")?.checked,results=Array.from({length:bo},(_,i)=>($("#seriesR"+(i+1))?.value||"").trim()).map((v,i)=>v?'<span><b>M'+(i+1)+'</b> '+esc(v.replace(/\s+/g,""))+'</span>':"").filter(Boolean),resultBox=$("#seriesResults");if(resultBox){resultBox.hidden=!showResults||!results.length;$("#seriesResultsList").innerHTML=results.join("");}for(let i=1;i<=7;i++){const label=$("#seriesR"+i)?.closest("label");if(label)label.hidden=i>bo;}["seriesHome","seriesAway"].forEach(id=>{const el=$("#"+id);if(el)el.max=need;});}
 
-  function studioState(){const ls={};["home","away"].forEach(side=>{const l=lineupFor(side);ls[side]={};SLOTS.forEach(slot=>ls[side][slot]=l[slot]||"");});return {theme:$("#theme")?.value||"broadcast",seriesFormat:$("#seriesFormat")?.value||"5",seriesRound:$("#seriesRound")?.value||"SLUTSPEL",seriesHome:$("#seriesHome")?.value||"0",seriesAway:$("#seriesAway")?.value||"0",seriesShowResults:!!$("#seriesShowResults")?.checked,seriesResults:Array.from({length:7},(_,i)=>$("#seriesR"+(i+1))?.value||""),scene:activeScene,lineupSide:$("#lineupSide").value,home:$("#home").value,away:$("#away").value,hs:$("#hs").value,as:$("#as").value,headline:$("#headline").value,subline:$("#subline").value,commentator1:$("#commentator1").value,commentator2:$("#commentator2").value,person:$("#person").value,role:$("#role").value,videoSource:$("#videoSource")?.value||"twitch",hlsUrl:$("#hlsUrl")?.value||"",twitchChannel:$("#twitchChannel")?.value||"",twitchShow:$("#showTwitch")?.checked!==false,twitchMute:$("#muteTwitch")?.checked!==false,lineups:ls};}
+  function studioState(){const ls={};["home","away"].forEach(side=>{const l=lineupFor(side);ls[side]={};SLOTS.forEach(slot=>ls[side][slot]=l[slot]||"");});return {leagueId:activeLeagueId,theme:$("#theme")?.value||"broadcast",seriesFormat:$("#seriesFormat")?.value||"5",seriesRound:$("#seriesRound")?.value||"SLUTSPEL",seriesHome:$("#seriesHome")?.value||"0",seriesAway:$("#seriesAway")?.value||"0",seriesShowResults:!!$("#seriesShowResults")?.checked,seriesResults:Array.from({length:7},(_,i)=>$("#seriesR"+(i+1))?.value||""),scene:activeScene,lineupSide:$("#lineupSide").value,home:$("#home").value,away:$("#away").value,hs:$("#hs").value,as:$("#as").value,headline:$("#headline").value,subline:$("#subline").value,commentator1:$("#commentator1").value,commentator2:$("#commentator2").value,person:$("#person").value,role:$("#role").value,videoSource:$("#videoSource")?.value||"twitch",hlsUrl:$("#hlsUrl")?.value||"",twitchChannel:$("#twitchChannel")?.value||"",twitchShow:$("#showTwitch")?.checked!==false,twitchMute:$("#muteTwitch")?.checked!==false,lineups:ls};}
   function applyScene(name,side){
     const next=name||"opening";
     const nextSide=side||$("#lineupSide").value;
@@ -405,7 +451,7 @@
       screen.classList.remove("scene-switching");
     },420);
   }
-  function applyRemoteState(s){if(!s||typeof s!=="object")return;remoteApplying=true;setTheme(s.theme||"broadcast");if($("#videoSource")&&s.videoSource!==undefined)$("#videoSource").value=s.videoSource||"twitch";if($("#hlsUrl")&&s.hlsUrl!==undefined)$("#hlsUrl").value=s.hlsUrl||"";if($("#twitchChannel")&&s.twitchChannel!==undefined)$("#twitchChannel").value=s.twitchChannel||"";if($("#showTwitch")&&s.twitchShow!==undefined)$("#showTwitch").checked=!!s.twitchShow;if($("#muteTwitch")&&s.twitchMute!==undefined)$("#muteTwitch").checked=!!s.twitchMute;window.__sehTwitchState=s;["home","away","hs","as","headline","subline","commentator1","commentator2","person","role","seriesFormat","seriesRound","seriesHome","seriesAway"].forEach(id=>{if(s[id]!==undefined&&$("#"+id))$("#"+id).value=s[id];});if($("#seriesShowResults")&&s.seriesShowResults!==undefined)$("#seriesShowResults").checked=!!s.seriesShowResults;if(Array.isArray(s.seriesResults))s.seriesResults.slice(0,7).forEach((v,i)=>{const el=$("#seriesR"+(i+1));if(el)el.value=v||"";});if(s.lineups){["home","away"].forEach(side=>{if(!s.lineups[side])return;const key=side+":"+String(selectedTeam(side).sports_gamer_team_id);const next={};SLOTS.forEach(slot=>next[slot]=String(s.lineups[side][slot]||""));lineups.set(key,next);});}applyScene(s.scene,s.lineupSide);window.dispatchEvent(new CustomEvent("seh:twitch-state",{detail:s}));renderMatch();renderSeries();renderLineup();renderStats();renderTable();renderTeamCompare();renderScorers();renderFormGuide();renderOffense();renderDefenseLeaders();renderGoalieLeaders();renderRoad();renderLeaders();renderRoleMatchups();remoteApplying=false;}
+  function applyRemoteState(s){if(!s||typeof s!=="object")return;remoteApplying=true;const incomingLeague=Number(s.leagueId||activeLeagueId);if(COMPETITIONS[incomingLeague]&&incomingLeague!==activeLeagueId){activeLeagueId=incomingLeague;if($("#tournament"))$("#tournament").value=String(activeLeagueId);applyCompetitionChrome(false);loadTournamentData();}setTheme(s.theme||"broadcast");if($("#videoSource")&&s.videoSource!==undefined)$("#videoSource").value=s.videoSource||"twitch";if($("#hlsUrl")&&s.hlsUrl!==undefined)$("#hlsUrl").value=s.hlsUrl||"";if($("#twitchChannel")&&s.twitchChannel!==undefined)$("#twitchChannel").value=s.twitchChannel||"";if($("#showTwitch")&&s.twitchShow!==undefined)$("#showTwitch").checked=!!s.twitchShow;if($("#muteTwitch")&&s.twitchMute!==undefined)$("#muteTwitch").checked=!!s.twitchMute;window.__sehTwitchState=s;["home","away"].forEach(id=>{if(s[id]!==undefined&&$("#"+id)){const el=$("#"+id),v=String(s[id]);if(v&&![...el.options].some(o=>o.value===v))el.add(new Option("LAG",v));el.value=v;}});["hs","as","headline","subline","commentator1","commentator2","person","role","seriesFormat","seriesRound","seriesHome","seriesAway"].forEach(id=>{if(s[id]!==undefined&&$("#"+id))$("#"+id).value=s[id];});if($("#seriesShowResults")&&s.seriesShowResults!==undefined)$("#seriesShowResults").checked=!!s.seriesShowResults;if(Array.isArray(s.seriesResults))s.seriesResults.slice(0,7).forEach((v,i)=>{const el=$("#seriesR"+(i+1));if(el)el.value=v||"";});if(s.lineups){["home","away"].forEach(side=>{if(!s.lineups[side])return;const key=side+":"+String(selectedTeam(side).sports_gamer_team_id);const next={};SLOTS.forEach(slot=>next[slot]=String(s.lineups[side][slot]||""));lineups.set(key,next);});}applyScene(s.scene,s.lineupSide);window.dispatchEvent(new CustomEvent("seh:twitch-state",{detail:s}));renderMatch();renderSeries();renderLineup();renderStats();renderTable();renderTeamCompare();renderScorers();renderFormGuide();renderOffense();renderDefenseLeaders();renderGoalieLeaders();renderRoad();renderLeaders();renderRoleMatchups();remoteApplying=false;}
   async function remoteRequest(method,body){const cfg=window.EHOCKEY_CONFIG||{};if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)return;const key=String(cfg.supabasePublishableKey),headers={apikey:key,Accept:"application/json","Content-Type":"application/json"};if(/^eyJ[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$/.test(key))headers.Authorization="Bearer "+key;const url=String(cfg.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/broadcast_studio_state?channel=eq."+encodeURIComponent(REMOTE_CHANNEL);const res=await fetch(url,{method,headers,body:body?JSON.stringify(body):undefined,cache:"no-store"});if(!res.ok)throw new Error("Broadcast state HTTP "+res.status);return method==="GET"?res.json():null;}
   function publishState(){if(OBS_MODE||remoteApplying)return;clearTimeout(remoteTimer);remoteTimer=setTimeout(()=>remoteRequest("PATCH",{state:studioState(),updated_at:new Date().toISOString()}).catch(console.error),120);} window.__sehPublishBroadcastState=publishState;
   async function pullState(){try{const rows=await remoteRequest("GET");if(rows&&rows[0]&&rows[0].state&&Object.keys(rows[0].state).length)applyRemoteState(rows[0].state);}catch(e){console.error("Broadcast remote:",e);}}
@@ -420,6 +466,20 @@
 
   // Controls are installed synchronously, before any data request starts.
   document.querySelectorAll("[data-scene]").forEach(button => button.addEventListener("click", () => { applyScene(button.dataset.scene,button.dataset.lineupSide); publishState(); }));
+  $("#tournament")?.addEventListener("change",()=>{
+    const next=Number($("#tournament").value);
+    if(!COMPETITIONS[next]||next===activeLeagueId)return;
+    activeLeagueId=next;
+    applyCompetitionChrome(true);
+    $("#home").replaceChildren();$("#away").replaceChildren();
+    $("#subline").value="";
+    loadTournamentData();
+    setTimeout(()=>{
+      const h=selectedTeam("home"),a=selectedTeam("away");
+      if($("#home").value&&$("#away").value)$("#subline").value=String(h.team_name_in_league||"").toLocaleUpperCase("sv")+" vs "+String(a.team_name_in_league||"").toLocaleUpperCase("sv");
+      renderAllCompetitionData();publishState();
+    },450);
+  });
   $("#theme")?.addEventListener("change",()=>{setTheme($("#theme").value);publishState();});
   ["seriesFormat","seriesHome","seriesAway","seriesShowResults"].forEach(id=>$("#"+id)?.addEventListener("change",()=>{renderSeries();publishState();}));
   for(let i=1;i<=7;i++)$("#seriesR"+i)?.addEventListener("input",()=>{renderSeries();publishState();});
@@ -477,9 +537,8 @@
   renderLeaders();
   renderRoleMatchups();
   renderStatus();
-  void loadPart("teams", "v_sec21_broadcast_teams_public", () => { renderTeams(); renderStats(); renderTable(); renderTeamCompare(); renderFormGuide(); renderOffense(); renderRoad(); renderLineup(); });
-  void loadPart("players", "v_sec21_broadcast_players_public", () => { renderLineup(); renderLeaders(); renderScorers(); renderDefenseLeaders(); renderGoalieLeaders(); renderOffense(); renderRoleMatchups(); });
-  void loadPart("playoffs", "v_sec21_broadcast_playoffs_public", renderRoad);
+  applyCompetitionChrome(false);
+  loadTournamentData();
 })();
 
 
