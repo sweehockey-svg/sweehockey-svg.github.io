@@ -458,3 +458,40 @@ button{font:inherit}
   .access-row{grid-template-columns:minmax(0,1fr) 70px}
   .access-row>em{display:none}
 }
+
+/* v16 · Hockeyettan team home + team-scoped cockpit access */
+.hidden{display:none!important}
+.route-screen{min-height:calc(100vh - 72px)}
+.home-button{border:1px solid #294352;border-radius:8px;background:#081a26;color:#91a5b1;padding:8px 10px;font-size:7px;font-weight:1000;letter-spacing:.08em;cursor:pointer}
+.league-home{padding:30px clamp(16px,3vw,42px) 42px}
+.league-home-hero{max-width:760px;margin:10px auto 25px;text-align:center}
+.league-home-hero>span{display:block;color:var(--yellow);font-size:8px;font-weight:1000;letter-spacing:.16em}
+.league-home-hero h2{margin:8px 0 6px;font-size:34px}
+.league-home-hero p{margin:0;color:#78909f;font-size:11px;line-height:1.55}
+.team-grid{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.team-card{min-height:104px;display:grid;grid-template-columns:48px minmax(0,1fr) 20px;gap:11px;align-items:center;padding:12px;border:1px solid #1e3948;border-radius:11px;background:linear-gradient(145deg,#081a26,#06141e);color:#dce7ec;text-align:left;cursor:pointer}
+.team-card:hover{border-color:#6b5928;transform:translateY(-1px)}
+.team-card.unlocked{border-color:#2e654b}
+.team-card-badge{width:48px;height:48px;border:1px solid #2b4858;border-radius:12px;background:#0b2230;display:grid;place-items:center;color:#a9bbc5;font:900 11px/1 Consolas,monospace}
+.team-card.unlocked .team-card-badge{border-color:#356b51;color:var(--green)}
+.team-card-copy{min-width:0}
+.team-card-copy span{display:block;color:#5e7888;font-size:6px;font-weight:1000;letter-spacing:.11em}
+.team-card-copy strong{display:block;margin-top:5px;font-size:11px;line-height:1.3}
+.team-card-copy small{display:block;margin-top:6px;color:#9c8233;font-size:6px;font-weight:900;letter-spacing:.08em}
+.team-card.unlocked .team-card-copy small{color:var(--green)}
+.team-card-arrow{color:#506a79;font-size:16px}
+.home-loading{grid-column:1/-1;padding:30px;text-align:center;color:#718997}
+.team-lock{padding:38px 18px;display:grid;place-items:center}
+.team-lock-card{width:min(520px,100%);padding:28px;border:1px solid #2a4656;border-radius:14px;background:linear-gradient(145deg,#081a26,#06141e);text-align:center}
+.lock-badge{width:68px;height:68px;margin:0 auto 14px;border:1px solid #6c5925;border-radius:16px;background:#0c2230;display:grid;place-items:center;color:var(--yellow);font:900 15px/1 Consolas,monospace}
+.team-lock-card>span{display:block;color:#718b99;font-size:7px;font-weight:1000;letter-spacing:.13em}
+.team-lock-card h2{margin:7px 0 7px;font-size:24px}
+.team-lock-card p{margin:0 auto;max-width:410px;color:#8197a4;font-size:10px;line-height:1.55}
+.team-lock-actions{display:flex;justify-content:center;gap:7px;margin-top:18px}
+.team-lock-actions button{border:1px solid #294352;border-radius:8px;background:#0a1e2b;color:#91a5b1;padding:9px 11px;font-size:7px;font-weight:1000;cursor:pointer}
+.team-lock-actions button:first-child{border-color:#715e24;background:var(--yellow);color:#07111a}
+.access-form-team{grid-template-columns:minmax(170px,1.3fr) minmax(120px,1fr) 110px minmax(150px,1fr) auto}
+.access-form select:disabled{opacity:.45}
+@media(max-width:1050px){.team-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.access-form-team{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.team-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.league-home{padding:20px 12px 32px}.league-home-hero h2{font-size:28px}.home-button{display:none}.access-form-team{grid-template-columns:1fr}}
+@media(max-width:480px){.team-grid{grid-template-columns:1fr}.team-lock-actions{flex-direction:column}}

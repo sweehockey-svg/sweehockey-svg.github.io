@@ -49,6 +49,11 @@
     cloudSyncState: "local",
     cloudSyncMessage: "",
     access: null,
+    accessRows: [],
+    competitionTeams: [],
+    selectedTeam: null,
+    selectedTeamSlug: "",
+    teamDataLoaded: false,
     accessAdminItems: [],
     accessAdminLoaded: false,
     accessAdminBusy: false,
@@ -177,6 +182,102 @@
     return state.teamById.get(id)?.canonical_name || "Okänt lag";
   }
 
+  function teamSlug(name) {
+    return String(name||"")
+      .toLocaleLowerCase("sv-SE")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z0-9]+/g,"-")
+      .replace(/^-+|-+$/g,"");
+  }
+
+  function requestedTeamSlug() {
+    return new URLSearchParams(window.location.search).get("team")||"";
+  }
+
+  function globalAdminAccess() {
+    return state.accessRows.find((row)=>row.active&&row.role==="admin"&&!row.team_id)||null;
+  }
+
+  function effectiveAccessForTeam(teamId) {
+    return globalAdminAccess() ||
+      state.accessRows.find((row)=>row.active&&row.role==="commentator"&&row.team_id===teamId) ||
+      null;
+  }
+
+  function canAccessTeam(teamId) {
+    return Boolean(state.authUser&&effectiveAccessForTeam(teamId));
+  }
+
+  function setRouteScreen(name) {
+    document.getElementById("homeScreen")?.classList.toggle("hidden",name!=="home");
+    document.getElementById("lockScreen")?.classList.toggle("hidden",name!=="lock");
+    document.getElementById("cockpitScreen")?.classList.toggle("hidden",name!=="cockpit");
+    document.getElementById("cockpitDeck")?.classList.toggle("hidden",name!=="cockpit");
+    document.getElementById("homeButton")?.classList.toggle("hidden",name==="home");
+    if(name!=="cockpit") drawer.classList.remove("open");
+  }
+
+  function openTeam(team) {
+    const url=new URL(window.location.href);
+    url.searchParams.set("team",teamSlug(team.canonical_name));
+    window.location.href=url.toString();
+  }
+
+  function goHome() {
+    const url=new URL(window.location.href);
+    url.searchParams.delete("team");
+    window.location.href=url.toString();
+  }
+
+  function renderLeagueHome() {
+    setRouteScreen("home");
+    const grid=document.getElementById("teamGrid");
+    if(!grid) return;
+    const teams=[...state.competitionTeams].sort((a,b)=>
+      a.canonical_name.localeCompare(b.canonical_name,"sv")
+    );
+    grid.innerHTML=teams.map((team)=>{
+      const access=effectiveAccessForTeam(team.id);
+      const status=!state.authUser
+        ? "KRÄVER INLOGGNING"
+        : access ? (access.role==="admin"?"ADMIN · ÖPPEN":"ÖPPEN FÖR DIG") : "LÅST";
+      return '<button class="team-card '+(access?"unlocked":"locked")+'" type="button" data-team-id="'+esc(team.id)+'">' +
+        '<div class="team-card-badge">'+esc(shortTeam(team.canonical_name))+'</div>' +
+        '<div class="team-card-copy"><span>HOCKEYETTAN</span><strong>'+esc(team.canonical_name)+'</strong><small>'+esc(status)+'</small></div>' +
+        '<div class="team-card-arrow">→</div>' +
+      '</button>';
+    }).join("");
+    grid.querySelectorAll("[data-team-id]").forEach((button)=>{
+      button.addEventListener("click",()=>{
+        const team=state.teamById.get(button.dataset.teamId);
+        if(team) openTeam(team);
+      });
+    });
+    document.getElementById("syncText").textContent=teams.length+" Hockeyettan-lag laddade";
+  }
+
+  function renderTeamLock() {
+    setRouteScreen("lock");
+    const team=state.selectedTeam;
+    if(!team) return;
+    document.getElementById("lockBadge").textContent=shortTeam(team.canonical_name);
+    document.getElementById("lockTeamName").textContent=team.canonical_name;
+    const message=!state.authUser
+      ? "Logga in med ett konto som har behörighet till "+team.canonical_name+"."
+      : "Du är inloggad som "+(state.authUser.email||"användare")+", men kontot saknar behörighet till "+team.canonical_name+".";
+    document.getElementById("lockMessage").textContent=message;
+    document.getElementById("syncText").textContent="Cockpit låst · "+team.canonical_name;
+  }
+
+  function showCockpit() {
+    setRouteScreen("cockpit");
+    if(state.selectedTeam){
+      document.title=state.selectedTeam.canonical_name+" · Commentator Cockpit";
+    }
+  }
+
+
   const LEGACY_NOTE_STORAGE_KEY="commentator-cockpit-notes-v1";
   const NOTE_STORAGE_PREFIX="commentator-cockpit-notes-v2";
 
@@ -255,22 +356,25 @@
   function updateAuthButton() {
     const button=document.getElementById("accountButton");
     if(!button) return;
+    state.access=state.selectedTeam
+      ? effectiveAccessForTeam(state.selectedTeam.id)
+      : globalAdminAccess() || state.accessRows.find((row)=>row.active) || null;
     if(state.authUser){
       const label=state.authUser.email||"Inloggad";
       button.classList.toggle("signed-in",Boolean(state.access?.active));
       button.classList.toggle("pending",!state.access?.active);
       const sub=state.access?.active
-        ? (state.access.role==="admin"?"ADMIN":state.cloudSyncState==="synced"?"MOLNSYNK":"KOMMENTATOR")
+        ? (state.access.role==="admin"?"ADMIN":state.selectedTeam?"LAGACCESS":"KOMMENTATOR")
         : "EJ GODKÄND";
       button.innerHTML='<span class="account-dot"></span><strong>'+esc(label)+'</strong><small>'+esc(sub)+'</small>';
     }else{
       button.classList.remove("signed-in","pending");
-      button.innerHTML='<span class="account-dot"></span><strong>LOGGA IN</strong><small>NOTES + AI</small>';
+      button.innerHTML='<span class="account-dot"></span><strong>LOGGA IN</strong><small>LAGACCESS</small>';
     }
   }
 
   async function syncNotesWithCloud({includeGuest=false}={}) {
-    if(!client||!state.authUser||!state.access?.active){
+    if(!client||!state.authUser||!state.selectedTeam||!canAccessTeam(state.selectedTeam.id)){
       state.cloudSyncState=state.authUser?"blocked":"local";
       state.cloudSyncMessage=state.authUser
         ? "Kontot är inloggat men saknar godkänd cockpit-behörighet."
@@ -326,7 +430,7 @@
 
   function saveNotes() {
     persistLocalNotes();
-    if(state.authUser&&state.access?.active){
+    if(state.authUser&&state.selectedTeam&&canAccessTeam(state.selectedTeam.id)){
       syncNotesWithCloud().catch((error)=>{
         console.error("Note cloud sync failed",error);
         state.cloudSyncState="error";
@@ -553,25 +657,29 @@
 
 
   function hasApprovedAccess() {
-    return Boolean(state.authUser&&state.access?.active);
+    return Boolean(state.selectedTeam&&canAccessTeam(state.selectedTeam.id));
   }
 
   function isAccessAdmin() {
-    return hasApprovedAccess()&&state.access?.role==="admin";
+    return Boolean(state.authUser&&globalAdminAccess());
   }
 
   async function loadAccessForCurrentUser() {
     state.access=null;
-    if(!client||!state.authUser?.email) return null;
+    state.accessRows=[];
+    if(!client||!state.authUser?.email) return [];
     const {data,error}=await client.from("commentator_access")
-      .select("email,role,active,display_name")
-      .maybeSingle();
+      .select("id,email,role,team_id,active,display_name")
+      .order("role",{ascending:true});
     if(error){
       console.error("Access check failed",error);
-      return null;
+      return [];
     }
-    state.access=data||null;
-    return state.access;
+    state.accessRows=data||[];
+    state.access=state.selectedTeam
+      ? effectiveAccessForTeam(state.selectedTeam.id)
+      : globalAdminAccess() || state.accessRows.find((row)=>row.active) || null;
+    return state.accessRows;
   }
 
   async function invokeAccessAdmin(body) {
@@ -598,25 +706,32 @@
 
   function accessAdminHtml() {
     if(!isAccessAdmin()) return "";
+    const teamOptions=state.competitionTeams
+      .slice()
+      .sort((a,b)=>a.canonical_name.localeCompare(b.canonical_name,"sv"))
+      .map((team)=>'<option value="'+esc(team.id)+'">'+esc(team.canonical_name)+'</option>')
+      .join("");
+
     const rows=state.accessAdminItems.map((item)=>{
-      const self=String(item.email||"").toLowerCase()===String(state.authUser?.email||"").toLowerCase();
+      const self=item.id===globalAdminAccess()?.id;
       const action=item.active
-        ? (self?"":'<button type="button" class="danger" data-access-deactivate="'+esc(item.email)+'">STÄNG AV</button>')
-        : '<button type="button" data-access-reactivate="'+esc(item.email)+'" data-access-role="'+esc(item.role)+'" data-access-name="'+esc(item.display_name||"")+'">ÅTERAKTIVERA</button>';
+        ? (self?"":'<button type="button" class="danger" data-access-deactivate="'+esc(item.id)+'">STÄNG AV</button>')
+        : '<button type="button" data-access-reactivate="'+esc(item.id)+'" data-access-email="'+esc(item.email)+'" data-access-role="'+esc(item.role)+'" data-access-team="'+esc(item.team_id||"")+'" data-access-name="'+esc(item.display_name||"")+'">ÅTERAKTIVERA</button>';
       return '<div class="access-row '+(item.active?"active":"inactive")+'">' +
         '<div><strong>'+esc(item.display_name||item.email)+'</strong><small>'+esc(item.email)+'</small></div>' +
-        '<span>'+esc(item.role.toUpperCase())+'</span>' +
+        '<span>'+esc(item.role==="admin"?"ADMIN":item.team_name||"LAG")+'</span>' +
         '<em>'+(item.active?"AKTIV":"AVSTÄNGD")+'</em>' +
         '<div>'+action+'</div>' +
       '</div>';
     }).join("");
 
     return '<section class="access-admin">' +
-      '<div class="section-title"><span>BEHÖRIGHETER</span><small>ADMIN</small></div>' +
-      '<form class="access-form" id="accessForm">' +
+      '<div class="section-title"><span>LAGBEHÖRIGHETER</span><small>ADMIN</small></div>' +
+      '<form class="access-form access-form-team" id="accessForm">' +
         '<input id="accessEmail" type="email" required placeholder="kommentator@example.com">' +
         '<input id="accessName" maxlength="120" placeholder="Namn (valfritt)">' +
-        '<select id="accessRole"><option value="commentator">Kommentator</option><option value="admin">Admin</option></select>' +
+        '<select id="accessRole"><option value="commentator">Kommentator</option><option value="admin">Global admin</option></select>' +
+        '<select id="accessTeam">'+teamOptions+'</select>' +
         '<button type="submit">LÄGG TILL / UPPDATERA</button>' +
       '</form>' +
       (state.accessAdminError?'<div class="account-message">'+esc(state.accessAdminError)+'</div>':"") +
@@ -630,41 +745,42 @@
   function renderAccount() {
     if(state.authUser){
       const email=state.authUser.email||"Inloggad användare";
+      const allowedTeams=state.competitionTeams.filter((team)=>canAccessTeam(team.id));
+      const teamText=isAccessAdmin()
+        ? "Global admin · alla lag"
+        : allowedTeams.length
+          ? allowedTeams.map((team)=>team.canonical_name).join(" · ")
+          : "Inga lag ännu";
 
-      if(!state.access?.active){
+      if(!state.accessRows.some((row)=>row.active)){
         return '<article class="account-card pending">' +
           '<span>INLOGGAD · EJ GODKÄND</span><h3>'+esc(email)+'</h3>' +
-          '<p>Kontot kan läsa den publika cockpit-datan, men moln-NOTES och server-AI är spärrade tills e-postadressen finns i behörighetslistan.</p>' +
+          '<p>Kontot är verifierat, men har ännu ingen lagbehörighet.</p>' +
         '</article>' +
-        '<div class="account-actions">' +
-          '<button type="button" id="refreshAccessButton">KONTROLLERA BEHÖRIGHET</button>' +
-          '<button type="button" class="danger" id="signOutButton">LOGGA UT</button>' +
-        '</div>' +
-        '<article class="drawer-card"><strong>Behöver godkännas</strong><span>En admin lägger in exakt den här e-postadressen. Ingen anonym eller vanlig inloggad användare kan ge sig själv behörighet.</span></article>';
+        '<div class="account-actions"><button type="button" id="refreshAccessButton">KONTROLLERA BEHÖRIGHET</button>' +
+        '<button type="button" class="danger" id="signOutButton">LOGGA UT</button></div>' +
+        '<article class="drawer-card"><strong>Lagstyrt</strong><span>En admin måste koppla e-postadressen till rätt Hockeyettan-lag.</span></article>';
       }
 
-      const syncLabel=state.cloudSyncState==="syncing"?"SYNKAR":
-        state.cloudSyncState==="error"?"SYNKFEL":
-        state.access.role==="admin"?"ADMIN":"KOMMENTATOR";
       return '<article class="account-card signed-in">' +
-        '<span>'+esc(syncLabel)+'</span><h3>'+esc(email)+'</h3>' +
-        '<p>'+esc(state.cloudSyncMessage||"Godkänt konto. NOTES kan synkas och server-AI är behörighetsmässigt upplåst.")+'</p>' +
+        '<span>'+esc(isAccessAdmin()?"GLOBAL ADMIN":"GODKÄND KOMMENTATOR")+'</span><h3>'+esc(email)+'</h3>' +
+        '<p>'+esc(teamText)+'</p>' +
       '</article>' +
       '<div class="account-actions">' +
-        '<button type="button" id="syncNotesNow">SYNKA NOTES NU</button>' +
+        (state.selectedTeam&&canAccessTeam(state.selectedTeam.id)?'<button type="button" id="syncNotesNow">SYNKA NOTES NU</button>':'') +
         '<button type="button" class="danger" id="signOutButton">LOGGA UT</button>' +
       '</div>' +
-      '<article class="drawer-card"><strong>AI</strong><span>Server-AI kräver både den här behörigheten och serverns OPENAI_API_KEY. Behörighetskontrollen görs även i Edge Function, inte bara i gränssnittet.</span></article>' +
+      '<article class="drawer-card"><strong>Åtkomst</strong><span>Varje lag har sin egen cockpit-behörighet. Global admin kan öppna alla lag.</span></article>' +
       accessAdminHtml();
     }
 
-    return '<article class="drawer-card"><strong>Passwordless login</strong><span>Fyll i e-postadressen. Supabase skickar en engångslänk. Kontot får inte moln-NOTES eller server-AI förrän en admin har godkänt adressen.</span></article>' +
+    return '<article class="drawer-card"><strong>Passwordless login</strong><span>Logga in med e-post. Därefter kontrolleras om adressen är kopplad till det lag du försöker öppna.</span></article>' +
       '<form class="account-form" id="accountForm">' +
         '<label><span>E-POST</span><input id="accountEmail" type="email" autocomplete="email" required placeholder="namn@example.com"></label>' +
         '<button type="submit" '+(state.authBusy?"disabled":"")+'>'+(state.authBusy?"SKICKAR…":"SKICKA MAGIC LINK")+'</button>' +
       '</form>' +
       (state.authMessage?'<div class="account-message">'+esc(state.authMessage)+'</div>':'') +
-      '<article class="drawer-card"><strong>Åtkomstmodell</strong><span>Magic Link verifierar vem du är. Behörighetslistan avgör om du får använda moln-NOTES och server-AI. Två olika saker, eftersom internet tydligen behöver dörrar även efter dörren.</span></article>';
+      '<article class="drawer-card"><strong>Efter inloggning</strong><span>Du kommer bara in i cockpiten för lag som en admin har kopplat till ditt konto.</span></article>';
   }
 
   function bindAccountUi() {
@@ -678,7 +794,7 @@
         state.authBusy=true;
         state.authMessage="";
         renderDrawer("account");
-        const redirectTo=window.location.origin+window.location.pathname;
+        const redirectTo=window.location.origin+window.location.pathname+window.location.search;
         const {error}=await client.auth.signInWithOtp({
           email,
           options:{
@@ -696,11 +812,12 @@
 
     document.getElementById("refreshAccessButton")?.addEventListener("click",async()=>{
       await loadAccessForCurrentUser();
-      if(state.access?.active){
+      if(state.selectedTeam&&canAccessTeam(state.selectedTeam.id)){
         const includeGuest=readNotesFromStorage(noteStorageKey(null)).length>0;
         await syncNotesWithCloud({includeGuest});
       }
       updateAuthButton();
+      await routeApp();
       renderDrawer("account");
     });
 
@@ -724,11 +841,13 @@
         state.accessAdminBusy=true;
         state.accessAdminError="";
         renderDrawer("account");
+        const role=document.getElementById("accessRole")?.value==="admin"?"admin":"commentator";
         const result=await invokeAccessAdmin({
           action:"upsert",
           email,
           display_name:String(document.getElementById("accessName")?.value||"").trim(),
-          role:document.getElementById("accessRole")?.value==="admin"?"admin":"commentator"
+          role,
+          team_id:role==="admin"?null:document.getElementById("accessTeam")?.value
         });
         state.accessAdminBusy=false;
         if(!result?.ok){
@@ -745,7 +864,7 @@
         renderDrawer("account");
         const result=await invokeAccessAdmin({
           action:"deactivate",
-          email:button.dataset.accessDeactivate
+          id:button.dataset.accessDeactivate
         });
         state.accessAdminBusy=false;
         if(!result?.ok) state.accessAdminError="Kunde inte stänga av användaren.";
@@ -760,9 +879,10 @@
         renderDrawer("account");
         const result=await invokeAccessAdmin({
           action:"upsert",
-          email:button.dataset.accessReactivate,
+          email:button.dataset.accessEmail,
           display_name:button.dataset.accessName||"",
-          role:button.dataset.accessRole==="admin"?"admin":"commentator"
+          role:button.dataset.accessRole==="admin"?"admin":"commentator",
+          team_id:button.dataset.accessRole==="admin"?null:button.dataset.accessTeam
         });
         state.accessAdminBusy=false;
         if(!result?.ok) state.accessAdminError="Kunde inte återaktivera användaren.";
@@ -770,6 +890,14 @@
         renderDrawer("account");
       });
     });
+
+    const roleSelect=document.getElementById("accessRole");
+    const teamSelect=document.getElementById("accessTeam");
+    const syncTeamSelect=()=>{
+      if(teamSelect) teamSelect.disabled=roleSelect?.value==="admin";
+    };
+    roleSelect?.addEventListener("change",syncTeamSelect);
+    syncTeamSelect();
 
     if(isAccessAdmin()&&!state.accessAdminLoaded&&!state.accessAdminBusy){
       window.setTimeout(async()=>{
@@ -787,6 +915,7 @@
     state.authUser=nextUser;
     state.authMessage="";
     state.access=null;
+    state.accessRows=[];
     state.accessAdminItems=[];
     state.accessAdminLoaded=false;
     state.accessAdminError="";
@@ -799,12 +928,12 @@
         includeGuest?readNotesFromStorage(noteStorageKey(null)):[]
       );
 
-      if(state.access?.active){
+      if(state.selectedTeam&&canAccessTeam(state.selectedTeam.id)){
         await syncNotesWithCloud({includeGuest});
       }else{
         persistLocalNotes();
         state.cloudSyncState="blocked";
-        state.cloudSyncMessage="Inloggad, men molnsynk väntar på godkänd behörighet.";
+        state.cloudSyncMessage="Molnsynk aktiveras när du öppnar ett lag du har behörighet till.";
       }
     }else{
       state.cloudSyncState="local";
@@ -813,7 +942,8 @@
     }
 
     updateAuthButton();
-    renderFacts();
+    await routeApp();
+
     const activeButton=document.querySelector(".deck-key.active");
     if(drawer.classList.contains("open")){
       if(activeButton?.dataset.panel==="notes") renderDrawer("notes");
@@ -1079,7 +1209,7 @@
         add({
           id:"live-special",
           tag:"SPECIAL TEAMS LIVE",
-          title:"Väsby PP "+specialRecord(vasbyLive?.power_play_goals,vasbyLive?.power_play_opportunities)+
+          title:state.vasby.canonical_name+" PP "+specialRecord(vasbyLive?.power_play_goals,vasbyLive?.power_play_opportunities)+
             " · "+state.opponent.canonical_name+" PP "+specialRecord(oppLive?.power_play_goals,oppLive?.power_play_opportunities),
           text:"Aktuell matchdata från officiella matchrapporten.",
           score:180,
@@ -1100,7 +1230,7 @@
       add({
         id:"standings",
         tag:"TABELL",
-        title:state.opponent.canonical_name+" #"+oppStanding.rank+" · Väsby #"+vasbyStanding.rank,
+        title:state.opponent.canonical_name+" #"+oppStanding.rank+" · "+state.vasby.canonical_name+" #"+vasbyStanding.rank,
         text:"Efter "+oppStanding.games_played+" respektive "+vasbyStanding.games_played+
           " spelade matcher. Poäng "+oppStanding.points+"–"+vasbyStanding.points+".",
         score:72,
@@ -1112,7 +1242,7 @@
       add({
         id:"form",
         tag:"FORM",
-        title:"Väsby "+formText(vasbyForm),
+        title:state.vasby.canonical_name+" "+formText(vasbyForm),
         text:state.opponent.canonical_name+" "+formText(oppForm)+".",
         score:104,
         story:true
@@ -1124,7 +1254,7 @@
         add({
           id:"latest-results",
           tag:"SENAST",
-          title:"Väsby "+vasbyLatest.result+" "+vasbyLatest.gf+"–"+vasbyLatest.ga+" mot "+vasbyLatest.opponent,
+          title:state.vasby.canonical_name+" "+vasbyLatest.result+" "+vasbyLatest.gf+"–"+vasbyLatest.ga+" mot "+vasbyLatest.opponent,
           text:state.opponent.canonical_name+" "+oppLatest.result+" "+oppLatest.gf+"–"+oppLatest.ga+" mot "+oppLatest.opponent+".",
           score:96,
           story:true
@@ -1140,7 +1270,7 @@
         id:"h2h",
         tag:"H2H",
         title:"Importerad historik: "+h.vasbyWins+"–"+h.opponentWins+" i vinster · mål "+h.vasbyGoals+"–"+h.opponentGoals,
-        text:"Senaste mötet: Väsby "+latestScore.gf+"–"+latestScore.ga+" "+state.opponent.canonical_name+
+        text:"Senaste mötet: "+state.vasby.canonical_name+" "+latestScore.gf+"–"+latestScore.ga+" "+state.opponent.canonical_name+
           " · "+shortDateOnly(latest.scheduled_start)+".",
         score:118,
         story:true
@@ -1155,7 +1285,7 @@
       add({
         id:"special-teams",
         tag:"PP / BP",
-        title:"Väsby PP "+specialRecord(vasbySpecial.pp_goals,vasbySpecial.pp_opportunities)+
+        title:state.vasby.canonical_name+" PP "+specialRecord(vasbySpecial.pp_goals,vasbySpecial.pp_opportunities)+
           " · BP "+specialRecord(vasbyPkKills,vasbySpecial.pk_opportunities),
         text:state.opponent.canonical_name+" PP "+specialRecord(oppSpecial.pp_goals,oppSpecial.pp_opportunities)+
           " · BP "+specialRecord(oppPkKills,oppSpecial.pk_opportunities)+
@@ -1369,6 +1499,7 @@
     const {data,error}=await client.functions.invoke("commentator-ai",{
       body:{
         game_id:state.nextGame.id,
+        team_id:state.vasby.id,
         question:String(question||"").trim().slice(0,500),
         mode:aiMode(),
         editorial_notes:aiEditorialPayload()
@@ -1420,7 +1551,7 @@
     return '<article class="drawer-card ai-safety"><strong>Ingen fri statistikfantasi</strong><span>Server-AI får match-ID och hämtar själv officiell statistik från databasen. Egna anteckningar skickas separat som redaktionellt material.</span></article>' +
       '<div class="ai-status '+(serverReady?"ready":"fallback")+'"><span>'+(serverReady?"SERVER-AI":"LOKAL FALLBACK")+'</span><strong>'+esc(statusText)+'</strong></div>' +
       '<form class="ai-form" id="aiForm">' +
-        '<label><span>FRÅGA / VINKEL</span><textarea id="aiQuestion" rows="3" maxlength="500" placeholder="T.ex. Vad är mest relevant att säga om Väsbys powerplay just nu?"></textarea></label>' +
+        '<label><span>FRÅGA / VINKEL</span><textarea id="aiQuestion" rows="3" maxlength="500" placeholder="T.ex. Vad är mest relevant att säga om lagets powerplay just nu?"></textarea></label>' +
         '<div class="ai-form-actions">' +
           '<button type="button" id="aiReset">MEST RELEVANT NU</button>' +
           '<button type="submit" class="primary" '+(state.aiBusy?"disabled":"")+'>'+(state.aiBusy?"JOBBAR…":"GENERERA TALKING POINTS")+'</button>' +
@@ -1969,7 +2100,7 @@
       '</div>' +
       '<article class="h2h-latest">' +
         '<span>SENASTE MÖTET · '+esc(seasonForGame(latest))+'</span>' +
-        '<strong>Väsby '+esc(latestScore.gf)+'–'+esc(latestScore.ga)+' '+esc(state.opponent.canonical_name)+'</strong>' +
+        '<strong>'+esc(state.vasby.canonical_name)+' '+esc(latestScore.gf)+'–'+esc(latestScore.ga)+' '+esc(state.opponent.canonical_name)+'</strong>' +
         '<small>'+esc(shortDateOnly(latest.scheduled_start))+' · '+esc(latest.venue_name||"Arena saknas")+'</small>' +
       '</article>' +
       '<div class="h2h-list">'+rows+'</div>';
@@ -2218,6 +2349,68 @@
     return data || [];
   }
 
+  async function loadBaseData() {
+    if(!client) throw new Error("Supabase-klienten kunde inte startas.");
+
+    const {data:competitions,error:compError}=await client.from("competitions")
+      .select("id,name,season_label,group_name,updated_at,source_competition_id")
+      .eq("source","swehockey");
+    if(compError) throw compError;
+    state.competitionById=new Map((competitions||[]).map((row)=>[row.id,row]));
+    const competition=(competitions||[]).find((row)=>row.source_competition_id==="21043");
+    if(!competition) throw new Error("Hockeyettan Norra 2026/27 saknas.");
+    state.competition=competition;
+
+    const [{data:teams,error:teamError},{data:rosters,error:rosterError}]=await Promise.all([
+      client.from("teams").select("id,canonical_name,short_name"),
+      client.from("team_rosters").select("team_id").eq("competition_id",competition.id).eq("is_active",true)
+    ]);
+    if(teamError) throw teamError;
+    if(rosterError) throw rosterError;
+
+    state.teams=teams||[];
+    state.teamById=new Map(state.teams.map((team)=>[team.id,team]));
+    const ids=new Set((rosters||[]).map((row)=>row.team_id));
+    state.competitionTeams=state.teams.filter((team)=>ids.has(team.id));
+
+    state.selectedTeamSlug=requestedTeamSlug();
+    state.selectedTeam=state.selectedTeamSlug
+      ? state.competitionTeams.find((team)=>teamSlug(team.canonical_name)===state.selectedTeamSlug)||null
+      : null;
+
+    if(state.selectedTeamSlug&&!state.selectedTeam){
+      state.selectedTeamSlug="";
+      history.replaceState(null,"",window.location.pathname);
+    }
+  }
+
+  async function routeApp() {
+    updateAuthButton();
+
+    if(!state.selectedTeam){
+      renderLeagueHome();
+      return;
+    }
+
+    if(!canAccessTeam(state.selectedTeam.id)){
+      renderTeamLock();
+      return;
+    }
+
+    state.access=effectiveAccessForTeam(state.selectedTeam.id);
+    if(!state.teamDataLoaded){
+      setRouteScreen("lock");
+      document.getElementById("lockBadge").textContent=shortTeam(state.selectedTeam.canonical_name);
+      document.getElementById("lockTeamName").textContent=state.selectedTeam.canonical_name;
+      document.getElementById("lockMessage").textContent="Behörighet godkänd. Laddar lagets cockpit…";
+      await loadData();
+      return;
+    }
+
+    showCockpit();
+    render();
+  }
+
   async function loadData() {
     if (!client) throw new Error("Supabase-klienten kunde inte startas.");
     state.notes=loadLocalNotes();
@@ -2236,8 +2429,10 @@
     if (teamError) throw teamError;
     state.teams = teams || [];
     state.teamById = new Map(state.teams.map((team) => [team.id, team]));
-    state.vasby = state.teams.find((team) => team.canonical_name === "Väsby IK HK");
-    if (!state.vasby) throw new Error("Väsby IK HK saknas i importerad data.");
+    state.vasby = state.selectedTeam
+      ? state.teamById.get(state.selectedTeam.id)
+      : null;
+    if (!state.vasby) throw new Error("Valt lag saknas i importerad data.");
 
     const activeWindowStart = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
     const { data: nextGames, error: nextError } = await client.from("games")
@@ -2250,7 +2445,7 @@
       .limit(1);
     if (nextError) throw nextError;
     state.nextGame = nextGames?.[0] || null;
-    if (!state.nextGame) throw new Error("Ingen kommande Väsby-match hittades.");
+    if (!state.nextGame) throw new Error("Ingen kommande match hittades för "+state.vasby.canonical_name+".");
 
     const opponentId = state.nextGame.home_team_id === state.vasby.id
       ? state.nextGame.away_team_id
@@ -2416,7 +2611,7 @@
     }
 
     panels.live.cards = [
-      ["Matchcollector", state.latestEvents.length + " händelser lästa från senaste Väsby-matchen."],
+      ["Matchcollector", state.latestEvents.length + " händelser lästa från senaste "+state.vasby.canonical_name+"-matchen."],
       ["Spelardata", state.seasonPlayerStats.filter((row) => row.position !== "GK").length + " säsongsrader · " + state.recentPlayerStats.length + " S5-matchrader."],
       ["Special teams", state.seasonSpecialTeams.length + " säsongsrader · " + state.teamGameStats.filter((row) => row.power_play_opportunities != null).length + " matchrader."],
       ["Nästa match-ID", state.nextGame.source_event_game_id
@@ -2424,6 +2619,8 @@
         : "Schema-ID " + (state.nextGame.game_number || "saknas") + " är känt. Live-ID väntas senare."]
     ];
 
+    state.teamDataLoaded=true;
+    showCockpit();
     render();
   }
 
@@ -2449,7 +2646,7 @@
     document.getElementById("homeScore").textContent = isLive ? game.home_score : "–";
     document.getElementById("awayScore").textContent = isLive ? game.away_score : "–";
 
-    document.getElementById("homeFormLabel").textContent = "Väsby";
+    document.getElementById("homeFormLabel").textContent = state.vasby.canonical_name;
     document.getElementById("awayFormLabel").textContent = state.opponent.canonical_name;
     renderForm("homeFormDots", state.vasbyForm, state.vasby.id);
     renderForm("awayFormDots", state.opponentForm, state.opponent.id);
@@ -2463,7 +2660,7 @@
     const oppStanding = state.standingsByTeam.get(state.opponent.id);
     panels.match.cards = [
       ["Nästa match", swedishDate(game.scheduled_start) + " · " + (game.venue_name || "Arena ej angiven")],
-      ["Tabell", "Väsby #" + (vasbyStanding?.rank ?? "–") + " (" + (vasbyStanding?.points ?? "–") + " p) · " +
+      ["Tabell", state.vasby.canonical_name + " #" + (vasbyStanding?.rank ?? "–") + " (" + (vasbyStanding?.points ?? "–") + " p) · " +
         state.opponent.canonical_name + " #" + (oppStanding?.rank ?? "–") + " (" + (oppStanding?.points ?? "–") + " p)"],
       ["Kedjor", state.nextLineup
         ? "Officiell lineup för nästa match är importerad."
@@ -2487,7 +2684,7 @@
   }
 
   async function refreshActiveMatch() {
-    if(!client||!state.nextGame?.id||state.liveRefreshBusy) return;
+    if(!client||!state.teamDataLoaded||!state.selectedTeam||!canAccessTeam(state.selectedTeam.id)||!state.nextGame?.id||state.liveRefreshBusy) return;
     state.liveRefreshBusy=true;
     try{
       const {data:game,error:gameError}=await client.from("games")
@@ -2571,6 +2768,12 @@
     renderDrawer("account");
   });
 
+  document.getElementById("homeButton")?.addEventListener("click",goHome);
+  document.getElementById("lockHomeButton")?.addEventListener("click",goHome);
+  document.getElementById("lockLoginButton")?.addEventListener("click",()=>{
+    renderDrawer("account");
+  });
+
   document.getElementById("aiButton")?.addEventListener("click",()=>{
     document.querySelectorAll(".deck-key").forEach((item)=>item.classList.remove("active"));
     document.querySelector('.deck-key[data-panel="ai"]')?.classList.add("active");
@@ -2592,13 +2795,15 @@
   window.setInterval(refreshActiveMatch, 15000);
 
   async function boot() {
-    await loadData();
+    await loadBaseData();
+    renderLeagueHome();
     try{
       await initAuth();
     }catch(error){
       console.error("Auth init failed",error);
       state.authMessage="Inloggningen kunde inte starta.";
       updateAuthButton();
+      await routeApp();
     }
   }
 
@@ -2607,7 +2812,7 @@
   window.CommentatorCockpit = {
     config: cfg || null,
     state,
-    reload: () => loadData().catch(showLoadError),
+    reload: () => routeApp().catch(showLoadError),
     openPanel: renderDrawer,
     editorialNotes: () => currentEditorialNotes(),
     aiFallback: (question="") => localAiBrief(question),

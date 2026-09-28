@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#06111a">
   <title>Commentator Cockpit · Hockeyettan</title>
-  <link rel="stylesheet" href="cockpit.css?v=15">
+  <link rel="stylesheet" href="cockpit.css?v=16">
 </head>
 <body>
   <div class="app-shell">
@@ -19,6 +19,7 @@
         </div>
       </div>
       <div class="top-actions">
+        <button class="home-button hidden" id="homeButton" type="button">ALLA LAG</button>
         <button class="account-button" id="accountButton" type="button">
           <span class="account-dot"></span><strong>LOGGA IN</strong><small>NOTES + AI</small>
         </button>
@@ -30,7 +31,31 @@
       </div>
     </header>
 
-    <main class="cockpit">
+    <main class="league-home route-screen" id="homeScreen">
+      <section class="league-home-hero">
+        <span>HOCKEYETTAN · COMMENTATOR COCKPIT</span>
+        <h2>Välj lag</h2>
+        <p>Alla lag syns här. Själva kommentatorscockpiten öppnas bara för användare som har behörighet till det valda laget.</p>
+      </section>
+      <section class="team-grid" id="teamGrid">
+        <div class="home-loading">Laddar Hockeyettan-lag…</div>
+      </section>
+    </main>
+
+    <main class="team-lock route-screen hidden" id="lockScreen">
+      <section class="team-lock-card">
+        <div class="lock-badge" id="lockBadge">—</div>
+        <span>TEAM COCKPIT</span>
+        <h2 id="lockTeamName">Lag</h2>
+        <p id="lockMessage">Kontrollerar behörighet…</p>
+        <div class="team-lock-actions">
+          <button type="button" id="lockLoginButton">LOGGA IN / KONTO</button>
+          <button type="button" id="lockHomeButton">TILL ALLA LAG</button>
+        </div>
+      </section>
+    </main>
+
+    <main class="cockpit route-screen hidden" id="cockpitScreen">
       <section class="match-hero">
         <div class="match-meta">
           <span class="live-pill">NÄSTA MATCH</span>
@@ -83,7 +108,7 @@
           <div class="section-block">
             <div class="section-title"><span>FORM</span><small>SENASTE 5</small></div>
             <div class="form-row">
-              <span id="homeFormLabel">Väsby</span>
+              <span id="homeFormLabel">Valt lag</span>
               <div class="form-dots" id="homeFormDots"><i></i><i></i><i></i><i></i><i></i></div>
             </div>
             <div class="form-row">
@@ -95,7 +120,7 @@
           <div class="section-block">
             <div class="section-title"><span>TABELL</span><small>LIVE NÄR DATA FINNS</small></div>
             <div class="table-placeholder" id="standingsQuick">
-              <div><b>–</b><span>Väsby IK HK</span><em>– p</em></div>
+              <div><b>–</b><span>Valt lag</span><em>– p</em></div>
               <div><b>–</b><span>Motståndare</span><em>– p</em></div>
             </div>
           </div>
@@ -112,7 +137,7 @@
 
           <div class="empty-state" id="eventFeed">
             <div class="empty-icon">↯</div>
-            <strong>Laddar senaste Väsby-matchen</strong>
+            <strong>Laddar senaste matchen</strong>
             <p>Grunddata hämtas från vår Supabase. Live-eventflödet kopplas in i nästa steg.</p>
           </div>
         </section>
@@ -147,19 +172,20 @@
         </aside>
       </section>
 
-      <section class="drawer" id="drawer">
-        <div class="drawer-head">
-          <div>
-            <span class="panel-kicker" id="drawerKicker">MATCH</span>
-            <h2 id="drawerTitle">Matchöversikt</h2>
-          </div>
-          <button class="close-button" id="closeDrawer" type="button" aria-label="Stäng">×</button>
-        </div>
-        <div class="drawer-body" id="drawerBody"></div>
-      </section>
     </main>
 
-    <nav class="deck" aria-label="Cockpit navigation">
+    <section class="drawer" id="drawer">
+      <div class="drawer-head">
+        <div>
+          <span class="panel-kicker" id="drawerKicker">MATCH</span>
+          <h2 id="drawerTitle">Matchöversikt</h2>
+        </div>
+        <button class="close-button" id="closeDrawer" type="button" aria-label="Stäng">×</button>
+      </div>
+      <div class="drawer-body" id="drawerBody"></div>
+    </section>
+
+    <nav class="deck hidden" id="cockpitDeck" aria-label="Cockpit navigation">
       <button class="deck-key active" data-panel="match"><span>01</span><strong>MATCH</strong></button>
       <button class="deck-key" data-panel="lines"><span>02</span><strong>KEDJOR</strong></button>
       <button class="deck-key" data-panel="players"><span>03</span><strong>SPELARE</strong></button>
@@ -176,6 +202,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=1"></script>
-  <script src="cockpit.js?v=15"></script>
+  <script src="cockpit.js?v=16"></script>
 </body>
 </html>
