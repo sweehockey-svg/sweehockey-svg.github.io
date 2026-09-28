@@ -2095,8 +2095,8 @@
     return '<article class="drawer-card h2h-intro"><strong>Historik från Swehockey</strong><span>'+esc(historySeasons.join(" · "))+' · siffrorna räknas direkt från importerade matcher.</span></article>' +
       '<div class="h2h-summary">' +
         '<div><span>MÖTEN</span><strong>'+esc(s.games)+'</strong></div>' +
-        '<div><span>VINSTER</span><strong>'+esc(s.vasbyWins)+'–'+esc(s.opponentWins)+'</strong><small>Väsby – '+esc(state.opponent.canonical_name)+'</small></div>' +
-        '<div><span>MÅL</span><strong>'+esc(s.vasbyGoals)+'–'+esc(s.opponentGoals)+'</strong><small>Väsby – '+esc(state.opponent.canonical_name)+'</small></div>' +
+        '<div><span>VINSTER</span><strong>'+esc(s.vasbyWins)+'–'+esc(s.opponentWins)+'</strong><small>'+esc(state.vasby.canonical_name)+' – '+esc(state.opponent.canonical_name)+'</small></div>' +
+        '<div><span>MÅL</span><strong>'+esc(s.vasbyGoals)+'–'+esc(s.opponentGoals)+'</strong><small>'+esc(state.vasby.canonical_name)+' – '+esc(state.opponent.canonical_name)+'</small></div>' +
         '<div><span>SVIT</span><strong>'+esc(s.streak||"–")+'</strong><small>'+esc(s.streak?streakName:"Ingen pågående")+'</small></div>' +
       '</div>' +
       '<article class="h2h-latest">' +
