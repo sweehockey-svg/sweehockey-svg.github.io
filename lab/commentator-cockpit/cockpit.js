@@ -36,7 +36,8 @@
     h2hGames: [],
     currentEvents: [],
     seenFactIds: new Set(),
-    lastQuickFactIds: []
+    lastQuickFactIds: [],
+    liveRefreshBusy: false
   };
 
   const panels = {
@@ -89,10 +90,7 @@
     studio: {
       kicker: "STUDIO",
       title: "Periodunderlag",
-      cards: [
-        ["Periodslut", "När live- och rapportcollectorn är inkopplad byggs pausunderlaget automatiskt."],
-        ["Verifierat först", "Skott, special teams och nyckelhändelser kommer från matchens officiella data."]
-      ]
+      cards: []
     },
     ai: {
       kicker: "AI",
@@ -267,7 +265,7 @@
     feed.className = "event-feed-live";
 
     const eventRows = state.latestEvents.length
-      ? '<div class="event-list">' + state.latestEvents.map((event) => {
+      ? '<div class="event-list">' + state.latestEvents.slice(0,12).map((event) => {
           const teamName = event.team_id ? getTeamName(event.team_id) : "";
           const label = event.event_type === "goal" ? "MÅL" :
             event.event_type === "penalty" ? "UTVISNING" :
@@ -1109,12 +1107,202 @@
       '<div class="h2h-list">'+rows+'</div>';
   }
 
+
+  function studioGame() {
+    return state.nextGame?.status === "live" ? state.nextGame : state.latestVasbyGame;
+  }
+
+  function studioEvents(game) {
+    if(!game) return [];
+    return game.id === state.nextGame?.id && state.nextGame?.status === "live"
+      ? state.currentEvents
+      : state.latestEvents;
+  }
+
+  function studioStatsForTeam(game,teamId) {
+    if(!game) return null;
+    const current=state.teamGameStats.find((row)=>row.game_id===game.id&&row.team_id===teamId);
+    if(current) return current;
+    if(game.id===state.latestVasbyGame?.id) return state.latestTeamStats.get(teamId)||null;
+    return null;
+  }
+
+  function studioPeriod(game,events) {
+    const eventPeriods=events.map((event)=>Number(event.period||0)).filter((period)=>period>0&&period<=5);
+    const maxEventPeriod=eventPeriods.length?Math.max(...eventPeriods):1;
+    if(game?.status==="live"&&Number(game.period)>0) return Math.max(1,Number(game.period));
+    return Math.max(1,maxEventPeriod);
+  }
+
+  function periodStat(stats,key,period) {
+    const values=stats?.period_stats?.[key];
+    if(!Array.isArray(values)) return null;
+    const value=values[period-1];
+    return value==null?null:Number(value);
+  }
+
+  function periodGoalCounts(events,period,homeId,awayId) {
+    let home=0,away=0;
+    for(const event of events){
+      if(Number(event.period)!==period||event.event_type!=="goal") continue;
+      if(event.team_id===homeId) home++;
+      else if(event.team_id===awayId) away++;
+    }
+    return {home,away};
+  }
+
+  function scoreAfterPeriod(events,period) {
+    const goals=events
+      .filter((event)=>event.event_type==="goal"&&Number(event.period)<=period&&event.home_score!=null&&event.away_score!=null)
+      .sort((a,b)=>Number(b.event_seconds||0)-Number(a.event_seconds||0));
+    return goals[0]
+      ? {home:Number(goals[0].home_score),away:Number(goals[0].away_score)}
+      : {home:0,away:0};
+  }
+
+  function contributorName(text) {
+    return String(text||"")
+      .replace(/^#\d+\s+/,"")
+      .replace(/\s*\(\d+\)\s*$/,"")
+      .trim();
+  }
+
+  function periodKeyPlayer(events,period) {
+    const points=new Map();
+    const add=(name,teamId,value)=>{
+      if(!name) return;
+      const key=teamId+"|"+name;
+      const current=points.get(key)||{name,teamId,goals:0,assists:0,weight:0};
+      if(value===2) current.goals++;
+      else current.assists++;
+      current.weight+=value;
+      points.set(key,current);
+    };
+
+    for(const event of events){
+      if(Number(event.period)!==period||event.event_type!=="goal") continue;
+      const description=String(event.description||"");
+      const parts=description.split("· Ass:");
+      const scorer=parts[0].replace(/\s*\(\d+\)\s*$/,"").trim();
+      add(contributorName(scorer),event.team_id,2);
+      if(parts[1]){
+        parts[1].split(",").forEach((assist)=>add(contributorName(assist.trim()),event.team_id,1));
+      }
+    }
+
+    return [...points.values()].sort((a,b)=>
+      b.weight-a.weight || b.goals-a.goals || a.name.localeCompare(b.name,"sv")
+    )[0]||null;
+  }
+
+  function periodLabel(period) {
+    if(period===4) return "OT";
+    if(period===5) return "SO";
+    return "P"+period;
+  }
+
+  function renderStudio() {
+    const game=studioGame();
+    if(!game){
+      return '<article class="drawer-card"><strong>Ingen match att sammanfatta</strong><span>Studio-underlaget aktiveras när matchdata finns.</span></article>';
+    }
+
+    const events=studioEvents(game);
+    const period=studioPeriod(game,events);
+    const homeId=game.home_team_id;
+    const awayId=game.away_team_id;
+    const homeName=getTeamName(homeId);
+    const awayName=getTeamName(awayId);
+    const homeStats=studioStatsForTeam(game,homeId);
+    const awayStats=studioStatsForTeam(game,awayId);
+    const goals=periodGoalCounts(events,period,homeId,awayId);
+    const overall=scoreAfterPeriod(events,period);
+    const homeShots=periodStat(homeStats,"shots",period);
+    const awayShots=periodStat(awayStats,"shots",period);
+    const homePim=periodStat(homeStats,"pim",period);
+    const awayPim=periodStat(awayStats,"pim",period);
+    const periodEvents=events
+      .filter((event)=>Number(event.period)===period&&(event.event_type==="goal"||event.event_type==="penalty"))
+      .sort((a,b)=>Number(a.event_seconds||0)-Number(b.event_seconds||0));
+    const ppGoals={
+      home:periodEvents.filter((event)=>event.event_type==="goal"&&event.team_id===homeId&&String(event.strength||"").toUpperCase().startsWith("PP")).length,
+      away:periodEvents.filter((event)=>event.event_type==="goal"&&event.team_id===awayId&&String(event.strength||"").toUpperCase().startsWith("PP")).length
+    };
+    const keyPlayer=periodKeyPlayer(events,period);
+    const live=game.status==="live";
+    const modeLabel=live?"AKTUELL MATCH":"TESTLÄGE · SENASTE MATCH";
+
+    const periodResult=goals.home===goals.away
+      ? "Perioden "+goals.home+"–"+goals.away
+      : (goals.home>goals.away?homeName:awayName)+" vann perioden "+goals.home+"–"+goals.away;
+
+    const shotText=homeShots!=null&&awayShots!=null
+      ? "Skotten "+homeShots+"–"+awayShots+"."
+      : "Periodskott saknas ännu.";
+
+    const specialText=(ppGoals.home||ppGoals.away)
+      ? "PP-mål "+ppGoals.home+"–"+ppGoals.away+
+        (homePim!=null&&awayPim!=null?" · PIM "+homePim+"–"+awayPim+".":".")
+      : "Inga PP-mål i perioden"+
+        (homePim!=null&&awayPim!=null?". PIM "+homePim+"–"+awayPim+".":".");
+
+    const keyText=keyPlayer
+      ? keyPlayer.name+" · "+keyPlayer.goals+" mål · "+keyPlayer.assists+" assist"
+      : "Ingen poängspelare sticker ut i eventdata för perioden.";
+
+    const talkingPoints=[
+      {
+        tag:"PERIODBILD",
+        title:periodResult,
+        text:shotText+" Totalt efter perioden: "+homeName+" "+overall.home+"–"+overall.away+" "+awayName+"."
+      },
+      {
+        tag:"SPECIAL TEAMS / DISCIPLIN",
+        title:specialText,
+        text:"Bygger på periodens mål, utvisningar och officiella periodstatistik."
+      },
+      {
+        tag:"NYCKELSPELARE",
+        title:keyText,
+        text:keyPlayer?"Poängbidrag i periodens registrerade mål.":"Använd skottbild och matchhändelser som huvudspår."
+      }
+    ];
+
+    const eventsHtml=periodEvents.length
+      ? '<div class="studio-events">'+periodEvents.map((event)=>{
+          const label=event.event_type==="goal"?"MÅL":"UTVISNING";
+          return '<div class="studio-event '+event.event_type+'">' +
+            '<div><span>'+esc(event.clock_display||"–")+'</span><b>'+label+'</b></div>' +
+            '<strong>'+esc(event.team_id?getTeamName(event.team_id):"")+'</strong>' +
+            '<p>'+esc(event.description||"")+'</p>' +
+          '</div>';
+        }).join("")+'</div>'
+      : '<div class="drawer-card"><strong>Inga mål eller utvisningar i perioden</strong><span>Eventflödet innehåller inga sådana händelser ännu.</span></div>';
+
+    return '<article class="studio-banner '+(live?"live":"")+'">' +
+      '<div><span>'+esc(modeLabel)+'</span><h3>'+esc(periodLabel(period))+' · '+esc(homeName)+' – '+esc(awayName)+'</h3></div>' +
+      '<strong>'+esc(overall.home)+'–'+esc(overall.away)+'</strong>' +
+    '</article>' +
+    '<div class="studio-summary-grid">' +
+      '<div><span>PERIOD</span><strong>'+esc(goals.home)+'–'+esc(goals.away)+'</strong><small>'+esc(periodLabel(period))+'</small></div>' +
+      '<div><span>SKOTT</span><strong>'+esc(homeShots??"–")+'–'+esc(awayShots??"–")+'</strong><small>'+esc(periodLabel(period))+'</small></div>' +
+      '<div><span>PP-MÅL</span><strong>'+esc(ppGoals.home)+'–'+esc(ppGoals.away)+'</strong><small>'+esc(periodLabel(period))+'</small></div>' +
+      '<div><span>PIM</span><strong>'+esc(homePim??"–")+'–'+esc(awayPim??"–")+'</strong><small>'+esc(periodLabel(period))+'</small></div>' +
+    '</div>' +
+    '<div class="studio-section-title"><span>3 TALKING POINTS</span><small>VERIFIERAD DATA</small></div>' +
+    '<div class="studio-talking-points">'+talkingPoints.map((point,index)=>
+      '<article><b>'+String(index+1).padStart(2,"0")+'</b><div><span>'+esc(point.tag)+'</span><strong>'+esc(point.title)+'</strong><p>'+esc(point.text)+'</p></div></article>'
+    ).join("")+'</div>' +
+    '<div class="studio-section-title"><span>PERIODENS HÄNDELSER</span><small>'+esc(periodLabel(period))+'</small></div>' +
+    eventsHtml;
+  }
+
   function renderDrawer(key) {
     const data = panels[key] || panels.match;
     drawerKicker.textContent = data.kicker;
     drawerTitle.textContent = data.title;
 
-    drawer.classList.toggle("wide", key === "lines" || key === "h2h" || key === "story");
+    drawer.classList.toggle("wide", key === "lines" || key === "h2h" || key === "story" || key === "studio");
     if (key === "lines") {
       drawerBody.innerHTML = renderLineups();
     } else if (key === "players") {
@@ -1131,6 +1319,8 @@
       drawerBody.innerHTML = renderStorylines();
     } else if (key === "h2h") {
       drawerBody.innerHTML = renderH2H();
+    } else if (key === "studio") {
+      drawerBody.innerHTML = renderStudio();
     } else {
       drawerBody.innerHTML = data.cards.map(([title, text]) =>
         '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
@@ -1278,7 +1468,7 @@
         .eq("competition_id", competition.id)
         .in("team_id", focusTeamIds),
       client.from("team_game_stats")
-        .select("game_id,team_id,goals,shots,saves,pim,power_play_opportunities,power_play_goals,power_play_pct,power_play_seconds,penalty_kill_opportunities,penalty_kill_goals_against,penalty_kill_pct")
+        .select("game_id,team_id,goals,shots,saves,pim,period_stats,power_play_opportunities,power_play_goals,power_play_pct,power_play_seconds,penalty_kill_opportunities,penalty_kill_goals_against,penalty_kill_pct")
         .in("game_id", statGameIds)
         .in("team_id", focusTeamIds)
     ]);
@@ -1321,7 +1511,7 @@
         .eq("is_active", true)
         .order("event_seconds", { ascending: false })
         .order("ordinal", { ascending: true })
-        .limit(12);
+        .limit(100);
       if (eventsError) throw eventsError;
       state.latestEvents = events || [];
     }
@@ -1334,7 +1524,7 @@
         .eq("is_active", true)
         .order("event_seconds", { ascending: false })
         .order("ordinal", { ascending: true })
-        .limit(12);
+        .limit(100);
       if (currentEventsError) throw currentEventsError;
       state.currentEvents = currentEvents || [];
     }
@@ -1413,6 +1603,63 @@
         .format(new Date(state.competition.updated_at));
   }
 
+  async function refreshActiveMatch() {
+    if(!client||!state.nextGame?.id||state.liveRefreshBusy) return;
+    state.liveRefreshBusy=true;
+    try{
+      const {data:game,error:gameError}=await client.from("games")
+        .select("id,scheduled_start,home_team_id,away_team_id,venue_name,status,period,clock_display,home_score,away_score,source_game_id,source_event_game_id,game_number")
+        .eq("id",state.nextGame.id)
+        .single();
+      if(gameError) throw gameError;
+
+      const wasFinal=state.nextGame.status==="final";
+      state.nextGame={...state.nextGame,...game};
+
+      if(game.status==="final"&&!wasFinal){
+        await loadData();
+        return;
+      }
+
+      if(game.status==="live"){
+        const [eventResult,statsResult]=await Promise.all([
+          client.from("game_events")
+            .select("id,period,clock_display,event_seconds,event_type,team_id,strength,home_score,away_score,description")
+            .eq("game_id",game.id)
+            .eq("is_active",true)
+            .order("event_seconds",{ascending:false})
+            .order("ordinal",{ascending:true})
+            .limit(100),
+          client.from("team_game_stats")
+            .select("game_id,team_id,goals,shots,saves,pim,period_stats,power_play_opportunities,power_play_goals,power_play_pct,power_play_seconds,penalty_kill_opportunities,penalty_kill_goals_against,penalty_kill_pct")
+            .eq("game_id",game.id)
+        ]);
+        if(eventResult.error) throw eventResult.error;
+        if(statsResult.error) throw statsResult.error;
+        state.currentEvents=eventResult.data||[];
+        state.teamGameStats=[
+          ...state.teamGameStats.filter((row)=>row.game_id!==game.id),
+          ...(statsResult.data||[])
+        ];
+      }else{
+        state.currentEvents=[];
+        if(!state.nextLineup&&game.source_event_game_id){
+          state.nextLineup=await loadLineup(game);
+        }
+      }
+
+      render();
+      const activeButton=document.querySelector(".deck-key.active");
+      if(drawer.classList.contains("open")&&activeButton?.dataset.panel==="studio"){
+        renderDrawer("studio");
+      }
+    }catch(error){
+      console.error("Live refresh failed",error);
+    }finally{
+      state.liveRefreshBusy=false;
+    }
+  }
+
   function showLoadError(error) {
     console.error("Commentator Cockpit data load failed", error);
     const syncState = document.getElementById("syncState");
@@ -1448,6 +1695,7 @@
 
   updateClock();
   window.setInterval(updateClock, 1000);
+  window.setInterval(refreshActiveMatch, 15000);
   loadData().catch(showLoadError);
 
   window.CommentatorCockpit = {
