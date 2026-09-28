@@ -7,7 +7,8 @@ create table if not exists public.commentator_access (
   display_name text,
   note text,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint commentator_access_email_normalized_chk check (email = lower(btrim(email)))
 );
 create unique index if not exists commentator_access_email_unique
   on public.commentator_access ((lower(email)));
@@ -30,6 +31,12 @@ create table if not exists public.commentator_access_audit (
 alter table public.commentator_access_audit enable row level security;
 revoke all on public.commentator_access_audit from anon,authenticated;
 grant select,insert,update,delete on public.commentator_access_audit to service_role;
+create policy "deny client access to access audit"
+on public.commentator_access_audit
+for all
+to anon, authenticated
+using (false)
+with check (false);
 
 -- commentator_notes owner policies additionally require an active
 -- commentator_access row matching the authenticated JWT email.

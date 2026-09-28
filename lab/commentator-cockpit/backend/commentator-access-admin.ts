@@ -35,7 +35,7 @@ Deno.serve(async(req:Request)=>{
   const actorEmail=normalizeEmail(user.email);
   const {data:actor,error:actorError}=await admin.from("commentator_access")
     .select("id,email,role,active")
-    .ilike("email",actorEmail)
+    .eq("email",actorEmail)
     .eq("active",true)
     .eq("role","admin")
     .maybeSingle();
@@ -64,7 +64,7 @@ Deno.serve(async(req:Request)=>{
 
     const {data:existing,error:existingError}=await admin.from("commentator_access")
       .select("id,email,role,active")
-      .ilike("email",email)
+      .eq("email",email)
       .maybeSingle();
     if(existingError) return json({error:"lookup_failed"},500);
 
@@ -106,7 +106,7 @@ Deno.serve(async(req:Request)=>{
     if(email===actorEmail) return json({error:"cannot_deactivate_self"},400);
     const {data,error}=await admin.from("commentator_access")
       .update({active:false,updated_at:new Date().toISOString()})
-      .ilike("email",email)
+      .eq("email",email)
       .select("id,email,role,active,display_name,note,created_at,updated_at")
       .maybeSingle();
     if(error) return json({error:"deactivate_failed"},500);

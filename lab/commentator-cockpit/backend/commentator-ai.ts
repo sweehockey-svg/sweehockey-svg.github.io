@@ -51,7 +51,7 @@ Deno.serve(async(req:Request)=>{
   const email=String(user.email||"").trim().toLowerCase();
   const {data:access,error:accessError}=await admin.from("commentator_access")
     .select("role,active")
-    .ilike("email",email)
+    .eq("email",email)
     .eq("active",true)
     .maybeSingle();
   if(accessError) return json({error:"access_check_failed"},500);
