@@ -143,6 +143,60 @@
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
+
+  const HOCKEYETTAN_LOGO="https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo_Hockeyettan.svg";
+  const TEAM_LOGOS=Object.freeze({
+    "Asplöven Haparanda Hockey Förening":"https://files.eliteprospects.com/layout/logos/425eee90-8102-491a-9e98-3ceebaa07264_large.png",
+    "Bodens HF":"https://cdn.api.everysport.com/logos/ishockey/bodens_hf_37750/1580983280534.png.cropped.png",
+    "Borlänge HF":"https://cdn.api.everysport.com/logos/ishockey/borl_nge_hf_3932/1580983254910.png",
+    "Enköpings SK HK":"https://cdn.api.everysport.com/logos/ishockey/enk_pings_sk_hk_202686/1669289501830.png.cropped.png",
+    "Hudiksvalls HC":"https://cdn.api.everysport.com/logos/ishockey/hudiksvalls_hc_117146/1637920246862.png.cropped.png",
+    "IF Sundsvall Hockey":"https://files.eliteprospects.com/layout/logos/ce38e0bd-a849-4d8f-819a-da4a0f24361b_large.png",
+    "Järfälla HC":"https://blob.api.swehockey.net/blob/184c68ef-a8a8-4ec8-8769-1c375f31bfd6.png",
+    "Kalix HC":"https://cdn.api.everysport.com/logos/ishockey/kalix_hc_146840/1637918356560.png",
+    "Kiruna IF":"https://imgk.svenskafans.com/articlemedia/image-original/559077.jpg?format=webp&quality=75&width=640",
+    "Lindlövens IF":"https://files.eliteprospects.com/layout/logos/e6041f6d-5c6e-453c-87bc-50375a1dd451_large.png",
+    "Norrtälje IK":"https://cdn.svenskalag.se/images/03bab0c9-5d40-4ec7-863b-43e1395cc270?v=0",
+    "Örnsköldsvik HF":"https://files.eliteprospects.com/layout/logos/b2e5b5c7-0a8e-4547-b7f4-878c8309e756_large.png",
+    "Piteå HC":"https://cdn.api.everysport.com/logos/ishockey/pite__hc_1190/1580983285788.png",
+    "Sollentuna HC":"https://files.eliteprospects.com/layout/logos/cc541b05-7688-43b7-b473-907585078062_large.png",
+    "Strömsbro IF":"https://files.eliteprospects.com/layout/logos/5b96a076-5d3d-4ccc-b3c2-dff4f449d616_large.png",
+    "Surahammars IF":"https://files.eliteprospects.com/layout/logos/f4f38399-7162-4743-ae2d-a617ce931e8b_original.png",
+    "Vallentuna Hockey":"https://edg01-prd-de-ixn.solidtango.com/cache/media_file/resize1280x720/798fa9ef-468f-4181-905c-10acbb153dcc.jpg?cb=921d0fc60bc59efdaa159fc05a0cfc5b",
+    "Väsby IK HK":"https://cdn.api.everysport.com/logos/ishockey/v_sby_ik_hk_183229/1638186314447.png.cropped.png",
+    "Wings HC Arlanda":"https://cdn.api.everysport.com/logos/ishockey/wings_hc_arlanda_1209/1580983580402.png",
+    "Borås HC":"https://cdn.api.everysport.com/logos/ishockey/bor_s_hc_87521/1636622668942.png.cropped.png",
+    "Boro/Vetlanda HC":"https://files.eliteprospects.com/layout/logos/ca7f8b7e-e04b-45e9-b325-a9a83bca6b31_large.png",
+    "Grästorps IK":"https://az729104.cdn.laget.se/emblem_5377808.png%3Bwidth%3D1170%3Bheight%3D600%3BpaddingWidth%3D15%3BbgColor%3D0c0f0f%3Bmode%3Dpad%3Bscale%3Dboth%3Banchor%3Dmiddlecenter",
+    "Grums IK":"https://files.eliteprospects.com/layout/logos/8e5b87d0-2a77-41d7-b53b-4f27df45ff96_original.png",
+    "Halmstad Hammers HC":"https://cdn.api.everysport.com/logos/ishockey/halmstad_hf_146068/1642229231194.png.cropped.png",
+    "Hanvikens SK":"https://blob.api.swehockey.net/blob/101428e9-ee0c-49a4-9d13-ba79c098d2df.png",
+    "HC Dalen":"https://files.eliteprospects.com/layout/logos/ed9a935b-e706-4ba2-bc2c-76b7533b0e36_large.png",
+    "HC Vita Hästen":"https://cdn.api.everysport.com/logos/ishockey/hc_vita_h_sten_209544/1698416578799.png",
+    "Huddinge IK":"https://files.eliteprospects.com/layout/logos/ee01eebb-22f1-4ee9-b33d-d27fb4e9a32e_large.png",
+    "IF Troja-Ljungby":"https://cdn.api.everysport.com/logos/ishockey/if_troja_ljungby_25654/1636622596899.png",
+    "Karlskrona HK":"https://dpsportsmanagement.se/wp-content/uploads/khk-logo.png",
+    "Kungälvs IK":"https://s3-eu-west-1.amazonaws.com/myclub-site/uploads/images/000/122/017/KIK_logo_red__1_.png",
+    "Mariestad BoIS HC":"https://files.eliteprospects.com/layout/logos/4715278e-94d6-40ec-8ead-ff57b4849c1a_original.png",
+    "Mjölby HC":"https://cdn.svenskalag.se/images/6af498d7-4416-4b78-a81f-2f0bf0091cf0?v=0",
+    "Mörrums GoIS IK":"https://files.livearenasports.com/files/892be289-ec35-4ee0-8eb7-461a94c44e0a",
+    "Nyköpings SK":"https://vectorportal.com/storage/nykopingshockey_3948.jpg",
+    "Tingsryds AIF":"https://pbs.twimg.com/profile_images/1856462130343444481/fN5SpDhr_400x400.jpg",
+    "Tranås AIF":"https://www.targetaid.com/media/yo4naz2r/tran-s-back.jpg",
+    "Tyringe SoSS":"https://pbs.twimg.com/profile_images/1965118781870477312/H1mpzluE_400x400.jpg",
+    "Västerviks IK":"https://edg01-prd-se-ixn.solidtango.com/cache/media_file/resize1280x720/3ad3d7f7-ddc2-47c9-9fee-b76529ed8c4f.png?cb=f75ebc0da6d7e4ca8c064823e7f93f6e"
+  });
+
+  function teamLogoUrl(name) {
+    return TEAM_LOGOS[name] || "";
+  }
+
+  function teamLogoMarkup(name,className="team-logo-img") {
+    const url=teamLogoUrl(name);
+    if(!url) return '<span class="team-logo-fallback">'+esc(shortTeam(name))+'</span>';
+    return '<img class="'+esc(className)+'" src="'+esc(url)+'" alt="'+esc(name)+' logotyp" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><span class="team-logo-fallback" style="display:none">'+esc(shortTeam(name))+'</span>';
+  }
+
   function shortTeam(name) {
     if (!name) return "—";
     return name
@@ -246,7 +300,7 @@
         ? "KRÄVER INLOGGNING"
         : access ? (access.role==="admin"?"ADMIN · ÖPPEN":"ÖPPEN FÖR DIG") : "LÅST";
       return '<button class="team-card '+(access?"unlocked":"locked")+'" type="button" data-team-id="'+esc(team.id)+'">' +
-        '<div class="team-card-badge">'+esc(shortTeam(team.canonical_name))+'</div>' +
+        '<div class="team-card-badge">'+teamLogoMarkup(team.canonical_name,"team-card-logo")+'</div>' +
         '<div class="team-card-copy"><span>HOCKEYETTAN · '+esc(state.teamCompetitionByTeam.get(team.id)?.group_name||"")+'</span><strong>'+esc(team.canonical_name)+'</strong><small>'+esc(status)+'</small></div>' +
         '<div class="team-card-arrow">→</div>' +
       '</button>';
@@ -264,7 +318,7 @@
     setRouteScreen("lock");
     const team=state.selectedTeam;
     if(!team) return;
-    document.getElementById("lockBadge").textContent=shortTeam(team.canonical_name);
+    document.getElementById("lockBadge").innerHTML=teamLogoMarkup(team.canonical_name,"lock-team-logo");
     document.getElementById("lockTeamName").textContent=team.canonical_name;
     const message=!state.authUser
       ? "Logga in med ett konto som har behörighet till "+team.canonical_name+"."
@@ -2664,8 +2718,8 @@
     document.getElementById("venueLabel").textContent = game.venue_name || "Arena ej angiven";
     document.getElementById("homeName").textContent = home?.canonical_name || "Hemmalag";
     document.getElementById("awayName").textContent = away?.canonical_name || "Bortalag";
-    document.querySelector(".team.home .team-badge").textContent = shortTeam(home?.canonical_name);
-    document.querySelector(".team.away .team-badge").textContent = shortTeam(away?.canonical_name);
+    document.querySelector(".team.home .team-badge").innerHTML = teamLogoMarkup(home?.canonical_name,"score-team-logo");
+    document.querySelector(".team.away .team-badge").innerHTML = teamLogoMarkup(away?.canonical_name,"score-team-logo");
     const isLive = game.status === "live";
     const livePill = document.querySelector(".live-pill");
     livePill.textContent = isLive ? "LIVE" : "NÄSTA MATCH";

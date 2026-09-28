@@ -495,3 +495,21 @@ button{font:inherit}
 @media(max-width:1050px){.team-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.access-form-team{grid-template-columns:1fr 1fr}}
 @media(max-width:760px){.team-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.league-home{padding:20px 12px 32px}.league-home-hero h2{font-size:28px}.home-button{display:none}.access-form-team{grid-template-columns:1fr}}
 @media(max-width:480px){.team-grid{grid-template-columns:1fr}.team-lock-actions{flex-direction:column}}
+
+/* v17 · league + team logos */
+.brand-mark.league-mark{width:58px;height:34px;border-radius:7px;background:#fff;padding:4px 6px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.brand-mark.league-mark img{display:block;width:100%;height:100%;object-fit:contain}
+.league-home-logo{width:178px;height:65px;margin:0 auto 15px;padding:8px 12px;border-radius:12px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.league-home-logo img{width:100%;height:100%;display:block;object-fit:contain}
+.team-card-badge{overflow:hidden;padding:4px}
+.team-card-logo,.lock-team-logo,.score-team-logo{display:block;width:100%;height:100%;object-fit:contain;border-radius:7px}
+.team-logo-fallback{width:100%;height:100%;display:grid;place-items:center;color:inherit;font:900 11px/1 Consolas,monospace}
+.lock-badge{overflow:hidden;padding:6px}
+.lock-badge .team-logo-fallback{font-size:15px}
+.scoreboard .team-badge{overflow:hidden;padding:4px;background:#0b1e2a}
+.scoreboard .team-badge .team-logo-fallback{font-size:10px}
+.score-team-logo{border-radius:5px}
+@media(max-width:760px){
+  .league-home-logo{width:150px;height:55px}
+  .brand-mark.league-mark{width:48px;height:30px}
+}
