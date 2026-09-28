@@ -11,7 +11,7 @@ const COMPETITION_SOURCE_ID = "21043";
 const VASBY_NAME = "Väsby IK HK";
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v4";
+const PARSER_VERSION = "game-sync-v7";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -1066,6 +1066,160 @@ async function syncFinalLineupOnly(game:any) {
   return await syncLineup(game,eventId,lineupHtml,homeName,awayName,roster || []);
 }
 
+
+function fixedPct(value:any) {
+  if (value === null || value === undefined || value === "") return "N/A";
+  const n=Number(value);
+  return Number.isFinite(n) ? n.toFixed(2).replace(".",",") : "N/A";
+}
+
+function fixedClock(seconds:any) {
+  const n=Number(seconds);
+  if (!Number.isFinite(n)) return "00:00";
+  const m=Math.floor(n/60);
+  const s=Math.floor(n%60);
+  return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+}
+
+function parseOppPctSegment(segment:string,seconds:number|null) {
+  const candidates:any[]=[];
+  for(let oppLen=1;oppLen<=2;oppLen++){
+    if(segment.length<=oppLen) continue;
+    const oppText=segment.slice(0,oppLen);
+    const pctText=segment.slice(oppLen);
+    if(!/^\d+$/.test(oppText)) continue;
+    if(pctText!=="N/A" && !/^\d{1,3}[,.]\d{2}$/.test(pctText)) continue;
+    const opp=Number(oppText);
+    const pct=pctText==="N/A" ? null : Number(pctText.replace(",","."));
+    if(!Number.isFinite(opp) || opp<0 || opp>30) continue;
+    if(pct!==null && (!Number.isFinite(pct) || pct<0 || pct>100)) continue;
+
+    let score=0;
+    if(opp<=15) score+=10;
+    if(seconds!==null && opp>0){
+      const secPerOpp=seconds/opp;
+      if(secPerOpp>=20) score+=6;
+      if(secPerOpp>=45) score+=5;
+      score-=Math.abs(secPerOpp-120)/60;
+    }
+    if(pct===100 || pct===0) score+=1;
+    candidates.push({opp,pct,score});
+  }
+  candidates.sort((a,b)=>b.score-a.score || a.opp-b.opp);
+  return candidates[0] || null;
+}
+
+function parseOfficialSpecialTail(line:string, stats:any) {
+  const compact=clean(line).replace(/\s+/g,"");
+  const prefix=[
+    stats.goals ?? "",
+    stats.shots ?? "",
+    stats.saves ?? "",
+    fixedPct(stats.save_pct),
+    stats.pim ?? "",
+    fixedClock(stats.power_play_seconds)
+  ].join("");
+
+  if(!compact.startsWith(prefix)) return null;
+  const tail=compact.slice(prefix.length);
+  const timeMatch=tail.match(/\d{2}:\d{2}/);
+  if(!timeMatch || timeMatch.index===undefined) return null;
+
+  const ppSegment=tail.slice(0,timeMatch.index);
+  const pkTime=timeMatch[0];
+  const pkSegment=tail.slice(timeMatch.index+pkTime.length);
+  const pp=parseOppPctSegment(ppSegment,Number(stats.power_play_seconds ?? 0));
+  const pk=parseOppPctSegment(pkSegment,clockSeconds(pkTime));
+  if(!pp || !pk) return null;
+
+  return {
+    power_play_opportunities:pp.opp,
+    power_play_goals:pp.pct===null ? null : Math.round(pp.opp*pp.pct/100),
+    power_play_pct:pp.pct,
+    penalty_kill_opportunities:pk.opp,
+    penalty_kill_goals_against:pk.pct===null ? null : Math.round(pk.opp*(100-pk.pct)/100),
+    penalty_kill_pct:pk.pct,
+    penalty_kill_seconds:clockSeconds(pkTime)
+  };
+}
+
+async function syncOfficialSpecialTeams(game:any,eventId:string,homeName:string,awayName:string) {
+  const { data:statsRows, error:statsError }=await admin.from("team_game_stats")
+    .select("id,team_id,goals,shots,saves,save_pct,pim,power_play_pct,power_play_seconds,source_fragment")
+    .eq("game_id",game.id);
+  if(statsError) throw statsError;
+  if((statsRows || []).length < 2) return {available:false,reason:"missing_team_stats"};
+
+  const pdfItem=await fetchBinary(`/Game/Reports/OfficialGameReport/${eventId}`);
+  await logBinaryFetch(pdfItem,"official_game_report_pdf",eventId);
+  if(!pdfItem.contentType.includes("pdf") || !pdfItem.bytes.length){
+    return {available:false,reason:"missing_pdf"};
+  }
+
+  const parsedPdf=await pdf(Buffer.from(pdfItem.bytes));
+  const lines=(parsedPdf.text || "").replace(/\r/g,"").split("\n").map(clean).filter(Boolean);
+  const gameTotalsIndex=lines.findIndex((line:string)=>line==="Game Totals");
+  const periodIndex=lines.findIndex((line:string,i:number)=>i>gameTotalsIndex && /^1st period$/i.test(line));
+  const totalLines=gameTotalsIndex>=0
+    ? lines.slice(gameTotalsIndex+1,periodIndex>gameTotalsIndex?periodIndex:undefined)
+    : lines;
+
+  const namesByTeam=new Map([
+    [game.home_team_id,homeName],
+    [game.away_team_id,awayName]
+  ]);
+
+  let updated=0;
+  const parsed:any[]=[];
+  for(const stats of statsRows || []){
+    const teamName=namesByTeam.get(stats.team_id);
+    if(!teamName) continue;
+    const nameIndex=totalLines.findIndex((line:string)=>line===teamName);
+    if(nameIndex<1) continue;
+    const rawLine=totalLines[nameIndex-1];
+    const special=parseOfficialSpecialTail(rawLine,stats);
+    if(!special) continue;
+
+    const patch:any={
+      power_play_opportunities:special.power_play_opportunities,
+      power_play_goals:special.power_play_goals,
+      power_play_pct:special.power_play_pct ?? stats.power_play_pct,
+      penalty_kill_opportunities:special.penalty_kill_opportunities,
+      penalty_kill_goals_against:special.penalty_kill_goals_against,
+      penalty_kill_pct:special.penalty_kill_pct,
+      source_fragment:{
+        ...(stats.source_fragment || {}),
+        official_game_report_row:rawLine,
+        parser:PARSER_VERSION
+      },
+      source_updated_at:new Date().toISOString(),
+      updated_at:new Date().toISOString()
+    };
+    const { error:updateError }=await admin.from("team_game_stats").update(patch).eq("id",stats.id);
+    if(updateError) throw updateError;
+    updated++;
+    parsed.push({team:teamName,...special});
+  }
+
+  return {available:true,updated,pages:parsedPdf.numpages,teams:parsed};
+}
+
+async function syncFinalGameComplete(game:any) {
+  const eventId = game.source_event_game_id || (/^\d+$/.test(game.source_game_id || "") ? game.source_game_id : null);
+  if(!eventId) return {skipped:true,reason:"missing_event_id"};
+
+  const { data:teams, error:teamsError }=await admin.from("teams")
+    .select("id,canonical_name")
+    .in("id",[game.home_team_id,game.away_team_id]);
+  if(teamsError) throw teamsError;
+  const map=new Map((teams || []).map((t:any)=>[t.id,t.canonical_name]));
+  const homeName=map.get(game.home_team_id) || "";
+  const awayName=map.get(game.away_team_id) || "";
+  if(!homeName || !awayName) return {skipped:true,reason:"missing_team_name"};
+
+  return await syncGameData(game,eventId,homeName,awayName);
+}
+
 async function syncFinalPlayerSummaryOnly(game:any) {
   const eventId = game.source_event_game_id || (/^\d+$/.test(game.source_game_id || "") ? game.source_game_id : null);
   if (!eventId) return { skipped:true,reason:"missing_event_id" };
@@ -1131,7 +1285,19 @@ async function syncGameData(game:any, eventId:string, homeName:string, awayName:
     }
   }
 
-  return { eventId, awaiting:false, lineup:lineupResult, events:eventsResult, player_summary:playerSummary };
+  let specialTeams:any = { skipped:true };
+  if (game.status === "final" || eventsResult.is_final === true) {
+    specialTeams = await syncOfficialSpecialTeams(game,eventId,homeName,awayName);
+  }
+
+  return {
+    eventId,
+    awaiting:false,
+    lineup:lineupResult,
+    events:eventsResult,
+    player_summary:playerSummary,
+    special_teams:specialTeams
+  };
 }
 
 Deno.serve(async (req:Request) => {
@@ -1288,14 +1454,18 @@ Deno.serve(async (req:Request) => {
 
       if(recentFinals.length) {
         const ids=recentFinals.map((g:any)=>g.id);
-        const [playerRows,goalieRows,lineupRows]=await Promise.all([
+        const [playerRows,goalieRows,lineupRows,specialRows]=await Promise.all([
           admin.from("player_game_stats").select("game_id").in("game_id",ids),
           admin.from("goalie_game_stats").select("game_id").in("game_id",ids),
-          admin.from("game_lineup_revisions").select("game_id").in("game_id",ids).eq("is_current",true)
+          admin.from("game_lineup_revisions").select("game_id").in("game_id",ids).eq("is_current",true),
+          admin.from("team_game_stats")
+            .select("game_id,team_id,power_play_opportunities,penalty_kill_opportunities")
+            .in("game_id",ids)
         ]);
         if(playerRows.error) throw playerRows.error;
         if(goalieRows.error) throw goalieRows.error;
         if(lineupRows.error) throw lineupRows.error;
+        if(specialRows.error) throw specialRows.error;
 
         const playerGames=new Set((playerRows.data || []).map((r:any)=>r.game_id));
         const goalieGames=new Set((goalieRows.data || []).map((r:any)=>r.game_id));
@@ -1334,6 +1504,34 @@ Deno.serve(async (req:Request) => {
           };
         } else {
           output.lineup_backfill={skipped:true,covered_games:latestForFocus.length};
+        }
+
+        const specialByGame=new Map<string,any[]>();
+        for(const row of specialRows.data || []){
+          const list=specialByGame.get(row.game_id) || [];
+          list.push(row);
+          specialByGame.set(row.game_id,list);
+        }
+        const missingSpecial=recentFinals.find((g:any)=>{
+          if(!g.source_event_game_id) return false;
+          const focusTeamId=focusTeamIds.find((teamId:string)=>
+            g.home_team_id===teamId || g.away_team_id===teamId
+          );
+          if(!focusTeamId) return false;
+          const rows=(specialByGame.get(g.id) || []).filter((row:any)=>row.team_id===focusTeamId);
+          return rows.length<1 || rows.some((row:any)=>
+            row.power_play_opportunities===null || row.penalty_kill_opportunities===null
+          );
+        });
+
+        if(missingSpecial) {
+          output.special_teams_backfill={
+            game_id:missingSpecial.id,
+            source_event_game_id:missingSpecial.source_event_game_id,
+            result:await syncFinalGameComplete(missingSpecial)
+          };
+        } else {
+          output.special_teams_backfill={skipped:true,covered_games:recentFinals.length};
         }
       }
     }

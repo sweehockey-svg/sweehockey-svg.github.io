@@ -212,3 +212,26 @@ button{font:inherit}
   .lineup-team-grid{grid-template-columns:1fr}
   .lineup-defense{width:76%}
 }
+
+/* v8 · special teams */
+.deck{grid-template-columns:repeat(10,minmax(68px,1fr))}
+.special-intro{margin-bottom:12px}
+.special-team-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.special-team-card{padding:12px;border:1px solid #1e3747;border-radius:11px;background:#061620}
+.special-team-head{padding-bottom:9px;border-bottom:1px solid #17303e}
+.special-team-head span{font-size:7px;font-weight:1000;letter-spacing:.11em;color:#6e8797}
+.special-team-head h3{margin:3px 0 0;font-size:14px}
+.special-primary{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
+.special-primary>div{padding:11px;border:1px solid #1b3443;border-radius:9px;background:#081a26}
+.special-primary span{display:block;font-size:7px;font-weight:1000;letter-spacing:.09em;color:#687f8f}
+.special-primary strong{display:block;margin-top:5px;font-size:19px;color:#edf4f7}
+.special-primary small{display:block;margin-top:3px;font-size:8px;color:#69808f}
+.special-recent,.special-current{padding:9px 10px;border:1px solid #1a3140;border-radius:8px;background:#081a26}
+.special-current{margin-top:6px}
+.special-recent span,.special-current span{display:block;font-size:7px;font-weight:1000;letter-spacing:.09em;color:var(--yellow)}
+.special-recent strong,.special-current strong{display:block;margin-top:4px;font-size:9px;color:#afbec7}
+.special-current.muted span{color:#627b8b}
+.special-current.muted strong{color:#738997}
+@media(max-width:760px){
+  .special-team-grid{grid-template-columns:1fr}
+}

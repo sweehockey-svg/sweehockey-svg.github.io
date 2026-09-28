@@ -29,7 +29,9 @@
     recentPlayerStats: [],
     recentGoalieStats: [],
     nextLineup: null,
-    fallbackLineups: new Map()
+    fallbackLineups: new Map(),
+    seasonSpecialTeams: [],
+    teamGameStats: []
   };
 
   const panels = {
@@ -54,6 +56,11 @@
     goalies: {
       kicker: "MÅLVAKTER",
       title: "Målvaktsstatistik",
+      cards: []
+    },
+    special: {
+      kicker: "PP / BP",
+      title: "Special teams",
       cards: []
     },
     live: {
@@ -637,6 +644,98 @@
     }).join("");
   }
 
+
+  function seasonSpecialForTeam(teamId) {
+    return state.seasonSpecialTeams.find((row) => row.team_id === teamId) || null;
+  }
+
+  function aggregateRecentSpecial(teamId) {
+    const allowed = new Set(recentGameIdsForTeam(teamId));
+    const rows = state.teamGameStats.filter((row) =>
+      row.team_id === teamId &&
+      allowed.has(row.game_id) &&
+      row.power_play_opportunities != null &&
+      row.penalty_kill_opportunities != null
+    );
+    const games = new Set(rows.map((row) => row.game_id)).size;
+    const ppOpp = rows.reduce((sum,row)=>sum+Number(row.power_play_opportunities||0),0);
+    const ppGoals = rows.reduce((sum,row)=>sum+Number(row.power_play_goals||0),0);
+    const pkOpp = rows.reduce((sum,row)=>sum+Number(row.penalty_kill_opportunities||0),0);
+    const pkGa = rows.reduce((sum,row)=>sum+Number(row.penalty_kill_goals_against||0),0);
+    return {
+      games,
+      ppOpp,
+      ppGoals,
+      ppPct: ppOpp ? ppGoals/ppOpp*100 : null,
+      pkOpp,
+      pkGa,
+      pkPct: pkOpp ? (pkOpp-pkGa)/pkOpp*100 : null
+    };
+  }
+
+  function nextGameSpecialForTeam(teamId) {
+    return state.teamGameStats.find((row) =>
+      row.game_id === state.nextGame?.id && row.team_id === teamId
+    ) || null;
+  }
+
+  function specialRecord(goals, opportunities) {
+    if (goals == null || opportunities == null) return "–";
+    return String(goals) + "/" + String(opportunities);
+  }
+
+  function renderSpecialTeamCard(teamId) {
+    const season=seasonSpecialForTeam(teamId);
+    const recent=aggregateRecentSpecial(teamId);
+    const current=nextGameSpecialForTeam(teamId);
+    const name=getTeamName(teamId);
+
+    if(!season){
+      return '<section class="special-team-card"><h3>'+esc(name)+'</h3><div class="drawer-card"><strong>Ingen special teams-data</strong><span>Swehockey har ännu inte publicerat säsongsraden.</span></div></section>';
+    }
+
+    const seasonPkKills = season.pk_opportunities == null || season.pk_goals_against == null
+      ? null
+      : Number(season.pk_opportunities)-Number(season.pk_goals_against);
+    const recentPkKills = recent.pkOpp-recent.pkGa;
+
+    const currentHtml=current && current.power_play_opportunities != null
+      ? '<div class="special-current"><span>AKTUELL MATCH</span><strong>PP '+
+          esc(specialRecord(current.power_play_goals,current.power_play_opportunities))+
+          ' · BP '+esc(specialRecord(
+            Number(current.penalty_kill_opportunities||0)-Number(current.penalty_kill_goals_against||0),
+            current.penalty_kill_opportunities
+          ))+'</strong></div>'
+      : '<div class="special-current muted"><span>NÄSTA MATCH</span><strong>Väntar på matchdata</strong></div>';
+
+    return '<section class="special-team-card">' +
+      '<div class="special-team-head"><span>SÄSONG</span><h3>'+esc(name)+'</h3></div>' +
+      '<div class="special-primary">' +
+        '<div><span>POWERPLAY</span><strong>'+esc(formatPct(season.pp_pct))+'</strong><small>'+
+          esc(specialRecord(season.pp_goals,season.pp_opportunities))+' · '+esc(formatClockSeconds(season.pp_seconds))+
+        '</small></div>' +
+        '<div><span>BOXPLAY</span><strong>'+esc(formatPct(season.pk_pct))+'</strong><small>'+
+          esc(specialRecord(seasonPkKills,season.pk_opportunities))+' dödade</small></div>' +
+      '</div>' +
+      '<div class="special-recent">' +
+        '<span>SENASTE 5 · '+esc(recent.games)+' SPELADE</span>' +
+        '<strong>PP '+esc(specialRecord(recent.ppGoals,recent.ppOpp))+
+          ' ('+esc(formatPct(recent.ppPct))+') · BP '+
+          esc(specialRecord(recentPkKills,recent.pkOpp))+
+          ' ('+esc(formatPct(recent.pkPct))+')</strong>' +
+      '</div>' +
+      currentHtml +
+    '</section>';
+  }
+
+  function renderSpecialTeams() {
+    return '<article class="drawer-card special-intro"><strong>PP / BP</strong><span>Säsongen kommer direkt från Swehockeys officiella PP/Penalty Killing-tabell. Senaste 5 räknas från importerade officiella matchrapporter.</span></article>' +
+      '<div class="special-team-grid">' +
+        renderSpecialTeamCard(state.vasby.id) +
+        renderSpecialTeamCard(state.opponent.id) +
+      '</div>';
+  }
+
   function renderDrawer(key) {
     const data = panels[key] || panels.match;
     drawerKicker.textContent = data.kicker;
@@ -653,6 +752,8 @@
       drawerBody.innerHTML =
         '<article class="drawer-card"><strong>Säsong + senaste 5</strong><span>SV%, GAA och record kommer från Swehockeys säsongstabell. S5 räknas från matchrapporterna.</span></article>' +
         renderGoalieStats();
+    } else if (key === "special") {
+      drawerBody.innerHTML = renderSpecialTeams();
     } else {
       drawerBody.innerHTML = data.cards.map(([title, text]) =>
         '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
@@ -767,7 +868,9 @@
     const focusTeamIds = [state.vasby.id, state.opponent.id];
     const recentGameIds = [...new Set([...state.vasbyForm, ...state.opponentForm].map((game) => game.id))];
 
-    const [seasonPlayerResult, seasonGoalieResult] = await Promise.all([
+    const statGameIds = [...new Set([...recentGameIds, state.nextGame.id])];
+
+    const [seasonPlayerResult, seasonGoalieResult, specialSeasonResult, teamGameStatsResult] = await Promise.all([
       client.from("player_season_stats")
         .select("team_id,player_id,source_name,jersey_number,position,games_played,goals,assists,points,pim,plus_minus,game_winning_goals,power_play_goals,shorthanded_goals,shots,shooting_pct,faceoff_wins,faceoff_losses,faceoff_total,faceoff_pct")
         .eq("competition_id", competition.id)
@@ -775,12 +878,24 @@
       client.from("goalie_season_stats")
         .select("team_id,player_id,source_name,jersey_number,games_played,minutes_played_seconds,goals_against,saves,shots_against,save_pct,gaa,shutouts,wins,losses")
         .eq("competition_id", competition.id)
+        .in("team_id", focusTeamIds),
+      client.from("team_special_teams_stats")
+        .select("team_id,games_played,pp_rank,pp_opportunities,pp_goals,pp_pct,pp_seconds,pk_rank,pk_opportunities,pk_goals_against,pk_pct,pk_seconds,shorthanded_goals_for,shorthanded_goals_against")
+        .eq("competition_id", competition.id)
+        .in("team_id", focusTeamIds),
+      client.from("team_game_stats")
+        .select("game_id,team_id,power_play_opportunities,power_play_goals,power_play_pct,power_play_seconds,penalty_kill_opportunities,penalty_kill_goals_against,penalty_kill_pct")
+        .in("game_id", statGameIds)
         .in("team_id", focusTeamIds)
     ]);
     if (seasonPlayerResult.error) throw seasonPlayerResult.error;
     if (seasonGoalieResult.error) throw seasonGoalieResult.error;
+    if (specialSeasonResult.error) throw specialSeasonResult.error;
+    if (teamGameStatsResult.error) throw teamGameStatsResult.error;
     state.seasonPlayerStats = seasonPlayerResult.data || [];
     state.seasonGoalieStats = seasonGoalieResult.data || [];
+    state.seasonSpecialTeams = specialSeasonResult.data || [];
+    state.teamGameStats = teamGameStatsResult.data || [];
 
     if (recentGameIds.length) {
       const [recentPlayerResult, recentGoalieResult] = await Promise.all([
@@ -828,6 +943,7 @@
     panels.live.cards = [
       ["Matchcollector", state.latestEvents.length + " händelser lästa från senaste Väsby-matchen."],
       ["Spelardata", state.seasonPlayerStats.filter((row) => row.position !== "GK").length + " säsongsrader · " + state.recentPlayerStats.length + " S5-matchrader."],
+      ["Special teams", state.seasonSpecialTeams.length + " säsongsrader · " + state.teamGameStats.filter((row) => row.power_play_opportunities != null).length + " matchrader."],
       ["Nästa match-ID", state.nextGame.source_event_game_id
         ? "Live-/rapport-ID: " + state.nextGame.source_event_game_id
         : "Schema-ID " + (state.nextGame.game_number || "saknas") + " är känt. Live-ID väntas senare."]

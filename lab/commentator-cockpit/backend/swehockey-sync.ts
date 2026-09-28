@@ -9,7 +9,7 @@ const COMPETITION_ID = "21043";
 const ZONE = "Europe/Stockholm";
 const SOURCE = "swehockey";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
-const PARSER_VERSION = "base-sync-v4";
+const PARSER_VERSION = "base-sync-v5";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -213,6 +213,62 @@ function parseSeasonStatsTables(tables:any[]) {
   return {skaters,goalies};
 }
 
+function parseSpecialTeams($:cheerio.CheerioAPI) {
+  const codeToName=new Map<string,string>();
+  $(".divTeam").each((_:number,el:any)=>{
+    const short=clean($(el).find(".divTeamShortName").text());
+    const name=clean($(el).find(".divTeamName").text()).replace(/^[-–—]\s*/,"");
+    if(short && name) codeToName.set(short,name);
+  });
+
+  const tables=$("table.tblContent").toArray().map(t=>directRows($,t));
+  const ppRows=tables.find(rows=>rows.some((r:any)=>r.cells.includes("ADV.")&&r.cells.includes("PPGF"))) || [];
+  const pkRows=tables.find(rows=>rows.some((r:any)=>r.cells.includes("DVG.")&&r.cells.includes("PPGA"))) || [];
+
+  const map=new Map<string,any>();
+
+  const ppHeader=ppRows.findIndex((r:any)=>r.cells.includes("ADV.")&&r.cells.includes("PPGF"));
+  for(const row of ppRows.slice(Math.max(0,ppHeader+1))) {
+    const code=clean(row.cells[1]||"");
+    if(!code || code==="Totals" || code==="Average" || !codeToName.has(code)) continue;
+    const current=map.get(code)||{code,team:codeToName.get(code)};
+    Object.assign(current,{
+      gamesPlayed:intOrNull(row.cells[2]),
+      ppRank:intOrNull(row.cells[0]),
+      ppOpportunities:intOrNull(row.cells[3]),
+      ppGoals:intOrNull(row.cells[4]),
+      ppPct:decimalOrNull(row.cells[5]),
+      ppSeconds:clockToSeconds(row.cells[6]),
+      ppSecondsPerGoal:row.cells[7]==="N/A"?null:clockToSeconds(row.cells[7]),
+      shorthandedGoalsAgainst:intOrNull(row.cells[8]),
+      ppSource:row.cells
+    });
+    map.set(code,current);
+  }
+
+  const pkHeader=pkRows.findIndex((r:any)=>r.cells.includes("DVG.")&&r.cells.includes("PPGA"));
+  for(const row of pkRows.slice(Math.max(0,pkHeader+1))) {
+    const code=clean(row.cells[1]||"");
+    if(!code || code==="Totals" || code==="Average" || !codeToName.has(code)) continue;
+    const current=map.get(code)||{code,team:codeToName.get(code)};
+    Object.assign(current,{
+      gamesPlayed:current.gamesPlayed ?? intOrNull(row.cells[2]),
+      pkRank:intOrNull(row.cells[0]),
+      pkOpportunities:intOrNull(row.cells[3]),
+      pkGoalsAgainst:intOrNull(row.cells[4]),
+      pkPct:decimalOrNull(row.cells[5]),
+      pkSeconds:clockToSeconds(row.cells[6]),
+      pkSecondsPerGoalAgainst:row.cells[7]==="N/A"?null:clockToSeconds(row.cells[7]),
+      shorthandedGoalsFor:intOrNull(row.cells[8]),
+      pkSource:row.cells
+    });
+    map.set(code,current);
+  }
+
+  return [...map.values()];
+}
+
+
 Deno.serve(async (req: Request) => {
   const started = Date.now();
   try {
@@ -222,15 +278,16 @@ Deno.serve(async (req: Request) => {
       return Response.json({ error: "forbidden" }, { status: 403 });
     }
 
-    const [overview, schedule, roster, seasonStats] = await Promise.all([
+    const [overview, schedule, roster, seasonStats, specialTeams] = await Promise.all([
       fetchHtml(`/ScheduleAndResults/Overview/${COMPETITION_ID}`),
       fetchHtml(`/ScheduleAndResults/Schedule/${COMPETITION_ID}`),
       fetchHtml(`/Teams/Info/TeamRoster/${COMPETITION_ID}`),
-      fetchHtml(`/Teams/Info/PlayersByTeam/${COMPETITION_ID}`)
+      fetchHtml(`/Teams/Info/PlayersByTeam/${COMPETITION_ID}`),
+      fetchHtml(`/Teams/Statistics/PowerplayAndPenaltyKilling/${COMPETITION_ID}`)
     ]);
 
     const previousFetches = await Promise.all(
-      [overview, schedule, roster, seasonStats].map(async (item) => {
+      [overview, schedule, roster, seasonStats, specialTeams].map(async (item) => {
         const { data } = await admin
           .from("ingest_fetches")
           .select("content_hash,parser_version")
@@ -247,6 +304,7 @@ Deno.serve(async (req: Request) => {
       previousFetches[1]?.content_hash === schedule.hash &&
       previousFetches[2]?.content_hash === roster.hash &&
       previousFetches[3]?.content_hash === seasonStats.hash &&
+      previousFetches[4]?.content_hash === specialTeams.hash &&
       previousFetches.every((row:any) => row?.parser_version === PARSER_VERSION);
 
     if (unchanged) {
@@ -254,7 +312,8 @@ Deno.serve(async (req: Request) => {
         logFetch(overview, "competition_overview", COMPETITION_ID),
         logFetch(schedule, "competition_schedule", COMPETITION_ID),
         logFetch(roster, "competition_roster", COMPETITION_ID),
-        logFetch(seasonStats, "competition_player_stats", COMPETITION_ID)
+        logFetch(seasonStats, "competition_player_stats", COMPETITION_ID),
+        logFetch(specialTeams, "competition_special_teams", COMPETITION_ID)
       ]);
       return Response.json({
         ok: true,
@@ -269,12 +328,14 @@ Deno.serve(async (req: Request) => {
     const $schedule = cheerio.load(schedule.text);
     const $roster = cheerio.load(roster.text);
     const $seasonStats = cheerio.load(seasonStats.text);
+    const $specialTeams = cheerio.load(specialTeams.text);
 
     const overviewTables = $overview("table.tblContent").toArray().map(t => directRows($overview, t));
     const scheduleTables = $schedule("table.tblContent").toArray().map(t => directRows($schedule, t));
     const rosterTables = $roster("table.tblContent").toArray().map(t => directRows($roster, t));
     const seasonStatsTables = $seasonStats("table.tblContent").toArray().map(t => directRows($seasonStats, t));
     const parsedSeasonStats = parseSeasonStatsTables(seasonStatsTables);
+    const parsedSpecialTeams = parseSpecialTeams($specialTeams);
 
     const standingsRows = overviewTables.find(rows =>
       rows.some(r => r.cells[0] === "RK" && r.cells[1] === "Team" && r.cells.includes("GP"))
@@ -429,6 +490,7 @@ Deno.serve(async (req: Request) => {
     rosterBlocks.forEach(b => teamNames.add(b.team));
     futureGames.forEach(g => { teamNames.add(g.home); teamNames.add(g.away); });
     results.forEach(g => { teamNames.add(g.home); teamNames.add(g.away); });
+    parsedSpecialTeams.forEach((s:any)=>teamNames.add(s.team));
 
     const teamPayload = [...teamNames].map(canonical_name => ({
       canonical_name,
@@ -594,6 +656,45 @@ Deno.serve(async (req: Request) => {
       if(goalieSeasonUpsert.error) throw goalieSeasonUpsert.error;
     }
 
+    const specialUpdatedAt=new Date().toISOString();
+    const specialTeamsPayload=parsedSpecialTeams.map((s:any)=>{
+      const teamId=teamMap.get(s.team);
+      if(!teamId) return null;
+      return {
+        competition_id:competitionId,
+        team_id:teamId,
+        games_played:s.gamesPlayed,
+        pp_rank:s.ppRank,
+        pp_opportunities:s.ppOpportunities,
+        pp_goals:s.ppGoals,
+        pp_pct:s.ppPct,
+        pp_seconds:s.ppSeconds,
+        pp_seconds_per_goal:s.ppSecondsPerGoal,
+        shorthanded_goals_against:s.shorthandedGoalsAgainst,
+        pk_rank:s.pkRank,
+        pk_opportunities:s.pkOpportunities,
+        pk_goals_against:s.pkGoalsAgainst,
+        pk_pct:s.pkPct,
+        pk_seconds:s.pkSeconds,
+        pk_seconds_per_goal_against:s.pkSecondsPerGoalAgainst,
+        shorthanded_goals_for:s.shorthandedGoalsFor,
+        source_fragment:{
+          code:s.code,
+          pp:s.ppSource || null,
+          pk:s.pkSource || null,
+          parser:PARSER_VERSION
+        },
+        source_updated_at:specialUpdatedAt,
+        updated_at:specialUpdatedAt
+      };
+    }).filter(Boolean);
+
+    if(specialTeamsPayload.length){
+      const specialUpsert=await admin.from("team_special_teams_stats")
+        .upsert(specialTeamsPayload,{onConflict:"competition_id,team_id"});
+      if(specialUpsert.error) throw specialUpsert.error;
+    }
+
     const existingGamesQ = await admin.from("games")
       .select("id,source_game_id,source_event_game_id,game_number,home_team_id,away_team_id,scheduled_start")
       .eq("competition_id", competitionId)
@@ -711,7 +812,8 @@ Deno.serve(async (req: Request) => {
       logFetch(overview, "competition_overview", COMPETITION_ID),
       logFetch(schedule, "competition_schedule", COMPETITION_ID),
       logFetch(roster, "competition_roster", COMPETITION_ID),
-      logFetch(seasonStats, "competition_player_stats", COMPETITION_ID)
+      logFetch(seasonStats, "competition_player_stats", COMPETITION_ID),
+      logFetch(specialTeams, "competition_special_teams", COMPETITION_ID)
     ]);
 
     const vasbyId = teamMap.get("Väsby IK HK") || null;
@@ -732,7 +834,8 @@ Deno.serve(async (req: Request) => {
         scheduled_games: schedulePayload.length,
         result_updates: resultUpdates,
         player_season_stats: playerSeasonPayload.length,
-        goalie_season_stats: goalieSeasonPayload.length
+        goalie_season_stats: goalieSeasonPayload.length,
+        special_teams_stats: specialTeamsPayload.length
       },
       elapsed_ms: Date.now() - started
     });
