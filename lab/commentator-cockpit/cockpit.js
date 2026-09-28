@@ -47,7 +47,12 @@
     authBusy: false,
     authMessage: "",
     cloudSyncState: "local",
-    cloudSyncMessage: ""
+    cloudSyncMessage: "",
+    access: null,
+    accessAdminItems: [],
+    accessAdminLoaded: false,
+    accessAdminBusy: false,
+    accessAdminError: ""
   };
 
   const panels = {
@@ -252,17 +257,27 @@
     if(!button) return;
     if(state.authUser){
       const label=state.authUser.email||"Inloggad";
-      button.classList.add("signed-in");
-      button.innerHTML='<span class="account-dot"></span><strong>'+esc(label)+'</strong><small>'+
-        esc(state.cloudSyncState==="synced"?"MOLNSYNK":"KONTO")+'</small>';
+      button.classList.toggle("signed-in",Boolean(state.access?.active));
+      button.classList.toggle("pending",!state.access?.active);
+      const sub=state.access?.active
+        ? (state.access.role==="admin"?"ADMIN":state.cloudSyncState==="synced"?"MOLNSYNK":"KOMMENTATOR")
+        : "EJ GODKÄND";
+      button.innerHTML='<span class="account-dot"></span><strong>'+esc(label)+'</strong><small>'+esc(sub)+'</small>';
     }else{
-      button.classList.remove("signed-in");
+      button.classList.remove("signed-in","pending");
       button.innerHTML='<span class="account-dot"></span><strong>LOGGA IN</strong><small>NOTES + AI</small>';
     }
   }
 
   async function syncNotesWithCloud({includeGuest=false}={}) {
-    if(!client||!state.authUser) return false;
+    if(!client||!state.authUser||!state.access?.active){
+      state.cloudSyncState=state.authUser?"blocked":"local";
+      state.cloudSyncMessage=state.authUser
+        ? "Kontot är inloggat men saknar godkänd cockpit-behörighet."
+        : "";
+      updateAuthButton();
+      return false;
+    }
     state.cloudSyncState="syncing";
     state.cloudSyncMessage="Synkar anteckningar…";
     updateAuthButton();
@@ -311,7 +326,7 @@
 
   function saveNotes() {
     persistLocalNotes();
-    if(state.authUser){
+    if(state.authUser&&state.access?.active){
       syncNotesWithCloud().catch((error)=>{
         console.error("Note cloud sync failed",error);
         state.cloudSyncState="error";
@@ -428,10 +443,14 @@
         }).join("")+'</div>'
       : '<div class="notes-empty"><strong>Inga anteckningar för den här matchen ännu.</strong><span>Lägg in sådant som officiell statistik inte känner till.</span></div>';
 
-    const storageTitle=state.authUser?"Molnsynk aktiv":"Lokalt sparat";
-    const storageText=state.authUser
-      ? (state.cloudSyncMessage||"Anteckningar följer det inloggade kontot mellan enheter.")
-      : "Anteckningar ligger bara i den här webbläsaren tills du loggar in.";
+    const storageTitle=state.access?.active
+      ? "Molnsynk aktiv"
+      : state.authUser ? "Lokalt · behörighet saknas" : "Lokalt sparat";
+    const storageText=state.access?.active
+      ? (state.cloudSyncMessage||"Anteckningar följer det godkända kontot mellan enheter.")
+      : state.authUser
+        ? "Du är inloggad, men kontot måste godkännas innan NOTES får skrivas till Supabase."
+        : "Anteckningar ligger bara i den här webbläsaren tills du loggar in med ett godkänt konto.";
     return '<article class="drawer-card notes-storage-info"><strong>'+esc(storageTitle)+'</strong><span>'+esc(storageText)+'</span></article>' +
       '<form class="note-form" id="noteForm">' +
         '<input type="hidden" id="noteEditId" value="">' +
@@ -496,7 +515,7 @@
           ? {...note,pinned:!note.pinned,updated_at:new Date().toISOString()}
           : note
         );
-        persistLocalNotes();
+        saveNotes();
         renderFacts();
         renderDrawer("notes");
       });
@@ -533,29 +552,119 @@
   }
 
 
+  function hasApprovedAccess() {
+    return Boolean(state.authUser&&state.access?.active);
+  }
+
+  function isAccessAdmin() {
+    return hasApprovedAccess()&&state.access?.role==="admin";
+  }
+
+  async function loadAccessForCurrentUser() {
+    state.access=null;
+    if(!client||!state.authUser?.email) return null;
+    const {data,error}=await client.from("commentator_access")
+      .select("email,role,active,display_name")
+      .maybeSingle();
+    if(error){
+      console.error("Access check failed",error);
+      return null;
+    }
+    state.access=data||null;
+    return state.access;
+  }
+
+  async function invokeAccessAdmin(body) {
+    if(!client||!isAccessAdmin()) return {ok:false,error:"admin_required"};
+    const {data,error}=await client.functions.invoke("commentator-access-admin",{body});
+    if(error) return {ok:false,error:String(error.message||error)};
+    return data||{ok:false,error:"invalid_response"};
+  }
+
+  async function refreshAccessAdminList() {
+    if(!isAccessAdmin()||state.accessAdminBusy) return false;
+    state.accessAdminBusy=true;
+    state.accessAdminError="";
+    const result=await invokeAccessAdmin({action:"list"});
+    state.accessAdminBusy=false;
+    state.accessAdminLoaded=true;
+    if(!result?.ok){
+      state.accessAdminError="Kunde inte läsa behörighetslistan.";
+      return false;
+    }
+    state.accessAdminItems=result.items||[];
+    return true;
+  }
+
+  function accessAdminHtml() {
+    if(!isAccessAdmin()) return "";
+    const rows=state.accessAdminItems.map((item)=>{
+      const self=String(item.email||"").toLowerCase()===String(state.authUser?.email||"").toLowerCase();
+      const action=item.active
+        ? (self?"":'<button type="button" class="danger" data-access-deactivate="'+esc(item.email)+'">STÄNG AV</button>')
+        : '<button type="button" data-access-reactivate="'+esc(item.email)+'" data-access-role="'+esc(item.role)+'" data-access-name="'+esc(item.display_name||"")+'">ÅTERAKTIVERA</button>';
+      return '<div class="access-row '+(item.active?"active":"inactive")+'">' +
+        '<div><strong>'+esc(item.display_name||item.email)+'</strong><small>'+esc(item.email)+'</small></div>' +
+        '<span>'+esc(item.role.toUpperCase())+'</span>' +
+        '<em>'+(item.active?"AKTIV":"AVSTÄNGD")+'</em>' +
+        '<div>'+action+'</div>' +
+      '</div>';
+    }).join("");
+
+    return '<section class="access-admin">' +
+      '<div class="section-title"><span>BEHÖRIGHETER</span><small>ADMIN</small></div>' +
+      '<form class="access-form" id="accessForm">' +
+        '<input id="accessEmail" type="email" required placeholder="kommentator@example.com">' +
+        '<input id="accessName" maxlength="120" placeholder="Namn (valfritt)">' +
+        '<select id="accessRole"><option value="commentator">Kommentator</option><option value="admin">Admin</option></select>' +
+        '<button type="submit">LÄGG TILL / UPPDATERA</button>' +
+      '</form>' +
+      (state.accessAdminError?'<div class="account-message">'+esc(state.accessAdminError)+'</div>':"") +
+      '<div class="access-list">'+
+        (state.accessAdminBusy?'<div class="notes-empty"><strong>Laddar behörigheter…</strong></div>':
+          rows||'<div class="notes-empty"><strong>Ingen godkänd användare ännu.</strong></div>')+
+      '</div>' +
+    '</section>';
+  }
+
   function renderAccount() {
     if(state.authUser){
       const email=state.authUser.email||"Inloggad användare";
+
+      if(!state.access?.active){
+        return '<article class="account-card pending">' +
+          '<span>INLOGGAD · EJ GODKÄND</span><h3>'+esc(email)+'</h3>' +
+          '<p>Kontot kan läsa den publika cockpit-datan, men moln-NOTES och server-AI är spärrade tills e-postadressen finns i behörighetslistan.</p>' +
+        '</article>' +
+        '<div class="account-actions">' +
+          '<button type="button" id="refreshAccessButton">KONTROLLERA BEHÖRIGHET</button>' +
+          '<button type="button" class="danger" id="signOutButton">LOGGA UT</button>' +
+        '</div>' +
+        '<article class="drawer-card"><strong>Behöver godkännas</strong><span>En admin lägger in exakt den här e-postadressen. Ingen anonym eller vanlig inloggad användare kan ge sig själv behörighet.</span></article>';
+      }
+
       const syncLabel=state.cloudSyncState==="syncing"?"SYNKAR":
-        state.cloudSyncState==="error"?"SYNKFEL":"MOLNSYNK AKTIV";
+        state.cloudSyncState==="error"?"SYNKFEL":
+        state.access.role==="admin"?"ADMIN":"KOMMENTATOR";
       return '<article class="account-card signed-in">' +
         '<span>'+esc(syncLabel)+'</span><h3>'+esc(email)+'</h3>' +
-        '<p>'+esc(state.cloudSyncMessage||"NOTES sparas lokalt och i Supabase. Samma konto kan användas på dator och mobil.")+'</p>' +
+        '<p>'+esc(state.cloudSyncMessage||"Godkänt konto. NOTES kan synkas och server-AI är behörighetsmässigt upplåst.")+'</p>' +
       '</article>' +
       '<div class="account-actions">' +
         '<button type="button" id="syncNotesNow">SYNKA NOTES NU</button>' +
         '<button type="button" class="danger" id="signOutButton">LOGGA UT</button>' +
       '</div>' +
-      '<article class="drawer-card"><strong>AI</strong><span>Inloggningen ger server-AI:n en riktig användaridentitet. OpenAI-anrop aktiveras först när servernyckeln är konfigurerad.</span></article>';
+      '<article class="drawer-card"><strong>AI</strong><span>Server-AI kräver både den här behörigheten och serverns OPENAI_API_KEY. Behörighetskontrollen görs även i Edge Function, inte bara i gränssnittet.</span></article>' +
+      accessAdminHtml();
     }
 
-    return '<article class="drawer-card"><strong>Passwordless login</strong><span>Fyll i e-postadressen. Supabase skickar en engångslänk som loggar in kontot utan lösenord.</span></article>' +
+    return '<article class="drawer-card"><strong>Passwordless login</strong><span>Fyll i e-postadressen. Supabase skickar en engångslänk. Kontot får inte moln-NOTES eller server-AI förrän en admin har godkänt adressen.</span></article>' +
       '<form class="account-form" id="accountForm">' +
         '<label><span>E-POST</span><input id="accountEmail" type="email" autocomplete="email" required placeholder="namn@example.com"></label>' +
         '<button type="submit" '+(state.authBusy?"disabled":"")+'>'+(state.authBusy?"SKICKAR…":"SKICKA MAGIC LINK")+'</button>' +
       '</form>' +
       (state.authMessage?'<div class="account-message">'+esc(state.authMessage)+'</div>':'') +
-      '<article class="drawer-card"><strong>Efter inloggning</strong><span>Lokala NOTES flyttas till kontot och synkas mot molnet. Server-AI kan därefter använda den autentiserade sessionen.</span></article>';
+      '<article class="drawer-card"><strong>Åtkomstmodell</strong><span>Magic Link verifierar vem du är. Behörighetslistan avgör om du får använda moln-NOTES och server-AI. Två olika saker, eftersom internet tydligen behöver dörrar även efter dörren.</span></article>';
   }
 
   function bindAccountUi() {
@@ -580,10 +689,20 @@
         state.authBusy=false;
         state.authMessage=error
           ? "Kunde inte skicka länken: "+error.message
-          : "Magic link skickad till "+email+". Öppna mejlet och följ länken tillbaka hit.";
+          : "Magic link skickad till "+email+". Efter inloggningen kontrolleras cockpit-behörigheten.";
         renderDrawer("account");
       });
     }
+
+    document.getElementById("refreshAccessButton")?.addEventListener("click",async()=>{
+      await loadAccessForCurrentUser();
+      if(state.access?.active){
+        const includeGuest=readNotesFromStorage(noteStorageKey(null)).length>0;
+        await syncNotesWithCloud({includeGuest});
+      }
+      updateAuthButton();
+      renderDrawer("account");
+    });
 
     document.getElementById("syncNotesNow")?.addEventListener("click",async()=>{
       await syncNotesWithCloud();
@@ -594,6 +713,72 @@
       if(!client) return;
       await client.auth.signOut();
     });
+
+    const accessForm=document.getElementById("accessForm");
+    if(accessForm){
+      accessForm.addEventListener("submit",async(event)=>{
+        event.preventDefault();
+        if(state.accessAdminBusy) return;
+        const email=String(document.getElementById("accessEmail")?.value||"").trim();
+        if(!email) return;
+        state.accessAdminBusy=true;
+        state.accessAdminError="";
+        renderDrawer("account");
+        const result=await invokeAccessAdmin({
+          action:"upsert",
+          email,
+          display_name:String(document.getElementById("accessName")?.value||"").trim(),
+          role:document.getElementById("accessRole")?.value==="admin"?"admin":"commentator"
+        });
+        state.accessAdminBusy=false;
+        if(!result?.ok){
+          state.accessAdminError="Kunde inte uppdatera användaren.";
+        }
+        await refreshAccessAdminList();
+        renderDrawer("account");
+      });
+    }
+
+    drawerBody.querySelectorAll("[data-access-deactivate]").forEach((button)=>{
+      button.addEventListener("click",async()=>{
+        state.accessAdminBusy=true;
+        renderDrawer("account");
+        const result=await invokeAccessAdmin({
+          action:"deactivate",
+          email:button.dataset.accessDeactivate
+        });
+        state.accessAdminBusy=false;
+        if(!result?.ok) state.accessAdminError="Kunde inte stänga av användaren.";
+        await refreshAccessAdminList();
+        renderDrawer("account");
+      });
+    });
+
+    drawerBody.querySelectorAll("[data-access-reactivate]").forEach((button)=>{
+      button.addEventListener("click",async()=>{
+        state.accessAdminBusy=true;
+        renderDrawer("account");
+        const result=await invokeAccessAdmin({
+          action:"upsert",
+          email:button.dataset.accessReactivate,
+          display_name:button.dataset.accessName||"",
+          role:button.dataset.accessRole==="admin"?"admin":"commentator"
+        });
+        state.accessAdminBusy=false;
+        if(!result?.ok) state.accessAdminError="Kunde inte återaktivera användaren.";
+        await refreshAccessAdminList();
+        renderDrawer("account");
+      });
+    });
+
+    if(isAccessAdmin()&&!state.accessAdminLoaded&&!state.accessAdminBusy){
+      window.setTimeout(async()=>{
+        await refreshAccessAdminList();
+        if(drawer.classList.contains("open")&&drawerKicker.textContent==="KONTO"){
+          renderDrawer("account");
+        }
+      },0);
+    }
   }
 
   async function handleAuthSession(session) {
@@ -601,14 +786,26 @@
     const nextUser=session?.user||null;
     state.authUser=nextUser;
     state.authMessage="";
+    state.access=null;
+    state.accessAdminItems=[];
+    state.accessAdminLoaded=false;
+    state.accessAdminError="";
 
     if(nextUser){
+      await loadAccessForCurrentUser();
       const includeGuest=previousId!==nextUser.id && readNotesFromStorage(noteStorageKey(null)).length>0;
       state.notes=mergeNoteSets(
         readNotesFromStorage(noteStorageKey(nextUser.id)),
         includeGuest?readNotesFromStorage(noteStorageKey(null)):[]
       );
-      await syncNotesWithCloud({includeGuest});
+
+      if(state.access?.active){
+        await syncNotesWithCloud({includeGuest});
+      }else{
+        persistLocalNotes();
+        state.cloudSyncState="blocked";
+        state.cloudSyncMessage="Inloggad, men molnsynk väntar på godkänd behörighet.";
+      }
     }else{
       state.cloudSyncState="local";
       state.cloudSyncMessage="";
@@ -1165,6 +1362,7 @@
 
   async function requestServerAi(question="") {
     if(!client||!state.nextGame?.id) return {used:false,reason:"missing_context"};
+    if(!state.access?.active) return {used:false,reason:"access_not_approved"};
     const {data:{session}}=await client.auth.getSession();
     if(!session?.access_token) return {used:false,reason:"not_authenticated"};
 
@@ -1213,7 +1411,11 @@
     const serverReady=state.aiBriefSource==="server";
     const statusText=serverReady
       ? "Svar från servermodellen, byggt på verifierad databasdata."
-      : "Fungerar redan med en regelbaserad fallback. Server-AI kräver inloggning och OPENAI_API_KEY.";
+      : !state.authUser
+        ? "Fallbacken fungerar direkt. Server-AI kräver inloggning, godkänd behörighet och OPENAI_API_KEY."
+        : !state.access?.active
+          ? "Kontot är inloggat men inte godkänt för server-AI. Fallbacken fungerar fortfarande."
+          : "Kontot är godkänt. Server-AI aktiveras när OPENAI_API_KEY finns på servern.";
 
     return '<article class="drawer-card ai-safety"><strong>Ingen fri statistikfantasi</strong><span>Server-AI får match-ID och hämtar själv officiell statistik från databasen. Egna anteckningar skickas separat som redaktionellt material.</span></article>' +
       '<div class="ai-status '+(serverReady?"ready":"fallback")+'"><span>'+(serverReady?"SERVER-AI":"LOKAL FALLBACK")+'</span><strong>'+esc(statusText)+'</strong></div>' +
@@ -1256,7 +1458,9 @@
         state.aiBriefSource="server";
         state.aiError="";
       }else if(result.reason==="not_authenticated"){
-        state.aiError="Server-AI är förberedd men kräver Supabase-inloggning. Fallbacken ovan använder bara verifierad cockpit-data.";
+        state.aiError="Server-AI kräver inloggning. Fallbacken ovan använder bara verifierad cockpit-data.";
+      }else if(result.reason==="access_not_approved"){
+        state.aiError="Kontot är inte godkänt för server-AI ännu. Den verifierade fallbacken används.";
       }else if(String(result.reason||"").includes("ai_not_configured")){
         state.aiError="OPENAI_API_KEY är inte konfigurerad på servern ännu. Fallbacken används tills dess.";
       }else if(result.reason&&result.reason!=="missing_context"){

@@ -48,6 +48,15 @@ Deno.serve(async(req:Request)=>{
   const {data:{user},error:userError}=await admin.auth.getUser(token);
   if(userError||!user) return json({error:"invalid_session"},401);
 
+  const email=String(user.email||"").trim().toLowerCase();
+  const {data:access,error:accessError}=await admin.from("commentator_access")
+    .select("role,active")
+    .ilike("email",email)
+    .eq("active",true)
+    .maybeSingle();
+  if(accessError) return json({error:"access_check_failed"},500);
+  if(!access) return json({error:"access_not_approved"},403);
+
   let body:any={};
   try{body=await req.json();}catch{return json({error:"invalid_json"},400);}
 

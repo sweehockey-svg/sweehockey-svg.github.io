@@ -426,3 +426,35 @@ button{font:inherit}
   .account-button{grid-template-areas:"dot title";grid-template-columns:8px minmax(0,100px)}
   .account-form{grid-template-columns:1fr}
 }
+
+/* v15 · approved commentator access */
+.account-button.pending{border-color:#765f27}
+.account-button.pending .account-dot{background:var(--yellow);box-shadow:0 0 8px rgba(244,178,27,.22)}
+.account-card.pending{border-color:#765f27;background:linear-gradient(135deg,rgba(244,178,27,.07),#071823)}
+.account-card.pending span{color:var(--yellow)}
+.access-admin{margin-top:13px;padding-top:12px;border-top:1px solid #1b3342}
+.access-form{display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(120px,1fr) 120px auto;gap:6px;margin:8px 0 10px}
+.access-form input,.access-form select{min-width:0;border:1px solid #294352;border-radius:8px;background:#081a26;color:#e7eff3;padding:8px 9px;font-size:9px;outline:none}
+.access-form button,.access-row button{border:1px solid #715e24;border-radius:7px;background:var(--yellow);color:#07111a;padding:8px 9px;font-size:7px;font-weight:1000;cursor:pointer}
+.access-list{display:grid;gap:5px}
+.access-row{display:grid;grid-template-columns:minmax(0,1fr) 92px 80px 100px;gap:8px;align-items:center;padding:8px 9px;border:1px solid #1d3544;border-radius:8px;background:#071823}
+.access-row.inactive{opacity:.65}
+.access-row>div:first-child{min-width:0}
+.access-row strong{display:block;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.access-row small{display:block;margin-top:2px;color:#607988;font-size:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.access-row>span{font-size:7px;font-weight:1000;color:#91a6b1}
+.access-row>em{font-style:normal;font-size:7px;color:var(--green)}
+.access-row.inactive>em{color:#b97c78}
+.access-row>div:last-child{text-align:right}
+.access-row button{background:#0a1e2b;color:#91a5b1;border-color:#294352;padding:6px 7px}
+.access-row button.danger{border-color:#663d3e;color:#cf8e8b}
+@media(max-width:900px){
+  .access-form{grid-template-columns:1fr 1fr}
+  .access-row{grid-template-columns:minmax(0,1fr) 75px 70px}
+  .access-row>div:last-child{grid-column:1/-1;text-align:left}
+}
+@media(max-width:560px){
+  .access-form{grid-template-columns:1fr}
+  .access-row{grid-template-columns:minmax(0,1fr) 70px}
+  .access-row>em{display:none}
+}
