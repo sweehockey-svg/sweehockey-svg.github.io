@@ -9,7 +9,7 @@ const COMPETITION_ID = "21043";
 const ZONE = "Europe/Stockholm";
 const SOURCE = "swehockey";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
-const PARSER_VERSION = "base-sync-v2";
+const PARSER_VERSION = "base-sync-v4";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -109,6 +109,110 @@ function playerNameParts(sourceName: string) {
   };
 }
 
+function intOrNull(value:string|null|undefined) {
+  const text=clean(value);
+  return /^-?\d+$/.test(text) ? Number(text) : null;
+}
+
+function decimalOrNull(value:string|null|undefined) {
+  const text=clean(value).replace(",",".");
+  const n=Number(text);
+  return text && Number.isFinite(n) ? n : null;
+}
+
+function clockToSeconds(value:string|null|undefined) {
+  const m=clean(value).match(/^(\d{1,3}):(\d{2})$/);
+  return m ? Number(m[1])*60+Number(m[2]) : null;
+}
+
+function headerIndex(header:string[], name:string) {
+  return header.findIndex(x=>clean(x)===name);
+}
+
+function parseSeasonStatsTables(tables:any[]) {
+  const skaters:any[]=[];
+  const goalies:any[]=[];
+  let currentTeam="";
+
+  for(const rows of tables) {
+    if(!rows.length) continue;
+
+    const firstCell=clean(rows[0]?.cells?.[0] || "");
+    if(firstCell && firstCell !== "Goalkeeping Statistics" && firstCell !== "Playing Statistics") {
+      currentTeam=firstCell;
+    }
+
+    const playingLabel=rows.findIndex((r:any)=>r.cells.some((x:string)=>x==="Playing Statistics"));
+    if(playingLabel>=0 && currentTeam) {
+      const skaterHeaderIndex=rows.findIndex((r:any,i:number)=>i>playingLabel && r.cells.includes("Name") && r.cells.includes("GP") && r.cells.includes("TP"));
+      if(skaterHeaderIndex>=0) {
+        const header=rows[skaterHeaderIndex].cells;
+        const ix=(name:string)=>headerIndex(header,name);
+        for(const row of rows.slice(skaterHeaderIndex+1)) {
+          if(row.cells.some((x:string)=>x.startsWith("Sorted by"))) break;
+          const name=clean(row.cells[ix("Name")] || "");
+          const position=clean(row.cells[ix("Pos")] || "");
+          const jersey=intOrNull(row.cells[ix("No")]);
+          const gp=intOrNull(row.cells[ix("GP")]);
+          if(!name || !position || gp===null) continue;
+          skaters.push({
+            team:currentTeam,sourceName:name,jersey,position,gamesPlayed:gp,
+            goals:intOrNull(row.cells[ix("G")]),
+            assists:intOrNull(row.cells[ix("A")]),
+            points:intOrNull(row.cells[ix("TP")]),
+            pim:intOrNull(row.cells[ix("PIM")]),
+            plusMinus:intOrNull(row.cells[ix("+/-")]),
+            gameWinningGoals:intOrNull(row.cells[ix("GWG")]),
+            powerPlayGoals:intOrNull(row.cells[ix("PPG")]),
+            shorthandedGoals:intOrNull(row.cells[ix("SHG")]),
+            shots:intOrNull(row.cells[ix("SOG")]),
+            shootingPct:decimalOrNull(row.cells[ix("SG%")]),
+            faceoffWins:intOrNull(row.cells[ix("FO+")]),
+            faceoffLosses:intOrNull(row.cells[ix("FO-")]),
+            faceoffTotal:intOrNull(row.cells[ix("FO")]),
+            faceoffPct:decimalOrNull(row.cells[ix("FO%")]),
+            sourceRow:row.cells
+          });
+        }
+      }
+    }
+
+    const goalieLabel=rows.findIndex((r:any)=>r.cells.some((x:string)=>x==="Goalkeeping Statistics"));
+    if(goalieLabel>=0 && currentTeam) {
+      const goalieHeaderIndex=rows.findIndex((r:any,i:number)=>i>goalieLabel && r.cells.includes("Name") && r.cells.includes("GPI") && r.cells.includes("SVS%"));
+      if(goalieHeaderIndex>=0) {
+        const header=rows[goalieHeaderIndex].cells;
+        const ix=(name:string)=>headerIndex(header,name);
+        for(const row of rows.slice(goalieHeaderIndex+1)) {
+          if(row.cells.some((x:string)=>x.startsWith("Sorted by"))) break;
+          const name=clean(row.cells[ix("Name")] || "");
+          const jersey=intOrNull(row.cells[ix("No")]);
+          const gpi=intOrNull(row.cells[ix("GPI")]);
+          if(!name || gpi===null) continue;
+          goalies.push({
+            team:currentTeam,sourceName:name,jersey,
+            gamesPlayed:gpi,
+            minutesPlayedSeconds:clockToSeconds(row.cells[ix("MIP")]),
+            goalsAgainst:intOrNull(row.cells[ix("GA")]),
+            saves:intOrNull(row.cells[ix("SVS")]),
+            shotsAgainst:intOrNull(row.cells[ix("SOG")]),
+            savePct:decimalOrNull(row.cells[ix("SVS%")]),
+            gaa:decimalOrNull(row.cells[ix("GAA")]),
+            shutouts:intOrNull(row.cells[ix("SO")]),
+            wins:intOrNull(row.cells[ix("W")]),
+            losses:intOrNull(row.cells[ix("L")]),
+            sourceRow:row.cells,
+            gpt:ix("GPT")>=0 ? intOrNull(row.cells[ix("GPT")]) : null,
+            gkd:ix("GKD")>=0 ? intOrNull(row.cells[ix("GKD")]) : null
+          });
+        }
+      }
+    }
+  }
+
+  return {skaters,goalies};
+}
+
 Deno.serve(async (req: Request) => {
   const started = Date.now();
   try {
@@ -118,14 +222,15 @@ Deno.serve(async (req: Request) => {
       return Response.json({ error: "forbidden" }, { status: 403 });
     }
 
-    const [overview, schedule, roster] = await Promise.all([
+    const [overview, schedule, roster, seasonStats] = await Promise.all([
       fetchHtml(`/ScheduleAndResults/Overview/${COMPETITION_ID}`),
       fetchHtml(`/ScheduleAndResults/Schedule/${COMPETITION_ID}`),
-      fetchHtml(`/Teams/Info/TeamRoster/${COMPETITION_ID}`)
+      fetchHtml(`/Teams/Info/TeamRoster/${COMPETITION_ID}`),
+      fetchHtml(`/Teams/Info/PlayersByTeam/${COMPETITION_ID}`)
     ]);
 
     const previousFetches = await Promise.all(
-      [overview, schedule, roster].map(async (item) => {
+      [overview, schedule, roster, seasonStats].map(async (item) => {
         const { data } = await admin
           .from("ingest_fetches")
           .select("content_hash,parser_version")
@@ -141,13 +246,15 @@ Deno.serve(async (req: Request) => {
       previousFetches[0]?.content_hash === overview.hash &&
       previousFetches[1]?.content_hash === schedule.hash &&
       previousFetches[2]?.content_hash === roster.hash &&
+      previousFetches[3]?.content_hash === seasonStats.hash &&
       previousFetches.every((row:any) => row?.parser_version === PARSER_VERSION);
 
     if (unchanged) {
       await Promise.all([
         logFetch(overview, "competition_overview", COMPETITION_ID),
         logFetch(schedule, "competition_schedule", COMPETITION_ID),
-        logFetch(roster, "competition_roster", COMPETITION_ID)
+        logFetch(roster, "competition_roster", COMPETITION_ID),
+        logFetch(seasonStats, "competition_player_stats", COMPETITION_ID)
       ]);
       return Response.json({
         ok: true,
@@ -161,10 +268,13 @@ Deno.serve(async (req: Request) => {
     const $overview = cheerio.load(overview.text);
     const $schedule = cheerio.load(schedule.text);
     const $roster = cheerio.load(roster.text);
+    const $seasonStats = cheerio.load(seasonStats.text);
 
     const overviewTables = $overview("table.tblContent").toArray().map(t => directRows($overview, t));
     const scheduleTables = $schedule("table.tblContent").toArray().map(t => directRows($schedule, t));
     const rosterTables = $roster("table.tblContent").toArray().map(t => directRows($roster, t));
+    const seasonStatsTables = $seasonStats("table.tblContent").toArray().map(t => directRows($seasonStats, t));
+    const parsedSeasonStats = parseSeasonStatsTables(seasonStatsTables);
 
     const standingsRows = overviewTables.find(rows =>
       rows.some(r => r.cells[0] === "RK" && r.cells[1] === "Team" && r.cells.includes("GP"))
@@ -403,6 +513,87 @@ Deno.serve(async (req: Request) => {
       .upsert(rosterPayload, { onConflict: "competition_id,team_id,player_id,roster_stint" });
     if (rosterUpsert.error) throw rosterUpsert.error;
 
+    const rosterByIdentity = new Map<string,any>();
+    const rosterByName = new Map<string,any>();
+    for (const row of rosterPayload) {
+      rosterByIdentity.set(`${row.team_id}|${row.jersey_number ?? ""}|${norm(row.source_name)}`,row);
+      rosterByName.set(`${row.team_id}|${norm(row.source_name)}`,row);
+    }
+
+    const seasonUpdatedAt=new Date().toISOString();
+    const playerSeasonPayload=parsedSeasonStats.skaters.map((s:any)=>{
+      const teamId=teamMap.get(s.team);
+      if(!teamId) return null;
+      const rosterRow=rosterByIdentity.get(`${teamId}|${s.jersey ?? ""}|${norm(s.sourceName)}`) ||
+        rosterByName.get(`${teamId}|${norm(s.sourceName)}`) || null;
+      return {
+        competition_id:competitionId,
+        team_id:teamId,
+        player_id:rosterRow?.player_id || null,
+        source_name:s.sourceName,
+        jersey_number:s.jersey,
+        position:s.position,
+        games_played:s.gamesPlayed,
+        goals:s.goals,
+        assists:s.assists,
+        points:s.points,
+        pim:s.pim,
+        plus_minus:s.plusMinus,
+        game_winning_goals:s.gameWinningGoals,
+        power_play_goals:s.powerPlayGoals,
+        shorthanded_goals:s.shorthandedGoals,
+        shots:s.shots,
+        shooting_pct:s.shootingPct,
+        faceoff_wins:s.faceoffWins,
+        faceoff_losses:s.faceoffLosses,
+        faceoff_total:s.faceoffTotal,
+        faceoff_pct:s.faceoffPct,
+        source_fragment:{row:s.sourceRow,parser:PARSER_VERSION},
+        source_updated_at:seasonUpdatedAt,
+        updated_at:seasonUpdatedAt
+      };
+    }).filter(Boolean);
+
+    const goalieSeasonPayload=parsedSeasonStats.goalies.map((g:any)=>{
+      const teamId=teamMap.get(g.team);
+      if(!teamId) return null;
+      const rosterRow=rosterByIdentity.get(`${teamId}|${g.jersey ?? ""}|${norm(g.sourceName)}`) ||
+        rosterByName.get(`${teamId}|${norm(g.sourceName)}`) || null;
+      return {
+        competition_id:competitionId,
+        team_id:teamId,
+        player_id:rosterRow?.player_id || null,
+        source_name:g.sourceName,
+        jersey_number:g.jersey,
+        games_played:g.gamesPlayed,
+        games_started:null,
+        games_in_net:g.gamesPlayed,
+        minutes_played_seconds:g.minutesPlayedSeconds,
+        goals_against:g.goalsAgainst,
+        saves:g.saves,
+        shots_against:g.shotsAgainst,
+        save_pct:g.savePct,
+        gaa:g.gaa,
+        shutouts:g.shutouts,
+        wins:g.wins,
+        losses:g.losses,
+        source_fragment:{row:g.sourceRow,gpt:g.gpt,gkd:g.gkd,parser:PARSER_VERSION},
+        source_updated_at:seasonUpdatedAt,
+        updated_at:seasonUpdatedAt
+      };
+    }).filter(Boolean);
+
+    if(playerSeasonPayload.length){
+      const playerSeasonUpsert=await admin.from("player_season_stats")
+        .upsert(playerSeasonPayload,{onConflict:"competition_id,team_id,source_name"});
+      if(playerSeasonUpsert.error) throw playerSeasonUpsert.error;
+    }
+    if(goalieSeasonPayload.length){
+      const goalieSeasonUpsert=await admin.from("goalie_season_stats")
+        .upsert(goalieSeasonPayload,{onConflict:"competition_id,team_id,source_name"});
+      if(goalieSeasonUpsert.error) throw goalieSeasonUpsert.error;
+    }
+
     const existingGamesQ = await admin.from("games")
       .select("id,source_game_id,source_event_game_id,game_number,home_team_id,away_team_id,scheduled_start")
       .eq("competition_id", competitionId)
@@ -519,7 +710,8 @@ Deno.serve(async (req: Request) => {
     await Promise.all([
       logFetch(overview, "competition_overview", COMPETITION_ID),
       logFetch(schedule, "competition_schedule", COMPETITION_ID),
-      logFetch(roster, "competition_roster", COMPETITION_ID)
+      logFetch(roster, "competition_roster", COMPETITION_ID),
+      logFetch(seasonStats, "competition_player_stats", COMPETITION_ID)
     ]);
 
     const vasbyId = teamMap.get("Väsby IK HK") || null;
@@ -538,7 +730,9 @@ Deno.serve(async (req: Request) => {
         vasby_roster: vasbyRosterCount,
         standings: standings.length,
         scheduled_games: schedulePayload.length,
-        result_updates: resultUpdates
+        result_updates: resultUpdates,
+        player_season_stats: playerSeasonPayload.length,
+        goalie_season_stats: goalieSeasonPayload.length
       },
       elapsed_ms: Date.now() - started
     });

@@ -23,7 +23,11 @@
     latestEvents: [],
     latestTeamStats: new Map(),
     latestPlayerStats: [],
-    latestGoalieStats: []
+    latestGoalieStats: [],
+    seasonPlayerStats: [],
+    seasonGoalieStats: [],
+    recentPlayerStats: [],
+    recentGoalieStats: []
   };
 
   const panels = {
@@ -350,32 +354,107 @@
     return value.slice(comma + 1).trim() + " " + value.slice(0, comma).trim();
   }
 
+  function sourceNameKey(value) {
+    return String(value || "").trim().toLocaleLowerCase("sv-SE");
+  }
+
+  function recentGameIdsForTeam(teamId) {
+    return (teamId === state.vasby?.id ? state.vasbyForm : state.opponentForm)
+      .map((game) => game.id);
+  }
+
+  function sameStatPlayer(seasonRow, gameRow) {
+    if (seasonRow.player_id && gameRow.player_id) {
+      return seasonRow.player_id === gameRow.player_id;
+    }
+    return seasonRow.team_id === gameRow.team_id &&
+      sourceNameKey(seasonRow.source_name) === sourceNameKey(gameRow.source_name);
+  }
+
+  function aggregateRecentPlayer(seasonRow) {
+    const allowedGames = new Set(recentGameIdsForTeam(seasonRow.team_id));
+    const rows = state.recentPlayerStats.filter((row) =>
+      allowedGames.has(row.game_id) && sameStatPlayer(seasonRow, row)
+    );
+    const goals = rows.reduce((sum, row) => sum + Number(row.goals || 0), 0);
+    const assists = rows.reduce((sum, row) => sum + Number(row.assists || 0), 0);
+    const points = rows.reduce((sum, row) => sum + Number(row.points || 0), 0);
+    const shots = rows.reduce((sum, row) => sum + Number(row.shots || 0), 0);
+    const pim = rows.reduce((sum, row) => sum + Number(row.pim || 0), 0);
+    const plusMinus = rows.reduce((sum, row) => sum + Number(row.plus_minus || 0), 0);
+    const faceoffWins = rows.reduce((sum, row) => sum + Number(row.faceoff_wins || 0), 0);
+    const faceoffLosses = rows.reduce((sum, row) => sum + Number(row.faceoff_losses || 0), 0);
+    const foTotal = faceoffWins + faceoffLosses;
+    return {
+      games: rows.length,
+      goals,
+      assists,
+      points,
+      shots,
+      pim,
+      plusMinus,
+      faceoffPct: foTotal ? (faceoffWins / foTotal) * 100 : null
+    };
+  }
+
+  function aggregateRecentGoalie(seasonRow) {
+    const allowedGames = new Set(recentGameIdsForTeam(seasonRow.team_id));
+    const rows = state.recentGoalieStats.filter((row) =>
+      allowedGames.has(row.game_id) && sameStatPlayer(seasonRow, row)
+    );
+    const saves = rows.reduce((sum, row) => sum + Number(row.saves || 0), 0);
+    const shotsAgainst = rows.reduce((sum, row) => sum + Number(row.shots_against || 0), 0);
+    const goalsAgainst = rows.reduce((sum, row) => sum + Number(row.goals_against || 0), 0);
+    const seconds = rows.reduce((sum, row) => sum + Number(row.minutes_played_seconds || 0), 0);
+    return {
+      games: rows.length,
+      saves,
+      shotsAgainst,
+      goalsAgainst,
+      seconds,
+      savePct: shotsAgainst ? (saves / shotsAgainst) * 100 : null,
+      gaa: seconds ? (goalsAgainst * 3600) / seconds : null
+    };
+  }
+
   function renderPlayerStats() {
-    if (!state.latestPlayerStats.length || !state.latestVasbyGame) {
-      return '<div class="drawer-card"><strong>Ingen Player Summary ännu</strong><span>Spelarstatistiken visas när Swehockey har publicerat slutrapporten.</span></div>';
+    if (!state.seasonPlayerStats.length || !state.nextGame) {
+      return '<div class="drawer-card"><strong>Ingen säsongsstatistik ännu</strong><span>Swehockeys Players By Team har ännu inte gett oss spelardata.</span></div>';
     }
 
-    const teamOrder = [state.latestVasbyGame.home_team_id, state.latestVasbyGame.away_team_id];
+    const teamOrder = [state.vasby.id, state.opponent.id];
     return teamOrder.map((teamId) => {
-      const rows = state.latestPlayerStats
-        .filter((row) => row.team_id === teamId)
-        .sort((a, b) => (b.points - a.points) || (b.goals - a.goals) || (b.shots - a.shots) || (a.jersey_number - b.jersey_number));
+      const rows = state.seasonPlayerStats
+        .filter((row) => row.team_id === teamId && row.position !== "GK")
+        .sort((a, b) =>
+          Number(b.points || 0) - Number(a.points || 0) ||
+          Number(b.goals || 0) - Number(a.goals || 0) ||
+          Number(b.shots || 0) - Number(a.shots || 0) ||
+          Number(a.jersey_number || 999) - Number(b.jersey_number || 999)
+        );
 
       if (!rows.length) return "";
       return '<section class="player-stat-section">' +
-        '<h3 class="roster-section-title">' + esc(getTeamName(teamId)) + '</h3>' +
-        '<div class="player-stat-head"><span>SPELARE</span><span>G</span><span>A</span><span>P</span><span>SOG</span><span>+/-</span><span>FO%</span></div>' +
+        '<h3 class="roster-section-title">' + esc(getTeamName(teamId)) + ' · SÄSONG</h3>' +
+        '<div class="player-stat-head"><span>SPELARE</span><span>GP</span><span>G</span><span>A</span><span>P</span><span>SOG</span><span>FO%</span></div>' +
         '<div class="player-stat-list">' +
           rows.map((row) => {
-            const fo = row.faceoff_pct == null ? "–" : Number(row.faceoff_pct).toLocaleString("sv-SE", { maximumFractionDigits: 1 });
-            const plusMinus = row.plus_minus > 0 ? "+" + row.plus_minus : row.plus_minus;
+            const recent = aggregateRecentPlayer(row);
+            const fo = row.faceoff_pct == null ? "–" :
+              Number(row.faceoff_pct).toLocaleString("sv-SE", { maximumFractionDigits: 1 });
+            const recentText = recent.games
+              ? 'S5 ' + recent.games + ' GP · ' + recent.goals + '+' + recent.assists + ' · ' + recent.points + ' P'
+              : 'S5 väntar på matchrapport';
             return '<div class="player-stat-row">' +
-              '<div class="player-stat-name"><b>#' + esc(row.jersey_number ?? "–") + '</b><span><strong>' + esc(humanSourceName(row.source_name)) + '</strong><small>' + esc(row.position || "") + '</small></span></div>' +
+              '<div class="player-stat-name"><b>#' + esc(row.jersey_number ?? "–") + '</b><span>' +
+                '<strong>' + esc(humanSourceName(row.source_name)) + '</strong>' +
+                '<small>' + esc((row.position || "") + ' · ' + recentText) + '</small>' +
+              '</span></div>' +
+              '<em>' + esc(row.games_played ?? 0) + '</em>' +
               '<em>' + esc(row.goals ?? 0) + '</em>' +
               '<em>' + esc(row.assists ?? 0) + '</em>' +
               '<em class="pts">' + esc(row.points ?? 0) + '</em>' +
               '<em>' + esc(row.shots ?? 0) + '</em>' +
-              '<em>' + esc(plusMinus ?? "–") + '</em>' +
               '<em>' + esc(fo) + '</em>' +
             '</div>';
           }).join("") +
@@ -385,25 +464,52 @@
   }
 
   function renderGoalieStats() {
-    if (!state.latestGoalieStats.length || !state.latestVasbyGame) {
-      return '<div class="drawer-card"><strong>Ingen målvaktsrapport ännu</strong><span>Målvaktsstatistiken visas när Swehockey har publicerat Player Summary.</span></div>';
+    if (!state.seasonGoalieStats.length || !state.nextGame) {
+      return '<div class="drawer-card"><strong>Ingen målvaktsstatistik ännu</strong><span>Swehockeys säsongstabell har ännu inte gett oss målvaktsdata.</span></div>';
     }
 
-    return '<div class="goalie-card-grid">' + state.latestGoalieStats.map((row) => {
-      const svPct = row.save_pct == null ? "–" : Number(row.save_pct).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
-      const gaa = row.gaa == null ? "–" : Number(row.gaa).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const minutes = row.minutes_played_seconds == null ? "–" : formatClockSeconds(row.minutes_played_seconds);
-      return '<article class="goalie-card">' +
-        '<div class="goalie-card-head"><span>' + esc(getTeamName(row.team_id)) + '</span><b>#' + esc(row.jersey_number ?? "–") + '</b></div>' +
-        '<h3>' + esc(humanSourceName(row.source_name)) + '</h3>' +
-        '<div class="goalie-metrics">' +
-          '<div><span>SV%</span><strong>' + esc(svPct) + '</strong></div>' +
-          '<div><span>RÄDDN.</span><strong>' + esc(row.saves ?? "–") + '/' + esc(row.shots_against ?? "–") + '</strong></div>' +
-          '<div><span>GAA</span><strong>' + esc(gaa) + '</strong></div>' +
-          '<div><span>MIP</span><strong>' + esc(minutes) + '</strong></div>' +
-        '</div>' +
-      '</article>';
-    }).join("") + '</div>';
+    const teamOrder = [state.vasby.id, state.opponent.id];
+    return teamOrder.map((teamId) => {
+      const rows = state.seasonGoalieStats
+        .filter((row) => row.team_id === teamId)
+        .sort((a, b) =>
+          Number(b.games_played || 0) - Number(a.games_played || 0) ||
+          Number(b.minutes_played_seconds || 0) - Number(a.minutes_played_seconds || 0)
+        );
+      if (!rows.length) return "";
+
+      return '<section class="goalie-team-section">' +
+        '<h3 class="roster-section-title">' + esc(getTeamName(teamId)) + ' · SÄSONG</h3>' +
+        '<div class="goalie-card-grid">' + rows.map((row) => {
+          const recent = aggregateRecentGoalie(row);
+          const svPct = row.save_pct == null ? "–" :
+            Number(row.save_pct).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+          const gaa = row.gaa == null ? "–" :
+            Number(row.gaa).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const record = Number(row.games_played || 0)
+            ? String(row.wins ?? 0) + "–" + String(row.losses ?? 0)
+            : "–";
+          const recentSv = recent.savePct == null ? "–" :
+            recent.savePct.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+          const recentGaa = recent.gaa == null ? "–" :
+            recent.gaa.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+          return '<article class="goalie-card">' +
+            '<div class="goalie-card-head"><span>SÄSONG</span><b>#' + esc(row.jersey_number ?? "–") + '</b></div>' +
+            '<h3>' + esc(humanSourceName(row.source_name)) + '</h3>' +
+            '<div class="goalie-metrics goalie-season-metrics">' +
+              '<div><span>GP</span><strong>' + esc(row.games_played ?? 0) + '</strong></div>' +
+              '<div><span>SV%</span><strong>' + esc(svPct) + '</strong></div>' +
+              '<div><span>GAA</span><strong>' + esc(gaa) + '</strong></div>' +
+              '<div><span>W–L</span><strong>' + esc(record) + '</strong></div>' +
+            '</div>' +
+            '<div class="goalie-recent">' +
+              '<span>S5</span><strong>' + esc(recent.games + ' GP · ' + recent.saves + '/' + recent.shotsAgainst + ' · ' + recentSv + ' · GAA ' + recentGaa) + '</strong>' +
+            '</div>' +
+          '</article>';
+        }).join("") + '</div>' +
+      '</section>';
+    }).join("");
   }
 
   function renderDrawer(key) {
@@ -417,11 +523,11 @@
         renderRoster();
     } else if (key === "players") {
       drawerBody.innerHTML =
-        '<article class="drawer-card"><strong>Senaste färdigspelade match</strong><span>G, A, poäng, skott, +/− och tekningar från Swehockey Player Summary.</span></article>' +
+        '<article class="drawer-card"><strong>Säsong + senaste 5</strong><span>Säsongstotalen kommer direkt från Swehockey. S5 räknas från de fem senaste Player Summary-rapporterna som finns importerade.</span></article>' +
         renderPlayerStats();
     } else if (key === "goalies") {
       drawerBody.innerHTML =
-        '<article class="drawer-card"><strong>Senaste färdigspelade match</strong><span>Målvaktsdata från Swehockey Player Summary.</span></article>' +
+        '<article class="drawer-card"><strong>Säsong + senaste 5</strong><span>SV%, GAA och record kommer från Swehockeys säsongstabell. S5 räknas från matchrapporterna.</span></article>' +
         renderGoalieStats();
     } else {
       drawerBody.innerHTML = data.cards.map(([title, text]) =>
@@ -524,6 +630,47 @@
     state.opponentForm = opponentForm;
     state.latestVasbyGame = vasbyForm[0] || null;
 
+    const focusTeamIds = [state.vasby.id, state.opponent.id];
+    const recentGameIds = [...new Set([...state.vasbyForm, ...state.opponentForm].map((game) => game.id))];
+
+    const [seasonPlayerResult, seasonGoalieResult] = await Promise.all([
+      client.from("player_season_stats")
+        .select("team_id,player_id,source_name,jersey_number,position,games_played,goals,assists,points,pim,plus_minus,game_winning_goals,power_play_goals,shorthanded_goals,shots,shooting_pct,faceoff_wins,faceoff_losses,faceoff_total,faceoff_pct")
+        .eq("competition_id", competition.id)
+        .in("team_id", focusTeamIds),
+      client.from("goalie_season_stats")
+        .select("team_id,player_id,source_name,jersey_number,games_played,minutes_played_seconds,goals_against,saves,shots_against,save_pct,gaa,shutouts,wins,losses")
+        .eq("competition_id", competition.id)
+        .in("team_id", focusTeamIds)
+    ]);
+    if (seasonPlayerResult.error) throw seasonPlayerResult.error;
+    if (seasonGoalieResult.error) throw seasonGoalieResult.error;
+    state.seasonPlayerStats = seasonPlayerResult.data || [];
+    state.seasonGoalieStats = seasonGoalieResult.data || [];
+
+    if (recentGameIds.length) {
+      const [recentPlayerResult, recentGoalieResult] = await Promise.all([
+        client.from("player_game_stats")
+          .select("game_id,team_id,player_id,source_name,jersey_number,position,goals,assists,points,plus_minus,pim,shots,faceoff_wins,faceoff_losses,faceoff_pct")
+          .in("game_id", recentGameIds),
+        client.from("goalie_game_stats")
+          .select("game_id,team_id,player_id,source_name,jersey_number,shots_against,goals_against,saves,save_pct,minutes_played_seconds,gaa")
+          .in("game_id", recentGameIds)
+      ]);
+      if (recentPlayerResult.error) throw recentPlayerResult.error;
+      if (recentGoalieResult.error) throw recentGoalieResult.error;
+      state.recentPlayerStats = recentPlayerResult.data || [];
+      state.recentGoalieStats = recentGoalieResult.data || [];
+    } else {
+      state.recentPlayerStats = [];
+      state.recentGoalieStats = [];
+    }
+
+    if (state.latestVasbyGame) {
+      state.latestPlayerStats = state.recentPlayerStats.filter((row) => row.game_id === state.latestVasbyGame.id);
+      state.latestGoalieStats = state.recentGoalieStats.filter((row) => row.game_id === state.latestVasbyGame.id);
+    }
+
     if (state.latestVasbyGame) {
       const { data: events, error: eventsError } = await client.from("game_events")
         .select("id,period,clock_display,event_seconds,event_type,team_id,strength,home_score,away_score,description")
@@ -544,24 +691,9 @@
       state.latestTeamStats = new Map((teamStats || []).map((row) => [row.team_id, row]));
     }
 
-    if (state.latestVasbyGame) {
-      const [playerResult, goalieResult] = await Promise.all([
-        client.from("player_game_stats")
-          .select("team_id,player_id,source_name,jersey_number,position,goals,assists,points,plus_minus,pim,shots,faceoff_wins,faceoff_losses,faceoff_pct")
-          .eq("game_id", state.latestVasbyGame.id),
-        client.from("goalie_game_stats")
-          .select("team_id,player_id,source_name,jersey_number,shots_against,goals_against,saves,save_pct,minutes_played_seconds,gaa")
-          .eq("game_id", state.latestVasbyGame.id)
-      ]);
-      if (playerResult.error) throw playerResult.error;
-      if (goalieResult.error) throw goalieResult.error;
-      state.latestPlayerStats = playerResult.data || [];
-      state.latestGoalieStats = goalieResult.data || [];
-    }
-
     panels.live.cards = [
       ["Matchcollector", state.latestEvents.length + " händelser lästa från senaste Väsby-matchen."],
-      ["Player Summary", state.latestPlayerStats.length + " utespelare och " + state.latestGoalieStats.length + " målvakter importerade."],
+      ["Spelardata", state.seasonPlayerStats.filter((row) => row.position !== "GK").length + " säsongsrader · " + state.recentPlayerStats.length + " S5-matchrader."],
       ["Nästa match-ID", state.nextGame.source_event_game_id
         ? "Live-/rapport-ID: " + state.nextGame.source_event_game_id
         : "Schema-ID " + (state.nextGame.game_number || "saknas") + " är känt. Live-ID väntas senare."]

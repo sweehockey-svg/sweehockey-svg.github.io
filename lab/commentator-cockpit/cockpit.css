@@ -161,3 +161,16 @@ button{font:inherit}
   .player-stat-head,.player-stat-row{grid-template-columns:minmax(128px,1fr) 26px 26px 26px 32px 32px 38px}
   .goalie-metrics{grid-template-columns:1fr 1fr}
 }
+
+/* v6 · season + recent-five player/goalie context */
+.player-stat-head,.player-stat-row{grid-template-columns:minmax(220px,1fr) 32px 32px 32px 34px 40px 46px}
+.player-stat-name small{color:#78909e}
+.goalie-team-section{margin-bottom:18px}
+.goalie-season-metrics{margin-bottom:8px}
+.goalie-recent{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid #1c3442;border-radius:8px;background:#061620}
+.goalie-recent span{font-size:7px;font-weight:1000;letter-spacing:.1em;color:var(--yellow)}
+.goalie-recent strong{font-size:9px;color:#aebfc8}
+@media(max-width:760px){
+  .player-stat-head,.player-stat-row{grid-template-columns:minmax(172px,1fr) 26px 26px 26px 28px 32px 38px}
+  .player-stat-name small{white-space:normal;line-height:1.35}
+}

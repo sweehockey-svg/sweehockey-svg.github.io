@@ -1007,6 +1007,28 @@ async function syncEvents(game:any, eventId:string, htmlItem:any, roster:any[]) 
   };
 }
 
+async function syncFinalPlayerSummaryOnly(game:any) {
+  const eventId = game.source_event_game_id || (/^\d+$/.test(game.source_game_id || "") ? game.source_game_id : null);
+  if (!eventId) return { skipped:true,reason:"missing_event_id" };
+
+  const { data:teams, error:teamsError }=await admin.from("teams")
+    .select("id,canonical_name")
+    .in("id",[game.home_team_id,game.away_team_id]);
+  if (teamsError) throw teamsError;
+  const map=new Map((teams || []).map((t:any)=>[t.id,t.canonical_name]));
+  const homeName=map.get(game.home_team_id) || "";
+  const awayName=map.get(game.away_team_id) || "";
+  if(!homeName || !awayName) return { skipped:true,reason:"missing_team_name" };
+
+  const { data:roster, error:rosterError }=await admin.from("team_rosters")
+    .select("team_id,player_id,jersey_number,source_name,position,is_active")
+    .eq("competition_id",game.competition_id)
+    .in("team_id",[game.home_team_id,game.away_team_id]);
+  if (rosterError) throw rosterError;
+
+  return await syncPlayerSummary(game,eventId,homeName,awayName,roster || []);
+}
+
 async function syncGameData(game:any, eventId:string, homeName:string, awayName:string) {
   const [lineupHtml, eventsHtml] = await Promise.all([
     fetchHtml(`/Game/LineUps/${eventId}`),
@@ -1181,6 +1203,54 @@ Deno.serve(async (req:Request) => {
         }
       } else {
         output.next.state = "idle_until_24h_before_start";
+      }
+    }
+
+
+    if (nextGame) {
+      const opponentId = nextGame.home_team_id === vasby.id ? nextGame.away_team_id : nextGame.home_team_id;
+      const focusTeamIds = [...new Set([vasby.id,opponentId].filter(Boolean))];
+      const recentFinalMap = new Map<string,any>();
+
+      for (const teamId of focusTeamIds) {
+        const { data:recent, error:recentError } = await admin.from("games")
+          .select(gameSelect)
+          .eq("competition_id",competition.id)
+          .eq("status","final")
+          .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`)
+          .order("scheduled_start",{ascending:false})
+          .limit(5);
+        if (recentError) throw recentError;
+        for (const game of recent || []) recentFinalMap.set(game.id,game);
+      }
+
+      const recentFinals=[...recentFinalMap.values()]
+        .sort((a:any,b:any)=>new Date(b.scheduled_start).getTime()-new Date(a.scheduled_start).getTime());
+
+      if(recentFinals.length) {
+        const ids=recentFinals.map((g:any)=>g.id);
+        const [playerRows,goalieRows]=await Promise.all([
+          admin.from("player_game_stats").select("game_id").in("game_id",ids),
+          admin.from("goalie_game_stats").select("game_id").in("game_id",ids)
+        ]);
+        if(playerRows.error) throw playerRows.error;
+        if(goalieRows.error) throw goalieRows.error;
+
+        const playerGames=new Set((playerRows.data || []).map((r:any)=>r.game_id));
+        const goalieGames=new Set((goalieRows.data || []).map((r:any)=>r.game_id));
+        const missing=recentFinals.find((g:any)=>
+          !!g.source_event_game_id && (!playerGames.has(g.id) || !goalieGames.has(g.id))
+        );
+
+        if(missing) {
+          output.backfill={
+            game_id:missing.id,
+            source_event_game_id:missing.source_event_game_id,
+            result:await syncFinalPlayerSummaryOnly(missing)
+          };
+        } else {
+          output.backfill={skipped:true,covered_games:recentFinals.length};
+        }
       }
     }
 
