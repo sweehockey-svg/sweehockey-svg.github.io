@@ -283,6 +283,8 @@
 
   const LEGACY_NOTE_STORAGE_KEY="commentator-cockpit-notes-v1";
   const NOTE_STORAGE_PREFIX="commentator-cockpit-notes-v2";
+  const AUTH_REDIRECT_URL="https://www.svenskehockey.se/lab/commentator-cockpit/";
+  const AUTH_PENDING_TEAM_KEY="commentator-cockpit-auth-team";
 
   function noteStorageKey(userId=state.authUser?.id) {
     return userId ? NOTE_STORAGE_PREFIX+"-user-"+userId : NOTE_STORAGE_PREFIX+"-guest";
@@ -797,7 +799,10 @@
         state.authBusy=true;
         state.authMessage="";
         renderDrawer("account");
-        const redirectTo=window.location.origin+window.location.pathname+window.location.search;
+        if(state.selectedTeamSlug){
+          try{ localStorage.setItem(AUTH_PENDING_TEAM_KEY,state.selectedTeamSlug); }catch{}
+        }
+        const redirectTo=AUTH_REDIRECT_URL;
         const {error}=await client.auth.signInWithOtp({
           email,
           options:{
@@ -924,6 +929,7 @@
     state.accessAdminError="";
 
     if(nextUser){
+      try{ localStorage.removeItem(AUTH_PENDING_TEAM_KEY); }catch{}
       await loadAccessForCurrentUser();
       const includeGuest=previousId!==nextUser.id && readNotesFromStorage(noteStorageKey(null)).length>0;
       state.notes=mergeNoteSets(
@@ -2388,6 +2394,17 @@
     state.competition=leagueCompetitions.find((row)=>row.source_competition_id==="21043")||leagueCompetitions[0];
 
     state.selectedTeamSlug=requestedTeamSlug();
+    if(!state.selectedTeamSlug){
+      try{
+        const pending=localStorage.getItem(AUTH_PENDING_TEAM_KEY)||"";
+        if(pending){
+          state.selectedTeamSlug=pending;
+          const url=new URL(window.location.href);
+          url.searchParams.set("team",pending);
+          history.replaceState(null,"",url.pathname+url.search+url.hash);
+        }
+      }catch{}
+    }
     state.selectedTeam=state.selectedTeamSlug
       ? state.competitionTeams.find((team)=>teamSlug(team.canonical_name)===state.selectedTeamSlug)||null
       : null;
