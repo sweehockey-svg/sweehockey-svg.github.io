@@ -235,3 +235,32 @@ button{font:inherit}
 @media(max-width:760px){
   .special-team-grid{grid-template-columns:1fr}
 }
+
+/* v9 · H2H history */
+.h2h-intro{margin-bottom:11px}
+.h2h-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px}
+.h2h-summary>div{padding:10px;border:1px solid #1c3443;border-radius:9px;background:#081a26;text-align:center}
+.h2h-summary span{display:block;font-size:7px;font-weight:1000;letter-spacing:.09em;color:#627b8b}
+.h2h-summary strong{display:block;margin-top:4px;font-size:18px}
+.h2h-summary small{display:block;margin-top:3px;font-size:7px;color:#718897;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h2h-latest{padding:12px;border:1px solid #765f21;border-radius:10px;background:linear-gradient(135deg,rgba(248,207,61,.09),#081a26);margin-bottom:9px}
+.h2h-latest>span{display:block;font-size:7px;font-weight:1000;letter-spacing:.1em;color:var(--yellow)}
+.h2h-latest>strong{display:block;margin-top:5px;font-size:16px}
+.h2h-latest>small{display:block;margin-top:4px;color:#7c919e;font-size:8px}
+.h2h-list{display:grid;gap:5px}
+.h2h-row{display:grid;grid-template-columns:110px minmax(0,1fr) 150px;gap:9px;align-items:center;padding:9px 10px;border:1px solid #1b3342;border-radius:8px;background:#071823}
+.h2h-row.win{border-left:3px solid #4bb57c}
+.h2h-row.loss{border-left:3px solid #b85858}
+.h2h-row.tie{border-left:3px solid #7d8990}
+.h2h-date strong{display:block;font-size:8px}
+.h2h-date span{display:block;margin-top:2px;font-size:7px;color:#637b8a}
+.h2h-teams{display:grid;gap:2px;min-width:0}
+.h2h-teams span{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h2h-score{text-align:right}
+.h2h-score strong{display:block;font-size:14px}
+.h2h-score small{display:block;margin-top:2px;font-size:7px;color:#5e7787;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:760px){
+  .h2h-summary{grid-template-columns:1fr 1fr}
+  .h2h-row{grid-template-columns:82px minmax(0,1fr) 72px}
+  .h2h-score small{display:none}
+}

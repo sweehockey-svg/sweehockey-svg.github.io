@@ -31,7 +31,9 @@
     nextLineup: null,
     fallbackLineups: new Map(),
     seasonSpecialTeams: [],
-    teamGameStats: []
+    teamGameStats: [],
+    competitionById: new Map(),
+    h2hGames: []
   };
 
   const panels = {
@@ -82,10 +84,7 @@
     h2h: {
       kicker: "H2H",
       title: "Tidigare möten",
-      cards: [
-        ["Datagrund", "H2H räknas från importerade matcher. Äldre säsonger läggs till efter V1-flödet."],
-        ["Ingen dubbellagring", "Senaste möten och sviter beräknas från matchhistoriken när panelen öppnas."]
-      ]
+      cards: []
     },
     studio: {
       kicker: "STUDIO",
@@ -736,12 +735,106 @@
       '</div>';
   }
 
+  function h2hScoreFor(game,teamId) {
+    const home=game.home_team_id===teamId;
+    return {
+      gf:Number(home?game.home_score:game.away_score),
+      ga:Number(home?game.away_score:game.home_score)
+    };
+  }
+
+  function h2hWinner(game) {
+    const v=h2hScoreFor(game,state.vasby.id);
+    if(v.gf>v.ga) return state.vasby.id;
+    if(v.gf<v.ga) return state.opponent.id;
+    return null;
+  }
+
+  function h2hSummary() {
+    const games=state.h2hGames;
+    let vasbyWins=0,opponentWins=0,ties=0,vasbyGoals=0,opponentGoals=0;
+    for(const game of games) {
+      const score=h2hScoreFor(game,state.vasby.id);
+      vasbyGoals+=score.gf;
+      opponentGoals+=score.ga;
+      if(score.gf>score.ga) vasbyWins++;
+      else if(score.gf<score.ga) opponentWins++;
+      else ties++;
+    }
+
+    let streakTeam=null;
+    let streak=0;
+    for(const game of games) {
+      const winner=h2hWinner(game);
+      if(!winner) break;
+      if(streakTeam===null) {
+        streakTeam=winner;
+        streak=1;
+      } else if(winner===streakTeam) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    return {games:games.length,vasbyWins,opponentWins,ties,vasbyGoals,opponentGoals,streakTeam,streak};
+  }
+
+  function seasonForGame(game) {
+    return state.competitionById.get(game.competition_id)?.season_label || "–";
+  }
+
+  function shortDateOnly(iso) {
+    if(!iso) return "–";
+    return new Intl.DateTimeFormat("sv-SE",{
+      day:"numeric",month:"short",year:"numeric",timeZone:"Europe/Stockholm"
+    }).format(new Date(iso));
+  }
+
+  function renderH2H() {
+    if(!state.h2hGames.length) {
+      return '<article class="drawer-card"><strong>Inga tidigare möten importerade</strong><span>Historikcollectorn har ännu inte hittat en match mellan lagen.</span></article>';
+    }
+
+    const s=h2hSummary();
+    const latest=state.h2hGames[0];
+    const latestScore=h2hScoreFor(latest,state.vasby.id);
+    const streakName=s.streakTeam?getTeamName(s.streakTeam):"Ingen";
+    const historySeasons=[...new Set(state.h2hGames.map(seasonForGame))].filter(Boolean);
+
+    const rows=state.h2hGames.slice(0,10).map((game)=>{
+      const v=h2hScoreFor(game,state.vasby.id);
+      const result=v.gf>v.ga?"win":v.gf<v.ga?"loss":"tie";
+      const home=getTeamName(game.home_team_id);
+      const away=getTeamName(game.away_team_id);
+      return '<div class="h2h-row '+result+'">' +
+        '<div class="h2h-date"><strong>'+esc(shortDateOnly(game.scheduled_start))+'</strong><span>'+esc(seasonForGame(game))+'</span></div>' +
+        '<div class="h2h-teams"><span>'+esc(home)+'</span><span>'+esc(away)+'</span></div>' +
+        '<div class="h2h-score"><strong>'+esc(game.home_score)+'–'+esc(game.away_score)+'</strong><small>'+esc(game.venue_name||"")+'</small></div>' +
+      '</div>';
+    }).join("");
+
+    return '<article class="drawer-card h2h-intro"><strong>Historik från Swehockey</strong><span>'+esc(historySeasons.join(" · "))+' · siffrorna räknas direkt från importerade matcher.</span></article>' +
+      '<div class="h2h-summary">' +
+        '<div><span>MÖTEN</span><strong>'+esc(s.games)+'</strong></div>' +
+        '<div><span>VINSTER</span><strong>'+esc(s.vasbyWins)+'–'+esc(s.opponentWins)+'</strong><small>Väsby – '+esc(state.opponent.canonical_name)+'</small></div>' +
+        '<div><span>MÅL</span><strong>'+esc(s.vasbyGoals)+'–'+esc(s.opponentGoals)+'</strong><small>Väsby – '+esc(state.opponent.canonical_name)+'</small></div>' +
+        '<div><span>SVIT</span><strong>'+esc(s.streak||"–")+'</strong><small>'+esc(s.streak?streakName:"Ingen pågående")+'</small></div>' +
+      '</div>' +
+      '<article class="h2h-latest">' +
+        '<span>SENASTE MÖTET · '+esc(seasonForGame(latest))+'</span>' +
+        '<strong>Väsby '+esc(latestScore.gf)+'–'+esc(latestScore.ga)+' '+esc(state.opponent.canonical_name)+'</strong>' +
+        '<small>'+esc(shortDateOnly(latest.scheduled_start))+' · '+esc(latest.venue_name||"Arena saknas")+'</small>' +
+      '</article>' +
+      '<div class="h2h-list">'+rows+'</div>';
+  }
+
   function renderDrawer(key) {
     const data = panels[key] || panels.match;
     drawerKicker.textContent = data.kicker;
     drawerTitle.textContent = data.title;
 
-    drawer.classList.toggle("wide", key === "lines");
+    drawer.classList.toggle("wide", key === "lines" || key === "h2h");
     if (key === "lines") {
       drawerBody.innerHTML = renderLineups();
     } else if (key === "players") {
@@ -754,6 +847,8 @@
         renderGoalieStats();
     } else if (key === "special") {
       drawerBody.innerHTML = renderSpecialTeams();
+    } else if (key === "h2h") {
+      drawerBody.innerHTML = renderH2H();
     } else {
       drawerBody.innerHTML = data.cards.map(([title, text]) =>
         '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
@@ -777,12 +872,13 @@
   async function loadData() {
     if (!client) throw new Error("Supabase-klienten kunde inte startas.");
 
-    const { data: competition, error: compError } = await client.from("competitions")
-      .select("id,name,season_label,group_name,updated_at")
-      .eq("source", "swehockey")
-      .eq("source_competition_id", "21043")
-      .single();
+    const { data: competitions, error: compError } = await client.from("competitions")
+      .select("id,name,season_label,group_name,updated_at,source_competition_id")
+      .eq("source", "swehockey");
     if (compError) throw compError;
+    state.competitionById = new Map((competitions || []).map((row) => [row.id,row]));
+    const competition = (competitions || []).find((row) => row.source_competition_id === "21043");
+    if (!competition) throw new Error("Hockeyettan Norra 2026/27 saknas.");
     state.competition = competition;
 
     const { data: teams, error: teamError } = await client.from("teams")
@@ -809,6 +905,20 @@
       : state.nextGame.home_team_id;
     state.opponent = state.teamById.get(opponentId);
     if (!state.opponent) throw new Error("Motståndarlaget saknas.");
+
+    const { data: vasbyHistory, error: h2hError } = await client.from("games")
+      .select("id,competition_id,scheduled_start,home_team_id,away_team_id,home_score,away_score,venue_name,status,source_event_game_id")
+      .eq("status","final")
+      .or("home_team_id.eq."+state.vasby.id+",away_team_id.eq."+state.vasby.id)
+      .order("scheduled_start",{ascending:false})
+      .limit(150);
+    if (h2hError) throw h2hError;
+    state.h2hGames = (vasbyHistory || [])
+      .filter((game) =>
+        (game.home_team_id === state.vasby.id && game.away_team_id === state.opponent.id) ||
+        (game.home_team_id === state.opponent.id && game.away_team_id === state.vasby.id)
+      )
+      .sort((a,b)=>new Date(b.scheduled_start).getTime()-new Date(a.scheduled_start).getTime());
 
     const { data: latestSnapshot, error: snapError } = await client.from("standings_snapshots")
       .select("id,fetched_at")
@@ -986,7 +1096,10 @@
         state.opponent.canonical_name + " #" + (oppStanding?.rank ?? "–") + " (" + (oppStanding?.points ?? "–") + " p)"],
       ["Kedjor", state.nextLineup
         ? "Officiell lineup för nästa match är importerad."
-        : "Visar senaste kända kedjor tills nästa lineup publiceras."]
+        : "Visar senaste kända kedjor tills nästa lineup publiceras."],
+      ["H2H", state.h2hGames.length
+        ? state.h2hGames.length + " tidigare möten importerade."
+        : "Inga tidigare möten importerade ännu."]
     ];
 
     const syncState = document.getElementById("syncState");
