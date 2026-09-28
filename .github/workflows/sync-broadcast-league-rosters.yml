@@ -76,6 +76,14 @@ jobs:
       PGKEEPALIVES_IDLE: 30
       PGKEEPALIVES_INTERVAL: 10
       PGKEEPALIVES_COUNT: 3
+      DB_HOST: ${{ secrets.SVENSK_DB_HOST }}
+      DB_PORT: ${{ secrets.SVENSK_DB_PORT }}
+      DB_NAME: ${{ secrets.SVENSK_DB_NAME }}
+      DB_USER: ${{ secrets.SVENSK_DB_USER }}
+      DB_PASSWORD: ${{ secrets.SVENSK_DB_PASSWORD }}
+      SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+      SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+      LEAGUE_ID: ${{ matrix.league_id }}
 
     steps:
       - name: Check out repository
@@ -111,26 +119,15 @@ jobs:
 
       - name: Read teams, roster and player IDs from SportsGamer
         id: export
-        env: &sports_gamer_env
-          DB_HOST: ${{ secrets.SVENSK_DB_HOST }}
-          DB_PORT: ${{ secrets.SVENSK_DB_PORT }}
-          DB_NAME: ${{ secrets.SVENSK_DB_NAME }}
-          DB_USER: ${{ secrets.SVENSK_DB_USER }}
-          DB_PASSWORD: ${{ secrets.SVENSK_DB_PASSWORD }}
-          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
-          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
-          LEAGUE_ID: ${{ matrix.league_id }}
         run: python .github/sync/export-broadcast-league-roster.py
 
       - name: Read standings from reported SportsGamer matches
         id: team_stats
-        env: *sports_gamer_env
         run: python .github/sync/export-broadcast-league-team-stats.py
 
       - name: Read full skater and goalie statistics
         id: player_stats
         env:
-          <<: *sports_gamer_env
           PLAYER_IDS_FILE: /tmp/broadcast_player_ids.csv
           EXPORT_FILE: /tmp/swedish_player_stats.csv
           MIN_PLAYER_COUNT: '1'
