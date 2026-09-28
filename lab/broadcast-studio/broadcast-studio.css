@@ -1704,3 +1704,38 @@ html[lang="de"] body[data-theme] .bt-row.selected .bt-team:before{background:#d9
 html[lang="de"] body[data-theme] .spotlight-stats div{border-left-color:#d91f2d!important}
 html[lang="de"] body:not(.obs-preview) .dock-head span{color:#f2c500!important}
 html[lang="de"] body:not(.obs-preview) #loadTwitch{border-color:#8b6f00!important;color:#f2c500!important;background:#17140b!important}
+
+
+/* v123: neutral commentator fallback portrait. */
+.opening-commentator>.commentator-placeholder{
+  position:relative!important;
+  display:block!important;
+  overflow:hidden;
+  background:linear-gradient(160deg,#25313b 0%,#111920 100%)!important;
+  color:transparent!important;
+}
+.opening-commentator>.commentator-placeholder::before{
+  content:"";
+  position:absolute;
+  left:50%;top:17px;
+  width:27px;height:27px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:rgba(226,232,237,.86);
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+.opening-commentator>.commentator-placeholder::after{
+  content:"";
+  position:absolute;
+  left:50%;bottom:-13px;
+  width:66px;height:57px;
+  transform:translateX(-50%);
+  border-radius:45% 45% 12% 12%;
+  background:linear-gradient(180deg,rgba(203,213,220,.90),rgba(126,142,153,.82));
+}
+html[lang="fi"] .opening-commentator>.commentator-placeholder{
+  background:linear-gradient(160deg,#173b5d,#091b2b)!important;
+}
+html[lang="de"] .opening-commentator>.commentator-placeholder{
+  background:linear-gradient(160deg,#292123,#111113)!important;
+}
