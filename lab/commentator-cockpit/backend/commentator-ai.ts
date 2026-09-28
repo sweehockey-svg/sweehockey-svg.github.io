@@ -49,21 +49,16 @@ Deno.serve(async(req:Request)=>{
   if(userError||!user) return json({error:"invalid_session"},401);
 
   const email=String(user.email||"").trim().toLowerCase();
-  const {data:access,error:accessError}=await admin.from("commentator_access")
-    .select("role,active")
-    .eq("email",email)
-    .eq("active",true)
-    .maybeSingle();
-  if(accessError) return json({error:"access_check_failed"},500);
-  if(!access) return json({error:"access_not_approved"},403);
 
   let body:any={};
   try{body=await req.json();}catch{return json({error:"invalid_json"},400);}
 
   const gameId=cleanText(body.game_id,80);
+  const selectedTeamId=cleanText(body.team_id,80);
   const question=cleanText(body.question,500);
   const mode=["pregame","live","studio","general"].includes(body.mode)?body.mode:"general";
   if(!/^[0-9a-f-]{36}$/i.test(gameId)) return json({error:"invalid_game_id"},400);
+  if(!/^[0-9a-f-]{36}$/i.test(selectedTeamId)) return json({error:"invalid_team_id"},400);
 
   const cutoff=new Date(Date.now()-10*60*1000).toISOString();
   const {count:recentCount,error:countError}=await admin
@@ -87,6 +82,20 @@ Deno.serve(async(req:Request)=>{
     .eq("id",gameId)
     .single();
   if(gameError||!game) return json({error:"game_not_found"},404);
+  if(selectedTeamId!==game.home_team_id&&selectedTeamId!==game.away_team_id){
+    return json({error:"team_not_in_game"},403);
+  }
+
+  const {data:accessRows,error:accessError}=await admin.from("commentator_access")
+    .select("role,team_id,active")
+    .eq("email",email)
+    .eq("active",true);
+  if(accessError) return json({error:"access_check_failed"},500);
+  const allowed=(accessRows||[]).some((row:any)=>
+    (row.role==="admin"&&row.team_id===null) ||
+    (row.role==="commentator"&&row.team_id===selectedTeamId)
+  );
+  if(!allowed) return json({error:"access_not_approved"},403);
 
   const teamIds=[game.home_team_id,game.away_team_id];
 

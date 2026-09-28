@@ -1,24 +1,35 @@
--- Commentator Cockpit · approved access gate
+-- Commentator Cockpit · team-scoped approved access gate
 
 create table if not exists public.commentator_access (
   id uuid primary key default gen_random_uuid(),
   email text not null,
   role text not null default 'commentator'
     check (role in ('admin','commentator')),
+  team_id uuid references public.teams(id) on delete cascade,
   active boolean not null default true,
   display_name text,
   note text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint commentator_access_email_normalized_chk
-    check (email = lower(btrim(email)))
+    check (email = lower(btrim(email))),
+  constraint commentator_access_role_team_chk
+    check (
+      (role='admin' and team_id is null)
+      or
+      (role='commentator' and team_id is not null)
+    )
 );
 
-create unique index if not exists commentator_access_email_unique
-  on public.commentator_access ((lower(email)));
+create unique index if not exists commentator_access_admin_email_unique
+  on public.commentator_access ((lower(email)))
+  where role='admin' and team_id is null;
+
+create unique index if not exists commentator_access_team_email_unique
+  on public.commentator_access ((lower(email)),team_id)
+  where role='commentator' and team_id is not null;
 
 alter table public.commentator_access enable row level security;
-
 revoke all on public.commentator_access from anon;
 revoke insert,update,delete on public.commentator_access from authenticated;
 grant select on public.commentator_access to authenticated;
@@ -40,6 +51,7 @@ create table if not exists public.commentator_access_audit (
   action text not null
     check (action in ('create','update','deactivate','reactivate')),
   role text,
+  team_id uuid references public.teams(id) on delete set null,
   created_at timestamptz not null default now()
 );
 
@@ -55,73 +67,6 @@ to anon,authenticated
 using (false)
 with check (false);
 
--- Cloud NOTES require both ownership and active cockpit approval.
-
-drop policy if exists "owner read commentator notes" on public.commentator_notes;
-create policy "owner read commentator notes"
-on public.commentator_notes
-for select
-to authenticated
-using (
-  (select auth.uid())=owner_id
-  and exists (
-    select 1
-    from public.commentator_access ca
-    where ca.active
-      and lower(ca.email)=lower(coalesce((select auth.jwt())->>'email',''))
-  )
-);
-
-drop policy if exists "owner insert commentator notes" on public.commentator_notes;
-create policy "owner insert commentator notes"
-on public.commentator_notes
-for insert
-to authenticated
-with check (
-  (select auth.uid())=owner_id
-  and exists (
-    select 1
-    from public.commentator_access ca
-    where ca.active
-      and lower(ca.email)=lower(coalesce((select auth.jwt())->>'email',''))
-  )
-);
-
-drop policy if exists "owner update commentator notes" on public.commentator_notes;
-create policy "owner update commentator notes"
-on public.commentator_notes
-for update
-to authenticated
-using (
-  (select auth.uid())=owner_id
-  and exists (
-    select 1
-    from public.commentator_access ca
-    where ca.active
-      and lower(ca.email)=lower(coalesce((select auth.jwt())->>'email',''))
-  )
-)
-with check (
-  (select auth.uid())=owner_id
-  and exists (
-    select 1
-    from public.commentator_access ca
-    where ca.active
-      and lower(ca.email)=lower(coalesce((select auth.jwt())->>'email',''))
-  )
-);
-
-drop policy if exists "owner delete commentator notes" on public.commentator_notes;
-create policy "owner delete commentator notes"
-on public.commentator_notes
-for delete
-to authenticated
-using (
-  (select auth.uid())=owner_id
-  and exists (
-    select 1
-    from public.commentator_access ca
-    where ca.active
-      and lower(ca.email)=lower(coalesce((select auth.jwt())->>'email',''))
-  )
-);
+-- Cloud NOTES remain owner-private and require an active approved cockpit account.
+-- Team cockpit visibility and server AI authorization are additionally checked
+-- against the selected team in the frontend/Edge Function.

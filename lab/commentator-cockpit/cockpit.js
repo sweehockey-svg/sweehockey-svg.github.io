@@ -232,6 +232,7 @@
 
   function renderLeagueHome() {
     setRouteScreen("home");
+    document.title="Commentator Cockpit · Hockeyettan";
     const grid=document.getElementById("teamGrid");
     if(!grid) return;
     const teams=[...state.competitionTeams].sort((a,b)=>
@@ -1491,8 +1492,8 @@
   }
 
   async function requestServerAi(question="") {
-    if(!client||!state.nextGame?.id) return {used:false,reason:"missing_context"};
-    if(!state.access?.active) return {used:false,reason:"access_not_approved"};
+    if(!client||!state.nextGame?.id||!state.vasby?.id) return {used:false,reason:"missing_context"};
+    if(!canAccessTeam(state.vasby.id)) return {used:false,reason:"access_not_approved"};
     const {data:{session}}=await client.auth.getSession();
     if(!session?.access_token) return {used:false,reason:"not_authenticated"};
 

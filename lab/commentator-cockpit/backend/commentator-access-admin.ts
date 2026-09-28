@@ -13,6 +13,7 @@ const json=(body:any,status=200)=>new Response(JSON.stringify(body),{
 });
 const clean=(v:any,max=160)=>String(v??"").replace(/\s+/g," ").trim().slice(0,max);
 const normalizeEmail=(v:any)=>clean(v,254).toLowerCase();
+const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 Deno.serve(async(req:Request)=>{
   if(req.method==="OPTIONS") return new Response(null,{status:204,headers:CORS});
@@ -22,22 +23,20 @@ Deno.serve(async(req:Request)=>{
   const serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
   if(!supabaseUrl||!serviceKey) return json({error:"server_not_configured"},500);
 
-  const authHeader=req.headers.get("Authorization")||"";
-  const token=authHeader.startsWith("Bearer ")?authHeader.slice(7):"";
+  const token=(req.headers.get("Authorization")||"").replace(/^Bearer\s+/i,"");
   if(!token) return json({error:"auth_required"},401);
 
-  const admin=createClient(supabaseUrl,serviceKey,{
-    auth:{persistSession:false,autoRefreshToken:false}
-  });
+  const admin=createClient(supabaseUrl,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
   const {data:{user},error:userError}=await admin.auth.getUser(token);
   if(userError||!user) return json({error:"invalid_session"},401);
 
   const actorEmail=normalizeEmail(user.email);
   const {data:actor,error:actorError}=await admin.from("commentator_access")
-    .select("id,email,role,active")
+    .select("id,email,role,team_id,active")
     .eq("email",actorEmail)
     .eq("active",true)
     .eq("role","admin")
+    .is("team_id",null)
     .maybeSingle();
   if(actorError) return json({error:"access_check_failed"},500);
   if(!actor) return json({error:"admin_required"},403);
@@ -47,72 +46,94 @@ Deno.serve(async(req:Request)=>{
   const action=clean(body.action,30)||"list";
 
   if(action==="list"){
-    const {data,error}=await admin.from("commentator_access")
-      .select("id,email,role,active,display_name,note,created_at,updated_at")
-      .order("active",{ascending:false})
-      .order("email",{ascending:true});
-    if(error) return json({error:"list_failed"},500);
-    return json({ok:true,items:data||[]});
+    const [{data:items,error:itemError},{data:teams,error:teamError}]=await Promise.all([
+      admin.from("commentator_access")
+        .select("id,email,role,team_id,active,display_name,note,created_at,updated_at")
+        .order("active",{ascending:false})
+        .order("email",{ascending:true}),
+      admin.from("teams").select("id,canonical_name")
+    ]);
+    if(itemError||teamError) return json({error:"list_failed"},500);
+    const teamMap=new Map((teams||[]).map((t:any)=>[t.id,t.canonical_name]));
+    return json({ok:true,items:(items||[]).map((item:any)=>({
+      ...item,
+      team_name:item.team_id?teamMap.get(item.team_id)||"Okänt lag":"Alla lag"
+    }))});
   }
 
   if(action==="upsert"){
     const email=normalizeEmail(body.email);
     const role=body.role==="admin"?"admin":"commentator";
+    const teamId=role==="admin"?null:clean(body.team_id,80);
     const displayName=clean(body.display_name,120)||null;
     const note=clean(body.note,300)||null;
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({error:"invalid_email"},400);
 
-    const {data:existing,error:existingError}=await admin.from("commentator_access")
-      .select("id,email,role,active")
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({error:"invalid_email"},400);
+    if(role==="commentator"&&!UUID_RE.test(teamId)) return json({error:"team_required"},400);
+
+    if(teamId){
+      const {data:team,error:teamError}=await admin.from("teams").select("id").eq("id",teamId).maybeSingle();
+      if(teamError||!team) return json({error:"team_not_found"},400);
+    }
+
+    let lookup=admin.from("commentator_access")
+      .select("id,email,role,team_id,active")
       .eq("email",email)
-      .maybeSingle();
-    if(existingError) return json({error:"lookup_failed"},500);
+      .eq("role",role);
+    lookup=teamId?lookup.eq("team_id",teamId):lookup.is("team_id",null);
+    const {data:existing,error:lookupError}=await lookup.maybeSingle();
+    if(lookupError) return json({error:"lookup_failed"},500);
+
+    const payload={
+      email,role,team_id:teamId,active:true,
+      display_name:displayName,note,
+      updated_at:new Date().toISOString()
+    };
 
     let item:any;
     let auditAction="create";
     if(existing){
       auditAction=existing.active?"update":"reactivate";
       const {data,error}=await admin.from("commentator_access")
-        .update({
-          email,
-          role,
-          active:true,
-          display_name:displayName,
-          note,
-          updated_at:new Date().toISOString()
-        })
-        .eq("id",existing.id)
-        .select("id,email,role,active,display_name,note,created_at,updated_at")
+        .update(payload).eq("id",existing.id)
+        .select("id,email,role,team_id,active,display_name,note,created_at,updated_at")
         .single();
       if(error) return json({error:"update_failed"},500);
       item=data;
     }else{
       const {data,error}=await admin.from("commentator_access")
-        .insert({email,role,active:true,display_name:displayName,note})
-        .select("id,email,role,active,display_name,note,created_at,updated_at")
+        .insert(payload)
+        .select("id,email,role,team_id,active,display_name,note,created_at,updated_at")
         .single();
       if(error) return json({error:"insert_failed"},500);
       item=data;
     }
 
     await admin.from("commentator_access_audit").insert({
-      actor_email:actorEmail,target_email:email,action:auditAction,role
+      actor_email:actorEmail,target_email:email,action:auditAction,role,team_id:teamId
     });
     return json({ok:true,item});
   }
 
   if(action==="deactivate"){
-    const email=normalizeEmail(body.email);
-    if(email===actorEmail) return json({error:"cannot_deactivate_self"},400);
+    const id=clean(body.id,80);
+    if(!UUID_RE.test(id)) return json({error:"invalid_id"},400);
+
+    const {data:target,error:targetError}=await admin.from("commentator_access")
+      .select("id,email,role,team_id,active").eq("id",id).maybeSingle();
+    if(targetError) return json({error:"lookup_failed"},500);
+    if(!target) return json({error:"not_found"},404);
+    if(target.id===actor.id) return json({error:"cannot_deactivate_self"},400);
+
     const {data,error}=await admin.from("commentator_access")
       .update({active:false,updated_at:new Date().toISOString()})
-      .eq("email",email)
-      .select("id,email,role,active,display_name,note,created_at,updated_at")
-      .maybeSingle();
+      .eq("id",id)
+      .select("id,email,role,team_id,active,display_name,note,created_at,updated_at")
+      .single();
     if(error) return json({error:"deactivate_failed"},500);
-    if(!data) return json({error:"not_found"},404);
+
     await admin.from("commentator_access_audit").insert({
-      actor_email:actorEmail,target_email:email,action:"deactivate",role:data.role
+      actor_email:actorEmail,target_email:data.email,action:"deactivate",role:data.role,team_id:data.team_id
     });
     return json({ok:true,item:data});
   }
