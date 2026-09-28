@@ -5,11 +5,14 @@ import * as cheerio from "npm:cheerio@1.0.0";
 import { DateTime } from "npm:luxon@3.5.0";
 
 const BASE = "https://stats.swehockey.se";
-const COMPETITION_ID = "21043";
+const COMPETITIONS = new Map([
+  ["21043",{name:"Hockeyettan Norra",group:"Norra"}],
+  ["21044",{name:"Hockeyettan Södra",group:"Södra"}]
+]);
 const ZONE = "Europe/Stockholm";
 const SOURCE = "swehockey";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
-const PARSER_VERSION = "base-sync-v5";
+const PARSER_VERSION = "base-sync-v6";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -278,6 +281,12 @@ Deno.serve(async (req: Request) => {
       return Response.json({ error: "forbidden" }, { status: 403 });
     }
 
+    let body:any={};
+    try{ body=await req.json(); }catch{}
+    const COMPETITION_ID=String(body.competition_id||"21043");
+    const meta=COMPETITIONS.get(COMPETITION_ID);
+    if(!meta) return Response.json({error:"competition_not_allowed"},{status:400});
+
     const [overview, schedule, roster, seasonStats, specialTeams] = await Promise.all([
       fetchHtml(`/ScheduleAndResults/Overview/${COMPETITION_ID}`),
       fetchHtml(`/ScheduleAndResults/Schedule/${COMPETITION_ID}`),
@@ -318,7 +327,7 @@ Deno.serve(async (req: Request) => {
       return Response.json({
         ok: true,
         unchanged: true,
-        competition: "Hockeyettan Norra",
+        competition: meta.name,
         competition_id: COMPETITION_ID,
         elapsed_ms: Date.now() - started
       });
@@ -461,10 +470,10 @@ Deno.serve(async (req: Request) => {
       const inserted = await admin.from("competitions").insert({
         source: SOURCE,
         source_competition_id: COMPETITION_ID,
-        name: "Hockeyettan Norra",
+        name: meta.name,
         league_name: "Hockeyettan",
         season_label: "2026/27",
-        group_name: "Norra",
+        group_name: meta.group,
         country_code: "SWE",
         source_url: overview.url
       }).select("id").single();
@@ -472,10 +481,10 @@ Deno.serve(async (req: Request) => {
       competition = inserted.data;
     } else {
       const upd = await admin.from("competitions").update({
-        name: "Hockeyettan Norra",
+        name: meta.name,
         league_name: "Hockeyettan",
         season_label: "2026/27",
-        group_name: "Norra",
+        group_name: meta.group,
         country_code: "SWE",
         source_url: overview.url,
         last_seen_at: new Date().toISOString(),
@@ -816,20 +825,14 @@ Deno.serve(async (req: Request) => {
       logFetch(specialTeams, "competition_special_teams", COMPETITION_ID)
     ]);
 
-    const vasbyId = teamMap.get("Väsby IK HK") || null;
-    const vasbyRosterCount = vasbyId
-      ? rosterPayload.filter(r => r.team_id === vasbyId && r.is_active).length
-      : 0;
-
     return Response.json({
       ok: true,
-      competition: "Hockeyettan Norra",
+      competition: meta.name,
       competition_id: COMPETITION_ID,
       counts: {
         teams: teamPayload.length,
         players: playerPayload.length,
         roster_rows: rosterPayload.length,
-        vasby_roster: vasbyRosterCount,
         standings: standings.length,
         scheduled_games: schedulePayload.length,
         result_updates: resultUpdates,
