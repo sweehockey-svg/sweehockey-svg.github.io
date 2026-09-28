@@ -51,6 +51,8 @@
     access: null,
     accessRows: [],
     competitionTeams: [],
+    teamCompetitionByTeam: new Map(),
+    selectedCompetition: null,
     selectedTeam: null,
     selectedTeamSlug: "",
     teamDataLoaded: false,
@@ -245,7 +247,7 @@
         : access ? (access.role==="admin"?"ADMIN · ÖPPEN":"ÖPPEN FÖR DIG") : "LÅST";
       return '<button class="team-card '+(access?"unlocked":"locked")+'" type="button" data-team-id="'+esc(team.id)+'">' +
         '<div class="team-card-badge">'+esc(shortTeam(team.canonical_name))+'</div>' +
-        '<div class="team-card-copy"><span>HOCKEYETTAN</span><strong>'+esc(team.canonical_name)+'</strong><small>'+esc(status)+'</small></div>' +
+        '<div class="team-card-copy"><span>HOCKEYETTAN · '+esc(state.teamCompetitionByTeam.get(team.id)?.group_name||"")+'</span><strong>'+esc(team.canonical_name)+'</strong><small>'+esc(status)+'</small></div>' +
         '<div class="team-card-arrow">→</div>' +
       '</button>';
     }).join("");
@@ -255,7 +257,7 @@
         if(team) openTeam(team);
       });
     });
-    document.getElementById("syncText").textContent=teams.length+" Hockeyettan-lag laddade";
+    document.getElementById("syncText").textContent=teams.length+" Hockeyettan-lag laddade · Norra + Södra";
   }
 
   function renderTeamLock() {
@@ -2358,29 +2360,44 @@
       .eq("source","swehockey");
     if(compError) throw compError;
     state.competitionById=new Map((competitions||[]).map((row)=>[row.id,row]));
-    const competition=(competitions||[]).find((row)=>row.source_competition_id==="21043");
-    if(!competition) throw new Error("Hockeyettan Norra 2026/27 saknas.");
-    state.competition=competition;
 
+    const leagueCompetitions=(competitions||[])
+      .filter((row)=>["21043","21044"].includes(row.source_competition_id));
+    if(leagueCompetitions.length<2) throw new Error("Båda Hockeyettan-serierna är inte importerade ännu.");
+
+    const competitionIds=leagueCompetitions.map((row)=>row.id);
     const [{data:teams,error:teamError},{data:rosters,error:rosterError}]=await Promise.all([
       client.from("teams").select("id,canonical_name,short_name"),
-      client.from("team_rosters").select("team_id").eq("competition_id",competition.id).eq("is_active",true)
+      client.from("team_rosters").select("team_id,competition_id")
+        .in("competition_id",competitionIds).eq("is_active",true)
     ]);
     if(teamError) throw teamError;
     if(rosterError) throw rosterError;
 
     state.teams=teams||[];
     state.teamById=new Map(state.teams.map((team)=>[team.id,team]));
-    const ids=new Set((rosters||[]).map((row)=>row.team_id));
-    state.competitionTeams=state.teams.filter((team)=>ids.has(team.id));
+    state.teamCompetitionByTeam=new Map();
+    for(const row of rosters||[]){
+      const competition=state.competitionById.get(row.competition_id);
+      if(competition&&!state.teamCompetitionByTeam.has(row.team_id)){
+        state.teamCompetitionByTeam.set(row.team_id,competition);
+      }
+    }
+
+    state.competitionTeams=state.teams.filter((team)=>state.teamCompetitionByTeam.has(team.id));
+    state.competition=leagueCompetitions.find((row)=>row.source_competition_id==="21043")||leagueCompetitions[0];
 
     state.selectedTeamSlug=requestedTeamSlug();
     state.selectedTeam=state.selectedTeamSlug
       ? state.competitionTeams.find((team)=>teamSlug(team.canonical_name)===state.selectedTeamSlug)||null
       : null;
+    state.selectedCompetition=state.selectedTeam
+      ? state.teamCompetitionByTeam.get(state.selectedTeam.id)||null
+      : null;
 
     if(state.selectedTeamSlug&&!state.selectedTeam){
       state.selectedTeamSlug="";
+      state.selectedCompetition=null;
       history.replaceState(null,"",window.location.pathname);
     }
   }
@@ -2416,14 +2433,9 @@
     if (!client) throw new Error("Supabase-klienten kunde inte startas.");
     state.notes=loadLocalNotes();
 
-    const { data: competitions, error: compError } = await client.from("competitions")
-      .select("id,name,season_label,group_name,updated_at,source_competition_id")
-      .eq("source", "swehockey");
-    if (compError) throw compError;
-    state.competitionById = new Map((competitions || []).map((row) => [row.id,row]));
-    const competition = (competitions || []).find((row) => row.source_competition_id === "21043");
-    if (!competition) throw new Error("Hockeyettan Norra 2026/27 saknas.");
-    state.competition = competition;
+    const competition=state.selectedCompetition;
+    if(!competition) throw new Error("Serie saknas för valt Hockeyettan-lag.");
+    state.competition=competition;
 
     const { data: teams, error: teamError } = await client.from("teams")
       .select("id,canonical_name,short_name");
