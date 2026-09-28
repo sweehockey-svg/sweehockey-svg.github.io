@@ -38,7 +38,11 @@
     seenFactIds: new Set(),
     lastQuickFactIds: [],
     liveRefreshBusy: false,
-    notes: []
+    notes: [],
+    aiBrief: null,
+    aiBriefSource: "local",
+    aiBusy: false,
+    aiError: ""
   };
 
   const panels = {
@@ -100,11 +104,8 @@
     },
     ai: {
       kicker: "AI",
-      title: "AI-assistent",
-      cards: [
-        ["Begränsad källa", "AI får endast strukturerad, verifierad data från stats engine och godkända anteckningar."],
-        ["Ingen statistikfantasi", "AI formulerar samtalspunkter men får inte hitta på matchfakta."]
-      ]
+      title: "Talking point-assistent",
+      cards: []
     }
   };
 
@@ -847,6 +848,173 @@
       ).join("")+'</div>';
   }
 
+
+  function aiQuestionBonus(fact,question) {
+    const q=String(question||"").toLocaleLowerCase("sv-SE");
+    if(!q) return 0;
+    const hay=(fact.id+" "+fact.tag+" "+fact.title+" "+fact.text).toLocaleLowerCase("sv-SE");
+    const groups=[
+      [["pp","powerplay","bp","boxplay","utvis"],80],
+      [["mål","goal","gör mål","poäng"],55],
+      [["målvakt","goalie","sv%","gaa"],75],
+      [["h2h","historik","möten","senast mot"],85],
+      [["form","senaste","svit"],70],
+      [["tabell","placering","poäng"],65],
+      [["kedja","lineup","uppställning"],70],
+      [["spelare","poängliga"],45]
+    ];
+    let bonus=0;
+    for(const [terms,score] of groups){
+      if(terms.some((term)=>q.includes(term))&&terms.some((term)=>hay.includes(term))){
+        bonus=Math.max(bonus,score);
+      }
+    }
+    return bonus;
+  }
+
+  function localAiBrief(question="") {
+    const facts=buildInsightFacts()
+      .map((fact)=>({...fact,localRank:Number(fact.score||0)+aiQuestionBonus(fact,question)}))
+      .sort((a,b)=>b.localRank-a.localRank)
+      .slice(0,3);
+
+    return {
+      headline:question
+        ? "Talking points för frågan"
+        : "Mest relevant just nu",
+      talking_points:facts.map((fact)=>({
+        label:fact.tag,
+        text:fact.title+(fact.text?" "+fact.text:""),
+        why_now:fact.editorial
+          ? "Pinnad redaktionell anteckning för den aktuella matchkontexten."
+          : "Hög relevans i den verifierade matchkontexten.",
+        source_refs:[fact.editorial?"editorial_notes":"verified_stats"]
+      })),
+      caution:"Regelbaserad fallback. Ingen extern språkmodell har använts."
+    };
+  }
+
+  function aiMode() {
+    if(state.nextGame?.status==="live") return "live";
+    return "pregame";
+  }
+
+  function aiEditorialPayload() {
+    return currentEditorialNotes()
+      .filter((note)=>note.pinned)
+      .slice(0,12)
+      .map((note)=>({
+        scope_type:note.scope_type,
+        title:note.title||"",
+        body:note.body||"",
+        tags:note.tags||[],
+        pinned:true
+      }));
+  }
+
+  async function requestServerAi(question="") {
+    if(!client||!state.nextGame?.id) return {used:false,reason:"missing_context"};
+    const {data:{session}}=await client.auth.getSession();
+    if(!session?.access_token) return {used:false,reason:"not_authenticated"};
+
+    const {data,error}=await client.functions.invoke("commentator-ai",{
+      body:{
+        game_id:state.nextGame.id,
+        question:String(question||"").trim().slice(0,500),
+        mode:aiMode(),
+        editorial_notes:aiEditorialPayload()
+      }
+    });
+
+    if(error){
+      const message=String(error.message||error);
+      return {used:false,reason:message};
+    }
+    if(!data?.ok||!data?.brief){
+      return {used:false,reason:data?.error||"invalid_response"};
+    }
+    return {used:true,brief:data.brief,model:data.model||"gpt-6-luna"};
+  }
+
+  function aiBriefHtml(brief,source) {
+    if(!brief?.talking_points?.length){
+      return '<div class="notes-empty"><strong>Inga talking points ännu.</strong><span>Matchkontexten är för tunn.</span></div>';
+    }
+    const sourceLabel=source==="server"?"OPENAI · GPT-6 LUNA":"VERIFIERAD FALLBACK";
+    return '<div class="ai-result-head"><span>'+esc(sourceLabel)+'</span><strong>'+esc(brief.headline||"Talking points")+'</strong></div>' +
+      '<div class="ai-points">'+brief.talking_points.slice(0,3).map((point,index)=>
+        '<article class="ai-point">' +
+          '<b>'+String(index+1).padStart(2,"0")+'</b>' +
+          '<div><span>'+esc(point.label||"TALKING POINT")+'</span>' +
+          '<strong>'+esc(point.text||"")+'</strong>' +
+          '<p>'+esc(point.why_now||"")+'</p>' +
+          (Array.isArray(point.source_refs)&&point.source_refs.length
+            ? '<small>'+esc(point.source_refs.join(" · "))+'</small>'
+            : "")+
+          '</div>' +
+        '</article>'
+      ).join("")+'</div>' +
+      (brief.caution?'<div class="ai-caution">'+esc(brief.caution)+'</div>':"");
+  }
+
+  function renderAi() {
+    const brief=state.aiBrief||localAiBrief("");
+    const serverReady=state.aiBriefSource==="server";
+    const statusText=serverReady
+      ? "Svar från servermodellen, byggt på verifierad databasdata."
+      : "Fungerar redan med en regelbaserad fallback. Server-AI kräver inloggning och OPENAI_API_KEY.";
+
+    return '<article class="drawer-card ai-safety"><strong>Ingen fri statistikfantasi</strong><span>Server-AI får match-ID och hämtar själv officiell statistik från databasen. Egna anteckningar skickas separat som redaktionellt material.</span></article>' +
+      '<div class="ai-status '+(serverReady?"ready":"fallback")+'"><span>'+(serverReady?"SERVER-AI":"LOKAL FALLBACK")+'</span><strong>'+esc(statusText)+'</strong></div>' +
+      '<form class="ai-form" id="aiForm">' +
+        '<label><span>FRÅGA / VINKEL</span><textarea id="aiQuestion" rows="3" maxlength="500" placeholder="T.ex. Vad är mest relevant att säga om Väsbys powerplay just nu?"></textarea></label>' +
+        '<div class="ai-form-actions">' +
+          '<button type="button" id="aiReset">MEST RELEVANT NU</button>' +
+          '<button type="submit" class="primary" '+(state.aiBusy?"disabled":"")+'>'+(state.aiBusy?"JOBBAR…":"GENERERA TALKING POINTS")+'</button>' +
+        '</div>' +
+      '</form>' +
+      (state.aiError?'<div class="ai-error">'+esc(state.aiError)+'</div>':"") +
+      '<div class="ai-output">'+aiBriefHtml(brief,state.aiBriefSource)+'</div>';
+  }
+
+  function bindAiUi() {
+    const form=document.getElementById("aiForm");
+    if(!form) return;
+
+    document.getElementById("aiReset")?.addEventListener("click",()=>{
+      state.aiBrief=localAiBrief("");
+      state.aiBriefSource="local";
+      state.aiError="";
+      renderDrawer("ai");
+    });
+
+    form.addEventListener("submit",async(event)=>{
+      event.preventDefault();
+      if(state.aiBusy) return;
+      const question=String(document.getElementById("aiQuestion")?.value||"").trim();
+      state.aiBusy=true;
+      state.aiError="";
+      state.aiBrief=localAiBrief(question);
+      state.aiBriefSource="local";
+      renderDrawer("ai");
+
+      const result=await requestServerAi(question);
+      state.aiBusy=false;
+      if(result.used){
+        state.aiBrief=result.brief;
+        state.aiBriefSource="server";
+        state.aiError="";
+      }else if(result.reason==="not_authenticated"){
+        state.aiError="Server-AI är förberedd men kräver Supabase-inloggning. Fallbacken ovan använder bara verifierad cockpit-data.";
+      }else if(String(result.reason||"").includes("ai_not_configured")){
+        state.aiError="OPENAI_API_KEY är inte konfigurerad på servern ännu. Fallbacken används tills dess.";
+      }else if(result.reason&&result.reason!=="missing_context"){
+        state.aiError="Server-AI kunde inte användas just nu. Fallbacken visas.";
+      }
+      renderDrawer("ai");
+    });
+  }
+
   function renderRoster() {
     const groups = [
       ["MÅLVAKTER", (p) => p.position === "GK"],
@@ -1547,7 +1715,7 @@
     drawerKicker.textContent = data.kicker;
     drawerTitle.textContent = data.title;
 
-    drawer.classList.toggle("wide", key === "lines" || key === "h2h" || key === "story" || key === "studio" || key === "notes");
+    drawer.classList.toggle("wide", key === "lines" || key === "h2h" || key === "story" || key === "studio" || key === "notes" || key === "ai");
     if (key === "lines") {
       drawerBody.innerHTML = renderLineups();
     } else if (key === "players") {
@@ -1569,6 +1737,9 @@
     } else if (key === "notes") {
       drawerBody.innerHTML = renderNotes();
       bindNotesUi();
+    } else if (key === "ai") {
+      drawerBody.innerHTML = renderAi();
+      bindAiUi();
     } else {
       drawerBody.innerHTML = data.cards.map(([title, text]) =>
         '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
@@ -1843,7 +2014,10 @@
         ? state.h2hGames.length + " tidigare möten importerade."
         : "Inga tidigare möten importerade ännu."],
       ["Notes", currentEditorialNotes().length + " relevanta anteckningar · " +
-        currentEditorialNotes().filter((note)=>note.pinned).length + " pinnade till STORY."]
+        currentEditorialNotes().filter((note)=>note.pinned).length + " pinnade till STORY."],
+      ["AI", state.aiBriefSource === "server"
+        ? "Server-AI har genererat senaste talking points."
+        : "Verifierad fallback är aktiv. Server-AI är förberedd."]
     ];
 
     const syncState = document.getElementById("syncState");
@@ -1935,6 +2109,12 @@
     renderLatestGame();
   });
 
+  document.getElementById("aiButton")?.addEventListener("click",()=>{
+    document.querySelectorAll(".deck-key").forEach((item)=>item.classList.remove("active"));
+    document.querySelector('.deck-key[data-panel="ai"]')?.classList.add("active");
+    renderDrawer("ai");
+  });
+
   function updateClock() {
     const now = new Date();
     document.getElementById("clock").textContent = now.toLocaleTimeString("sv-SE", {
@@ -1954,6 +2134,7 @@
     state,
     reload: () => loadData().catch(showLoadError),
     openPanel: renderDrawer,
-    editorialNotes: () => currentEditorialNotes()
+    editorialNotes: () => currentEditorialNotes(),
+    aiFallback: (question="") => localAiBrief(question)
   };
 })();
