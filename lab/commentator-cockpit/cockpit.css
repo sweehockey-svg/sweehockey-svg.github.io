@@ -125,3 +125,9 @@ button{font:inherit}
 .event-copy p{margin:3px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#b4c3cc;font-size:9px}
 .event-score b{font-size:13px}
 @media(max-width:760px){.event-feed-live{max-height:360px}.event-row{grid-template-columns:50px minmax(0,1fr) auto}.event-copy p{white-space:normal}}
+
+.match-stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.match-stats-strip>div{padding:9px 10px;border:1px solid #1d3443;border-radius:8px;background:#081a26;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.match-stats-strip span{font-size:7px;font-weight:1000;letter-spacing:.1em;color:#698293}
+.match-stats-strip strong{font-size:12px;white-space:nowrap}
+@media(max-width:760px){.match-stats-strip{grid-template-columns:1fr 1fr}}

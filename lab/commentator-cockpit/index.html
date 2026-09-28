@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#06111a">
   <title>Commentator Cockpit · Hockeyettan</title>
-  <link rel="stylesheet" href="cockpit.css?v=3">
+  <link rel="stylesheet" href="cockpit.css?v=4">
 </head>
 <body>
   <div class="app-shell">
@@ -71,10 +71,10 @@
           </div>
 
           <div class="stat-grid">
-            <div class="stat"><span>SKOTT</span><strong>–</strong><small>–</small></div>
-            <div class="stat"><span>TEKNINGAR</span><strong>–</strong><small>–</small></div>
-            <div class="stat"><span>PP</span><strong>–</strong><small>–</small></div>
-            <div class="stat"><span>PIM</span><strong>–</strong><small>–</small></div>
+            <div class="stat"><span>SKOTT</span><strong id="shotsValue">–</strong><small id="shotsDetail">senaste match</small></div>
+            <div class="stat"><span>RÄDDNINGAR</span><strong id="savesValue">–</strong><small id="savesDetail">senaste match</small></div>
+            <div class="stat"><span>PP</span><strong id="ppValue">–</strong><small id="ppDetail">senaste match</small></div>
+            <div class="stat"><span>PIM</span><strong id="pimValue">–</strong><small id="pimDetail">senaste match</small></div>
           </div>
 
           <div class="section-block">
@@ -169,6 +169,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=1"></script>
-  <script src="cockpit.js?v=3"></script>
+  <script src="cockpit.js?v=4"></script>
 </body>
 </html>

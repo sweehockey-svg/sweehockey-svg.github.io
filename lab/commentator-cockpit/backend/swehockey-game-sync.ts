@@ -312,6 +312,150 @@ function inferEventType(rawType:string) {
   return norm(rawType).replace(/[^a-z0-9åäö]+/g,"_").replace(/^_+|_+$/g,"_") || "event";
 }
 
+function displaySourceName(sourceName:string) {
+  const name = clean(sourceName);
+  const comma = name.indexOf(",");
+  if (comma < 0) return name;
+  return clean(name.slice(comma + 1) + " " + name.slice(0, comma));
+}
+
+function formatPlayerRef(player:{jersey:number,sourceName:string}) {
+  return "#" + player.jersey + " " + displaySourceName(player.sourceName);
+}
+
+function formatEventDescription(row:any) {
+  if (row.event_type === "goal" && row.players.length) {
+    const scorer = formatPlayerRef(row.players[0]);
+    const goalCount = row.actorText.match(/^\s*\d+\.\s*.*?\((\d+)\)/)?.[1] || null;
+    const assists = row.players.slice(1).map(formatPlayerRef);
+    return scorer + (goalCount ? " (" + goalCount + ")" : "") +
+      (assists.length ? " · Ass: " + assists.join(", ") : "");
+  }
+
+  if (row.event_type === "penalty" && row.players[0]) {
+    const reason = clean(row.details).replace(/^[-–—·\s]+/, "");
+    return formatPlayerRef(row.players[0]) + (reason ? " · " + reason : "");
+  }
+
+  if ((row.event_type === "goalie_in" || row.event_type === "goalie_out") && row.players[0]) {
+    return formatPlayerRef(row.players[0]);
+  }
+
+  return [row.actorText,row.details].filter(Boolean).join(" · ") || row.rawType;
+}
+
+function pctValue(text:string|null|undefined) {
+  const n = Number(clean(text).replace("%","").replace(",","."));
+  return Number.isFinite(n) ? n : null;
+}
+
+function clockSeconds(text:string|null|undefined) {
+  const m = clean(text).replace(/[()]/g,"").match(/^(\d+):(\d{2})$/);
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+}
+
+function periodValues(text:string|null|undefined) {
+  const m = clean(text).match(/\((\d+):(\d+):(\d+)(?::(\d+))?\)/);
+  if (!m) return null;
+  return [m[1],m[2],m[3],m[4]].filter(Boolean).map(Number);
+}
+
+function parseSummaryStats(html:string, game:any, lastGoal:any) {
+  const $ = cheerio.load(html);
+  let table:any = null;
+
+  $("table.tblContent").each((_:number,t:any) => {
+    if (table) return;
+    const rows = $(t).children("tbody").children("tr").toArray().map((tr:any)=>
+      $(tr).children("th,td").map((_:number,td:any)=>clean($(td).text())).get()
+    );
+    if (rows.some((cells:string[]) => cells.filter(x => x === "Shots").length >= 2) &&
+        rows.some((cells:string[]) => cells.filter(x => x === "PIM").length >= 2)) {
+      table = $(t);
+    }
+  });
+
+  if (!table) return [];
+
+  const rows = table.children("tbody").children("tr").toArray().map((tr:any)=>
+    $(tr).children("th,td").map((_:number,td:any)=>clean($(td).text())).get()
+  );
+
+  function extractPair(label:string) {
+    const cells = rows.find((r:string[]) => r.filter(x => x === label).length >= 2);
+    if (!cells) return null;
+    const idx1 = cells.indexOf(label);
+    const idx2 = cells.indexOf(label, idx1 + 1);
+    return {
+      homeValue: cells[idx1 + 1] || null,
+      homeExtra: cells[idx1 + 2] || null,
+      awayValue: cells[idx2 + 1] || null,
+      awayExtra: cells[idx2 + 2] || null
+    };
+  }
+
+  const shots = extractPair("Shots");
+  const saves = extractPair("Saves");
+  const pim = extractPair("PIM");
+  const pp = extractPair("PP");
+
+  const homeShots = shots && /^\d+$/.test(shots.homeValue || "") ? Number(shots.homeValue) : null;
+  const awayShots = shots && /^\d+$/.test(shots.awayValue || "") ? Number(shots.awayValue) : null;
+  const homeSaves = saves && /^\d+$/.test(saves.homeValue || "") ? Number(saves.homeValue) : null;
+  const awaySaves = saves && /^\d+$/.test(saves.awayValue || "") ? Number(saves.awayValue) : null;
+  const homePim = pim && /^\d+$/.test(pim.homeValue || "") ? Number(pim.homeValue) : null;
+  const awayPim = pim && /^\d+$/.test(pim.awayValue || "") ? Number(pim.awayValue) : null;
+  const homePpPct = pp ? pctValue(pp.homeValue) : null;
+  const awayPpPct = pp ? pctValue(pp.awayValue) : null;
+  const homePpSeconds = pp ? clockSeconds(pp.homeExtra) : null;
+  const awayPpSeconds = pp ? clockSeconds(pp.awayExtra) : null;
+
+  const homeScore = lastGoal?.home_score ?? game.home_score ?? null;
+  const awayScore = lastGoal?.away_score ?? game.away_score ?? null;
+
+  const homeSavePct = homeSaves !== null && awayShots ? Number(((homeSaves / awayShots) * 100).toFixed(3)) : null;
+  const awaySavePct = awaySaves !== null && homeShots ? Number(((awaySaves / homeShots) * 100).toFixed(3)) : null;
+
+  return [
+    {
+      game_id:game.id,
+      team_id:game.home_team_id,
+      goals:homeScore,
+      shots:homeShots,
+      saves:homeSaves,
+      save_pct:homeSavePct,
+      pim:homePim,
+      power_play_pct:homePpPct,
+      power_play_seconds:homePpSeconds,
+      period_stats:{
+        shots:periodValues(shots?.homeExtra),
+        pim:periodValues(pim?.homeExtra)
+      },
+      source_fragment:{ parser:PARSER_VERSION, side:"home" },
+      source_updated_at:new Date().toISOString(),
+      updated_at:new Date().toISOString()
+    },
+    {
+      game_id:game.id,
+      team_id:game.away_team_id,
+      goals:awayScore,
+      shots:awayShots,
+      saves:awaySaves,
+      save_pct:awaySavePct,
+      pim:awayPim,
+      power_play_pct:awayPpPct,
+      power_play_seconds:awayPpSeconds,
+      period_stats:{
+        shots:periodValues(shots?.awayExtra),
+        pim:periodValues(pim?.awayExtra)
+      },
+      source_fragment:{ parser:PARSER_VERSION, side:"away" },
+      source_updated_at:new Date().toISOString(),
+      updated_at:new Date().toISOString()
+    }
+  ];
+}
+
 function parseEventRows(html:string) {
   const $ = cheerio.load(html);
   let eventTable:any = null;
@@ -398,7 +542,7 @@ async function syncEvents(game:any, eventId:string, htmlItem:any, roster:any[]) 
       strength:row.strength,
       home_score:row.home_score,
       away_score:row.away_score,
-      description:[row.actorText,row.details].filter(Boolean).join(" · ") || row.rawType,
+      description:formatEventDescription(row),
       is_active:true,
       source_hash:sourceKey,
       source_fragment:{
@@ -495,7 +639,9 @@ async function syncEvents(game:any, eventId:string, htmlItem:any, roster:any[]) 
     last_seen_at:new Date().toISOString(),
     updated_at:new Date().toISOString()
   };
-  const lastGoal = [...rows].reverse().find((r:any)=>r.home_score !== null && r.away_score !== null);
+  const lastGoal = rows
+    .filter((r:any)=>r.home_score !== null && r.away_score !== null)
+    .sort((a:any,b:any)=>(b.event_seconds ?? -1) - (a.event_seconds ?? -1))[0] || null;
   if (lastGoal) {
     update.home_score = lastGoal.home_score;
     update.away_score = lastGoal.away_score;
@@ -507,7 +653,18 @@ async function syncEvents(game:any, eventId:string, htmlItem:any, roster:any[]) 
   const { error: gameUpdateError } = await admin.from("games").update(update).eq("id",game.id);
   if (gameUpdateError) throw gameUpdateError;
 
-  return { events:eventPayload.length, participants:participants.length };
+  const summaryStats = parseSummaryStats(htmlItem.text, game, lastGoal);
+  if (summaryStats.length) {
+    const { error: statsError } = await admin.from("team_game_stats")
+      .upsert(summaryStats,{onConflict:"game_id,team_id"});
+    if (statsError) throw statsError;
+  }
+
+  return {
+    events:eventPayload.length,
+    participants:participants.length,
+    team_stats:summaryStats.length
+  };
 }
 
 async function syncGameData(game:any, eventId:string, homeName:string, awayName:string) {
@@ -538,6 +695,8 @@ async function syncGameData(game:any, eventId:string, homeName:string, awayName:
 
 Deno.serve(async (req:Request) => {
   const started = Date.now();
+  const requestUrl = new URL(req.url);
+  const force = requestUrl.searchParams.get("force") === "1";
   try {
     const candidate = req.headers.get("x-sync-token") || "";
     const { data:valid, error:authError } = await admin.rpc("validate_swehockey_sync_token",{candidate});
@@ -603,9 +762,14 @@ Deno.serve(async (req:Request) => {
         .eq("is_current",true);
       if (lineupCountError) throw lineupCountError;
 
+      const { count:teamStatsCount, error:teamStatsCountError } = await admin.from("team_game_stats")
+        .select("id",{count:"exact",head:true})
+        .eq("game_id",latestFinal.id);
+      if (teamStatsCountError) throw teamStatsCountError;
+
       const legacyNumeric = /^\d+$/.test(latestFinal.source_game_id || "") ? latestFinal.source_game_id : null;
       const finalEventId = latestFinal.source_event_game_id || legacyNumeric;
-      if (((eventCount || 0) === 0 || (lineupCount || 0) === 0) && finalEventId) {
+      if ((force || (eventCount || 0) === 0 || (lineupCount || 0) === 0 || (teamStatsCount || 0) < 2) && finalEventId) {
         output.bootstrap = await syncGameData(
           latestFinal,
           finalEventId,
@@ -617,6 +781,7 @@ Deno.serve(async (req:Request) => {
           skipped:true,
           existing_events:eventCount || 0,
           existing_lineups:lineupCount || 0,
+          existing_team_stats:teamStatsCount || 0,
           eventId:finalEventId
         };
       }

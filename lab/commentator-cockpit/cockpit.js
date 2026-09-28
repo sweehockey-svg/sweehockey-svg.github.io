@@ -20,7 +20,8 @@
     vasbyForm: [],
     opponentForm: [],
     latestVasbyGame: null,
-    latestEvents: []
+    latestEvents: [],
+    latestTeamStats: new Map()
   };
 
   const panels = {
@@ -141,6 +142,80 @@
     return "tie";
   }
 
+  function formatPct(value) {
+    if (value == null || value === "") return "–";
+    const n = Number(value);
+    return Number.isFinite(n) ? n.toLocaleString("sv-SE", { maximumFractionDigits: 1 }) + "%" : "–";
+  }
+
+  function formatClockSeconds(value) {
+    if (value == null || value === "") return "";
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "";
+    const minutes = Math.floor(n / 60);
+    const seconds = Math.floor(n % 60);
+    return minutes + ":" + String(seconds).padStart(2, "0");
+  }
+
+  function latestStatsPair() {
+    const game = state.latestVasbyGame;
+    if (!game) return { home: null, away: null };
+    return {
+      home: state.latestTeamStats.get(game.home_team_id) || null,
+      away: state.latestTeamStats.get(game.away_team_id) || null
+    };
+  }
+
+  function statPair(a, b, formatter = (v) => v ?? "–") {
+    return formatter(a) + "–" + formatter(b);
+  }
+
+  function renderMatchStats() {
+    const game = state.latestVasbyGame;
+    if (!game) return;
+    const { home, away } = latestStatsPair();
+    const homeName = getTeamName(game.home_team_id);
+    const awayName = getTeamName(game.away_team_id);
+    const detail = shortTeam(homeName) + "–" + shortTeam(awayName);
+
+    document.getElementById("shotsValue").textContent =
+      statPair(home?.shots, away?.shots);
+    document.getElementById("shotsDetail").textContent = detail;
+
+    document.getElementById("savesValue").textContent =
+      statPair(home?.saves, away?.saves);
+    document.getElementById("savesDetail").textContent = detail;
+
+    document.getElementById("ppValue").textContent =
+      statPair(home?.power_play_pct, away?.power_play_pct, formatPct);
+    const ppTimes = [formatClockSeconds(home?.power_play_seconds), formatClockSeconds(away?.power_play_seconds)]
+      .filter(Boolean);
+    document.getElementById("ppDetail").textContent =
+      ppTimes.length === 2 ? ppTimes.join("–") : detail;
+
+    document.getElementById("pimValue").textContent =
+      statPair(home?.pim, away?.pim);
+    document.getElementById("pimDetail").textContent = detail;
+  }
+
+  function matchStatsStripHtml() {
+    const game = state.latestVasbyGame;
+    if (!game) return "";
+    const { home, away } = latestStatsPair();
+    if (!home && !away) return "";
+    const items = [
+      ["SKOTT", statPair(home?.shots, away?.shots)],
+      ["RÄDDNINGAR", statPair(home?.saves, away?.saves)],
+      ["PP", statPair(home?.power_play_pct, away?.power_play_pct, formatPct)],
+      ["PIM", statPair(home?.pim, away?.pim)]
+    ];
+    return '<div class="match-stats-strip">' +
+      items.map(([label, value]) =>
+        '<div><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>'
+      ).join("") +
+    '</div>';
+  }
+
   function renderForm(elementId, games, teamId) {
     const el = document.getElementById(elementId);
     if (!el) return;
@@ -198,6 +273,7 @@
         '</div>' +
         '<div class="recent-game-foot">' + esc(game.venue_name || "") + ' · ' + state.latestEvents.length + ' importerade händelser</div>' +
       '</article>' +
+      matchStatsStripHtml() +
       eventRows;
   }
 
@@ -377,6 +453,14 @@
       state.latestEvents = events || [];
     }
 
+    if (state.latestVasbyGame) {
+      const { data: teamStats, error: teamStatsError } = await client.from("team_game_stats")
+        .select("team_id,goals,shots,saves,save_pct,pim,power_play_pct,power_play_seconds,period_stats")
+        .eq("game_id", state.latestVasbyGame.id);
+      if (teamStatsError) throw teamStatsError;
+      state.latestTeamStats = new Map((teamStats || []).map((row) => [row.team_id, row]));
+    }
+
     panels.live.cards = [
       ["Matchcollector", state.latestEvents.length + " händelser lästa från senaste Väsby-matchen."],
       ["Nästa match-ID", state.nextGame.source_event_game_id
@@ -409,6 +493,7 @@
     renderForm("awayFormDots", state.opponentForm, state.opponent.id);
 
     renderStandingsQuick();
+    renderMatchStats();
     renderLatestGame();
     renderFacts();
 
