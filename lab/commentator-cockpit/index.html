@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#06111a">
+  <title>Commentator Cockpit · Hockeyettan</title>
+  <link rel="stylesheet" href="cockpit.css?v=1">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">HC</div>
+        <div>
+          <div class="eyebrow">HOCKEYETTAN · COMMENTATOR TOOL</div>
+          <h1>Commentator Cockpit</h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="sync-state" id="syncState">
+          <span class="sync-dot"></span>
+          <span>Databas klar · collector väntar</span>
+        </div>
+        <div class="clock" id="clock">--:--:--</div>
+      </div>
+    </header>
+
+    <main class="cockpit">
+      <section class="match-hero">
+        <div class="match-meta">
+          <span class="live-pill">NÄSTA MATCH</span>
+          <span id="competitionLabel">Hockeyettan</span>
+          <span>·</span>
+          <span id="venueLabel">Arena hämtas från Swehockey</span>
+        </div>
+
+        <div class="scoreboard">
+          <div class="team home">
+            <div class="team-badge">VÄS</div>
+            <div>
+              <small>HEMMA</small>
+              <strong id="homeName">Väsby IK HK</strong>
+            </div>
+          </div>
+
+          <div class="score-center">
+            <div class="score"><span id="homeScore">–</span><b>:</b><span id="awayScore">–</span></div>
+            <div class="period" id="gameState">Ingen match laddad</div>
+          </div>
+
+          <div class="team away">
+            <div>
+              <small>BORTA</small>
+              <strong id="awayName">Motståndare</strong>
+            </div>
+            <div class="team-badge muted">—</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <aside class="panel match-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">MATCHLÄGE</span>
+              <h2>Överblick</h2>
+            </div>
+            <span class="panel-status">V1</span>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat"><span>SKOTT</span><strong>–</strong><small>–</small></div>
+            <div class="stat"><span>TEKNINGAR</span><strong>–</strong><small>–</small></div>
+            <div class="stat"><span>PP</span><strong>–</strong><small>–</small></div>
+            <div class="stat"><span>PIM</span><strong>–</strong><small>–</small></div>
+          </div>
+
+          <div class="section-block">
+            <div class="section-title"><span>FORM</span><small>SENASTE 5</small></div>
+            <div class="form-row">
+              <span>Väsby</span>
+              <div class="form-dots"><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+            <div class="form-row">
+              <span>Motståndare</span>
+              <div class="form-dots"><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+          </div>
+
+          <div class="section-block">
+            <div class="section-title"><span>TABELL</span><small>LIVE NÄR DATA FINNS</small></div>
+            <div class="table-placeholder">
+              <div><b>–</b><span>Väsby IK HK</span><em>– p</em></div>
+              <div><b>–</b><span>Motståndare</span><em>– p</em></div>
+            </div>
+          </div>
+        </aside>
+
+        <section class="panel event-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">MATCHFEED</span>
+              <h2>Senaste händelser</h2>
+            </div>
+            <button class="ghost-button" id="clearDemo" type="button">RENSA</button>
+          </div>
+
+          <div class="empty-state" id="eventFeed">
+            <div class="empty-icon">↯</div>
+            <strong>Väntar på Swehockey-collectorn</strong>
+            <p>När liveflödet kopplas in hamnar mål, utvisningar och målvaktsbyten här automatiskt.</p>
+          </div>
+        </section>
+
+        <aside class="panel assistant-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker yellow">ASSISTENT</span>
+              <h2>Snabbfakta</h2>
+            </div>
+            <span class="assistant-light">●</span>
+          </div>
+
+          <div class="fact-stack" id="factStack">
+            <article class="fact-card primary">
+              <span>DATASTATUS</span>
+              <strong>Databasen är skapad och cockpitens frontend är igång.</strong>
+              <p>Nästa steg är att mata in riktig Hockeyettan-data från Swehockey.</p>
+            </article>
+            <article class="fact-card">
+              <span>NÄSTA</span>
+              <strong>Importera Hockeyettan Norra 2026/27</strong>
+              <p>Serie, lag, Väsbys roster, matcher och tabell blir första riktiga datatestet.</p>
+            </article>
+          </div>
+
+          <button class="ai-button" type="button" disabled>
+            <span>AI</span>
+            <strong>Talking point</strong>
+            <small>Aktiveras när verifierad matchdata finns</small>
+          </button>
+        </aside>
+      </section>
+
+      <section class="drawer" id="drawer">
+        <div class="drawer-head">
+          <div>
+            <span class="panel-kicker" id="drawerKicker">MATCH</span>
+            <h2 id="drawerTitle">Matchöversikt</h2>
+          </div>
+          <button class="close-button" id="closeDrawer" type="button" aria-label="Stäng">×</button>
+        </div>
+        <div class="drawer-body" id="drawerBody"></div>
+      </section>
+    </main>
+
+    <nav class="deck" aria-label="Cockpit navigation">
+      <button class="deck-key active" data-panel="match"><span>01</span><strong>MATCH</strong></button>
+      <button class="deck-key" data-panel="lines"><span>02</span><strong>KEDJOR</strong></button>
+      <button class="deck-key" data-panel="live"><span>03</span><strong>LIVE</strong></button>
+      <button class="deck-key" data-panel="story"><span>04</span><strong>STORY</strong></button>
+      <button class="deck-key" data-panel="h2h"><span>05</span><strong>H2H</strong></button>
+      <button class="deck-key" data-panel="studio"><span>06</span><strong>STUDIO</strong></button>
+      <button class="deck-key accent" data-panel="ai"><span>07</span><strong>AI</strong></button>
+    </nav>
+  </div>
+
+  <script src="config.js?v=1"></script>
+  <script src="cockpit.js?v=1"></script>
+</body>
+</html>
