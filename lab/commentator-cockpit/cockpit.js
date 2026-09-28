@@ -265,6 +265,33 @@
     return Boolean(state.authUser&&effectiveAccessForTeam(teamId));
   }
 
+  function allowedCommentatorTeams() {
+    return state.accessRows
+      .filter((row)=>row.active&&row.role==="commentator"&&row.team_id)
+      .map((row)=>state.teamById.get(row.team_id))
+      .filter(Boolean);
+  }
+
+  function selectTeamInPlace(team) {
+    if(!team) return false;
+    state.selectedTeam=team;
+    state.selectedTeamSlug=teamSlug(team.canonical_name);
+    state.selectedCompetition=state.teamCompetitionByTeam.get(team.id)||null;
+    state.teamDataLoaded=false;
+    const url=new URL(window.location.href);
+    url.searchParams.set("team",state.selectedTeamSlug);
+    history.replaceState(null,"",url.pathname+url.search+url.hash);
+    return true;
+  }
+
+  function normalizeTeamSelectionForAccess() {
+    if(!state.authUser||globalAdminAccess()) return false;
+    const allowed=allowedCommentatorTeams();
+    if(allowed.length!==1) return false;
+    if(state.selectedTeam&&canAccessTeam(state.selectedTeam.id)) return false;
+    return selectTeamInPlace(allowed[0]);
+  }
+
   function setRouteScreen(name) {
     document.getElementById("homeScreen")?.classList.toggle("hidden",name!=="home");
     document.getElementById("lockScreen")?.classList.toggle("hidden",name!=="lock");
@@ -985,6 +1012,7 @@
     if(nextUser){
       try{ localStorage.removeItem(AUTH_PENDING_TEAM_KEY); }catch{}
       await loadAccessForCurrentUser();
+      normalizeTeamSelectionForAccess();
       const includeGuest=previousId!==nextUser.id && readNotesFromStorage(noteStorageKey(null)).length>0;
       state.notes=mergeNoteSets(
         readNotesFromStorage(noteStorageKey(nextUser.id)),
@@ -2489,7 +2517,7 @@
     state.access=effectiveAccessForTeam(state.selectedTeam.id);
     if(!state.teamDataLoaded){
       setRouteScreen("lock");
-      document.getElementById("lockBadge").textContent=shortTeam(state.selectedTeam.canonical_name);
+      document.getElementById("lockBadge").innerHTML=teamLogoMarkup(state.selectedTeam.canonical_name,"lock-team-logo");
       document.getElementById("lockTeamName").textContent=state.selectedTeam.canonical_name;
       document.getElementById("lockMessage").textContent="Behörighet godkänd. Laddar lagets cockpit…";
       await loadData();
