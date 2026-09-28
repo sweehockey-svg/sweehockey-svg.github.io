@@ -1739,3 +1739,40 @@ html[lang="fi"] .opening-commentator>.commentator-placeholder{
 html[lang="de"] .opening-commentator>.commentator-placeholder{
   background:linear-gradient(160deg,#292123,#111113)!important;
 }
+
+
+/* v124: player nationality flags. */
+.player-flag{
+  position:static!important;
+  inset:auto!important;
+  display:inline-block!important;
+  width:24px!important;
+  height:18px!important;
+  min-width:24px!important;
+  max-width:24px!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  transform:none!important;
+  filter:none!important;
+  margin:0 7px 0 0!important;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:2px;
+  box-shadow:0 1px 5px rgba(0,0,0,.35)!important;
+  vertical-align:-3px;
+}
+.player-info .player-flag{
+  width:18px!important;
+  height:14px!important;
+  min-width:18px!important;
+  max-width:18px!important;
+  margin-right:5px!important;
+  vertical-align:-2px;
+}
+.spotlight-copy h2 .player-flag{
+  width:32px!important;
+  height:24px!important;
+  min-width:32px!important;
+  max-width:32px!important;
+  margin-right:10px!important;
+  vertical-align:-3px;
+}
