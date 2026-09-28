@@ -11,7 +11,7 @@ const COMPETITION_SOURCE_ID = "21043";
 const VASBY_NAME = "Väsby IK HK";
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v2";
+const PARSER_VERSION = "game-sync-v4";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -100,13 +100,21 @@ async function logFetch(item: any, entityType: string, entityKey: string) {
 function parsePlayerText(text: string) {
   const m = clean(text).match(/^(\d+)\.\s*(.+)$/);
   if (!m) return null;
-  return { jersey: Number(m[1]), sourceName: clean(m[2]).replace(/\s*\(\d+\)\s*$/, "") };
+  const rawName=clean(m[2]);
+  const positionMatch=rawName.match(/\s*\((RD|LD|RW|LW|CE|GK)\)\s*$/i);
+  return {
+    jersey:Number(m[1]),
+    sourceName:rawName
+      .replace(/\s*\((RD|LD|RW|LW|CE|GK)\)\s*$/i,"")
+      .replace(/\s*\(\d+\)\s*$/,""),
+    listedPosition:positionMatch ? positionMatch[1].toUpperCase() : null
+  };
 }
 
 function parsePlayerList(text: string) {
   const normalized = clean(text);
   const segments = normalized.match(/\d+\.\s*.*?(?=\d+\.\s*|$)/g) || [];
-  return segments.map(parsePlayerText).filter(Boolean) as Array<{jersey:number,sourceName:string}>;
+  return segments.map(parsePlayerText).filter(Boolean) as Array<{jersey:number,sourceName:string,listedPosition?:string|null}>;
 }
 
 function parseElapsed(text: string) {
@@ -219,7 +227,10 @@ function parseLineup(html: string, game: any, homeName: string, awayName: string
 
     const lineLabel = cells.find((x:string)=>/^\d+(?:st|nd|rd|th) Line$/i.test(x));
     const hasGoalies = cells.some((x:string)=>x === "Goalies");
-    const playerCells = cells.map(parsePlayerText).filter(Boolean) as Array<{jersey:number,sourceName:string}>;
+    const playerCells = cells.map((cell:string,cellIndex:number)=>({
+      cellIndex,
+      player:parsePlayerText(cell)
+    })).filter((item:any)=>item.player) as Array<{cellIndex:number,player:{jersey:number,sourceName:string,listedPosition?:string|null}}>;
     const blankRow = cells.every((x:string)=>!x);
 
     if (blankRow) {
@@ -238,7 +249,9 @@ function parseLineup(html: string, game: any, homeName: string, awayName: string
     }
 
     if (!playerCells.length) continue;
-    for (const p of playerCells) {
+    for (let playerIndex=0; playerIndex<playerCells.length; playerIndex++) {
+      const item = playerCells[playerIndex];
+      const p = item.player;
       let goalieRole:string|null = null;
       let position:string|null = null;
       if (goalieMode) {
@@ -246,6 +259,22 @@ function parseLineup(html: string, game: any, homeName: string, awayName: string
         goalieCounts.set(currentTeamId,next);
         goalieRole = next === 1 ? "listed_1" : "listed_2";
         position = "GK";
+      } else if (currentLine) {
+        const defenseRow =
+          cells.length >= 5 ||
+          (cells.length === 4 && !lineLabel && playerCells.length <= 2);
+
+        if (defenseRow) {
+          position = playerCells.length === 2
+            ? (["RD","LD"][playerIndex] || null)
+            : (p.listedPosition || null);
+        } else {
+          const slotOffset = lineLabel ? 1 : 0;
+          const forwardIndex = item.cellIndex - slotOffset;
+          position = ["RW","CE","LW"][forwardIndex] || p.listedPosition || null;
+        }
+      } else if (p.listedPosition) {
+        position = p.listedPosition;
       }
       parsed.push({
         team_id:currentTeamId,
@@ -255,7 +284,12 @@ function parseLineup(html: string, game: any, homeName: string, awayName: string
         line_number:goalieMode ? null : currentLine,
         goalie_role:goalieRole,
         is_extra:currentLine === null && !goalieMode,
-        source_fragment:{ cells }
+        source_fragment:{
+          cells,
+          cell_index:item.cellIndex,
+          row_player_index:playerIndex,
+          row_player_count:playerCells.length
+        }
       });
     }
   }
@@ -1007,6 +1041,31 @@ async function syncEvents(game:any, eventId:string, htmlItem:any, roster:any[]) 
   };
 }
 
+async function syncFinalLineupOnly(game:any) {
+  const eventId = game.source_event_game_id || (/^\d+$/.test(game.source_game_id || "") ? game.source_game_id : null);
+  if (!eventId) return { skipped:true,reason:"missing_event_id" };
+
+  const { data:teams, error:teamsError }=await admin.from("teams")
+    .select("id,canonical_name")
+    .in("id",[game.home_team_id,game.away_team_id]);
+  if (teamsError) throw teamsError;
+  const map=new Map((teams || []).map((t:any)=>[t.id,t.canonical_name]));
+  const homeName=map.get(game.home_team_id) || "";
+  const awayName=map.get(game.away_team_id) || "";
+  if(!homeName || !awayName) return { skipped:true,reason:"missing_team_name" };
+
+  const lineupHtml=await fetchHtml(`/Game/LineUps/${eventId}`);
+  await logFetch(lineupHtml,"game_lineup",eventId);
+
+  const { data:roster, error:rosterError }=await admin.from("team_rosters")
+    .select("team_id,player_id,jersey_number,source_name,position,is_active")
+    .eq("competition_id",game.competition_id)
+    .in("team_id",[game.home_team_id,game.away_team_id]);
+  if (rosterError) throw rosterError;
+
+  return await syncLineup(game,eventId,lineupHtml,homeName,awayName,roster || []);
+}
+
 async function syncFinalPlayerSummaryOnly(game:any) {
   const eventId = game.source_event_game_id || (/^\d+$/.test(game.source_game_id || "") ? game.source_game_id : null);
   if (!eventId) return { skipped:true,reason:"missing_event_id" };
@@ -1229,15 +1288,19 @@ Deno.serve(async (req:Request) => {
 
       if(recentFinals.length) {
         const ids=recentFinals.map((g:any)=>g.id);
-        const [playerRows,goalieRows]=await Promise.all([
+        const [playerRows,goalieRows,lineupRows]=await Promise.all([
           admin.from("player_game_stats").select("game_id").in("game_id",ids),
-          admin.from("goalie_game_stats").select("game_id").in("game_id",ids)
+          admin.from("goalie_game_stats").select("game_id").in("game_id",ids),
+          admin.from("game_lineup_revisions").select("game_id").in("game_id",ids).eq("is_current",true)
         ]);
         if(playerRows.error) throw playerRows.error;
         if(goalieRows.error) throw goalieRows.error;
+        if(lineupRows.error) throw lineupRows.error;
 
         const playerGames=new Set((playerRows.data || []).map((r:any)=>r.game_id));
         const goalieGames=new Set((goalieRows.data || []).map((r:any)=>r.game_id));
+        const lineupGames=new Set((lineupRows.data || []).map((r:any)=>r.game_id));
+
         const missing=recentFinals.find((g:any)=>
           !!g.source_event_game_id && (!playerGames.has(g.id) || !goalieGames.has(g.id))
         );
@@ -1250,6 +1313,27 @@ Deno.serve(async (req:Request) => {
           };
         } else {
           output.backfill={skipped:true,covered_games:recentFinals.length};
+        }
+
+        const latestForFocus=[...new Map(
+          focusTeamIds.map((teamId:string)=>[
+            teamId,
+            recentFinals.find((g:any)=>g.home_team_id===teamId || g.away_team_id===teamId) || null
+          ])
+        ).values()].filter(Boolean) as any[];
+
+        const missingLineup=latestForFocus.find((g:any)=>
+          !!g.source_event_game_id && !lineupGames.has(g.id)
+        );
+
+        if(missingLineup) {
+          output.lineup_backfill={
+            game_id:missingLineup.id,
+            source_event_game_id:missingLineup.source_event_game_id,
+            result:await syncFinalLineupOnly(missingLineup)
+          };
+        } else {
+          output.lineup_backfill={skipped:true,covered_games:latestForFocus.length};
         }
       }
     }

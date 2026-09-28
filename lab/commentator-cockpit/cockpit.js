@@ -27,7 +27,9 @@
     seasonPlayerStats: [],
     seasonGoalieStats: [],
     recentPlayerStats: [],
-    recentGoalieStats: []
+    recentGoalieStats: [],
+    nextLineup: null,
+    fallbackLineups: new Map()
   };
 
   const panels = {
@@ -41,7 +43,7 @@
     },
     lines: {
       kicker: "KEDJOR",
-      title: "Väsby · trupp",
+      title: "Matchkedjor",
       cards: []
     },
     players: {
@@ -354,6 +356,129 @@
     return value.slice(comma + 1).trim() + " " + value.slice(0, comma).trim();
   }
 
+  function cleanLineupSourceName(sourceName) {
+    return String(sourceName || "").replace(/\s*\((RD|LD|RW|LW|CE|GK)\)\s*$/i, "").trim();
+  }
+
+  async function loadLineup(game) {
+    if (!game?.id) return null;
+    const { data: revision, error: revisionError } = await client.from("game_lineup_revisions")
+      .select("id,game_id,fetched_at,source_updated_at,status,source_url")
+      .eq("game_id", game.id)
+      .eq("is_current", true)
+      .order("fetched_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (revisionError) throw revisionError;
+    if (!revision) return null;
+
+    const { data: players, error: playersError } = await client.from("game_lineup_players")
+      .select("team_id,player_id,source_name,jersey_number,position,line_number,goalie_role,is_extra")
+      .eq("lineup_revision_id", revision.id)
+      .order("line_number", { ascending: true, nullsFirst: true })
+      .order("jersey_number", { ascending: true });
+    if (playersError) throw playersError;
+
+    return { game, revision, players: players || [] };
+  }
+
+  function lineupContextForTeam(teamId) {
+    const official = state.nextLineup?.players?.some((row) => row.team_id === teamId);
+    if (official) {
+      return { ...state.nextLineup, mode: "official" };
+    }
+    const fallback = state.fallbackLineups.get(teamId) || null;
+    return fallback ? { ...fallback, mode: "previous" } : null;
+  }
+
+  function lineupSlot(row, position) {
+    if (!row) {
+      return '<div class="lineup-slot empty"><span>' + esc(position) + '</span><strong>–</strong></div>';
+    }
+    return '<div class="lineup-slot">' +
+      '<span>' + esc(position) + '</span>' +
+      '<b>#' + esc(row.jersey_number ?? "–") + '</b>' +
+      '<strong>' + esc(humanSourceName(cleanLineupSourceName(row.source_name))) + '</strong>' +
+    '</div>';
+  }
+
+  function renderLineupTeam(teamId) {
+    const ctx = lineupContextForTeam(teamId);
+    const teamName = getTeamName(teamId);
+
+    if (!ctx) {
+      return '<section class="lineup-team">' +
+        '<div class="lineup-team-head"><div><span>INGEN LINEUP</span><h3>' + esc(teamName) + '</h3></div></div>' +
+        '<div class="drawer-card"><strong>Uppställning saknas</strong><span>Ingen tidigare lineup är importerad för laget ännu.</span></div>' +
+      '</section>';
+    }
+
+    const rows = ctx.players.filter((row) => row.team_id === teamId);
+    const goalies = rows
+      .filter((row) => row.position === "GK")
+      .sort((a, b) => String(a.goalie_role || "").localeCompare(String(b.goalie_role || "")));
+    const extras = rows.filter((row) => row.line_number == null && row.position !== "GK");
+    const statusLabel = ctx.mode === "official" ? "OFFICIELL LINEUP ✓" : "SENAST ANVÄNDA";
+    const meta = ctx.mode === "official"
+      ? swedishDate(state.nextGame.scheduled_start)
+      : "Från " + swedishDate(ctx.game.scheduled_start);
+
+    const lineHtml = [1,2,3,4].map((lineNumber) => {
+      const line = rows.filter((row) => Number(row.line_number) === lineNumber);
+      const byPos = new Map(line.filter((row) => row.position).map((row) => [row.position, row]));
+      if (!line.length) return "";
+      return '<article class="lineup-line">' +
+        '<div class="lineup-line-head"><strong>' + lineNumber + ':A</strong><span>' + esc(teamName) + '</span></div>' +
+        '<div class="lineup-forwards">' +
+          lineupSlot(byPos.get("LW"), "LW") +
+          lineupSlot(byPos.get("CE"), "C") +
+          lineupSlot(byPos.get("RW"), "RW") +
+        '</div>' +
+        '<div class="lineup-defense">' +
+          lineupSlot(byPos.get("LD"), "LD") +
+          lineupSlot(byPos.get("RD"), "RD") +
+        '</div>' +
+      '</article>';
+    }).join("");
+
+    const goaliesHtml = '<div class="lineup-goalies">' +
+      goalies.map((row, i) =>
+        '<div><span>' + (i === 0 ? "G1" : "G2") + '</span><b>#' + esc(row.jersey_number ?? "–") + '</b><strong>' +
+        esc(humanSourceName(cleanLineupSourceName(row.source_name))) + '</strong></div>'
+      ).join("") +
+    '</div>';
+
+    const extrasHtml = extras.length
+      ? '<div class="lineup-extras"><span>EXTRA</span>' + extras.map((row) =>
+          '<strong>#' + esc(row.jersey_number ?? "–") + ' ' + esc(humanSourceName(cleanLineupSourceName(row.source_name))) + '</strong>'
+        ).join("") + '</div>'
+      : "";
+
+    return '<section class="lineup-team">' +
+      '<div class="lineup-team-head"><div><span class="' + (ctx.mode === "official" ? "official" : "") + '">' + statusLabel + '</span><h3>' + esc(teamName) + '</h3></div><small>' + esc(meta) + '</small></div>' +
+      goaliesHtml +
+      '<div class="lineup-lines">' + lineHtml + '</div>' +
+      extrasHtml +
+    '</section>';
+  }
+
+  function renderLineups() {
+    const officialTeams = state.nextLineup
+      ? new Set(state.nextLineup.players.map((row) => row.team_id))
+      : new Set();
+    const officialReady = officialTeams.has(state.vasby.id) && officialTeams.has(state.opponent.id);
+
+    const intro = officialReady
+      ? '<article class="drawer-card lineup-info official"><strong>Officiell lineup publicerad</strong><span>Uppställningen för nästa match hämtas direkt från Swehockey och ersätter automatiskt tidigare kedjor.</span></article>'
+      : '<article class="drawer-card lineup-info"><strong>Officiell lineup är inte publicerad ännu</strong><span>Visar respektive lags senast importerade uppställning tills nästa matchs lineup kommer. Den byts då ut automatiskt.</span></article>';
+
+    return intro +
+      '<div class="lineup-team-grid">' +
+        renderLineupTeam(state.vasby.id) +
+        renderLineupTeam(state.opponent.id) +
+      '</div>';
+  }
+
   function sourceNameKey(value) {
     return String(value || "").trim().toLocaleLowerCase("sv-SE");
   }
@@ -517,10 +642,9 @@
     drawerKicker.textContent = data.kicker;
     drawerTitle.textContent = data.title;
 
-    if (key === "lines" && state.roster.length) {
-      drawerBody.innerHTML =
-        '<article class="drawer-card"><strong>Aktuell Väsby-trupp</strong><span>Officiella matchkedjor visas här när lineupen publicerats. Tills dess används den aktuella registrerade truppen.</span></article>' +
-        renderRoster();
+    drawer.classList.toggle("wide", key === "lines");
+    if (key === "lines") {
+      drawerBody.innerHTML = renderLineups();
     } else if (key === "players") {
       drawerBody.innerHTML =
         '<article class="drawer-card"><strong>Säsong + senaste 5</strong><span>Säsongstotalen kommer direkt från Swehockey. S5 räknas från de fem senaste Player Summary-rapporterna som finns importerade.</span></article>' +
@@ -630,6 +754,16 @@
     state.opponentForm = opponentForm;
     state.latestVasbyGame = vasbyForm[0] || null;
 
+    const [nextLineup, vasbyFallbackLineup, opponentFallbackLineup] = await Promise.all([
+      loadLineup(state.nextGame),
+      loadLineup(state.vasbyForm[0]),
+      loadLineup(state.opponentForm[0])
+    ]);
+    state.nextLineup = nextLineup;
+    state.fallbackLineups = new Map();
+    if (vasbyFallbackLineup) state.fallbackLineups.set(state.vasby.id, vasbyFallbackLineup);
+    if (opponentFallbackLineup) state.fallbackLineups.set(state.opponent.id, opponentFallbackLineup);
+
     const focusTeamIds = [state.vasby.id, state.opponent.id];
     const recentGameIds = [...new Set([...state.vasbyForm, ...state.opponentForm].map((game) => game.id))];
 
@@ -734,7 +868,9 @@
       ["Nästa match", swedishDate(game.scheduled_start) + " · " + (game.venue_name || "Arena ej angiven")],
       ["Tabell", "Väsby #" + (vasbyStanding?.rank ?? "–") + " (" + (vasbyStanding?.points ?? "–") + " p) · " +
         state.opponent.canonical_name + " #" + (oppStanding?.rank ?? "–") + " (" + (oppStanding?.points ?? "–") + " p)"],
-      ["Trupp", state.roster.length + " aktiva Väsbyspelare importerade från Swehockey."]
+      ["Kedjor", state.nextLineup
+        ? "Officiell lineup för nästa match är importerad."
+        : "Visar senaste kända kedjor tills nästa lineup publiceras."]
     ];
 
     const syncState = document.getElementById("syncState");

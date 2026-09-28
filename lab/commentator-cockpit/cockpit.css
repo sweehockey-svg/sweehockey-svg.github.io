@@ -174,3 +174,41 @@ button{font:inherit}
   .player-stat-head,.player-stat-row{grid-template-columns:minmax(172px,1fr) 26px 26px 26px 28px 32px 38px}
   .player-stat-name small{white-space:normal;line-height:1.35}
 }
+
+/* v7 · match lineups */
+.drawer.wide{width:min(900px,calc(100vw - 36px))}
+.lineup-info{margin-bottom:12px}
+.lineup-info.official{border-color:#2c6649;background:linear-gradient(135deg,rgba(98,214,154,.08),#0a1d2a)}
+.lineup-team-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lineup-team{min-width:0;padding:12px;border:1px solid #1e3747;border-radius:11px;background:#061620}
+.lineup-team-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding-bottom:10px;border-bottom:1px solid #17303e}
+.lineup-team-head span{font-size:7px;font-weight:1000;letter-spacing:.1em;color:#758d9d}
+.lineup-team-head span.official{color:var(--green)}
+.lineup-team-head h3{margin:3px 0 0;font-size:14px}
+.lineup-team-head small{font-size:8px;color:#5d7585;text-align:right}
+.lineup-goalies{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+.lineup-goalies>div{display:grid;grid-template-columns:24px 28px minmax(0,1fr);gap:5px;align-items:center;padding:7px 8px;border:1px solid #1a3140;border-radius:8px;background:#081a26}
+.lineup-goalies span{font-size:7px;font-weight:1000;color:var(--yellow)}
+.lineup-goalies b{font-size:8px;color:#748d9c}
+.lineup-goalies strong{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lineup-lines{display:grid;gap:8px}
+.lineup-line{padding:8px;border:1px solid #19303e;border-radius:9px;background:#071824}
+.lineup-line-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.lineup-line-head strong{font-size:8px;color:var(--yellow);letter-spacing:.08em}
+.lineup-line-head span{font-size:7px;color:#516b7c}
+.lineup-forwards{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.lineup-defense{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;width:68%;margin:5px auto 0}
+.lineup-slot{position:relative;min-width:0;padding:7px 6px 6px;border:1px solid #1d3544;border-radius:7px;background:#0a1d2a;text-align:center}
+.lineup-slot>span{position:absolute;left:5px;top:4px;font-size:6px;font-weight:1000;color:#587181}
+.lineup-slot>b{display:block;color:#8199a8;font-size:7px;margin-bottom:2px}
+.lineup-slot>strong{display:block;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lineup-slot.empty{opacity:.42;border-style:dashed;min-height:42px;display:grid;place-items:center}
+.lineup-slot.empty>strong{font-size:12px;color:#4d6575}
+.lineup-extras{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:9px;padding-top:8px;border-top:1px solid #17303e}
+.lineup-extras>span{font-size:7px;font-weight:1000;color:#6d8494;margin-right:3px}
+.lineup-extras>strong{padding:4px 6px;border-radius:6px;background:#0a1d2a;font-size:8px;color:#9babb5}
+@media(max-width:760px){
+  .drawer.wide{width:calc(100vw - 24px);right:12px}
+  .lineup-team-grid{grid-template-columns:1fr}
+  .lineup-defense{width:76%}
+}
