@@ -33,7 +33,10 @@
     seasonSpecialTeams: [],
     teamGameStats: [],
     competitionById: new Map(),
-    h2hGames: []
+    h2hGames: [],
+    currentEvents: [],
+    seenFactIds: new Set(),
+    lastQuickFactIds: []
   };
 
   const panels = {
@@ -76,10 +79,7 @@
     story: {
       kicker: "STORYLINES",
       title: "Matchens vinklar",
-      cards: [
-        ["Automatiskt", "Form, tidigare möten, streaks och situationsstatistik byggs från verifierad historik."],
-        ["Redaktionellt", "Egna anteckningar kan komplettera med sådant som inte finns i officiell statistik."]
-      ]
+      cards: []
     },
     h2h: {
       kicker: "H2H",
@@ -301,27 +301,307 @@
       eventRows;
   }
 
+  function formSummary(games, teamId) {
+    const summary={games:0,wins:0,ties:0,losses:0,gf:0,ga:0};
+    for(const game of (games || []).slice(0,5)){
+      const home=game.home_team_id===teamId;
+      const gf=Number(home?game.home_score:game.away_score);
+      const ga=Number(home?game.away_score:game.home_score);
+      if(!Number.isFinite(gf)||!Number.isFinite(ga)) continue;
+      summary.games++;
+      summary.gf+=gf;
+      summary.ga+=ga;
+      if(gf>ga) summary.wins++;
+      else if(gf<ga) summary.losses++;
+      else summary.ties++;
+    }
+    return summary;
+  }
+
+  function formText(summary) {
+    return summary.wins+"–"+summary.ties+"–"+summary.losses+" · mål "+summary.gf+"–"+summary.ga;
+  }
+
+  function latestResultText(games, teamId) {
+    const game=games?.[0];
+    if(!game) return null;
+    const home=game.home_team_id===teamId;
+    const gf=Number(home?game.home_score:game.away_score);
+    const ga=Number(home?game.away_score:game.home_score);
+    const opponentId=home?game.away_team_id:game.home_team_id;
+    return {
+      gf,ga,
+      result:gf>ga?"vann":gf<ga?"föll":"spelade oavgjort",
+      opponent:getTeamName(opponentId),
+      game
+    };
+  }
+
+  function topSkater(teamId) {
+    return state.seasonPlayerStats
+      .filter((row)=>row.team_id===teamId && row.position!=="GK" && Number(row.games_played||0)>0)
+      .sort((a,b)=>
+        Number(b.points||0)-Number(a.points||0) ||
+        Number(b.goals||0)-Number(a.goals||0) ||
+        Number(b.shots||0)-Number(a.shots||0)
+      )[0] || null;
+  }
+
+  function leadingGoalie(teamId) {
+    return state.seasonGoalieStats
+      .filter((row)=>row.team_id===teamId && Number(row.games_played||0)>0 && row.save_pct!=null)
+      .sort((a,b)=>
+        Number(b.games_played||0)-Number(a.games_played||0) ||
+        Number(b.save_pct||0)-Number(a.save_pct||0)
+      )[0] || null;
+  }
+
+  function buildInsightFacts() {
+    if(!state.nextGame||!state.vasby||!state.opponent) return [];
+    const facts=[];
+    const game=state.nextGame;
+    const live=game.status==="live";
+    const vasbyStanding=state.standingsByTeam.get(state.vasby.id);
+    const oppStanding=state.standingsByTeam.get(state.opponent.id);
+    const vasbyForm=formSummary(state.vasbyForm,state.vasby.id);
+    const oppForm=formSummary(state.opponentForm,state.opponent.id);
+
+    const add=(fact)=>{
+      if(!fact?.id||!fact?.title||!fact?.text) return;
+      facts.push({story:false,score:50,...fact});
+    };
+
+    if(live){
+      const home=getTeamName(game.home_team_id);
+      const away=getTeamName(game.away_team_id);
+      add({
+        id:"live-score",
+        tag:"LIVE",
+        title:home+" "+game.home_score+"–"+game.away_score+" "+away,
+        text:"Period "+(game.period||"–")+" · "+(game.clock_display||"matchen pågår"),
+        score:220,
+        story:true
+      });
+
+      const latestGoal=state.currentEvents.find((event)=>event.event_type==="goal");
+      if(latestGoal){
+        add({
+          id:"live-latest-goal",
+          tag:"SENASTE MÅLET",
+          title:latestGoal.description || "Mål registrerat",
+          text:(latestGoal.clock_display||"–")+" · P"+(latestGoal.period||"–")+
+            (latestGoal.home_score!=null?" · "+latestGoal.home_score+"–"+latestGoal.away_score:""),
+          score:205,
+          story:true
+        });
+      }
+
+      const vasbyLive=state.teamGameStats.find((row)=>row.game_id===game.id&&row.team_id===state.vasby.id);
+      const oppLive=state.teamGameStats.find((row)=>row.game_id===game.id&&row.team_id===state.opponent.id);
+      if(vasbyLive||oppLive){
+        add({
+          id:"live-special",
+          tag:"SPECIAL TEAMS LIVE",
+          title:"Väsby PP "+specialRecord(vasbyLive?.power_play_goals,vasbyLive?.power_play_opportunities)+
+            " · "+state.opponent.canonical_name+" PP "+specialRecord(oppLive?.power_play_goals,oppLive?.power_play_opportunities),
+          text:"Aktuell matchdata från officiella matchrapporten.",
+          score:180,
+          story:true
+        });
+      }
+    }else{
+      add({
+        id:"next-match",
+        tag:"NÄSTA MATCH",
+        title:state.vasby.canonical_name+" – "+state.opponent.canonical_name,
+        text:swedishDate(game.scheduled_start)+" · "+(game.venue_name||"Arena ej angiven"),
+        score:74
+      });
+    }
+
+    if(vasbyStanding&&oppStanding){
+      add({
+        id:"standings",
+        tag:"TABELL",
+        title:state.opponent.canonical_name+" #"+oppStanding.rank+" · Väsby #"+vasbyStanding.rank,
+        text:"Efter "+oppStanding.games_played+" respektive "+vasbyStanding.games_played+
+          " spelade matcher. Poäng "+oppStanding.points+"–"+vasbyStanding.points+".",
+        score:72,
+        story:true
+      });
+    }
+
+    if(vasbyForm.games||oppForm.games){
+      add({
+        id:"form",
+        tag:"FORM",
+        title:"Väsby "+formText(vasbyForm),
+        text:state.opponent.canonical_name+" "+formText(oppForm)+".",
+        score:104,
+        story:true
+      });
+
+      const vasbyLatest=latestResultText(state.vasbyForm,state.vasby.id);
+      const oppLatest=latestResultText(state.opponentForm,state.opponent.id);
+      if(vasbyLatest&&oppLatest){
+        add({
+          id:"latest-results",
+          tag:"SENAST",
+          title:"Väsby "+vasbyLatest.result+" "+vasbyLatest.gf+"–"+vasbyLatest.ga+" mot "+vasbyLatest.opponent,
+          text:state.opponent.canonical_name+" "+oppLatest.result+" "+oppLatest.gf+"–"+oppLatest.ga+" mot "+oppLatest.opponent+".",
+          score:96,
+          story:true
+        });
+      }
+    }
+
+    if(state.h2hGames.length){
+      const h=h2hSummary();
+      const latest=state.h2hGames[0];
+      const latestScore=h2hScoreFor(latest,state.vasby.id);
+      add({
+        id:"h2h",
+        tag:"H2H",
+        title:"Importerad historik: "+h.vasbyWins+"–"+h.opponentWins+" i vinster · mål "+h.vasbyGoals+"–"+h.opponentGoals,
+        text:"Senaste mötet: Väsby "+latestScore.gf+"–"+latestScore.ga+" "+state.opponent.canonical_name+
+          " · "+shortDateOnly(latest.scheduled_start)+".",
+        score:118,
+        story:true
+      });
+    }
+
+    const vasbySpecial=seasonSpecialForTeam(state.vasby.id);
+    const oppSpecial=seasonSpecialForTeam(state.opponent.id);
+    if(vasbySpecial&&oppSpecial){
+      const vasbyPkKills=Number(vasbySpecial.pk_opportunities||0)-Number(vasbySpecial.pk_goals_against||0);
+      const oppPkKills=Number(oppSpecial.pk_opportunities||0)-Number(oppSpecial.pk_goals_against||0);
+      add({
+        id:"special-teams",
+        tag:"PP / BP",
+        title:"Väsby PP "+specialRecord(vasbySpecial.pp_goals,vasbySpecial.pp_opportunities)+
+          " · BP "+specialRecord(vasbyPkKills,vasbySpecial.pk_opportunities),
+        text:state.opponent.canonical_name+" PP "+specialRecord(oppSpecial.pp_goals,oppSpecial.pp_opportunities)+
+          " · BP "+specialRecord(oppPkKills,oppSpecial.pk_opportunities)+
+          ". Tidigt säsongsunderlag.",
+        score:112,
+        story:true
+      });
+    }
+
+    const vasbyTop=topSkater(state.vasby.id);
+    const oppTop=topSkater(state.opponent.id);
+    if(vasbyTop&&oppTop){
+      add({
+        id:"points-leaders",
+        tag:"POÄNGLIGAN I LAGEN",
+        title:"#"+vasbyTop.jersey_number+" "+humanSourceName(vasbyTop.source_name)+
+          " "+vasbyTop.goals+"+"+vasbyTop.assists+" · "+vasbyTop.points+" P",
+        text:state.opponent.canonical_name+": #"+oppTop.jersey_number+" "+humanSourceName(oppTop.source_name)+
+          " "+oppTop.goals+"+"+oppTop.assists+" · "+oppTop.points+" P.",
+        score:89,
+        story:true
+      });
+    }
+
+    const vasbyGoalie=leadingGoalie(state.vasby.id);
+    const oppGoalie=leadingGoalie(state.opponent.id);
+    if(vasbyGoalie&&oppGoalie){
+      add({
+        id:"goalie-numbers",
+        tag:"MÅLVAKTSSIFFROR",
+        title:humanSourceName(vasbyGoalie.source_name)+" "+formatPct(vasbyGoalie.save_pct),
+        text:humanSourceName(oppGoalie.source_name)+" "+formatPct(oppGoalie.save_pct)+
+          ". Statistik, inte bekräftade starters.",
+        score:67
+      });
+    }
+
+    if(state.nextLineup){
+      add({
+        id:"official-lineup",
+        tag:"LINEUP",
+        title:"Officiell lineup för nästa match är publicerad",
+        text:"KEDJOR-panelen visar Swehockeys aktuella uppställning.",
+        score:150,
+        story:true
+      });
+    }
+
+    const unique=new Map();
+    for(const fact of facts){
+      const old=unique.get(fact.id);
+      if(!old||fact.score>old.score) unique.set(fact.id,fact);
+    }
+    return [...unique.values()].sort((a,b)=>b.score-a.score);
+  }
+
+  function rankedQuickFacts() {
+    return buildInsightFacts().sort((a,b)=>{
+      const aScore=a.score-(state.seenFactIds.has(a.id)?55:0);
+      const bScore=b.score-(state.seenFactIds.has(b.id)?55:0);
+      return bScore-aScore;
+    });
+  }
+
   function renderFacts() {
-    const box = document.getElementById("factStack");
-    if (!box || !state.nextGame || !state.vasby || !state.opponent) return;
-    const vasbyStanding = state.standingsByTeam.get(state.vasby.id);
-    const oppStanding = state.standingsByTeam.get(state.opponent.id);
-    box.innerHTML =
-      '<article class="fact-card primary">' +
-        '<span>NÄSTA MATCH</span>' +
-        '<strong>' + esc(state.vasby.canonical_name) + ' – ' + esc(state.opponent.canonical_name) + '</strong>' +
-        '<p>' + esc(swedishDate(state.nextGame.scheduled_start)) + ' · ' + esc(state.nextGame.venue_name || "Arena ej angiven") + '</p>' +
-      '</article>' +
-      '<article class="fact-card">' +
-        '<span>TABELL JUST NU</span>' +
-        '<strong>Väsby #' + esc(vasbyStanding?.rank ?? "–") + ' · ' + esc(vasbyStanding?.points ?? "–") + ' p</strong>' +
-        '<p>' + esc(state.opponent.canonical_name) + ' #' + esc(oppStanding?.rank ?? "–") + ' · ' + esc(oppStanding?.points ?? "–") + ' p</p>' +
-      '</article>' +
-      '<article class="fact-card">' +
-        '<span>MATCHCOLLECTOR</span>' +
-        '<strong>' + state.latestEvents.length + ' verifierade händelser från senaste matchen</strong>' +
-        '<p>' + state.roster.length + ' aktiva Väsbyspelare i roster. Nästa match-ID bevakas automatiskt när matchen närmar sig.</p>' +
-      '</article>';
+    const box=document.getElementById("factStack");
+    if(!box) return;
+    const facts=rankedQuickFacts();
+    if(!facts.length){
+      box.innerHTML='<article class="fact-card"><span>SNABBFAKTA</span><strong>Ingen verifierad fakta ännu.</strong><p>Väntar på mer matchdata.</p></article>';
+      return;
+    }
+
+    const shown=facts.slice(0,3);
+    state.lastQuickFactIds=shown.map((fact)=>fact.id);
+    box.innerHTML=shown.map((fact,index)=>
+      '<article class="fact-card '+(index===0?"primary":"")+' insight-card">' +
+        '<span>'+esc(fact.tag)+'</span>' +
+        '<strong>'+esc(fact.title)+'</strong>' +
+        '<p>'+esc(fact.text)+'</p>' +
+      '</article>'
+    ).join("") +
+    (facts.length>3
+      ? '<button class="quick-fact-next" id="nextQuickFact" type="button"><span>↻</span><strong>NÄSTA SNABBIS</strong><small>Redan visade fakta prioriteras ned</small></button>'
+      : "");
+
+    const next=document.getElementById("nextQuickFact");
+    if(next){
+      next.addEventListener("click",()=>{
+        state.lastQuickFactIds.forEach((id)=>state.seenFactIds.add(id));
+        const all=buildInsightFacts();
+        if(all.length&&all.every((fact)=>state.seenFactIds.has(fact.id))){
+          state.seenFactIds.clear();
+        }
+        renderFacts();
+      });
+    }
+  }
+
+  function renderStorylines() {
+    const stories=buildInsightFacts()
+      .filter((fact)=>fact.story)
+      .sort((a,b)=>b.score-a.score)
+      .slice(0,7);
+
+    if(!stories.length){
+      return '<article class="drawer-card"><strong>Inga storylines ännu</strong><span>Väntar på verifierad matchdata.</span></article>';
+    }
+
+    const earlySeason=Math.max(
+      Number(state.standingsByTeam.get(state.vasby.id)?.games_played||0),
+      Number(state.standingsByTeam.get(state.opponent.id)?.games_played||0)
+    )<5;
+
+    return (earlySeason
+      ? '<article class="drawer-card story-note"><strong>Tidigt på säsongen</strong><span>Form, tabell och procenttal bygger ännu på få matcher. Cockpiten visar siffrorna men drar inga stora slutsatser av dem.</span></article>'
+      : "") +
+      '<div class="story-grid">'+stories.map((fact,index)=>
+        '<article class="story-card">' +
+          '<div class="story-index">'+String(index+1).padStart(2,"0")+'</div>' +
+          '<div><span>'+esc(fact.tag)+'</span><strong>'+esc(fact.title)+'</strong><p>'+esc(fact.text)+'</p></div>' +
+        '</article>'
+      ).join("")+'</div>';
   }
 
   function renderRoster() {
@@ -834,7 +1114,7 @@
     drawerKicker.textContent = data.kicker;
     drawerTitle.textContent = data.title;
 
-    drawer.classList.toggle("wide", key === "lines" || key === "h2h");
+    drawer.classList.toggle("wide", key === "lines" || key === "h2h" || key === "story");
     if (key === "lines") {
       drawerBody.innerHTML = renderLineups();
     } else if (key === "players") {
@@ -847,6 +1127,8 @@
         renderGoalieStats();
     } else if (key === "special") {
       drawerBody.innerHTML = renderSpecialTeams();
+    } else if (key === "story") {
+      drawerBody.innerHTML = renderStorylines();
     } else if (key === "h2h") {
       drawerBody.innerHTML = renderH2H();
     } else {
@@ -889,11 +1171,13 @@
     state.vasby = state.teams.find((team) => team.canonical_name === "Väsby IK HK");
     if (!state.vasby) throw new Error("Väsby IK HK saknas i importerad data.");
 
+    const activeWindowStart = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
     const { data: nextGames, error: nextError } = await client.from("games")
-      .select("id,scheduled_start,home_team_id,away_team_id,venue_name,status,home_score,away_score,source_game_id,source_event_game_id,game_number")
+      .select("id,scheduled_start,home_team_id,away_team_id,venue_name,status,period,clock_display,home_score,away_score,source_game_id,source_event_game_id,game_number")
       .eq("competition_id", competition.id)
+      .neq("status", "final")
       .or("home_team_id.eq." + state.vasby.id + ",away_team_id.eq." + state.vasby.id)
-      .gt("scheduled_start", new Date().toISOString())
+      .gte("scheduled_start", activeWindowStart)
       .order("scheduled_start", { ascending: true })
       .limit(1);
     if (nextError) throw nextError;
@@ -994,7 +1278,7 @@
         .eq("competition_id", competition.id)
         .in("team_id", focusTeamIds),
       client.from("team_game_stats")
-        .select("game_id,team_id,power_play_opportunities,power_play_goals,power_play_pct,power_play_seconds,penalty_kill_opportunities,penalty_kill_goals_against,penalty_kill_pct")
+        .select("game_id,team_id,goals,shots,saves,pim,power_play_opportunities,power_play_goals,power_play_pct,power_play_seconds,penalty_kill_opportunities,penalty_kill_goals_against,penalty_kill_pct")
         .in("game_id", statGameIds)
         .in("team_id", focusTeamIds)
     ]);
@@ -1042,6 +1326,19 @@
       state.latestEvents = events || [];
     }
 
+    state.currentEvents = [];
+    if (state.nextGame?.status === "live") {
+      const { data: currentEvents, error: currentEventsError } = await client.from("game_events")
+        .select("id,period,clock_display,event_seconds,event_type,team_id,strength,home_score,away_score,description")
+        .eq("game_id", state.nextGame.id)
+        .eq("is_active", true)
+        .order("event_seconds", { ascending: false })
+        .order("ordinal", { ascending: true })
+        .limit(12);
+      if (currentEventsError) throw currentEventsError;
+      state.currentEvents = currentEvents || [];
+    }
+
     if (state.latestVasbyGame) {
       const { data: teamStats, error: teamStatsError } = await client.from("team_game_stats")
         .select("team_id,goals,shots,saves,save_pct,pim,power_play_pct,power_play_seconds,period_stats")
@@ -1074,9 +1371,15 @@
     document.getElementById("awayName").textContent = away?.canonical_name || "Bortalag";
     document.querySelector(".team.home .team-badge").textContent = shortTeam(home?.canonical_name);
     document.querySelector(".team.away .team-badge").textContent = shortTeam(away?.canonical_name);
-    document.getElementById("gameState").textContent = swedishDate(game.scheduled_start);
-    document.getElementById("homeScore").textContent = "–";
-    document.getElementById("awayScore").textContent = "–";
+    const isLive = game.status === "live";
+    const livePill = document.querySelector(".live-pill");
+    livePill.textContent = isLive ? "LIVE" : "NÄSTA MATCH";
+    livePill.classList.toggle("is-live", isLive);
+    document.getElementById("gameState").textContent = isLive
+      ? "P" + (game.period || "–") + " · " + (game.clock_display || "LIVE")
+      : swedishDate(game.scheduled_start);
+    document.getElementById("homeScore").textContent = isLive ? game.home_score : "–";
+    document.getElementById("awayScore").textContent = isLive ? game.away_score : "–";
 
     document.getElementById("homeFormLabel").textContent = "Väsby";
     document.getElementById("awayFormLabel").textContent = state.opponent.canonical_name;
