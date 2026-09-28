@@ -1,29 +1,47 @@
 (() => {
   "use strict";
 
+  const cfg = window.COMMENTATOR_CONFIG;
+  const sb = window.supabase;
+  const client = cfg && sb ? sb.createClient(cfg.supabaseUrl, cfg.supabasePublishableKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+  }) : null;
+
+  const state = {
+    competition: null,
+    teams: [],
+    teamById: new Map(),
+    vasby: null,
+    opponent: null,
+    nextGame: null,
+    standings: [],
+    standingsByTeam: new Map(),
+    roster: [],
+    vasbyForm: [],
+    opponentForm: [],
+    latestVasbyGame: null
+  };
+
   const panels = {
     match: {
       kicker: "MATCH",
       title: "Matchöversikt",
       cards: [
-        ["Nästa match", "När första Swehockey-importen är klar visas datum, tid, arena, domare, tabellposition och form här."],
-        ["Datakälla", "Match- och liveinformationen kommer från Swehockey via vår collector, aldrig direkt från webbläsaren."]
+        ["Nästa match", "Laddar från Hockeyettan Norra 2026/27."],
+        ["Datakälla", "Swehockey → collector → Supabase → cockpit."]
       ]
     },
     lines: {
       kicker: "KEDJOR",
-      title: "Laguppställning",
-      cards: [
-        ["Officiell lineup", "Fyra kedjor, backpar, startande målvakt och reservmålvakt laddas per match."],
-        ["Versionshistorik", "Sena lineupändringar sparas som nya revisioner i stället för att skriva över historiken."]
-      ]
+      title: "Väsby · trupp",
+      cards: []
     },
     live: {
       kicker: "LIVE",
       title: "Live matchdata",
       cards: [
-        ["Eventfeed", "Mål, assists, utvisningar och målvaktsbyten reconcileras mot Swehockey."],
-        ["Status", "Livepollingen aktiveras först när collectorn är driftsatt."]
+        ["Nästa steg", "Matchspecifik eventcollector kopplas mot Swehockey Game/Events."],
+        ["Grunddata", "Schema, resultat, tabell och roster är redan automatiskt synkade."]
       ]
     },
     story: {
@@ -38,24 +56,24 @@
       kicker: "H2H",
       title: "Tidigare möten",
       cards: [
-        ["Senaste möten", "H2H räknas från sparade matcher, inte som en separat sanning i databasen."],
-        ["Kontext", "Hemma/borta, målskillnad, sviter och största seger kan läggas ovanpå samma historik."]
+        ["Datagrund", "H2H räknas från importerade matcher. Äldre säsonger läggs till efter V1-flödet."],
+        ["Ingen dubbellagring", "Senaste möten och sviter beräknas från matchhistoriken när panelen öppnas."]
       ]
     },
     studio: {
       kicker: "STUDIO",
       title: "Periodunderlag",
       cards: [
-        ["Periodslut", "När rapportdata finns byggs ett kompakt pausunderlag med skott, special teams och nyckelhändelser."],
-        ["Samtalspunkter", "Verifierade fakta prioriteras efter det som faktiskt har hänt i matchen."]
+        ["Periodslut", "När live- och rapportcollectorn är inkopplad byggs pausunderlaget automatiskt."],
+        ["Verifierat först", "Skott, special teams och nyckelhändelser kommer från matchens officiella data."]
       ]
     },
     ai: {
       kicker: "AI",
       title: "AI-assistent",
       cards: [
-        ["Begränsad källa", "AI får endast strukturerad, verifierad data från vår stats engine och egna godkända anteckningar."],
-        ["Ingen statistikfantasi", "AI ska formulera samtalspunkter, inte hitta på eller själv samla in matchfakta."]
+        ["Begränsad källa", "AI får endast strukturerad, verifierad data från stats engine och godkända anteckningar."],
+        ["Ingen statistikfantasi", "AI formulerar samtalspunkter men får inte hitta på matchfakta."]
       ]
     }
   };
@@ -65,14 +83,317 @@
   const drawerTitle = document.getElementById("drawerTitle");
   const drawerBody = document.getElementById("drawerBody");
 
+  const esc = (value) => String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+  function shortTeam(name) {
+    if (!name) return "—";
+    return name
+      .replace(/ Hockey| IK| IF| HC| HK/g, "")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 3)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 3) || "—";
+  }
+
+  function swedishDate(iso) {
+    if (!iso) return "Tid ej fastställd";
+    return new Intl.DateTimeFormat("sv-SE", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Europe/Stockholm"
+    }).format(new Date(iso)).replace(",", " ·");
+  }
+
+  function ageOn(dateText, referenceIso) {
+    if (!dateText) return null;
+    const birth = new Date(dateText + "T12:00:00Z");
+    const ref = referenceIso ? new Date(referenceIso) : new Date();
+    let age = ref.getUTCFullYear() - birth.getUTCFullYear();
+    const beforeBirthday =
+      ref.getUTCMonth() < birth.getUTCMonth() ||
+      (ref.getUTCMonth() === birth.getUTCMonth() && ref.getUTCDate() < birth.getUTCDate());
+    if (beforeBirthday) age -= 1;
+    return age;
+  }
+
+  function getTeamName(id) {
+    return state.teamById.get(id)?.canonical_name || "Okänt lag";
+  }
+
+  function resultForTeam(game, teamId) {
+    const home = game.home_team_id === teamId;
+    const gf = home ? game.home_score : game.away_score;
+    const ga = home ? game.away_score : game.home_score;
+    if (gf > ga) return "win";
+    if (gf < ga) return "loss";
+    return "tie";
+  }
+
+  function renderForm(elementId, games, teamId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const results = games.map((game) => resultForTeam(game, teamId));
+    el.innerHTML = Array.from({ length: 5 }, (_, i) =>
+      '<i class="' + (results[i] || "") + '"></i>'
+    ).join("");
+  }
+
+  function renderStandingsQuick() {
+    const el = document.getElementById("standingsQuick");
+    if (!el || !state.vasby || !state.opponent) return;
+    const rows = [state.vasby, state.opponent].map((team) => {
+      const row = state.standingsByTeam.get(team.id);
+      return '<div><b>' + esc(row?.rank ?? "–") + '</b><span>' +
+        esc(team.canonical_name) + '</span><em>' + esc(row?.points ?? "–") + ' p</em></div>';
+    });
+    el.innerHTML = rows.join("");
+  }
+
+  function renderLatestGame() {
+    const feed = document.getElementById("eventFeed");
+    const game = state.latestVasbyGame;
+    if (!feed || !game) return;
+    feed.className = "";
+    feed.innerHTML =
+      '<article class="recent-game">' +
+        '<div class="recent-game-top"><span>SENASTE VÄSBY-MATCH</span><span>' + esc(swedishDate(game.scheduled_start)) + '</span></div>' +
+        '<div class="recent-game-score">' +
+          '<span>' + esc(getTeamName(game.home_team_id)) + '</span>' +
+          '<strong>' + esc(game.home_score) + '–' + esc(game.away_score) + '</strong>' +
+          '<span>' + esc(getTeamName(game.away_team_id)) + '</span>' +
+        '</div>' +
+        '<div class="recent-game-foot">' + esc(game.venue_name || "") + ' · live-eventfeed kopplas i nästa steg</div>' +
+      '</article>';
+  }
+
+  function renderFacts() {
+    const box = document.getElementById("factStack");
+    if (!box || !state.nextGame || !state.vasby || !state.opponent) return;
+    const vasbyStanding = state.standingsByTeam.get(state.vasby.id);
+    const oppStanding = state.standingsByTeam.get(state.opponent.id);
+    box.innerHTML =
+      '<article class="fact-card primary">' +
+        '<span>NÄSTA MATCH</span>' +
+        '<strong>' + esc(state.vasby.canonical_name) + ' – ' + esc(state.opponent.canonical_name) + '</strong>' +
+        '<p>' + esc(swedishDate(state.nextGame.scheduled_start)) + ' · ' + esc(state.nextGame.venue_name || "Arena ej angiven") + '</p>' +
+      '</article>' +
+      '<article class="fact-card">' +
+        '<span>TABELL JUST NU</span>' +
+        '<strong>Väsby #' + esc(vasbyStanding?.rank ?? "–") + ' · ' + esc(vasbyStanding?.points ?? "–") + ' p</strong>' +
+        '<p>' + esc(state.opponent.canonical_name) + ' #' + esc(oppStanding?.rank ?? "–") + ' · ' + esc(oppStanding?.points ?? "–") + ' p</p>' +
+      '</article>' +
+      '<article class="fact-card">' +
+        '<span>TRUPP</span>' +
+        '<strong>' + state.roster.length + ' registrerade Väsbyspelare</strong>' +
+        '<p>Födelsedata, position, fattning, längd, vikt och moder-/youth club där Swehockey rapporterar det.</p>' +
+      '</article>';
+  }
+
+  function renderRoster() {
+    const groups = [
+      ["MÅLVAKTER", (p) => p.position === "GK"],
+      ["BACKAR", (p) => p.position === "LD" || p.position === "RD"],
+      ["FORWARDS", (p) => !["GK", "LD", "RD"].includes(p.position)]
+    ];
+    return groups.map(([title, test]) => {
+      const items = state.roster.filter(test);
+      if (!items.length) return "";
+      return '<section class="roster-section"><h3 class="roster-section-title">' + title + '</h3><div class="roster-list">' +
+        items.map((item) => {
+          const p = item.player;
+          const age = ageOn(p?.birth_date, state.nextGame?.scheduled_start);
+          const meta = [
+            item.position,
+            age != null ? age + " år" : null,
+            p?.shoots_catches ? p.shoots_catches + "-fattad" : null,
+            p?.height_cm ? p.height_cm + " cm" : null,
+            p?.weight_kg ? p.weight_kg + " kg" : null
+          ].filter(Boolean).join(" · ");
+          return '<div class="roster-player">' +
+            '<b>#' + esc(item.jersey_number ?? "–") + '</b>' +
+            '<div><strong>' + esc(p?.display_name || item.source_name || "Okänd spelare") + '</strong>' +
+            '<small>' + esc(meta) + (p?.youth_club ? ' · ' + esc(p.youth_club) : '') + '</small></div>' +
+            '<em>' + esc(item.position || "") + '</em>' +
+          '</div>';
+        }).join("") +
+      '</div></section>';
+    }).join("");
+  }
+
   function renderDrawer(key) {
     const data = panels[key] || panels.match;
     drawerKicker.textContent = data.kicker;
     drawerTitle.textContent = data.title;
-    drawerBody.innerHTML = data.cards.map(([title, text]) =>
-      `<article class="drawer-card"><strong>${title}</strong><span>${text}</span></article>`
-    ).join("");
+
+    if (key === "lines" && state.roster.length) {
+      drawerBody.innerHTML =
+        '<article class="drawer-card"><strong>Aktuell Väsby-trupp</strong><span>Officiella matchkedjor visas här när lineupen publicerats. Tills dess används den aktuella registrerade truppen.</span></article>' +
+        renderRoster();
+    } else {
+      drawerBody.innerHTML = data.cards.map(([title, text]) =>
+        '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
+      ).join("");
+    }
     drawer.classList.add("open");
+  }
+
+  async function loadForm(teamId) {
+    const { data, error } = await client.from("games")
+      .select("id,scheduled_start,home_team_id,away_team_id,home_score,away_score,venue_name,status")
+      .eq("competition_id", state.competition.id)
+      .eq("status", "final")
+      .or("home_team_id.eq." + teamId + ",away_team_id.eq." + teamId)
+      .order("scheduled_start", { ascending: false })
+      .limit(5);
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function loadData() {
+    if (!client) throw new Error("Supabase-klienten kunde inte startas.");
+
+    const { data: competition, error: compError } = await client.from("competitions")
+      .select("id,name,season_label,group_name,updated_at")
+      .eq("source", "swehockey")
+      .eq("source_competition_id", "21043")
+      .single();
+    if (compError) throw compError;
+    state.competition = competition;
+
+    const { data: teams, error: teamError } = await client.from("teams")
+      .select("id,canonical_name,short_name");
+    if (teamError) throw teamError;
+    state.teams = teams || [];
+    state.teamById = new Map(state.teams.map((team) => [team.id, team]));
+    state.vasby = state.teams.find((team) => team.canonical_name === "Väsby IK HK");
+    if (!state.vasby) throw new Error("Väsby IK HK saknas i importerad data.");
+
+    const { data: nextGames, error: nextError } = await client.from("games")
+      .select("id,scheduled_start,home_team_id,away_team_id,venue_name,status,home_score,away_score,source_game_id")
+      .eq("competition_id", competition.id)
+      .or("home_team_id.eq." + state.vasby.id + ",away_team_id.eq." + state.vasby.id)
+      .gt("scheduled_start", new Date().toISOString())
+      .order("scheduled_start", { ascending: true })
+      .limit(1);
+    if (nextError) throw nextError;
+    state.nextGame = nextGames?.[0] || null;
+    if (!state.nextGame) throw new Error("Ingen kommande Väsby-match hittades.");
+
+    const opponentId = state.nextGame.home_team_id === state.vasby.id
+      ? state.nextGame.away_team_id
+      : state.nextGame.home_team_id;
+    state.opponent = state.teamById.get(opponentId);
+    if (!state.opponent) throw new Error("Motståndarlaget saknas.");
+
+    const { data: latestSnapshot, error: snapError } = await client.from("standings_snapshots")
+      .select("id,fetched_at")
+      .eq("competition_id", competition.id)
+      .order("fetched_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (snapError) throw snapError;
+
+    if (latestSnapshot) {
+      const { data: standings, error: standingsError } = await client.from("standings_snapshot_rows")
+        .select("team_id,rank,games_played,wins,ties,losses,goals_for,goals_against,goal_diff,points")
+        .eq("snapshot_id", latestSnapshot.id)
+        .order("rank", { ascending: true });
+      if (standingsError) throw standingsError;
+      state.standings = standings || [];
+      state.standingsByTeam = new Map(state.standings.map((row) => [row.team_id, row]));
+    }
+
+    const { data: rosterRows, error: rosterError } = await client.from("team_rosters")
+      .select("player_id,jersey_number,position,source_name")
+      .eq("competition_id", competition.id)
+      .eq("team_id", state.vasby.id)
+      .eq("is_active", true)
+      .order("jersey_number", { ascending: true });
+    if (rosterError) throw rosterError;
+
+    const playerIds = [...new Set((rosterRows || []).map((row) => row.player_id).filter(Boolean))];
+    let playerMap = new Map();
+    if (playerIds.length) {
+      const { data: players, error: playerError } = await client.from("players")
+        .select("id,display_name,birth_date,nationality_code,shoots_catches,primary_position,height_cm,weight_kg,youth_club")
+        .in("id", playerIds);
+      if (playerError) throw playerError;
+      playerMap = new Map((players || []).map((player) => [player.id, player]));
+    }
+    state.roster = (rosterRows || []).map((row) => ({ ...row, player: playerMap.get(row.player_id) || null }));
+
+    const [vasbyForm, opponentForm] = await Promise.all([
+      loadForm(state.vasby.id),
+      loadForm(state.opponent.id)
+    ]);
+    state.vasbyForm = vasbyForm;
+    state.opponentForm = opponentForm;
+    state.latestVasbyGame = vasbyForm[0] || null;
+
+    render();
+  }
+
+  function render() {
+    const game = state.nextGame;
+    const home = state.teamById.get(game.home_team_id);
+    const away = state.teamById.get(game.away_team_id);
+
+    document.getElementById("competitionLabel").textContent =
+      state.competition.name + " · " + state.competition.season_label;
+    document.getElementById("venueLabel").textContent = game.venue_name || "Arena ej angiven";
+    document.getElementById("homeName").textContent = home?.canonical_name || "Hemmalag";
+    document.getElementById("awayName").textContent = away?.canonical_name || "Bortalag";
+    document.querySelector(".team.home .team-badge").textContent = shortTeam(home?.canonical_name);
+    document.querySelector(".team.away .team-badge").textContent = shortTeam(away?.canonical_name);
+    document.getElementById("gameState").textContent = swedishDate(game.scheduled_start);
+    document.getElementById("homeScore").textContent = "–";
+    document.getElementById("awayScore").textContent = "–";
+
+    document.getElementById("homeFormLabel").textContent = "Väsby";
+    document.getElementById("awayFormLabel").textContent = state.opponent.canonical_name;
+    renderForm("homeFormDots", state.vasbyForm, state.vasby.id);
+    renderForm("awayFormDots", state.opponentForm, state.opponent.id);
+
+    renderStandingsQuick();
+    renderLatestGame();
+    renderFacts();
+
+    const vasbyStanding = state.standingsByTeam.get(state.vasby.id);
+    const oppStanding = state.standingsByTeam.get(state.opponent.id);
+    panels.match.cards = [
+      ["Nästa match", swedishDate(game.scheduled_start) + " · " + (game.venue_name || "Arena ej angiven")],
+      ["Tabell", "Väsby #" + (vasbyStanding?.rank ?? "–") + " (" + (vasbyStanding?.points ?? "–") + " p) · " +
+        state.opponent.canonical_name + " #" + (oppStanding?.rank ?? "–") + " (" + (oppStanding?.points ?? "–") + " p)"],
+      ["Trupp", state.roster.length + " aktiva Väsbyspelare importerade från Swehockey."]
+    ];
+
+    const syncState = document.getElementById("syncState");
+    const syncText = document.getElementById("syncText");
+    syncState.classList.add("ok");
+    syncText.textContent = "Swehockey synkad · " +
+      new Intl.DateTimeFormat("sv-SE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Stockholm" })
+        .format(new Date(state.competition.updated_at));
+  }
+
+  function showLoadError(error) {
+    console.error("Commentator Cockpit data load failed", error);
+    const syncState = document.getElementById("syncState");
+    syncState.classList.add("bad");
+    document.getElementById("syncText").textContent = "Datakoppling misslyckades";
+    document.getElementById("factStack").innerHTML =
+      '<div class="data-error"><strong>Kunde inte läsa Hockeyettan-data.</strong><br>' +
+      esc(error?.message || error) + '</div>';
   }
 
   document.querySelectorAll(".deck-key").forEach((button) => {
@@ -86,12 +407,7 @@
   document.getElementById("closeDrawer").addEventListener("click", () => drawer.classList.remove("open"));
 
   document.getElementById("clearDemo").addEventListener("click", () => {
-    const feed = document.getElementById("eventFeed");
-    feed.innerHTML = `
-      <div class="empty-icon">↯</div>
-      <strong>Ingen eventdata ännu</strong>
-      <p>Den här ytan börjar fyllas när Swehockey-collectorn är ansluten.</p>
-    `;
+    renderLatestGame();
   });
 
   function updateClock() {
@@ -105,9 +421,12 @@
 
   updateClock();
   window.setInterval(updateClock, 1000);
+  loadData().catch(showLoadError);
 
   window.CommentatorCockpit = {
-    config: window.COMMENTATOR_CONFIG || null,
+    config: cfg || null,
+    state,
+    reload: () => loadData().catch(showLoadError),
     openPanel: renderDrawer
   };
 })();

@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#06111a">
   <title>Commentator Cockpit · Hockeyettan</title>
-  <link rel="stylesheet" href="cockpit.css?v=1">
+  <link rel="stylesheet" href="cockpit.css?v=2">
 </head>
 <body>
   <div class="app-shell">
@@ -21,7 +21,7 @@
       <div class="top-actions">
         <div class="sync-state" id="syncState">
           <span class="sync-dot"></span>
-          <span>Databas klar · collector väntar</span>
+          <span id="syncText">Laddar Hockeyettan-data…</span>
         </div>
         <div class="clock" id="clock">--:--:--</div>
       </div>
@@ -80,18 +80,18 @@
           <div class="section-block">
             <div class="section-title"><span>FORM</span><small>SENASTE 5</small></div>
             <div class="form-row">
-              <span>Väsby</span>
-              <div class="form-dots"><i></i><i></i><i></i><i></i><i></i></div>
+              <span id="homeFormLabel">Väsby</span>
+              <div class="form-dots" id="homeFormDots"><i></i><i></i><i></i><i></i><i></i></div>
             </div>
             <div class="form-row">
-              <span>Motståndare</span>
-              <div class="form-dots"><i></i><i></i><i></i><i></i><i></i></div>
+              <span id="awayFormLabel">Motståndare</span>
+              <div class="form-dots" id="awayFormDots"><i></i><i></i><i></i><i></i><i></i></div>
             </div>
           </div>
 
           <div class="section-block">
             <div class="section-title"><span>TABELL</span><small>LIVE NÄR DATA FINNS</small></div>
-            <div class="table-placeholder">
+            <div class="table-placeholder" id="standingsQuick">
               <div><b>–</b><span>Väsby IK HK</span><em>– p</em></div>
               <div><b>–</b><span>Motståndare</span><em>– p</em></div>
             </div>
@@ -109,8 +109,8 @@
 
           <div class="empty-state" id="eventFeed">
             <div class="empty-icon">↯</div>
-            <strong>Väntar på Swehockey-collectorn</strong>
-            <p>När liveflödet kopplas in hamnar mål, utvisningar och målvaktsbyten här automatiskt.</p>
+            <strong>Laddar senaste Väsby-matchen</strong>
+            <p>Grunddata hämtas från vår Supabase. Live-eventflödet kopplas in i nästa steg.</p>
           </div>
         </section>
 
@@ -126,13 +126,13 @@
           <div class="fact-stack" id="factStack">
             <article class="fact-card primary">
               <span>DATASTATUS</span>
-              <strong>Databasen är skapad och cockpitens frontend är igång.</strong>
-              <p>Nästa steg är att mata in riktig Hockeyettan-data från Swehockey.</p>
+              <strong>Laddar verifierad Hockeyettan-data.</strong>
+              <p>Serie, tabell, schema och trupp hämtas från vår egen databas.</p>
             </article>
             <article class="fact-card">
               <span>NÄSTA</span>
-              <strong>Importera Hockeyettan Norra 2026/27</strong>
-              <p>Serie, lag, Väsbys roster, matcher och tabell blir första riktiga datatestet.</p>
+              <strong>Grundimporten är ansluten.</strong>
+              <p>Nästa lager blir matchspecifik lineup och live-events.</p>
             </article>
           </div>
 
@@ -167,7 +167,8 @@
     </nav>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=1"></script>
-  <script src="cockpit.js?v=1"></script>
+  <script src="cockpit.js?v=2"></script>
 </body>
 </html>
