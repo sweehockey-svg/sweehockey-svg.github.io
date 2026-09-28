@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#06111a">
   <title>Commentator Cockpit · Hockeyettan</title>
-  <link rel="stylesheet" href="cockpit.css?v=13">
+  <link rel="stylesheet" href="cockpit.css?v=14">
 </head>
 <body>
   <div class="app-shell">
@@ -19,6 +19,9 @@
         </div>
       </div>
       <div class="top-actions">
+        <button class="account-button" id="accountButton" type="button">
+          <span class="account-dot"></span><strong>LOGGA IN</strong><small>NOTES + AI</small>
+        </button>
         <div class="sync-state" id="syncState">
           <span class="sync-dot"></span>
           <span id="syncText">Laddar Hockeyettan-data…</span>
@@ -173,6 +176,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=1"></script>
-  <script src="cockpit.js?v=13"></script>
+  <script src="cockpit.js?v=14"></script>
 </body>
 </html>

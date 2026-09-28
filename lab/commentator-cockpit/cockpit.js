@@ -4,7 +4,7 @@
   const cfg = window.COMMENTATOR_CONFIG;
   const sb = window.supabase;
   const client = cfg && sb ? sb.createClient(cfg.supabaseUrl, cfg.supabasePublishableKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   }) : null;
 
   const state = {
@@ -42,7 +42,12 @@
     aiBrief: null,
     aiBriefSource: "local",
     aiBusy: false,
-    aiError: ""
+    aiError: "",
+    authUser: null,
+    authBusy: false,
+    authMessage: "",
+    cloudSyncState: "local",
+    cloudSyncMessage: ""
   };
 
   const panels = {
@@ -106,6 +111,11 @@
       kicker: "AI",
       title: "Talking point-assistent",
       cards: []
+    },
+    account: {
+      kicker: "KONTO",
+      title: "Inloggning & molnsynk",
+      cards: []
     }
   };
 
@@ -162,23 +172,152 @@
     return state.teamById.get(id)?.canonical_name || "Okänt lag";
   }
 
-  const NOTE_STORAGE_KEY="commentator-cockpit-notes-v1";
+  const LEGACY_NOTE_STORAGE_KEY="commentator-cockpit-notes-v1";
+  const NOTE_STORAGE_PREFIX="commentator-cockpit-notes-v2";
 
-  function loadLocalNotes() {
+  function noteStorageKey(userId=state.authUser?.id) {
+    return userId ? NOTE_STORAGE_PREFIX+"-user-"+userId : NOTE_STORAGE_PREFIX+"-guest";
+  }
+
+  function readNotesFromStorage(key) {
     try{
-      const parsed=JSON.parse(localStorage.getItem(NOTE_STORAGE_KEY)||"[]");
+      const parsed=JSON.parse(localStorage.getItem(key)||"[]");
       return Array.isArray(parsed)?parsed.filter((note)=>note&&note.id&&note.body):[];
     }catch{
       return [];
     }
   }
 
+  function loadLocalNotes() {
+    const key=noteStorageKey();
+    let notes=readNotesFromStorage(key);
+    if(!state.authUser&&notes.length===0){
+      const legacy=readNotesFromStorage(LEGACY_NOTE_STORAGE_KEY);
+      if(legacy.length){
+        notes=legacy;
+        try{
+          localStorage.setItem(key,JSON.stringify(legacy));
+          localStorage.removeItem(LEGACY_NOTE_STORAGE_KEY);
+        }catch{}
+      }
+    }
+    return notes;
+  }
+
   function persistLocalNotes() {
     try{
-      localStorage.setItem(NOTE_STORAGE_KEY,JSON.stringify(state.notes));
+      localStorage.setItem(noteStorageKey(),JSON.stringify(state.notes));
       return true;
     }catch{
       return false;
+    }
+  }
+
+  function noteTimestamp(note) {
+    const value=new Date(note?.updated_at||note?.created_at||0).getTime();
+    return Number.isFinite(value)?value:0;
+  }
+
+  function mergeNoteSets(...sets) {
+    const map=new Map();
+    for(const set of sets){
+      for(const note of set||[]){
+        if(!note?.id||!note?.body) continue;
+        const current=map.get(note.id);
+        if(!current||noteTimestamp(note)>=noteTimestamp(current)) map.set(note.id,note);
+      }
+    }
+    return [...map.values()].sort((a,b)=>noteTimestamp(b)-noteTimestamp(a));
+  }
+
+  function noteCloudPayload(note) {
+    return {
+      id:note.id,
+      scope_type:note.scope_type,
+      game_id:note.game_id||null,
+      team_id:note.team_id||null,
+      player_id:note.player_id||null,
+      title:String(note.title||"").slice(0,120),
+      body:String(note.body||"").slice(0,1200),
+      tags:Array.isArray(note.tags)?note.tags.slice(0,8):[],
+      pinned:Boolean(note.pinned),
+      is_active:note.is_active!==false,
+      created_at:note.created_at||new Date().toISOString(),
+      updated_at:note.updated_at||new Date().toISOString()
+    };
+  }
+
+  function updateAuthButton() {
+    const button=document.getElementById("accountButton");
+    if(!button) return;
+    if(state.authUser){
+      const label=state.authUser.email||"Inloggad";
+      button.classList.add("signed-in");
+      button.innerHTML='<span class="account-dot"></span><strong>'+esc(label)+'</strong><small>'+
+        esc(state.cloudSyncState==="synced"?"MOLNSYNK":"KONTO")+'</small>';
+    }else{
+      button.classList.remove("signed-in");
+      button.innerHTML='<span class="account-dot"></span><strong>LOGGA IN</strong><small>NOTES + AI</small>';
+    }
+  }
+
+  async function syncNotesWithCloud({includeGuest=false}={}) {
+    if(!client||!state.authUser) return false;
+    state.cloudSyncState="syncing";
+    state.cloudSyncMessage="Synkar anteckningar…";
+    updateAuthButton();
+
+    const userKey=noteStorageKey(state.authUser.id);
+    const userLocal=readNotesFromStorage(userKey);
+    const guestLocal=includeGuest?readNotesFromStorage(noteStorageKey(null)):[];
+    const localMerged=mergeNoteSets(state.notes,userLocal,guestLocal);
+
+    const {data:cloud,error:readError}=await client.from("commentator_notes")
+      .select("id,scope_type,game_id,team_id,player_id,title,body,tags,pinned,is_active,created_at,updated_at")
+      .order("updated_at",{ascending:false});
+    if(readError){
+      state.cloudSyncState="error";
+      state.cloudSyncMessage=readError.message||"Molnsynk misslyckades.";
+      updateAuthButton();
+      return false;
+    }
+
+    const merged=mergeNoteSets(cloud||[],localMerged);
+    if(merged.length){
+      const {error:writeError}=await client.from("commentator_notes")
+        .upsert(merged.map(noteCloudPayload),{onConflict:"id"});
+      if(writeError){
+        state.cloudSyncState="error";
+        state.cloudSyncMessage=writeError.message||"Molnsynk misslyckades.";
+        updateAuthButton();
+        return false;
+      }
+    }
+
+    state.notes=merged;
+    try{
+      localStorage.setItem(userKey,JSON.stringify(merged));
+      if(includeGuest) localStorage.removeItem(noteStorageKey(null));
+    }catch{}
+
+    state.cloudSyncState="synced";
+    state.cloudSyncMessage="Synkad "+new Intl.DateTimeFormat("sv-SE",{
+      hour:"2-digit",minute:"2-digit",timeZone:"Europe/Stockholm"
+    }).format(new Date());
+    updateAuthButton();
+    renderFacts();
+    return true;
+  }
+
+  function saveNotes() {
+    persistLocalNotes();
+    if(state.authUser){
+      syncNotesWithCloud().catch((error)=>{
+        console.error("Note cloud sync failed",error);
+        state.cloudSyncState="error";
+        state.cloudSyncMessage="Molnsynk misslyckades.";
+        updateAuthButton();
+      });
     }
   }
 
@@ -289,7 +428,11 @@
         }).join("")+'</div>'
       : '<div class="notes-empty"><strong>Inga anteckningar för den här matchen ännu.</strong><span>Lägg in sådant som officiell statistik inte känner till.</span></div>';
 
-    return '<article class="drawer-card notes-storage-info"><strong>Lokalt nu · säker molnsynk förberedd</strong><span>Anteckningar sparas i den här webbläsaren. Supabase-tabellen är låst till inloggad ägare och har ingen anonym skrivaccess.</span></article>' +
+    const storageTitle=state.authUser?"Molnsynk aktiv":"Lokalt sparat";
+    const storageText=state.authUser
+      ? (state.cloudSyncMessage||"Anteckningar följer det inloggade kontot mellan enheter.")
+      : "Anteckningar ligger bara i den här webbläsaren tills du loggar in.";
+    return '<article class="drawer-card notes-storage-info"><strong>'+esc(storageTitle)+'</strong><span>'+esc(storageText)+'</span></article>' +
       '<form class="note-form" id="noteForm">' +
         '<input type="hidden" id="noteEditId" value="">' +
         '<label><span>KOPPLA TILL</span><select id="noteScope">'+noteScopeOptionsHtml(state.nextGame?"match|"+state.nextGame.id:"general|")+'</select></label>' +
@@ -339,7 +482,7 @@
       state.notes=existing
         ? state.notes.map((item)=>item.id===id?note:item)
         : [note,...state.notes];
-      persistLocalNotes();
+      saveNotes();
       renderFacts();
       renderDrawer("notes");
     });
@@ -361,8 +504,12 @@
 
     drawerBody.querySelectorAll("[data-note-delete]").forEach((button)=>{
       button.addEventListener("click",()=>{
-        state.notes=state.notes.filter((note)=>note.id!==button.dataset.noteDelete);
-        persistLocalNotes();
+        const id=button.dataset.noteDelete;
+        state.notes=state.notes.map((note)=>note.id===id
+          ? {...note,is_active:false,updated_at:new Date().toISOString()}
+          : note
+        );
+        saveNotes();
         renderFacts();
         renderDrawer("notes");
       });
@@ -385,6 +532,110 @@
     });
   }
 
+
+  function renderAccount() {
+    if(state.authUser){
+      const email=state.authUser.email||"Inloggad användare";
+      const syncLabel=state.cloudSyncState==="syncing"?"SYNKAR":
+        state.cloudSyncState==="error"?"SYNKFEL":"MOLNSYNK AKTIV";
+      return '<article class="account-card signed-in">' +
+        '<span>'+esc(syncLabel)+'</span><h3>'+esc(email)+'</h3>' +
+        '<p>'+esc(state.cloudSyncMessage||"NOTES sparas lokalt och i Supabase. Samma konto kan användas på dator och mobil.")+'</p>' +
+      '</article>' +
+      '<div class="account-actions">' +
+        '<button type="button" id="syncNotesNow">SYNKA NOTES NU</button>' +
+        '<button type="button" class="danger" id="signOutButton">LOGGA UT</button>' +
+      '</div>' +
+      '<article class="drawer-card"><strong>AI</strong><span>Inloggningen ger server-AI:n en riktig användaridentitet. OpenAI-anrop aktiveras först när servernyckeln är konfigurerad.</span></article>';
+    }
+
+    return '<article class="drawer-card"><strong>Passwordless login</strong><span>Fyll i e-postadressen. Supabase skickar en engångslänk som loggar in kontot utan lösenord.</span></article>' +
+      '<form class="account-form" id="accountForm">' +
+        '<label><span>E-POST</span><input id="accountEmail" type="email" autocomplete="email" required placeholder="namn@example.com"></label>' +
+        '<button type="submit" '+(state.authBusy?"disabled":"")+'>'+(state.authBusy?"SKICKAR…":"SKICKA MAGIC LINK")+'</button>' +
+      '</form>' +
+      (state.authMessage?'<div class="account-message">'+esc(state.authMessage)+'</div>':'') +
+      '<article class="drawer-card"><strong>Efter inloggning</strong><span>Lokala NOTES flyttas till kontot och synkas mot molnet. Server-AI kan därefter använda den autentiserade sessionen.</span></article>';
+  }
+
+  function bindAccountUi() {
+    const form=document.getElementById("accountForm");
+    if(form){
+      form.addEventListener("submit",async(event)=>{
+        event.preventDefault();
+        if(state.authBusy||!client) return;
+        const email=String(document.getElementById("accountEmail")?.value||"").trim();
+        if(!email) return;
+        state.authBusy=true;
+        state.authMessage="";
+        renderDrawer("account");
+        const redirectTo=window.location.origin+window.location.pathname;
+        const {error}=await client.auth.signInWithOtp({
+          email,
+          options:{
+            emailRedirectTo:redirectTo,
+            shouldCreateUser:true
+          }
+        });
+        state.authBusy=false;
+        state.authMessage=error
+          ? "Kunde inte skicka länken: "+error.message
+          : "Magic link skickad till "+email+". Öppna mejlet och följ länken tillbaka hit.";
+        renderDrawer("account");
+      });
+    }
+
+    document.getElementById("syncNotesNow")?.addEventListener("click",async()=>{
+      await syncNotesWithCloud();
+      renderDrawer("account");
+    });
+
+    document.getElementById("signOutButton")?.addEventListener("click",async()=>{
+      if(!client) return;
+      await client.auth.signOut();
+    });
+  }
+
+  async function handleAuthSession(session) {
+    const previousId=state.authUser?.id||null;
+    const nextUser=session?.user||null;
+    state.authUser=nextUser;
+    state.authMessage="";
+
+    if(nextUser){
+      const includeGuest=previousId!==nextUser.id && readNotesFromStorage(noteStorageKey(null)).length>0;
+      state.notes=mergeNoteSets(
+        readNotesFromStorage(noteStorageKey(nextUser.id)),
+        includeGuest?readNotesFromStorage(noteStorageKey(null)):[]
+      );
+      await syncNotesWithCloud({includeGuest});
+    }else{
+      state.cloudSyncState="local";
+      state.cloudSyncMessage="";
+      state.notes=loadLocalNotes();
+    }
+
+    updateAuthButton();
+    renderFacts();
+    const activeButton=document.querySelector(".deck-key.active");
+    if(drawer.classList.contains("open")){
+      if(activeButton?.dataset.panel==="notes") renderDrawer("notes");
+      else if(drawerKicker.textContent==="KONTO") renderDrawer("account");
+      else if(activeButton?.dataset.panel==="ai") renderDrawer("ai");
+    }
+  }
+
+  async function initAuth() {
+    if(!client) return;
+    client.auth.onAuthStateChange((_event,session)=>{
+      window.setTimeout(()=>{
+        handleAuthSession(session).catch((error)=>console.error("Auth state handling failed",error));
+      },0);
+    });
+    const {data,error}=await client.auth.getSession();
+    if(error) throw error;
+    await handleAuthSession(data.session||null);
+  }
 
   function resultForTeam(game, teamId) {
     const home = game.home_team_id === teamId;
@@ -1715,7 +1966,7 @@
     drawerKicker.textContent = data.kicker;
     drawerTitle.textContent = data.title;
 
-    drawer.classList.toggle("wide", key === "lines" || key === "h2h" || key === "story" || key === "studio" || key === "notes" || key === "ai");
+    drawer.classList.toggle("wide", key === "lines" || key === "h2h" || key === "story" || key === "studio" || key === "notes" || key === "ai" || key === "account");
     if (key === "lines") {
       drawerBody.innerHTML = renderLineups();
     } else if (key === "players") {
@@ -1740,6 +1991,9 @@
     } else if (key === "ai") {
       drawerBody.innerHTML = renderAi();
       bindAiUi();
+    } else if (key === "account") {
+      drawerBody.innerHTML = renderAccount();
+      bindAccountUi();
     } else {
       drawerBody.innerHTML = data.cards.map(([title, text]) =>
         '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
@@ -2109,6 +2363,10 @@
     renderLatestGame();
   });
 
+  document.getElementById("accountButton")?.addEventListener("click",()=>{
+    renderDrawer("account");
+  });
+
   document.getElementById("aiButton")?.addEventListener("click",()=>{
     document.querySelectorAll(".deck-key").forEach((item)=>item.classList.remove("active"));
     document.querySelector('.deck-key[data-panel="ai"]')?.classList.add("active");
@@ -2125,9 +2383,22 @@
   }
 
   updateClock();
+  updateAuthButton();
   window.setInterval(updateClock, 1000);
   window.setInterval(refreshActiveMatch, 15000);
-  loadData().catch(showLoadError);
+
+  async function boot() {
+    await loadData();
+    try{
+      await initAuth();
+    }catch(error){
+      console.error("Auth init failed",error);
+      state.authMessage="Inloggningen kunde inte starta.";
+      updateAuthButton();
+    }
+  }
+
+  boot().catch(showLoadError);
 
   window.CommentatorCockpit = {
     config: cfg || null,
@@ -2135,6 +2406,7 @@
     reload: () => loadData().catch(showLoadError),
     openPanel: renderDrawer,
     editorialNotes: () => currentEditorialNotes(),
-    aiFallback: (question="") => localAiBrief(question)
+    aiFallback: (question="") => localAiBrief(question),
+    syncNotes: () => syncNotesWithCloud()
   };
 })();
