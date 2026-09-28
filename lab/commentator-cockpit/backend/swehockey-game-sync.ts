@@ -11,7 +11,7 @@ const COMPETITION_SOURCE_ID = "21043";
 const VASBY_NAME = "Väsby IK HK";
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v7";
+const PARSER_VERSION = "game-sync-v8";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -1015,9 +1015,18 @@ async function syncEvents(game:any, eventId:string, htmlItem:any, roster:any[]) 
   const lastGoal = rows
     .filter((r:any)=>r.home_score !== null && r.away_score !== null)
     .sort((a:any,b:any)=>(b.event_seconds ?? -1) - (a.event_seconds ?? -1))[0] || null;
+  const latestEvent = [...rows]
+    .sort((a:any,b:any)=>
+      (b.event_seconds ?? -1) - (a.event_seconds ?? -1) ||
+      (b.ordinal ?? -1) - (a.ordinal ?? -1)
+    )[0] || null;
   if (lastGoal) {
     update.home_score = lastGoal.home_score;
     update.away_score = lastGoal.away_score;
+  }
+  if (latestEvent) {
+    update.period = latestEvent.period;
+    update.clock_display = latestEvent.clock_display;
   }
   if (/Final Score/i.test(bodyText)) update.status = "final";
   else if (rows.length) update.status = "live";
