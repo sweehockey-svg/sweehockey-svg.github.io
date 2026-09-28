@@ -70,3 +70,12 @@ with check (false);
 -- Cloud NOTES remain owner-private and require an active approved cockpit account.
 -- Team cockpit visibility and server AI authorization are additionally checked
 -- against the selected team in the frontend/Edge Function.
+
+
+create index if not exists commentator_access_team_idx
+  on public.commentator_access(team_id)
+  where team_id is not null;
+
+create index if not exists commentator_access_audit_team_idx
+  on public.commentator_access_audit(team_id)
+  where team_id is not null;
