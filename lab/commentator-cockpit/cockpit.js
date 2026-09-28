@@ -37,7 +37,8 @@
     currentEvents: [],
     seenFactIds: new Set(),
     lastQuickFactIds: [],
-    liveRefreshBusy: false
+    liveRefreshBusy: false,
+    notes: []
   };
 
   const panels = {
@@ -90,6 +91,11 @@
     studio: {
       kicker: "STUDIO",
       title: "Periodunderlag",
+      cards: []
+    },
+    notes: {
+      kicker: "NOTES",
+      title: "Redaktionella anteckningar",
       cards: []
     },
     ai: {
@@ -154,6 +160,230 @@
   function getTeamName(id) {
     return state.teamById.get(id)?.canonical_name || "Okänt lag";
   }
+
+  const NOTE_STORAGE_KEY="commentator-cockpit-notes-v1";
+
+  function loadLocalNotes() {
+    try{
+      const parsed=JSON.parse(localStorage.getItem(NOTE_STORAGE_KEY)||"[]");
+      return Array.isArray(parsed)?parsed.filter((note)=>note&&note.id&&note.body):[];
+    }catch{
+      return [];
+    }
+  }
+
+  function persistLocalNotes() {
+    try{
+      localStorage.setItem(NOTE_STORAGE_KEY,JSON.stringify(state.notes));
+      return true;
+    }catch{
+      return false;
+    }
+  }
+
+  function noteId() {
+    if(window.crypto?.randomUUID) return window.crypto.randomUUID();
+    return "note-"+Date.now()+"-"+Math.random().toString(36).slice(2,9);
+  }
+
+  function notePlayerName(playerId) {
+    const row=state.seasonPlayerStats.find((player)=>player.player_id===playerId);
+    return row?humanSourceName(row.source_name):"Spelare";
+  }
+
+  function noteScopeLabel(note) {
+    if(note.scope_type==="match"){
+      return "MATCH · "+(state.nextGame
+        ? getTeamName(state.nextGame.home_team_id)+" – "+getTeamName(state.nextGame.away_team_id)
+        : "match");
+    }
+    if(note.scope_type==="team") return getTeamName(note.team_id);
+    if(note.scope_type==="player") return notePlayerName(note.player_id);
+    return "ALLMÄNT";
+  }
+
+  function noteAppliesToCurrentMatch(note) {
+    if(!note||note.is_active===false) return false;
+    if(note.scope_type==="general") return true;
+    if(note.scope_type==="match") return note.game_id===state.nextGame?.id;
+    if(note.scope_type==="team"){
+      return note.team_id===state.vasby?.id||note.team_id===state.opponent?.id;
+    }
+    if(note.scope_type==="player"){
+      return state.seasonPlayerStats.some((row)=>
+        row.player_id===note.player_id &&
+        (row.team_id===state.vasby?.id||row.team_id===state.opponent?.id)
+      );
+    }
+    return false;
+  }
+
+  function currentEditorialNotes() {
+    return state.notes
+      .filter(noteAppliesToCurrentMatch)
+      .sort((a,b)=>
+        Number(Boolean(b.pinned))-Number(Boolean(a.pinned)) ||
+        (new Date(b.updated_at||b.created_at||0).getTime()-new Date(a.updated_at||a.created_at||0).getTime())
+      );
+  }
+
+  function noteScopeOptionsHtml(selectedValue) {
+    const opts=[];
+    const push=(value,label)=>opts.push(
+      '<option value="'+esc(value)+'" '+(value===selectedValue?"selected":"")+'>'+esc(label)+'</option>'
+    );
+    push("general|","Allmänt");
+    if(state.nextGame){
+      push("match|"+state.nextGame.id,"Match · "+getTeamName(state.nextGame.home_team_id)+" – "+getTeamName(state.nextGame.away_team_id));
+    }
+    if(state.vasby) push("team|"+state.vasby.id,"Lag · "+state.vasby.canonical_name);
+    if(state.opponent) push("team|"+state.opponent.id,"Lag · "+state.opponent.canonical_name);
+
+    const players=state.seasonPlayerStats
+      .filter((row)=>row.player_id&&(row.team_id===state.vasby?.id||row.team_id===state.opponent?.id))
+      .sort((a,b)=>
+        getTeamName(a.team_id).localeCompare(getTeamName(b.team_id),"sv") ||
+        humanSourceName(a.source_name).localeCompare(humanSourceName(b.source_name),"sv")
+      );
+
+    const seen=new Set();
+    for(const row of players){
+      if(seen.has(row.player_id)) continue;
+      seen.add(row.player_id);
+      push("player|"+row.player_id,"Spelare · "+humanSourceName(row.source_name)+" · "+getTeamName(row.team_id));
+    }
+    return opts.join("");
+  }
+
+  function parseNoteScope(value) {
+    const [scopeType,targetId]=String(value||"general|").split("|");
+    return {
+      scope_type:["general","match","team","player"].includes(scopeType)?scopeType:"general",
+      game_id:scopeType==="match"&&targetId?targetId:null,
+      team_id:scopeType==="team"&&targetId?targetId:null,
+      player_id:scopeType==="player"&&targetId?targetId:null
+    };
+  }
+
+  function renderNotes() {
+    const notes=currentEditorialNotes();
+    const playerCount=state.seasonPlayerStats.filter((row)=>row.player_id).length;
+
+    const list=notes.length
+      ? '<div class="notes-list">'+notes.map((note)=>{
+          const tags=(note.tags||[]).map((tag)=>'<span>#'+esc(tag)+'</span>').join("");
+          return '<article class="note-card '+(note.pinned?"pinned":"")+'">' +
+            '<div class="note-card-head"><div><span>'+esc(noteScopeLabel(note))+'</span>' +
+              (note.pinned?'<b>PINNAD</b>':'')+'</div>' +
+              '<small>'+esc(shortDateOnly(note.updated_at||note.created_at))+'</small></div>' +
+            (note.title?'<h3>'+esc(note.title)+'</h3>':'') +
+            '<p>'+esc(note.body)+'</p>' +
+            (tags?'<div class="note-tags">'+tags+'</div>':'') +
+            '<div class="note-actions">' +
+              '<button type="button" data-note-pin="'+esc(note.id)+'">'+(note.pinned?"TA BORT FRÅN STORY":"PINNA TILL STORY")+'</button>' +
+              '<button type="button" data-note-edit="'+esc(note.id)+'">REDIGERA</button>' +
+              '<button type="button" class="danger" data-note-delete="'+esc(note.id)+'">RADERA</button>' +
+            '</div>' +
+          '</article>';
+        }).join("")+'</div>'
+      : '<div class="notes-empty"><strong>Inga anteckningar för den här matchen ännu.</strong><span>Lägg in sådant som officiell statistik inte känner till.</span></div>';
+
+    return '<article class="drawer-card notes-storage-info"><strong>Lokalt nu · säker molnsynk förberedd</strong><span>Anteckningar sparas i den här webbläsaren. Supabase-tabellen är låst till inloggad ägare och har ingen anonym skrivaccess.</span></article>' +
+      '<form class="note-form" id="noteForm">' +
+        '<input type="hidden" id="noteEditId" value="">' +
+        '<label><span>KOPPLA TILL</span><select id="noteScope">'+noteScopeOptionsHtml(state.nextGame?"match|"+state.nextGame.id:"general|")+'</select></label>' +
+        '<label><span>RUBRIK</span><input id="noteTitle" maxlength="120" placeholder="T.ex. återvänder till moderklubben"></label>' +
+        '<label class="wide"><span>ANTECKNING</span><textarea id="noteBody" rows="4" maxlength="1200" placeholder="Skriv fakta, bakgrund eller en talking point du vill kunna använda i sändningen."></textarea></label>' +
+        '<label><span>TAGGAR</span><input id="noteTags" maxlength="160" placeholder="bakgrund, comeback, lokal"></label>' +
+        '<label class="note-pin-control"><input type="checkbox" id="notePinned" checked><span>PINNA TILL STORY / SNABBFAKTA</span></label>' +
+        '<div class="note-form-actions"><button type="button" id="noteCancelEdit">RENSA</button><button type="submit" class="primary">SPARA ANTECKNING</button></div>' +
+      '</form>' +
+      '<div class="notes-meta"><span>'+esc(notes.length)+' relevanta anteckningar</span><small>'+esc(playerCount)+' spelare kan kopplas</small></div>' +
+      list;
+  }
+
+  function bindNotesUi() {
+    const form=document.getElementById("noteForm");
+    if(!form) return;
+
+    const resetForm=()=>{
+      document.getElementById("noteEditId").value="";
+      document.getElementById("noteTitle").value="";
+      document.getElementById("noteBody").value="";
+      document.getElementById("noteTags").value="";
+      document.getElementById("notePinned").checked=true;
+      document.getElementById("noteScope").value=state.nextGame?"match|"+state.nextGame.id:"general|";
+    };
+
+    form.addEventListener("submit",(event)=>{
+      event.preventDefault();
+      const body=String(document.getElementById("noteBody").value||"").trim();
+      if(!body) return;
+      const id=document.getElementById("noteEditId").value||noteId();
+      const existing=state.notes.find((note)=>note.id===id);
+      const scope=parseNoteScope(document.getElementById("noteScope").value);
+      const now=new Date().toISOString();
+      const note={
+        id,
+        ...scope,
+        title:String(document.getElementById("noteTitle").value||"").trim(),
+        body,
+        tags:String(document.getElementById("noteTags").value||"")
+          .split(",").map((tag)=>tag.trim()).filter(Boolean).slice(0,8),
+        pinned:Boolean(document.getElementById("notePinned").checked),
+        is_active:true,
+        created_at:existing?.created_at||now,
+        updated_at:now
+      };
+      state.notes=existing
+        ? state.notes.map((item)=>item.id===id?note:item)
+        : [note,...state.notes];
+      persistLocalNotes();
+      renderFacts();
+      renderDrawer("notes");
+    });
+
+    document.getElementById("noteCancelEdit")?.addEventListener("click",resetForm);
+
+    drawerBody.querySelectorAll("[data-note-pin]").forEach((button)=>{
+      button.addEventListener("click",()=>{
+        const id=button.dataset.notePin;
+        state.notes=state.notes.map((note)=>note.id===id
+          ? {...note,pinned:!note.pinned,updated_at:new Date().toISOString()}
+          : note
+        );
+        persistLocalNotes();
+        renderFacts();
+        renderDrawer("notes");
+      });
+    });
+
+    drawerBody.querySelectorAll("[data-note-delete]").forEach((button)=>{
+      button.addEventListener("click",()=>{
+        state.notes=state.notes.filter((note)=>note.id!==button.dataset.noteDelete);
+        persistLocalNotes();
+        renderFacts();
+        renderDrawer("notes");
+      });
+    });
+
+    drawerBody.querySelectorAll("[data-note-edit]").forEach((button)=>{
+      button.addEventListener("click",()=>{
+        const note=state.notes.find((item)=>item.id===button.dataset.noteEdit);
+        if(!note) return;
+        document.getElementById("noteEditId").value=note.id;
+        document.getElementById("noteTitle").value=note.title||"";
+        document.getElementById("noteBody").value=note.body||"";
+        document.getElementById("noteTags").value=(note.tags||[]).join(", ");
+        document.getElementById("notePinned").checked=Boolean(note.pinned);
+        const value=note.scope_type+"|"+(note.game_id||note.team_id||note.player_id||"");
+        const scope=document.getElementById("noteScope");
+        if([...scope.options].some((option)=>option.value===value)) scope.value=value;
+        document.getElementById("noteBody").focus();
+      });
+    });
+  }
+
 
   function resultForTeam(game, teamId) {
     const home = game.home_team_id === teamId;
@@ -525,6 +755,21 @@
       });
     }
 
+    for(const note of currentEditorialNotes().filter((item)=>item.pinned)){
+      const scopeScore=note.scope_type==="match"?190:
+        note.scope_type==="team"?165:
+        note.scope_type==="player"?160:135;
+      add({
+        id:"editorial-"+note.id,
+        tag:"REDAKTIONELLT · "+noteScopeLabel(note),
+        title:note.title||note.body.slice(0,100),
+        text:note.title?note.body:((note.tags||[]).length?"Taggar: "+note.tags.join(", "):"Egen anteckning."),
+        score:scopeScore,
+        story:true,
+        editorial:true
+      });
+    }
+
     const unique=new Map();
     for(const fact of facts){
       const old=unique.get(fact.id);
@@ -553,7 +798,7 @@
     const shown=facts.slice(0,3);
     state.lastQuickFactIds=shown.map((fact)=>fact.id);
     box.innerHTML=shown.map((fact,index)=>
-      '<article class="fact-card '+(index===0?"primary":"")+' insight-card">' +
+      '<article class="fact-card '+(index===0?"primary ":"")+(fact.editorial?"editorial ":"")+'insight-card">' +
         '<span>'+esc(fact.tag)+'</span>' +
         '<strong>'+esc(fact.title)+'</strong>' +
         '<p>'+esc(fact.text)+'</p>' +
@@ -595,7 +840,7 @@
       ? '<article class="drawer-card story-note"><strong>Tidigt på säsongen</strong><span>Form, tabell och procenttal bygger ännu på få matcher. Cockpiten visar siffrorna men drar inga stora slutsatser av dem.</span></article>'
       : "") +
       '<div class="story-grid">'+stories.map((fact,index)=>
-        '<article class="story-card">' +
+        '<article class="story-card '+(fact.editorial?"editorial":"")+'">' +
           '<div class="story-index">'+String(index+1).padStart(2,"0")+'</div>' +
           '<div><span>'+esc(fact.tag)+'</span><strong>'+esc(fact.title)+'</strong><p>'+esc(fact.text)+'</p></div>' +
         '</article>'
@@ -1302,7 +1547,7 @@
     drawerKicker.textContent = data.kicker;
     drawerTitle.textContent = data.title;
 
-    drawer.classList.toggle("wide", key === "lines" || key === "h2h" || key === "story" || key === "studio");
+    drawer.classList.toggle("wide", key === "lines" || key === "h2h" || key === "story" || key === "studio" || key === "notes");
     if (key === "lines") {
       drawerBody.innerHTML = renderLineups();
     } else if (key === "players") {
@@ -1321,6 +1566,9 @@
       drawerBody.innerHTML = renderH2H();
     } else if (key === "studio") {
       drawerBody.innerHTML = renderStudio();
+    } else if (key === "notes") {
+      drawerBody.innerHTML = renderNotes();
+      bindNotesUi();
     } else {
       drawerBody.innerHTML = data.cards.map(([title, text]) =>
         '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
@@ -1343,6 +1591,7 @@
 
   async function loadData() {
     if (!client) throw new Error("Supabase-klienten kunde inte startas.");
+    state.notes=loadLocalNotes();
 
     const { data: competitions, error: compError } = await client.from("competitions")
       .select("id,name,season_label,group_name,updated_at,source_competition_id")
@@ -1592,7 +1841,9 @@
         : "Visar senaste kända kedjor tills nästa lineup publiceras."],
       ["H2H", state.h2hGames.length
         ? state.h2hGames.length + " tidigare möten importerade."
-        : "Inga tidigare möten importerade ännu."]
+        : "Inga tidigare möten importerade ännu."],
+      ["Notes", currentEditorialNotes().length + " relevanta anteckningar · " +
+        currentEditorialNotes().filter((note)=>note.pinned).length + " pinnade till STORY."]
     ];
 
     const syncState = document.getElementById("syncState");
@@ -1702,6 +1953,7 @@
     config: cfg || null,
     state,
     reload: () => loadData().catch(showLoadError),
-    openPanel: renderDrawer
+    openPanel: renderDrawer,
+    editorialNotes: () => currentEditorialNotes()
   };
 })();

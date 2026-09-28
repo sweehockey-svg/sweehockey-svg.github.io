@@ -319,3 +319,45 @@ button{font:inherit}
   .studio-event{grid-template-columns:78px minmax(0,1fr)}
   .studio-event p{grid-column:1/-1;white-space:normal}
 }
+
+/* v12 · notes + editorial facts */
+.deck{grid-template-columns:repeat(11,minmax(64px,1fr))}
+.fact-card.editorial{border-color:#5f4f21;background:linear-gradient(135deg,rgba(244,178,27,.085),#071823 52%)}
+.story-card.editorial{border-color:#655424;background:linear-gradient(135deg,rgba(244,178,27,.075),#081a26 55%)}
+.notes-storage-info{border-color:#29475a}
+.note-form{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:12px;border:1px solid #1d3544;border-radius:10px;background:#061620;margin-bottom:11px}
+.note-form label{display:grid;gap:5px}
+.note-form label.wide{grid-column:1/-1}
+.note-form label>span{font-size:7px;font-weight:1000;letter-spacing:.1em;color:#6e8797}
+.note-form input,.note-form select,.note-form textarea{width:100%;border:1px solid #294352;border-radius:8px;background:#081a26;color:#e7eff3;padding:9px 10px;font:500 10px/1.4 Inter,Arial,sans-serif;outline:none}
+.note-form textarea{resize:vertical;min-height:88px}
+.note-form input:focus,.note-form select:focus,.note-form textarea:focus{border-color:#806b2d;box-shadow:0 0 0 2px rgba(244,178,27,.05)}
+.note-pin-control{grid-column:1/-1;display:flex!important;grid-template-columns:none!important;align-items:center;gap:8px!important;padding:7px 9px;border:1px solid #1a3241;border-radius:8px;background:#081a26}
+.note-pin-control input{width:14px;height:14px;margin:0;accent-color:var(--yellow)}
+.note-pin-control span{color:#91a4af!important}
+.note-form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:7px}
+.note-form-actions button,.note-actions button{border:1px solid #294352;border-radius:7px;background:#0a1e2b;color:#8198a7;padding:7px 9px;font-size:7px;font-weight:1000;letter-spacing:.05em;cursor:pointer}
+.note-form-actions button.primary{border-color:#715e24;color:#07111a;background:var(--yellow)}
+.notes-meta{display:flex;justify-content:space-between;align-items:center;margin:12px 0 7px;color:#718a99;font-size:8px}
+.notes-meta small{font-size:7px;color:#536d7d}
+.notes-list{display:grid;gap:7px}
+.note-card{padding:11px;border:1px solid #1d3544;border-radius:10px;background:#071823}
+.note-card.pinned{border-color:#695722;background:linear-gradient(135deg,rgba(244,178,27,.06),#071823 58%)}
+.note-card-head{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.note-card-head>div{display:flex;align-items:center;gap:6px;min-width:0}
+.note-card-head span{font-size:7px;font-weight:1000;letter-spacing:.08em;color:#778e9c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note-card-head b{padding:3px 5px;border-radius:5px;background:rgba(244,178,27,.12);color:var(--yellow);font-size:6px;letter-spacing:.08em}
+.note-card-head small{font-size:7px;color:#536c7c;white-space:nowrap}
+.note-card h3{margin:8px 0 0;font-size:12px;color:#e5eef2}
+.note-card p{margin:6px 0 0;font-size:9px;line-height:1.5;color:#91a5b1;white-space:pre-wrap}
+.note-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.note-tags span{padding:3px 5px;border:1px solid #203b4a;border-radius:5px;color:#698393;font-size:7px}
+.note-actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;padding-top:8px;border-top:1px solid #162d3a}
+.note-actions button.danger{border-color:#593536;color:#c98783}
+.notes-empty{padding:18px;border:1px dashed #294352;border-radius:10px;text-align:center;color:#718997}
+.notes-empty strong{display:block;color:#a9bac4;font-size:11px}
+.notes-empty span{display:block;margin-top:4px;font-size:8px}
+@media(max-width:760px){
+  .note-form{grid-template-columns:1fr}
+  .note-form label.wide,.note-pin-control,.note-form-actions{grid-column:auto}
+}
