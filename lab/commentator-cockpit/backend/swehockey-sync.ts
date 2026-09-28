@@ -9,6 +9,7 @@ const COMPETITION_ID = "21043";
 const ZONE = "Europe/Stockholm";
 const SOURCE = "swehockey";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
+const PARSER_VERSION = "base-sync-v2";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -25,7 +26,8 @@ function directRows($: cheerio.CheerioAPI, table: any) {
     links: $(tr).find("a").map((__: number, a: any) => ({
       text: clean($(a).text()),
       href: $(a).attr("href") || ""
-    })).get()
+    })).get(),
+    titles: $(tr).find("[title]").map((__: number, el: any) => clean($(el).attr("title") || "")).get()
   })).get();
 }
 
@@ -51,7 +53,7 @@ async function fetchHtml(path: string) {
 async function logFetch(item: {url:string,status:number,text:string,hash:string}, entityType: string, entityKey: string) {
   const { data: previous } = await admin
     .from("ingest_fetches")
-    .select("content_hash")
+    .select("content_hash,parser_version")
     .eq("url", item.url)
     .order("fetched_at", { ascending: false })
     .limit(1)
@@ -63,9 +65,9 @@ async function logFetch(item: {url:string,status:number,text:string,hash:string}
     source_entity_key: entityKey,
     url: item.url,
     content_hash: item.hash,
-    parser_version: "base-sync-v1",
+    parser_version: PARSER_VERSION,
     http_status: item.status,
-    changed: previous?.content_hash !== item.hash,
+    changed: previous?.content_hash !== item.hash || previous?.parser_version !== PARSER_VERSION,
     metadata: { bytes: item.text.length }
   });
 }
@@ -122,23 +124,24 @@ Deno.serve(async (req: Request) => {
       fetchHtml(`/Teams/Info/TeamRoster/${COMPETITION_ID}`)
     ]);
 
-    const previousHashes = await Promise.all(
+    const previousFetches = await Promise.all(
       [overview, schedule, roster].map(async (item) => {
         const { data } = await admin
           .from("ingest_fetches")
-          .select("content_hash")
+          .select("content_hash,parser_version")
           .eq("url", item.url)
           .order("fetched_at", { ascending: false })
           .limit(1)
           .maybeSingle();
-        return data?.content_hash || null;
+        return data || null;
       })
     );
 
     const unchanged =
-      previousHashes[0] === overview.hash &&
-      previousHashes[1] === schedule.hash &&
-      previousHashes[2] === roster.hash;
+      previousFetches[0]?.content_hash === overview.hash &&
+      previousFetches[1]?.content_hash === schedule.hash &&
+      previousFetches[2]?.content_hash === roster.hash &&
+      previousFetches.every((row:any) => row?.parser_version === PARSER_VERSION);
 
     if (unchanged) {
       await Promise.all([
@@ -204,6 +207,7 @@ Deno.serve(async (req: Request) => {
         const score = parseScore(r.cells[2] || "");
         const href = r.links.map((l:any) => l.href).join(" ");
         const idMatch = href.match(/\/Game\/Events\/(\d+)/);
+        const gameNumber = r.titles.find((v:string) => /^90\d{6}$/.test(v)) || null;
         if (!teams || !score) return null;
         return {
           date: r.cells[0],
@@ -214,7 +218,8 @@ Deno.serve(async (req: Request) => {
           periods: r.cells[3] || null,
           attendance: /^\d+$/.test(r.cells[4] || "") ? Number(r.cells[4]) : null,
           venue: r.cells[5] || null,
-          gameId: idMatch ? idMatch[1] : null
+          gameId: idMatch ? idMatch[1] : null,
+          gameNumber
         };
       }).filter(Boolean) as any[];
 
@@ -241,11 +246,13 @@ Deno.serve(async (req: Request) => {
       const resultCell = r.cells[gameIndex + 1] || "";
       if (parseScore(resultCell)) continue;
 
+      const gameNumber = r.titles.find((v:string) => /^90\d{6}$/.test(v)) || null;
       futureGames.push({
         dateTime: `${scheduleDate} ${time}`,
         home: teams[0],
         away: teams[1],
-        venue: r.cells[r.cells.length - 1] || null
+        venue: r.cells[r.cells.length - 1] || null,
+        gameNumber
       });
     }
 
@@ -397,7 +404,7 @@ Deno.serve(async (req: Request) => {
     if (rosterUpsert.error) throw rosterUpsert.error;
 
     const existingGamesQ = await admin.from("games")
-      .select("id,source_game_id,home_team_id,away_team_id,scheduled_start")
+      .select("id,source_game_id,source_event_game_id,game_number,home_team_id,away_team_id,scheduled_start")
       .eq("competition_id", competitionId)
       .limit(1000);
     if (existingGamesQ.error) throw existingGamesQ.error;
@@ -413,6 +420,7 @@ Deno.serve(async (req: Request) => {
         competition_id: competitionId,
         source: SOURCE,
         source_game_id: `schedule:${g.dateTime}|${g.home}|${g.away}`,
+        game_number: g.gameNumber,
         scheduled_start: scheduledStart,
         home_team_id: homeId,
         away_team_id: awayId,
@@ -449,7 +457,8 @@ Deno.serve(async (req: Request) => {
       const values:any = {
         competition_id: competitionId,
         source: SOURCE,
-        source_game_id: g.gameId || `result:${g.date}|${g.home}|${g.away}`,
+        game_number: g.gameNumber,
+        source_event_game_id: g.gameId,
         home_team_id: homeId,
         away_team_id: awayId,
         venue_name: g.venue,
@@ -465,6 +474,7 @@ Deno.serve(async (req: Request) => {
         const upd = await admin.from("games").update(values).eq("id", match.id);
         if (upd.error) throw upd.error;
       } else {
+        values.source_game_id = `result:${g.date}|${g.home}|${g.away}`;
         values.scheduled_start = localNoonIso(g.date);
         const ins = await admin.from("games").insert(values);
         if (ins.error) throw ins.error;

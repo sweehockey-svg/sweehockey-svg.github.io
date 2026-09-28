@@ -19,7 +19,8 @@
     roster: [],
     vasbyForm: [],
     opponentForm: [],
-    latestVasbyGame: null
+    latestVasbyGame: null,
+    latestEvents: []
   };
 
   const panels = {
@@ -164,17 +165,40 @@
     const feed = document.getElementById("eventFeed");
     const game = state.latestVasbyGame;
     if (!feed || !game) return;
-    feed.className = "";
+    feed.className = "event-feed-live";
+
+    const eventRows = state.latestEvents.length
+      ? '<div class="event-list">' + state.latestEvents.map((event) => {
+          const teamName = event.team_id ? getTeamName(event.team_id) : "";
+          const label = event.event_type === "goal" ? "MÅL" :
+            event.event_type === "penalty" ? "UTVISNING" :
+            event.event_type === "goalie_in" ? "MV IN" :
+            event.event_type === "goalie_out" ? "MV UT" :
+            event.event_type === "timeout" ? "TIMEOUT" :
+            event.event_type === "powerbreak" ? "POWERBREAK" : event.event_type.replaceAll("_", " ").toUpperCase();
+          const score = event.home_score != null && event.away_score != null
+            ? '<b>' + event.home_score + '–' + event.away_score + '</b>'
+            : '';
+          return '<div class="event-row ' + (event.event_type === "goal" ? "goal" : "") + '">' +
+            '<div class="event-time"><strong>' + esc(event.clock_display || "–") + '</strong><span>P' + esc(event.period || "–") + '</span></div>' +
+            '<div class="event-copy"><div><em>' + esc(label) + '</em>' + (teamName ? '<span>' + esc(teamName) + '</span>' : '') + '</div>' +
+            '<p>' + esc(event.description || "") + '</p></div>' +
+            '<div class="event-score">' + score + '</div>' +
+          '</div>';
+        }).join("") + '</div>'
+      : '<div class="recent-game-foot">Inga importerade händelser för matchen ännu.</div>';
+
     feed.innerHTML =
       '<article class="recent-game">' +
-        '<div class="recent-game-top"><span>SENASTE VÄSBY-MATCH</span><span>' + esc(swedishDate(game.scheduled_start)) + '</span></div>' +
+        '<div class="recent-game-top"><span>SENASTE VÄSBY-MATCH · OFFICIELL EVENTDATA</span><span>' + esc(swedishDate(game.scheduled_start)) + '</span></div>' +
         '<div class="recent-game-score">' +
           '<span>' + esc(getTeamName(game.home_team_id)) + '</span>' +
           '<strong>' + esc(game.home_score) + '–' + esc(game.away_score) + '</strong>' +
           '<span>' + esc(getTeamName(game.away_team_id)) + '</span>' +
         '</div>' +
-        '<div class="recent-game-foot">' + esc(game.venue_name || "") + ' · live-eventfeed kopplas i nästa steg</div>' +
-      '</article>';
+        '<div class="recent-game-foot">' + esc(game.venue_name || "") + ' · ' + state.latestEvents.length + ' importerade händelser</div>' +
+      '</article>' +
+      eventRows;
   }
 
   function renderFacts() {
@@ -194,9 +218,9 @@
         '<p>' + esc(state.opponent.canonical_name) + ' #' + esc(oppStanding?.rank ?? "–") + ' · ' + esc(oppStanding?.points ?? "–") + ' p</p>' +
       '</article>' +
       '<article class="fact-card">' +
-        '<span>TRUPP</span>' +
-        '<strong>' + state.roster.length + ' registrerade Väsbyspelare</strong>' +
-        '<p>Födelsedata, position, fattning, längd, vikt och moder-/youth club där Swehockey rapporterar det.</p>' +
+        '<span>MATCHCOLLECTOR</span>' +
+        '<strong>' + state.latestEvents.length + ' verifierade händelser från senaste matchen</strong>' +
+        '<p>' + state.roster.length + ' aktiva Väsbyspelare i roster. Nästa match-ID bevakas automatiskt när matchen närmar sig.</p>' +
       '</article>';
   }
 
@@ -280,7 +304,7 @@
     if (!state.vasby) throw new Error("Väsby IK HK saknas i importerad data.");
 
     const { data: nextGames, error: nextError } = await client.from("games")
-      .select("id,scheduled_start,home_team_id,away_team_id,venue_name,status,home_score,away_score,source_game_id")
+      .select("id,scheduled_start,home_team_id,away_team_id,venue_name,status,home_score,away_score,source_game_id,source_event_game_id,game_number")
       .eq("competition_id", competition.id)
       .or("home_team_id.eq." + state.vasby.id + ",away_team_id.eq." + state.vasby.id)
       .gt("scheduled_start", new Date().toISOString())
@@ -340,6 +364,25 @@
     state.vasbyForm = vasbyForm;
     state.opponentForm = opponentForm;
     state.latestVasbyGame = vasbyForm[0] || null;
+
+    if (state.latestVasbyGame) {
+      const { data: events, error: eventsError } = await client.from("game_events")
+        .select("id,period,clock_display,event_seconds,event_type,team_id,strength,home_score,away_score,description")
+        .eq("game_id", state.latestVasbyGame.id)
+        .eq("is_active", true)
+        .order("event_seconds", { ascending: false })
+        .order("ordinal", { ascending: true })
+        .limit(12);
+      if (eventsError) throw eventsError;
+      state.latestEvents = events || [];
+    }
+
+    panels.live.cards = [
+      ["Matchcollector", state.latestEvents.length + " händelser lästa från senaste Väsby-matchen."],
+      ["Nästa match-ID", state.nextGame.source_event_game_id
+        ? "Live-/rapport-ID: " + state.nextGame.source_event_game_id
+        : "Schema-ID " + (state.nextGame.game_number || "saknas") + " är känt. Live-ID väntas senare."]
+    ];
 
     render();
   }
