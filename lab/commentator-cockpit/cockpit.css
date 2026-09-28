@@ -80,7 +80,7 @@ button{font:inherit}
 .fact-card strong{font-size:12px;line-height:1.4}.fact-card p{margin:6px 0 0;color:#718999;font-size:10px;line-height:1.45}
 .ai-button{width:100%;margin-top:12px;padding:12px;border:1px dashed #365064;border-radius:10px;background:#081a26;color:#7e94a2;text-align:left;display:grid;grid-template-columns:36px 1fr;grid-template-areas:"a b" "a c";gap:2px 9px}
 .ai-button span{grid-area:a;width:34px;height:34px;display:grid;place-items:center;border-radius:8px;background:#152734;font-size:10px;font-weight:1000}.ai-button strong{grid-area:b;font-size:10px}.ai-button small{grid-area:c;color:#5e7483;font-size:8px}
-.deck{position:fixed;z-index:20;left:50%;bottom:18px;transform:translateX(-50%);display:grid;grid-template-columns:repeat(7,minmax(84px,1fr));gap:7px;width:min(900px,calc(100vw - 34px));padding:9px;border:1px solid #28404f;border-radius:14px;background:rgba(4,14,22,.94);backdrop-filter:blur(14px);box-shadow:0 18px 54px rgba(0,0,0,.46)}
+.deck{position:fixed;z-index:20;left:50%;bottom:18px;transform:translateX(-50%);display:grid;grid-template-columns:repeat(9,minmax(74px,1fr));gap:7px;width:min(1120px,calc(100vw - 34px));padding:9px;border:1px solid #28404f;border-radius:14px;background:rgba(4,14,22,.94);backdrop-filter:blur(14px);box-shadow:0 18px 54px rgba(0,0,0,.46)}
 .deck-key{min-height:57px;border:1px solid #243d4d;border-radius:9px;background:linear-gradient(180deg,#0d2230,#071824);color:#dce7ed;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;padding:8px 9px;cursor:pointer}
 .deck-key span{color:#536d7e;font:700 8px/1 Consolas,monospace}.deck-key strong{font-size:9px;letter-spacing:.06em}.deck-key:hover,.deck-key.active{border-color:#7a672c;box-shadow:inset 0 0 0 1px rgba(244,178,27,.08)}.deck-key.active strong{color:var(--yellow)}.deck-key.accent{border-color:#624f1f}.deck-key.accent strong{color:var(--yellow)}
 .drawer{position:fixed;z-index:30;right:18px;top:18px;bottom:18px;width:min(470px,calc(100vw - 36px));transform:translateX(calc(100% + 28px));transition:transform .22s ease;border:1px solid #2a4353;border-radius:15px;background:#071824;box-shadow:0 30px 90px rgba(0,0,0,.52);padding:18px}.drawer.open{transform:translateX(0)}
@@ -131,3 +131,33 @@ button{font:inherit}
 .match-stats-strip span{font-size:7px;font-weight:1000;letter-spacing:.1em;color:#698293}
 .match-stats-strip strong{font-size:12px;white-space:nowrap}
 @media(max-width:760px){.match-stats-strip{grid-template-columns:1fr 1fr}}
+
+.player-stat-section{margin-bottom:16px}
+.player-stat-head,.player-stat-row{display:grid;grid-template-columns:minmax(150px,1fr) 30px 30px 30px 38px 38px 44px;gap:5px;align-items:center}
+.player-stat-head{padding:0 8px 6px;color:#607989;font-size:7px;font-weight:1000;letter-spacing:.08em;text-align:center}
+.player-stat-head span:first-child{text-align:left}
+.player-stat-list{display:grid;gap:4px}
+.player-stat-row{padding:8px;border:1px solid #1b3241;border-radius:8px;background:#081a26}
+.player-stat-name{display:grid;grid-template-columns:31px minmax(0,1fr);gap:6px;align-items:center;min-width:0}
+.player-stat-name>b{color:#7892a3;font-size:9px}
+.player-stat-name span{min-width:0}
+.player-stat-name strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px}
+.player-stat-name small{display:block;color:#5f7888;font-size:7px;margin-top:2px}
+.player-stat-row em{font-style:normal;text-align:center;color:#9fb1bc;font-size:9px}
+.player-stat-row em.pts{color:var(--yellow);font-weight:950}
+.goalie-card-grid{display:grid;gap:9px}
+.goalie-card{border:1px solid #1d3544;border-radius:10px;background:#081a26;padding:13px}
+.goalie-card-head{display:flex;align-items:center;justify-content:space-between;color:#6e8797;font-size:8px;font-weight:900}
+.goalie-card-head b{color:#8ea2ae}
+.goalie-card h3{margin:6px 0 12px;font-size:15px}
+.goalie-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.goalie-metrics div{padding:8px;border:1px solid #19303e;border-radius:8px;background:#061620;text-align:center}
+.goalie-metrics span{display:block;color:#607888;font-size:7px;font-weight:1000;letter-spacing:.08em}
+.goalie-metrics strong{display:block;margin-top:4px;font-size:11px}
+@media(max-width:760px){
+  .deck{display:flex;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}
+  .deck::-webkit-scrollbar{display:none}
+  .deck-key{flex:0 0 76px}
+  .player-stat-head,.player-stat-row{grid-template-columns:minmax(128px,1fr) 26px 26px 26px 32px 32px 38px}
+  .goalie-metrics{grid-template-columns:1fr 1fr}
+}

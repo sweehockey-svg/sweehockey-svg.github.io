@@ -21,7 +21,9 @@
     opponentForm: [],
     latestVasbyGame: null,
     latestEvents: [],
-    latestTeamStats: new Map()
+    latestTeamStats: new Map(),
+    latestPlayerStats: [],
+    latestGoalieStats: []
   };
 
   const panels = {
@@ -36,6 +38,16 @@
     lines: {
       kicker: "KEDJOR",
       title: "Väsby · trupp",
+      cards: []
+    },
+    players: {
+      kicker: "SPELARE",
+      title: "Spelarstatistik",
+      cards: []
+    },
+    goalies: {
+      kicker: "MÅLVAKTER",
+      title: "Målvaktsstatistik",
       cards: []
     },
     live: {
@@ -331,6 +343,69 @@
     }).join("");
   }
 
+  function humanSourceName(sourceName) {
+    const value = String(sourceName || "");
+    const comma = value.indexOf(",");
+    if (comma < 0) return value;
+    return value.slice(comma + 1).trim() + " " + value.slice(0, comma).trim();
+  }
+
+  function renderPlayerStats() {
+    if (!state.latestPlayerStats.length || !state.latestVasbyGame) {
+      return '<div class="drawer-card"><strong>Ingen Player Summary ännu</strong><span>Spelarstatistiken visas när Swehockey har publicerat slutrapporten.</span></div>';
+    }
+
+    const teamOrder = [state.latestVasbyGame.home_team_id, state.latestVasbyGame.away_team_id];
+    return teamOrder.map((teamId) => {
+      const rows = state.latestPlayerStats
+        .filter((row) => row.team_id === teamId)
+        .sort((a, b) => (b.points - a.points) || (b.goals - a.goals) || (b.shots - a.shots) || (a.jersey_number - b.jersey_number));
+
+      if (!rows.length) return "";
+      return '<section class="player-stat-section">' +
+        '<h3 class="roster-section-title">' + esc(getTeamName(teamId)) + '</h3>' +
+        '<div class="player-stat-head"><span>SPELARE</span><span>G</span><span>A</span><span>P</span><span>SOG</span><span>+/-</span><span>FO%</span></div>' +
+        '<div class="player-stat-list">' +
+          rows.map((row) => {
+            const fo = row.faceoff_pct == null ? "–" : Number(row.faceoff_pct).toLocaleString("sv-SE", { maximumFractionDigits: 1 });
+            const plusMinus = row.plus_minus > 0 ? "+" + row.plus_minus : row.plus_minus;
+            return '<div class="player-stat-row">' +
+              '<div class="player-stat-name"><b>#' + esc(row.jersey_number ?? "–") + '</b><span><strong>' + esc(humanSourceName(row.source_name)) + '</strong><small>' + esc(row.position || "") + '</small></span></div>' +
+              '<em>' + esc(row.goals ?? 0) + '</em>' +
+              '<em>' + esc(row.assists ?? 0) + '</em>' +
+              '<em class="pts">' + esc(row.points ?? 0) + '</em>' +
+              '<em>' + esc(row.shots ?? 0) + '</em>' +
+              '<em>' + esc(plusMinus ?? "–") + '</em>' +
+              '<em>' + esc(fo) + '</em>' +
+            '</div>';
+          }).join("") +
+        '</div>' +
+      '</section>';
+    }).join("");
+  }
+
+  function renderGoalieStats() {
+    if (!state.latestGoalieStats.length || !state.latestVasbyGame) {
+      return '<div class="drawer-card"><strong>Ingen målvaktsrapport ännu</strong><span>Målvaktsstatistiken visas när Swehockey har publicerat Player Summary.</span></div>';
+    }
+
+    return '<div class="goalie-card-grid">' + state.latestGoalieStats.map((row) => {
+      const svPct = row.save_pct == null ? "–" : Number(row.save_pct).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+      const gaa = row.gaa == null ? "–" : Number(row.gaa).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const minutes = row.minutes_played_seconds == null ? "–" : formatClockSeconds(row.minutes_played_seconds);
+      return '<article class="goalie-card">' +
+        '<div class="goalie-card-head"><span>' + esc(getTeamName(row.team_id)) + '</span><b>#' + esc(row.jersey_number ?? "–") + '</b></div>' +
+        '<h3>' + esc(humanSourceName(row.source_name)) + '</h3>' +
+        '<div class="goalie-metrics">' +
+          '<div><span>SV%</span><strong>' + esc(svPct) + '</strong></div>' +
+          '<div><span>RÄDDN.</span><strong>' + esc(row.saves ?? "–") + '/' + esc(row.shots_against ?? "–") + '</strong></div>' +
+          '<div><span>GAA</span><strong>' + esc(gaa) + '</strong></div>' +
+          '<div><span>MIP</span><strong>' + esc(minutes) + '</strong></div>' +
+        '</div>' +
+      '</article>';
+    }).join("") + '</div>';
+  }
+
   function renderDrawer(key) {
     const data = panels[key] || panels.match;
     drawerKicker.textContent = data.kicker;
@@ -340,6 +415,14 @@
       drawerBody.innerHTML =
         '<article class="drawer-card"><strong>Aktuell Väsby-trupp</strong><span>Officiella matchkedjor visas här när lineupen publicerats. Tills dess används den aktuella registrerade truppen.</span></article>' +
         renderRoster();
+    } else if (key === "players") {
+      drawerBody.innerHTML =
+        '<article class="drawer-card"><strong>Senaste färdigspelade match</strong><span>G, A, poäng, skott, +/− och tekningar från Swehockey Player Summary.</span></article>' +
+        renderPlayerStats();
+    } else if (key === "goalies") {
+      drawerBody.innerHTML =
+        '<article class="drawer-card"><strong>Senaste färdigspelade match</strong><span>Målvaktsdata från Swehockey Player Summary.</span></article>' +
+        renderGoalieStats();
     } else {
       drawerBody.innerHTML = data.cards.map(([title, text]) =>
         '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
@@ -461,8 +544,24 @@
       state.latestTeamStats = new Map((teamStats || []).map((row) => [row.team_id, row]));
     }
 
+    if (state.latestVasbyGame) {
+      const [playerResult, goalieResult] = await Promise.all([
+        client.from("player_game_stats")
+          .select("team_id,player_id,source_name,jersey_number,position,goals,assists,points,plus_minus,pim,shots,faceoff_wins,faceoff_losses,faceoff_pct")
+          .eq("game_id", state.latestVasbyGame.id),
+        client.from("goalie_game_stats")
+          .select("team_id,player_id,source_name,jersey_number,shots_against,goals_against,saves,save_pct,minutes_played_seconds,gaa")
+          .eq("game_id", state.latestVasbyGame.id)
+      ]);
+      if (playerResult.error) throw playerResult.error;
+      if (goalieResult.error) throw goalieResult.error;
+      state.latestPlayerStats = playerResult.data || [];
+      state.latestGoalieStats = goalieResult.data || [];
+    }
+
     panels.live.cards = [
       ["Matchcollector", state.latestEvents.length + " händelser lästa från senaste Väsby-matchen."],
+      ["Player Summary", state.latestPlayerStats.length + " utespelare och " + state.latestGoalieStats.length + " målvakter importerade."],
       ["Nästa match-ID", state.nextGame.source_event_game_id
         ? "Live-/rapport-ID: " + state.nextGame.source_event_game_id
         : "Schema-ID " + (state.nextGame.game_number || "saknas") + " är känt. Live-ID väntas senare."]

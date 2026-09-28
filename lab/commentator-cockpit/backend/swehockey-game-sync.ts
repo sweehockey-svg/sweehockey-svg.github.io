@@ -3,13 +3,15 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import * as cheerio from "npm:cheerio@1.0.0";
 import { DateTime } from "npm:luxon@3.5.0";
+import pdf from "npm:pdf-parse@1.1.1";
+import { Buffer } from "node:buffer";
 
 const BASE = "https://stats.swehockey.se";
 const COMPETITION_SOURCE_ID = "21043";
 const VASBY_NAME = "Väsby IK HK";
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v1";
+const PARSER_VERSION = "game-sync-v2";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -35,6 +37,43 @@ async function fetchHtml(path: string) {
   const text = await response.text();
   if (!response.ok) throw new Error(`Swehockey ${response.status} for ${url}`);
   return { url, status: response.status, text, hash: await sha256(text) };
+}
+
+async function fetchBinary(path:string) {
+  const url = BASE + path;
+  const response = await fetch(url, {
+    headers: { "User-Agent": UA, "Accept": "application/pdf,*/*" }
+  });
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (!response.ok) throw new Error(`Swehockey ${response.status} for ${url}`);
+  return {
+    url,
+    status:response.status,
+    bytes,
+    contentType:response.headers.get("content-type") || "",
+    hash:await sha256(Array.from(bytes).join(","))
+  };
+}
+
+async function logBinaryFetch(item:any, entityType:string, entityKey:string) {
+  const { data:previous } = await admin.from("ingest_fetches")
+    .select("content_hash,parser_version")
+    .eq("url",item.url)
+    .order("fetched_at",{ascending:false})
+    .limit(1)
+    .maybeSingle();
+
+  await admin.from("ingest_fetches").insert({
+    source:SOURCE,
+    source_entity_type:entityType,
+    source_entity_key:entityKey,
+    url:item.url,
+    content_hash:item.hash,
+    parser_version:PARSER_VERSION,
+    http_status:item.status,
+    changed:previous?.content_hash !== item.hash || previous?.parser_version !== PARSER_VERSION,
+    metadata:{ bytes:item.bytes.length, content_type:item.contentType }
+  });
 }
 
 async function logFetch(item: any, entityType: string, entityKey: string) {
@@ -238,6 +277,306 @@ function locateRosterPlayer(roster:any[], teamId:string, jersey:number|null, sou
     if (exact) return exact;
   }
   return null;
+}
+
+function parseDecimalComma(text:string|null|undefined) {
+  const value = Number(clean(text).replace(",","."));
+  return Number.isFinite(value) ? value : null;
+}
+
+function splitPimShots(tail:string) {
+  const candidates:any[] = [];
+  for (let sogLen=1;sogLen<=2;sogLen++) {
+    if (tail.length <= sogLen) continue;
+    const pimText = tail.slice(0,-sogLen);
+    const sogText = tail.slice(-sogLen);
+    if (!/^\d+$/.test(pimText) || !/^\d+$/.test(sogText)) continue;
+    const pim = Number(pimText);
+    const shots = Number(sogText);
+    if (pim > 99 || shots > 40) continue;
+    let score = 0;
+    if ([0,2,4,5,10,12,14,15,20,25].includes(pim)) score += 4;
+    if (shots <= 15) score += 3;
+    if (sogLen === 1) score += 1;
+    candidates.push({pim,shots,score});
+  }
+  candidates.sort((a,b)=>b.score-a.score);
+  return candidates[0] || null;
+}
+
+function parseSkaterSummaryLine(line:string) {
+  const row=clean(line);
+  const base=row.match(/^(.+?)(\d{1,3})(RD|LD|CE|RW|LW)(.+)$/);
+  if(!base) return null;
+
+  const sourceName=clean(base[1]);
+  const jersey=Number(base[2]);
+  const position=base[3];
+  const rest=base[4];
+  const pctCandidates:any[]=[];
+
+  if(rest.endsWith("N/A")) {
+    pctCandidates.push({pct:null,before:rest.slice(0,-3)});
+  } else {
+    const decimal=rest.match(/([,.])(\d{2})$/);
+    if(!decimal) return null;
+    const separatorIndex=decimal.index!;
+    const decimals=decimal[2];
+    for(let intLen=1;intLen<=3;intLen++) {
+      const start=separatorIndex-intLen;
+      if(start<0) continue;
+      const intText=rest.slice(start,separatorIndex);
+      if(!/^\d+$/.test(intText)) continue;
+      const pct=Number(intText+"."+decimals);
+      if(pct<0||pct>100) continue;
+      pctCandidates.push({pct,before:rest.slice(0,start)});
+    }
+  }
+
+  const candidates:any[]=[];
+  for(const pctCandidate of pctCandidates) {
+    const slash=pctCandidate.before.lastIndexOf("/");
+    if(slash<0) continue;
+
+    const lossesText=pctCandidate.before.slice(slash+1);
+    const left=pctCandidate.before.slice(0,slash);
+    if(!/^\d+$/.test(lossesText)||!lossesText.length) continue;
+    const faceoffLosses=Number(lossesText);
+
+    for(let winsLen=1;winsLen<=2;winsLen++) {
+      if(left.length<=winsLen+5) continue;
+      const winsText=left.slice(-winsLen);
+      const stats=left.slice(0,-winsLen);
+      if(!/^\d+$/.test(winsText)||!/^\d{3}/.test(stats)) continue;
+
+      const faceoffWins=Number(winsText);
+      const goals=Number(stats[0]);
+      const assists=Number(stats[1]);
+      const points=Number(stats[2]);
+      if(points!==goals+assists) continue;
+
+      let tail=stats.slice(3);
+      let plusMinus:number|null=null;
+      if(tail.startsWith("-")) {
+        if(tail.length<4||!/^\-\d+$/.test(tail)) continue;
+        plusMinus=-Number(tail[1]);
+        tail=tail.slice(2);
+      } else {
+        if(tail.length<3||!/^\d+$/.test(tail)) continue;
+        plusMinus=Number(tail[0]);
+        tail=tail.slice(1);
+      }
+
+      const pimShots=splitPimShots(tail);
+      if(!pimShots) continue;
+
+      const totalFo=faceoffWins+faceoffLosses;
+      let pctScore=0;
+      if(pctCandidate.pct===null) {
+        if(totalFo!==0) continue;
+        pctScore=6;
+      } else {
+        if(totalFo<=0) continue;
+        const expected=faceoffWins/totalFo*100;
+        const delta=Math.abs(expected-pctCandidate.pct);
+        if(delta>0.2) continue;
+        pctScore=8-Math.min(delta,0.2)*10;
+      }
+
+      candidates.push({
+        sourceName,jersey,position,goals,assists,points,plusMinus,
+        pim:pimShots.pim,shots:pimShots.shots,
+        faceoffWins,faceoffLosses,faceoffPct:pctCandidate.pct,
+        sourceLine:row,score:pctScore+pimShots.score
+      });
+    }
+  }
+
+  candidates.sort((a,b)=>b.score-a.score);
+  const best=candidates[0];
+  if(!best) return null;
+  delete best.score;
+  return best;
+}
+
+function parseGoalieSummaryLine(line:string) {
+  const row=clean(line);
+  const base=row.match(/^(.+?)(\d{1,3})GK(.+)$/);
+  if(!base) return null;
+  const sourceName=clean(base[1]);
+  const jersey=Number(base[2]);
+  const rest=base[3];
+
+  const finalDecimal=rest.match(/([,.])(\d{2})$/);
+  if(!finalDecimal) return null;
+  const finalSep=finalDecimal.index!;
+  const gaaDecimals=finalDecimal[2];
+  const candidates:any[]=[];
+
+  for(let gaaIntLen=1;gaaIntLen<=2;gaaIntLen++) {
+    const gaaStart=finalSep-gaaIntLen;
+    if(gaaStart<0) continue;
+    const gaaInt=rest.slice(gaaStart,finalSep);
+    if(!/^\d+$/.test(gaaInt)) continue;
+    const gaa=Number(gaaInt+"."+gaaDecimals);
+    if(gaa>20) continue;
+
+    const beforeGaa=rest.slice(0,gaaStart);
+    const colon=beforeGaa.lastIndexOf(":");
+    if(colon<0||colon+3!==beforeGaa.length) continue;
+    const secondsText=beforeGaa.slice(colon+1);
+    if(!/^\d{2}$/.test(secondsText)||Number(secondsText)>59) continue;
+
+    for(let minuteLen=1;minuteLen<=3;minuteLen++) {
+      const minuteStart=colon-minuteLen;
+      if(minuteStart<0) continue;
+      const minuteText=beforeGaa.slice(minuteStart,colon);
+      if(!/^\d+$/.test(minuteText)) continue;
+      const minutes=Number(minuteText);
+      if(minutes>120) continue;
+
+      const beforeMip=beforeGaa.slice(0,minuteStart);
+      const saveDecimal=beforeMip.match(/([,.])(\d{2})$/);
+      if(!saveDecimal) continue;
+      const saveSep=saveDecimal.index!;
+      const saveDecimals=saveDecimal[2];
+
+      for(let pctIntLen=1;pctIntLen<=3;pctIntLen++) {
+        const pctStart=saveSep-pctIntLen;
+        if(pctStart<0) continue;
+        const pctInt=beforeMip.slice(pctStart,saveSep);
+        if(!/^\d+$/.test(pctInt)) continue;
+        const savePct=Number(pctInt+"."+saveDecimals);
+        if(savePct<0||savePct>100) continue;
+
+        const numbers=beforeMip.slice(0,pctStart);
+        if(!/^\d+$/.test(numbers)||numbers.length<3) continue;
+
+        for(let a=1;a<numbers.length-1;a++) {
+          for(let b=a+1;b<numbers.length;b++) {
+            const shotsAgainst=Number(numbers.slice(0,a));
+            const goalsAgainst=Number(numbers.slice(a,b));
+            const saves=Number(numbers.slice(b));
+            if(shotsAgainst>100||goalsAgainst>30||saves>100) continue;
+            if(shotsAgainst-goalsAgainst!==saves) continue;
+            if(shotsAgainst<=0) continue;
+
+            const expected=saves/shotsAgainst*100;
+            const delta=Math.abs(expected-savePct);
+            if(delta>0.2) continue;
+
+            let score=10-delta*10;
+            if(shotsAgainst<=60) score+=2;
+            if(goalsAgainst<=10) score+=2;
+            if(minutes<=65) score+=2;
+
+            candidates.push({
+              sourceName,jersey,position:"GK",shotsAgainst,goalsAgainst,saves,
+              savePct,minutesPlayedSeconds:minutes*60+Number(secondsText),
+              gaa,sourceLine:row,score
+            });
+          }
+        }
+      }
+    }
+  }
+
+  candidates.sort((a,b)=>b.score-a.score);
+  const best=candidates[0];
+  if(!best) return null;
+  delete best.score;
+  return best;
+}
+
+function parsePlayerSummaryText(text:string, game:any, homeName:string, awayName:string, roster:any[]) {
+  const lines = text.replace(/\r/g,"").split("\n").map(clean).filter(Boolean);
+  const skaters:any[]=[];
+  const goalies:any[]=[];
+  let teamId:string|null=null;
+  let mode:"skaters"|"goalies"|null=null;
+
+  for (const line of lines) {
+    if (line === homeName) { teamId=game.home_team_id; mode=null; continue; }
+    if (line === awayName) { teamId=game.away_team_id; mode=null; continue; }
+    if (!teamId) continue;
+
+    if (/^NameNo\.Pos\.GATP\+\/-PIMSOGFO\+\/-FO%$/i.test(line)) {
+      mode="skaters"; continue;
+    }
+    if (/^NameNo\.Pos\.SOGGASVSSVS%MIPGAA$/i.test(line)) {
+      mode="goalies"; continue;
+    }
+    if (line === "Player Summary" || line.startsWith("Referee") || line.startsWith("Linesman") ||
+        /^\d{4}-\d{2}-\d{2}/.test(line) || line.startsWith("Hockeyettan") ||
+        line.startsWith("Group No.") || line.startsWith("Game No.")) {
+      continue;
+    }
+
+    if (mode === "skaters") {
+      const p=parseSkaterSummaryLine(line);
+      if (!p) continue;
+      const rp=locateRosterPlayer(roster,teamId,p.jersey,p.sourceName);
+      skaters.push({
+        game_id:game.id,team_id:teamId,player_id:rp?.player_id || null,
+        source_name:p.sourceName,jersey_number:p.jersey,position:p.position,
+        goals:p.goals,assists:p.assists,points:p.points,plus_minus:p.plusMinus,
+        pim:p.pim,shots:p.shots,faceoff_wins:p.faceoffWins,faceoff_losses:p.faceoffLosses,
+        faceoff_pct:p.faceoffPct,toi_seconds:null,
+        source_fragment:{ source_line:p.sourceLine, parser:PARSER_VERSION },
+        source_updated_at:new Date().toISOString(),updated_at:new Date().toISOString()
+      });
+      continue;
+    }
+
+    if (mode === "goalies") {
+      const g=parseGoalieSummaryLine(line);
+      if (!g) continue;
+      const rp=locateRosterPlayer(roster,teamId,g.jersey,g.sourceName);
+      goalies.push({
+        game_id:game.id,team_id:teamId,player_id:rp?.player_id || null,
+        source_name:g.sourceName,jersey_number:g.jersey,
+        shots_against:g.shotsAgainst,goals_against:g.goalsAgainst,saves:g.saves,
+        save_pct:g.savePct,minutes_played_seconds:g.minutesPlayedSeconds,gaa:g.gaa,
+        decision:null,started:null,
+        source_fragment:{ source_line:g.sourceLine, parser:PARSER_VERSION },
+        source_updated_at:new Date().toISOString(),updated_at:new Date().toISOString()
+      });
+    }
+  }
+  return { skaters,goalies };
+}
+
+async function syncPlayerSummary(game:any,eventId:string,homeName:string,awayName:string,roster:any[]) {
+  const pdfItem=await fetchBinary(`/Game/Reports/PlayerSummary/${eventId}`);
+  await logBinaryFetch(pdfItem,"player_summary_pdf",eventId);
+  if (!pdfItem.contentType.includes("pdf") || !pdfItem.bytes.length) {
+    return { available:false,skaters:0,goalies:0 };
+  }
+
+  const parsedPdf=await pdf(Buffer.from(pdfItem.bytes));
+  const parsed=parsePlayerSummaryText(parsedPdf.text || "",game,homeName,awayName,roster);
+
+  const { error:deleteSkatersError }=await admin.from("player_game_stats")
+    .delete()
+    .eq("game_id",game.id);
+  if (deleteSkatersError) throw deleteSkatersError;
+
+  const { error:deleteGoaliesError }=await admin.from("goalie_game_stats")
+    .delete()
+    .eq("game_id",game.id);
+  if (deleteGoaliesError) throw deleteGoaliesError;
+
+  if (parsed.skaters.length) {
+    const { error:skaterInsertError }=await admin.from("player_game_stats").insert(parsed.skaters);
+    if (skaterInsertError) throw skaterInsertError;
+  }
+
+  if (parsed.goalies.length) {
+    const { error:goalieInsertError }=await admin.from("goalie_game_stats").insert(parsed.goalies);
+    if (goalieInsertError) throw goalieInsertError;
+  }
+
+  return { available:true,skaters:parsed.skaters.length,goalies:parsed.goalies.length,pages:parsedPdf.numpages };
 }
 
 async function syncLineup(game:any, eventId:string, htmlItem:any, homeName:string, awayName:string, roster:any[]) {
@@ -663,7 +1002,8 @@ async function syncEvents(game:any, eventId:string, htmlItem:any, roster:any[]) 
   return {
     events:eventPayload.length,
     participants:participants.length,
-    team_stats:summaryStats.length
+    team_stats:summaryStats.length,
+    is_final:update.status === "final"
   };
 }
 
@@ -690,7 +1030,27 @@ async function syncGameData(game:any, eventId:string, homeName:string, awayName:
 
   const lineupResult = await syncLineup(game,eventId,lineupHtml,homeName,awayName,roster || []);
   const eventsResult = await syncEvents(game,eventId,eventsHtml,roster || []);
-  return { eventId, awaiting:false, lineup:lineupResult, events:eventsResult };
+
+  let playerSummary:any = { skipped:true };
+  const shouldReadSummary = game.status === "final" || eventsResult.is_final === true;
+  if (shouldReadSummary) {
+    const { count:skaterCount, error:skaterCountError } = await admin.from("player_game_stats")
+      .select("id",{count:"exact",head:true})
+      .eq("game_id",game.id);
+    if (skaterCountError) throw skaterCountError;
+    const { count:goalieCount, error:goalieCountError } = await admin.from("goalie_game_stats")
+      .select("id",{count:"exact",head:true})
+      .eq("game_id",game.id);
+    if (goalieCountError) throw goalieCountError;
+
+    if ((skaterCount || 0) === 0 || (goalieCount || 0) === 0) {
+      playerSummary = await syncPlayerSummary(game,eventId,homeName,awayName,roster || []);
+    } else {
+      playerSummary = { skipped:true,existing_skaters:skaterCount || 0,existing_goalies:goalieCount || 0 };
+    }
+  }
+
+  return { eventId, awaiting:false, lineup:lineupResult, events:eventsResult, player_summary:playerSummary };
 }
 
 Deno.serve(async (req:Request) => {
@@ -767,9 +1127,19 @@ Deno.serve(async (req:Request) => {
         .eq("game_id",latestFinal.id);
       if (teamStatsCountError) throw teamStatsCountError;
 
+      const { count:playerStatsCount, error:playerStatsCountError } = await admin.from("player_game_stats")
+        .select("id",{count:"exact",head:true})
+        .eq("game_id",latestFinal.id);
+      if (playerStatsCountError) throw playerStatsCountError;
+
+      const { count:goalieStatsCount, error:goalieStatsCountError } = await admin.from("goalie_game_stats")
+        .select("id",{count:"exact",head:true})
+        .eq("game_id",latestFinal.id);
+      if (goalieStatsCountError) throw goalieStatsCountError;
+
       const legacyNumeric = /^\d+$/.test(latestFinal.source_game_id || "") ? latestFinal.source_game_id : null;
       const finalEventId = latestFinal.source_event_game_id || legacyNumeric;
-      if ((force || (eventCount || 0) === 0 || (lineupCount || 0) === 0 || (teamStatsCount || 0) < 2) && finalEventId) {
+      if ((force || (eventCount || 0) === 0 || (lineupCount || 0) === 0 || (teamStatsCount || 0) < 2 || (playerStatsCount || 0) === 0 || (goalieStatsCount || 0) === 0) && finalEventId) {
         output.bootstrap = await syncGameData(
           latestFinal,
           finalEventId,
@@ -782,6 +1152,8 @@ Deno.serve(async (req:Request) => {
           existing_events:eventCount || 0,
           existing_lineups:lineupCount || 0,
           existing_team_stats:teamStatsCount || 0,
+          existing_player_stats:playerStatsCount || 0,
+          existing_goalie_stats:goalieStatsCount || 0,
           eventId:finalEventId
         };
       }
