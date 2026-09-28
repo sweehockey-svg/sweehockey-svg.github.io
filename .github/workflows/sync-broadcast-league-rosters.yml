@@ -1,5 +1,5 @@
-name: Sync Broadcast Studio league rosters
-run-name: Broadcast rosters · ${{ inputs.request_id || github.event_name }}
+name: Sync Broadcast Studio league data
+run-name: Broadcast data · ${{ inputs.request_id || github.event_name }}
 
 on:
   workflow_dispatch:
@@ -19,7 +19,9 @@ on:
     paths:
       - '.github/workflows/sync-broadcast-league-rosters.yml'
       - '.github/sync/export-broadcast-league-roster.py'
+      - '.github/sync/export-broadcast-league-team-stats.py'
       - '.github/sync/import-broadcast-league-roster.psql'
+      - '.github/sync/import-broadcast-league-team-stats.psql'
 
 permissions:
   contents: read
@@ -60,7 +62,7 @@ jobs:
   sync:
     needs: prepare
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       max-parallel: 1
       fail-fast: false
@@ -107,9 +109,9 @@ jobs:
             -L "${SSH_LOCAL_DB_PORT:-3307}:${SSH_REMOTE_DB_HOST:-127.0.0.1}:${SSH_REMOTE_DB_PORT:-3306}" \
             "$SSH_USER@$SSH_HOST"
 
-      - name: Read teams and full roster from SportsGamer
+      - name: Read teams, roster and player IDs from SportsGamer
         id: export
-        env:
+        env: &sports_gamer_env
           DB_HOST: ${{ secrets.SVENSK_DB_HOST }}
           DB_PORT: ${{ secrets.SVENSK_DB_PORT }}
           DB_NAME: ${{ secrets.SVENSK_DB_NAME }}
@@ -120,7 +122,23 @@ jobs:
           LEAGUE_ID: ${{ matrix.league_id }}
         run: python .github/sync/export-broadcast-league-roster.py
 
-      - name: Import teams and full roster into Supabase
+      - name: Read standings from reported SportsGamer matches
+        id: team_stats
+        env: *sports_gamer_env
+        run: python .github/sync/export-broadcast-league-team-stats.py
+
+      - name: Read full skater and goalie statistics
+        id: player_stats
+        env:
+          <<: *sports_gamer_env
+          PLAYER_IDS_FILE: /tmp/broadcast_player_ids.csv
+          EXPORT_FILE: /tmp/swedish_player_stats.csv
+          MIN_PLAYER_COUNT: '1'
+          LEAGUE_IDS: ${{ matrix.league_id }}
+          CURRENT_LEAGUE_WINDOW: '0'
+        run: python .github/sync/export_current_swedish_player_stats.py
+
+      - name: Import teams and roster into Supabase
         env:
           PGURL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
@@ -129,15 +147,57 @@ jobs:
           timeout --foreground --kill-after=30s 10m \
             psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-broadcast-league-roster.psql
 
+      - name: Import standings into Supabase
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          timeout --foreground --kill-after=30s 10m \
+            psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-broadcast-league-team-stats.psql
+
+      - name: Import player statistics into Supabase
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          timeout --foreground --kill-after=30s 10m \
+            psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-current-swedish-player-stats.psql
+
+      - name: Verify Broadcast Studio rows
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+          LEAGUE_ID: ${{ matrix.league_id }}
+        run: |
+          psql "$PGURL" -v ON_ERROR_STOP=1 -v league_id="$LEAGUE_ID" <<'SQL'
+          select sports_gamer_league_id, statistics_stage, count(*) as teams,
+                 sum(games_played) as team_games
+          from public.v_broadcast_teams_public
+          where sports_gamer_league_id=:'league_id'::bigint
+          group by sports_gamer_league_id, statistics_stage
+          order by statistics_stage;
+
+          select sports_gamer_league_id, count(*) as players,
+                 count(*) filter (
+                   where coalesce(regular_skater_games,0)+coalesce(playoff_skater_games,0)
+                        +coalesce(regular_goalie_games,0)+coalesce(playoff_goalie_games,0) > 0
+                 ) as players_with_stats
+          from public.v_broadcast_players_public
+          where sports_gamer_league_id=:'league_id'::bigint
+          group by sports_gamer_league_id;
+          SQL
+
       - name: Summary
         if: always()
         run: |
           {
-            echo "## Broadcast Studio roster sync"
+            echo "## Broadcast Studio data sync"
             echo ""
             echo "- SportsGamer league: **${{ matrix.league_id }}**"
             echo "- Teams: **${{ steps.export.outputs.team_count || 0 }}**"
-            echo "- Full roster players: **${{ steps.export.outputs.player_count || 0 }}**"
+            echo "- Current roster players: **${{ steps.export.outputs.player_count || 0 }}**"
+            echo "- Players checked for statistics: **${{ steps.export.outputs.stats_player_count || 0 }}**"
+            echo "- Reported matches: **${{ steps.team_stats.outputs.completed_match_count || 0 }}**"
+            echo "- Team-stage rows: **${{ steps.team_stats.outputs.team_stat_row_count || 0 }}**"
             echo "- Source: direct SportsGamer read-only database"
             echo "- Result: **${{ job.status }}**"
           } >> "$GITHUB_STEP_SUMMARY"

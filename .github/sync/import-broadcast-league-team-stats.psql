@@ -1,0 +1,61 @@
+\set ON_ERROR_STOP on
+
+begin;
+set local statement_timeout = '10min';
+set local lock_timeout = '30s';
+
+create temporary table broadcast_team_stats_stage
+(like public.sportsgamer_team_tournament_stats including defaults)
+on commit drop;
+
+\copy broadcast_team_stats_stage (
+  sports_gamer_league_id,official_league_name,league_description,platform_id,video_game_id,
+  game_mode_id,configured_team_count,configured_group_count,active_league,featured_league,
+  league_phase,league_stage,registration_end,regular_season_end,league_logo,league_landing_link,
+  league_info_link,sports_gamer_team_id,team_name_in_league,current_global_team_name,
+  team_abbreviation,registered_group_id,statistics_group_id,effective_group_id,group_name,
+  registered_for_league,country_in_league,nationality_in_league,city_in_league,
+  team_logo_in_league,current_global_team_logo,ea_club_id,statistics_stage,games_played,wins,
+  losses,overtime_wins,overtime_losses,total_wins,table_points,goals_for,goals_against,
+  goal_difference,statistics_status,sports_gamer_team_url
+) from '/tmp/broadcast_league_team_stats.csv' with (format csv, header true, null '');
+
+select 1 / case when count(*) >= 2 then 1 else 0 end as team_stats_must_exist
+from broadcast_team_stats_stage;
+
+select 1 / case when count(distinct sports_gamer_league_id)=1 then 1 else 0 end as exactly_one_league
+from broadcast_team_stats_stage;
+
+select 1 / case
+  when count(*) = count(distinct (sports_gamer_league_id,sports_gamer_team_id,statistics_stage))
+  then 1 else 0 end as team_stage_rows_must_be_unique
+from broadcast_team_stats_stage;
+
+delete from public.sportsgamer_team_tournament_stats
+where sports_gamer_league_id=(select min(sports_gamer_league_id) from broadcast_team_stats_stage);
+
+insert into public.sportsgamer_team_tournament_stats (
+  sports_gamer_league_id,official_league_name,league_description,platform_id,video_game_id,
+  game_mode_id,configured_team_count,configured_group_count,active_league,featured_league,
+  league_phase,league_stage,registration_end,regular_season_end,league_logo,league_landing_link,
+  league_info_link,sports_gamer_team_id,team_name_in_league,current_global_team_name,
+  team_abbreviation,registered_group_id,statistics_group_id,effective_group_id,group_name,
+  registered_for_league,country_in_league,nationality_in_league,city_in_league,
+  team_logo_in_league,current_global_team_logo,ea_club_id,statistics_stage,games_played,wins,
+  losses,overtime_wins,overtime_losses,total_wins,table_points,goals_for,goals_against,
+  goal_difference,statistics_status,sports_gamer_team_url,imported_at
+)
+select
+  sports_gamer_league_id,official_league_name,league_description,platform_id,video_game_id,
+  game_mode_id,configured_team_count,configured_group_count,active_league,featured_league,
+  league_phase,league_stage,registration_end,regular_season_end,league_logo,league_landing_link,
+  league_info_link,sports_gamer_team_id,team_name_in_league,current_global_team_name,
+  team_abbreviation,registered_group_id,statistics_group_id,effective_group_id,group_name,
+  registered_for_league,country_in_league,nationality_in_league,city_in_league,
+  team_logo_in_league,current_global_team_logo,ea_club_id,statistics_stage,games_played,wins,
+  losses,overtime_wins,overtime_losses,total_wins,table_points,goals_for,goals_against,
+  goal_difference,statistics_status,sports_gamer_team_url,now()
+from broadcast_team_stats_stage;
+
+analyze public.sportsgamer_team_tournament_stats;
+commit;

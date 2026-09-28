@@ -23,6 +23,7 @@ if LEAGUE_ID <= 0:
     raise RuntimeError("LEAGUE_ID must be a positive SportsGamer league id")
 TEAM_OUT = Path("/tmp/broadcast_league_teams.csv")
 ROSTER_OUT = Path("/tmp/broadcast_league_roster.csv")
+PLAYER_IDS_OUT = Path("/tmp/broadcast_player_ids.csv")
 POSITION_BY_ID = {1: "LW", 2: "C", 3: "RW", 4: "LD", 5: "RD", 6: "G"}
 
 
@@ -264,6 +265,23 @@ def main() -> int:
     connection = connect()
     try:
         team_rows, roster_rows, global_teams, players = load_source_rows(connection)
+        inventory = table_inventory(connection)
+        stats_player_ids = {integer(first(row, "playerID", "player_id")) for row in roster_rows}
+        stats_player_ids.discard(0)
+        for table in ("nhlgamer_playerStats", "nhlgamer_goalieStats", "nhlgamer_participants"):
+            columns = inventory.get(table, [])
+            league_column = column_name(columns, "leagueID", "league_id")
+            player_column = column_name(columns, "playerID", "player_id")
+            if not league_column or not player_column:
+                continue
+            rows = select(
+                connection,
+                f"select distinct {safe_identifier(player_column)} as __playerID "
+                f"from {safe_identifier(table)} where {safe_identifier(league_column)}=%s",
+                (LEAGUE_ID,),
+            )
+            stats_player_ids.update(integer(first(row, "__playerID")) for row in rows)
+        stats_player_ids.discard(0)
     finally:
         connection.close()
 
@@ -323,11 +341,25 @@ def main() -> int:
         writer.writeheader()
         writer.writerows(sorted(roster.values(), key=lambda item: (item["sports_gamer_team_id"], item["display_gamertag"].casefold())))
 
+    with PLAYER_IDS_OUT.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["sports_gamer_player_id"])
+        writer.writeheader()
+        writer.writerows({"sports_gamer_player_id": player_id} for player_id in sorted(stats_player_ids))
+
     output = os.environ.get("GITHUB_OUTPUT")
     if output:
         with open(output, "a", encoding="utf-8") as handle:
-            handle.write(f"team_count={len(teams)}\nplayer_count={len(roster)}\nleague_id={LEAGUE_ID}\ndiagnostic_stage=complete\n")
-    print(f"Exported {len(teams)} teams and {len(roster)} roster players for league {LEAGUE_ID}.")
+            handle.write(
+                f"team_count={len(teams)}\n"
+                f"player_count={len(roster)}\n"
+                f"stats_player_count={len(stats_player_ids)}\n"
+                f"league_id={LEAGUE_ID}\n"
+                "diagnostic_stage=complete\n"
+            )
+    print(
+        f"Exported {len(teams)} teams, {len(roster)} roster players and "
+        f"{len(stats_player_ids)} statistics player IDs for league {LEAGUE_ID}."
+    )
     return 0
 
 
