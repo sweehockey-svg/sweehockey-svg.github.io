@@ -11,7 +11,7 @@
     competition: null,
     teams: [],
     teamById: new Map(),
-    vasby: null,
+    focusTeam: null,
     opponent: null,
     nextGame: null,
     upcomingGames: [],
@@ -19,9 +19,9 @@
     standingsByTeam: new Map(),
     roster: [],
     playerProfiles: new Map(),
-    vasbyForm: [],
+    focusForm: [],
     opponentForm: [],
-    latestVasbyGame: null,
+    latestFocusGame: null,
     latestEvents: [],
     latestTeamStats: new Map(),
     latestPlayerStats: [],
@@ -69,7 +69,7 @@
       kicker: "MATCH",
       title: "Matchöversikt",
       cards: [
-        ["Nästa match", "Laddar från Hockeyettan Norra 2026/27."],
+        ["Nästa match", "Laddar från Hockeyettan 2026/27."],
         ["Datakälla", "Swehockey → collector → Supabase → cockpit."]
       ]
     },
@@ -589,12 +589,12 @@
     if(note.scope_type==="general") return true;
     if(note.scope_type==="match") return note.game_id===state.nextGame?.id;
     if(note.scope_type==="team"){
-      return note.team_id===state.vasby?.id||note.team_id===state.opponent?.id;
+      return note.team_id===state.focusTeam?.id||note.team_id===state.opponent?.id;
     }
     if(note.scope_type==="player"){
       return state.seasonPlayerStats.some((row)=>
         row.player_id===note.player_id &&
-        (row.team_id===state.vasby?.id||row.team_id===state.opponent?.id)
+        (row.team_id===state.focusTeam?.id||row.team_id===state.opponent?.id)
       );
     }
     return false;
@@ -618,11 +618,11 @@
     if(state.nextGame){
       push("match|"+state.nextGame.id,"Match · "+getTeamName(state.nextGame.home_team_id)+" – "+getTeamName(state.nextGame.away_team_id));
     }
-    if(state.vasby) push("team|"+state.vasby.id,"Lag · "+state.vasby.canonical_name);
+    if(state.focusTeam) push("team|"+state.focusTeam.id,"Lag · "+state.focusTeam.canonical_name);
     if(state.opponent) push("team|"+state.opponent.id,"Lag · "+state.opponent.canonical_name);
 
     const players=state.seasonPlayerStats
-      .filter((row)=>row.player_id&&(row.team_id===state.vasby?.id||row.team_id===state.opponent?.id))
+      .filter((row)=>row.player_id&&(row.team_id===state.focusTeam?.id||row.team_id===state.opponent?.id))
       .sort((a,b)=>
         getTeamName(a.team_id).localeCompare(getTeamName(b.team_id),"sv") ||
         humanSourceName(a.source_name).localeCompare(humanSourceName(b.source_name),"sv")
@@ -1117,7 +1117,7 @@
   }
 
   function latestStatsPair() {
-    const game = state.latestVasbyGame;
+    const game = state.latestFocusGame;
     if (!game) return { home: null, away: null };
     return {
       home: state.latestTeamStats.get(game.home_team_id) || null,
@@ -1130,7 +1130,7 @@
   }
 
   function renderMatchStats() {
-    const game = state.latestVasbyGame;
+    const game = state.latestFocusGame;
     if (!game) return;
     const { home, away } = latestStatsPair();
     const homeName = getTeamName(game.home_team_id);
@@ -1158,7 +1158,7 @@
   }
 
   function matchStatsStripHtml() {
-    const game = state.latestVasbyGame;
+    const game = state.latestFocusGame;
     if (!game) return "";
     const { home, away } = latestStatsPair();
     if (!home && !away) return "";
@@ -1186,8 +1186,8 @@
 
   function renderStandingsQuick() {
     const el = document.getElementById("standingsQuick");
-    if (!el || !state.vasby || !state.opponent) return;
-    const rows = [state.vasby, state.opponent].map((team) => {
+    if (!el || !state.focusTeam || !state.opponent) return;
+    const rows = [state.focusTeam, state.opponent].map((team) => {
       const row = state.standingsByTeam.get(team.id);
       return '<div><b>' + esc(row?.rank ?? "–") + '</b><span>' +
         esc(team.canonical_name) + '</span><em>' + esc(row?.points ?? "–") + ' p</em></div>';
@@ -1197,7 +1197,7 @@
 
   function renderLatestGame() {
     const feed = document.getElementById("eventFeed");
-    const game = state.latestVasbyGame;
+    const game = state.latestFocusGame;
     if (!feed || !game) return;
     feed.className = "event-feed-live";
 
@@ -1224,7 +1224,7 @@
 
     feed.innerHTML =
       '<article class="recent-game">' +
-        '<div class="recent-game-top"><span>SENASTE VÄSBY-MATCH · OFFICIELL EVENTDATA</span><span>' + esc(swedishDate(game.scheduled_start)) + '</span></div>' +
+        '<div class="recent-game-top"><span>SENASTE MATCH · ' + esc(state.focusTeam.canonical_name.toUpperCase()) + ' · OFFICIELL EVENTDATA</span><span>' + esc(swedishDate(game.scheduled_start)) + '</span></div>' +
         '<div class="recent-game-score">' +
           '<span>' + esc(getTeamName(game.home_team_id)) + '</span>' +
           '<strong>' + esc(game.home_score) + '–' + esc(game.away_score) + '</strong>' +
@@ -1292,13 +1292,13 @@
   }
 
   function buildInsightFacts() {
-    if(!state.nextGame||!state.vasby||!state.opponent) return [];
+    if(!state.nextGame||!state.focusTeam||!state.opponent) return [];
     const facts=[];
     const game=state.nextGame;
     const live=game.status==="live";
-    const vasbyStanding=state.standingsByTeam.get(state.vasby.id);
+    const focusStanding=state.standingsByTeam.get(state.focusTeam.id);
     const oppStanding=state.standingsByTeam.get(state.opponent.id);
-    const vasbyForm=formSummary(state.vasbyForm,state.vasby.id);
+    const focusForm=formSummary(state.focusForm,state.focusTeam.id);
     const oppForm=formSummary(state.opponentForm,state.opponent.id);
 
     const add=(fact)=>{
@@ -1331,13 +1331,13 @@
         });
       }
 
-      const vasbyLive=state.teamGameStats.find((row)=>row.game_id===game.id&&row.team_id===state.vasby.id);
+      const focusLive=state.teamGameStats.find((row)=>row.game_id===game.id&&row.team_id===state.focusTeam.id);
       const oppLive=state.teamGameStats.find((row)=>row.game_id===game.id&&row.team_id===state.opponent.id);
-      if(vasbyLive||oppLive){
+      if(focusLive||oppLive){
         add({
           id:"live-special",
           tag:"SPECIAL TEAMS LIVE",
-          title:state.vasby.canonical_name+" PP "+specialRecord(vasbyLive?.power_play_goals,vasbyLive?.power_play_opportunities)+
+          title:state.focusTeam.canonical_name+" PP "+specialRecord(focusLive?.power_play_goals,focusLive?.power_play_opportunities)+
             " · "+state.opponent.canonical_name+" PP "+specialRecord(oppLive?.power_play_goals,oppLive?.power_play_opportunities),
           text:"Aktuell matchdata från officiella matchrapporten.",
           score:180,
@@ -1348,41 +1348,41 @@
       add({
         id:"next-match",
         tag:"NÄSTA MATCH",
-        title:state.vasby.canonical_name+" – "+state.opponent.canonical_name,
+        title:state.focusTeam.canonical_name+" – "+state.opponent.canonical_name,
         text:swedishDate(game.scheduled_start)+" · "+(game.venue_name||"Arena ej angiven"),
         score:74
       });
     }
 
-    if(vasbyStanding&&oppStanding){
+    if(focusStanding&&oppStanding){
       add({
         id:"standings",
         tag:"TABELL",
-        title:state.opponent.canonical_name+" #"+oppStanding.rank+" · "+state.vasby.canonical_name+" #"+vasbyStanding.rank,
-        text:"Efter "+oppStanding.games_played+" respektive "+vasbyStanding.games_played+
-          " spelade matcher. Poäng "+oppStanding.points+"–"+vasbyStanding.points+".",
+        title:state.opponent.canonical_name+" #"+oppStanding.rank+" · "+state.focusTeam.canonical_name+" #"+focusStanding.rank,
+        text:"Efter "+oppStanding.games_played+" respektive "+focusStanding.games_played+
+          " spelade matcher. Poäng "+oppStanding.points+"–"+focusStanding.points+".",
         score:72,
         story:true
       });
     }
 
-    if(vasbyForm.games||oppForm.games){
+    if(focusForm.games||oppForm.games){
       add({
         id:"form",
         tag:"FORM",
-        title:state.vasby.canonical_name+" "+formText(vasbyForm),
+        title:state.focusTeam.canonical_name+" "+formText(focusForm),
         text:state.opponent.canonical_name+" "+formText(oppForm)+".",
         score:104,
         story:true
       });
 
-      const vasbyLatest=latestResultText(state.vasbyForm,state.vasby.id);
+      const focusLatest=latestResultText(state.focusForm,state.focusTeam.id);
       const oppLatest=latestResultText(state.opponentForm,state.opponent.id);
-      if(vasbyLatest&&oppLatest){
+      if(focusLatest&&oppLatest){
         add({
           id:"latest-results",
           tag:"SENAST",
-          title:state.vasby.canonical_name+" "+vasbyLatest.result+" "+vasbyLatest.gf+"–"+vasbyLatest.ga+" mot "+vasbyLatest.opponent,
+          title:state.focusTeam.canonical_name+" "+focusLatest.result+" "+focusLatest.gf+"–"+focusLatest.ga+" mot "+focusLatest.opponent,
           text:state.opponent.canonical_name+" "+oppLatest.result+" "+oppLatest.gf+"–"+oppLatest.ga+" mot "+oppLatest.opponent+".",
           score:96,
           story:true
@@ -1393,28 +1393,28 @@
     if(state.h2hGames.length){
       const h=h2hSummary();
       const latest=state.h2hGames[0];
-      const latestScore=h2hScoreFor(latest,state.vasby.id);
+      const latestScore=h2hScoreFor(latest,state.focusTeam.id);
       add({
         id:"h2h",
         tag:"H2H",
-        title:"Importerad historik: "+h.vasbyWins+"–"+h.opponentWins+" i vinster · mål "+h.vasbyGoals+"–"+h.opponentGoals,
-        text:"Senaste mötet: "+state.vasby.canonical_name+" "+latestScore.gf+"–"+latestScore.ga+" "+state.opponent.canonical_name+
+        title:"Importerad historik: "+h.focusWins+"–"+h.opponentWins+" i vinster · mål "+h.focusGoals+"–"+h.opponentGoals,
+        text:"Senaste mötet: "+state.focusTeam.canonical_name+" "+latestScore.gf+"–"+latestScore.ga+" "+state.opponent.canonical_name+
           " · "+shortDateOnly(latest.scheduled_start)+".",
         score:118,
         story:true
       });
     }
 
-    const vasbySpecial=seasonSpecialForTeam(state.vasby.id);
+    const focusSpecial=seasonSpecialForTeam(state.focusTeam.id);
     const oppSpecial=seasonSpecialForTeam(state.opponent.id);
-    if(vasbySpecial&&oppSpecial){
-      const vasbyPkKills=Number(vasbySpecial.pk_opportunities||0)-Number(vasbySpecial.pk_goals_against||0);
+    if(focusSpecial&&oppSpecial){
+      const focusPkKills=Number(focusSpecial.pk_opportunities||0)-Number(focusSpecial.pk_goals_against||0);
       const oppPkKills=Number(oppSpecial.pk_opportunities||0)-Number(oppSpecial.pk_goals_against||0);
       add({
         id:"special-teams",
         tag:"PP / BP",
-        title:state.vasby.canonical_name+" PP "+specialRecord(vasbySpecial.pp_goals,vasbySpecial.pp_opportunities)+
-          " · BP "+specialRecord(vasbyPkKills,vasbySpecial.pk_opportunities),
+        title:state.focusTeam.canonical_name+" PP "+specialRecord(focusSpecial.pp_goals,focusSpecial.pp_opportunities)+
+          " · BP "+specialRecord(focusPkKills,focusSpecial.pk_opportunities),
         text:state.opponent.canonical_name+" PP "+specialRecord(oppSpecial.pp_goals,oppSpecial.pp_opportunities)+
           " · BP "+specialRecord(oppPkKills,oppSpecial.pk_opportunities)+
           ". Tidigt säsongsunderlag.",
@@ -1423,14 +1423,14 @@
       });
     }
 
-    const vasbyTop=topSkater(state.vasby.id);
+    const focusTop=topSkater(state.focusTeam.id);
     const oppTop=topSkater(state.opponent.id);
-    if(vasbyTop&&oppTop){
+    if(focusTop&&oppTop){
       add({
         id:"points-leaders",
         tag:"POÄNGLIGAN I LAGEN",
-        title:"#"+vasbyTop.jersey_number+" "+humanSourceName(vasbyTop.source_name)+
-          " "+vasbyTop.goals+"+"+vasbyTop.assists+" · "+vasbyTop.points+" P",
+        title:"#"+focusTop.jersey_number+" "+humanSourceName(focusTop.source_name)+
+          " "+focusTop.goals+"+"+focusTop.assists+" · "+focusTop.points+" P",
         text:state.opponent.canonical_name+": #"+oppTop.jersey_number+" "+humanSourceName(oppTop.source_name)+
           " "+oppTop.goals+"+"+oppTop.assists+" · "+oppTop.points+" P.",
         score:89,
@@ -1438,13 +1438,13 @@
       });
     }
 
-    const vasbyGoalie=leadingGoalie(state.vasby.id);
+    const focusGoalie=leadingGoalie(state.focusTeam.id);
     const oppGoalie=leadingGoalie(state.opponent.id);
-    if(vasbyGoalie&&oppGoalie){
+    if(focusGoalie&&oppGoalie){
       add({
         id:"goalie-numbers",
         tag:"MÅLVAKTSSIFFROR",
-        title:humanSourceName(vasbyGoalie.source_name)+" "+formatPct(vasbyGoalie.save_pct),
+        title:humanSourceName(focusGoalie.source_name)+" "+formatPct(focusGoalie.save_pct),
         text:humanSourceName(oppGoalie.source_name)+" "+formatPct(oppGoalie.save_pct)+
           ". Statistik, inte bekräftade starters.",
         score:67
@@ -1539,7 +1539,7 @@
     }
 
     const earlySeason=Math.max(
-      Number(state.standingsByTeam.get(state.vasby.id)?.games_played||0),
+      Number(state.standingsByTeam.get(state.focusTeam.id)?.games_played||0),
       Number(state.standingsByTeam.get(state.opponent.id)?.games_played||0)
     )<5;
 
@@ -1619,15 +1619,15 @@
   }
 
   async function requestServerAi(question="") {
-    if(!client||!state.nextGame?.id||!state.vasby?.id) return {used:false,reason:"missing_context"};
-    if(!canAccessTeam(state.vasby.id)) return {used:false,reason:"access_not_approved"};
+    if(!client||!state.nextGame?.id||!state.focusTeam?.id) return {used:false,reason:"missing_context"};
+    if(!canAccessTeam(state.focusTeam.id)) return {used:false,reason:"access_not_approved"};
     const {data:{session}}=await client.auth.getSession();
     if(!session?.access_token) return {used:false,reason:"not_authenticated"};
 
     const {data,error}=await client.functions.invoke("commentator-ai",{
       body:{
         game_id:state.nextGame.id,
-        team_id:state.vasby.id,
+        team_id:state.focusTeam.id,
         question:String(question||"").trim().slice(0,500),
         mode:aiMode(),
         editorial_notes:aiEditorialPayload()
@@ -1877,7 +1877,7 @@
     const officialTeams = state.nextLineup
       ? new Set(state.nextLineup.players.map((row) => row.team_id))
       : new Set();
-    const officialReady = officialTeams.has(state.vasby.id) && officialTeams.has(state.opponent.id);
+    const officialReady = officialTeams.has(state.focusTeam.id) && officialTeams.has(state.opponent.id);
 
     const intro = officialReady
       ? '<article class="drawer-card lineup-info official"><strong>Officiell lineup publicerad</strong><span>Uppställningen för nästa match hämtas direkt från Swehockey och ersätter automatiskt tidigare kedjor.</span></article>'
@@ -1885,7 +1885,7 @@
 
     return intro +
       '<div class="lineup-team-grid">' +
-        renderLineupTeam(state.vasby.id) +
+        renderLineupTeam(state.focusTeam.id) +
         renderLineupTeam(state.opponent.id) +
       '</div>';
   }
@@ -1895,7 +1895,7 @@
   }
 
   function recentGameIdsForTeam(teamId) {
-    return (teamId === state.vasby?.id ? state.vasbyForm : state.opponentForm)
+    return (teamId === state.focusTeam?.id ? state.focusForm : state.opponentForm)
       .map((game) => game.id);
   }
 
@@ -1958,7 +1958,7 @@
       return '<div class="drawer-card"><strong>Ingen säsongsstatistik ännu</strong><span>Swehockeys Players By Team har ännu inte gett oss spelardata.</span></div>';
     }
 
-    const teamOrder = [state.vasby.id, state.opponent.id];
+    const teamOrder = [state.focusTeam.id, state.opponent.id];
     return teamOrder.map((teamId) => {
       const rows = state.seasonPlayerStats
         .filter((row) => row.team_id === teamId && row.position !== "GK")
@@ -2004,7 +2004,7 @@
       return '<div class="drawer-card"><strong>Ingen målvaktsstatistik ännu</strong><span>Swehockeys säsongstabell har ännu inte gett oss målvaktsdata.</span></div>';
     }
 
-    const teamOrder = [state.vasby.id, state.opponent.id];
+    const teamOrder = [state.focusTeam.id, state.opponent.id];
     return teamOrder.map((teamId) => {
       const rows = state.seasonGoalieStats
         .filter((row) => row.team_id === teamId)
@@ -2135,7 +2135,7 @@
   function renderSpecialTeams() {
     return '<article class="drawer-card special-intro"><strong>PP / BP</strong><span>Säsongen kommer direkt från Swehockeys officiella PP/Penalty Killing-tabell. Senaste 5 räknas från importerade officiella matchrapporter.</span></article>' +
       '<div class="special-team-grid">' +
-        renderSpecialTeamCard(state.vasby.id) +
+        renderSpecialTeamCard(state.focusTeam.id) +
         renderSpecialTeamCard(state.opponent.id) +
       '</div>';
   }
@@ -2149,20 +2149,20 @@
   }
 
   function h2hWinner(game) {
-    const v=h2hScoreFor(game,state.vasby.id);
-    if(v.gf>v.ga) return state.vasby.id;
+    const v=h2hScoreFor(game,state.focusTeam.id);
+    if(v.gf>v.ga) return state.focusTeam.id;
     if(v.gf<v.ga) return state.opponent.id;
     return null;
   }
 
   function h2hSummary() {
     const games=state.h2hGames;
-    let vasbyWins=0,opponentWins=0,ties=0,vasbyGoals=0,opponentGoals=0;
+    let focusWins=0,opponentWins=0,ties=0,focusGoals=0,opponentGoals=0;
     for(const game of games) {
-      const score=h2hScoreFor(game,state.vasby.id);
-      vasbyGoals+=score.gf;
+      const score=h2hScoreFor(game,state.focusTeam.id);
+      focusGoals+=score.gf;
       opponentGoals+=score.ga;
-      if(score.gf>score.ga) vasbyWins++;
+      if(score.gf>score.ga) focusWins++;
       else if(score.gf<score.ga) opponentWins++;
       else ties++;
     }
@@ -2182,7 +2182,7 @@
       }
     }
 
-    return {games:games.length,vasbyWins,opponentWins,ties,vasbyGoals,opponentGoals,streakTeam,streak};
+    return {games:games.length,focusWins,opponentWins,ties,focusGoals,opponentGoals,streakTeam,streak};
   }
 
   function seasonForGame(game) {
@@ -2203,12 +2203,12 @@
 
     const s=h2hSummary();
     const latest=state.h2hGames[0];
-    const latestScore=h2hScoreFor(latest,state.vasby.id);
+    const latestScore=h2hScoreFor(latest,state.focusTeam.id);
     const streakName=s.streakTeam?getTeamName(s.streakTeam):"Ingen";
     const historySeasons=[...new Set(state.h2hGames.map(seasonForGame))].filter(Boolean);
 
     const rows=state.h2hGames.slice(0,10).map((game)=>{
-      const v=h2hScoreFor(game,state.vasby.id);
+      const v=h2hScoreFor(game,state.focusTeam.id);
       const result=v.gf>v.ga?"win":v.gf<v.ga?"loss":"tie";
       const home=getTeamName(game.home_team_id);
       const away=getTeamName(game.away_team_id);
@@ -2222,13 +2222,13 @@
     return '<article class="drawer-card h2h-intro"><strong>Historik från Swehockey</strong><span>'+esc(historySeasons.join(" · "))+' · siffrorna räknas direkt från importerade matcher.</span></article>' +
       '<div class="h2h-summary">' +
         '<div><span>MÖTEN</span><strong>'+esc(s.games)+'</strong></div>' +
-        '<div><span>VINSTER</span><strong>'+esc(s.vasbyWins)+'–'+esc(s.opponentWins)+'</strong><small>'+esc(state.vasby.canonical_name)+' – '+esc(state.opponent.canonical_name)+'</small></div>' +
-        '<div><span>MÅL</span><strong>'+esc(s.vasbyGoals)+'–'+esc(s.opponentGoals)+'</strong><small>'+esc(state.vasby.canonical_name)+' – '+esc(state.opponent.canonical_name)+'</small></div>' +
+        '<div><span>VINSTER</span><strong>'+esc(s.focusWins)+'–'+esc(s.opponentWins)+'</strong><small>'+esc(state.focusTeam.canonical_name)+' – '+esc(state.opponent.canonical_name)+'</small></div>' +
+        '<div><span>MÅL</span><strong>'+esc(s.focusGoals)+'–'+esc(s.opponentGoals)+'</strong><small>'+esc(state.focusTeam.canonical_name)+' – '+esc(state.opponent.canonical_name)+'</small></div>' +
         '<div><span>SVIT</span><strong>'+esc(s.streak||"–")+'</strong><small>'+esc(s.streak?streakName:"Ingen pågående")+'</small></div>' +
       '</div>' +
       '<article class="h2h-latest">' +
         '<span>SENASTE MÖTET · '+esc(seasonForGame(latest))+'</span>' +
-        '<strong>'+esc(state.vasby.canonical_name)+' '+esc(latestScore.gf)+'–'+esc(latestScore.ga)+' '+esc(state.opponent.canonical_name)+'</strong>' +
+        '<strong>'+esc(state.focusTeam.canonical_name)+' '+esc(latestScore.gf)+'–'+esc(latestScore.ga)+' '+esc(state.opponent.canonical_name)+'</strong>' +
         '<small>'+esc(shortDateOnly(latest.scheduled_start))+' · '+esc(latest.venue_name||"Arena saknas")+'</small>' +
       '</article>' +
       '<div class="h2h-list">'+rows+'</div>';
@@ -2236,7 +2236,7 @@
 
 
   function studioGame() {
-    return state.nextGame?.status === "live" ? state.nextGame : state.latestVasbyGame;
+    return state.nextGame?.status === "live" ? state.nextGame : state.latestFocusGame;
   }
 
   function studioEvents(game) {
@@ -2250,7 +2250,7 @@
     if(!game) return null;
     const current=state.teamGameStats.find((row)=>row.game_id===game.id&&row.team_id===teamId);
     if(current) return current;
-    if(game.id===state.latestVasbyGame?.id) return state.latestTeamStats.get(teamId)||null;
+    if(game.id===state.latestFocusGame?.id) return state.latestTeamStats.get(teamId)||null;
     return null;
   }
 
@@ -2626,42 +2626,42 @@
     if (teamError) throw teamError;
     state.teams = teams || [];
     state.teamById = new Map(state.teams.map((team) => [team.id, team]));
-    state.vasby = state.selectedTeam
+    state.focusTeam = state.selectedTeam
       ? state.teamById.get(state.selectedTeam.id)
       : null;
-    if (!state.vasby) throw new Error("Valt lag saknas i importerad data.");
+    if (!state.focusTeam) throw new Error("Valt lag saknas i importerad data.");
 
     const activeWindowStart = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
     const { data: nextGames, error: nextError } = await client.from("games")
       .select("id,scheduled_start,home_team_id,away_team_id,venue_name,status,period,clock_display,home_score,away_score,source_game_id,source_event_game_id,game_number")
       .eq("competition_id", competition.id)
       .neq("status", "final")
-      .or("home_team_id.eq." + state.vasby.id + ",away_team_id.eq." + state.vasby.id)
+      .or("home_team_id.eq." + state.focusTeam.id + ",away_team_id.eq." + state.focusTeam.id)
       .gte("scheduled_start", activeWindowStart)
       .order("scheduled_start", { ascending: true })
       .limit(5);
     if (nextError) throw nextError;
     state.upcomingGames = nextGames || [];
     state.nextGame = state.upcomingGames[0] || null;
-    if (!state.nextGame) throw new Error("Ingen kommande match hittades för "+state.vasby.canonical_name+".");
+    if (!state.nextGame) throw new Error("Ingen kommande match hittades för "+state.focusTeam.canonical_name+".");
 
-    const opponentId = state.nextGame.home_team_id === state.vasby.id
+    const opponentId = state.nextGame.home_team_id === state.focusTeam.id
       ? state.nextGame.away_team_id
       : state.nextGame.home_team_id;
     state.opponent = state.teamById.get(opponentId);
     if (!state.opponent) throw new Error("Motståndarlaget saknas.");
 
-    const { data: vasbyHistory, error: h2hError } = await client.from("games")
+    const { data: focusHistory, error: h2hError } = await client.from("games")
       .select("id,competition_id,scheduled_start,home_team_id,away_team_id,home_score,away_score,venue_name,status,source_event_game_id")
       .eq("status","final")
-      .or("home_team_id.eq."+state.vasby.id+",away_team_id.eq."+state.vasby.id)
+      .or("home_team_id.eq."+state.focusTeam.id+",away_team_id.eq."+state.focusTeam.id)
       .order("scheduled_start",{ascending:false})
       .limit(150);
     if (h2hError) throw h2hError;
-    state.h2hGames = (vasbyHistory || [])
+    state.h2hGames = (focusHistory || [])
       .filter((game) =>
-        (game.home_team_id === state.vasby.id && game.away_team_id === state.opponent.id) ||
-        (game.home_team_id === state.opponent.id && game.away_team_id === state.vasby.id)
+        (game.home_team_id === state.focusTeam.id && game.away_team_id === state.opponent.id) ||
+        (game.home_team_id === state.opponent.id && game.away_team_id === state.focusTeam.id)
       )
       .sort((a,b)=>new Date(b.scheduled_start).getTime()-new Date(a.scheduled_start).getTime());
 
@@ -2686,7 +2686,7 @@
     const { data: rosterRows, error: rosterError } = await client.from("team_rosters")
       .select("team_id,player_id,jersey_number,position,source_name")
       .eq("competition_id", competition.id)
-      .in("team_id", [state.vasby.id, state.opponent.id])
+      .in("team_id", [state.focusTeam.id, state.opponent.id])
       .eq("is_active", true)
       .order("jersey_number", { ascending: true });
     if (rosterError) throw rosterError;
@@ -2702,29 +2702,29 @@
     }
     state.playerProfiles = playerMap;
     state.roster = (rosterRows || [])
-      .filter((row) => row.team_id === state.vasby.id)
+      .filter((row) => row.team_id === state.focusTeam.id)
       .map((row) => ({ ...row, player: playerMap.get(row.player_id) || null }));
 
-    const [vasbyForm, opponentForm] = await Promise.all([
-      loadForm(state.vasby.id),
+    const [focusForm, opponentForm] = await Promise.all([
+      loadForm(state.focusTeam.id),
       loadForm(state.opponent.id)
     ]);
-    state.vasbyForm = vasbyForm;
+    state.focusForm = focusForm;
     state.opponentForm = opponentForm;
-    state.latestVasbyGame = vasbyForm[0] || null;
+    state.latestFocusGame = focusForm[0] || null;
 
-    const [nextLineup, vasbyFallbackLineup, opponentFallbackLineup] = await Promise.all([
+    const [nextLineup, focusFallbackLineup, opponentFallbackLineup] = await Promise.all([
       loadLineup(state.nextGame),
-      loadLineup(state.vasbyForm[0]),
+      loadLineup(state.focusForm[0]),
       loadLineup(state.opponentForm[0])
     ]);
     state.nextLineup = nextLineup;
     state.fallbackLineups = new Map();
-    if (vasbyFallbackLineup) state.fallbackLineups.set(state.vasby.id, vasbyFallbackLineup);
+    if (focusFallbackLineup) state.fallbackLineups.set(state.focusTeam.id, focusFallbackLineup);
     if (opponentFallbackLineup) state.fallbackLineups.set(state.opponent.id, opponentFallbackLineup);
 
-    const focusTeamIds = [state.vasby.id, state.opponent.id];
-    const recentGameIds = [...new Set([...state.vasbyForm, ...state.opponentForm].map((game) => game.id))];
+    const focusTeamIds = [state.focusTeam.id, state.opponent.id];
+    const recentGameIds = [...new Set([...state.focusForm, ...state.opponentForm].map((game) => game.id))];
 
     const statGameIds = [...new Set([...recentGameIds, state.nextGame.id])];
 
@@ -2773,15 +2773,15 @@
       state.recentGoalieStats = [];
     }
 
-    if (state.latestVasbyGame) {
-      state.latestPlayerStats = state.recentPlayerStats.filter((row) => row.game_id === state.latestVasbyGame.id);
-      state.latestGoalieStats = state.recentGoalieStats.filter((row) => row.game_id === state.latestVasbyGame.id);
+    if (state.latestFocusGame) {
+      state.latestPlayerStats = state.recentPlayerStats.filter((row) => row.game_id === state.latestFocusGame.id);
+      state.latestGoalieStats = state.recentGoalieStats.filter((row) => row.game_id === state.latestFocusGame.id);
     }
 
-    if (state.latestVasbyGame) {
+    if (state.latestFocusGame) {
       const { data: events, error: eventsError } = await client.from("game_events")
         .select("id,period,clock_display,event_seconds,event_type,team_id,strength,home_score,away_score,description")
-        .eq("game_id", state.latestVasbyGame.id)
+        .eq("game_id", state.latestFocusGame.id)
         .eq("is_active", true)
         .order("event_seconds", { ascending: false })
         .order("ordinal", { ascending: true })
@@ -2803,16 +2803,16 @@
       state.currentEvents = currentEvents || [];
     }
 
-    if (state.latestVasbyGame) {
+    if (state.latestFocusGame) {
       const { data: teamStats, error: teamStatsError } = await client.from("team_game_stats")
         .select("team_id,goals,shots,saves,save_pct,pim,power_play_pct,power_play_seconds,period_stats")
-        .eq("game_id", state.latestVasbyGame.id);
+        .eq("game_id", state.latestFocusGame.id);
       if (teamStatsError) throw teamStatsError;
       state.latestTeamStats = new Map((teamStats || []).map((row) => [row.team_id, row]));
     }
 
     panels.live.cards = [
-      ["Matchcollector", state.latestEvents.length + " händelser lästa från senaste "+state.vasby.canonical_name+"-matchen."],
+      ["Matchcollector", state.latestEvents.length + " händelser lästa från senaste "+state.focusTeam.canonical_name+"-matchen."],
       ["Spelardata", state.seasonPlayerStats.filter((row) => row.position !== "GK").length + " säsongsrader · " + state.recentPlayerStats.length + " S5-matchrader."],
       ["Special teams", state.seasonSpecialTeams.length + " säsongsrader · " + state.teamGameStats.filter((row) => row.power_play_opportunities != null).length + " matchrader."],
       ["Nästa match-ID", state.nextGame.source_event_game_id
@@ -2847,9 +2847,9 @@
     document.getElementById("homeScore").textContent = isLive ? game.home_score : "–";
     document.getElementById("awayScore").textContent = isLive ? game.away_score : "–";
 
-    document.getElementById("homeFormLabel").textContent = state.vasby.canonical_name;
+    document.getElementById("homeFormLabel").textContent = state.focusTeam.canonical_name;
     document.getElementById("awayFormLabel").textContent = state.opponent.canonical_name;
-    renderForm("homeFormDots", state.vasbyForm, state.vasby.id);
+    renderForm("homeFormDots", state.focusForm, state.focusTeam.id);
     renderForm("awayFormDots", state.opponentForm, state.opponent.id);
 
     renderStandingsQuick();
@@ -2857,11 +2857,11 @@
     renderLatestGame();
     renderFacts();
 
-    const vasbyStanding = state.standingsByTeam.get(state.vasby.id);
+    const focusStanding = state.standingsByTeam.get(state.focusTeam.id);
     const oppStanding = state.standingsByTeam.get(state.opponent.id);
     panels.match.cards = [
       ["Nästa match", swedishDate(game.scheduled_start) + " · " + (game.venue_name || "Arena ej angiven")],
-      ["Tabell", state.vasby.canonical_name + " #" + (vasbyStanding?.rank ?? "–") + " (" + (vasbyStanding?.points ?? "–") + " p) · " +
+      ["Tabell", state.focusTeam.canonical_name + " #" + (focusStanding?.rank ?? "–") + " (" + (focusStanding?.points ?? "–") + " p) · " +
         state.opponent.canonical_name + " #" + (oppStanding?.rank ?? "–") + " (" + (oppStanding?.points ?? "–") + " p)"],
       ["Kedjor", state.nextLineup
         ? "Officiell lineup för nästa match är importerad."
