@@ -535,7 +535,7 @@
   if(OBS_MODE){
     const obsPoll=()=>{void pullState();};
     obsPoll();
-    setInterval(obsPoll,500);
+    setInterval(obsPoll,1000);
     document.addEventListener("visibilitychange",obsPoll);
     window.addEventListener("focus",obsPoll);
     window.addEventListener("pageshow",obsPoll);
