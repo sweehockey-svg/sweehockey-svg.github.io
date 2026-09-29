@@ -1287,3 +1287,108 @@ button{font:inherit}
   box-shadow:0 0 0 1px rgba(255,255,255,.12);
   flex:0 0 auto;
 }
+
+
+/* v28 · cockpit loading, partial data and sync health */
+.sync-state.warn{
+  border-color:#735f28;
+  color:#e3c978;
+  background:rgba(48,38,10,.72);
+}
+.sync-state.warn .sync-dot{
+  background:var(--yellow);
+  box-shadow:0 0 14px rgba(244,178,27,.48);
+}
+.sync-state.working{
+  border-color:#31566d;
+  color:#b9d2df;
+  background:rgba(10,31,43,.82);
+}
+.sync-state.working .sync-dot{
+  background:#8ec7e5;
+  animation:cockpitPulse 1.05s ease-in-out infinite;
+}
+@keyframes cockpitPulse{
+  0%,100%{opacity:.42;transform:scale(.82)}
+  50%{opacity:1;transform:scale(1.18)}
+}
+.team-lock-card.loading{
+  border-color:#38586a;
+}
+.team-lock-card.loading .lock-badge{
+  animation:cockpitSoftPulse 1.35s ease-in-out infinite;
+}
+.team-lock-card.error{
+  border-color:#6b3b39;
+}
+@keyframes cockpitSoftPulse{
+  0%,100%{opacity:.72}
+  50%{opacity:1}
+}
+.team-lock-actions .retry-button{
+  border-color:#715e24;
+  background:var(--yellow);
+  color:#07111a;
+}
+.data-health{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:6px;
+  margin:0 0 10px;
+}
+.data-health>div{
+  min-width:0;
+  padding:9px 10px;
+  border:1px solid #203846;
+  border-radius:8px;
+  background:#081a26;
+}
+.data-health span{
+  display:block;
+  color:#8298a5;
+  font-size:8px;
+  font-weight:950;
+  letter-spacing:.09em;
+}
+.data-health strong{
+  display:block;
+  margin-top:4px;
+  font-size:9px;
+  letter-spacing:.05em;
+}
+.data-health .ready strong{color:var(--green)}
+.data-health .warn strong{color:var(--yellow)}
+.data-health .waiting strong{color:#91a6b2}
+.drawer-card.data-warning{
+  border-color:#655520;
+  background:rgba(50,41,13,.42);
+}
+.drawer-card.data-warning strong{color:#e6c968}
+.home-load-error{
+  grid-column:1/-1;
+  display:grid;
+  justify-items:center;
+  gap:8px;
+  padding:28px;
+  border:1px solid #6b3b39;
+  border-radius:12px;
+  background:#1d1215;
+  color:#dba5a2;
+  text-align:center;
+}
+.home-load-error strong{color:#f1d3d1;font-size:13px}
+.home-load-error span{max-width:560px;font-size:10px;line-height:1.5}
+.home-load-error button{
+  margin-top:4px;
+  padding:9px 12px;
+  border:1px solid #715e24;
+  border-radius:8px;
+  background:var(--yellow);
+  color:#07111a;
+  font-size:8px;
+  font-weight:1000;
+  cursor:pointer;
+}
+@media(max-width:760px){
+  .data-health{grid-template-columns:1fr 1fr}
+}
