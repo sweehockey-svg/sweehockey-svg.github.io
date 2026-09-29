@@ -298,17 +298,25 @@ async function pollChannel(admin:any,token:string,cfg:any,botIdentity:string){
   const contentHidden=nonBot>0&&readable===0;
   if(contentHidden)errors.push("Discord returned messages without readable content. Check Message Content Intent.");
 
-  const update:any={last_polled_at:new Date().toISOString(),updated_at:new Date().toISOString()};
-  if(newest&&!contentHidden)update.last_message_id=newest;
-  update.last_error=errors.length?errors.join(" | ").slice(0,2000):null;
+  const now=Date.now(),nowIso=new Date(now).toISOString();
+  const nextError=errors.length?errors.join(" | ").slice(0,2000):"";
+  const previousError=String(cfg?.last_error||"");
+  const lastPolledAt=Date.parse(String(cfg?.last_polled_at||""))||0;
+  const heartbeatDue=!lastPolledAt||now-lastPolledAt>=15*60*1000;
+  const cursorChanged=Boolean(newest&&!contentHidden&&newest!==cursor);
+  const shouldWriteConfig=cursorChanged||nextError!==previousError||commands>0||cleaned>0||heartbeatDue;
 
-  const{error:updateError}=await admin.from("sportsgamer_discord_free_command_config").update(update).eq("id",configId);
-  if(updateError)throw updateError;
+  if(shouldWriteConfig){
+    const update:any={last_polled_at:nowIso,updated_at:nowIso,last_error:nextError||null};
+    if(cursorChanged)update.last_message_id=newest;
+    const{error:updateError}=await admin.from("sportsgamer_discord_free_command_config").update(update).eq("id",configId);
+    if(updateError)throw updateError;
+  }
 
   return{
     id:configId,channel_id:channelId,enabled:true,configured:true,
     processed:ordered.length,commands,posted,removed,deleted,cleaned,
-    content_hidden:contentHidden,errors
+    content_hidden:contentHidden,errors,config_write:shouldWriteConfig
   };
 }
 
@@ -319,7 +327,7 @@ async function poll(){
   const admin=serviceClient();
   const{data:configs,error:cfgError}=await admin
     .from("sportsgamer_discord_free_command_config")
-    .select("id,enabled,channel_id,last_message_id,activated_at")
+    .select("id,enabled,channel_id,last_message_id,activated_at,last_polled_at,last_error")
     .eq("enabled",true)
     .order("id",{ascending:true});
   if(cfgError)throw cfgError;
