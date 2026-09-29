@@ -956,3 +956,48 @@ button{font:inherit}
   .league-home-hero{margin-bottom:14px}
   .team-card{min-height:90px}
 }
+
+
+/* v21 · upcoming match schedule */
+.upcoming-schedule{margin:12px 0}
+.upcoming-schedule-head{display:flex;align-items:center;justify-content:space-between;margin:0 1px 7px}
+.upcoming-schedule-head span{font-size:9px;font-weight:1000;letter-spacing:.12em;color:var(--yellow)}
+.upcoming-schedule-head small{font-size:8px;font-weight:900;letter-spacing:.08em;color:#607989}
+.upcoming-game-list{display:grid;gap:5px}
+.upcoming-game{
+  display:grid;
+  grid-template-columns:minmax(120px,.85fr) minmax(0,1.4fr) 48px;
+  gap:10px;
+  align-items:center;
+  min-width:0;
+  padding:9px 10px;
+  border:1px solid #1d3544;
+  border-radius:9px;
+  background:#071823;
+}
+.upcoming-game.active{border-color:#6d5923;background:linear-gradient(135deg,rgba(244,178,27,.07),#071823 55%)}
+.upcoming-game.live{border-color:#2f6c4f;background:linear-gradient(135deg,rgba(98,214,154,.07),#071823 55%)}
+.upcoming-game-time{min-width:0}
+.upcoming-game-time strong{display:block;font-size:10px;color:#dbe6eb;white-space:nowrap}
+.upcoming-game-time span{display:block;margin-top:3px;font-size:8px;color:#617989;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upcoming-game-teams{display:flex;align-items:center;justify-content:flex-start;gap:7px;min-width:0}
+.upcoming-game-teams span{min-width:0;font-size:10px;color:#aebdc5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upcoming-game-teams b{flex:0 0 auto;color:#4f6979;font-size:9px}
+.upcoming-game>em{justify-self:end;min-width:42px;font-style:normal;text-align:center;font-size:7px;font-weight:1000;letter-spacing:.08em;color:var(--yellow)}
+.upcoming-game.live>em{color:var(--green)}
+
+@media (min-width:761px) and (max-width:1600px){
+  .upcoming-schedule-head span{font-size:10px}
+  .upcoming-schedule-head small{font-size:9px}
+  .upcoming-game{padding:9px 10px}
+  .upcoming-game-time strong{font-size:11px}
+  .upcoming-game-time span{font-size:9px}
+  .upcoming-game-teams span{font-size:11px}
+  .upcoming-game>em{font-size:8px}
+}
+@media(max-width:760px){
+  .upcoming-game{grid-template-columns:1fr 42px;gap:6px 8px}
+  .upcoming-game-time{grid-column:1/-1}
+  .upcoming-game-teams{grid-column:1}
+  .upcoming-game>em{grid-column:2}
+}
