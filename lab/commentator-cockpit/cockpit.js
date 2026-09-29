@@ -2558,7 +2558,7 @@
     }
 
     state.competitionTeams=state.teams.filter((team)=>state.teamCompetitionByTeam.has(team.id));
-    state.competition=leagueCompetitions.find((row)=>row.source_competition_id==="21043")||leagueCompetitions[0];
+    state.competition=null;
 
     state.selectedTeamSlug=requestedTeamSlug();
     if(!state.selectedTeamSlug){
@@ -2578,6 +2578,7 @@
     state.selectedCompetition=state.selectedTeam
       ? state.teamCompetitionByTeam.get(state.selectedTeam.id)||null
       : null;
+    state.competition=state.selectedCompetition;
 
     if(state.selectedTeamSlug&&!state.selectedTeam){
       state.selectedTeamSlug="";
