@@ -6,7 +6,17 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#06111a">
   <title>Commentator Cockpit · Hockeyettan</title>
-  <link rel="stylesheet" href="cockpit.css?v=30">
+  <script>
+    (() => {
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem("commentator-cockpit-theme") === "light" ? "light" : "dark";
+      } catch {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="cockpit.css?v=31">
 </head>
 <body>
   <div class="app-shell">
@@ -20,6 +30,9 @@
       </div>
       <div class="top-actions">
         <button class="home-button hidden" id="homeButton" type="button">ALLA LAG</button>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Byt färgläge" title="Byt färgläge">
+          <span aria-hidden="true">☾</span><strong>MÖRK</strong>
+        </button>
         <button class="account-button" id="accountButton" type="button">
           <span class="account-dot"></span><strong>LOGGA IN</strong><small>NOTES + AI</small>
         </button>
@@ -204,6 +217,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=1"></script>
-  <script src="cockpit.js?v=31"></script>
+  <script src="cockpit.js?v=32"></script>
 </body>
 </html>
