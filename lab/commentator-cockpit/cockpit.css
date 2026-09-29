@@ -2551,3 +2551,188 @@ html[data-theme="light"] .theme-toggle:hover{
     max-height:none;
   }
 }
+
+
+/* v37 · light theme contrast pass */
+html[data-theme="light"]{
+  --text:#14242d;
+  --muted:#4f6571;
+  --muted2:#6f838d;
+}
+
+html[data-theme="light"] .stat{
+  background:#f5f8f9;
+  border-color:#cfd9df;
+}
+html[data-theme="light"] .stat strong{
+  color:#14242d;
+}
+html[data-theme="light"] .stat span{
+  color:#5b707c;
+}
+html[data-theme="light"] .stat small{
+  color:#687d88;
+}
+
+html[data-theme="light"] .table-placeholder{
+  background:#f7f9fa;
+  border-color:#cfd9df;
+}
+html[data-theme="light"] .table-placeholder div{
+  border-color:#dbe3e7;
+}
+html[data-theme="light"] .table-placeholder span{
+  color:#1b2d37;
+}
+html[data-theme="light"] .table-placeholder b{
+  color:#526b78;
+}
+html[data-theme="light"] .table-placeholder em{
+  color:#536b77;
+}
+
+html[data-theme="light"] .recent-game{
+  background:#f7f9fa;
+  border-color:#cbd7dd;
+}
+html[data-theme="light"] .recent-game-top,
+html[data-theme="light"] .recent-game-foot{
+  color:#627681;
+}
+html[data-theme="light"] .recent-game-score span{
+  color:#182a34;
+}
+html[data-theme="light"] .recent-game-score strong{
+  color:#12232d;
+}
+
+html[data-theme="light"] .match-stats-strip>div{
+  background:#f3f6f8;
+  border-color:#cbd7dd;
+}
+html[data-theme="light"] .match-stats-strip span{
+  color:#5c717d;
+}
+html[data-theme="light"] .match-stats-strip strong{
+  color:#172a34;
+}
+
+html[data-theme="light"] .event-row{
+  background:#f5f8f9;
+  border-color:#ced9df;
+}
+html[data-theme="light"] .event-row.goal{
+  background:linear-gradient(90deg,rgba(215,154,9,.12),#f7f9fa 46%);
+  border-color:#d2b45c;
+}
+html[data-theme="light"] .event-time{
+  border-color:#cbd7dd;
+}
+html[data-theme="light"] .event-time strong{
+  color:#1e333d;
+}
+html[data-theme="light"] .event-time span{
+  color:#617782;
+}
+html[data-theme="light"] .event-copy em{
+  color:#a96f00;
+}
+html[data-theme="light"] .event-copy span{
+  color:#425b68;
+}
+html[data-theme="light"] .event-copy p{
+  color:#213640;
+}
+html[data-theme="light"] .event-score b{
+  color:#132731;
+}
+
+html[data-theme="light"] .quick-fact-next{
+  background:#f4f7f8;
+  border-color:#cbd7dd;
+  color:#314752;
+}
+html[data-theme="light"] .quick-fact-next span{
+  background:#e8eef1;
+  color:#a56f00;
+}
+html[data-theme="light"] .quick-fact-next strong{
+  color:#2e4652;
+}
+html[data-theme="light"] .quick-fact-next small{
+  color:#617782;
+}
+html[data-theme="light"] .quick-fact-next:hover{
+  border-color:#c3a54c;
+  background:#fffaf0;
+}
+
+html[data-theme="light"] .ai-button{
+  background:#f5f8f9;
+  border-color:#cbd7dd;
+  color:#435c68;
+}
+html[data-theme="light"] .ai-button span{
+  background:#e7edf0;
+  color:#4a626e;
+}
+html[data-theme="light"] .ai-button strong{
+  color:#2d444f;
+}
+html[data-theme="light"] .ai-button small{
+  color:#667b86;
+}
+
+html[data-theme="light"] .panel-status{
+  background:#f4f7f8;
+  border-color:#c7d4da;
+  color:#526b77;
+}
+
+html[data-theme="light"] .deck-key{
+  color:#253a45;
+}
+html[data-theme="light"] .deck-key span{
+  color:#6b7e88;
+}
+html[data-theme="light"] .deck-key strong{
+  color:#263b46;
+}
+html[data-theme="light"] .deck-key.active strong,
+html[data-theme="light"] .deck-key.accent strong{
+  color:#a66f00;
+}
+
+html[data-theme="light"] .player-stat-row em{
+  color:#425a67;
+}
+html[data-theme="light"] .player-stat-head{
+  color:#4e6571;
+}
+html[data-theme="light"] .drawer.stats-wide .player-stat-head{
+  background:#f3f6f8;
+  border-color:#cfd9df;
+  box-shadow:0 5px 8px rgba(64,82,92,.10);
+}
+html[data-theme="light"] .drawer.stats-wide .player-stat-name>b{
+  color:#58707c;
+}
+html[data-theme="light"] .drawer.stats-wide .player-stat-name small{
+  color:#607580;
+}
+
+html[data-theme="light"] .form-row{
+  color:#334b57;
+}
+html[data-theme="light"] .section-title span{
+  color:#243944;
+}
+html[data-theme="light"] .section-title small{
+  color:#667b86;
+}
+
+html[data-theme="light"] .fact-card p,
+html[data-theme="light"] .story-card p,
+html[data-theme="light"] .drawer-card span{
+  color:#556b76;
+}
