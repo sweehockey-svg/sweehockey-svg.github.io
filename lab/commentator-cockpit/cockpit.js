@@ -58,6 +58,11 @@
     selectedTeam: null,
     selectedTeamSlug: "",
     teamDataLoaded: false,
+    teamLoading: false,
+    teamLoadError: "",
+    loadWarnings: [],
+    lastLiveRefreshAt: null,
+    lastLiveRefreshError: "",
     accessAdminItems: [],
     accessAdminLoaded: false,
     accessAdminBusy: false,
@@ -380,6 +385,7 @@
 
   function renderTeamLock() {
     setRouteScreen("lock");
+    setLockMode("normal");
     const team=state.selectedTeam;
     if(!team) return;
     document.getElementById("lockBadge").innerHTML=teamLogoMarkup(team.canonical_name,"lock-team-logo");
@@ -396,6 +402,102 @@
     if(state.selectedTeam){
       document.title=state.selectedTeam.canonical_name+" · Commentator Cockpit";
     }
+  }
+
+  function setSyncStatus(kind,text) {
+    const syncState=document.getElementById("syncState");
+    const syncText=document.getElementById("syncText");
+    if(!syncState||!syncText) return;
+    syncState.classList.remove("ok","bad","warn","working");
+    if(kind) syncState.classList.add(kind);
+    syncText.textContent=text;
+  }
+
+  function syncAgeMinutes() {
+    const value=state.competition?.updated_at;
+    if(!value) return null;
+    const ms=Date.now()-new Date(value).getTime();
+    return Number.isFinite(ms) ? Math.max(0,Math.round(ms/60000)) : null;
+  }
+
+  function renderSyncFreshness() {
+    if(!state.teamDataLoaded||!state.competition) return;
+    if(state.lastLiveRefreshError){
+      setSyncStatus("warn","Live-uppdatering misslyckades · senaste data visas");
+      return;
+    }
+    const age=syncAgeMinutes();
+    const time=new Intl.DateTimeFormat("sv-SE",{
+      hour:"2-digit",minute:"2-digit",timeZone:"Europe/Stockholm"
+    }).format(new Date(state.competition.updated_at));
+    const ageText=age==null?"":age<1?" · nyss":" · "+age+" min sedan";
+    const liveText=state.lastLiveRefreshAt && state.nextGame?.status==="live"
+      ? " · live "+new Intl.DateTimeFormat("sv-SE",{hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:"Europe/Stockholm"}).format(new Date(state.lastLiveRefreshAt))
+      : "";
+    const warningText=state.loadWarnings.length ? " · "+state.loadWarnings.length+" delvarning"+(state.loadWarnings.length===1?"":"ar") : "";
+    const kind=state.loadWarnings.length ? "warn" : age!=null&&age>180 ? "bad" : age!=null&&age>75 ? "warn" : "ok";
+    setSyncStatus(kind,"Swehockey synkad · "+time+ageText+liveText+warningText);
+  }
+
+  function recordLoadWarning(scope,error) {
+    const message=String(error?.message||error||"Okänt fel");
+    state.loadWarnings.push({scope,message});
+    console.warn("Commentator Cockpit partial data:",scope,error);
+  }
+
+  function optionalData(result,scope,fallback=[]) {
+    if(result?.error){
+      recordLoadWarning(scope,result.error);
+      return fallback;
+    }
+    return result?.data ?? fallback;
+  }
+
+  async function optionalLoad(scope,loader,fallback=null) {
+    try{
+      return await loader();
+    }catch(error){
+      recordLoadWarning(scope,error);
+      return fallback;
+    }
+  }
+
+  function setLockMode(mode) {
+    const card=document.querySelector(".team-lock-card");
+    const login=document.getElementById("lockLoginButton");
+    const retry=document.getElementById("lockRetryButton");
+    card?.classList.toggle("loading",mode==="loading");
+    card?.classList.toggle("error",mode==="error");
+    login?.classList.toggle("hidden",mode==="loading"||mode==="error");
+    retry?.classList.toggle("hidden",mode!=="error");
+  }
+
+  function showTeamLoading() {
+    state.teamLoading=true;
+    state.teamLoadError="";
+    setRouteScreen("lock");
+    setLockMode("loading");
+    const team=state.selectedTeam;
+    if(team){
+      document.getElementById("lockBadge").innerHTML=teamLogoMarkup(team.canonical_name,"lock-team-logo");
+      document.getElementById("lockTeamName").textContent=team.canonical_name;
+      document.getElementById("lockMessage").textContent="Laddar lagdata · match, kedjor, statistik och live-underlag…";
+      setSyncStatus("working","Laddar lagdata · "+team.canonical_name);
+    }
+  }
+
+  function showTeamLoadError(error) {
+    state.teamLoading=false;
+    state.teamLoadError=String(error?.message||error||"Okänt fel");
+    setRouteScreen("lock");
+    setLockMode("error");
+    const team=state.selectedTeam;
+    if(team){
+      document.getElementById("lockBadge").innerHTML=teamLogoMarkup(team.canonical_name,"lock-team-logo");
+      document.getElementById("lockTeamName").textContent=team.canonical_name;
+    }
+    document.getElementById("lockMessage").textContent="Kunde inte ladda lagets cockpit. "+state.teamLoadError;
+    setSyncStatus("bad","Lagdata kunde inte laddas");
   }
 
 
@@ -1198,7 +1300,12 @@
   function renderLatestGame() {
     const feed = document.getElementById("eventFeed");
     const game = state.latestFocusGame;
-    if (!feed || !game) return;
+    if (!feed) return;
+    if(!game){
+      feed.className="empty-state";
+      feed.innerHTML='<div class="empty-icon">↯</div><strong>Ingen tidigare matchdata ännu</strong><p>Cockpiten har nästa match, men ingen importerad slutrapport för det valda laget ännu.</p>';
+      return;
+    }
     feed.className = "event-feed-live";
 
     const eventRows = state.latestEvents.length
@@ -2457,6 +2564,31 @@
     '</section>';
   }
 
+  function renderDataHealth() {
+    const lineupStatus=state.nextLineup
+      ? ["ready","OFFICIELL"]
+      : state.fallbackLineups.size ? ["warn","SENASTE"] : ["waiting","VÄNTAR"];
+    const statsTotal=state.seasonPlayerStats.length+state.seasonGoalieStats.length+state.seasonSpecialTeams.length;
+    const statsStatus=statsTotal
+      ? (state.loadWarnings.some((item)=>/statistik|special/i.test(item.scope)) ? ["warn","DELVIS"] : ["ready","REDO"])
+      : ["waiting","VÄNTAR"];
+    const liveStatus=state.nextGame?.status==="live"
+      ? (state.currentEvents.length ? ["ready","LIVE"] : ["warn","STARTAD"])
+      : (state.nextGame?.source_event_game_id ? ["ready","FÖRBEREDD"] : ["waiting","VÄNTAR"]);
+    const items=[
+      ["MATCH",state.nextGame?["ready","REDO"]:["waiting","VÄNTAR"]],
+      ["KEDJOR",lineupStatus],
+      ["STATISTIK",statsStatus],
+      ["LIVE",liveStatus]
+    ];
+    const warning=state.loadWarnings.length
+      ? '<article class="drawer-card data-warning"><strong>Delvis data</strong><span>'+esc(state.loadWarnings.length)+' sekundär'+(state.loadWarnings.length===1?" datakälla svarade inte.":"a datakällor svarade inte.")+' Resten av cockpiten visas som vanligt.</span></article>'
+      : "";
+    return '<div class="data-health">'+items.map(([label,status])=>
+      '<div class="'+status[0]+'"><span>'+esc(label)+'</span><strong>'+esc(status[1])+'</strong></div>'
+    ).join("")+'</div>'+warning;
+  }
+
   function renderMatchOverview() {
     const cards = panels.match.cards || [];
     const first = cards.slice(0, 1).map(([title, text]) =>
@@ -2465,7 +2597,7 @@
     const rest = cards.slice(1).map(([title, text]) =>
       '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
     ).join("");
-    return first + renderUpcomingGames() + rest;
+    return first + renderDataHealth() + renderUpcomingGames() + rest;
   }
 
   function renderDrawer(key) {
@@ -2602,11 +2734,14 @@
 
     state.access=effectiveAccessForTeam(state.selectedTeam.id);
     if(!state.teamDataLoaded){
-      setRouteScreen("lock");
-      document.getElementById("lockBadge").innerHTML=teamLogoMarkup(state.selectedTeam.canonical_name,"lock-team-logo");
-      document.getElementById("lockTeamName").textContent=state.selectedTeam.canonical_name;
-      document.getElementById("lockMessage").textContent="Behörighet godkänd. Laddar lagets cockpit…";
-      await loadData();
+      if(state.teamLoading) return;
+      showTeamLoading();
+      try{
+        await loadData();
+      }catch(error){
+        console.error("Team cockpit load failed",error);
+        showTeamLoadError(error);
+      }
       return;
     }
 
@@ -2616,6 +2751,9 @@
 
   async function loadData() {
     if (!client) throw new Error("Supabase-klienten kunde inte startas.");
+    state.loadWarnings=[];
+    state.teamLoadError="";
+    state.lastLiveRefreshError="";
     state.notes=loadLocalNotes();
 
     const competition=state.selectedCompetition;
@@ -2658,8 +2796,8 @@
       .or("home_team_id.eq."+state.focusTeam.id+",away_team_id.eq."+state.focusTeam.id)
       .order("scheduled_start",{ascending:false})
       .limit(150);
-    if (h2hError) throw h2hError;
-    state.h2hGames = (focusHistory || [])
+    if (h2hError) recordLoadWarning("H2H-historik",h2hError);
+    state.h2hGames = (h2hError ? [] : (focusHistory || []))
       .filter((game) =>
         (game.home_team_id === state.focusTeam.id && game.away_team_id === state.opponent.id) ||
         (game.home_team_id === state.opponent.id && game.away_team_id === state.focusTeam.id)
@@ -2672,34 +2810,42 @@
       .order("fetched_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (snapError) throw snapError;
+    if (snapError) recordLoadWarning("Tabell",snapError);
 
-    if (latestSnapshot) {
+    state.standings=[];
+    state.standingsByTeam=new Map();
+    if (!snapError && latestSnapshot) {
       const { data: standings, error: standingsError } = await client.from("standings_snapshot_rows")
         .select("team_id,rank,games_played,wins,ties,losses,goals_for,goals_against,goal_diff,points")
         .eq("snapshot_id", latestSnapshot.id)
         .order("rank", { ascending: true });
-      if (standingsError) throw standingsError;
-      state.standings = standings || [];
-      state.standingsByTeam = new Map(state.standings.map((row) => [row.team_id, row]));
+      if (standingsError) {
+        recordLoadWarning("Tabellrader",standingsError);
+      } else {
+        state.standings = standings || [];
+        state.standingsByTeam = new Map(state.standings.map((row) => [row.team_id, row]));
+      }
     }
 
-    const { data: rosterRows, error: rosterError } = await client.from("team_rosters")
+    const rosterResult = await client.from("team_rosters")
       .select("team_id,player_id,jersey_number,position,source_name")
       .eq("competition_id", competition.id)
       .in("team_id", [state.focusTeam.id, state.opponent.id])
       .eq("is_active", true)
       .order("jersey_number", { ascending: true });
-    if (rosterError) throw rosterError;
+    const rosterRows=optionalData(rosterResult,"Trupper",[]);
 
-    const playerIds = [...new Set((rosterRows || []).map((row) => row.player_id).filter(Boolean))];
+    const playerIds = [...new Set(rosterRows.map((row) => row.player_id).filter(Boolean))];
     let playerMap = new Map();
     if (playerIds.length) {
       const { data: players, error: playerError } = await client.from("players")
         .select("id,display_name,birth_date,nationality_code,shoots_catches,primary_position,height_cm,weight_kg,youth_club")
         .in("id", playerIds);
-      if (playerError) throw playerError;
-      playerMap = new Map((players || []).map((player) => [player.id, player]));
+      if (playerError) {
+        recordLoadWarning("Spelarprofiler",playerError);
+      } else {
+        playerMap = new Map((players || []).map((player) => [player.id, player]));
+      }
     }
     state.playerProfiles = playerMap;
     state.roster = (rosterRows || [])
@@ -2707,17 +2853,17 @@
       .map((row) => ({ ...row, player: playerMap.get(row.player_id) || null }));
 
     const [focusForm, opponentForm] = await Promise.all([
-      loadForm(state.focusTeam.id),
-      loadForm(state.opponent.id)
+      optionalLoad("Form · "+state.focusTeam.canonical_name,()=>loadForm(state.focusTeam.id),[]),
+      optionalLoad("Form · "+state.opponent.canonical_name,()=>loadForm(state.opponent.id),[])
     ]);
     state.focusForm = focusForm;
     state.opponentForm = opponentForm;
     state.latestFocusGame = focusForm[0] || null;
 
     const [nextLineup, focusFallbackLineup, opponentFallbackLineup] = await Promise.all([
-      loadLineup(state.nextGame),
-      loadLineup(state.focusForm[0]),
-      loadLineup(state.opponentForm[0])
+      optionalLoad("Kedjor · nästa match",()=>loadLineup(state.nextGame),null),
+      optionalLoad("Kedjor · "+state.focusTeam.canonical_name,()=>loadLineup(state.focusForm[0]),null),
+      optionalLoad("Kedjor · "+state.opponent.canonical_name,()=>loadLineup(state.opponentForm[0]),null)
     ]);
     state.nextLineup = nextLineup;
     state.fallbackLineups = new Map();
@@ -2747,14 +2893,10 @@
         .in("game_id", statGameIds)
         .in("team_id", focusTeamIds)
     ]);
-    if (seasonPlayerResult.error) throw seasonPlayerResult.error;
-    if (seasonGoalieResult.error) throw seasonGoalieResult.error;
-    if (specialSeasonResult.error) throw specialSeasonResult.error;
-    if (teamGameStatsResult.error) throw teamGameStatsResult.error;
-    state.seasonPlayerStats = seasonPlayerResult.data || [];
-    state.seasonGoalieStats = seasonGoalieResult.data || [];
-    state.seasonSpecialTeams = specialSeasonResult.data || [];
-    state.teamGameStats = teamGameStatsResult.data || [];
+    state.seasonPlayerStats = optionalData(seasonPlayerResult,"Spelarstatistik",[]);
+    state.seasonGoalieStats = optionalData(seasonGoalieResult,"Målvaktsstatistik",[]);
+    state.seasonSpecialTeams = optionalData(specialSeasonResult,"Special teams",[]);
+    state.teamGameStats = optionalData(teamGameStatsResult,"Matchstatistik",[]);
 
     if (recentGameIds.length) {
       const [recentPlayerResult, recentGoalieResult] = await Promise.all([
@@ -2765,10 +2907,8 @@
           .select("game_id,team_id,player_id,source_name,jersey_number,shots_against,goals_against,saves,save_pct,minutes_played_seconds,gaa")
           .in("game_id", recentGameIds)
       ]);
-      if (recentPlayerResult.error) throw recentPlayerResult.error;
-      if (recentGoalieResult.error) throw recentGoalieResult.error;
-      state.recentPlayerStats = recentPlayerResult.data || [];
-      state.recentGoalieStats = recentGoalieResult.data || [];
+      state.recentPlayerStats = optionalData(recentPlayerResult,"Senaste spelarstatistik",[]);
+      state.recentGoalieStats = optionalData(recentGoalieResult,"Senaste målvaktsstatistik",[]);
     } else {
       state.recentPlayerStats = [];
       state.recentGoalieStats = [];
@@ -2787,8 +2927,14 @@
         .order("event_seconds", { ascending: false })
         .order("ordinal", { ascending: true })
         .limit(100);
-      if (eventsError) throw eventsError;
-      state.latestEvents = events || [];
+      if (eventsError) {
+        recordLoadWarning("Senaste matchhändelser",eventsError);
+        state.latestEvents=[];
+      } else {
+        state.latestEvents = events || [];
+      }
+    } else {
+      state.latestEvents=[];
     }
 
     state.currentEvents = [];
@@ -2800,16 +2946,25 @@
         .order("event_seconds", { ascending: false })
         .order("ordinal", { ascending: true })
         .limit(100);
-      if (currentEventsError) throw currentEventsError;
-      state.currentEvents = currentEvents || [];
+      if (currentEventsError) {
+        recordLoadWarning("Live-händelser",currentEventsError);
+      } else {
+        state.currentEvents = currentEvents || [];
+      }
     }
 
     if (state.latestFocusGame) {
       const { data: teamStats, error: teamStatsError } = await client.from("team_game_stats")
         .select("team_id,goals,shots,saves,save_pct,pim,power_play_pct,power_play_seconds,period_stats")
         .eq("game_id", state.latestFocusGame.id);
-      if (teamStatsError) throw teamStatsError;
-      state.latestTeamStats = new Map((teamStats || []).map((row) => [row.team_id, row]));
+      if (teamStatsError) {
+        recordLoadWarning("Senaste matchstatistik",teamStatsError);
+        state.latestTeamStats=new Map();
+      } else {
+        state.latestTeamStats = new Map((teamStats || []).map((row) => [row.team_id, row]));
+      }
+    } else {
+      state.latestTeamStats=new Map();
     }
 
     panels.live.cards = [
@@ -2818,10 +2973,14 @@
       ["Special teams", state.seasonSpecialTeams.length + " säsongsrader · " + state.teamGameStats.filter((row) => row.power_play_opportunities != null).length + " matchrader."],
       ["Nästa match-ID", state.nextGame.source_event_game_id
         ? "Live-/rapport-ID: " + state.nextGame.source_event_game_id
-        : "Schema-ID " + (state.nextGame.game_number || "saknas") + " är känt. Live-ID väntas senare."]
+        : "Schema-ID " + (state.nextGame.game_number || "saknas") + " är känt. Live-ID väntas senare."],
+      ["Datakvalitet", state.loadWarnings.length
+        ? state.loadWarnings.length + " sekundär" + (state.loadWarnings.length===1?" datakälla":"a datakällor") + " saknas just nu. Övrig data visas."
+        : "Alla efterfrågade datalager svarade."]
     ];
 
     state.teamDataLoaded=true;
+    state.teamLoading=false;
     showCockpit();
     render();
   }
@@ -2877,17 +3036,13 @@
         : "Verifierad fallback är aktiv. Server-AI är förberedd."]
     ];
 
-    const syncState = document.getElementById("syncState");
-    const syncText = document.getElementById("syncText");
-    syncState.classList.add("ok");
-    syncText.textContent = "Swehockey synkad · " +
-      new Intl.DateTimeFormat("sv-SE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Stockholm" })
-        .format(new Date(state.competition.updated_at));
+    renderSyncFreshness();
   }
 
   async function refreshActiveMatch() {
     if(!client||!state.teamDataLoaded||!state.selectedTeam||!canAccessTeam(state.selectedTeam.id)||!state.nextGame?.id||state.liveRefreshBusy) return;
     state.liveRefreshBusy=true;
+    if(state.nextGame?.status==="live") setSyncStatus("working","Uppdaterar live-data…");
     try{
       const {data:game,error:gameError}=await client.from("games")
         .select("id,scheduled_start,home_team_id,away_team_id,venue_name,status,period,clock_display,home_score,away_score,source_game_id,source_event_game_id,game_number")
@@ -2930,6 +3085,8 @@
         }
       }
 
+      state.lastLiveRefreshError="";
+      state.lastLiveRefreshAt=new Date().toISOString();
       render();
       const activeButton=document.querySelector(".deck-key.active");
       if(drawer.classList.contains("open")&&activeButton?.dataset.panel==="studio"){
@@ -2937,19 +3094,27 @@
       }
     }catch(error){
       console.error("Live refresh failed",error);
+      state.lastLiveRefreshError=String(error?.message||error||"Okänt fel");
+      if(state.nextGame?.status==="live") setSyncStatus("warn","Live-uppdatering misslyckades · senaste data visas");
     }finally{
       state.liveRefreshBusy=false;
+      if(!state.lastLiveRefreshError) renderSyncFreshness();
     }
   }
 
   function showLoadError(error) {
     console.error("Commentator Cockpit data load failed", error);
-    const syncState = document.getElementById("syncState");
-    syncState.classList.add("bad");
-    document.getElementById("syncText").textContent = "Datakoppling misslyckades";
-    document.getElementById("factStack").innerHTML =
-      '<div class="data-error"><strong>Kunde inte läsa Hockeyettan-data.</strong><br>' +
-      esc(error?.message || error) + '</div>';
+    if(state.selectedTeam&&canAccessTeam(state.selectedTeam.id)){
+      showTeamLoadError(error);
+      return;
+    }
+    setRouteScreen("home");
+    setSyncStatus("bad","Datakoppling misslyckades");
+    const grid=document.getElementById("teamGrid");
+    if(grid){
+      grid.innerHTML='<div class="home-load-error"><strong>Kunde inte läsa Hockeyettan-data.</strong><span>'+esc(error?.message||error)+'</span><button type="button" id="homeRetryButton">FÖRSÖK IGEN</button></div>';
+      document.getElementById("homeRetryButton")?.addEventListener("click",()=>window.location.reload());
+    }
   }
 
   document.querySelectorAll(".deck-key").forEach((button) => {
@@ -2979,6 +3144,12 @@
 
   document.getElementById("homeButton")?.addEventListener("click",goHome);
   document.getElementById("lockHomeButton")?.addEventListener("click",goHome);
+  document.getElementById("lockRetryButton")?.addEventListener("click",async()=>{
+    if(state.teamLoading) return;
+    state.teamDataLoaded=false;
+    state.teamLoadError="";
+    await routeApp();
+  });
   document.getElementById("lockLoginButton")?.addEventListener("click",()=>{
     renderDrawer("account");
   });
@@ -3002,6 +3173,7 @@
   updateAuthButton();
   window.setInterval(updateClock, 1000);
   window.setInterval(refreshActiveMatch, 15000);
+  window.setInterval(renderSyncFreshness, 60000);
 
   async function boot() {
     await loadBaseData();
