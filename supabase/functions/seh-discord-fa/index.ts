@@ -107,7 +107,7 @@ async function dm(t,uid,p){const r=await dc("/users/@me/channels",t,{method:"POS
 async function del(t,c,id){const r=await dc("/channels/"+c+"/messages/"+id,t,{method:"DELETE"});if(!r.ok&&r.status!==404)throw Error("DELETE "+r.status+": "+(await r.text()).slice(0,300))}
 async function once(){
  const t=Deno.env.get("SEH_DISCORD_BOT_TOKEN")||Deno.env.get("DISCORD_BOT_TOKEN")||"";if(!t)throw Error("BOT_TOKEN");
- const a=db(),{data:c,error:ce}=await a.from("ehockey_discord_fa_command_config").select("enabled,channel_id,last_message_id,activated_at").eq("id",1).maybeSingle();if(ce)throw ce;
+ const a=db(),{data:c,error:ce}=await a.from("ehockey_discord_fa_command_config").select("enabled,channel_id,last_message_id,activated_at,last_polled_at,last_error").eq("id",1).maybeSingle();if(ce)throw ce;
  const ch=String(c?.channel_id||""),cur=String(c?.last_message_id||""),act=Date.parse(String(c?.activated_at||""))||0;if(!c?.enabled||!ch)return{enabled:!!c?.enabled,configured:!!ch};
  const r=await dc("/channels/"+ch+"/messages?limit=100",t);if(!r.ok)throw Error("READ "+r.status+": "+(await r.text()).slice(0,300));
  const raw=await r.json(),ms=(Array.isArray(raw)?raw:[]).filter(x=>after(x?.id,cur)).sort((x,y)=>after(x.id,y.id)?1:-1);
@@ -136,7 +136,7 @@ async function once(){
    await send(t,ch,{embeds:[em],components:[{type:1,components:[{type:2,style:5,label:"Spelarkort",url}]}],allowed_mentions:{parse:[]}});
   }catch(e){errors.push(err(e))}
  }
- const up={last_polled_at:new Date().toISOString(),updated_at:new Date().toISOString()};if(newest)up.last_message_id=newest;if(errors.length)up.last_error=errors.join(" | ").slice(0,2000);else if(commands)up.last_error=null;await a.from("ehockey_discord_fa_command_config").update(up).eq("id",1);
- return{enabled:true,configured:true,processed:ms.length,commands,submitted,deleted,errors}
+ const now=Date.now(),nowIso=new Date(now).toISOString(),nextError=errors.length?errors.join(" | ").slice(0,2000):"",previousError=String(c?.last_error||""),lastPolledAt=Date.parse(String(c?.last_polled_at||""))||0,heartbeatDue=!lastPolledAt||now-lastPolledAt>=15*60*1000,cursorChanged=!!newest&&newest!==cur,shouldWriteConfig=cursorChanged||nextError!==previousError||commands>0||heartbeatDue;if(shouldWriteConfig){const up={last_polled_at:nowIso,updated_at:nowIso,last_error:nextError||null};if(cursorChanged)up.last_message_id=newest;await a.from("ehockey_discord_fa_command_config").update(up).eq("id",1);}
+ return{enabled:true,configured:true,processed:ms.length,commands,submitted,deleted,errors,config_write:shouldWriteConfig}
 }
 Deno.serve(async req=>{if(req.method!=="POST")return j({error:"Method not allowed"},405);try{const a=db(),{data:c,error:e}=await a.from("ehockey_discord_fa_command_config").select("poll_secret").eq("id",1).maybeSingle();if(e)throw e;if(!c?.poll_secret||req.headers.get("x-seh-internal-key")!==c.poll_secret)return j({error:"Forbidden"},403);const b=await req.json().catch(()=>({})),action=String(b?.action||"watch");if(action==="poll")return j(await once());if(action!=="watch")return j({error:"Unknown action"},400);const start=Date.now(),out=[];while(Date.now()-start<54000){const x=await once();out.push(x);if(!x?.enabled||!x?.configured)break;await new Promise(r=>setTimeout(r,4000))}return j({mode:"watch",iterations:out.length,last:out.at(-1)||null})}catch(e){return j({error:err(e)},500)}});
