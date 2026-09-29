@@ -205,7 +205,7 @@ async function poll() {
   const admin = serviceClient();
   const { data: cfg, error: cfgError } = await admin
     .from("ehockey_discord_free_command_config")
-    .select("enabled,channel_id,last_message_id,activated_at")
+    .select("enabled,channel_id,last_message_id,activated_at,last_polled_at,last_error")
     .eq("id", 1)
     .maybeSingle();
   if (cfgError) throw cfgError;
@@ -436,22 +436,29 @@ async function poll() {
     errors.push("Discord returnerade meddelanden utan läsbar content. Kontrollera Message Content Intent för botten.");
   }
 
-  const update: Record<string, unknown> = {
-    last_polled_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-  if (errors.length) {
-    update.last_error = errors.join(" | ").slice(0, 2000);
-  } else if (commands > 0) {
-    update.last_error = null;
-  }
-  if (newest && !contentHidden) update.last_message_id = newest;
+  const now = Date.now();
+  const nowIso = new Date(now).toISOString();
+  const nextError = errors.length ? errors.join(" | ").slice(0, 2000) : "";
+  const previousError = String(cfg?.last_error || "");
+  const lastPolledAt = Date.parse(String(cfg?.last_polled_at || "")) || 0;
+  const heartbeatDue = !lastPolledAt || now - lastPolledAt >= 15 * 60 * 1000;
+  const cursorChanged = Boolean(newest && !contentHidden && newest !== lastMessageId);
+  const shouldWriteConfig = cursorChanged || nextError !== previousError || commands > 0 || heartbeatDue;
 
-  const { error: updateError } = await admin
-    .from("ehockey_discord_free_command_config")
-    .update(update)
-    .eq("id", 1);
-  if (updateError) throw updateError;
+  if (shouldWriteConfig) {
+    const update: Record<string, unknown> = {
+      last_polled_at: nowIso,
+      updated_at: nowIso,
+      last_error: nextError || null,
+    };
+    if (cursorChanged) update.last_message_id = newest;
+
+    const { error: updateError } = await admin
+      .from("ehockey_discord_free_command_config")
+      .update(update)
+      .eq("id", 1);
+    if (updateError) throw updateError;
+  }
 
   return {
     enabled: true,
@@ -475,6 +482,7 @@ async function poll() {
     channel_last_message_id: String(channelMeta?.last_message_id || ""),
     channel_parent_id: String(channelMeta?.parent_id || ""),
     errors,
+    config_write: shouldWriteConfig,
   };
 }
 
