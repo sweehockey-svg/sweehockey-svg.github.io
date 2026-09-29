@@ -1878,3 +1878,26 @@ button{font:inherit}
     grid-template-columns:minmax(102px,1fr) 21px 21px 21px 24px 27px 32px;
   }
 }
+
+
+/* v30 · final auth and interaction polish */
+.account-message.success{
+  border-color:#2d684b;
+  background:rgba(12,42,29,.72);
+  color:#a9dfc2;
+}
+.account-message.error{
+  border-color:#6b3b39;
+  background:#211416;
+  color:#e0aaa5;
+}
+.panel-status{
+  white-space:nowrap;
+}
+@media(max-width:760px){
+  .panel-status{
+    max-width:92px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+}
