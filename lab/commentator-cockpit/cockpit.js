@@ -14,6 +14,7 @@
     vasby: null,
     opponent: null,
     nextGame: null,
+    upcomingGames: [],
     standings: [],
     standingsByTeam: new Map(),
     roster: [],
@@ -2387,6 +2388,50 @@
     eventsHtml;
   }
 
+  function renderUpcomingGames() {
+    const games = state.upcomingGames || [];
+    if (!games.length) {
+      return '<section class="upcoming-schedule">' +
+        '<div class="upcoming-schedule-head"><span>KOMMANDE MATCHER</span><small>SCHEMA</small></div>' +
+        '<div class="drawer-card"><strong>Inga kommande matcher</strong><span>Det finns inga framtida matcher importerade för laget just nu.</span></div>' +
+      '</section>';
+    }
+
+    return '<section class="upcoming-schedule">' +
+      '<div class="upcoming-schedule-head"><span>KOMMANDE MATCHER</span><small>NÄSTA ' + games.length + '</small></div>' +
+      '<div class="upcoming-game-list">' +
+        games.map((game, index) => {
+          const home = state.teamById.get(game.home_team_id);
+          const away = state.teamById.get(game.away_team_id);
+          const active = game.id === state.nextGame?.id;
+          const live = game.status === "live";
+          const tag = live ? "LIVE" : active ? "NÄSTA" : "";
+          return '<article class="upcoming-game' + (active ? ' active' : '') + (live ? ' live' : '') + '">' +
+            '<div class="upcoming-game-time"><strong>' + esc(swedishDate(game.scheduled_start)) + '</strong>' +
+              '<span>' + esc(game.venue_name || "Arena ej angiven") + '</span></div>' +
+            '<div class="upcoming-game-teams">' +
+              '<span>' + esc(home?.canonical_name || "Hemmalag") + '</span>' +
+              '<b>–</b>' +
+              '<span>' + esc(away?.canonical_name || "Bortalag") + '</span>' +
+            '</div>' +
+            (tag ? '<em>' + tag + '</em>' : '<em aria-hidden="true"></em>') +
+          '</article>';
+        }).join("") +
+      '</div>' +
+    '</section>';
+  }
+
+  function renderMatchOverview() {
+    const cards = panels.match.cards || [];
+    const first = cards.slice(0, 1).map(([title, text]) =>
+      '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
+    ).join("");
+    const rest = cards.slice(1).map(([title, text]) =>
+      '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
+    ).join("");
+    return first + renderUpcomingGames() + rest;
+  }
+
   function renderDrawer(key) {
     const data = panels[key] || panels.match;
     drawerKicker.textContent = data.kicker;
@@ -2422,6 +2467,8 @@
     } else if (key === "account") {
       drawerBody.innerHTML = renderAccount();
       bindAccountUi();
+    } else if (key === "match") {
+      drawerBody.innerHTML = renderMatchOverview();
     } else {
       drawerBody.innerHTML = data.cards.map(([title, text]) =>
         '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
@@ -2556,9 +2603,10 @@
       .or("home_team_id.eq." + state.vasby.id + ",away_team_id.eq." + state.vasby.id)
       .gte("scheduled_start", activeWindowStart)
       .order("scheduled_start", { ascending: true })
-      .limit(1);
+      .limit(5);
     if (nextError) throw nextError;
-    state.nextGame = nextGames?.[0] || null;
+    state.upcomingGames = nextGames || [];
+    state.nextGame = state.upcomingGames[0] || null;
     if (!state.nextGame) throw new Error("Ingen kommande match hittades för "+state.vasby.canonical_name+".");
 
     const opponentId = state.nextGame.home_team_id === state.vasby.id
