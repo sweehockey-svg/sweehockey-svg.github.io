@@ -706,3 +706,253 @@ button{font:inherit}
     grid-template-columns:1fr;
   }
 }
+
+
+/* v20 · laptop readability + viewport fit */
+@media (min-width:761px) and (max-width:1600px){
+  .app-shell{padding:14px 14px 90px}
+  .topbar{max-width:1500px;margin-bottom:10px;gap:12px}
+  .brand{gap:10px}
+  .brand-mark.league-mark{width:54px;height:32px}
+  .brand h1{font-size:20px}
+  .eyebrow,.panel-kicker{font-size:10px;letter-spacing:.15em}
+  .top-actions{gap:7px}
+  .sync-state,.clock{min-height:35px;padding:0 10px;font-size:11px}
+  .account-button{padding:6px 8px}
+  .account-button strong{font-size:9px}
+  .account-button small{font-size:7px}
+  .home-button{font-size:8px}
+
+  .match-meta{min-height:32px;padding:7px 12px;font-size:10px}
+  .live-pill{padding:5px 7px;font-size:9px}
+  .scoreboard{min-height:104px;padding:12px 20px;gap:18px}
+  .team{gap:12px}
+  .team-badge{width:52px;height:52px;border-radius:10px}
+  .team small{font-size:9px;margin-bottom:4px}
+  .team strong{font-size:clamp(17px,1.7vw,23px)}
+  .score-center{min-width:132px}
+  .score{font-size:35px}
+  .period{margin-top:6px;font-size:10px}
+
+  .workspace{
+    grid-template-columns:minmax(250px,.82fr) minmax(390px,1.35fr) minmax(260px,.88fr);
+    gap:10px;
+    margin-top:10px;
+  }
+  .panel{min-height:410px;padding:14px}
+  .panel-head{padding-bottom:10px;margin-bottom:11px}
+  .panel-head h2{font-size:18px}
+  .panel-status{font-size:9px}
+  .stat-grid{gap:7px}
+  .stat{padding:10px}
+  .stat span{font-size:9px}
+  .stat strong{font-size:22px}
+  .stat small{font-size:10px}
+  .section-block{margin-top:14px;padding-top:11px}
+  .section-title{margin-bottom:8px}
+  .section-title span{font-size:10px}
+  .section-title small{font-size:9px}
+  .form-row{padding:6px 0;font-size:11px}
+  .table-placeholder div{padding:8px 9px;font-size:11px}
+  .ghost-button{font-size:9px}
+  .empty-state{min-height:315px;padding:18px}
+  .empty-state strong{font-size:16px}
+  .empty-state p{font-size:11px}
+  .fact-stack{gap:7px}
+  .fact-card{padding:11px}
+  .fact-card span{font-size:9px}
+  .fact-card strong{font-size:12px}
+  .fact-card p{font-size:10px}
+  .ai-button{margin-top:9px;padding:10px}
+  .ai-button small{font-size:9px}
+
+  .recent-game-top{font-size:9px}
+  .recent-game-foot{font-size:10px}
+  .event-time span{font-size:8px}
+  .event-copy em{font-size:8px}
+  .event-copy span{font-size:9px}
+  .event-copy p{font-size:10px}
+  .match-stats-strip span{font-size:8px}
+
+  .drawer{top:12px;right:12px;bottom:12px;padding:16px}
+  .drawer.wide{width:min(1080px,calc(100vw - 24px))}
+  .drawer-head{padding-bottom:11px}
+  .drawer-head h2{font-size:20px}
+  .drawer-body{padding-top:11px;font-size:12px}
+  .drawer-card{padding:11px}
+  .drawer-card strong{font-size:13px}
+
+  .roster-section-title{font-size:10px}
+  .roster-player{padding:8px 9px}
+  .roster-player strong{font-size:11px}
+  .roster-player small{font-size:9px}
+  .roster-player em{font-size:10px}
+
+  .lineup-team{padding:10px}
+  .lineup-team-head{padding-bottom:8px}
+  .lineup-team-head span{font-size:8px}
+  .lineup-team-head h3{font-size:14px}
+  .lineup-team-head small{font-size:9px}
+  .lineup-goalies{margin:8px 0}
+  .lineup-goalies>div{padding:6px 7px}
+  .lineup-goalies span{font-size:8px}
+  .lineup-goalies b{font-size:9px}
+  .lineup-goalies strong{font-size:10px}
+  .lineup-lines{gap:6px}
+  .lineup-line{padding:7px}
+  .lineup-line-head{margin-bottom:6px}
+  .lineup-line-head strong{font-size:9px}
+  .lineup-line-head span{font-size:8px}
+  .lineup-slot{padding:7px 6px 6px}
+  .lineup-slot>span{font-size:7px}
+  .lineup-slot>b{font-size:8px}
+  .lineup-slot>strong{font-size:9px}
+  .lineup-extras>span{font-size:8px}
+  .lineup-extras>strong{font-size:9px}
+
+  .special-team-card{padding:10px}
+  .special-team-head span,
+  .special-primary span,
+  .special-recent span,
+  .special-current span{font-size:8px}
+  .special-primary>div{padding:9px}
+  .special-primary small{font-size:9px}
+  .special-recent strong,.special-current strong{font-size:10px}
+
+  .h2h-summary span,.h2h-summary small,.h2h-latest>span{font-size:8px}
+  .h2h-latest>small{font-size:9px}
+  .h2h-date strong{font-size:9px}
+  .h2h-date span{font-size:8px}
+  .h2h-teams span{font-size:10px}
+  .h2h-score small{font-size:8px}
+
+  .quick-fact-next strong{font-size:9px}
+  .quick-fact-next small{font-size:8px}
+  .story-card span{font-size:8px}
+  .story-card strong{font-size:11px}
+  .story-card p{font-size:10px}
+
+  .studio-banner span{font-size:8px}
+  .studio-summary-grid span,.studio-summary-grid small{font-size:8px}
+  .studio-section-title span{font-size:9px}
+  .studio-section-title small{font-size:8px}
+  .studio-talking-points span{font-size:8px}
+  .studio-talking-points strong{font-size:11px}
+  .studio-talking-points p{font-size:9px}
+  .studio-event b,.studio-event>strong{font-size:9px}
+  .studio-event p{font-size:9px}
+
+  .note-form label>span,.ai-form label span,.account-form label span{font-size:8px}
+  .note-form-actions button,.note-actions button,.ai-form-actions button{font-size:8px}
+  .notes-meta{font-size:9px}
+  .notes-meta small{font-size:8px}
+  .note-card-head span,.note-card-head small{font-size:8px}
+  .note-card-head b{font-size:7px}
+  .note-card p{font-size:10px}
+  .note-tags span{font-size:8px}
+  .ai-status span{font-size:8px}
+  .ai-status strong{font-size:10px}
+  .ai-error,.ai-caution{font-size:9px}
+  .ai-result-head span{font-size:8px}
+  .ai-point span{font-size:8px}
+  .ai-point strong{font-size:11px}
+  .ai-point p{font-size:9px}
+  .ai-point small{font-size:7px}
+  .account-card span{font-size:8px}
+  .account-card p{font-size:10px}
+  .account-form button,.account-actions button{font-size:8px}
+  .account-message{font-size:9px}
+  .access-form input,.access-form select{font-size:10px}
+  .access-form button,.access-row button{font-size:8px}
+  .access-row strong{font-size:10px}
+  .access-row small,.access-row>span,.access-row>em{font-size:8px}
+
+  .drawer.stats-wide{
+    width:min(1240px,calc(100vw - 16px));
+    top:8px;
+    right:8px;
+    bottom:8px;
+    padding:12px 13px;
+  }
+  .drawer.stats-wide .drawer-head{padding-bottom:7px}
+  .drawer.stats-wide .drawer-head h2{font-size:21px}
+  .drawer.stats-wide .drawer-body{padding-top:7px}
+  .drawer.stats-wide .stats-intro{
+    grid-template-columns:145px minmax(0,1fr);
+    gap:10px;
+    padding:6px 9px;
+    margin-bottom:7px;
+  }
+  .drawer.stats-wide .stats-intro strong{font-size:10px}
+  .drawer.stats-wide .stats-intro span{font-size:8px}
+  .drawer.stats-wide .roster-section-title{font-size:10px;margin-bottom:5px}
+  .drawer.stats-wide .player-stat-head,
+  .drawer.stats-wide .player-stat-row{
+    grid-template-columns:minmax(170px,1fr) 28px 28px 28px 31px 35px 41px;
+    gap:3px;
+  }
+  .drawer.stats-wide .player-stat-head{
+    padding:5px 6px 6px;
+    font-size:9px;
+  }
+  .drawer.stats-wide .player-stat-row{padding:5px 6px}
+  .drawer.stats-wide .player-stat-name{grid-template-columns:28px minmax(0,1fr);gap:5px}
+  .drawer.stats-wide .player-stat-name>b{font-size:9px}
+  .drawer.stats-wide .player-stat-name strong{font-size:11px;line-height:1.15}
+  .drawer.stats-wide .player-stat-name small{font-size:8px;line-height:1.18}
+  .drawer.stats-wide .player-stat-row em{font-size:10px}
+  .drawer.stats-wide .goalie-card{padding:8px 9px}
+  .drawer.stats-wide .goalie-card-head{font-size:8px}
+  .drawer.stats-wide .goalie-card h3{font-size:13px}
+  .drawer.stats-wide .goalie-metrics span{font-size:8px}
+  .drawer.stats-wide .goalie-metrics strong{font-size:11px}
+  .drawer.stats-wide .goalie-recent span{font-size:8px}
+  .drawer.stats-wide .goalie-recent strong{font-size:8px}
+
+  .deck{
+    width:min(1160px,calc(100vw - 24px));
+    bottom:10px;
+    gap:5px;
+    padding:7px;
+  }
+  .deck-key{min-height:52px;padding:7px 8px}
+  .deck-key span{font-size:8px}
+  .deck-key strong{font-size:10px}
+
+  .league-home{padding:22px clamp(14px,2.5vw,34px) 34px}
+  .league-home-hero{margin:6px auto 18px}
+  .league-home-hero>span{font-size:9px}
+  .league-home-hero h2{margin:7px 0 5px;font-size:31px}
+  .league-home-hero p{font-size:12px}
+  .league-home-logo{width:160px;height:58px;margin-bottom:12px}
+  .team-grid{gap:9px}
+  .team-card{min-height:96px;padding:10px}
+  .team-card-copy span{font-size:8px}
+  .team-card-copy strong{font-size:12px}
+  .team-card-copy small{font-size:8px}
+  .team-lock-card>span{font-size:8px}
+  .team-lock-card p{font-size:11px}
+  .team-lock-actions button{font-size:8px}
+}
+
+@media (min-width:761px) and (max-height:900px){
+  .app-shell{padding-top:10px;padding-bottom:76px}
+  .topbar{margin-bottom:8px}
+  .match-meta{min-height:30px;padding-top:6px;padding-bottom:6px}
+  .scoreboard{min-height:92px;padding-top:9px;padding-bottom:9px}
+  .team-badge{width:48px;height:48px}
+  .workspace{gap:8px;margin-top:8px}
+  .panel{min-height:370px;padding:12px}
+  .panel-head{padding-bottom:8px;margin-bottom:9px}
+  .stat{padding:8px 9px}
+  .section-block{margin-top:11px;padding-top:9px}
+  .empty-state{min-height:275px;padding:14px}
+  .fact-card{padding:10px}
+  .deck{bottom:7px;padding:6px}
+  .deck-key{min-height:48px;padding:6px 7px}
+  .drawer{top:7px;bottom:7px}
+  .drawer.stats-wide{top:6px;bottom:6px}
+  .league-home{padding-top:14px;padding-bottom:28px}
+  .league-home-hero{margin-bottom:14px}
+  .team-card{min-height:90px}
+}
