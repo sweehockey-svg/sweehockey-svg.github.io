@@ -33,6 +33,7 @@ alter table public.commentator_access enable row level security;
 revoke all on public.commentator_access from anon;
 revoke insert,update,delete on public.commentator_access from authenticated;
 grant select on public.commentator_access to authenticated;
+grant select on public.commentator_access to service_role;
 
 drop policy if exists "approved user reads own access" on public.commentator_access;
 create policy "approved user reads own access"
