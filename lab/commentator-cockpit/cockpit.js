@@ -169,21 +169,14 @@
     USA:["US","USA"]
   });
 
-  function countryFlag(alpha2) {
-    const code = String(alpha2 || "").trim().toUpperCase();
-    if (!/^[A-Z]{2}$/.test(code)) return "";
-    return String.fromCodePoint(...[...code].map((char) => 127397 + char.charCodeAt(0)));
-  }
-
   function nationalityMarkup(playerId) {
     const code = String(state.playerProfiles.get(playerId)?.nationality_code || "").trim().toUpperCase();
     if (!code) return "";
     const entry = NATIONALITIES[code];
-    const alpha2 = entry?.[0] || (code.length === 2 ? code : "");
+    const alpha2 = String(entry?.[0] || (code.length === 2 ? code : "")).toLowerCase();
     const label = entry?.[1] || code;
-    const flag = countryFlag(alpha2);
-    return flag
-      ? '<span class="player-flag" title="' + esc(label) + '" aria-label="' + esc(label) + '">' + flag + '</span>'
+    return /^[a-z]{2}$/.test(alpha2)
+      ? '<img class="player-flag" src="https://flagcdn.com/20x15/' + esc(alpha2) + '.png" srcset="https://flagcdn.com/40x30/' + esc(alpha2) + '.png 2x" width="20" height="15" loading="lazy" decoding="async" alt="' + esc(label) + '" title="' + esc(label) + '">'
       : '<span class="player-country-code" title="' + esc(label) + '">' + esc(code) + '</span>';
   }
 
