@@ -30,6 +30,8 @@
     seasonGoalieStats: [],
     recentPlayerStats: [],
     recentGoalieStats: [],
+    currentPlayerStats: [],
+    currentGoalieStats: [],
     nextLineup: null,
     fallbackLineups: new Map(),
     seasonSpecialTeams: [],
@@ -2090,15 +2092,53 @@
     };
   }
 
+  function currentPlayerGameRow(seasonRow) {
+    if(state.nextGame?.status!=="live") return null;
+    return state.currentPlayerStats.find((row)=>sameStatPlayer(seasonRow,row)) || null;
+  }
+
+  function currentGoalieGameRow(seasonRow) {
+    if(state.nextGame?.status!=="live") return null;
+    return state.currentGoalieStats.find((row)=>sameStatPlayer(seasonRow,row)) || null;
+  }
+
+  function signedStat(value) {
+    const n=Number(value || 0);
+    return n>0 ? "+"+n : String(n);
+  }
+
+  function livePlayerDetail(row) {
+    if(!row) return "";
+    const fo=row.faceoff_pct==null ? "" : " · FO "+Number(row.faceoff_pct).toLocaleString("sv-SE",{maximumFractionDigits:1})+"%";
+    return '<span class="live-stat-line"><b>LIVE</b> '+esc(Number(row.goals||0)+"+"+Number(row.assists||0)+" · "+Number(row.points||0)+" P · "+Number(row.shots||0)+" SOG · "+Number(row.pim||0)+" PIM · +/- "+signedStat(row.plus_minus))+esc(fo)+'</span>';
+  }
+
+  function liveGoalieDetail(row) {
+    if(!row) return "";
+    const sv=row.save_pct==null ? "–" : Number(row.save_pct).toLocaleString("sv-SE",{minimumFractionDigits:2,maximumFractionDigits:2})+"%";
+    const gaa=row.gaa==null ? "–" : Number(row.gaa).toLocaleString("sv-SE",{minimumFractionDigits:2,maximumFractionDigits:2});
+    return '<div class="goalie-live"><span>LIVE</span><strong>'+esc(Number(row.saves||0)+"/"+Number(row.shots_against||0)+" · "+sv+" · GAA "+gaa+" · "+formatClockSeconds(row.minutes_played_seconds))+'</strong></div>';
+  }
+
   function renderPlayerStats() {
-    if (!state.seasonPlayerStats.length || !state.nextGame) {
+    if ((!state.seasonPlayerStats.length && !state.currentPlayerStats.length) || !state.nextGame) {
       return '<div class="drawer-card"><strong>Ingen säsongsstatistik ännu</strong><span>Swehockeys Players By Team har ännu inte gett oss spelardata.</span></div>';
     }
 
     const teamOrder = [state.focusTeam.id, state.opponent.id];
     return teamOrder.map((teamId) => {
-      const rows = state.seasonPlayerStats
-        .filter((row) => row.team_id === teamId && row.position !== "GK")
+      const seasonRows = state.seasonPlayerStats
+        .filter((row) => row.team_id === teamId && row.position !== "GK");
+      const liveOnlyRows = state.currentPlayerStats
+        .filter((row)=>row.team_id===teamId && row.position!=="GK")
+        .filter((liveRow)=>!seasonRows.some((seasonRow)=>sameStatPlayer(seasonRow,liveRow)))
+        .map((row)=>({
+          ...row,
+          games_played:0,goals:0,assists:0,points:0,shots:0,pim:0,plus_minus:0,
+          faceoff_pct:null,
+          live_only:true
+        }));
+      const rows = [...seasonRows,...liveOnlyRows]
         .sort((a, b) =>
           Number(b.points || 0) - Number(a.points || 0) ||
           Number(b.goals || 0) - Number(a.goals || 0) ||
@@ -2118,9 +2158,11 @@
             const recentText = recent.games
               ? 'S5 ' + recent.games + ' GP · ' + recent.goals + '+' + recent.assists + ' · ' + recent.points + ' P'
               : 'S5 väntar på matchrapport';
-            return '<div class="player-stat-row">' +
+            const liveRow=currentPlayerGameRow(row);
+            return '<div class="player-stat-row' + (liveRow ? ' is-live' : '') + '">' +
               '<div class="player-stat-name"><b>#' + esc(row.jersey_number ?? "–") + '</b><span>' +
                 '<strong>' + nationalityMarkup(row.player_id) + esc(humanSourceName(row.source_name)) + '</strong>' +
+                livePlayerDetail(liveRow) +
                 '<small>' + esc((row.position || "") + ' · ' + recentText) + '</small>' +
               '</span></div>' +
               '<em>' + esc(row.games_played ?? 0) + '</em>' +
@@ -2137,14 +2179,20 @@
   }
 
   function renderGoalieStats() {
-    if (!state.seasonGoalieStats.length || !state.nextGame) {
+    if ((!state.seasonGoalieStats.length && !state.currentGoalieStats.length) || !state.nextGame) {
       return '<div class="drawer-card"><strong>Ingen målvaktsstatistik ännu</strong><span>Swehockeys säsongstabell har ännu inte gett oss målvaktsdata.</span></div>';
     }
 
     const teamOrder = [state.focusTeam.id, state.opponent.id];
     return teamOrder.map((teamId) => {
-      const rows = state.seasonGoalieStats
-        .filter((row) => row.team_id === teamId)
+      const seasonRows=state.seasonGoalieStats.filter((row)=>row.team_id===teamId);
+      const liveOnlyRows=state.currentGoalieStats
+        .filter((row)=>row.team_id===teamId)
+        .filter((liveRow)=>!seasonRows.some((seasonRow)=>sameStatPlayer(seasonRow,liveRow)))
+        .map((row)=>({
+          ...row,games_played:0,wins:0,losses:0,save_pct:null,gaa:null,minutes_played_seconds:0,live_only:true
+        }));
+      const rows = [...seasonRows,...liveOnlyRows]
         .sort((a, b) =>
           Number(b.games_played || 0) - Number(a.games_played || 0) ||
           Number(b.minutes_played_seconds || 0) - Number(a.minutes_played_seconds || 0)
@@ -2176,6 +2224,7 @@
               '<div><span>GAA</span><strong>' + esc(gaa) + '</strong></div>' +
               '<div><span>W–L</span><strong>' + esc(record) + '</strong></div>' +
             '</div>' +
+            liveGoalieDetail(currentGoalieGameRow(row)) +
             '<div class="goalie-recent">' +
               '<span>S5</span><strong>' + esc(recent.games + ' GP · ' + recent.saves + '/' + recent.shotsAgainst + ' · ' + recentSv + ' · GAA ' + recentGaa) + '</strong>' +
             '</div>' +
@@ -2646,11 +2695,11 @@
       drawerBody.innerHTML = renderLineups();
     } else if (key === "players") {
       drawerBody.innerHTML =
-        '<article class="drawer-card stats-intro"><strong>Säsong + senaste 5</strong><span>Säsongstotalen kommer direkt från Swehockey. S5 räknas från de fem senaste Player Summary-rapporterna som finns importerade.</span></article>' +
+        '<article class="drawer-card stats-intro"><strong>'+(state.nextGame?.status==="live"?"LIVE + säsong + senaste 5":"Säsong + senaste 5")+'</strong><span>'+(state.nextGame?.status==="live"?"LIVE-raden kommer från pågående Player Summary när Swehockey publicerar den. ":"")+'Säsongstotalen kommer direkt från Swehockey. S5 räknas från de fem senaste Player Summary-rapporterna som finns importerade.</span></article>' +
         '<div class="stats-team-grid players-grid">' + renderPlayerStats() + '</div>';
     } else if (key === "goalies") {
       drawerBody.innerHTML =
-        '<article class="drawer-card stats-intro"><strong>Säsong + senaste 5</strong><span>SV%, GAA och record kommer från Swehockeys säsongstabell. S5 räknas från matchrapporterna.</span></article>' +
+        '<article class="drawer-card stats-intro"><strong>'+(state.nextGame?.status==="live"?"LIVE + säsong + senaste 5":"Säsong + senaste 5")+'</strong><span>'+(state.nextGame?.status==="live"?"LIVE-raden uppdateras från pågående Player Summary när den finns. ":"")+'SV%, GAA och record kommer från Swehockeys säsongstabell. S5 räknas från matchrapporterna.</span></article>' +
         '<div class="stats-team-grid goalies-grid">' + renderGoalieStats() + '</div>';
     } else if (key === "special") {
       drawerBody.innerHTML = renderSpecialTeams();
@@ -2948,6 +2997,17 @@
       state.recentGoalieStats = [];
     }
 
+    const [currentPlayerResult,currentGoalieResult]=await Promise.all([
+      client.from("player_game_stats")
+        .select("game_id,team_id,player_id,source_name,jersey_number,position,goals,assists,points,plus_minus,pim,shots,faceoff_wins,faceoff_losses,faceoff_pct")
+        .eq("game_id",state.nextGame.id),
+      client.from("goalie_game_stats")
+        .select("game_id,team_id,player_id,source_name,jersey_number,shots_against,goals_against,saves,save_pct,minutes_played_seconds,gaa")
+        .eq("game_id",state.nextGame.id)
+    ]);
+    state.currentPlayerStats=optionalData(currentPlayerResult,"Aktuell spelarstatistik",[]);
+    state.currentGoalieStats=optionalData(currentGoalieResult,"Aktuell målvaktsstatistik",[]);
+
     if (state.latestFocusGame) {
       state.latestPlayerStats = state.recentPlayerStats.filter((row) => row.game_id === state.latestFocusGame.id);
       state.latestGoalieStats = state.recentGoalieStats.filter((row) => row.game_id === state.latestFocusGame.id);
@@ -3093,7 +3153,7 @@
       }
 
       if(game.status==="live"){
-        const [eventResult,statsResult]=await Promise.all([
+        const [eventResult,statsResult,playerResult,goalieResult,lineupResult]=await Promise.all([
           client.from("game_events")
             .select("id,period,clock_display,event_seconds,event_type,team_id,strength,home_score,away_score,description")
             .eq("game_id",game.id)
@@ -3103,19 +3163,34 @@
             .limit(100),
           client.from("team_game_stats")
             .select("game_id,team_id,goals,shots,saves,pim,period_stats,power_play_opportunities,power_play_goals,power_play_pct,power_play_seconds,penalty_kill_opportunities,penalty_kill_goals_against,penalty_kill_pct")
-            .eq("game_id",game.id)
+            .eq("game_id",game.id),
+          client.from("player_game_stats")
+            .select("game_id,team_id,player_id,source_name,jersey_number,position,goals,assists,points,plus_minus,pim,shots,faceoff_wins,faceoff_losses,faceoff_pct")
+            .eq("game_id",game.id),
+          client.from("goalie_game_stats")
+            .select("game_id,team_id,player_id,source_name,jersey_number,shots_against,goals_against,saves,save_pct,minutes_played_seconds,gaa")
+            .eq("game_id",game.id),
+          game.source_event_game_id ? loadLineup(game) : Promise.resolve(null)
         ]);
         if(eventResult.error) throw eventResult.error;
         if(statsResult.error) throw statsResult.error;
+        if(playerResult.error) throw playerResult.error;
+        if(goalieResult.error) throw goalieResult.error;
         state.currentEvents=eventResult.data||[];
+        if((playerResult.data||[]).length || !state.currentPlayerStats.length) state.currentPlayerStats=playerResult.data||[];
+        if((goalieResult.data||[]).length || !state.currentGoalieStats.length) state.currentGoalieStats=goalieResult.data||[];
+        if(lineupResult) state.nextLineup=lineupResult;
         state.teamGameStats=[
           ...state.teamGameStats.filter((row)=>row.game_id!==game.id),
           ...(statsResult.data||[])
         ];
       }else{
         state.currentEvents=[];
-        if(!state.nextLineup&&game.source_event_game_id){
-          state.nextLineup=await loadLineup(game);
+        state.currentPlayerStats=[];
+        state.currentGoalieStats=[];
+        if(game.source_event_game_id){
+          const latestLineup=await loadLineup(game);
+          if(latestLineup) state.nextLineup=latestLineup;
         }
       }
 
@@ -3123,8 +3198,9 @@
       state.lastLiveRefreshAt=new Date().toISOString();
       render();
       const activeButton=document.querySelector(".deck-key.active");
-      if(drawer.classList.contains("open")&&activeButton?.dataset.panel==="studio"){
-        renderDrawer("studio");
+      const livePanels=new Set(["lines","players","goalies","special","live","studio"]);
+      if(drawer.classList.contains("open")&&livePanels.has(activeButton?.dataset.panel||"")){
+        renderDrawer(activeButton.dataset.panel);
       }
     }catch(error){
       console.error("Live refresh failed",error);
