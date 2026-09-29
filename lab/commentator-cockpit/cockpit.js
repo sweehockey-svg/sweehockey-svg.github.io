@@ -2392,17 +2392,19 @@
     drawerKicker.textContent = data.kicker;
     drawerTitle.textContent = data.title;
 
-    drawer.classList.toggle("wide", key === "lines" || key === "h2h" || key === "story" || key === "studio" || key === "notes" || key === "ai" || key === "account");
+    const statsWide = key === "players" || key === "goalies";
+    drawer.classList.toggle("wide", statsWide || key === "lines" || key === "h2h" || key === "story" || key === "studio" || key === "notes" || key === "ai" || key === "account");
+    drawer.classList.toggle("stats-wide", statsWide);
     if (key === "lines") {
       drawerBody.innerHTML = renderLineups();
     } else if (key === "players") {
       drawerBody.innerHTML =
-        '<article class="drawer-card"><strong>Säsong + senaste 5</strong><span>Säsongstotalen kommer direkt från Swehockey. S5 räknas från de fem senaste Player Summary-rapporterna som finns importerade.</span></article>' +
-        renderPlayerStats();
+        '<article class="drawer-card stats-intro"><strong>Säsong + senaste 5</strong><span>Säsongstotalen kommer direkt från Swehockey. S5 räknas från de fem senaste Player Summary-rapporterna som finns importerade.</span></article>' +
+        '<div class="stats-team-grid players-grid">' + renderPlayerStats() + '</div>';
     } else if (key === "goalies") {
       drawerBody.innerHTML =
-        '<article class="drawer-card"><strong>Säsong + senaste 5</strong><span>SV%, GAA och record kommer från Swehockeys säsongstabell. S5 räknas från matchrapporterna.</span></article>' +
-        renderGoalieStats();
+        '<article class="drawer-card stats-intro"><strong>Säsong + senaste 5</strong><span>SV%, GAA och record kommer från Swehockeys säsongstabell. S5 räknas från matchrapporterna.</span></article>' +
+        '<div class="stats-team-grid goalies-grid">' + renderGoalieStats() + '</div>';
     } else if (key === "special") {
       drawerBody.innerHTML = renderSpecialTeams();
     } else if (key === "story") {

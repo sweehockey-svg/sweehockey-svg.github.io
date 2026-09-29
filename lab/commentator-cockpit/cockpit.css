@@ -513,3 +513,160 @@ button{font:inherit}
   .league-home-logo{width:150px;height:55px}
   .brand-mark.league-mark{width:48px;height:30px}
 }
+
+
+/* v18 · compact two-column player/goalie stats */
+.drawer.stats-wide{
+  width:min(1120px,calc(100vw - 24px));
+  top:12px;
+  right:12px;
+  bottom:12px;
+  padding:15px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.drawer.stats-wide .drawer-head{
+  flex:0 0 auto;
+  padding-bottom:10px;
+}
+.drawer.stats-wide .drawer-head h2{
+  font-size:21px;
+}
+.drawer.stats-wide .drawer-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding-top:10px;
+  padding-right:5px;
+  scrollbar-width:thin;
+}
+.drawer.stats-wide .stats-intro{
+  display:grid;
+  grid-template-columns:150px minmax(0,1fr);
+  align-items:center;
+  gap:12px;
+  padding:9px 11px;
+  margin-bottom:10px;
+}
+.drawer.stats-wide .stats-intro strong{
+  margin:0;
+  font-size:10px;
+}
+.drawer.stats-wide .stats-intro span{
+  font-size:8px;
+  line-height:1.4;
+}
+.stats-team-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  align-items:start;
+}
+.stats-team-grid>.player-stat-section,
+.stats-team-grid>.goalie-team-section{
+  min-width:0;
+  margin:0;
+}
+.drawer.stats-wide .roster-section-title{
+  margin:0 0 6px;
+  padding:0 1px;
+}
+.drawer.stats-wide .player-stat-head,
+.drawer.stats-wide .player-stat-row{
+  grid-template-columns:minmax(170px,1fr) 27px 27px 27px 30px 34px 39px;
+  gap:3px;
+}
+.drawer.stats-wide .player-stat-head{
+  position:sticky;
+  top:0;
+  z-index:2;
+  padding:5px 6px 6px;
+  background:#071824;
+  border-bottom:1px solid #17303e;
+}
+.drawer.stats-wide .player-stat-list{
+  gap:3px;
+}
+.drawer.stats-wide .player-stat-row{
+  padding:5px 6px;
+  border-radius:7px;
+}
+.drawer.stats-wide .player-stat-name{
+  grid-template-columns:27px minmax(0,1fr);
+  gap:5px;
+}
+.drawer.stats-wide .player-stat-name>b{
+  font-size:8px;
+}
+.drawer.stats-wide .player-stat-name strong{
+  font-size:9px;
+}
+.drawer.stats-wide .player-stat-name small{
+  margin-top:1px;
+  font-size:6px;
+  line-height:1.25;
+}
+.drawer.stats-wide .player-stat-row em{
+  font-size:8px;
+}
+.drawer.stats-wide .goalie-card-grid{
+  gap:6px;
+}
+.drawer.stats-wide .goalie-card{
+  padding:9px 10px;
+}
+.drawer.stats-wide .goalie-card h3{
+  margin:4px 0 7px;
+  font-size:13px;
+}
+.drawer.stats-wide .goalie-metrics{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:5px;
+}
+.drawer.stats-wide .goalie-metrics div{
+  padding:6px;
+}
+.drawer.stats-wide .goalie-metrics span{
+  font-size:6px;
+}
+.drawer.stats-wide .goalie-metrics strong{
+  margin-top:2px;
+  font-size:10px;
+}
+.drawer.stats-wide .goalie-season-metrics{
+  margin-bottom:6px;
+}
+.drawer.stats-wide .goalie-recent{
+  padding:6px 8px;
+  gap:7px;
+}
+.drawer.stats-wide .goalie-recent strong{
+  font-size:8px;
+}
+@media(max-width:980px){
+  .drawer.stats-wide{
+    width:min(760px,calc(100vw - 24px));
+  }
+  .stats-team-grid{
+    grid-template-columns:1fr;
+  }
+}
+@media(max-width:760px){
+  .drawer.stats-wide{
+    width:calc(100vw - 16px);
+    top:8px;
+    right:8px;
+    bottom:8px;
+    padding:12px;
+  }
+  .drawer.stats-wide .stats-intro{
+    grid-template-columns:1fr;
+    gap:3px;
+  }
+  .drawer.stats-wide .player-stat-head,
+  .drawer.stats-wide .player-stat-row{
+    grid-template-columns:minmax(140px,1fr) 24px 24px 24px 27px 30px 35px;
+  }
+}
