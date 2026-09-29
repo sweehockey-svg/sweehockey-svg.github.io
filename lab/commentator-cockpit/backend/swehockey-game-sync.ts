@@ -10,7 +10,7 @@ const BASE = "https://stats.swehockey.se";
 const ALLOWED_COMPETITION_SOURCE_IDS = ["21043","21044"] as const;
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v9";
+const PARSER_VERSION = "game-sync-v10";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -579,37 +579,100 @@ function parsePlayerSummaryText(text:string, game:any, homeName:string, awayName
   return { skaters,goalies };
 }
 
-async function syncPlayerSummary(game:any,eventId:string,homeName:string,awayName:string,roster:any[]) {
-  const pdfItem=await fetchBinary(`/Game/Reports/PlayerSummary/${eventId}`);
+async function syncPlayerSummary(
+  game:any,
+  eventId:string,
+  homeName:string,
+  awayName:string,
+  roster:any[],
+  mode:"live"|"final"="final"
+) {
+  let pdfItem:any;
+  try {
+    pdfItem=await fetchBinary(`/Game/Reports/PlayerSummary/${eventId}`);
+  } catch (error) {
+    if (mode === "live") {
+      return {
+        available:false,
+        mode,
+        reason:"not_published",
+        message:String((error as any)?.message || error)
+      };
+    }
+    throw error;
+  }
+
   await logBinaryFetch(pdfItem,"player_summary_pdf",eventId);
   if (!pdfItem.contentType.includes("pdf") || !pdfItem.bytes.length) {
-    return { available:false,skaters:0,goalies:0 };
+    return { available:false,mode,reason:"not_pdf",skaters:0,goalies:0 };
   }
 
   const parsedPdf=await pdf(Buffer.from(pdfItem.bytes));
   const parsed=parsePlayerSummaryText(parsedPdf.text || "",game,homeName,awayName,roster);
 
-  const { error:deleteSkatersError }=await admin.from("player_game_stats")
-    .delete()
-    .eq("game_id",game.id);
-  if (deleteSkatersError) throw deleteSkatersError;
+  const skaterTeams=new Set(parsed.skaters.map((row:any)=>row.team_id).filter(Boolean));
+  const goalieTeams=new Set(parsed.goalies.map((row:any)=>row.team_id).filter(Boolean));
+  const bothSkaterTeams=skaterTeams.has(game.home_team_id) && skaterTeams.has(game.away_team_id);
+  const bothGoalieTeams=goalieTeams.has(game.home_team_id) && goalieTeams.has(game.away_team_id);
 
-  const { error:deleteGoaliesError }=await admin.from("goalie_game_stats")
-    .delete()
-    .eq("game_id",game.id);
-  if (deleteGoaliesError) throw deleteGoaliesError;
+  const [{ count:existingSkaters,error:existingSkatersError },{ count:existingGoalies,error:existingGoaliesError }]=await Promise.all([
+    admin.from("player_game_stats").select("id",{count:"exact",head:true}).eq("game_id",game.id),
+    admin.from("goalie_game_stats").select("id",{count:"exact",head:true}).eq("game_id",game.id)
+  ]);
+  if(existingSkatersError) throw existingSkatersError;
+  if(existingGoaliesError) throw existingGoaliesError;
+
+  if (mode === "live") {
+    const plausibleSkaters=bothSkaterTeams && parsed.skaters.length >= 12;
+    const plausibleGoalies=bothGoalieTeams && parsed.goalies.length >= 2;
+    const regressesSkaters=(existingSkaters || 0) > parsed.skaters.length;
+    const regressesGoalies=(existingGoalies || 0) > parsed.goalies.length;
+
+    if (!plausibleSkaters || !plausibleGoalies || regressesSkaters || regressesGoalies) {
+      return {
+        available:true,
+        mode,
+        accepted:false,
+        reason:"partial_snapshot",
+        parsed_skaters:parsed.skaters.length,
+        parsed_goalies:parsed.goalies.length,
+        existing_skaters:existingSkaters || 0,
+        existing_goalies:existingGoalies || 0,
+        both_skater_teams:bothSkaterTeams,
+        both_goalie_teams:bothGoalieTeams,
+        pages:parsedPdf.numpages
+      };
+    }
+  }
 
   if (parsed.skaters.length) {
+    const { error:deleteSkatersError }=await admin.from("player_game_stats")
+      .delete()
+      .eq("game_id",game.id);
+    if (deleteSkatersError) throw deleteSkatersError;
+
     const { error:skaterInsertError }=await admin.from("player_game_stats").insert(parsed.skaters);
     if (skaterInsertError) throw skaterInsertError;
   }
 
   if (parsed.goalies.length) {
+    const { error:deleteGoaliesError }=await admin.from("goalie_game_stats")
+      .delete()
+      .eq("game_id",game.id);
+    if (deleteGoaliesError) throw deleteGoaliesError;
+
     const { error:goalieInsertError }=await admin.from("goalie_game_stats").insert(parsed.goalies);
     if (goalieInsertError) throw goalieInsertError;
   }
 
-  return { available:true,skaters:parsed.skaters.length,goalies:parsed.goalies.length,pages:parsedPdf.numpages };
+  return {
+    available:true,
+    mode,
+    accepted:true,
+    skaters:parsed.skaters.length,
+    goalies:parsed.goalies.length,
+    pages:parsedPdf.numpages
+  };
 }
 
 async function syncLineup(game:any, eventId:string, htmlItem:any, homeName:string, awayName:string, roster:any[]) {
@@ -1247,7 +1310,7 @@ async function syncFinalPlayerSummaryOnly(game:any) {
     .in("team_id",[game.home_team_id,game.away_team_id]);
   if (rosterError) throw rosterError;
 
-  return await syncPlayerSummary(game,eventId,homeName,awayName,roster || []);
+  return await syncPlayerSummary(game,eventId,homeName,awayName,roster || [],"final");
 }
 
 async function syncGameData(game:any, eventId:string, homeName:string, awayName:string) {
@@ -1275,8 +1338,12 @@ async function syncGameData(game:any, eventId:string, homeName:string, awayName:
   const eventsResult = await syncEvents(game,eventId,eventsHtml,roster || []);
 
   let playerSummary:any = { skipped:true };
-  const shouldReadSummary = game.status === "final" || eventsResult.is_final === true;
-  if (shouldReadSummary) {
+  const isFinal = game.status === "final" || eventsResult.is_final === true;
+  const appearsLive = !isFinal && Number(eventsResult.events || 0) > 0;
+
+  if (appearsLive) {
+    playerSummary = await syncPlayerSummary(game,eventId,homeName,awayName,roster || [],"live");
+  } else if (isFinal) {
     const { count:skaterCount, error:skaterCountError } = await admin.from("player_game_stats")
       .select("id",{count:"exact",head:true})
       .eq("game_id",game.id);
@@ -1287,7 +1354,7 @@ async function syncGameData(game:any, eventId:string, homeName:string, awayName:
     if (goalieCountError) throw goalieCountError;
 
     if ((skaterCount || 0) === 0 || (goalieCount || 0) === 0) {
-      playerSummary = await syncPlayerSummary(game,eventId,homeName,awayName,roster || []);
+      playerSummary = await syncPlayerSummary(game,eventId,homeName,awayName,roster || [],"final");
     } else {
       playerSummary = { skipped:true,existing_skaters:skaterCount || 0,existing_goalies:goalieCount || 0 };
     }
