@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#06111a">
   <title>Commentator Cockpit · Hockeyettan</title>
-  <link rel="stylesheet" href="cockpit.css?v=27">
+  <link rel="stylesheet" href="cockpit.css?v=28">
 </head>
 <body>
   <div class="app-shell">
@@ -51,6 +51,7 @@
         <p id="lockMessage">Kontrollerar behörighet…</p>
         <div class="team-lock-actions">
           <button type="button" id="lockLoginButton">LOGGA IN / KONTO</button>
+          <button type="button" class="retry-button hidden" id="lockRetryButton">FÖRSÖK IGEN</button>
           <button type="button" id="lockHomeButton">TILL ALLA LAG</button>
         </div>
       </section>
@@ -203,6 +204,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=1"></script>
-  <script src="cockpit.js?v=29"></script>
+  <script src="cockpit.js?v=30"></script>
 </body>
 </html>
