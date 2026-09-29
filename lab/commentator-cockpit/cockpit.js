@@ -2914,6 +2914,13 @@
 
   document.querySelectorAll(".deck-key").forEach((button) => {
     button.addEventListener("click", () => {
+      const samePanel = button.classList.contains("active");
+      const drawerOpen = drawer.classList.contains("open");
+      if (samePanel && drawerOpen) {
+        drawer.classList.remove("open");
+        return;
+      }
+
       document.querySelectorAll(".deck-key").forEach((item) => item.classList.remove("active"));
       button.classList.add("active");
       renderDrawer(button.dataset.panel);
