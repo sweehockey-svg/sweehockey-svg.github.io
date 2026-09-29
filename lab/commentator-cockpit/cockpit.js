@@ -144,6 +144,27 @@
   const drawerKicker = document.getElementById("drawerKicker");
   const drawerTitle = document.getElementById("drawerTitle");
   const drawerBody = document.getElementById("drawerBody");
+  const THEME_STORAGE_KEY = "commentator-cockpit-theme";
+
+  function currentTheme() {
+    return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+  }
+
+  function updateThemeToggle() {
+    const button=document.getElementById("themeToggle");
+    if(!button) return;
+    const light=currentTheme()==="light";
+    button.innerHTML='<span aria-hidden="true">'+(light?"☀":"☾")+'</span><strong>'+(light?"LJUS":"MÖRK")+'</strong>';
+    button.setAttribute("aria-label",light?"Byt till mörkt läge":"Byt till ljust läge");
+    button.setAttribute("title",light?"Byt till mörkt läge":"Byt till ljust läge");
+  }
+
+  function setTheme(theme) {
+    const next=theme==="light"?"light":"dark";
+    document.documentElement.dataset.theme=next;
+    try{ localStorage.setItem(THEME_STORAGE_KEY,next); }catch{}
+    updateThemeToggle();
+  }
 
   function setDrawerOpen(open) {
     drawer.classList.toggle("open", open);
@@ -3150,6 +3171,11 @@
     renderDrawer("account");
   });
 
+  document.getElementById("themeToggle")?.addEventListener("click",()=>{
+    setTheme(currentTheme()==="light"?"dark":"light");
+  });
+  updateThemeToggle();
+
   document.getElementById("homeButton")?.addEventListener("click",goHome);
   document.getElementById("lockHomeButton")?.addEventListener("click",goHome);
   document.getElementById("lockRetryButton")?.addEventListener("click",async()=>{
@@ -3205,6 +3231,8 @@
     openPanel: renderDrawer,
     editorialNotes: () => currentEditorialNotes(),
     aiFallback: (question="") => localAiBrief(question),
-    syncNotes: () => syncNotesWithCloud()
+    syncNotes: () => syncNotesWithCloud(),
+    theme: () => currentTheme(),
+    setTheme
   };
 })();
