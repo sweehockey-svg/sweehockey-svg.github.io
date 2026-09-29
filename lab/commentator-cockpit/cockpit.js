@@ -48,6 +48,8 @@
     authUser: null,
     authBusy: false,
     authMessage: "",
+    authMessageType: "",
+    authEmailDraft: "",
     cloudSyncState: "local",
     cloudSyncMessage: "",
     access: null,
@@ -102,8 +104,8 @@
       kicker: "LIVE",
       title: "Live matchdata",
       cards: [
-        ["Nästa steg", "Matchspecifik eventcollector kopplas mot Swehockey Game/Events."],
-        ["Grunddata", "Schema, resultat, tabell och roster är redan automatiskt synkade."]
+        ["Matchcollector", "Matchrapport, lineup och events hämtas automatiskt när Swehockey publicerar dem."],
+        ["Grunddata", "Schema, resultat, tabell, roster och statistik synkas automatiskt."]
       ]
     },
     story: {
@@ -145,6 +147,7 @@
 
   function setDrawerOpen(open) {
     drawer.classList.toggle("open", open);
+    drawer.setAttribute("aria-hidden", open ? "false" : "true");
     document.body.classList.toggle("drawer-open", open);
   }
 
@@ -999,13 +1002,13 @@
       accessAdminHtml();
     }
 
-    return '<article class="drawer-card"><strong>Passwordless login</strong><span>Logga in med e-post. Därefter kontrolleras om adressen är kopplad till det lag du försöker öppna.</span></article>' +
+    return '<article class="drawer-card"><strong>E-postinloggning</strong><span>Du får en personlig engångslänk via e-post. Inget lösenord behövs. Efter inloggningen kontrolleras din lagbehörighet.</span></article>' +
       '<form class="account-form" id="accountForm">' +
-        '<label><span>E-POST</span><input id="accountEmail" type="email" autocomplete="email" required placeholder="namn@example.com"></label>' +
-        '<button type="submit" '+(state.authBusy?"disabled":"")+'>'+(state.authBusy?"SKICKAR…":"SKICKA MAGIC LINK")+'</button>' +
+        '<label><span>E-POST</span><input id="accountEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" required placeholder="namn@example.com" value="'+esc(state.authEmailDraft)+'"></label>' +
+        '<button type="submit" '+(state.authBusy?"disabled":"")+'>'+(state.authBusy?"SKICKAR…":"SKICKA INLOGGNINGSLÄNK")+'</button>' +
       '</form>' +
-      (state.authMessage?'<div class="account-message">'+esc(state.authMessage)+'</div>':'') +
-      '<article class="drawer-card"><strong>Efter inloggning</strong><span>Du kommer bara in i cockpiten för lag som en admin har kopplat till ditt konto.</span></article>';
+      (state.authMessage?'<div class="account-message '+esc(state.authMessageType||"")+'" role="status" aria-live="polite">'+esc(state.authMessage)+'</div>':'') +
+      '<article class="drawer-card"><strong>Lagbehörighet</strong><span>Inloggning och lagåtkomst är separata. En admin kopplar din e-postadress till rätt Hockeyettan-lag.</span></article>';
   }
 
   function bindAccountUi() {
@@ -1018,22 +1021,26 @@
         if(!email) return;
         state.authBusy=true;
         state.authMessage="";
+        state.authMessageType="";
+        state.authEmailDraft=email;
         renderDrawer("account");
         if(state.selectedTeamSlug){
           try{ localStorage.setItem(AUTH_PENDING_TEAM_KEY,state.selectedTeamSlug); }catch{}
         }
-        const redirectTo=AUTH_REDIRECT_URL;
+        const redirectUrl=new URL(AUTH_REDIRECT_URL);
+        if(state.selectedTeamSlug) redirectUrl.searchParams.set("team",state.selectedTeamSlug);
         const {error}=await client.auth.signInWithOtp({
           email,
           options:{
-            emailRedirectTo:redirectTo,
+            emailRedirectTo:redirectUrl.toString(),
             shouldCreateUser:true
           }
         });
         state.authBusy=false;
+        state.authMessageType=error?"error":"success";
         state.authMessage=error
-          ? "Kunde inte skicka länken: "+error.message
-          : "Magic link skickad till "+email+". Efter inloggningen kontrolleras cockpit-behörigheten.";
+          ? "Kunde inte skicka inloggningslänken: "+error.message
+          : "Inloggningslänk skickad till "+email+". Öppna mejlet och klicka på Logga in.";
         renderDrawer("account");
       });
     }
@@ -1149,6 +1156,8 @@
     state.accessAdminError="";
 
     if(nextUser){
+      state.authEmailDraft="";
+      state.authMessageType="";
       try{ localStorage.removeItem(AUTH_PENDING_TEAM_KEY); }catch{}
       await loadAccessForCurrentUser();
       normalizeTeamSelectionForAccess();
@@ -3133,9 +3142,8 @@
   });
 
   document.getElementById("closeDrawer").addEventListener("click", () => setDrawerOpen(false));
-
-  document.getElementById("clearDemo").addEventListener("click", () => {
-    renderLatestGame();
+  document.addEventListener("keydown",(event)=>{
+    if(event.key==="Escape"&&drawer.classList.contains("open")) setDrawerOpen(false);
   });
 
   document.getElementById("accountButton")?.addEventListener("click",()=>{
