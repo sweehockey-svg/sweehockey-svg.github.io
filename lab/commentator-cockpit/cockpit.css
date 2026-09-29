@@ -2365,3 +2365,41 @@ html[data-theme="light"] .theme-toggle:hover{
     margin-top:3px;
   }
 }
+
+
+/* v34 · fill desktop viewport vertically */
+@media (min-width:1101px) and (min-height:700px){
+  .cockpit:not(.hidden) .workspace{
+    min-height:calc(100dvh - 250px);
+    align-items:stretch;
+  }
+
+  .cockpit:not(.hidden) .panel{
+    height:100%;
+    min-height:0;
+  }
+
+  .cockpit:not(.hidden) .event-panel{
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+
+  .cockpit:not(.hidden) .event-panel .panel-head{
+    flex:0 0 auto;
+  }
+
+  .cockpit:not(.hidden) .event-feed-live{
+    flex:1 1 auto;
+    min-height:0;
+    max-height:none;
+    overflow-y:auto;
+    overflow-x:hidden;
+  }
+}
+
+@media (min-width:1101px) and (min-height:900px){
+  .cockpit:not(.hidden) .workspace{
+    min-height:calc(100dvh - 242px);
+  }
+}
