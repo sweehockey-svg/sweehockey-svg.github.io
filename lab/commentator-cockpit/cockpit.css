@@ -1041,3 +1041,186 @@ button{font:inherit}
   body.drawer-open{overflow:hidden}
   body.drawer-open .drawer-body{overscroll-behavior:contain}
 }
+
+
+/* v24 · 1920 readability + stronger contrast */
+:root{
+  --muted:#9eb0bb;
+  --muted2:#748a98;
+}
+
+/* Primary cockpit text should read clearly; reserve muted tones for metadata. */
+.team strong,
+.panel-head h2,
+.stat strong,
+.table-placeholder span,
+.event-copy p,
+.fact-card strong,
+.drawer-head h2,
+.drawer-card strong,
+.player-stat-name strong,
+.goalie-card h3,
+.lineup-team-head h3,
+.lineup-goalies strong,
+.lineup-slot>strong,
+.special-team-head h3,
+.special-primary strong,
+.special-recent strong,
+.special-current strong,
+.h2h-latest>strong,
+.h2h-teams span,
+.h2h-score strong,
+.story-card strong,
+.studio-banner h3,
+.studio-summary-grid strong,
+.studio-talking-points strong,
+.studio-event p,
+.note-card h3,
+.ai-point strong,
+.account-card h3,
+.team-card-copy strong{
+  color:#f4f7f9;
+}
+
+.drawer-body,
+.form-row,
+.table-placeholder,
+.event-copy span,
+.recent-game-foot,
+.roster-player em,
+.player-stat-row em,
+.goalie-recent strong,
+.lineup-team-head small,
+.lineup-extras>strong,
+.special-primary small,
+.h2h-latest>small,
+.h2h-date strong,
+.h2h-date span,
+.quick-fact-next strong,
+.story-card p,
+.studio-event>strong,
+.note-card p,
+.account-card p{
+  color:#b7c5cd;
+}
+
+.eyebrow,
+.panel-kicker,
+.match-meta,
+.team small,
+.period,
+.stat span,
+.stat small,
+.section-title small,
+.fact-card span,
+.player-stat-head,
+.player-stat-name>b,
+.player-stat-name small,
+.goalie-card-head,
+.goalie-metrics span,
+.lineup-team-head span,
+.lineup-goalies b,
+.lineup-line-head span,
+.lineup-slot>b,
+.special-team-head span,
+.special-primary span,
+.h2h-summary span,
+.h2h-summary small,
+.h2h-latest>span,
+.quick-fact-next small,
+.story-card span,
+.studio-banner span,
+.studio-summary-grid span,
+.studio-summary-grid small,
+.studio-section-title small,
+.note-card-head span,
+.note-card-head small,
+.ai-status span,
+.ai-form label span,
+.account-form label span,
+.access-row small{
+  color:#91a6b2;
+}
+
+/* Keep status/accent semantics intact. */
+.panel-kicker.yellow,
+.roster-section-title,
+.player-stat-row em.pts,
+.lineup-goalies span,
+.lineup-line-head strong,
+.special-recent span,
+.special-current span,
+.h2h-latest>span,
+.story-card span,
+.studio-banner span,
+.upcoming-schedule-head span,
+.upcoming-game>em{
+  color:var(--yellow);
+}
+
+/* 1920px displays still need laptop-grade typography, without changing the main layout width. */
+@media (min-width:1601px) and (max-width:1920px){
+  .eyebrow,.panel-kicker{font-size:10px}
+  .match-meta{font-size:10px}
+  .team small{font-size:9px}
+  .period{font-size:10px}
+  .panel-status{font-size:9px}
+  .stat span{font-size:9px}
+  .stat small{font-size:10px}
+  .section-title span{font-size:10px}
+  .section-title small{font-size:9px}
+  .form-row{font-size:11px}
+  .table-placeholder div{font-size:11px}
+  .event-time span{font-size:8px}
+  .event-copy em{font-size:8px}
+  .event-copy span{font-size:9px}
+  .event-copy p{font-size:10px}
+  .fact-card span{font-size:9px}
+  .fact-card p{font-size:10px}
+
+  .drawer-body{font-size:12px}
+  .drawer-card strong{font-size:13px}
+  .roster-section-title{font-size:10px}
+  .roster-player strong{font-size:11px}
+  .roster-player small{font-size:9px}
+  .roster-player em{font-size:10px}
+
+  .drawer.stats-wide{
+    width:min(1320px,calc(100vw - 24px));
+    padding:13px 14px;
+  }
+  .drawer.stats-wide .stats-intro strong{font-size:10px}
+  .drawer.stats-wide .stats-intro span{font-size:9px}
+  .drawer.stats-wide .roster-section-title{font-size:10px}
+  .drawer.stats-wide .player-stat-head{font-size:9px}
+  .drawer.stats-wide .player-stat-name>b{font-size:9px}
+  .drawer.stats-wide .player-stat-name strong{font-size:11px;line-height:1.15}
+  .drawer.stats-wide .player-stat-name small{font-size:8px;line-height:1.2}
+  .drawer.stats-wide .player-stat-row em{font-size:10px}
+  .drawer.stats-wide .goalie-card-head{font-size:8px}
+  .drawer.stats-wide .goalie-card h3{font-size:13px}
+  .drawer.stats-wide .goalie-metrics span{font-size:8px}
+  .drawer.stats-wide .goalie-metrics strong{font-size:11px}
+  .drawer.stats-wide .goalie-recent span{font-size:8px}
+  .drawer.stats-wide .goalie-recent strong{font-size:9px}
+
+  .lineup-team-head span{font-size:8px}
+  .lineup-team-head small{font-size:9px}
+  .lineup-goalies span{font-size:8px}
+  .lineup-goalies b{font-size:9px}
+  .lineup-goalies strong{font-size:10px}
+  .lineup-line-head strong{font-size:9px}
+  .lineup-line-head span{font-size:8px}
+  .lineup-slot>span{font-size:7px}
+  .lineup-slot>b{font-size:8px}
+  .lineup-slot>strong{font-size:9px}
+  .lineup-extras>span{font-size:8px}
+  .lineup-extras>strong{font-size:9px}
+
+  .upcoming-schedule-head span{font-size:10px}
+  .upcoming-schedule-head small{font-size:9px}
+  .upcoming-game-time strong{font-size:11px}
+  .upcoming-game-time span{font-size:9px}
+  .upcoming-game-teams span{font-size:11px}
+  .upcoming-game>em{font-size:8px}
+}
