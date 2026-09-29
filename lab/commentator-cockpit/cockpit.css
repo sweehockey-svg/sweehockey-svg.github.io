@@ -2736,3 +2736,87 @@ html[data-theme="light"] .story-card p,
 html[data-theme="light"] .drawer-card span{
   color:#556b76;
 }
+
+
+/* v38 · live player and goalie stats */
+.live-stat-line{
+  display:block;
+  margin-top:2px;
+  color:#d5e4ec;
+  font-size:7px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.live-stat-line b{
+  display:inline-block;
+  margin-right:4px;
+  color:var(--green);
+  font-size:6px;
+  letter-spacing:.08em;
+}
+.player-stat-row.is-live{
+  border-color:#2d684b;
+  box-shadow:inset 2px 0 0 rgba(98,214,154,.55);
+}
+.goalie-live{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  margin-bottom:5px;
+  padding:5px 6px;
+  border:1px solid #2d684b;
+  border-radius:6px;
+  background:rgba(20,65,45,.24);
+}
+.goalie-live span{
+  flex:0 0 auto;
+  color:var(--green);
+  font-size:6px;
+  font-weight:1000;
+  letter-spacing:.08em;
+}
+.goalie-live strong{
+  min-width:0;
+  color:#d9e8ef;
+  font-size:7px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+@media (min-width:761px){
+  .drawer.stats-wide .live-stat-line{
+    font-size:8px;
+  }
+  .drawer.stats-wide .live-stat-line b{
+    font-size:7px;
+  }
+  .drawer.stats-wide .goalie-live span{
+    font-size:7px;
+  }
+  .drawer.stats-wide .goalie-live strong{
+    font-size:8px;
+  }
+}
+html[data-theme="light"] .live-stat-line{
+  color:#29434f;
+}
+html[data-theme="light"] .live-stat-line b{
+  color:#19794e;
+}
+html[data-theme="light"] .player-stat-row.is-live{
+  border-color:#83b89f;
+  box-shadow:inset 2px 0 0 rgba(25,121,78,.42);
+}
+html[data-theme="light"] .goalie-live{
+  background:#edf8f2;
+  border-color:#8dbca3;
+}
+html[data-theme="light"] .goalie-live span{
+  color:#19794e;
+}
+html[data-theme="light"] .goalie-live strong{
+  color:#26423a;
+}
