@@ -2168,3 +2168,84 @@ html[data-theme="light"] .theme-toggle:hover{
     font-size:13px;
   }
 }
+
+
+/* v32 · wide desktop workstation layout */
+@media (min-width:1400px){
+  .league-home{
+    padding-left:12px;
+    padding-right:12px;
+  }
+  .team-grid{
+    width:100%;
+    max-width:2100px;
+    grid-template-columns:repeat(auto-fit,minmax(275px,1fr));
+    gap:9px;
+  }
+}
+
+@media (min-width:1601px){
+  .app-shell{
+    padding-left:12px;
+    padding-right:12px;
+  }
+
+  .topbar,
+  .cockpit{
+    width:min(2400px,calc(100vw - 24px));
+    max-width:none;
+  }
+
+  .topbar{
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .workspace{
+    grid-template-columns:
+      minmax(360px,.95fr)
+      minmax(720px,2fr)
+      minmax(380px,1.05fr);
+    gap:10px;
+  }
+
+  .event-panel{
+    min-width:0;
+  }
+
+  .event-feed-live{
+    max-height:445px;
+  }
+
+  .deck{
+    width:min(1380px,calc(100vw - 24px));
+    max-width:none;
+  }
+
+  .drawer.wide{
+    width:min(1550px,calc(100vw - 24px));
+  }
+
+  .drawer.stats-wide{
+    width:min(1750px,calc(100vw - 24px));
+  }
+}
+
+@media (min-width:2200px){
+  .team-grid{
+    max-width:2400px;
+    grid-template-columns:repeat(7,minmax(0,1fr));
+  }
+
+  .workspace{
+    grid-template-columns:
+      minmax(390px,.9fr)
+      minmax(900px,2.15fr)
+      minmax(420px,.95fr);
+    gap:12px;
+  }
+
+  .event-feed-live{
+    max-height:500px;
+  }
+}
