@@ -2636,8 +2636,12 @@
     drawerTitle.textContent = data.title;
 
     const statsWide = key === "players" || key === "goalies";
-    drawer.classList.toggle("wide", statsWide || key === "lines" || key === "h2h" || key === "story" || key === "studio" || key === "notes" || key === "ai" || key === "account");
+    const fullWork = key === "lines" || key === "players";
+    const medium = key === "goalies" || key === "story" || key === "h2h" || key === "studio" || key === "notes" || key === "ai" || key === "account";
+    drawer.classList.remove("wide","medium","full-work");
     drawer.classList.toggle("stats-wide", statsWide);
+    drawer.classList.toggle("full-work", fullWork);
+    drawer.classList.toggle("medium", medium);
     if (key === "lines") {
       drawerBody.innerHTML = renderLineups();
     } else if (key === "players") {
