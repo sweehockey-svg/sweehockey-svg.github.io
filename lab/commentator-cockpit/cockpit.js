@@ -18,6 +18,7 @@
     standings: [],
     standingsByTeam: new Map(),
     roster: [],
+    playerProfiles: new Map(),
     vasbyForm: [],
     opponentForm: [],
     latestVasbyGame: null,
@@ -148,6 +149,43 @@
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+
+  const NATIONALITIES = Object.freeze({
+    SWE:["SE","Sverige"],
+    FIN:["FI","Finland"],
+    NOR:["NO","Norge"],
+    CZE:["CZ","Tjeckien"],
+    LAT:["LV","Lettland"],
+    CAN:["CA","Kanada"],
+    AUT:["AT","Österrike"],
+    DEN:["DK","Danmark"],
+    EST:["EE","Estland"],
+    GBR:["GB","Storbritannien"],
+    LTU:["LT","Litauen"],
+    NED:["NL","Nederländerna"],
+    ROM:["RO","Rumänien"],
+    SUI:["CH","Schweiz"],
+    UKR:["UA","Ukraina"],
+    USA:["US","USA"]
+  });
+
+  function countryFlag(alpha2) {
+    const code = String(alpha2 || "").trim().toUpperCase();
+    if (!/^[A-Z]{2}$/.test(code)) return "";
+    return String.fromCodePoint(...[...code].map((char) => 127397 + char.charCodeAt(0)));
+  }
+
+  function nationalityMarkup(playerId) {
+    const code = String(state.playerProfiles.get(playerId)?.nationality_code || "").trim().toUpperCase();
+    if (!code) return "";
+    const entry = NATIONALITIES[code];
+    const alpha2 = entry?.[0] || (code.length === 2 ? code : "");
+    const label = entry?.[1] || code;
+    const flag = countryFlag(alpha2);
+    return flag
+      ? '<span class="player-flag" title="' + esc(label) + '" aria-label="' + esc(label) + '">' + flag + '</span>'
+      : '<span class="player-country-code" title="' + esc(label) + '">' + esc(code) + '</span>';
+  }
 
 
   const HOCKEYETTAN_LOGO="https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo_Hockeyettan.svg";
@@ -1778,7 +1816,7 @@
     return '<div class="lineup-slot">' +
       '<span>' + esc(position) + '</span>' +
       '<b>#' + esc(row.jersey_number ?? "–") + '</b>' +
-      '<strong>' + esc(humanSourceName(cleanLineupSourceName(row.source_name))) + '</strong>' +
+      '<strong>' + nationalityMarkup(row.player_id) + esc(humanSourceName(cleanLineupSourceName(row.source_name))) + '</strong>' +
     '</div>';
   }
 
@@ -1824,7 +1862,7 @@
     const goaliesHtml = '<div class="lineup-goalies">' +
       goalies.map((row, i) =>
         '<div><span>' + (i === 0 ? "G1" : "G2") + '</span><b>#' + esc(row.jersey_number ?? "–") + '</b><strong>' +
-        esc(humanSourceName(cleanLineupSourceName(row.source_name))) + '</strong></div>'
+        nationalityMarkup(row.player_id) + esc(humanSourceName(cleanLineupSourceName(row.source_name))) + '</strong></div>'
       ).join("") +
     '</div>';
 
@@ -1952,7 +1990,7 @@
               : 'S5 väntar på matchrapport';
             return '<div class="player-stat-row">' +
               '<div class="player-stat-name"><b>#' + esc(row.jersey_number ?? "–") + '</b><span>' +
-                '<strong>' + esc(humanSourceName(row.source_name)) + '</strong>' +
+                '<strong>' + nationalityMarkup(row.player_id) + esc(humanSourceName(row.source_name)) + '</strong>' +
                 '<small>' + esc((row.position || "") + ' · ' + recentText) + '</small>' +
               '</span></div>' +
               '<em>' + esc(row.games_played ?? 0) + '</em>' +
@@ -2001,7 +2039,7 @@
 
           return '<article class="goalie-card">' +
             '<div class="goalie-card-head"><span>SÄSONG</span><b>#' + esc(row.jersey_number ?? "–") + '</b></div>' +
-            '<h3>' + esc(humanSourceName(row.source_name)) + '</h3>' +
+            '<h3>' + nationalityMarkup(row.player_id) + esc(humanSourceName(row.source_name)) + '</h3>' +
             '<div class="goalie-metrics goalie-season-metrics">' +
               '<div><span>GP</span><strong>' + esc(row.games_played ?? 0) + '</strong></div>' +
               '<div><span>SV%</span><strong>' + esc(svPct) + '</strong></div>' +
@@ -2653,9 +2691,9 @@
     }
 
     const { data: rosterRows, error: rosterError } = await client.from("team_rosters")
-      .select("player_id,jersey_number,position,source_name")
+      .select("team_id,player_id,jersey_number,position,source_name")
       .eq("competition_id", competition.id)
-      .eq("team_id", state.vasby.id)
+      .in("team_id", [state.vasby.id, state.opponent.id])
       .eq("is_active", true)
       .order("jersey_number", { ascending: true });
     if (rosterError) throw rosterError;
@@ -2669,7 +2707,10 @@
       if (playerError) throw playerError;
       playerMap = new Map((players || []).map((player) => [player.id, player]));
     }
-    state.roster = (rosterRows || []).map((row) => ({ ...row, player: playerMap.get(row.player_id) || null }));
+    state.playerProfiles = playerMap;
+    state.roster = (rosterRows || [])
+      .filter((row) => row.team_id === state.vasby.id)
+      .map((row) => ({ ...row, player: playerMap.get(row.player_id) || null }));
 
     const [vasbyForm, opponentForm] = await Promise.all([
       loadForm(state.vasby.id),
