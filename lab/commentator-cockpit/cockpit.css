@@ -2403,3 +2403,67 @@ html[data-theme="light"] .theme-toggle:hover{
     min-height:calc(100dvh - 242px);
   }
 }
+
+
+/* v35 · fixed desktop cockpit viewport */
+@media (min-width:1101px) and (min-height:700px){
+  body:has(.cockpit:not(.hidden)){
+    height:100dvh;
+    overflow:hidden;
+  }
+
+  body:has(.cockpit:not(.hidden)) .app-shell{
+    height:100dvh;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  body:has(.cockpit:not(.hidden)) .topbar{
+    flex:0 0 auto;
+  }
+
+  .cockpit:not(.hidden){
+    flex:1 1 auto;
+    min-height:0;
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr);
+  }
+
+  .cockpit:not(.hidden) .workspace{
+    min-height:0;
+    height:auto;
+    align-items:stretch;
+  }
+
+  .cockpit:not(.hidden) .panel{
+    min-height:0;
+    height:100%;
+  }
+
+  .cockpit:not(.hidden) .match-panel,
+  .cockpit:not(.hidden) .assistant-panel{
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:thin;
+  }
+
+  .cockpit:not(.hidden) .event-panel{
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+
+  .cockpit:not(.hidden) .event-panel .panel-head{
+    flex:0 0 auto;
+  }
+
+  .cockpit:not(.hidden) .event-feed-live{
+    flex:1 1 auto;
+    min-height:0;
+    max-height:none;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:thin;
+  }
+}
