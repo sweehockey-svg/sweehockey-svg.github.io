@@ -1001,3 +1001,35 @@ button{font:inherit}
   .upcoming-game-teams{grid-column:1}
   .upcoming-game>em{grid-column:2}
 }
+
+
+/* v22 · keep drawers clear of bottom deck */
+@media (min-width:761px){
+  .drawer{
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .drawer-head{
+    flex:0 0 auto;
+  }
+  .drawer-body{
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:thin;
+  }
+}
+@media (min-width:761px) and (max-width:1600px){
+  .drawer,
+  .drawer.stats-wide{
+    bottom:78px;
+  }
+}
+@media (min-width:1601px){
+  .drawer,
+  .drawer.stats-wide{
+    bottom:102px;
+  }
+}
