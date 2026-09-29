@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#06111a">
   <title>Commentator Cockpit · Hockeyettan</title>
-  <link rel="stylesheet" href="cockpit.css?v=29">
+  <link rel="stylesheet" href="cockpit.css?v=30">
 </head>
 <body>
   <div class="app-shell">
@@ -23,7 +23,7 @@
         <button class="account-button" id="accountButton" type="button">
           <span class="account-dot"></span><strong>LOGGA IN</strong><small>NOTES + AI</small>
         </button>
-        <div class="sync-state" id="syncState">
+        <div class="sync-state" id="syncState" role="status" aria-live="polite">
           <span class="sync-dot"></span>
           <span id="syncText">Laddar Hockeyettan-data…</span>
         </div>
@@ -48,7 +48,7 @@
         <div class="lock-badge" id="lockBadge">—</div>
         <span>TEAM COCKPIT</span>
         <h2 id="lockTeamName">Lag</h2>
-        <p id="lockMessage">Kontrollerar behörighet…</p>
+        <p id="lockMessage" aria-live="polite">Kontrollerar behörighet…</p>
         <div class="team-lock-actions">
           <button type="button" id="lockLoginButton">LOGGA IN / KONTO</button>
           <button type="button" class="retry-button hidden" id="lockRetryButton">FÖRSÖK IGEN</button>
@@ -97,7 +97,7 @@
               <span class="panel-kicker">MATCHLÄGE</span>
               <h2>Överblick</h2>
             </div>
-            <span class="panel-status">V1</span>
+            <span class="panel-status">SWEHOCKEY</span>
           </div>
 
           <div class="stat-grid">
@@ -134,13 +134,13 @@
               <span class="panel-kicker">MATCHFEED</span>
               <h2>Senaste händelser</h2>
             </div>
-            <button class="ghost-button" id="clearDemo" type="button">RENSA</button>
+
           </div>
 
           <div class="empty-state" id="eventFeed">
             <div class="empty-icon">↯</div>
             <strong>Laddar senaste matchen</strong>
-            <p>Grunddata hämtas från vår Supabase. Live-eventflödet kopplas in i nästa steg.</p>
+            <p>Matchrapport, händelser och statistik hämtas från vår databas när Swehockey publicerar dem.</p>
           </div>
         </section>
 
@@ -161,8 +161,8 @@
             </article>
             <article class="fact-card">
               <span>NÄSTA</span>
-              <strong>Grundimporten är ansluten.</strong>
-              <p>Nästa lager blir matchspecifik lineup och live-events.</p>
+              <strong>Matchcollector och liveflöde är anslutna.</strong>
+              <p>Kedjor, events och matchstatistik uppdateras automatiskt när officiell data finns.</p>
             </article>
           </div>
 
@@ -176,7 +176,7 @@
 
     </main>
 
-    <section class="drawer" id="drawer">
+    <section class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true">
       <div class="drawer-head">
         <div>
           <span class="panel-kicker" id="drawerKicker">MATCH</span>
@@ -204,6 +204,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=1"></script>
-  <script src="cockpit.js?v=30"></script>
+  <script src="cockpit.js?v=31"></script>
 </body>
 </html>
