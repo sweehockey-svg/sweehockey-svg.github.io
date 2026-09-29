@@ -1224,3 +1224,15 @@ button{font:inherit}
   .upcoming-game-teams span{font-size:11px}
   .upcoming-game>em{font-size:8px}
 }
+
+
+/* v25 · player stats secondary contrast */
+.drawer.stats-wide .player-stat-head{
+  color:#c7d3da;
+}
+.drawer.stats-wide .player-stat-name small{
+  color:#aebdc6;
+}
+.drawer.stats-wide .player-stat-name>b{
+  color:#9fb1bc;
+}
