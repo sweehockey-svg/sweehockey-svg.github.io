@@ -1236,3 +1236,40 @@ button{font:inherit}
 .drawer.stats-wide .player-stat-name>b{
   color:#9fb1bc;
 }
+
+
+/* v26 · player nationality flags */
+.player-flag{
+  display:inline-block;
+  width:1.35em;
+  margin-right:5px;
+  font-size:1em;
+  line-height:1;
+  vertical-align:-.08em;
+  filter:saturate(.92);
+}
+.player-country-code{
+  display:inline-block;
+  margin-right:5px;
+  padding:1px 3px;
+  border:1px solid #35505f;
+  border-radius:3px;
+  color:#b9c7ce;
+  font-size:.72em;
+  line-height:1.1;
+  vertical-align:.08em;
+}
+.player-stat-name strong,
+.goalie-card h3,
+.lineup-slot>strong,
+.lineup-goalies strong{
+  display:flex;
+  align-items:center;
+  min-width:0;
+}
+.player-stat-name strong .player-flag,
+.goalie-card h3 .player-flag,
+.lineup-slot>strong .player-flag,
+.lineup-goalies strong .player-flag{
+  flex:0 0 auto;
+}
