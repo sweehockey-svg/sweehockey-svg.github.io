@@ -137,6 +137,11 @@
   const drawerTitle = document.getElementById("drawerTitle");
   const drawerBody = document.getElementById("drawerBody");
 
+  function setDrawerOpen(open) {
+    drawer.classList.toggle("open", open);
+    document.body.classList.toggle("drawer-open", open);
+  }
+
   const esc = (value) => String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -299,7 +304,7 @@
     document.getElementById("cockpitScreen")?.classList.toggle("hidden",name!=="cockpit");
     document.getElementById("cockpitDeck")?.classList.toggle("hidden",name!=="cockpit");
     document.getElementById("homeButton")?.classList.toggle("hidden",name==="home");
-    if(name!=="cockpit") drawer.classList.remove("open");
+    if(name!=="cockpit") setDrawerOpen(false);
   }
 
   function openTeam(team) {
@@ -2474,7 +2479,7 @@
         '<article class="drawer-card"><strong>' + esc(title) + '</strong><span>' + esc(text) + '</span></article>'
       ).join("");
     }
-    drawer.classList.add("open");
+    setDrawerOpen(true);
   }
 
   async function loadForm(teamId) {
@@ -2917,7 +2922,7 @@
       const samePanel = button.classList.contains("active");
       const drawerOpen = drawer.classList.contains("open");
       if (samePanel && drawerOpen) {
-        drawer.classList.remove("open");
+        setDrawerOpen(false);
         return;
       }
 
@@ -2927,7 +2932,7 @@
     });
   });
 
-  document.getElementById("closeDrawer").addEventListener("click", () => drawer.classList.remove("open"));
+  document.getElementById("closeDrawer").addEventListener("click", () => setDrawerOpen(false));
 
   document.getElementById("clearDemo").addEventListener("click", () => {
     renderLatestGame();
