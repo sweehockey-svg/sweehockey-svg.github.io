@@ -1033,3 +1033,11 @@ button{font:inherit}
     bottom:102px;
   }
 }
+
+
+/* v23 · lock page scroll while drawer is open */
+@media (min-width:761px){
+  html{scrollbar-gutter:stable}
+  body.drawer-open{overflow:hidden}
+  body.drawer-open .drawer-body{overscroll-behavior:contain}
+}
