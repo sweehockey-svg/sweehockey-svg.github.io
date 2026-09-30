@@ -3323,3 +3323,22 @@ html[data-theme="light"] .ai-form-actions button.fresh:hover{
     flex:1 1 auto;
   }
 }
+
+
+/* v41 · cleaner text-led header brand */
+.brand{
+  gap:0;
+}
+.brand-copy{
+  min-width:0;
+  padding-left:2px;
+}
+@media (max-width:760px){
+  .brand{
+    gap:0;
+  }
+  .brand-copy{
+    min-width:0;
+    padding-left:0;
+  }
+}
