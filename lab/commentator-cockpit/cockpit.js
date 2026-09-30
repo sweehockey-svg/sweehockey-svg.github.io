@@ -47,6 +47,7 @@
     aiBriefSource: "local",
     aiBusy: false,
     aiError: "",
+    aiUsedTopics: [],
     authUser: null,
     authBusy: false,
     authMessage: "",
@@ -346,6 +347,10 @@
     state.selectedTeamSlug=teamSlug(team.canonical_name);
     state.selectedCompetition=state.teamCompetitionByTeam.get(team.id)||null;
     state.teamDataLoaded=false;
+    state.aiBrief=null;
+    state.aiBriefSource="local";
+    state.aiError="";
+    state.aiUsedTopics=[];
     const url=new URL(window.location.href);
     url.searchParams.set("team",state.selectedTeamSlug);
     history.replaceState(null,"",url.pathname+url.search+url.hash);
@@ -1744,20 +1749,36 @@
     return "pregame";
   }
 
-  async function requestServerAi(question="") {
+  function aiTopicsFromBrief(brief) {
+    return (brief?.talking_points||[])
+      .slice(0,3)
+      .map((point)=>String((point?.label||"")+" · "+(point?.text||"")).replace(/\s+/g," ").trim())
+      .filter(Boolean);
+  }
+
+  function rememberAiTopics(brief) {
+    const merged=[...state.aiUsedTopics,...aiTopicsFromBrief(brief)];
+    state.aiUsedTopics=[...new Set(merged)].slice(-9);
+  }
+
+  async function requestServerAi(question="",requestStyle="relevant") {
     if(!client||!state.nextGame?.id||!state.focusTeam?.id) return {used:false,reason:"missing_context"};
     if(!canAccessTeam(state.focusTeam.id)) return {used:false,reason:"access_not_approved"};
     const {data:{session}}=await client.auth.getSession();
     if(!session?.access_token) return {used:false,reason:"not_authenticated"};
 
-    const {data,error}=await client.functions.invoke("commentator-ai",{
-      body:{
-        game_id:state.nextGame.id,
-        team_id:state.focusTeam.id,
-        question:String(question||"").trim().slice(0,500),
-        mode:aiMode()
-      }
-    });
+    const body={
+      game_id:state.nextGame.id,
+      team_id:state.focusTeam.id,
+      question:String(question||"").trim().slice(0,500),
+      mode:aiMode(),
+      request_style:requestStyle
+    };
+    if(requestStyle==="fresh"){
+      body.avoid_topics=state.aiUsedTopics.slice(-9);
+    }
+
+    const {data,error}=await client.functions.invoke("commentator-ai",{body});
 
     if(error){
       const message=String(error.message||error);
@@ -1806,7 +1827,8 @@
       '<form class="ai-form" id="aiForm">' +
         '<label><span>FRÅGA / VINKEL</span><textarea id="aiQuestion" rows="3" maxlength="500" placeholder="T.ex. Vad är mest relevant att säga om lagets powerplay just nu?"></textarea></label>' +
         '<div class="ai-form-actions">' +
-          '<button type="button" id="aiReset">MEST RELEVANT NU</button>' +
+          '<button type="button" id="aiReset" '+(state.aiBusy?"disabled":"")+'>MEST RELEVANT NU</button>' +
+          '<button type="button" id="aiFresh" class="fresh" '+(state.aiBusy?"disabled":"")+'>NYA VINKLAR</button>' +
           '<button type="submit" class="primary" '+(state.aiBusy?"disabled":"")+'>'+(state.aiBusy?"JOBBAR…":"GENERERA TALKING POINTS")+'</button>' +
         '</div>' +
       '</form>' +
@@ -1818,29 +1840,21 @@
     const form=document.getElementById("aiForm");
     if(!form) return;
 
-    document.getElementById("aiReset")?.addEventListener("click",()=>{
-      state.aiBrief=localAiBrief("");
-      state.aiBriefSource="local";
-      state.aiError="";
-      renderDrawer("ai");
-    });
-
-    form.addEventListener("submit",async(event)=>{
-      event.preventDefault();
+    async function runAi(question="",requestStyle="relevant") {
       if(state.aiBusy) return;
-      const question=String(document.getElementById("aiQuestion")?.value||"").trim();
       state.aiBusy=true;
       state.aiError="";
       state.aiBrief=localAiBrief(question);
       state.aiBriefSource="local";
       renderDrawer("ai");
 
-      const result=await requestServerAi(question);
+      const result=await requestServerAi(question,requestStyle);
       state.aiBusy=false;
       if(result.used){
         state.aiBrief=result.brief;
         state.aiBriefSource="server";
         state.aiError="";
+        rememberAiTopics(result.brief);
       }else if(result.reason==="not_authenticated"){
         state.aiError="Server-AI kräver inloggning. Fallbacken ovan använder bara verifierad cockpit-data.";
       }else if(result.reason==="access_not_approved"){
@@ -1851,6 +1865,20 @@
         state.aiError="Server-AI fick inget användbart svar just nu. Verifierad fallback visas i stället.";
       }
       renderDrawer("ai");
+    }
+
+    document.getElementById("aiReset")?.addEventListener("click",()=>{
+      runAi("","relevant");
+    });
+
+    document.getElementById("aiFresh")?.addEventListener("click",()=>{
+      runAi("","fresh");
+    });
+
+    form.addEventListener("submit",(event)=>{
+      event.preventDefault();
+      const question=String(document.getElementById("aiQuestion")?.value||"").trim();
+      runAi(question,question?"question":"relevant");
     });
   }
 
