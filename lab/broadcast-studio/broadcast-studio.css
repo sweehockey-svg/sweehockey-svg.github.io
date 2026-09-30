@@ -2202,3 +2202,98 @@ html[lang="de"] .scene-quick-toggle input{accent-color:#f2c500}
   bottom:auto;
   height:61%;
 }
+
+
+/* v138: optional commentator info in the lower-left corner of Match Live. */
+.live-commentators{
+  display:none;
+  position:absolute;
+  left:18px;
+  bottom:22px;
+  z-index:6;
+  flex-direction:column;
+  gap:5px;
+  width:252px;
+  pointer-events:none;
+}
+.screen.live-mode:not(.live-commentators-off)>.live-commentators:not(:empty){
+  display:flex;
+}
+.live-commentator{
+  height:48px;
+  display:grid;
+  grid-template-columns:46px minmax(0,1fr);
+  align-items:center;
+  overflow:hidden;
+  border:1px solid rgba(103,175,232,.42);
+  border-left:3px solid #f4b21b;
+  background:linear-gradient(100deg,rgba(3,22,38,.96),rgba(4,35,60,.92));
+  box-shadow:0 5px 14px rgba(0,0,0,.28);
+}
+.live-commentator>img,
+.live-commentator>.commentator-placeholder{
+  width:46px;
+  height:48px;
+  object-fit:cover;
+  object-position:center top;
+  background:linear-gradient(160deg,#173b5d,#091b2b);
+}
+.live-commentator>.commentator-placeholder{
+  position:relative;
+}
+.live-commentator>.commentator-placeholder:before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:8px;
+  width:13px;
+  height:13px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:rgba(210,220,228,.78);
+}
+.live-commentator>.commentator-placeholder:after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:-6px;
+  width:32px;
+  height:28px;
+  transform:translateX(-50%);
+  border-radius:50% 50% 12% 12%;
+  background:rgba(160,177,188,.70);
+}
+.live-commentator>div:last-child{
+  min-width:0;
+  padding:0 10px;
+}
+.live-commentator small{
+  display:block;
+  margin-bottom:3px;
+  color:#f4b21b;
+  font-size:7px;
+  font-weight:950;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.live-commentator b{
+  display:block;
+  overflow:hidden;
+  color:#f5f8fa;
+  font-size:12px;
+  line-height:1.08;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+html[lang="fi"] .live-commentator{
+  border-color:rgba(111,174,239,.42);
+  border-left-color:#5ba2f2;
+  background:linear-gradient(100deg,rgba(5,27,48,.96),rgba(9,49,88,.92));
+}
+html[lang="fi"] .live-commentator small{color:#dcecff}
+html[lang="de"] .live-commentator{
+  border-color:rgba(217,31,45,.38);
+  border-left-color:#f2c500;
+  background:linear-gradient(100deg,rgba(16,14,15,.96),rgba(35,18,20,.94));
+}
+html[lang="de"] .live-commentator small{color:#f2c500}
