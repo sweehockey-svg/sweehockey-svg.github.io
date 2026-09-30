@@ -2156,3 +2156,49 @@ html[lang="de"] .scene-quick-toggle:has(input:checked){
   background:#201817!important;
 }
 html[lang="de"] .scene-quick-toggle input{accent-color:#f2c500}
+
+
+/* v137: lock lineup card rows so all six cards align regardless of name length. */
+.lineup .players{
+  align-items:stretch;
+}
+.lineup .player{
+  height:100%;
+  min-height:0;
+}
+.lineup .player-info{
+  flex:0 0 31%;
+  min-height:31%;
+  max-height:31%;
+  display:grid;
+  grid-template-rows:minmax(0,2.35em) 1.35em;
+  align-content:end;
+  row-gap:7px;
+  box-sizing:border-box;
+  margin:-10px;
+  padding:18px 10px 12px;
+}
+.lineup .player-info strong{
+  display:-webkit-box;
+  min-height:2.35em;
+  max-height:2.35em;
+  overflow:hidden;
+  line-height:1.175;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  white-space:normal;
+}
+.lineup .player-info small{
+  display:block;
+  height:1.35em;
+  margin:0;
+  overflow:hidden;
+  line-height:1.35;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.lineup .players .player>img{
+  top:5%;
+  bottom:auto;
+  height:61%;
+}
