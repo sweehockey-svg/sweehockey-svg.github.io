@@ -26,6 +26,23 @@ function responseText(payload:any){
   return "";
 }
 
+function parseBriefPayload(payload:any){
+  const raw=responseText(payload).trim();
+  if(!raw) return {brief:null,rawLength:0};
+  try{
+    return {brief:JSON.parse(raw),rawLength:raw.length};
+  }catch{
+    const start=raw.indexOf("{");
+    const end=raw.lastIndexOf("}");
+    if(start>=0&&end>start){
+      try{
+        return {brief:JSON.parse(raw.slice(start,end+1)),rawLength:raw.length};
+      }catch{}
+    }
+    return {brief:null,rawLength:raw.length};
+  }
+}
+
 Deno.serve(async(req:Request)=>{
   if(req.method==="OPTIONS") return new Response(null,{status:204,headers:CORS});
   if(req.method!=="POST") return json({error:"method_not_allowed"},405);
@@ -262,36 +279,73 @@ Deno.serve(async(req:Request)=>{
         }
       }
     },
-    max_output_tokens:700
+    max_output_tokens:1400
   };
 
-  let openai:any;
-  try{
+  async function callOpenAI(maxOutputTokens:number){
     const response=await fetch("https://api.openai.com/v1/responses",{
       method:"POST",
       headers:{
         "Authorization":"Bearer "+openaiKey,
         "Content-Type":"application/json"
       },
-      body:JSON.stringify(openaiBody)
+      body:JSON.stringify({...openaiBody,max_output_tokens:maxOutputTokens})
     });
-    openai=await response.json();
-    if(!response.ok){
-      console.error("OpenAI error",response.status,openai?.error?.code||openai?.error?.type||"unknown");
+    const payload=await response.json();
+    return {response,payload};
+  }
+
+  let openai:any;
+  let parsed:{brief:any,rawLength:number}={brief:null,rawLength:0};
+
+  try{
+    let attempt=await callOpenAI(1400);
+    openai=attempt.payload;
+
+    if(!attempt.response.ok){
+      console.error("OpenAI error",attempt.response.status,openai?.error?.code||openai?.error?.type||"unknown");
       await admin.from("commentator_ai_requests").insert({
         owner_id:user.id,game_id:game.id,model:MODEL,mode,status:"openai_error",
         latency_ms:Date.now()-started
       });
       return json({error:"ai_provider_error"},502);
     }
+
+    parsed=parseBriefPayload(openai);
+
+    if(!parsed.brief){
+      console.warn("OpenAI structured output retry",{
+        status:openai?.status||null,
+        incomplete_reason:openai?.incomplete_details?.reason||null,
+        raw_length:parsed.rawLength
+      });
+
+      attempt=await callOpenAI(2200);
+      openai=attempt.payload;
+
+      if(!attempt.response.ok){
+        console.error("OpenAI retry error",attempt.response.status,openai?.error?.code||openai?.error?.type||"unknown");
+        await admin.from("commentator_ai_requests").insert({
+          owner_id:user.id,game_id:game.id,model:MODEL,mode,status:"openai_error",
+          latency_ms:Date.now()-started
+        });
+        return json({error:"ai_provider_error"},502);
+      }
+
+      parsed=parseBriefPayload(openai);
+    }
   }catch(error){
     console.error("OpenAI request failed",error);
     return json({error:"ai_provider_unreachable"},502);
   }
 
-  const raw=responseText(openai);
-  let brief:any;
-  try{brief=JSON.parse(raw);}catch{
+  const brief=parsed.brief;
+  if(!brief){
+    console.error("OpenAI parse failed after retry",{
+      status:openai?.status||null,
+      incomplete_reason:openai?.incomplete_details?.reason||null,
+      raw_length:parsed.rawLength
+    });
     await admin.from("commentator_ai_requests").insert({
       owner_id:user.id,game_id:game.id,model:MODEL,mode,status:"parse_error",
       latency_ms:Date.now()-started
