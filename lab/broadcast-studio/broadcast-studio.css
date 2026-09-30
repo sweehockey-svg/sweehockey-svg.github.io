@@ -1935,3 +1935,36 @@ body:not(.obs-preview) .lineup-editor-grid option.lineup-option-used{
 @media(max-width:900px){
   body:not(.obs-preview) .lineup-control #lineupEditors{grid-template-columns:1fr}
 }
+
+
+/* v127: selected team marker belongs to the row edge, not between rank and logo. */
+.table .bt-row{position:relative}
+.table .bt-row.selected .bt-team:before{display:none!important}
+.table .bt-row.selected::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:5px;
+  bottom:5px;
+  width:4px;
+  border-radius:0 2px 2px 0;
+  background:#f4b21b;
+  pointer-events:none;
+}
+.table .broadcast-table.bt-dense .bt-row.selected::before{
+  top:4px;
+  bottom:4px;
+  width:4px;
+}
+.table .broadcast-table.bt-xdense .bt-row.selected::before{
+  top:3px;
+  bottom:3px;
+  width:3px;
+}
+.table .bt-panel .bt-row.selected::before{
+  top:3px;
+  bottom:3px;
+  width:3px;
+}
+html[lang="fi"] .table .bt-row.selected::before{background:#f5f9ff!important}
+html[lang="de"] .table .bt-row.selected::before{background:#d91f2d!important}
