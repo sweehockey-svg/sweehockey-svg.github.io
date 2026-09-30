@@ -108,8 +108,7 @@ Deno.serve(async(req:Request)=>{
     gameStatsResult,
     eventsResult,
     recentGamesResult,
-    h2hResult,
-    cloudNotesResult
+    h2hResult
   ]=await Promise.all([
     admin.from("teams").select("id,canonical_name,short_name").in("id",teamIds),
     admin.from("standings_snapshots").select("id,fetched_at").eq("competition_id",game.competition_id).order("fetched_at",{ascending:false}).limit(1),
@@ -121,14 +120,13 @@ Deno.serve(async(req:Request)=>{
     admin.from("games").select("id,scheduled_start,home_team_id,away_team_id,home_score,away_score,status").eq("competition_id",game.competition_id).eq("status","final").or("home_team_id.in.("+teamIds.join(",")+"),away_team_id.in.("+teamIds.join(",")+")").order("scheduled_start",{ascending:false}).limit(30),
     admin.from("games").select("id,competition_id,scheduled_start,home_team_id,away_team_id,home_score,away_score,status").eq("status","final").or(
       "and(home_team_id.eq."+game.home_team_id+",away_team_id.eq."+game.away_team_id+"),and(home_team_id.eq."+game.away_team_id+",away_team_id.eq."+game.home_team_id+")"
-    ).order("scheduled_start",{ascending:false}).limit(10),
-    admin.from("commentator_notes").select("scope_type,game_id,team_id,player_id,title,body,tags,pinned,updated_at").eq("owner_id",user.id).eq("is_active",true).order("pinned",{ascending:false}).order("updated_at",{ascending:false}).limit(30)
+    ).order("scheduled_start",{ascending:false}).limit(10)
   ]);
 
   const dbErrors=[
     teamsResult.error,snapshotsResult.error,specialResult.error,skaterResult.error,
     goalieResult.error,gameStatsResult.error,eventsResult.error,recentGamesResult.error,
-    h2hResult.error,cloudNotesResult.error
+    h2hResult.error
   ].filter(Boolean);
   if(dbErrors.length) return json({error:"context_load_failed"},500);
 
@@ -178,31 +176,10 @@ Deno.serve(async(req:Request)=>{
       .slice(0,3);
   }
 
-  const localNotes=Array.isArray(body.editorial_notes)
-    ? body.editorial_notes.slice(0,12).map((note:any)=>({
-        scope_type:cleanText(note.scope_type,20),
-        title:cleanText(note.title,120),
-        body:cleanText(note.body,700),
-        tags:Array.isArray(note.tags)?note.tags.slice(0,8).map((tag:any)=>cleanText(tag,40)):[],
-        pinned:Boolean(note.pinned),
-        source:"local_editorial_note"
-      })).filter((note:any)=>note.body)
-    : [];
-
-  const cloudNotes=(cloudNotesResult.data||[])
-    .filter((note:any)=>
-      note.scope_type==="general" ||
-      (note.scope_type==="match"&&note.game_id===game.id) ||
-      (note.scope_type==="team"&&teamIds.includes(note.team_id)) ||
-      note.scope_type==="player"
-    )
-    .slice(0,12)
-    .map((note:any)=>({...note,source:"cloud_editorial_note"}));
-
   const context={
     data_policy:{
-      official_stats:"All numeric hockey statistics below are database records imported from Swehockey.",
-      editorial_notes:"Editorial notes are human-written context and must never be presented as official statistics."
+      official_stats:"All hockey facts below are database records imported from Swehockey.",
+      private_notes:"Private commentator notes are intentionally excluded from this AI request."
     },
     mode,
     game:{
@@ -228,15 +205,14 @@ Deno.serve(async(req:Request)=>{
     top_skaters:topSkaters,
     goalies,
     current_match_stats:gameStatsResult.data||[],
-    current_events:eventsResult.data||[],
-    editorial_notes:[...localNotes,...cloudNotes]
+    current_events:eventsResult.data||[]
   };
 
   const systemPrompt=[
     "Du är en svensk hockeykommentators assistent.",
     "Använd ENDAST fakta som finns i JSON-kontexten.",
     "Hitta aldrig på statistik, historik, skador, relationer, tidigare klubbar eller biografiska detaljer.",
-    "Redaktionella anteckningar är mänskliga uppgifter och ska märkas som redaktionella, inte som officiell statistik.",
+    "Privata/redaktionella anteckningar ingår inte i kontexten och får inte efterfrågas eller antas.",
     "Om underlaget är litet, säg det kort.",
     "Skriv för direktsändning: kort, naturligt, konkret och lätt att säga högt.",
     "Ge 2–3 talking points. Upprepa inte samma poäng i olika formuleringar.",
@@ -332,6 +308,7 @@ Deno.serve(async(req:Request)=>{
     ok:true,
     model:MODEL,
     generated_at:new Date().toISOString(),
+    data_scope:"official_swehockey_only",
     brief
   });
 });
