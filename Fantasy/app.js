@@ -2517,6 +2517,22 @@
     }
   }
 
+  async function syncFantasyDiscordRole() {
+    try {
+      const { data, error } = await sb.functions.invoke("seh-fantasy-discord-role", {
+        body: { competition_code: competitionCode() }
+      });
+      if (error) {
+        let payload = null;
+        try { payload = await error.context?.json?.(); } catch (_) {}
+        return { ok: false, code: clean(payload?.error || "ROLE_ASSIGNMENT_FAILED") };
+      }
+      return data || { ok: false, code: "ROLE_ASSIGNMENT_FAILED" };
+    } catch (_) {
+      return { ok: false, code: "ROLE_ASSIGNMENT_FAILED" };
+    }
+  }
+
   async function saveTeam() {
     const budget = number(state.competition?.budget || 100);
 
@@ -2565,6 +2581,8 @@
 
       if (error) throw error;
 
+      const discordRole = await syncFantasyDiscordRole();
+
       const transfer = data?.transfer || {};
       const transferCount = number(transfer.count);
       const forcedReplacementCount = number(transfer.forced_replacement_count);
@@ -2597,6 +2615,14 @@
             : " " + (transferCount - forcedReplacementCount) + " gratis byte använt.";
       } else if (hadEntry && transferCount === 0) {
         successText += " Kaptensbyte/positionsändring kostar inget.";
+      }
+
+      if (discordRole?.ok) {
+        successText += " Discord-rollen Fantasy är aktiverad.";
+      } else if (discordRole?.code === "DISCORD_MEMBER_REQUIRED") {
+        successText += " Gå med i Discord-servern och spara laget igen för att få Fantasy-rollen.";
+      } else {
+        successText += " Laget sparades, men Discord-rollen kunde inte delas ut automatiskt.";
       }
 
       setStatus("saveStatus", successText, "success");

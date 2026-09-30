@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.seh-admin-password]
 verify_jwt = true
+
+[functions.seh-fantasy-discord-role]
+verify_jwt = true
