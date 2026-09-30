@@ -1970,19 +1970,19 @@ html[lang="fi"] .table .bt-row.selected::before{background:#f5f9ff!important}
 html[lang="de"] .table .bt-row.selected::before{background:#d91f2d!important}
 
 
-/* v128: compact live team identity strip beside the in-game NHL scoreboard.
+/* v129: compact live team identity strip beside the in-game NHL scoreboard.
    Names/logos come from the selected Broadcast Studio teams; score/time remain in-game. */
 .live-team-strip{
   display:none;
   position:absolute;
-  left:28px;
-  top:62px;
+  left:12px;
+  top:96px;
   z-index:5;
-  width:255px;
-  height:92px;
+  width:228px;
+  height:76px;
   border:1px solid rgba(103,175,232,.50);
   background:rgba(2,20,36,.94);
-  box-shadow:0 5px 18px rgba(0,0,0,.34);
+  box-shadow:0 4px 14px rgba(0,0,0,.30);
   overflow:hidden;
   pointer-events:none;
 }
@@ -1990,7 +1990,7 @@ html[lang="de"] .table .bt-row.selected::before{background:#d91f2d!important}
 .live-team-strip .live-team-row{
   position:relative;
   display:grid;
-  grid-template-columns:54px minmax(0,1fr);
+  grid-template-columns:44px minmax(0,1fr);
   align-items:center;
   min-width:0;
   background:
@@ -2007,8 +2007,8 @@ html[lang="de"] .table .bt-row.selected::before{background:#d91f2d!important}
   pointer-events:none;
 }
 .live-team-strip .live-team-row>img{
-  width:44px;
-  height:44px;
+  width:34px;
+  height:34px;
   justify-self:center;
   object-fit:contain;
   filter:drop-shadow(0 2px 4px rgba(0,0,0,.55));
@@ -2017,12 +2017,12 @@ html[lang="de"] .table .bt-row.selected::before{background:#d91f2d!important}
   position:relative;
   z-index:1;
   min-width:0;
-  padding:0 12px 0 4px;
+  padding:0 10px 0 2px;
   overflow:hidden;
   color:#f4b21b;
-  font-size:19px;
+  font-size:14px;
   font-weight:950;
-  letter-spacing:.015em;
+  letter-spacing:.01em;
   line-height:1;
   white-space:nowrap;
   text-overflow:ellipsis;
