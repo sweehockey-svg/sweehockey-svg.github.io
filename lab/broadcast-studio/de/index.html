@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><base href="../"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Broadcast Studio · SportsGamer</title><link rel="stylesheet" href="broadcast-studio.css?v=20260930-134"></head><body class=""><script>(function(){var p=new URLSearchParams(location.search);if(p.get("obs")==="1"){document.documentElement.classList.add("obs-preview");document.body.classList.add("obs-preview")}})()</script>
+<!doctype html><html lang="de"><head><base href="../"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Broadcast Studio · SportsGamer</title><link rel="stylesheet" href="broadcast-studio.css?v=20261001-135"></head><body class=""><script>(function(){var p=new URLSearchParams(location.search);if(p.get("obs")==="1"){document.documentElement.classList.add("obs-preview");document.body.classList.add("obs-preview")}})()</script>
 <header><div class="brand"><b>SG</b><span>SPORTSGAMER<small>BROADCAST STUDIO · PROTOTYP</small></span></div><div class="live-dot">VERSTECKTE TESTUMGEBUNG</div></header>
 <main><aside><div class="control-hero"><span>REGIE</span><strong>Sendeleitung</strong><small>Szenen, Spieldaten und Grafiksteuerung</small></div>
 
@@ -24,18 +24,15 @@
    <label class="source-field source-twitch">KANAL / TWITCH-URL<input id="twitchChannel" placeholder="z. B. svensk_ehockey"></label>
    <label class="source-field source-direct" hidden>HLS / VIDEO-URL<input id="hlsUrl" placeholder="https://…/stream.m3u8"></label>
    <label class="stream-check"><input id="showTwitch" type="checkbox" checked> VIDEO ANZEIGEN</label>
-   <label class="stream-check"><input id="showLiveTeamStrip" type="checkbox" checked> TEAMFELD ANZEIGEN</label>
    <label class="stream-check"><input id="muteTwitch" type="checkbox" checked> VORSCHAU STUMM</label>
  </div>
  <p class="control-note"><b>Twitch (automatisch)</b>: z. B. einfügen <code>https://www.twitch.tv/lucasiooo04</code> und VIDEO LADEN klicken. Das System lädt den tatsächlichen HLS-Stream über unseren Resolver. <b>Direkt-HLS / Video</b> bleibt für eigene .m3u8-/Videoquellen verfügbar.</p>
  <div class="stream-status" id="streamStatus"><i></i><span>KEIN STREAM GELADEN</span></div>
 </div><div class="director-dock">
-  <div class="dock-head"><span>SZENENWERKZEUGE</span><strong>Schnellsteuerung</strong><small>Spiel- und Sendungssteuerung, ohne die Programmansicht zu verlassen.</small></div>
-  <div class="dock-grid">
-    <label>HEIM<input id="dockHs" type="number" min="0" value="0"></label>
-    <label>AUSWÄRTS<input id="dockAs" type="number" min="0" value="0"></label>
-    <label>GRAFIKPAKET<select id="dockTheme"><option value="broadcast">Broadcast</option><option value="arena">Arena</option><option value="ice">Ice</option><option value="impact">Impact</option></select></label>
+  <div class="dock-head"><span>LIVE-SPIEL</span><strong>Live-Grafik</strong><small>Teamfeld bei Pausen oder Spielmenüs schnell ausblenden.</small></div>
+  <div class="live-overlay-control">
+    <div><b>Teamfeld über dem EA-Scoreboard</b><small>Zeigt Teamlogos und Namen über dem linken Bereich des Spiel-Scoreboards.</small></div>
+    <label class="live-overlay-switch"><input id="showLiveTeamStrip" type="checkbox" checked> TEAMFELD ANZEIGEN</label>
   </div>
-  <small class="dock-note">Die Schnellsteuerung spiegelt die Haupteinstellungen.</small>
 </div></section></main>
 <script src="../../config.js?v=20260918-team-aliases-v1"></script><script src="../../playerimages-manifest.js?v=20260926-13"></script><script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script><script src="broadcast-studio.js?v=20260930-106"></script></body></html>

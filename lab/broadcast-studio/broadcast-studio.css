@@ -2044,3 +2044,66 @@ html[lang="de"] .live-team-strip .live-team-row>b{color:#f2c500}
 .screen.live-mode>.top{
   right:4.5%!important;
 }
+
+
+/* v135: dedicated Match Live overlay control replaces duplicate quick controls. */
+.live-overlay-control{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-top:2px;
+  padding:13px 14px;
+  border:1px solid #2a3d4c;
+  border-radius:8px;
+  background:#0b1924;
+}
+.live-overlay-control>div{min-width:0}
+.live-overlay-control b{
+  display:block;
+  color:#f1f6f9;
+  font-size:12px;
+  line-height:1.15;
+}
+.live-overlay-control small{
+  display:block;
+  margin-top:4px;
+  color:#718697;
+  font-size:9px;
+  line-height:1.35;
+}
+.live-overlay-switch{
+  flex:0 0 auto;
+  display:flex!important;
+  align-items:center;
+  gap:8px;
+  margin:0!important;
+  padding:9px 11px;
+  border:1px solid #f4b21b;
+  border-radius:7px;
+  background:#17170d;
+  color:#f4b21b!important;
+  font-size:9px!important;
+  font-weight:950!important;
+  letter-spacing:.08em!important;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.live-overlay-switch input{
+  width:16px!important;
+  height:16px!important;
+  margin:0!important;
+  accent-color:#f4b21b;
+}
+html[lang="fi"] .live-overlay-switch{
+  border-color:#5ba2f2!important;
+  background:#0b2845!important;
+  color:#dcecff!important;
+}
+html[lang="fi"] .live-overlay-switch input{accent-color:#5ba2f2}
+html[lang="de"] .live-overlay-switch{
+  border-color:#f2c500!important;
+  background:#201817!important;
+  color:#f2c500!important;
+}
+html[lang="de"] .live-overlay-switch input{accent-color:#f2c500}

@@ -1,4 +1,4 @@
-<!doctype html><html lang="sv"><head><base href="../"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Broadcast Studio · Svensk eHockey</title><link rel="stylesheet" href="broadcast-studio.css?v=20260930-134"></head><body class=""><script>(function(){var p=new URLSearchParams(location.search);if(p.get("obs")==="1"){document.documentElement.classList.add("obs-preview");document.body.classList.add("obs-preview")}})()</script>
+<!doctype html><html lang="sv"><head><base href="../"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Broadcast Studio · Svensk eHockey</title><link rel="stylesheet" href="broadcast-studio.css?v=20261001-135"></head><body class=""><script>(function(){var p=new URLSearchParams(location.search);if(p.get("obs")==="1"){document.documentElement.classList.add("obs-preview");document.body.classList.add("obs-preview")}})()</script>
 <header><div class="brand"><b>SEH</b><span>SVENSK eHOCKEY<small>BROADCAST STUDIO · PROTOTYP</small></span></div><div class="live-dot">DOLD TESTMILJÖ</div></header>
 <main><aside><div class="control-hero"><span>CONTROL DESK</span><strong>Broadcast Director</strong><small>Scener, matchdata och grafikstyrning</small></div>
 
@@ -24,18 +24,15 @@
    <label class="source-field source-twitch">KANAL / TWITCH-URL<input id="twitchChannel" placeholder="t.ex. svensk_ehockey"></label>
    <label class="source-field source-direct" hidden>HLS / VIDEO-URL<input id="hlsUrl" placeholder="https://…/stream.m3u8"></label>
    <label class="stream-check"><input id="showTwitch" type="checkbox" checked> VISA VIDEO</label>
-   <label class="stream-check"><input id="showLiveTeamStrip" type="checkbox" checked> VISA LAGRUTA</label>
    <label class="stream-check"><input id="muteTwitch" type="checkbox" checked> MUTE I PREVIEW</label>
  </div>
  <p class="control-note"><b>Twitch (automatisk)</b>: klistra in t.ex. <code>https://www.twitch.tv/lucasiooo04</code> och klicka LADDA VIDEO. Systemet hämtar den riktiga HLS-strömmen via vår resolver. <b>Direkt HLS / video</b> finns kvar för egna .m3u8/video-källor.</p>
  <div class="stream-status" id="streamStatus"><i></i><span>INGEN STREAM LADDAD</span></div>
 </div><div class="director-dock">
-  <div class="dock-head"><span>SCENVERKTYG</span><strong>Snabbkontroller</strong><small>Match och sändningskontroller utan att lämna programvyn.</small></div>
-  <div class="dock-grid">
-    <label>HEMMA<input id="dockHs" type="number" min="0" value="0"></label>
-    <label>BORTA<input id="dockAs" type="number" min="0" value="0"></label>
-    <label>GRAFIKPAKET<select id="dockTheme"><option value="broadcast">Broadcast</option><option value="arena">Arena</option><option value="ice">Ice</option><option value="impact">Impact</option></select></label>
+  <div class="dock-head"><span>MATCH LIVE</span><strong>Live-grafik</strong><small>Slå snabbt av lagrutan när spelets egna menyer eller pausgrafik ska synas rent.</small></div>
+  <div class="live-overlay-control">
+    <div><b>Lagruta över EA-scoreboard</b><small>Visar lagloggor och lagnamn ovanpå vänsterdelen av spelets scoreboard.</small></div>
+    <label class="live-overlay-switch"><input id="showLiveTeamStrip" type="checkbox" checked> VISA LAGRUTA</label>
   </div>
-  <small class="dock-note">Snabbkontrollerna speglar huvudinställningarna.</small>
 </div></section></main>
 <script src="../../config.js?v=20260918-team-aliases-v1"></script><script src="../../playerimages-manifest.js?v=20260926-13"></script><script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script><script src="broadcast-studio.js?v=20260930-106"></script></body></html>

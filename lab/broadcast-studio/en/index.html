@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><base href="../"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Broadcast Studio · SportsGamer</title><link rel="stylesheet" href="broadcast-studio.css?v=20260930-134"></head><body class=""><script>(function(){var p=new URLSearchParams(location.search);if(p.get("obs")==="1"){document.documentElement.classList.add("obs-preview");document.body.classList.add("obs-preview")}})()</script>
+<!doctype html><html lang="en"><head><base href="../"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Broadcast Studio · SportsGamer</title><link rel="stylesheet" href="broadcast-studio.css?v=20261001-135"></head><body class=""><script>(function(){var p=new URLSearchParams(location.search);if(p.get("obs")==="1"){document.documentElement.classList.add("obs-preview");document.body.classList.add("obs-preview")}})()</script>
 <header><div class="brand"><b>SG</b><span>SPORTSGAMER<small>BROADCAST STUDIO · PROTOTYPE</small></span></div><div class="live-dot">HIDDEN TEST ENVIRONMENT</div></header>
 <main><aside><div class="control-hero"><span>CONTROL DESK</span><strong>Broadcast Director</strong><small>Scenes, match data and graphics control</small></div>
 
@@ -24,18 +24,15 @@
    <label class="source-field source-twitch">CHANNEL / TWITCH URL<input id="twitchChannel" placeholder="e.g. svensk_ehockey"></label>
    <label class="source-field source-direct" hidden>HLS / VIDEO-URL<input id="hlsUrl" placeholder="https://…/stream.m3u8"></label>
    <label class="stream-check"><input id="showTwitch" type="checkbox" checked> SHOW VIDEO</label>
-   <label class="stream-check"><input id="showLiveTeamStrip" type="checkbox" checked> SHOW TEAM STRIP</label>
    <label class="stream-check"><input id="muteTwitch" type="checkbox" checked> MUTE IN PREVIEW</label>
  </div>
  <p class="control-note"><b>Twitch (automatic)</b>: paste e.g. <code>https://www.twitch.tv/lucasiooo04</code> and click LOAD VIDEO. The system fetches the actual HLS stream through our resolver. <b>Direct HLS / video</b> remains available for your own .m3u8/video sources.</p>
  <div class="stream-status" id="streamStatus"><i></i><span>NO STREAM LOADED</span></div>
 </div><div class="director-dock">
-  <div class="dock-head"><span>SCENE TOOLS</span><strong>Quick Controls</strong><small>Match and broadcast controls without leaving the program view.</small></div>
-  <div class="dock-grid">
-    <label>HOME<input id="dockHs" type="number" min="0" value="0"></label>
-    <label>AWAY<input id="dockAs" type="number" min="0" value="0"></label>
-    <label>GRAPHICS PACKAGE<select id="dockTheme"><option value="broadcast">Broadcast</option><option value="arena">Arena</option><option value="ice">Ice</option><option value="impact">Impact</option></select></label>
+  <div class="dock-head"><span>MATCH LIVE</span><strong>Live graphics</strong><small>Quickly hide the team strip during pauses or when the game's own menus should stay clean.</small></div>
+  <div class="live-overlay-control">
+    <div><b>Team strip over EA scoreboard</b><small>Shows team logos and names over the left side of the in-game scoreboard.</small></div>
+    <label class="live-overlay-switch"><input id="showLiveTeamStrip" type="checkbox" checked> SHOW TEAM STRIP</label>
   </div>
-  <small class="dock-note">Quick controls mirror the main settings.</small>
 </div></section></main>
 <script src="../../config.js?v=20260918-team-aliases-v1"></script><script src="../../playerimages-manifest.js?v=20260926-13"></script><script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script><script src="broadcast-studio.js?v=20260930-106"></script></body></html>
