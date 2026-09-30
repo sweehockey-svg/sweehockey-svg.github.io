@@ -2474,6 +2474,7 @@
     updateHeaderAccount();
     await loadMyEntry();
     await loadTransferState();
+    if (state.entry) await syncFantasyDiscordRole();
   }
 
   async function loginWithDiscord() {

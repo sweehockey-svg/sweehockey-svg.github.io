@@ -54,15 +54,11 @@ function supabaseClients(authorization: string) {
   const url = Deno.env.get("SUPABASE_URL") || "";
   const publishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ||
     Deno.env.get("SUPABASE_ANON_KEY") || "";
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  if (!url || !publishableKey || !serviceKey) throw new Error("SUPABASE_CONFIG_MISSING");
+  if (!url || !publishableKey) throw new Error("SUPABASE_CONFIG_MISSING");
 
   return {
     user: createClient(url, publishableKey, {
       global: { headers: { Authorization: authorization } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    }),
-    admin: createClient(url, serviceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     }),
   };
@@ -108,7 +104,7 @@ Deno.serve(async (request: Request) => {
     const { data: userData, error: userError } = await clients.user.auth.getUser();
     if (userError || !userData.user) return json({ error: "UNAUTHORIZED" }, 401, origin);
 
-    const { data: competition, error: competitionError } = await clients.admin
+    const { data: competition, error: competitionError } = await clients.user
       .from("ehockey_fantasy_competitions")
       .select("id,code")
       .eq("code", COMPETITION_CODE)
@@ -116,7 +112,7 @@ Deno.serve(async (request: Request) => {
     if (competitionError) throw competitionError;
     if (!competition) return json({ error: "COMPETITION_NOT_FOUND" }, 404, origin);
 
-    const { data: entry, error: entryError } = await clients.admin
+    const { data: entry, error: entryError } = await clients.user
       .from("ehockey_fantasy_entries")
       .select("id")
       .eq("competition_id", competition.id)
@@ -125,7 +121,7 @@ Deno.serve(async (request: Request) => {
     if (entryError) throw entryError;
     if (!entry) return json({ error: "FANTASY_TEAM_REQUIRED" }, 409, origin);
 
-    const { data: link, error: linkError } = await clients.admin
+    const { data: link, error: linkError } = await clients.user
       .from("ehockey_discord_player_links")
       .select("discord_user_id,status,approved_player_key")
       .eq("user_id", userData.user.id)
@@ -133,7 +129,13 @@ Deno.serve(async (request: Request) => {
       .not("approved_player_key", "is", null)
       .maybeSingle();
     if (linkError) throw linkError;
-    const discordUserId = String(link?.discord_user_id || "").trim();
+    const discordIdentity = userData.user.identities?.find((identity) => identity.provider === "discord");
+    const discordUserId = String(
+      link?.discord_user_id ||
+      discordIdentity?.provider_id ||
+      discordIdentity?.identity_data?.sub ||
+      "",
+    ).trim();
     if (!discordUserId) return json({ error: "APPROVED_DISCORD_LINK_REQUIRED" }, 409, origin);
 
     const token = Deno.env.get("SEH_DISCORD_BOT_TOKEN") ||
