@@ -2107,3 +2107,52 @@ html[lang="de"] .live-overlay-switch{
   color:#f2c500!important;
 }
 html[lang="de"] .live-overlay-switch input{accent-color:#f2c500}
+
+
+/* v136: compact live toggles above scene buttons so key controls stay in reach. */
+.scene-quick-toggles{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:0 0 9px;
+}
+.scene-quick-toggle{
+  display:flex!important;
+  align-items:center;
+  gap:6px;
+  margin:0!important;
+  min-height:28px;
+  padding:5px 8px;
+  border:1px solid #2a3d4c;
+  border-radius:6px;
+  background:#0b1924;
+  color:#91a5b5!important;
+  font-size:8px!important;
+  font-weight:950!important;
+  letter-spacing:.06em!important;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.scene-quick-toggle input{
+  width:14px!important;
+  height:14px!important;
+  margin:0!important;
+  accent-color:#f4b21b;
+}
+.scene-quick-toggle:has(input:checked){
+  border-color:#6a5420;
+  color:#f4b21b!important;
+  background:#15150d;
+}
+html[lang="fi"] .scene-quick-toggle:has(input:checked){
+  border-color:#5ba2f2!important;
+  color:#dcecff!important;
+  background:#0b2845!important;
+}
+html[lang="fi"] .scene-quick-toggle input{accent-color:#5ba2f2}
+html[lang="de"] .scene-quick-toggle:has(input:checked){
+  border-color:#f2c500!important;
+  color:#f2c500!important;
+  background:#201817!important;
+}
+html[lang="de"] .scene-quick-toggle input{accent-color:#f2c500}
