@@ -1401,18 +1401,44 @@ a{color:inherit}
 }
 
 @media(max-width:720px){
-  .fantasy-player-row{grid-template-columns:38px minmax(0,1fr) auto}
+  .fantasy-player-row{
+    grid-template-columns:38px minmax(0,1fr) 42px 82px;
+    gap:6px;
+    padding:9px 8px
+  }
   .fantasy-player-row__portrait-wrap{width:34px;height:42px}
   .fantasy-player-row__portrait{width:34px;height:42px}
-  .fantasy-player-row__price{display:none}
+  .fantasy-player-row__price{
+    display:block;
+    min-width:0;
+    text-align:right
+  }
+  .fantasy-player-row__price b{font-size:.75rem}
+  .fantasy-player-row__price span{font-size:.46rem}
+  .fantasy-player-row button{
+    padding:7px 5px;
+    font-size:.56rem;
+    line-height:1.12
+  }
   .fantasy-player-card__portrait{width:66px;height:88px;flex-basis:66px}
   .fantasy-player-picker-dialog{padding:14px}
   .fantasy-picker-player{
-    grid-template-columns:48px minmax(0,1fr) 70px;
-    gap:8px
+    grid-template-columns:48px minmax(0,1fr) 42px 70px;
+    gap:6px
   }
-  .fantasy-picker-player__price{display:none}
-  .fantasy-picker-player>button{grid-column:2/-1}
+  .fantasy-picker-player__price{
+    display:block;
+    min-width:0;
+    text-align:right
+  }
+  .fantasy-picker-player__price strong{font-size:.82rem}
+  .fantasy-picker-player__price small{font-size:.48rem}
+  .fantasy-picker-player>button{
+    grid-column:auto;
+    padding:8px 5px;
+    font-size:.56rem;
+    line-height:1.12
+  }
 }
 
 
