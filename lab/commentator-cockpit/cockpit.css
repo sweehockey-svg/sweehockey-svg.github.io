@@ -3293,3 +3293,33 @@ html[data-theme="light"] .goalie-live strong{
     width:calc(100vw - 20px);
   }
 }
+
+
+/* v40 · AI angle controls */
+.ai-form-actions{
+  flex-wrap:wrap;
+}
+.ai-form-actions button.fresh{
+  border-color:#3a596b;
+  color:#d4e1e8;
+  background:#0d2533;
+}
+.ai-form-actions button.fresh:hover{
+  border-color:#d29b1c;
+  color:var(--yellow);
+}
+html[data-theme="light"] .ai-form-actions button.fresh{
+  border-color:#aebfc8;
+  background:#eef3f5;
+  color:#29424e;
+}
+html[data-theme="light"] .ai-form-actions button.fresh:hover{
+  border-color:#b88917;
+  color:#8a5d00;
+  background:#fff8e8;
+}
+@media (max-width:1099px){
+  .ai-form-actions button{
+    flex:1 1 auto;
+  }
+}
