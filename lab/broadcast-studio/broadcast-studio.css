@@ -1873,3 +1873,65 @@ html[lang="de"] .table .bt-panel-title{
   background:#f2c500!important;
   color:#0b0b0c!important;
 }
+
+
+/* v126: show both team lineups in the director and dim players already in use. */
+body:not(.obs-preview) .lineup-control #lineupEditors{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+body:not(.obs-preview) .lineup-editor-side{
+  min-width:0;
+  padding:10px;
+  border:1px solid #223542;
+  border-radius:7px;
+  background:#09131b;
+}
+body:not(.obs-preview) .lineup-editor-head{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:42px;
+  margin-bottom:7px;
+  padding-bottom:7px;
+  border-bottom:1px solid #223542;
+}
+body:not(.obs-preview) .lineup-editor-head img{
+  width:34px;
+  height:34px;
+  flex:0 0 34px;
+  object-fit:contain;
+}
+body:not(.obs-preview) .lineup-editor-head span{min-width:0}
+body:not(.obs-preview) .lineup-editor-head small{
+  display:block;
+  margin-bottom:1px;
+  color:#728899;
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.12em;
+}
+body:not(.obs-preview) .lineup-editor-head b{
+  display:block;
+  overflow:hidden;
+  color:#eef4f7;
+  font-size:11px;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+body:not(.obs-preview) .lineup-editor-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0 8px;
+}
+body:not(.obs-preview) .lineup-editor-grid>label{min-width:0}
+body:not(.obs-preview) .lineup-editor-grid select{width:100%;min-width:0}
+body:not(.obs-preview) .lineup-editor-grid option.lineup-option-used{
+  color:#596976!important;
+  background:#0a1117!important;
+}
+@media(max-width:900px){
+  body:not(.obs-preview) .lineup-control #lineupEditors{grid-template-columns:1fr}
+}
