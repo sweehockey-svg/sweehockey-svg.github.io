@@ -23,6 +23,7 @@
     de:{commentator:"KOMMENTATOR",group:"GRUPPE",groupstage:"GRUPPENPHASE",playoffs:"PLAYOFFS",goals:"TORE",goalsPerGame:"TORE / SPIEL",goalsAgainstPerGame:"GEGENTORE / SPIEL",goalDiff:"TORDIFFERENZ",totalResult:"GESAMTBILANZ",teamGoals:"TEAMTORE",playerGoals:"SPIELERTORE",mostGoals:"MEISTE TORE",wins:"Siege",series:"Serien",matchWins:"Spielsiege",dataMissing:"KEINE DATEN",groupTables:"GRUPPENPHASE-TABELLEN",currentTournament:"AKTUELLES TURNIER",liveTournamentData:"Live-Turnierdaten",testMatch:"TESTSPIEL",bronze:"BRONZE",seriesState:"SERIENSTAND",winsSeries:"GEWINNT DIE SERIE",seriesDone:"SERIE ENTSCHIEDEN",nextMatch:"NÄCHSTES SPIEL",matches:"SPIELE",previousMatches:"BISHERIGE SPIELE",home:"HEIM",away:"AUSWÄRTS",selectPlayer:"Spieler wählen",teamStats:"Teamstatistik",rosterPlayers:"Kader/Spieler",loading:"lädt…",ready:"bereit",empty:"fehlt",loadError:"konnte nicht geladen werden",goalie:"TORWART",defender:"VERTEIDIGER",pointsLeader:"PUNKTELEADER",roadBronze:"Weg zu Bronze",roadPlayoffs:"Playoff-Weg",team:"TEAM",notSelected:"NICHT GEWÄHLT",noPlayer:"KEIN SPIELER",noGoalie:"KEIN TORWART",totalPoints:"PUNKTE GESAMT",gamesLower:"Spiele",invalidTwitch:"UNGÜLTIGER TWITCH-KANAL / URL",fetchingTwitch:"TWITCH-STREAM WIRD GELADEN",missingSupabase:"SUPABASE-KONFIGURATION FEHLT",twitchFetchFail:"TWITCH-STREAM KONNTE NICHT GELADEN WERDEN",twitchReady:"TWITCH HLS BEREIT",twitchNetwork:"TWITCH-RESOLVER NETZWERKFEHLER",twitchRecovering:"TWITCH STELLT LIVE-STREAM WIEDER HER",unknown:"unbekannt",hlsNetworkError:"HLS-NETZWERKFEHLER",loadingDirectVideo:"DIREKTVIDEO WIRD GELADEN",directVideo:"DIREKTVIDEO",invalidVideoUrl:"GÜLTIGE HLS-/VIDEO-URL EINGEBEN",playing:"WIEDERGABE",buffering:"PUFFERT",videoError:"VIDEOFEHLER · URL/CORS PRÜFEN",hlsLoaded:"HLS GELADEN",optimized:"OPTIMIERT",twitchBuffering:"TWITCH PUFFERT",hlsMediaError:"HLS-MEDIENFEHLER",hlsError:"HLS-FEHLER"}
   };
   const tx = key => (STRINGS[LOCALE] || STRINGS.sv)[key] ?? STRINGS.sv[key] ?? key;
+  window.__sehBroadcastTx = tx;
   const seriesBestOf = bo => LOCALE === "fi" ? "PARAS " + bo + ":STÄ" : LOCALE === "de" ? "BEST-OF-" + bo : LOCALE === "sv" ? "BÄST AV " + bo : "BEST OF " + bo;
   const REMOTE_CHANNEL = ({sv:"sec21-bronze-test",en:"broadcast-en",fi:"broadcast-fi",de:"broadcast-de"}[LOCALE] || "sec21-bronze-test");
   const OBS_MODE = new URLSearchParams(location.search).get("obs") === "1";
@@ -671,6 +672,7 @@
    Twitch embed is kept for compatibility; Direct HLS/video uses a same-page <video>
    so OBS Browser Source can own playback and graphics in one source. */
 (()=>{
+ const tx=window.__sehBroadcastTx||((key)=>key);
  const OBS_MODE_LOCAL=new URLSearchParams(location.search).get("obs")==="1";
  const $id=id=>document.getElementById(id);
  const source=$id("videoSource"),twitchInput=$id("twitchChannel"),hlsInput=$id("hlsUrl"),btn=$id("loadTwitch"),
