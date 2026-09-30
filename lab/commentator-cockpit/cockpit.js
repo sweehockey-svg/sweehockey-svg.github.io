@@ -1744,19 +1744,6 @@
     return "pregame";
   }
 
-  function aiEditorialPayload() {
-    return currentEditorialNotes()
-      .filter((note)=>note.pinned)
-      .slice(0,12)
-      .map((note)=>({
-        scope_type:note.scope_type,
-        title:note.title||"",
-        body:note.body||"",
-        tags:note.tags||[],
-        pinned:true
-      }));
-  }
-
   async function requestServerAi(question="") {
     if(!client||!state.nextGame?.id||!state.focusTeam?.id) return {used:false,reason:"missing_context"};
     if(!canAccessTeam(state.focusTeam.id)) return {used:false,reason:"access_not_approved"};
@@ -1768,8 +1755,7 @@
         game_id:state.nextGame.id,
         team_id:state.focusTeam.id,
         question:String(question||"").trim().slice(0,500),
-        mode:aiMode(),
-        editorial_notes:aiEditorialPayload()
+        mode:aiMode()
       }
     });
 
@@ -1808,14 +1794,14 @@
     const brief=state.aiBrief||localAiBrief("");
     const serverReady=state.aiBriefSource==="server";
     const statusText=serverReady
-      ? "Svar från servermodellen, byggt på verifierad databasdata."
+      ? "Svar från servermodellen, byggt enbart på verifierad Swehockey-data."
       : !state.authUser
         ? "Fallbacken fungerar direkt. Server-AI kräver inloggning, godkänd behörighet och OPENAI_API_KEY."
         : !state.access?.active
           ? "Kontot är inloggat men inte godkänt för server-AI. Fallbacken fungerar fortfarande."
           : "Kontot är godkänt. Server-AI aktiveras när OPENAI_API_KEY finns på servern.";
 
-    return '<article class="drawer-card ai-safety"><strong>Ingen fri statistikfantasi</strong><span>Server-AI får match-ID och hämtar själv officiell statistik från databasen. Egna anteckningar skickas separat som redaktionellt material.</span></article>' +
+    return '<article class="drawer-card ai-safety"><strong>Ingen fri statistikfantasi</strong><span>Server-AI får match-ID och hämtar själv officiell Swehockey-data från databasen. Privata NOTES skickas aldrig till språkmodellen.</span></article>' +
       '<div class="ai-status '+(serverReady?"ready":"fallback")+'"><span>'+(serverReady?"SERVER-AI":"LOKAL FALLBACK")+'</span><strong>'+esc(statusText)+'</strong></div>' +
       '<form class="ai-form" id="aiForm">' +
         '<label><span>FRÅGA / VINKEL</span><textarea id="aiQuestion" rows="3" maxlength="500" placeholder="T.ex. Vad är mest relevant att säga om lagets powerplay just nu?"></textarea></label>' +
