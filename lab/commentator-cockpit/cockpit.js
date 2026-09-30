@@ -3257,6 +3257,23 @@
   });
 
   document.getElementById("closeDrawer").addEventListener("click", () => setDrawerOpen(false));
+
+  document.addEventListener("click",(event)=>{
+    if(!drawer.classList.contains("open")) return;
+    const target=event.target instanceof Element ? event.target : null;
+    if(!target) return;
+
+    if(
+      drawer.contains(target) ||
+      target.closest(".deck-key") ||
+      target.closest("#accountButton") ||
+      target.closest("#lockLoginButton") ||
+      target.closest("#aiButton")
+    ) return;
+
+    setDrawerOpen(false);
+  });
+
   document.addEventListener("keydown",(event)=>{
     if(event.key==="Escape"&&drawer.classList.contains("open")) setDrawerOpen(false);
   });
