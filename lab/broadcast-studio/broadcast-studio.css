@@ -1970,27 +1970,27 @@ html[lang="fi"] .table .bt-row.selected::before{background:#f5f9ff!important}
 html[lang="de"] .table .bt-row.selected::before{background:#d91f2d!important}
 
 
-/* v129: compact live team identity strip beside the in-game NHL scoreboard.
-   Names/logos come from the selected Broadcast Studio teams; score/time remain in-game. */
+/* v130: live team strip overlays the EA logo/team abbreviations, leaving score/time visible. */
 .live-team-strip{
   display:none;
   position:absolute;
-  left:12px;
-  top:96px;
-  z-index:5;
-  width:228px;
-  height:76px;
+  left:36px;
+  top:30px;
+  z-index:6;
+  width:174px;
+  height:72px;
   border:1px solid rgba(103,175,232,.50);
-  background:rgba(2,20,36,.94);
+  background:rgba(2,20,36,.96);
   box-shadow:0 4px 14px rgba(0,0,0,.30);
   overflow:hidden;
   pointer-events:none;
 }
 .screen.live-mode>.live-team-strip{display:grid;grid-template-rows:1fr 1fr}
+.screen.live-team-strip-off>.live-team-strip{display:none!important}
 .live-team-strip .live-team-row{
   position:relative;
   display:grid;
-  grid-template-columns:44px minmax(0,1fr);
+  grid-template-columns:38px minmax(0,1fr);
   align-items:center;
   min-width:0;
   background:
@@ -2007,8 +2007,8 @@ html[lang="de"] .table .bt-row.selected::before{background:#d91f2d!important}
   pointer-events:none;
 }
 .live-team-strip .live-team-row>img{
-  width:34px;
-  height:34px;
+  width:28px;
+  height:28px;
   justify-self:center;
   object-fit:contain;
   filter:drop-shadow(0 2px 4px rgba(0,0,0,.55));
@@ -2017,10 +2017,10 @@ html[lang="de"] .table .bt-row.selected::before{background:#d91f2d!important}
   position:relative;
   z-index:1;
   min-width:0;
-  padding:0 10px 0 2px;
+  padding:0 7px 0 1px;
   overflow:hidden;
   color:#f4b21b;
-  font-size:14px;
+  font-size:13px;
   font-weight:950;
   letter-spacing:.01em;
   line-height:1;
