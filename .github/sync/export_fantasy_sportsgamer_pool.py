@@ -46,13 +46,17 @@ PRICE_CONFIDENCE_GAMES = int(os.environ.get("FANTASY_PRICE_CONFIDENCE_GAMES") or
 PRICE_RECENCY_HALF_LIFE_LEAGUE_IDS = float(os.environ.get("FANTASY_PRICE_RECENCY_HALF_LIFE_LEAGUE_IDS") or "60")
 PRICE_RECENCY_FLOOR = float(os.environ.get("FANTASY_PRICE_RECENCY_FLOOR") or "0.10")
 PRICE_DIVISION_WEIGHTS = {
-    "Elite": 1.00,
-    "Pro": 0.90,
-    "Lite": 0.75,
-    "Core": 0.62,
-    "Neo": 0.50,
-    "National": 0.85,
-    "Other": 0.75,
+    "Elite": 1.15,
+    "Pro": 1.00,
+    "Lite": 0.62,
+    "Core": 0.42,
+    "Neo": 0.25,
+    "National": 0.75,
+    "Other": 0.60,
+}
+PRICE_TOP_DIVISION_PLAYOFF_BONUS = {
+    "Elite": 1.15,
+    "Pro": 1.10,
 }
 GOALIE_SAVE_PERCENTAGE_WEIGHT = 20.0
 GOALIE_GAA_PENALTY = 1.5
@@ -488,7 +492,7 @@ def history_role(position: str) -> str:
     return "F"
 
 
-def league_strength(league_name: str) -> tuple[str, float]:
+def league_strength(league_name: str, match_type: str = "") -> tuple[str, float]:
     """Return a stable historical strength tier from the official league name."""
     name = re.sub(r"\s+", " ", str(league_name or "").lower()).strip()
     detected = [
@@ -497,7 +501,13 @@ def league_strength(league_name: str) -> tuple[str, float]:
     ]
     if detected:
         # Mixed pre-season leagues use the mean of their named divisions.
-        return "+".join(detected), sum(PRICE_DIVISION_WEIGHTS[tier] for tier in detected) / len(detected)
+        strength = sum(PRICE_DIVISION_WEIGHTS[tier] for tier in detected) / len(detected)
+        is_playoffs = "playoff" in name or "playoff" in str(match_type or "").lower()
+        if is_playoffs:
+            playoff_bonuses = [PRICE_TOP_DIVISION_PLAYOFF_BONUS[tier] for tier in detected if tier in PRICE_TOP_DIVISION_PLAYOFF_BONUS]
+            if playoff_bonuses:
+                strength *= sum(playoff_bonuses) / len(playoff_bonuses)
+        return "+".join(detected), strength
     if any(token in name for token in ("scl", "eshl", "sec")):
         return "National", PRICE_DIVISION_WEIGHTS["National"]
     return "Other", PRICE_DIVISION_WEIGHTS["Other"]
@@ -558,15 +568,20 @@ def fetch_historical_performance(
         "saves": optional("saves"),
         "goals_allowed": optional("goalsAllowed", "goals_allowed"),
     }
+    match_type_col = optional("matchType", "match_type")
 
     selected = [
-        f"{safe_identifier(player_col)} as playerID",
-        f"{safe_identifier(match_col)} as matchID",
-        f"{safe_identifier(pos_col)} as positionID",
-        f"{safe_identifier(league_col)} as leagueID",
+        f"p.{safe_identifier(player_col)} as playerID",
+        f"p.{safe_identifier(match_col)} as matchID",
+        f"p.{safe_identifier(pos_col)} as positionID",
+        f"p.{safe_identifier(league_col)} as leagueID",
     ]
     for alias, source in field_map.items():
-        selected.append(f"{safe_identifier(source)} as {safe_identifier(alias)}" if source else f"0 as {safe_identifier(alias)}")
+        selected.append(f"p.{safe_identifier(source)} as {safe_identifier(alias)}" if source else f"0 as {safe_identifier(alias)}")
+    selected.append(
+        f"p.{safe_identifier(match_type_col)} as matchType"
+        if match_type_col else "'' as matchType"
+    )
 
     rows: list[dict[str, Any]] = []
     for part in chunks(player_ids, 250):
@@ -574,9 +589,10 @@ def fetch_historical_performance(
         rows.extend(select(
             connection,
             "select " + ",".join(selected) +
-            f" from `nhlgamer_participants` where {safe_identifier(player_col)} in ({placeholders}) "
-            f"and {safe_identifier(match_col)}>0 and {safe_identifier(pos_col)} between 1 and 6 "
-            f"and {safe_identifier(league_col)}<=%s",
+            " from `nhlgamer_participants` p " +
+            f"where p.{safe_identifier(player_col)} in ({placeholders}) "
+            f"and p.{safe_identifier(match_col)}>0 and p.{safe_identifier(pos_col)} between 1 and 6 "
+            f"and p.{safe_identifier(league_col)}<=%s",
             tuple(part) + (PRICE_HISTORY_MAX_LEAGUE_ID,),
         ))
 
@@ -633,7 +649,7 @@ def fetch_historical_performance(
             totals[player_id]["skater_games"] += 1
 
         role = history_role(position)
-        division, strength = league_strength(league_names.get(league_id, ""))
+        division, strength = league_strength(league_names.get(league_id, ""), row.get("matchType"))
         recency = history_recency_weight(league_id)
         weighted_points = points * strength * recency
         role_values = totals[player_id]["roles"][role]
@@ -1114,7 +1130,7 @@ def main() -> int:
         for row in output_rows:
             raw = json.loads(row["raw_player"])
             raw["fantasy_pricing"] = {
-                "model": "sports_gamer_division_role_recency_v5",
+                "model": "sports_gamer_top_division_playoffs_v6",
                 "history_through": PRICE_HISTORY_LABEL,
                 "history_max_league_id": PRICE_HISTORY_MAX_LEAGUE_ID,
                 "reference_population": "all_swedish_sportsgamer_players",
@@ -1125,6 +1141,7 @@ def main() -> int:
                     "floor": PRICE_RECENCY_FLOOR,
                 },
                 "division_weights": PRICE_DIVISION_WEIGHTS,
+                "top_division_playoff_bonus": PRICE_TOP_DIVISION_PLAYOFF_BONUS,
                 "goalie_quality_formula": {
                     "save_percentage_weight": GOALIE_SAVE_PERCENTAGE_WEIGHT,
                     "gaa_penalty": GOALIE_GAA_PENALTY,
