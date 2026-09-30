@@ -74,6 +74,10 @@ Deno.serve(async(req:Request)=>{
   const selectedTeamId=cleanText(body.team_id,80);
   const question=cleanText(body.question,500);
   const mode=["pregame","live","studio","general"].includes(body.mode)?body.mode:"general";
+  const requestStyle=["relevant","fresh","question"].includes(body.request_style)?body.request_style:"relevant";
+  const avoidTopics=Array.isArray(body.avoid_topics)
+    ? body.avoid_topics.slice(0,9).map((item:any)=>cleanText(item,240)).filter(Boolean)
+    : [];
   if(!/^[0-9a-f-]{36}$/i.test(gameId)) return json({error:"invalid_game_id"},400);
   if(!/^[0-9a-f-]{36}$/i.test(selectedTeamId)) return json({error:"invalid_team_id"},400);
 
@@ -199,6 +203,7 @@ Deno.serve(async(req:Request)=>{
       private_notes:"Private commentator notes are intentionally excluded from this AI request."
     },
     mode,
+    request_style:requestStyle,
     game:{
       id:game.id,
       scheduled_start:game.scheduled_start,
@@ -225,6 +230,17 @@ Deno.serve(async(req:Request)=>{
     current_events:eventsResult.data||[]
   };
 
+  const requestInstruction=requestStyle==="fresh"
+    ? [
+        "Användaren vill ha NYA VINKLAR.",
+        "Undvik ämnena i avoid_topics om det finns andra tydligt verifierade vinklar i kontexten.",
+        "Byt inte bara rubrik eller formulering på samma statistik; välj helst andra datapunkter, spelare, målvakter, special teams, form, H2H eller aktuell matchdata.",
+        "Om underlaget är för tunt för tre genuint nya vinklar: ge färre punkter hellre än att hitta på eller maskera en upprepning."
+      ].join(" ")
+    : requestStyle==="question"
+      ? "Prioritera användarens uttryckliga fråga/vinkel. Svara bara med sådant som den verifierade kontexten faktiskt stödjer."
+      : "Prioritera de starkaste och mest relevanta verifierade talking pointsen just nu, även om samma ämne varit relevant tidigare.";
+
   const systemPrompt=[
     "Du är en svensk hockeykommentators assistent.",
     "Använd ENDAST fakta som finns i JSON-kontexten.",
@@ -232,7 +248,9 @@ Deno.serve(async(req:Request)=>{
     "Privata/redaktionella anteckningar ingår inte i kontexten och får inte efterfrågas eller antas.",
     "Om underlaget är litet, säg det kort.",
     "Skriv för direktsändning: kort, naturligt, konkret och lätt att säga högt.",
-    "Ge 2–3 talking points. Upprepa inte samma poäng i olika formuleringar.",
+    "Ge 1–3 talking points. För normal relevans ska du sikta på 2–3; i NYA VINKLAR får du ge 1 om det saknas fler genuint nya fakta.",
+    "Upprepa inte samma poäng i olika formuleringar.",
+    requestInstruction,
     "source_refs ska bara innehålla namn på toppnivåfält i kontexten som faktiskt stöder påståendet."
   ].join("\n");
 
@@ -243,7 +261,12 @@ Deno.serve(async(req:Request)=>{
     input:[
       {role:"developer",content:systemPrompt},
       {role:"user",content:JSON.stringify({
-        question:question||"Ge mig de mest relevanta talking points just nu.",
+        question:question||(
+          requestStyle==="fresh"
+            ? "Ge mig andra verifierade vinklar än de som redan visats."
+            : "Ge mig de mest relevanta talking points just nu."
+        ),
+        avoid_topics:requestStyle==="fresh"?avoidTopics:[],
         context
       })}
     ],
@@ -258,7 +281,7 @@ Deno.serve(async(req:Request)=>{
             headline:{type:"string"},
             talking_points:{
               type:"array",
-              minItems:2,
+              minItems:1,
               maxItems:3,
               items:{
                 type:"object",
