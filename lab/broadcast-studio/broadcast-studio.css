@@ -2038,3 +2038,9 @@ html[lang="de"] .live-team-strip{
   background:rgba(18,12,14,.95);
 }
 html[lang="de"] .live-team-strip .live-team-row>b{color:#f2c500}
+
+
+/* v134: nudge live top-right lockup left for better balance with the in-game scoreboard. */
+.screen.live-mode>.top{
+  right:4.5%!important;
+}
