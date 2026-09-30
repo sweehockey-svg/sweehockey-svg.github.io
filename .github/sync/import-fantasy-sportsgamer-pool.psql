@@ -244,16 +244,8 @@ do update set
   display_gamertag=excluded.display_gamertag,
   real_team_id=excluded.real_team_id,
   real_team_name=excluded.real_team_name,
-  primary_position=case
-    when public.ehockey_fantasy_player_pool.primary_position is null
-      then excluded.primary_position
-    else public.ehockey_fantasy_player_pool.primary_position
-  end,
-  eligible_slots=case
-    when cardinality(public.ehockey_fantasy_player_pool.eligible_slots)=0
-      then excluded.eligible_slots
-    else public.ehockey_fantasy_player_pool.eligible_slots
-  end,
+  primary_position=excluded.primary_position,
+  eligible_slots=excluded.eligible_slots,
   price=case
     when coalesce(excluded.source_snapshot->>'pricing_model','') in ('sports_gamer_history_v1','sports_gamer_frozen_swedish_reference_v2','sports_gamer_division_weighted_roles_v3','sports_gamer_division_role_quality_v4','sports_gamer_division_role_recency_v5','sports_gamer_top_division_playoffs_v6')
       then excluded.price

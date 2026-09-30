@@ -430,21 +430,29 @@ def slots_for_position(position: str) -> list[str]:
 
 
 def explicit_roster_slots(roster: dict[str, Any], player: dict[str, Any]) -> list[str]:
-    result: list[str] = []
-    for slot, field in (
+    """Prefer current SportsGamer profile position flags over league-roster flags.
+
+    League roster rows can retain positions from registration time. The player
+    profile is the live source for later position changes.
+    """
+    fields = (
         ("LW", "positionLW"),
         ("C", "positionC"),
         ("RW", "positionRW"),
         ("LD", "positionLD"),
         ("RD", "positionRD"),
         ("G", "positionG"),
-    ):
-        value = first(roster, field)
-        if value is None:
-            value = first(player, field)
-        if integer(value) > 0:
-            result.append(slot)
-    return result
+    )
+
+    profile_values = [(slot, first(player, field)) for slot, field in fields]
+    if any(value is not None for _, value in profile_values):
+        return [slot for slot, value in profile_values if integer(value) > 0]
+
+    return [
+        slot
+        for slot, field in fields
+        if integer(first(roster, field)) > 0
+    ]
 
 
 def validated_cross_role_slots(
@@ -1059,7 +1067,7 @@ def main() -> int:
 
             position = normalize_position(
                 first(
-                    roster,
+                    player,
                     "preferredPositionID",
                     "positionID",
                     "position",
@@ -1068,7 +1076,7 @@ def main() -> int:
                     "preferredPosition",
                 )
                 or first(
-                    player,
+                    roster,
                     "preferredPositionID",
                     "positionID",
                     "position",
