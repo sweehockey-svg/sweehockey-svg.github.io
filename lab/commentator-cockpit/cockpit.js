@@ -1799,7 +1799,7 @@
         ? "Fallbacken fungerar direkt. Server-AI kräver inloggning, godkänd behörighet och OPENAI_API_KEY."
         : !state.access?.active
           ? "Kontot är inloggat men inte godkänt för server-AI. Fallbacken fungerar fortfarande."
-          : "Kontot är godkänt. Server-AI aktiveras när OPENAI_API_KEY finns på servern.";
+          : "Server-AI är konfigurerad. Om ett anrop misslyckas visas verifierad fallback automatiskt.";
 
     return '<article class="drawer-card ai-safety"><strong>Ingen fri statistikfantasi</strong><span>Server-AI får match-ID och hämtar själv officiell Swehockey-data från databasen. Privata NOTES skickas aldrig till språkmodellen.</span></article>' +
       '<div class="ai-status '+(serverReady?"ready":"fallback")+'"><span>'+(serverReady?"SERVER-AI":"LOKAL FALLBACK")+'</span><strong>'+esc(statusText)+'</strong></div>' +
@@ -1848,7 +1848,7 @@
       }else if(String(result.reason||"").includes("ai_not_configured")){
         state.aiError="OPENAI_API_KEY är inte konfigurerad på servern ännu. Fallbacken används tills dess.";
       }else if(result.reason&&result.reason!=="missing_context"){
-        state.aiError="Server-AI kunde inte användas just nu. Fallbacken visas.";
+        state.aiError="Server-AI fick inget användbart svar just nu. Verifierad fallback visas i stället.";
       }
       renderDrawer("ai");
     });
