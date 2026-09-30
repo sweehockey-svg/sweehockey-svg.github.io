@@ -1012,19 +1012,34 @@
     ).length;
   }
 
+  function discordHeaderIcon() {
+    return '<svg class="fantasy-account-button__discord" viewBox="0 0 24 24" aria-hidden="true">' +
+      '<path d="M7.2 7.1c3.2-1.6 6.4-1.6 9.6 0 1.6 2.3 2.5 4.8 2.7 7.4-1.9 1.4-3.8 2.2-5.7 2.6l-.8-1.1c.8-.2 1.6-.6 2.3-1-2.2 1-4.4 1-6.6 0 .7.4 1.5.8 2.3 1l-.8 1.1c-1.9-.4-3.8-1.2-5.7-2.6.2-2.6 1.1-5.1 2.7-7.4Z"/>' +
+      '<circle cx="9.2" cy="12.1" r="1.1"/><circle cx="14.8" cy="12.1" r="1.1"/>' +
+    '</svg>';
+  }
+
   function updateHeaderAccount() {
     const button = $("accountButton");
     if (!button) return;
 
     if (!state.session?.user) {
-      button.textContent = t("login_discord");
+      button.innerHTML = discordHeaderIcon() +
+        '<span class="fantasy-account-button__label fantasy-account-button__label--desktop">' + escapeHtml(t("login_discord")) + '</span>' +
+        '<span class="fantasy-account-button__label fantasy-account-button__label--mobile">Logga in</span>';
       button.dataset.action = "login";
+      button.setAttribute("aria-label", t("login_discord"));
+      button.title = t("login_discord");
       return;
     }
 
     const playerName = clean(state.account?.player_name || state.account?.playerName);
-    button.textContent = playerName ? playerName : t("logout");
+    const label = playerName ? playerName : t("logout");
+    button.innerHTML = discordHeaderIcon() +
+      '<span class="fantasy-account-button__label">' + escapeHtml(label) + '</span>';
     button.dataset.action = "logout";
+    button.setAttribute("aria-label", playerName ? label + " · " + t("logout") : t("logout"));
+    button.title = playerName ? label + " · " + t("logout") : t("logout");
   }
 
   function renderCompetitionSelector() {
