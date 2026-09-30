@@ -2820,3 +2820,476 @@ html[data-theme="light"] .goalie-live span{
 html[data-theme="light"] .goalie-live strong{
   color:#26423a;
 }
+
+
+/* v39 · workstation readability floor */
+/* A live tool must be glance-readable. Desktop/tablet text gets a real floor;
+   density is recovered with wrapping, columns and internal scroll instead of 7px type. */
+@media (min-width:761px){
+  .eyebrow,
+  .panel-kicker{
+    font-size:10px;
+  }
+
+  .match-meta,
+  .period,
+  .panel-status{
+    font-size:10px;
+  }
+
+  .panel-head h2{
+    font-size:19px;
+  }
+
+  .stat span,
+  .section-title span{
+    font-size:10px;
+  }
+
+  .stat small,
+  .section-title small{
+    font-size:10px;
+  }
+
+  .form-row,
+  .table-placeholder div{
+    font-size:12px;
+  }
+
+  .fact-card span{
+    font-size:10px;
+  }
+
+  .fact-card strong{
+    font-size:13px;
+    line-height:1.42;
+  }
+
+  .fact-card p{
+    font-size:11px;
+    line-height:1.5;
+  }
+
+  .quick-fact-next strong{
+    font-size:10px;
+  }
+
+  .quick-fact-next small{
+    font-size:9px;
+  }
+
+  .deck-key span{
+    font-size:9px;
+  }
+
+  .deck-key strong{
+    font-size:11px;
+  }
+
+  .drawer-head h2{
+    font-size:22px;
+  }
+
+  .drawer-body{
+    font-size:13px;
+    line-height:1.58;
+  }
+
+  .drawer-card strong{
+    font-size:14px;
+  }
+
+  .drawer-card>span,
+  .drawer-card>p{
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .roster-section-title{
+    font-size:11px;
+  }
+
+  .roster-player strong{
+    font-size:12px;
+  }
+
+  .roster-player small{
+    font-size:10px;
+  }
+
+  .roster-player em{
+    font-size:11px;
+  }
+
+  .lineup-team-head span,
+  .lineup-goalies span,
+  .lineup-line-head strong,
+  .lineup-extras>span{
+    font-size:9px;
+  }
+
+  .lineup-team-head h3{
+    font-size:16px;
+  }
+
+  .lineup-team-head small,
+  .lineup-goalies b,
+  .lineup-line-head span,
+  .lineup-slot>b,
+  .lineup-extras>strong{
+    font-size:10px;
+  }
+
+  .lineup-goalies strong,
+  .lineup-slot>strong{
+    font-size:11px;
+  }
+
+  .lineup-slot>span{
+    font-size:8px;
+  }
+
+  .special-team-head span,
+  .special-primary span,
+  .special-recent span,
+  .special-current span{
+    font-size:9px;
+  }
+
+  .special-team-head h3{
+    font-size:16px;
+  }
+
+  .special-primary small{
+    font-size:10px;
+  }
+
+  .special-recent strong,
+  .special-current strong{
+    font-size:11px;
+  }
+
+  .h2h-summary span,
+  .h2h-latest>span{
+    font-size:9px;
+  }
+
+  .h2h-summary small,
+  .h2h-latest>small,
+  .h2h-date span,
+  .h2h-score small{
+    font-size:10px;
+  }
+
+  .h2h-date strong{
+    font-size:11px;
+  }
+
+  .h2h-teams span{
+    font-size:12px;
+  }
+
+  .story-card span{
+    font-size:9px;
+  }
+
+  .story-card strong{
+    font-size:13px;
+    line-height:1.45;
+  }
+
+  .story-card p{
+    font-size:11px;
+    line-height:1.5;
+  }
+
+  .studio-banner span,
+  .studio-summary-grid span,
+  .studio-section-title span,
+  .studio-talking-points span{
+    font-size:9px;
+  }
+
+  .studio-summary-grid small,
+  .studio-section-title small{
+    font-size:10px;
+  }
+
+  .studio-talking-points strong{
+    font-size:12px;
+    line-height:1.42;
+  }
+
+  .studio-talking-points p{
+    font-size:10px;
+    line-height:1.45;
+  }
+
+  .studio-event b,
+  .studio-event>strong,
+  .studio-event p{
+    font-size:10px;
+  }
+
+  .note-form label>span,
+  .account-form label span{
+    font-size:10px;
+  }
+
+  .note-form input,
+  .note-form textarea,
+  .account-form input{
+    font-size:12px;
+  }
+
+  .note-form-actions button,
+  .note-actions button,
+  .account-form button,
+  .account-actions button{
+    font-size:10px;
+  }
+
+  .notes-meta,
+  .note-card-head span,
+  .note-card-head small{
+    font-size:10px;
+  }
+
+  .notes-meta small,
+  .note-card-head b,
+  .note-tags span{
+    font-size:9px;
+  }
+
+  .note-card h3{
+    font-size:14px;
+  }
+
+  .note-card p{
+    font-size:12px;
+    line-height:1.52;
+  }
+
+  /* AI is intentionally larger than the surrounding chrome: it is spoken material. */
+  .ai-safety>span{
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .ai-status{
+    padding:12px 13px;
+  }
+
+  .ai-status span{
+    font-size:10px;
+  }
+
+  .ai-status strong{
+    font-size:12px;
+    line-height:1.4;
+  }
+
+  .ai-form{
+    padding:13px;
+  }
+
+  .ai-form label span{
+    font-size:10px;
+  }
+
+  .ai-form textarea{
+    min-height:92px;
+    padding:11px 12px;
+    font-size:13px;
+    line-height:1.5;
+  }
+
+  .ai-form-actions button{
+    padding:9px 12px;
+    font-size:10px;
+  }
+
+  .ai-error,
+  .ai-caution{
+    font-size:11px;
+    line-height:1.5;
+  }
+
+  .ai-result-head{
+    margin:14px 0 9px;
+  }
+
+  .ai-result-head span{
+    font-size:10px;
+  }
+
+  .ai-result-head strong{
+    font-size:12px;
+  }
+
+  .ai-point{
+    grid-template-columns:32px minmax(0,1fr);
+    gap:10px;
+    padding:14px;
+  }
+
+  .ai-point>b{
+    width:31px;
+    height:31px;
+    font-size:9px;
+  }
+
+  .ai-point span{
+    font-size:10px;
+  }
+
+  .ai-point strong{
+    margin-top:5px;
+    font-size:13px;
+    line-height:1.48;
+  }
+
+  .ai-point p{
+    margin-top:6px;
+    font-size:11px;
+    line-height:1.48;
+  }
+
+  .ai-point small{
+    margin-top:7px;
+    font-size:9px;
+    line-height:1.35;
+  }
+
+  /* Player/goalie tables stay dense, but not microscopic. */
+  .drawer.stats-wide .stats-intro strong{
+    font-size:12px;
+  }
+
+  .drawer.stats-wide .stats-intro span{
+    font-size:10px;
+  }
+
+  .drawer.stats-wide .player-stat-head{
+    font-size:10px;
+  }
+
+  .drawer.stats-wide .player-stat-name>b{
+    font-size:10px;
+  }
+
+  .drawer.stats-wide .player-stat-name strong{
+    font-size:12px;
+    line-height:1.2;
+  }
+
+  .drawer.stats-wide .player-stat-name small{
+    font-size:9px;
+    line-height:1.25;
+  }
+
+  .drawer.stats-wide .player-stat-row em{
+    font-size:11px;
+  }
+
+  .drawer.stats-wide .goalie-card-head,
+  .drawer.stats-wide .goalie-metrics span,
+  .drawer.stats-wide .goalie-recent span{
+    font-size:9px;
+  }
+
+  .drawer.stats-wide .goalie-card h3{
+    font-size:15px;
+  }
+
+  .drawer.stats-wide .goalie-metrics strong{
+    font-size:12px;
+  }
+
+  .drawer.stats-wide .goalie-recent strong{
+    font-size:10px;
+  }
+
+  .drawer.stats-wide .live-stat-line{
+    font-size:10px;
+  }
+
+  .drawer.stats-wide .live-stat-line b,
+  .drawer.stats-wide .goalie-live span{
+    font-size:9px;
+  }
+
+  .drawer.stats-wide .goalie-live strong{
+    font-size:10px;
+  }
+}
+
+/* Main matchfeed: readable at normal viewing distance, scrollbar absorbs extra height. */
+@media (min-width:1101px){
+  .event-time strong{
+    font-size:13px;
+  }
+
+  .event-time span{
+    font-size:9px;
+  }
+
+  .event-copy em{
+    font-size:10px;
+  }
+
+  .event-copy span,
+  .event-copy p{
+    font-size:12px;
+  }
+
+  .event-score b{
+    font-size:15px;
+  }
+}
+
+/* Laptop / smaller desktop: use fewer columns instead of shrinking the words. */
+@media (min-width:1100px) and (max-width:1599px){
+  .ai-points,
+  .story-grid,
+  .studio-talking-points{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .h2h-summary,
+  .studio-summary-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .drawer.medium{
+    width:min(1120px,calc(100vw - 28px));
+  }
+}
+
+/* Wide workstations can comfortably keep three editorial cards in one row. */
+@media (min-width:1600px){
+  .ai-points,
+  .story-grid,
+  .studio-talking-points{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+
+/* Below laptop width, editorial content becomes a single readable stream. */
+@media (min-width:761px) and (max-width:1099px){
+  .ai-points,
+  .story-grid,
+  .studio-talking-points{
+    grid-template-columns:1fr;
+  }
+
+  .h2h-summary,
+  .studio-summary-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .drawer.medium{
+    right:10px;
+    width:calc(100vw - 20px);
+  }
+}
