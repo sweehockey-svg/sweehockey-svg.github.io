@@ -1970,12 +1970,12 @@ html[lang="fi"] .table .bt-row.selected::before{background:#f5f9ff!important}
 html[lang="de"] .table .bt-row.selected::before{background:#d91f2d!important}
 
 
-/* v130: live team strip overlays the EA logo/team abbreviations, leaving score/time visible. */
+/* v131: live team strip overlays the EA logo/team abbreviations, leaving score/time visible. */
 .live-team-strip{
   display:none;
   position:absolute;
-  left:36px;
-  top:30px;
+  left:20px;
+  top:18px;
   z-index:6;
   width:174px;
   height:72px;
