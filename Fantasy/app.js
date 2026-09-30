@@ -2271,10 +2271,10 @@
       !row?.settings?.archive_role
     );
 
-    const requested = clean(new URLSearchParams(window.location.search).get("competition")).toUpperCase();
-    state.competition = requested
-      ? (state.competitions.find((row) => clean(row.code).toUpperCase() === requested) || null)
-      : null;
+    const requested = clean(new URLSearchParams(window.location.search).get("competition") || "SCL2027").toUpperCase();
+    state.competition = state.competitions.find(
+      (row) => clean(row.code).toUpperCase() === requested
+    ) || null;
 
     renderCompetitionSelector();
 
