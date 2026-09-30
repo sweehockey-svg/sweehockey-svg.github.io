@@ -459,7 +459,8 @@
 
   const sb = window.supabase.createClient(supabaseUrl, supabaseKey, {
     auth: {
-      storageKey: "seh-scl27-fantasy-auth",
+      // Use Supabase's normal project storage key so Fantasy shares the same
+      // Discord session as the rest of Svensk eHockey / webbappen.
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true
