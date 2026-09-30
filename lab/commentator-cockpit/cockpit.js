@@ -998,6 +998,15 @@
     '</section>';
   }
 
+  function swahnworksAboutCard() {
+    return '<article class="drawer-card swahnworks-about">' +
+      '<span>SWAHNWORKS</span>' +
+      '<strong>Koncept & utveckling</strong>' +
+      '<p>Commentator Cockpit är utvecklad av Swahnworks.</p>' +
+      '<a href="mailto:swahnworks@gmail.com">swahnworks@gmail.com</a>' +
+    '</article>';
+  }
+
   function renderAccount() {
     if(state.authUser){
       const email=state.authUser.email||"Inloggad användare";
@@ -1015,7 +1024,8 @@
         '</article>' +
         '<div class="account-actions"><button type="button" id="refreshAccessButton">KONTROLLERA BEHÖRIGHET</button>' +
         '<button type="button" class="danger" id="signOutButton">LOGGA UT</button></div>' +
-        '<article class="drawer-card"><strong>Lagstyrt</strong><span>En admin måste koppla e-postadressen till rätt Hockeyettan-lag.</span></article>';
+        '<article class="drawer-card"><strong>Lagstyrt</strong><span>En admin måste koppla e-postadressen till rätt Hockeyettan-lag.</span></article>' +
+        swahnworksAboutCard();
       }
 
       return '<article class="account-card signed-in">' +
@@ -1027,7 +1037,8 @@
         '<button type="button" class="danger" id="signOutButton">LOGGA UT</button>' +
       '</div>' +
       '<article class="drawer-card"><strong>Åtkomst</strong><span>Varje lag har sin egen cockpit-behörighet. Global admin kan öppna alla lag.</span></article>' +
-      accessAdminHtml();
+      accessAdminHtml() +
+      swahnworksAboutCard();
     }
 
     return '<article class="drawer-card"><strong>E-postinloggning</strong><span>Du får en personlig engångslänk via e-post. Inget lösenord behövs. Efter inloggningen kontrolleras din lagbehörighet.</span></article>' +
@@ -1036,7 +1047,8 @@
         '<button type="submit" '+(state.authBusy?"disabled":"")+'>'+(state.authBusy?"SKICKAR…":"SKICKA INLOGGNINGSLÄNK")+'</button>' +
       '</form>' +
       (state.authMessage?'<div class="account-message '+esc(state.authMessageType||"")+'" role="status" aria-live="polite">'+esc(state.authMessage)+'</div>':'') +
-      '<article class="drawer-card"><strong>Lagbehörighet</strong><span>Inloggning och lagåtkomst är separata. En admin kopplar din e-postadress till rätt Hockeyettan-lag.</span></article>';
+      '<article class="drawer-card"><strong>Lagbehörighet</strong><span>Inloggning och lagåtkomst är separata. En admin kopplar din e-postadress till rätt Hockeyettan-lag.</span></article>' +
+      swahnworksAboutCard();
   }
 
   function bindAccountUi() {
