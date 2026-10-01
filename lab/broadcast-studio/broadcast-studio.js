@@ -506,14 +506,14 @@
   }
 
   function setTheme(name){
-    const background=["broadcast","arena","ice","impact"].includes(name)?name:"broadcast";
+    const background=["broadcast","arena","ice","impact","gamenight"].includes(name)?name:"broadcast";
     document.body.dataset.background=background;
     // Existing overlays become graphics package "standard"; old theme CSS stays on the broadcast baseline.
     document.body.dataset.theme="broadcast";
     if($("#theme"))$("#theme").value=background;
   }
   function setGraphicsPackage(name){
-    const graphics=["standard"].includes(name)?name:"standard";
+    const graphics=["standard","gamenight"].includes(name)?name:"standard";
     document.body.dataset.graphics=graphics;
     if($("#graphicsPackage"))$("#graphicsPackage").value=graphics;
   }
