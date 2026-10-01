@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#071522"/>
+    <stop offset=".55" stop-color="#03101a"/>
+    <stop offset="1" stop-color="#020910"/>
+  </linearGradient>
+  <radialGradient id="centerGlow" cx="50%" cy="35%" r="62%">
+    <stop offset="0" stop-color="#123048" stop-opacity=".34"/>
+    <stop offset=".55" stop-color="#071725" stop-opacity=".12"/>
+    <stop offset="1" stop-color="#020910" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#7a4b00"/>
+    <stop offset=".42" stop-color="#ffbd00"/>
+    <stop offset=".68" stop-color="#e59400"/>
+    <stop offset="1" stop-color="#5e3900"/>
+  </linearGradient>
+  <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#152938" stop-opacity=".84"/>
+    <stop offset=".35" stop-color="#081824" stop-opacity=".92"/>
+    <stop offset="1" stop-color="#02070c"/>
+  </linearGradient>
+  <pattern id="dots" width="14" height="14" patternUnits="userSpaceOnUse">
+    <circle cx="2" cy="2" r="1.4" fill="#ffbd00" opacity=".28"/>
+  </pattern>
+  <filter id="blur"><feGaussianBlur stdDeviation="30"/></filter>
+  <filter id="soft"><feGaussianBlur stdDeviation="10"/></filter>
+</defs>
+
+<rect width="1920" height="1080" fill="url(#bg)"/>
+<rect width="1920" height="1080" fill="url(#centerGlow)"/>
+
+<!-- dark architectural side blades -->
+<path d="M0 0H300L80 650 0 720Z" fill="#0a1b29"/>
+<path d="M78 0H205L0 590V420Z" fill="#102737"/>
+<path d="M1920 0H1620L1840 650 1920 720Z" fill="#0a1b29"/>
+<path d="M1842 0H1715L1920 590V420Z" fill="#102737"/>
+
+<!-- gold side accents -->
+<path d="M0 104L126 0H151L0 504Z" fill="url(#gold)" opacity=".92"/>
+<path d="M0 250L84 106H101L0 590Z" fill="#ffc20a" opacity=".68"/>
+<path d="M1920 104L1794 0H1769L1920 504Z" fill="url(#gold)" opacity=".92"/>
+<path d="M1920 250L1836 106H1819L1920 590Z" fill="#ffc20a" opacity=".68"/>
+
+<!-- textured panels -->
+<path d="M0 50L190 0 70 474 0 510Z" fill="url(#dots)" opacity=".82"/>
+<path d="M1920 50L1730 0 1850 474 1920 510Z" fill="url(#dots)" opacity=".82"/>
+
+<!-- additional fine diagonal rails -->
+<path d="M235 0L486 0 276 430 250 430 438 0Z" fill="#d99b00" opacity=".22"/>
+<path d="M1685 0L1434 0 1644 430 1670 430 1482 0Z" fill="#d99b00" opacity=".16"/>
+<path d="M350 0L507 0 330 360 314 360 470 0Z" fill="#1a3548" opacity=".52"/>
+<path d="M1570 0L1413 0 1590 360 1606 360 1450 0Z" fill="#1a3548" opacity=".52"/>
+
+<!-- rink / floor -->
+<path d="M0 670H1920V1080H0Z" fill="url(#floor)"/>
+<path d="M0 704H1920" stroke="#95b5c6" stroke-opacity=".22" stroke-width="3"/>
+<path d="M0 745H1920" stroke="#b9d1df" stroke-opacity=".10" stroke-width="2"/>
+<path d="M960 665L1032 1080H888Z" fill="url(#gold)" opacity=".72"/>
+<path d="M960 665L968 1080H952Z" fill="#ffe17c" opacity=".45"/>
+
+<!-- perspective floor seams -->
+<g stroke="#8aa5b7" stroke-opacity=".12" stroke-width="2">
+  <path d="M200 1080L770 670"/>
+  <path d="M470 1080L835 670"/>
+  <path d="M720 1080L900 670"/>
+  <path d="M1200 1080L1020 670"/>
+  <path d="M1450 1080L1085 670"/>
+  <path d="M1720 1080L1150 670"/>
+</g>
+
+<!-- rink boards suggestion -->
+<path d="M0 622L400 648 0 720Z" fill="#d3dce1" opacity=".12"/>
+<path d="M1920 622L1520 648 1920 720Z" fill="#d3dce1" opacity=".12"/>
+<path d="M0 650L410 664" stroke="#ffbd00" stroke-opacity=".65" stroke-width="10"/>
+<path d="M1920 650L1510 664" stroke="#ffbd00" stroke-opacity=".65" stroke-width="10"/>
+
+<!-- fog bank -->
+<g filter="url(#blur)" opacity=".48">
+  <ellipse cx="260" cy="650" rx="350" ry="82" fill="#becbd2"/>
+  <ellipse cx="650" cy="665" rx="390" ry="68" fill="#8295a1"/>
+  <ellipse cx="1260" cy="665" rx="390" ry="68" fill="#8295a1"/>
+  <ellipse cx="1660" cy="650" rx="350" ry="82" fill="#becbd2"/>
+</g>
+<g filter="url(#soft)" opacity=".18">
+  <ellipse cx="120" cy="570" rx="190" ry="70" fill="#ffbd00"/>
+  <ellipse cx="1800" cy="570" rx="190" ry="70" fill="#ffbd00"/>
+</g>
+
+<!-- subtle vignette -->
+<rect x="0" y="0" width="1920" height="1080" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="70"/>
+</svg>

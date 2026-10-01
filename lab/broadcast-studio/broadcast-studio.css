@@ -2695,7 +2695,7 @@ body[data-background="gamenight"] .background-package-layer{
   display:block;
   background-image:
     linear-gradient(180deg,rgba(1,8,15,.02),rgba(1,8,15,.05)),
-    url("/lab/broadcast-studio/assets/game-night-background-v2.webp");
+    url("/lab/broadcast-studio/assets/game-night-background-v3.svg");
 }
 .screen.live-mode>.background-package-layer{
   display:none!important;
