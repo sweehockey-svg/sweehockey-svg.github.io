@@ -2674,3 +2674,37 @@ body[data-graphics="gamenight"] .live-commentator small{color:#ffbd00!important}
 body[data-graphics="gamenight"] .screen.scene-switching::after{
   background:linear-gradient(110deg,transparent 0 42%,rgba(255,189,0,.28) 48%,rgba(255,245,204,.16) 50%,transparent 58%)!important;
 }
+
+
+/* v141: dedicated background package layer.
+   Keeps background packages independent from scene/graphics styling. */
+.background-package-layer{
+  display:none;
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
+}
+body[data-background="gamenight"] .screen{
+  background:#020912!important;
+}
+body[data-background="gamenight"] .background-package-layer{
+  display:block;
+  background-image:
+    linear-gradient(180deg,rgba(1,8,15,.02),rgba(1,8,15,.05)),
+    url("/lab/broadcast-studio/assets/game-night-background.webp");
+}
+.screen.live-mode>.background-package-layer{
+  display:none!important;
+}
+.screen>.texture,
+.screen>.top,
+.screen>.scene,
+.screen>.bug,
+.screen>.live-team-strip,
+.screen>.live-commentators{
+  z-index:2;
+}
