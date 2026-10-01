@@ -2297,3 +2297,77 @@ html[lang="de"] .live-commentator{
   background:linear-gradient(100deg,rgba(16,14,15,.96),rgba(35,18,20,.94));
 }
 html[lang="de"] .live-commentator small{color:#f2c500}
+
+
+/* v139: split background packages from graphics packages.
+   Background package owns only the canvas/background texture.
+   Graphics package owns overlays, cards, typography and scene geometry. */
+.theme-control label+label{margin-top:10px}
+
+/* Broadcast = the existing default/background for each regional studio. */
+body[data-background="broadcast"] .screen{
+  /* Intentionally keep the existing base/regional Broadcast background. */
+}
+
+/* Arena background only. */
+body[data-background="arena"] .screen{
+  background:
+    radial-gradient(ellipse at 50% -12%,rgba(255,255,255,.13) 0,rgba(255,255,255,.035) 25%,transparent 48%),
+    radial-gradient(circle at 16% 42%,rgba(244,178,27,.10),transparent 28%),
+    radial-gradient(circle at 84% 42%,rgba(244,178,27,.08),transparent 28%),
+    linear-gradient(180deg,#101922 0%,#071019 58%,#04090e 100%)!important;
+}
+body[data-background="arena"] .texture{
+  opacity:.42!important;
+  background:
+    linear-gradient(90deg,transparent 49.8%,rgba(255,255,255,.055) 50%,transparent 50.2%),
+    repeating-linear-gradient(90deg,transparent 0 159px,rgba(255,255,255,.025) 160px),
+    linear-gradient(160deg,transparent 0 43%,rgba(244,178,27,.08) 43.2%,transparent 43.5%)!important;
+}
+
+/* Ice background only. */
+body[data-background="ice"] .screen{
+  background:
+    radial-gradient(circle at 50% 48%,rgba(151,220,244,.16),transparent 35%),
+    linear-gradient(135deg,#12384c 0%,#09283a 48%,#0d3447 100%)!important;
+}
+body[data-background="ice"] .texture{
+  opacity:.7!important;
+  background:
+    radial-gradient(circle at 50% 50%,transparent 0 112px,rgba(164,225,245,.10) 113px 116px,transparent 117px),
+    linear-gradient(90deg,transparent 49.85%,rgba(224,248,255,.13) 50%,transparent 50.15%),
+    repeating-linear-gradient(90deg,transparent 0 191px,rgba(196,234,246,.045) 192px)!important;
+}
+
+/* Impact background only. */
+body[data-background="impact"] .screen{
+  background:
+    linear-gradient(118deg,transparent 0 18%,rgba(255,180,0,.12) 18.1% 18.8%,transparent 18.9% 70%,rgba(255,180,0,.07) 70.1% 71.2%,transparent 71.3%),
+    radial-gradient(circle at 78% 18%,rgba(255,180,0,.12),transparent 25%),
+    linear-gradient(145deg,#111827 0%,#07111e 48%,#0b1018 100%)!important;
+}
+body[data-background="impact"] .texture{
+  opacity:.75!important;
+  background:
+    repeating-linear-gradient(118deg,transparent 0 110px,rgba(255,255,255,.025) 111px 112px),
+    linear-gradient(90deg,transparent 0 62%,rgba(255,180,0,.055) 62% 100%)!important;
+}
+
+/* OBS/root backing follows only the selected background package. */
+body.obs-preview[data-background="arena"],
+body.obs-preview[data-background="arena"] main,
+body.obs-preview[data-background="arena"] .workspace{background:#071019!important}
+body.obs-preview[data-background="ice"],
+body.obs-preview[data-background="ice"] main,
+body.obs-preview[data-background="ice"] .workspace{background:#09283a!important}
+body.obs-preview[data-background="impact"],
+body.obs-preview[data-background="impact"] main,
+body.obs-preview[data-background="impact"] .workspace{background:#07111e!important}
+
+/* Package 1: current graphics, now explicitly named Standard.
+   Future graphics packages can override overlays without touching data-background. */
+body[data-graphics="standard"] .screen{
+  --theme-accent:#f4b21b;
+  --theme-panel:#061521e8;
+  --theme-line:#365063;
+}
