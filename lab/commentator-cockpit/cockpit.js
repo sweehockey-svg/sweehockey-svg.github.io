@@ -1000,10 +1000,10 @@
 
   function swahnworksAboutCard() {
     return '<article class="drawer-card swahnworks-about">' +
-      '<span>SWAHNWORKS</span>' +
+      '<span>SWNWORKS</span>' +
       '<strong>Koncept & utveckling</strong>' +
-      '<p>Commentator Cockpit är utvecklad av Swahnworks.</p>' +
-      '<a href="mailto:swahnworks@gmail.com">swahnworks@gmail.com</a>' +
+      '<p>Sports technology & broadcast tools · Commentator Cockpit är utvecklad av SWNWORKS.</p>' +
+      '<a href="mailto:swnworks@gmail.com">swnworks@gmail.com</a>' +
     '</article>';
   }
 
