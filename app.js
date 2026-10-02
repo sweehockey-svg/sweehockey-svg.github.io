@@ -16848,6 +16848,130 @@ function SEH_initShop() {
     });
   }
 
+  function renderPlayerImageApprovals(host){
+    for(const row of playerImageApprovalRequests){
+      const item=document.createElement('article');
+      item.className='profile-admin-request-card profile-admin-image-request-card';
+      item.dataset.adminRequestKey='image:'+row.id;
+      const playerName=row.display_gamertag||faApprovalPlayerName(row.player_key);
+      const sizeKb=Math.max(1,Math.round((Number(row.size_bytes)||0)/1024));
+      const statusText=row.status==='editing'?'REDIGERAS':'NY SPELARBILD';
+      item.innerHTML=
+        '<header class="profile-admin-request-card__head"><div>'+
+          '<span class="profile-admin-type">'+escapeHtml(statusText)+'</span>'+
+          '<a class="profile-admin-player-link" href="#/spelare/'+encodeURIComponent(row.player_key||'')+'">'+escapeHtml(playerName)+' ↗</a>'+
+          '<small>'+escapeHtml(profileAdminDate(row.submitted_at))+'</small>'+
+        '</div><span class="profile-admin-waiting">'+(row.status==='editing'?'Redigeras':'Väntar')+'</span></header>'+
+        '<div style="display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:18px;align-items:start;padding:16px 0">'+
+          '<div><img data-player-image-preview alt="Originalbild från '+escapeHtml(playerName)+'" style="display:block;max-width:220px;max-height:260px;width:auto;height:auto;object-fit:contain;border:1px solid rgba(255,255,255,.15);border-radius:10px"><small data-player-image-preview-status style="display:block;margin-top:8px">Laddar originalbild…</small></div>'+
+          '<div><p><b>Original:</b> '+escapeHtml(row.original_filename||'Spelarbild')+'</p><p><b>Filtyp:</b> '+escapeHtml(row.mime_type||'–')+'</p><p><b>Storlek:</b> '+sizeKb+' KB</p><a data-player-image-original class="writer-secondary" href="#" target="_blank" rel="noopener noreferrer" hidden>Öppna original ↗</a></div>'+
+        '</div>'+
+        '<div style="display:grid;gap:10px;margin:10px 0 14px">'+
+          '<label><span>Färdigredigerad bild</span><input data-player-image-final type="file" accept="image/jpeg,image/png,image/webp"></label>'+
+          '<label><span>Kommentar till spelaren</span><input data-player-image-note maxlength="1000" placeholder="Valfritt"></label>'+
+          '<p data-player-image-status role="status"></p>'+
+        '</div>'+
+        '<footer class="profile-admin-request-card__footer">'+
+          '<button type="button" data-player-image-publish="'+row.id+'">Publicera bild</button>'+
+          (row.status!=='editing'?'<button type="button" class="writer-secondary" data-player-image-editing="'+row.id+'">Markera som redigeras</button>':'')+
+          '<button type="button" class="writer-secondary" data-player-image-reject="'+row.id+'">Avslå</button>'+
+        '</footer>';
+
+      const preview=item.querySelector('[data-player-image-preview]');
+      const previewStatus=item.querySelector('[data-player-image-preview-status]');
+      const originalLink=item.querySelector('[data-player-image-original]');
+      sb.storage.from('player-image-submissions').createSignedUrl(row.original_path,600).then(({data,error})=>{
+        if(!item.isConnected)return;
+        if(error||!data?.signedUrl){
+          if(previewStatus)previewStatus.textContent='Originalbilden kunde inte öppnas.';
+          return;
+        }
+        if(preview){
+          preview.src=data.signedUrl;
+          preview.onload=()=>{if(previewStatus)previewStatus.hidden=true;};
+        }
+        if(originalLink){
+          originalLink.href=data.signedUrl;
+          originalLink.hidden=false;
+        }
+      }).catch(()=>{if(previewStatus)previewStatus.textContent='Originalbilden kunde inte öppnas.';});
+
+      item.querySelector('[data-player-image-editing]')?.addEventListener('click',async(event)=>{
+        const button=event.currentTarget;
+        const statusEl=item.querySelector('[data-player-image-status]');
+        button.disabled=true;
+        if(statusEl)statusEl.textContent='Markerar som redigeras…';
+        try{
+          const result=await sb.rpc('seh_admin_set_player_image_status',{
+            p_request_id:Number(row.id),
+            p_status:'editing',
+            p_admin_note:item.querySelector('[data-player-image-note]')?.value||null
+          });
+          if(result.error)throw result.error;
+          await loadProfileApprovals();
+        }catch(error){
+          if(statusEl)statusEl.textContent='Fel: '+(error?.message||error);
+          button.disabled=false;
+        }
+      });
+
+      item.querySelector('[data-player-image-reject]')?.addEventListener('click',async(event)=>{
+        if(!confirm('Avslå spelarbilden från '+playerName+'?'))return;
+        const button=event.currentTarget;
+        const statusEl=item.querySelector('[data-player-image-status]');
+        button.disabled=true;
+        if(statusEl)statusEl.textContent='Avslår bildärendet…';
+        try{
+          const result=await sb.rpc('seh_admin_set_player_image_status',{
+            p_request_id:Number(row.id),
+            p_status:'rejected',
+            p_admin_note:item.querySelector('[data-player-image-note]')?.value||null
+          });
+          if(result.error)throw result.error;
+          await loadProfileApprovals();
+          await flushDiscordNotifications();
+        }catch(error){
+          if(statusEl)statusEl.textContent='Fel: '+(error?.message||error);
+          button.disabled=false;
+        }
+      });
+
+      item.querySelector('[data-player-image-publish]')?.addEventListener('click',async(event)=>{
+        const file=item.querySelector('[data-player-image-final]')?.files?.[0]||null;
+        const statusEl=item.querySelector('[data-player-image-status]');
+        if(!file){if(statusEl)statusEl.textContent='Välj den färdigredigerade bilden först.';return;}
+        if(!['image/jpeg','image/png','image/webp'].includes(String(file.type||''))){if(statusEl)statusEl.textContent='Den färdiga bilden måste vara JPG, PNG eller WEBP.';return;}
+        if(Number(file.size)>8*1024*1024){if(statusEl)statusEl.textContent='Den färdiga bilden får vara högst 8 MB.';return;}
+
+        const button=event.currentTarget;
+        button.disabled=true;
+        if(statusEl)statusEl.textContent='Laddar upp och publicerar…';
+        let finalPath='';
+        try{
+          const ext=(String(file.name||'').split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+          finalPath='published/'+row.player_key+'/'+Date.now()+'.'+ext;
+          const upload=await sb.storage.from('player-profile-images').upload(finalPath,file,{cacheControl:'3600',upsert:false,contentType:file.type});
+          if(upload.error)throw upload.error;
+          const publicUrl=sb.storage.from('player-profile-images').getPublicUrl(finalPath)?.data?.publicUrl||'';
+          const result=await sb.rpc('seh_admin_publish_player_image',{
+            p_request_id:Number(row.id),
+            p_final_path:finalPath,
+            p_public_url:publicUrl
+          });
+          if(result.error)throw result.error;
+          await loadProfileApprovals();
+          await flushDiscordNotifications();
+        }catch(error){
+          if(finalPath){try{await sb.storage.from('player-profile-images').remove([finalPath]);}catch(_){}}
+          if(statusEl)statusEl.textContent='Fel: '+(error?.message||error);
+          button.disabled=false;
+        }
+      });
+
+      host.append(item);
+    }
+  }
+
   function renderProfileApprovals(){
     const host=$('profileAdminRequests');
     const profileCount=profileApprovalRequests.length+playerImageApprovalRequests.length;
@@ -16971,6 +17095,7 @@ function SEH_initShop() {
       }
       host.append(item);
     }
+    renderPlayerImageApprovals(host);
   }
   async function loadProfileApprovals(){
     if(!sb||writer?.role!=='admin')return;
