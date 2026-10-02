@@ -10,7 +10,7 @@ const BASE = "https://stats.swehockey.se";
 const ALLOWED_COMPETITION_SOURCE_IDS = ["21043","21044"] as const;
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v10";
+const PARSER_VERSION = "game-sync-v11";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -163,11 +163,50 @@ async function discoverGameIdentity(game: any, homeName: string, awayName: strin
 
         foundGameNumber = row.titles.find((v:string) => /^90\d{6}$/.test(v)) || foundGameNumber;
         const href = row.links.map((l:any) => l.href).join(" ");
-        const id = href.match(/\/Game\/Events\/(\d+)/)?.[1] || null;
+        const id = href.match(/\/Game\/(?:Events|LineUps|Reports(?:\/[^/]+)?)\/(\d+)/i)?.[1] || null;
         if (id) foundEventId = id;
       }
     });
     await logFetch(item, item.url.includes("/Live/") ? "game_identity_live" : "game_identity_schedule", game.id);
+  }
+
+  if (!foundEventId && /^\d+$/.test(String(foundGameNumber || "")) && game.competition_id) {
+    const { data:knownPairs, error:knownPairsError } = await admin.from("games")
+      .select("game_number,source_event_game_id")
+      .eq("competition_id",game.competition_id)
+      .not("game_number","is",null)
+      .not("source_event_game_id","is",null)
+      .limit(100);
+    if (knownPairsError) throw knownPairsError;
+
+    const offsets = new Map<number,number>();
+    for (const row of knownPairs || []) {
+      const gameNumber = Number(row.game_number);
+      const eventId = Number(row.source_event_game_id);
+      if (!Number.isInteger(gameNumber) || !Number.isInteger(eventId) || gameNumber <= eventId) continue;
+      const offset = gameNumber - eventId;
+      offsets.set(offset,(offsets.get(offset) || 0) + 1);
+    }
+
+    const ranked = [...offsets.entries()].sort((a,b)=>b[1]-a[1]);
+    const best = ranked[0] || null;
+    if (best && best[1] >= 3) {
+      const candidate = String(Number(foundGameNumber) - best[0]);
+      if (/^\d+$/.test(candidate) && Number(candidate) > 0) {
+        try {
+          const candidatePage = await fetchHtml(`/Game/Events/${candidate}`);
+          const bodyText = clean(cheerio.load(candidatePage.text)("body").text());
+          const namesMatch = bodyText.includes(homeName) && bodyText.includes(awayName);
+          const gameNumberMatch = bodyText.includes(String(foundGameNumber));
+          if (namesMatch || gameNumberMatch) {
+            foundEventId = candidate;
+            await logFetch(candidatePage,"game_identity_inferred",game.id);
+          }
+        } catch (error) {
+          console.warn("Could not validate inferred Swehockey event id",candidate,error);
+        }
+      }
+    }
   }
 
   const update:any = {
