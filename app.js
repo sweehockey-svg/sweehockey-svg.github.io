@@ -6974,7 +6974,7 @@ function SEH_initTeam() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-09-24-v1285-team-leadership";
+    const APP_BUILD = "2026-10-03-v1286-approved-player-images";
     const config = window.EHOCKEY_CONFIG || {};
   
     console.info("eHockey Master team build:", APP_BUILD);
@@ -7857,10 +7857,59 @@ function SEH_initTeam() {
     }
 
     function localPlayerImageUrl(player) {
+      const approvedImage = String(
+        player?.approvedImageUrl || player?.approved_image_url || ""
+      ).trim();
+      if (/^https?:\/\//i.test(approvedImage)) return approvedImage;
+
       const sportsGamerId = String(player.sportsGamerPlayerUrl || "")
         .match(/\/players\/(\d+)/i)?.[1];
       const localImage = normalizeLocalPortraitPath(player.playerImage);
       return SEH_playerImageUrl(sportsGamerId, localImage);
+    }
+
+    async function hydrateApprovedPlayerImages(players = []) {
+      const targets = (players || []).filter((player) => player?.playerKey);
+      const keys = [...new Set(
+        targets
+          .map((player) => String(player.playerKey).trim())
+          .filter(Boolean)
+      )];
+      if (!keys.length) return players;
+
+      const approved = new Map();
+      for (let offset = 0; offset < keys.length; offset += 50) {
+        const chunk = keys.slice(offset, offset + 50);
+        const params = new URLSearchParams({
+          select: "player_key,image_url",
+          player_key: `in.(${chunk.join(",")})`,
+          limit: String(chunk.length)
+        });
+
+        try {
+          const rows = await fetchJson(
+            "v_ehockey_player_self_profiles_public",
+            params
+          );
+          for (const row of rows) {
+            const key = String(row?.player_key || "").trim();
+            const url = String(row?.image_url || "").trim();
+            if (key && url) approved.set(key, url);
+          }
+        } catch (error) {
+          console.warn(
+            `${APP_BUILD}: kunde inte hämta adminpublicerade spelarbilder på lagsidan.`,
+            error
+          );
+          return players;
+        }
+      }
+
+      for (const player of targets) {
+        player.approvedImageUrl =
+          approved.get(String(player.playerKey).trim()) || "";
+      }
+      return players;
     }
   
     function playerPageUrl(playerKey, gamertag = "") {
