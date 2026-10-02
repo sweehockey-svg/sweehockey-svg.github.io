@@ -137,6 +137,19 @@
           </div>
         </div>
 
+        <div class="control-section" id="rosterSeasonSection">
+          <div class="section-title"><strong>Spelarpool</strong><span id="rosterSeasonHint">AKTUELL TRUPP</span></div>
+          <div class="field full">
+            <label for="rosterSeasonSelect">SÄSONG</label>
+            <select id="rosterSeasonSelect">
+              <option value="current">Aktuell roster</option>
+            </select>
+          </div>
+          <div class="generator-note" style="margin:10px 0 0">
+            Admin kan välja aktuell roster, en specifik historisk säsong eller alla spelare som representerat laget. Kaptener använder alltid lagets aktuella SCL-roster.
+          </div>
+        </div>
+
         <div class="control-section" id="presentationRosterSection" hidden>
           <div class="section-title"><strong>Lagtrupp</strong><span id="presentationRosterHint">0 / 12 valda</span></div>
           <div class="generator-note" style="margin:0 0 12px">Välj upp till 12 spelare från lagets registrerade SCL 27-roster. Position hämtas automatiskt. Nummer är valfritt.</div>
@@ -189,7 +202,7 @@
           <button id="resetButton" class="ghost" type="button">Återställ testdata</button>
         </div>
 
-        <p class="generator-note"><strong>Adminläge:</strong> matchmallarna använder ECL 27-lagbygget. Team Presentation använder registrerade SCL 27-lag och låter dig välja upp till 13 spelare från lagets aktuella SCL-roster.</p>
+        <p class="generator-note"><strong>Adminläge:</strong> välj aktuell roster, en historisk säsong eller alla spelare för det valda laget. <strong>Kaptenläge:</strong> eget lag är låst och spelarvalen kommer alltid från den aktuella SCL-rosten.</p>
       </aside>
 
       <section class="preview-panel">
@@ -211,6 +224,6 @@
   <script src="../../ecl27-team-builds-v2.js?v=shared-model-1"></script>
   <script src="../../ecl27-current-roster-snapshot.js?v=20260921-1"></script>
   <script src="../../match-graphics-player-stats-snapshot.js?v=20260922-1"></script>
-  <script src="match-image-generator.js?v=71"></script>
+  <script src="match-image-generator.js?v=72-admin-season-rosters"></script>
 </body>
 </html>
