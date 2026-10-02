@@ -10,7 +10,7 @@ const BASE = "https://stats.swehockey.se";
 const ALLOWED_COMPETITION_SOURCE_IDS = ["21043","21044"] as const;
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v14";
+const PARSER_VERSION = "game-sync-v15";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -1147,6 +1147,49 @@ async function syncEvents(game:any, eventId:string, htmlItem:any, roster:any[]) 
 
   const summaryStats = parseSummaryStats(htmlItem.text, game, lastGoal);
   if (summaryStats.length) {
+    const { data: existingStats, error: existingStatsError } = await admin.from("team_game_stats")
+      .select("team_id,shots,saves,pim,power_play_pct,power_play_seconds,source_fragment")
+      .eq("game_id",game.id);
+    if (existingStatsError) throw existingStatsError;
+
+    const existingByTeam=new Map((existingStats || []).map((row:any)=>[row.team_id,row]));
+    const changedAt=new Date().toISOString();
+    const same=(a:any,b:any)=>JSON.stringify(a)===JSON.stringify(b);
+    const hasValue=(value:any)=>Array.isArray(value)
+      ? value.some((part:any)=>part!==null&&part!==undefined&&part!=="")
+      : value!==null&&value!==undefined&&value!=="";
+
+    for (const row of summaryStats) {
+      const previous=existingByTeam.get(row.team_id);
+      const priorChanged=previous?.source_fragment?.stat_changed_at || {};
+      const currentValues:any={
+        shots:row.shots,
+        saves:row.saves,
+        pim:row.pim,
+        pp:[row.power_play_pct,row.power_play_seconds]
+      };
+      const previousValues:any={
+        shots:previous?.shots,
+        saves:previous?.saves,
+        pim:previous?.pim,
+        pp:[previous?.power_play_pct,previous?.power_play_seconds]
+      };
+      const statChangedAt:any={};
+      for (const key of ["shots","saves","pim","pp"]) {
+        if (!hasValue(currentValues[key])) {
+          statChangedAt[key]=priorChanged[key] || null;
+        } else if (!previous || !same(currentValues[key],previousValues[key])) {
+          statChangedAt[key]=changedAt;
+        } else {
+          statChangedAt[key]=priorChanged[key] || changedAt;
+        }
+      }
+      row.source_fragment={
+        ...(row.source_fragment || {}),
+        stat_changed_at:statChangedAt
+      };
+    }
+
     const { error: statsError } = await admin.from("team_game_stats")
       .upsert(summaryStats,{onConflict:"game_id,team_id"});
     if (statsError) throw statsError;
