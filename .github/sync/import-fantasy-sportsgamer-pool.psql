@@ -95,7 +95,8 @@ cross join fantasy_pool_meta m
 on conflict (competition_id,source_league_id,sports_gamer_team_id)
 do update set
   team_name=excluded.team_name,
-  team_logo_url=coalesce(excluded.team_logo_url,public.ehockey_fantasy_team_pool.team_logo_url),
+  -- NULL is meaningful: the current league registration has no logo.
+  team_logo_url=excluded.team_logo_url,
   registered_at=coalesce(excluded.registered_at,public.ehockey_fantasy_team_pool.registered_at),
   is_available=true,
   source_snapshot=excluded.source_snapshot,
@@ -266,7 +267,8 @@ do update set
   source_snapshot=excluded.source_snapshot,
   source_updated_at=now(),
   country_code=coalesce(excluded.country_code,public.ehockey_fantasy_player_pool.country_code),
-  team_logo_url=coalesce(excluded.team_logo_url,public.ehockey_fantasy_player_pool.team_logo_url),
+  -- Keep Fantasy branding aligned with the current league registration.
+  team_logo_url=excluded.team_logo_url,
   updated_at=now();
 
 update public.ehockey_fantasy_player_pool p
