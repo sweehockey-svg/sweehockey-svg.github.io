@@ -10,7 +10,7 @@ const BASE = "https://stats.swehockey.se";
 const ALLOWED_COMPETITION_SOURCE_IDS = ["21043","21044"] as const;
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v11";
+const PARSER_VERSION = "game-sync-v12";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -1127,7 +1127,7 @@ async function syncEvents(game:any, eventId:string, htmlItem:any, roster:any[]) 
   }
   if (latestEvent) {
     update.period = latestEvent.period;
-    update.clock_display = latestEvent.clock_display;
+    update.clock_display = latestEvent.time;
   }
   if (/Final Score/i.test(bodyText)) update.status = "final";
   else if (rows.length) update.status = "live";
