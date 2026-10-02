@@ -16559,6 +16559,7 @@ function SEH_initShop() {
   const emailFor = (v) => { const n = String(v || '').trim().toLowerCase(); return /^[a-z0-9._-]{2,40}$/.test(n) ? n + '@writers.svenskehockey.se' : ''; };
 
   let faDirectory = [], faEntries = [], faLinkRequests = [], faApprovedLinks = [], faApprovalRequests = [], profileApprovalRequests = [], profileApprovalBaselines = new Map(), faSelectedKey = '', faSelectedId = 0, faManualName = '';
+  const profileApplicationDrafts = new Map();
   let playerAdminAutoTimer = 0, playerAdminRefreshInFlight = false, playerAdminHasSnapshot = false, playerAdminLastPendingKeys = new Set(), playerAdminLastRefreshAt = 0, playerAdminNewStateTimer = 0;
   const faClean = (v) => String(v ?? '').trim();
   const faToday = () => new Date().toLocaleDateString('sv-SE');
@@ -16814,10 +16815,33 @@ function SEH_initShop() {
       return `<article class="profile-admin-field${decided?` is-${decision}`:''}" data-profile-field="${escapeHtml(change.key)}"><div class="profile-admin-field__head"><span>${escapeHtml(change.label)}</span>${decided?`<strong class="profile-admin-field-status is-${decision}">${decision==='approved'?'Godkänd':'Avslagen'}</strong>`:'<strong class="profile-admin-field-status">Väntar</strong>'}</div><div class="profile-admin-field__compare"><div><small>NU</small>${profileChangeValueHtml(change.key,change.from,'from')}</div><i aria-hidden="true">→</i><div><small>FÖRESLAGET</small>${profileChangeValueHtml(change.key,change.to,'to')}</div></div>${decided?'':`<div class="profile-admin-field__actions"><button type="button" data-profile-field-approve="${row.id}" data-profile-field-key="${escapeHtml(change.key)}">✓ Godkänn</button><button type="button" class="writer-secondary" data-profile-field-reject="${row.id}" data-profile-field-key="${escapeHtml(change.key)}">Avslå</button></div>`}</article>`;
     }).join('')}</div>`;
   }
+  function captureProfileApplicationDrafts(){
+    const host=$('profileAdminRequests');
+    if(!host)return;
+    host.querySelectorAll('[data-admin-request-key^="profile:"]').forEach((item)=>{
+      const id=Number(String(item.dataset.adminRequestKey||'').split(':')[1]);
+      if(!id)return;
+      const search=item.querySelector('[data-application-search]');
+      const select=item.querySelector('[data-application-player]');
+      const note=item.querySelector('[data-application-note]');
+      if(!search&&!select&&!note)return;
+      const selected=select?.selectedOptions?.[0]||null;
+      profileApplicationDrafts.set(id,{
+        search:search?.value||'',
+        playerKey:select?.value||'',
+        playerLabel:select?.value ? (selected?.textContent||'') : '',
+        note:note?.value||''
+      });
+    });
+  }
+
   function renderProfileApprovals(){
     const host=$('profileAdminRequests');
     if($('profileAdminRequestCount'))$('profileAdminRequestCount').textContent=String(profileApprovalRequests.length);
     if(!host)return;
+    captureProfileApplicationDrafts();
+    const pendingIds=new Set(profileApprovalRequests.map((row)=>Number(row.id)));
+    for(const id of profileApplicationDrafts.keys())if(!pendingIds.has(Number(id)))profileApplicationDrafts.delete(id);
     host.replaceChildren();
     if(!profileApprovalRequests.length){const p=document.createElement('p');p.className='fa-admin-empty player-admin-empty-state';p.textContent='Inga profilärenden väntar.';host.append(p);return;}
     for(const row of profileApprovalRequests){
@@ -16825,12 +16849,52 @@ function SEH_initShop() {
         const p=row.payload||{};
         const item=document.createElement('article');item.className='fa-admin-request-row profile-admin-request-row';item.dataset.adminRequestKey=`profile:${row.id}`;
         item.innerHTML=`<div><span>${row.request_type==='find_player'?'HJÄLP ATT HITTA SPELARKORT':'ANSÖKAN OM SPELARKORT'}</span><strong>${escapeHtml(p.gamertag||'')}</strong>${[['Discord',p.discord_username],['Discord-ID',p.discord_user_id],['Plattform',p.platform],['Profillänk',p.profile_url],['Senaste lag',p.last_team],['Kommentar',p.comment]].map(([label,value])=>`<p><b>${label}:</b> ${escapeHtml(value||'–')}</p>`).join('')}<p>Skapa eventuell saknad spelare i ordinarie spelarhantering först. Välj sedan rätt befintligt kort för godkänd koppling.</p><label>Sök spelarkort <input data-application-search placeholder="Gamertag" maxlength="100"></label><select data-application-player aria-label="Spelarkort att koppla"><option value="">Välj spelarkort</option></select><label>Kommentar till spelaren <input data-application-note maxlength="1000"></label><p data-application-status role="status"></p></div><div class="fa-admin-request-actions"><button type="button" data-profile-request-approve="${row.id}">Godkänn och koppla</button><button type="button" class="writer-secondary" data-profile-request-reject="${row.id}">Avslå</button></div>`;
+        const draft=profileApplicationDrafts.get(Number(row.id))||null;
+        const searchInput=item.querySelector('[data-application-search]');
+        const playerSelect=item.querySelector('[data-application-player]');
+        const noteInput=item.querySelector('[data-application-note]');
+        if(draft){
+          if(searchInput)searchInput.value=draft.search||'';
+          if(noteInput)noteInput.value=draft.note||'';
+          if(playerSelect&&draft.playerKey){
+            playerSelect.add(new Option(draft.playerLabel||draft.playerKey,draft.playerKey,true,true));
+          }
+        }
+        playerSelect?.addEventListener('change',()=>{
+          const selected=playerSelect.selectedOptions?.[0]||null;
+          const current=profileApplicationDrafts.get(Number(row.id))||{};
+          profileApplicationDrafts.set(Number(row.id),{
+            ...current,
+            search:searchInput?.value||'',
+            playerKey:playerSelect.value||'',
+            playerLabel:playerSelect.value?(selected?.textContent||''):'',
+            note:noteInput?.value||''
+          });
+        });
+        noteInput?.addEventListener('input',()=>{
+          const current=profileApplicationDrafts.get(Number(row.id))||{};
+          profileApplicationDrafts.set(Number(row.id),{
+            ...current,
+            search:searchInput?.value||'',
+            playerKey:playerSelect?.value||'',
+            playerLabel:playerSelect?.value?(playerSelect.selectedOptions?.[0]?.textContent||''):'',
+            note:noteInput.value||''
+          });
+        });
         let timer=0,sequence=0;
         item.querySelector('[data-application-search]').oninput=event=>{
           clearTimeout(timer);
           const query=event.target.value.trim(),version=++sequence;
           const select=item.querySelector('[data-application-player]');
           const statusEl=item.querySelector('[data-application-status]');
+          const currentDraft=profileApplicationDrafts.get(Number(row.id))||{};
+          profileApplicationDrafts.set(Number(row.id),{
+            ...currentDraft,
+            search:event.target.value,
+            playerKey:'',
+            playerLabel:'',
+            note:noteInput?.value||''
+          });
           select.replaceChildren(new Option('Välj spelarkort',''));
           if(query.length<2){if(statusEl)statusEl.textContent='';return;}
 
@@ -16866,6 +16930,13 @@ function SEH_initShop() {
 
             if(players.length===1){
               select.selectedIndex=1;
+              const only=select.selectedOptions?.[0]||null;
+              profileApplicationDrafts.set(Number(row.id),{
+                search:searchInput?.value||query,
+                playerKey:select.value||'',
+                playerLabel:only?.textContent||'',
+                note:noteInput?.value||''
+              });
             }
             if(statusEl){
               statusEl.textContent=players.length
@@ -16983,6 +17054,12 @@ function SEH_initShop() {
   }
   async function refreshPlayerAdminQueues({announce=true}={}){
     if(!isPlayerAdminPage||!sb||writer?.role!=='admin'||playerAdminRefreshInFlight)return;
+    const active=document.activeElement;
+    if(active?.closest?.('[data-admin-request-key^="profile:"]')&&active.matches('input,select,textarea')){
+      playerAdminSetLiveState('Auto-uppdateringen väntar medan du arbetar i ett profilärende.','');
+      playerAdminStampRefresh();
+      return;
+    }
     playerAdminRefreshInFlight=true;
     const button=$('adminPlayerRefreshNow');
     if(button)button.disabled=true;
