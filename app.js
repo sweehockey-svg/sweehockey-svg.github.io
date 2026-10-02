@@ -17173,16 +17173,32 @@ function SEH_initShop() {
     const application=profileApprovalRequests.find(row=>Number(row.id)===Number(id)&&['find_player','new_player'].includes(row.request_type));
     if(application){
       const item=document.querySelector(`[data-admin-request-key="profile:${Number(id)}"]`);
-      const key=item?.querySelector('[data-application-player]')?.value||null;
-      if(decision==='approved'&&!key){faSetStatus('Välj ett befintligt spelarkort först.','error');return;}
-      if(decision==='approved'&&!confirm(`Godkänn Discord-kopplingen till spelarkort ${key}?`))return;
+      const select=item?.querySelector('[data-application-player]');
+      const statusEl=item?.querySelector('[data-application-status]');
+      const key=select?.value||null;
+      const playerLabel=select?.selectedOptions?.[0]?.textContent?.trim()||key||'valt spelarkort';
+      if(decision==='approved'&&!key){
+        if(statusEl)statusEl.textContent='Välj ett befintligt spelarkort först.';
+        faSetStatus('Välj ett befintligt spelarkort först.','error');
+        return;
+      }
+      if(decision==='approved'&&!confirm(`Godkänn Discord-kopplingen till ${playerLabel}?`))return;
       const buttons=item?.querySelectorAll('button')||[];buttons.forEach(button=>button.disabled=true);
+      if(statusEl)statusEl.textContent=decision==='approved'?'Kopplar spelarkortet…':'Avslår ansökan…';
       try{
         const result=await sb.rpc('seh_review_player_application',{p_id:Number(id),p_decision:decision,p_player_key:key,p_note:item?.querySelector('[data-application-note]')?.value||null});
         if(result.error)throw result.error;
+        if(statusEl)statusEl.textContent=decision==='approved'?'Klart. Spelarkortet är kopplat.':'Ansökan är avslagen.';
         faSetStatus(decision==='approved'?'Ansökan godkänd och spelarkortet kopplat.':'Ansökan avslagen.','success');
-        await loadFreeAgentApprovals();await flushDiscordNotifications();
-      }catch(error){faSetStatus('Fel: '+error.message,'error');buttons.forEach(button=>button.disabled=false);}
+        profileApplicationDrafts.delete(Number(id));
+        await loadFreeAgentApprovals();
+        await flushDiscordNotifications();
+      }catch(error){
+        const message='Fel: '+(error?.message||error);
+        if(statusEl)statusEl.textContent=message;
+        faSetStatus(message,'error');
+        buttons.forEach(button=>button.disabled=false);
+      }
       return;
     }
     faSetStatus(decision==='approved'?'Behandlar profilärendet…':'Avslår profilärendet…','working');
