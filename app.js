@@ -16558,7 +16558,7 @@ function SEH_initShop() {
   const rpcRow = (value) => Array.isArray(value) ? value[0] : value;
   const emailFor = (v) => { const n = String(v || '').trim().toLowerCase(); return /^[a-z0-9._-]{2,40}$/.test(n) ? n + '@writers.svenskehockey.se' : ''; };
 
-  let faDirectory = [], faEntries = [], faLinkRequests = [], faApprovedLinks = [], faApprovalRequests = [], profileApprovalRequests = [], profileApprovalBaselines = new Map(), faSelectedKey = '', faSelectedId = 0, faManualName = '';
+  let faDirectory = [], faEntries = [], faLinkRequests = [], faApprovedLinks = [], faApprovalRequests = [], profileApprovalRequests = [], profileApprovedApplications = [], profileApprovalBaselines = new Map(), faSelectedKey = '', faSelectedId = 0, faManualName = '';
   const profileApplicationDrafts = new Map();
   let playerAdminAutoTimer = 0, playerAdminRefreshInFlight = false, playerAdminHasSnapshot = false, playerAdminLastPendingKeys = new Set(), playerAdminLastRefreshAt = 0, playerAdminNewStateTimer = 0;
   const faClean = (v) => String(v ?? '').trim();
@@ -16721,6 +16721,19 @@ function SEH_initShop() {
     });
   }
   function faApprovalPlayerName(key){return faDirectoryMap().get(String(key))?.display_gamertag||String(key||'Okänd spelare');}
+  function faApprovedDiscordName(row){
+    const stored=faClean(row?.discord_username);
+    if(stored && stored.toLowerCase()!=='discord')return stored;
+    const application=profileApprovedApplications.find((item)=>
+      String(item.user_id)===String(row?.user_id)
+      && String(item.player_key||'')===String(row?.approved_player_key||'')
+    );
+    return faClean(application?.payload?.discord_username)
+      || faClean(application?.payload?.discord_name)
+      || faClean(application?.payload?.gamertag)
+      || stored
+      || 'Discord-konto';
+  }
   function faRenderApprovals(){
     const linkHost=$('faAdminLinkRequests'),approvedHost=$('faAdminApprovedLinks'),requestHost=$('faAdminRequests');
     if($('faAdminLinkRequestCount'))$('faAdminLinkRequestCount').textContent=String(faLinkRequests.length);
@@ -16735,7 +16748,7 @@ function SEH_initShop() {
     if(approvedHost){
       approvedHost.replaceChildren();
       if(!faApprovedLinks.length){const p=document.createElement('p');p.className='fa-admin-empty';p.textContent='Inga godkända Discord-kopplingar ännu.';approvedHost.append(p);}
-      for(const row of faApprovedLinks){const item=document.createElement('article');item.className='fa-admin-request-row';item.innerHTML=`<div><span>GODKÄND KOPPLING</span><strong>${escapeHtml(row.discord_username||row.discord_user_id||'Discord-konto')}</strong><small>kopplad till <a class="fa-admin-player-link" href="#/spelare/${encodeURIComponent(row.approved_player_key||'')}">${escapeHtml(faApprovalPlayerName(row.approved_player_key))} ↗</a></small></div><div class="fa-admin-request-actions"><button type="button" class="writer-secondary fa-admin-delete" data-fa-link-unlink="${escapeHtml(row.user_id)}">Ta bort koppling</button></div>`;approvedHost.append(item);}
+      for(const row of faApprovedLinks){const item=document.createElement('article');item.className='fa-admin-request-row';item.innerHTML=`<div><span>GODKÄND KOPPLING</span><strong>${escapeHtml(faApprovedDiscordName(row))}</strong><small>kopplad till <a class="fa-admin-player-link" href="#/spelare/${encodeURIComponent(row.approved_player_key||'')}">${escapeHtml(faApprovalPlayerName(row.approved_player_key))} ↗</a></small></div><div class="fa-admin-request-actions"><button type="button" class="writer-secondary fa-admin-delete" data-fa-link-unlink="${escapeHtml(row.user_id)}">Ta bort koppling</button></div>`;approvedHost.append(item);}
     }
     if(requestHost){
       requestHost.replaceChildren();
@@ -17210,13 +17223,28 @@ function SEH_initShop() {
   }
   async function loadFreeAgentApprovals(){
     if(!sb||writer?.role!=='admin')return;
-    const [linksResult,approvedLinksResult,requestsResult]=await Promise.all([
+    const [linksResult,approvedLinksResult,requestsResult,approvedApplicationsResult]=await Promise.all([
       sb.from('ehockey_discord_player_links').select('*').eq('status','pending').order('updated_at',{ascending:true}),
       sb.from('ehockey_discord_player_links').select('*').eq('status','approved').not('approved_player_key','is',null).order('updated_at',{ascending:false}),
-      sb.from('ehockey_free_agent_requests').select('*').eq('status','pending').order('submitted_at',{ascending:true})
+      sb.from('ehockey_free_agent_requests').select('*').eq('status','pending').order('submitted_at',{ascending:true}),
+      sb.from('ehockey_player_profile_requests')
+        .select('user_id,player_key,payload,reviewed_at')
+        .eq('status','approved')
+        .in('request_type',['find_player','new_player'])
+        .order('reviewed_at',{ascending:false})
+        .limit(500)
     ]);
-    if(linksResult.error)throw linksResult.error;if(approvedLinksResult.error)throw approvedLinksResult.error;if(requestsResult.error)throw requestsResult.error;
-    faLinkRequests=linksResult.data||[];faApprovedLinks=approvedLinksResult.data||[];faApprovalRequests=requestsResult.data||[];faRenderApprovals();filterApprovedLinks();await loadProfileApprovals();
+    if(linksResult.error)throw linksResult.error;
+    if(approvedLinksResult.error)throw approvedLinksResult.error;
+    if(requestsResult.error)throw requestsResult.error;
+    if(approvedApplicationsResult.error)throw approvedApplicationsResult.error;
+    faLinkRequests=linksResult.data||[];
+    faApprovedLinks=approvedLinksResult.data||[];
+    faApprovalRequests=requestsResult.data||[];
+    profileApprovedApplications=approvedApplicationsResult.data||[];
+    faRenderApprovals();
+    filterApprovedLinks();
+    await loadProfileApprovals();
   }
   async function faReviewLink(userId,decision){
     faSetStatus(decision==='approved'?'Godkänner spelarkoppling…':'Avslår spelarkoppling…','working');
