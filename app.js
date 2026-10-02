@@ -16558,7 +16558,7 @@ function SEH_initShop() {
   const rpcRow = (value) => Array.isArray(value) ? value[0] : value;
   const emailFor = (v) => { const n = String(v || '').trim().toLowerCase(); return /^[a-z0-9._-]{2,40}$/.test(n) ? n + '@writers.svenskehockey.se' : ''; };
 
-  let faDirectory = [], faEntries = [], faLinkRequests = [], faApprovedLinks = [], faApprovalRequests = [], profileApprovalRequests = [], profileApprovedApplications = [], profileApprovalBaselines = new Map(), faSelectedKey = '', faSelectedId = 0, faManualName = '';
+  let faDirectory = [], faEntries = [], faLinkRequests = [], faApprovedLinks = [], faApprovalRequests = [], profileApprovalRequests = [], playerImageApprovalRequests = [], profileApprovedApplications = [], profileApprovalBaselines = new Map(), faSelectedKey = '', faSelectedId = 0, faManualName = '';
   const profileApplicationDrafts = new Map();
   let playerAdminAutoTimer = 0, playerAdminRefreshInFlight = false, playerAdminHasSnapshot = false, playerAdminLastPendingKeys = new Set(), playerAdminLastRefreshAt = 0, playerAdminNewStateTimer = 0;
   const faClean = (v) => String(v ?? '').trim();
@@ -16850,13 +16850,14 @@ function SEH_initShop() {
 
   function renderProfileApprovals(){
     const host=$('profileAdminRequests');
-    if($('profileAdminRequestCount'))$('profileAdminRequestCount').textContent=String(profileApprovalRequests.length);
+    const profileCount=profileApprovalRequests.length+playerImageApprovalRequests.length;
+    if($('profileAdminRequestCount'))$('profileAdminRequestCount').textContent=String(profileCount);
     if(!host)return;
     captureProfileApplicationDrafts();
     const pendingIds=new Set(profileApprovalRequests.map((row)=>Number(row.id)));
     for(const id of profileApplicationDrafts.keys())if(!pendingIds.has(Number(id)))profileApplicationDrafts.delete(id);
     host.replaceChildren();
-    if(!profileApprovalRequests.length){const p=document.createElement('p');p.className='fa-admin-empty player-admin-empty-state';p.textContent='Inga profilärenden väntar.';host.append(p);return;}
+    if(!profileCount){const p=document.createElement('p');p.className='fa-admin-empty player-admin-empty-state';p.textContent='Inga profilärenden väntar.';host.append(p);return;}
     for(const row of profileApprovalRequests){
       if(['find_player','new_player'].includes(row.request_type)){
         const p=row.payload||{};
@@ -16973,9 +16974,14 @@ function SEH_initShop() {
   }
   async function loadProfileApprovals(){
     if(!sb||writer?.role!=='admin')return;
-    const result=await sb.from('ehockey_player_profile_requests').select('*').eq('status','pending').order('submitted_at',{ascending:true});
+    const [result,imageResult]=await Promise.all([
+      sb.from('ehockey_player_profile_requests').select('*').eq('status','pending').order('submitted_at',{ascending:true}),
+      sb.rpc('seh_admin_list_player_image_requests')
+    ]);
     if(result.error)throw result.error;
+    if(imageResult.error)throw imageResult.error;
     profileApprovalRequests=result.data||[];
+    playerImageApprovalRequests=Array.isArray(imageResult.data)?imageResult.data:[];
     profileApprovalBaselines=new Map();
     const keys=[...new Set(profileApprovalRequests.map((row)=>faClean(row.player_key)).filter(Boolean))];
     if(keys.length){
@@ -17009,17 +17015,15 @@ function SEH_initShop() {
     try{playerAdminActiveView=sessionStorage.getItem('seh_admin_player_view')||'queue';}catch(_){playerAdminActiveView='queue';}setPlayerAdminView(playerAdminActiveView);setPlayerAdminQueueFilter('all');updatePlayerAdminCounters();
   }
   function playerAdminPendingKeys(){
-    const imageKeys=Array.isArray(window.SEH_playerImagePendingKeys)?window.SEH_playerImagePendingKeys:[];
     return new Set([
       ...faLinkRequests.map((row)=>`link:${row.user_id}`),
       ...faApprovalRequests.map((row)=>`fa:${row.id}`),
       ...profileApprovalRequests.map((row)=>`profile:${row.id}`),
-      ...imageKeys
+      ...playerImageApprovalRequests.map((row)=>`image:${row.id}`)
     ]);
   }
   function updatePlayerAdminCounters(){
-    const imageCount=Number.isFinite(Number(window.SEH_playerImagePendingCount))?Number(window.SEH_playerImagePendingCount):0;
-    const profileCount=profileApprovalRequests.length+imageCount;
+    const profileCount=profileApprovalRequests.length+playerImageApprovalRequests.length;
     const total=faLinkRequests.length+faApprovalRequests.length+profileCount;
     const pendingBreakdown={
       links:faLinkRequests.length,
@@ -17068,7 +17072,7 @@ function SEH_initShop() {
   async function refreshPlayerAdminQueues({announce=true}={}){
     if(!isPlayerAdminPage||!sb||writer?.role!=='admin'||playerAdminRefreshInFlight)return;
     const active=document.activeElement;
-    if(active?.closest?.('[data-admin-request-key^="profile:"]')&&active.matches('input,select,textarea')){
+    if(active?.closest?.('[data-admin-request-key^="profile:"],[data-admin-request-key^="image:"]')&&active.matches('input,select,textarea')){
       playerAdminSetLiveState('Auto-uppdateringen väntar medan du arbetar i ett profilärende.','');
       playerAdminStampRefresh();
       return;
