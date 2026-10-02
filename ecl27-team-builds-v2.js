@@ -985,7 +985,9 @@
   }
 
   function filteredTeams() {
-    return sortedTeams().filter((team) => {
+    return sortedTeams()
+      .filter((team) => team.officialScl)
+      .filter((team) => {
       const status = statusFor(team);
       if (state.division !== "all" && team.division !== state.division) return false;
       if (state.status !== "all" && status.key !== state.status) return false;
@@ -1004,10 +1006,11 @@
     const host = $("#ecl27v2Grid");
     if (!host) return;
     const teams = filteredTeams();
+    const totalSclTeams = model.teams.filter((team) => team.officialScl).length;
     host.innerHTML = teams.map(renderTeamCard).join("");
     applyTeamPowerToDom(host);
     const result = $("#ecl27v2Result");
-    if (result) result.textContent = `${teams.length} av ${model.teams.length} lag/projekt`;
+    if (result) result.textContent = `${teams.length} av ${totalSclTeams} SCL-lag`;
   }
 
   function springBasePlayers(team) {
@@ -1679,8 +1682,8 @@
     section.innerHTML = `<header class="ecl27v2-hero"><div><p class="directory-kicker">SILLY SEASON · SVERIGE</p><h2>ECL 27 – Svenska lagbyggen</h2><p>Arbetsbilden börjar i ECL ’26 Spring-truppen och uppdateras med bekräftade IN/UT, lagposter och Free Agents. Lag som nu är registrerade till SCL 27 hämtas direkt från SportsGamer och deras registrerade SCL-trupp skriver över arbetsbilden för aktuell trupp.</p></div><div class="ecl27v2-stamp"><span>SENAST UPPDATERAD</span><strong>${esc(DATA.updated)}</strong><small>SCL 27 start 5 okt · ${officialCount} officiellt anmälda lag</small></div></header>
       <div class="ecl27v2-overview"><div><span>SPRING-LAG</span><strong>${springCount}</strong><small>Elite → Neo</small></div><div><span>NYA PROJEKT</span><strong>${newCount}</strong><small>manuellt följda lagbyggen</small></div><div><span>OFFICIELLA SCL-LAG</span><strong>${officialCount}</strong><small>SportsGamer liga ${Number(DATA.sclLeagueId) || 527}</small></div><div><span>KÄNDA SPELARE NU</span><strong>${knownNow}</strong><small>officiell SCL-trupp har företräde</small></div><div><span>RÖRELSER</span><strong>${movementCount}</strong><small>IN / UT / FA, härledda byten inkluderade</small></div></div>
       <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">SENASTE</p><h3>Transferflödet</h3></div><span>Bekräftade rörelser + Free Agents</span></div><div class="ecl27v2-feed">${renderLatestFeed()}</div></section>
-      <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">LAG FÖR LAG</p><h3>Svenska lagbyggen just nu</h3></div><span id="ecl27v2Result">${model.teams.length} lag/projekt</span></div><div class="ecl27v2-toolbar"><label>SÖK<input id="ecl27v2Search" type="search" placeholder="Lag eller spelare…"></label><label>SPRING-NIVÅ<select id="ecl27v2Division"><option value="all">Alla nivåer</option><option>Elite</option><option>Pro</option><option>Lite</option><option>Core</option><option>Neo</option><option value="Nytt">Nya projekt</option></select></label><label>STATUS<select id="ecl27v2Status"><option value="all">Alla statusar</option><option value="ready">Ser färdigt ut</option><option value="building">På god väg</option><option value="thin">Tunt / bygger</option><option value="rebuild">Kraftigt ombyggt / tidigt</option></select></label></div><div id="ecl27v2Grid" class="ecl27v2-grid"></div></section>
-      <aside class="ecl27v2-method"><strong>Lagbygge + officiell SCL-registrering</strong>Lag märkta OFFICIELLT SCL-LAG är registrerade i SportsGamer liga ${Number(DATA.sclLeagueId) || 527}. För dessa lag används den registrerade SCL-truppen som aktuell trupp och skriver över den manuella arbetsbilden. Övriga lag fortsätter byggas från Spring-bas och bekräftade IN/UT-händelser.</aside>`;
+      <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">SCL 27</p><h3>Officiellt anmälda SCL-lag</h3></div><span id="ecl27v2Result">${officialCount} SCL-lag</span></div><div class="ecl27v2-toolbar"><label>SÖK<input id="ecl27v2Search" type="search" placeholder="Lag eller spelare…"></label><label>SPRING-NIVÅ<select id="ecl27v2Division"><option value="all">Alla nivåer</option><option>Elite</option><option>Pro</option><option>Lite</option><option>Core</option><option>Neo</option><option value="Nytt">Nya projekt</option></select></label><label>STATUS<select id="ecl27v2Status"><option value="all">Alla statusar</option><option value="ready">Ser färdigt ut</option><option value="building">På god väg</option><option value="thin">Tunt / bygger</option><option value="rebuild">Kraftigt ombyggt / tidigt</option></select></label></div><div id="ecl27v2Grid" class="ecl27v2-grid"></div></section>
+      <aside class="ecl27v2-method"><strong>Officiell SCL-registrering</strong>På laglistan visas endast lag som är registrerade i SportsGamer liga ${Number(DATA.sclLeagueId) || 527}. Den registrerade SCL-truppen används som aktuell trupp och har företräde framför den manuella arbetsbilden.</aside>`;
 
     const search = $("#ecl27v2Search");
     const division = $("#ecl27v2Division");
@@ -1708,7 +1711,7 @@
     overview.insertAdjacentElement("afterend",section);
 
     const wantedSlug = requestedTeamSlug();
-    const wantedTeam = wantedSlug ? model.teams.find((team) => slug(team.name) === wantedSlug) : null;
+    const wantedTeam = wantedSlug ? model.teams.find((team) => team.officialScl && slug(team.name) === wantedSlug) : null;
     if (wantedTeam) {
       section.innerHTML = renderTeamDetail(wantedTeam);
       hydrateDetailRoster(wantedTeam,section);
