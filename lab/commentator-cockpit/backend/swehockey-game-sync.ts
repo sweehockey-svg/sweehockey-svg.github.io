@@ -10,7 +10,7 @@ const BASE = "https://stats.swehockey.se";
 const ALLOWED_COMPETITION_SOURCE_IDS = ["21043","21044"] as const;
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v12";
+const PARSER_VERSION = "game-sync-v13";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -905,7 +905,7 @@ function parseSummaryStats(html:string, game:any, lastGoal:any) {
         shots:periodValues(shots?.homeExtra),
         pim:periodValues(pim?.homeExtra)
       },
-      source_fragment:{ parser:PARSER_VERSION, side:"home" },
+      source_fragment:{ parser:PARSER_VERSION, side:"home", raw_summary:{ shots, saves, pim, pp } },
       source_updated_at:new Date().toISOString(),
       updated_at:new Date().toISOString()
     },
@@ -923,7 +923,7 @@ function parseSummaryStats(html:string, game:any, lastGoal:any) {
         shots:periodValues(shots?.awayExtra),
         pim:periodValues(pim?.awayExtra)
       },
-      source_fragment:{ parser:PARSER_VERSION, side:"away" },
+      source_fragment:{ parser:PARSER_VERSION, side:"away", raw_summary:{ shots, saves, pim, pp } },
       source_updated_at:new Date().toISOString(),
       updated_at:new Date().toISOString()
     }
