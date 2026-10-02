@@ -8769,7 +8769,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     if(modal)return modal;
     modal=document.createElement('div');
     modal.id='seh-my-profile-modal';
-    modal.innerHTML=`<div class="seh-my-profile-sheet" role="dialog" aria-modal="true" aria-labelledby="seh-my-profile-title"><div class="seh-my-profile-sheet-head"><div><div class="kicker">MIN PROFIL</div><h2 id="seh-my-profile-title">Koppla din spelarprofil</h2><p>Skriv in ditt gamertag och välj rätt svensk spelare. Profilen sparas bara på den här mobilen.</p></div><button class="seh-my-profile-close" type="button" aria-label="Stäng">×</button></div><div class="seh-my-profile-search"><input id="seh-my-profile-input" type="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Skriv ditt GT"><button id="seh-my-profile-search-btn" type="button">Sök</button></div><div class="seh-my-profile-status" id="seh-my-profile-status"></div><div class="seh-my-profile-results" id="seh-my-profile-results"></div></div>`;
+    modal.innerHTML=`<div class="seh-my-profile-sheet" role="dialog" aria-modal="true" aria-labelledby="seh-my-profile-title"><div class="seh-my-profile-sheet-head"><div><div class="kicker">MIN PROFIL</div><h2 id="seh-my-profile-title">Koppla din spelarprofil</h2><p>Skriv in ditt gamertag och välj rätt svensk, norsk eller dansk spelare. Profilen sparas bara på den här mobilen.</p></div><button class="seh-my-profile-close" type="button" aria-label="Stäng">×</button></div><div class="seh-my-profile-search"><input id="seh-my-profile-input" type="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Skriv ditt GT"><button id="seh-my-profile-search-btn" type="button">Sök</button></div><div class="seh-my-profile-status" id="seh-my-profile-status"></div><div class="seh-my-profile-results" id="seh-my-profile-results"></div></div>`;
     document.body.appendChild(modal);
     modal.querySelector('.seh-my-profile-close').onclick=closeMyProfilePicker;
     modal.addEventListener('click',event=>{if(event.target===modal)closeMyProfilePicker();});
@@ -8803,9 +8803,9 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     if(status){status.textContent='Söker…';status.classList.remove('error');}
     if(results)results.innerHTML='';
     try{
-      let raw=await sehTeamDirectRest('app_player_directory_cache',{
+      let raw=await sehTeamDirectRest('app_account_player_directory_cache',{
         select:zeroPlayerDirectorySelect(),
-        player_country:'eq.SE',
+        player_country:'in.(SE,NO,DK)',
         display_gamertag:`ilike.*${query}*`,
         order:'career_games.desc.nullslast,display_gamertag.asc',
         limit:'18'
@@ -8821,9 +8821,9 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
         const score=(k,c)=>k===q?0:c===compactQ?1:k.startsWith(q)?2:k.includes(q)?3:4;
         return score(ak,ac)-score(bk,bc)||b.games-a.games||a.name.localeCompare(b.name,'sv-SE');
       }).slice(0,10);
-      if(!players.length){if(status)status.textContent='Ingen svensk spelare hittades. Kontrollera GT och försök igen.';return;}
+      if(!players.length){if(status)status.textContent='Ingen svensk, norsk eller dansk spelare hittades. Kontrollera GT och försök igen.';return;}
       if(status)status.textContent=`${players.length} träff${players.length===1?'':'ar'} – välj rätt profil.`;
-      results.innerHTML=players.map((player,index)=>`<button class="seh-my-profile-result" type="button" data-profile-result="${index}"><img src="${htmlEscape(player.photo||ZERO_PLAYER_PNG_FALLBACK)}" alt=""><span><strong>${htmlEscape(player.name)}</strong><span>${htmlEscape([player.latestTeam,player.latestSeason].filter(Boolean).join(' · ')||player.position||'Svensk spelare')}</span></span><b>Välj</b></button>`).join('');
+      results.innerHTML=players.map((player,index)=>`<button class="seh-my-profile-result" type="button" data-profile-result="${index}"><img src="${htmlEscape(player.photo||ZERO_PLAYER_PNG_FALLBACK)}" alt=""><span><strong>${htmlEscape(player.name)}</strong><span>${htmlEscape([player.country,player.latestTeam,player.latestSeason].filter(Boolean).join(' · ')||player.position||'Spelare')}</span></span><b>Välj</b></button>`).join('');
       results.querySelectorAll('[data-profile-result]').forEach(button=>{
         const player=players[Number(button.dataset.profileResult)];
         const img=button.querySelector('img');if(img)applyZeroPlayerPngFallback(img);
@@ -8839,7 +8839,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     if(!profile)return `<div class="seh-my-profile-favorite-card"><span class="placeholder">${icons.user}</span><div><small>MIN PROFIL</small><strong>Koppla din spelarprofil</strong><span>Logga in med Discord och koppla ditt befintliga spelarkort.</span></div><div class="seh-my-profile-favorite-actions"><button class="primary" type="button" data-my-profile-account>Koppla</button></div></div>`;
     const photo=String(profile.photo||ZERO_PLAYER_PNG_FALLBACK).trim();
     const linked=profile.serverLinked===true;
-    return `<div class="seh-my-profile-favorite-card"><img src="${htmlEscape(photo)}" alt="${htmlEscape(profile.name)}"><div><small>${linked?'KOPPLAD SPELARPROFIL':'MIN PROFIL'}</small><strong>${htmlEscape(profile.name)}</strong><span>${htmlEscape([profile.latestTeam,profile.latestSeason].filter(Boolean).join(' · ')||'Svensk spelare')}</span></div><div class="seh-my-profile-favorite-actions"><button class="primary" type="button" data-my-profile-open>Öppna</button><button type="button" ${linked?'data-my-profile-account':'data-my-profile-pick'}>${linked?'Min profil':'Ändra'}</button></div></div>`;
+    return `<div class="seh-my-profile-favorite-card"><img src="${htmlEscape(photo)}" alt="${htmlEscape(profile.name)}"><div><small>${linked?'KOPPLAD SPELARPROFIL':'MIN PROFIL'}</small><strong>${htmlEscape(profile.name)}</strong><span>${htmlEscape([profile.latestTeam,profile.latestSeason].filter(Boolean).join(' · ')||'Spelare')}</span></div><div class="seh-my-profile-favorite-actions"><button class="primary" type="button" data-my-profile-open>Öppna</button><button type="button" ${linked?'data-my-profile-account':'data-my-profile-pick'}>${linked?'Min profil':'Ändra'}</button></div></div>`;
   }
   function sehEnsureSyncUiStyle(){
     if(document.getElementById('seh-webapp-sync-ui'))return;
@@ -10535,6 +10535,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       currentTeamLogo:String(row.current_team_logo||'').trim(),
       currentStatus,
       primaryPosition:String(row.primary_position||'').trim(),
+      country:String(row.player_country||'').trim().toUpperCase(),
       lastAppearanceDate:String(row.last_appearance_date||'').trim(),
       latestHistoricalTeam,
       history:zeroPlayerHistory(row),
@@ -18288,7 +18289,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       const cached=[...(Array.isArray(sehZeroPlayer?.all)?sehZeroPlayer.all:[]),...(Array.isArray(window.__SEH_PLAYER_DIRECTORY_ROWS__)?window.__SEH_PLAYER_DIRECTORY_ROWS__:[])];
       player=cached.find(row=>String(row?.key||'').trim().toLocaleLowerCase('sv-SE')===wanted.toLocaleLowerCase('sv-SE'))||null;
       if(!player&&wanted){
-        const raw=await sehTeamDirectRest('app_player_directory_cache',{
+        const raw=await sehTeamDirectRest('app_account_player_directory_cache',{
           select:zeroPlayerDirectorySelect(),
           player_key:`eq.${wanted}`,
           limit:'1'
@@ -18348,7 +18349,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       const batch=missing.slice(offset,offset+80);
       const quoted=batch.map(key=>`"${key.replace(/\\/g,'\\\\').replace(/"/g,'\\"')}"`).join(',');
       try{
-        const rows=await sehTeamDirectRest('app_player_directory_cache',{
+        const rows=await sehTeamDirectRest('app_account_player_directory_cache',{
           select:'player_key,player_image,sports_gamer_player_url',
           player_key:`in.(${quoted})`,limit:String(batch.length)
         });
@@ -18504,9 +18505,9 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
         : p.current_status==='free_agent'
           ? 'Free Agent'
           : 'Inget aktuellt lag';
-      body=`<div class="seh-v760-card"><div class="seh-v760-profile"><img class="seh-v760-avatar" src="${htmlEscape(photo)}" alt=""><div><span class="seh-v760-kicker">GODKÄND SPELARKOPPLING</span><strong>${htmlEscape(name)}</strong><span>${htmlEscape([p.primary_position,accountTeamStatus,p.latest_ecl_division].filter(Boolean).join(' · ')||'Svensk spelare')}</span><span>Discord: ${htmlEscape(result.account.discordUsername||sehV760DiscordName(result.session.user))}</span></div></div><div class="seh-v760-actions"><button class="seh-v760-btn gold" data-v760-server-profile>Öppna spelarprofil</button><button class="seh-v760-btn" data-v760-edit-profile>Redigera profil</button><button class="seh-v760-btn" data-v760-fa>Free Agents${fa.id&&fa.is_active!==false?' · aktiv':''}</button><button class="seh-v760-btn" data-v760-favs>Favoriter</button><button class="seh-v760-btn" data-v760-logout>Logga ut</button></div></div>`;
+      body=`<div class="seh-v760-card"><div class="seh-v760-profile"><img class="seh-v760-avatar" src="${htmlEscape(photo)}" alt=""><div><span class="seh-v760-kicker">GODKÄND SPELARKOPPLING</span><strong>${htmlEscape(name)}</strong><span>${htmlEscape([p.player_country,p.primary_position,accountTeamStatus,p.latest_ecl_division].filter(Boolean).join(' · ')||'Spelare')}</span><span>Discord: ${htmlEscape(result.account.discordUsername||sehV760DiscordName(result.session.user))}</span></div></div><div class="seh-v760-actions"><button class="seh-v760-btn gold" data-v760-server-profile>Öppna spelarprofil</button><button class="seh-v760-btn" data-v760-edit-profile>Redigera profil</button><button class="seh-v760-btn" data-v760-fa>Free Agents${fa.id&&fa.is_active!==false?' · aktiv':''}</button><button class="seh-v760-btn" data-v760-favs>Favoriter</button><button class="seh-v760-btn" data-v760-logout>Logga ut</button></div></div>`;
     }else{
-      const pending=result.account?.status==='pending';body=`<div class="seh-v760-card"><h2>${pending?'Spelarkoppling väntar på admin':'Koppla din spelarprofil'}</h2><p>${pending?`Begärd profil: ${htmlEscape(result.account?.requestedPlayerKey||'–')}. Du kan använda lokal Min profil under tiden.`:'Välj din svenska spelarprofil. Kopplingen skickas till samma adminflöde som på webben.'}</p>${pending?'':`<div class="seh-v760-form"><label><span>Gamertag</span><input id="seh-v760-link-search" placeholder="Skriv ditt GT"></label><div id="seh-v760-link-results"></div><div id="seh-v760-link-status" class="seh-v760-status"></div></div>`}<div class="seh-v760-actions">${local?'<button class="seh-v760-btn" data-v760-local>Öppna lokal profil</button>':'<button class="seh-v760-btn" data-v760-pick>Koppla GT lokalt</button>'}<button class="seh-v760-btn" data-v760-fa>Visa Free Agents</button><button class="seh-v760-btn" data-v760-logout>Logga ut</button></div></div>`;
+      const pending=result.account?.status==='pending';body=`<div class="seh-v760-card"><h2>${pending?'Spelarkoppling väntar på admin':'Koppla din spelarprofil'}</h2><p>${pending?`Begärd profil: ${htmlEscape(result.account?.requestedPlayerKey||'–')}. Du kan använda lokal Min profil under tiden.`:'Välj din svenska, norska eller danska spelarprofil. Kopplingen skickas till samma adminflöde som på webben.'}</p>${pending?'':`<div class="seh-v760-form"><label><span>Gamertag</span><input id="seh-v760-link-search" placeholder="Skriv ditt GT"></label><div id="seh-v760-link-results"></div><div id="seh-v760-link-status" class="seh-v760-status"></div></div>`}<div class="seh-v760-actions">${local?'<button class="seh-v760-btn" data-v760-local>Öppna lokal profil</button>':'<button class="seh-v760-btn" data-v760-pick>Koppla GT lokalt</button>'}<button class="seh-v760-btn" data-v760-fa>Visa Free Agents</button><button class="seh-v760-btn" data-v760-logout>Logga ut</button></div></div>`;
     }
     const accountTools=`<div class="seh-v760-card"><span class="seh-v760-kicker">INTEGRITET & KONTO</span><h2>Dina uppgifter</h2><p>Läs hur Svensk eHockey hanterar uppgifter och hur du kontaktar oss i integritetsfrågor.</p><div class="seh-v760-actions"><button class="seh-v760-btn" data-v760-privacy>Integritetspolicy</button></div></div>`;
     layer.innerHTML=`<div class="seh-v760-shell">${sehV760Header('Min profil','SVENSK eHOCKEY / KONTO')}${body}${accountTools}</div>`;sehV760BindClose(layer);
@@ -18741,8 +18742,8 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     const q=String(value||'').trim().replace(/[%*]/g,'');host.innerHTML='';if(q.length<2)return;
     if(status)status.textContent='Söker…';
     try{
-      const rows=await sehTeamDirectRest('app_player_directory_cache',{select:'player_key,display_gamertag,primary_position,latest_team,player_image,sports_gamer_player_url',player_country:'eq.SE',display_gamertag:`ilike.*${q}*`,order:'display_gamertag.asc',limit:'8'});
-      host.innerHTML=rows.map((p,i)=>`<button class="seh-v760-player" type="button" data-v760-link="${i}"><img src="${htmlEscape(sehV760DirectoryPhoto(p)||sehWebAppPlayerImage(''))}" alt=""><span><strong>${htmlEscape(p.display_gamertag||p.player_key)}</strong><span>${htmlEscape([p.primary_position,p.latest_team].filter(Boolean).join(' · '))}</span></span><b>Välj</b></button>`).join('');if(status)status.textContent=rows.length?'Välj rätt profil.':'Ingen svensk spelare hittades.';
+      const rows=await sehTeamDirectRest('app_account_player_directory_cache',{select:'player_key,display_gamertag,player_country,primary_position,latest_team,player_image,sports_gamer_player_url',player_country:'in.(SE,NO,DK)',display_gamertag:`ilike.*${q}*`,order:'display_gamertag.asc',limit:'8'});
+      host.innerHTML=rows.map((p,i)=>`<button class="seh-v760-player" type="button" data-v760-link="${i}"><img src="${htmlEscape(sehV760DirectoryPhoto(p)||sehWebAppPlayerImage(''))}" alt=""><span><strong>${htmlEscape(p.display_gamertag||p.player_key)}</strong><span>${htmlEscape([p.player_country,p.primary_position,p.latest_team].filter(Boolean).join(' · '))}</span></span><b>Välj</b></button>`).join('');if(status)status.textContent=rows.length?'Välj rätt profil.':'Ingen svensk, norsk eller dansk spelare hittades.';
       host.querySelectorAll('[data-v760-link]').forEach(btn=>btn.addEventListener('click',async()=>{const p=rows[Number(btn.dataset.v760Link)];const client=sehV760Client();if(!client)return;if(status)status.textContent='Skickar kopplingen till admin…';const r=await client.rpc('seh_request_discord_player_link',{p_player_key:p.player_key});if(r.error){if(status){status.textContent=`Fel: ${r.error.message}`;status.classList.add('error');}}else sehV760OpenAccount();}));
     }catch(error){if(status){status.textContent=`Fel: ${error.message||error}`;status.classList.add('error');}}
   }

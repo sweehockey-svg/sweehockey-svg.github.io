@@ -3407,7 +3407,7 @@ function SEH_initPlayer() {
     async function fetchPlayerSlugDirectory() {
       if (!playerSlugDirectoryPromise) {
         playerSlugDirectoryPromise = fetchAllJson(
-          "app_player_directory_cache",
+          "app_account_player_directory_cache",
           new URLSearchParams({
             select: "player_key,display_gamertag"
           }),
@@ -3480,7 +3480,7 @@ function SEH_initPlayer() {
         limit: "25"
       });
 
-      const rows = await fetchJson("app_player_directory_cache", params);
+      const rows = await fetchJson("app_account_player_directory_cache", params);
       if (rows.length) return rows;
 
       const fallback = playerRouteFallbackRows.get(String(playerKey || "").trim());
@@ -6819,9 +6819,9 @@ function SEH_initPlayer() {
           directoryRow?.player_country || ""
         ).trim().toUpperCase();
 
-        if (!["SE", "SWE"].includes(playerCountry)) {
+        if (!["SE", "SWE", "NO", "NOR", "DK", "DEN"].includes(playerCountry)) {
           throw new Error(
-            "Spelarprofiler på Svensk eHockey visas endast för svenska spelare."
+            "Spelarprofilen ingår inte i Svensk eHockey."
           );
         }
 
@@ -15925,8 +15925,9 @@ function SEH_initShop() {
       // Safe fallback: always keep the self-service form usable even if the
       // ECL summary cannot be loaded for some reason.
       const {data:player,error:playerError}=await sb
-        .from('app_player_directory_cache')
-        .select('player_key,display_gamertag,primary_position,latest_team')
+        .from('app_account_player_directory_cache')
+        .select('player_key,display_gamertag,player_country,primary_position,latest_team')
+        .in('player_country',['SE','NO','DK'])
         .eq('player_key',key)
         .maybeSingle();
       if(playerError)throw playerError;
@@ -16021,7 +16022,7 @@ function SEH_initShop() {
       const host=selfEl('faSelfPlayerResults');if(!host)return;
       const q=clean(selfEl('faSelfPlayerSearch')?.value);host.replaceChildren();
       if(q.length<2)return;
-      const {data,error}=await sb.from('app_player_directory_cache').select('player_key,display_gamertag,primary_position,latest_team').ilike('display_gamertag',`%${q.replaceAll('%','')}%`).order('display_gamertag',{ascending:true}).limit(8);
+      const {data,error}=await sb.from('app_account_player_directory_cache').select('player_key,display_gamertag,player_country,primary_position,latest_team').in('player_country',['SE','NO','DK']).ilike('display_gamertag',`%${q.replaceAll('%','')}%`).order('display_gamertag',{ascending:true}).limit(8);
       if(error){selfStatus('faSelfLinkStatus',`Fel: ${error.message}`,'error');return;}
       const players=data||[];
       let linkedKeys=new Set();
@@ -16035,7 +16036,7 @@ function SEH_initShop() {
         const button=document.createElement('button');button.type='button';
         if(isLinked){button.disabled=true;button.classList.add('is-linked');button.setAttribute('aria-label',`${player.display_gamertag||'Spelaren'} är redan kopplad till ett Discord-konto`);}
         else button.dataset.faSelfPlayer=player.player_key;
-        button.innerHTML=`<span class="fa-self-player-result__identity"><strong>${escapeHtml(player.display_gamertag||player.player_key)}</strong><small>${escapeHtml([player.primary_position,player.latest_team].filter(Boolean).join(' · ')||'Spelarprofil')}</small></span>${isLinked?'<em>Redan kopplad</em>':'<span>Välj profil</span>'}`;
+        button.innerHTML=`<span class="fa-self-player-result__identity"><strong>${escapeHtml(player.display_gamertag||player.player_key)}</strong><small>${escapeHtml([player.player_country,player.primary_position,player.latest_team].filter(Boolean).join(' · ')||'Spelarprofil')}</small></span>${isLinked?'<em>Redan kopplad</em>':'<span>Välj profil</span>'}`;
         host.append(button);
       }
       if(!players.length){const p=document.createElement('p');p.textContent='Ingen spelarprofil hittades.';host.append(p);}
@@ -16271,8 +16272,9 @@ function SEH_initShop() {
       if(q.length<2)return;
 
       const {data,error}=await sb
-        .from('app_player_directory_cache')
-        .select('player_key,display_gamertag,primary_position,latest_team')
+        .from('app_account_player_directory_cache')
+        .select('player_key,display_gamertag,player_country,primary_position,latest_team')
+        .in('player_country',['SE','NO','DK'])
         .ilike('display_gamertag',`%${q.replaceAll('%','')}%`)
         .order('display_gamertag',{ascending:true})
         .limit(8);
@@ -16296,7 +16298,7 @@ function SEH_initShop() {
         }else{
           button.dataset.myProfilePlayer=player.player_key;
         }
-        button.innerHTML=`<span class="fa-self-player-result__identity"><strong>${escapeHtml(player.display_gamertag||player.player_key)}</strong><small>${escapeHtml([player.primary_position,player.latest_team].filter(Boolean).join(' · ')||'Spelarprofil')}</small></span>${isLinked?'<em>Redan kopplad</em>':'<span>Välj profil</span>'}`;
+        button.innerHTML=`<span class="fa-self-player-result__identity"><strong>${escapeHtml(player.display_gamertag||player.player_key)}</strong><small>${escapeHtml([player.player_country,player.primary_position,player.latest_team].filter(Boolean).join(' · ')||'Spelarprofil')}</small></span>${isLinked?'<em>Redan kopplad</em>':'<span>Välj profil</span>'}`;
         host.append(button);
       }
 
@@ -16577,7 +16579,7 @@ function SEH_initShop() {
   async function faFetchDirectory(){
     const rows=[],pageSize=1000;
     for(let from=0;;from+=pageSize){
-      const{data,error}=await sb.from('app_player_directory_cache').select('player_key,display_gamertag,primary_position,latest_team').order('display_gamertag',{ascending:true}).range(from,from+pageSize-1);
+      const{data,error}=await sb.from('app_account_player_directory_cache').select('player_key,display_gamertag,player_country,primary_position,latest_team').in('player_country',['SE','NO','DK']).order('display_gamertag',{ascending:true}).range(from,from+pageSize-1);
       if(error)throw error;
       rows.push(...(data||[]));
       if(!data||data.length<pageSize)break;
@@ -16829,7 +16831,7 @@ function SEH_initShop() {
           const select=item.querySelector('[data-application-player]');select.replaceChildren(new Option('Välj spelarkort',''));
           if(query.length<2)return;
           timer=setTimeout(async()=>{
-            const result=await sb.from('app_player_directory_cache').select('player_key,display_gamertag').ilike('display_gamertag',`%${query.replace(/[%_\\]/g,'')}%`).limit(30);
+            const result=await sb.from('app_account_player_directory_cache').select('player_key,display_gamertag,player_country').in('player_country',['SE','NO','DK']).ilike('display_gamertag',`%${query.replace(/[%_\\]/g,'')}%`).limit(30);
             if(version!==sequence||!item.isConnected)return;
             if(result.error){item.querySelector('[data-application-status]').textContent=result.error.message;return;}
             for(const player of result.data||[])select.add(new Option(`${player.display_gamertag} (${player.player_key})`,player.player_key));
