@@ -216,6 +216,12 @@
   }
 
   function logoUrl(team) {
+    // Official SCL registration is the current identity. Never let an older
+    // local/Spring logo override it, and an empty official logo means no logo.
+    if (team.officialScl) {
+      return String(team.officialLogoUrl || "").trim();
+    }
+
     const manifest = window.SEH_TEAM_LOGO_FILES || {};
     const candidates = [team.logoName, team.name, team.springName].filter(Boolean);
     for (const candidate of candidates) {
