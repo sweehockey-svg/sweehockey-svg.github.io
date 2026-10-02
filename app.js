@@ -2889,7 +2889,7 @@ function SEH_playerSlug(value) {
 }
 
 function SEH_isHashedPlayerKey(value) {
-  return /^[a-f0-9]{40,}$/i.test(String(value || "").trim());
+  return /^[a-f0-9]{32,}$/i.test(String(value || "").trim());
 }
 
 function SEH_playerProfileUrl(playerKey, gamertag, fromTeam = null) {
@@ -3407,7 +3407,7 @@ function SEH_initPlayer() {
     async function fetchPlayerSlugDirectory() {
       if (!playerSlugDirectoryPromise) {
         playerSlugDirectoryPromise = fetchAllJson(
-          "app_account_player_directory_cache",
+          "app_player_directory_cache",
           new URLSearchParams({
             select: "player_key,display_gamertag"
           }),
