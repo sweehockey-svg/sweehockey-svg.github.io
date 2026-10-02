@@ -66,6 +66,12 @@
               <label for="teamSelect">DITT LAG</label>
               <select id="teamSelect"></select>
             </div>
+            <div class="field full" id="rosterSeasonSection">
+              <label for="rosterSeasonSelect">SPELARPOOL / SÄSONG <span class="field-optional" id="rosterSeasonHint">AKTUELL TRUPP</span></label>
+              <select id="rosterSeasonSelect">
+                <option value="current">Aktuell roster</option>
+              </select>
+            </div>
             <div class="field full" id="opponentField">
               <label for="opponentSelect">MOTSTÅNDARE</label>
               <select id="opponentSelect"></select>
@@ -134,19 +140,6 @@
               <label for="formatSelect">FORMAT</label>
               <select id="formatSelect"></select>
             </div>
-          </div>
-        </div>
-
-        <div class="control-section" id="rosterSeasonSection" hidden>
-          <div class="section-title"><strong>Spelarpool</strong><span id="rosterSeasonHint">AKTUELL TRUPP</span></div>
-          <div class="field full">
-            <label for="rosterSeasonSelect">SÄSONG</label>
-            <select id="rosterSeasonSelect">
-              <option value="current">Aktuell roster</option>
-            </select>
-          </div>
-          <div class="generator-note" style="margin:10px 0 0">
-            Admin kan välja aktuell roster, en specifik historisk säsong eller alla spelare som representerat laget. Kaptener använder alltid lagets aktuella SCL-roster.
           </div>
         </div>
 
@@ -224,6 +217,6 @@
   <script src="../../ecl27-team-builds-v2.js?v=shared-model-1"></script>
   <script src="../../ecl27-current-roster-snapshot.js?v=20260921-1"></script>
   <script src="../../match-graphics-player-stats-snapshot.js?v=20260922-1"></script>
-  <script src="match-image-generator.js?v=72-admin-season-rosters"></script>
+  <script src="match-image-generator.js?v=73-roster-selector-placement"></script>
 </body>
 </html>
