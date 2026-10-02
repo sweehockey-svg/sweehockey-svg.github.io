@@ -10,7 +10,7 @@ const BASE = "https://stats.swehockey.se";
 const ALLOWED_COMPETITION_SOURCE_IDS = ["21043","21044"] as const;
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v13";
+const PARSER_VERSION = "game-sync-v14";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -873,10 +873,19 @@ function parseSummaryStats(html:string, game:any, lastGoal:any) {
   const pim = extractPair("PIM");
   const pp = extractPair("PP");
 
-  const homeShots = shots && /^\d+$/.test(shots.homeValue || "") ? Number(shots.homeValue) : null;
-  const awayShots = shots && /^\d+$/.test(shots.awayValue || "") ? Number(shots.awayValue) : null;
-  const homeSaves = saves && /^\d+$/.test(saves.homeValue || "") ? Number(saves.homeValue) : null;
-  const awaySaves = saves && /^\d+$/.test(saves.awayValue || "") ? Number(saves.awayValue) : null;
+  let homeShots = shots && /^\d+$/.test(shots.homeValue || "") ? Number(shots.homeValue) : null;
+  let awayShots = shots && /^\d+$/.test(shots.awayValue || "") ? Number(shots.awayValue) : null;
+  let homeSaves = saves && /^\d+$/.test(saves.homeValue || "") ? Number(saves.homeValue) : null;
+  let awaySaves = saves && /^\d+$/.test(saves.awayValue || "") ? Number(saves.awayValue) : null;
+
+  const shotsPlaceholder =
+    homeShots === 0 && awayShots === 0 &&
+    clean(shots?.homeExtra) === "(-)" && clean(shots?.awayExtra) === "(-)";
+  const savesPlaceholder =
+    homeSaves === 0 && awaySaves === 0 &&
+    clean(saves?.homeExtra) === "(-)" && clean(saves?.awayExtra) === "(-)";
+  if (shotsPlaceholder) { homeShots = null; awayShots = null; }
+  if (savesPlaceholder) { homeSaves = null; awaySaves = null; }
   const homePim = pim && /^\d+$/.test(pim.homeValue || "") ? Number(pim.homeValue) : null;
   const awayPim = pim && /^\d+$/.test(pim.awayValue || "") ? Number(pim.awayValue) : null;
   const homePpPct = pp ? pctValue(pp.homeValue) : null;
