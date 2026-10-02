@@ -144,11 +144,23 @@ def load_source_rows(connection: Any) -> tuple[list[dict[str, Any]], list[dict[s
         raise RuntimeError("SportsGamer leagueTeams is missing league/team identifiers")
 
     diagnostic_stage("registered_teams")
+    league_logo_column = column_name(
+        team_columns,
+        "teamLogo", "team_logo", "logo", "logoUrl", "teamImage", "team_image",
+    )
+    league_logo_select = (
+        f"{safe_identifier(league_logo_column)} as __teamLogo, "
+        "1 as __leagueLogoColumnPresent, "
+        if league_logo_column
+        else "NULL as __teamLogo, NULL as __leagueLogoColumnPresent, "
+    )
     team_rows = select(
         connection,
         "select *, "
         f"{safe_identifier(league_column)} as __leagueID, "
-        f"{safe_identifier(team_column)} as __teamID "
+        f"{safe_identifier(team_column)} as __teamID, "
+        + league_logo_select +
+        "0 as __scl27_export_marker "
         "from `nhlgamer_leagueTeams` "
         f"where {safe_identifier(league_column)}=%s",
         (LEAGUE_ID,),
@@ -273,11 +285,21 @@ def main() -> int:
             continue
         global_team = global_teams.get(team_id, {})
         team_name = text(first(row, "teamName", "team_name", "name")) or text(first(global_team, "teamName", "team_name", "name")) or f"Team {team_id}"
+        # League-specific branding must win when that schema exposes a logo
+        # column. Teams are sometimes renamed/reused between competitions, so
+        # falling back to the global team logo in that case can resurrect an
+        # old identity. An explicitly empty league logo also has meaning: no logo.
+        has_league_logo_column = first(row, "__leagueLogoColumnPresent") is not None
+        league_logo = text(first(row, "__teamLogo"))
+        global_logo = text(first(
+            global_team,
+            "teamLogo", "team_logo", "logo", "logoUrl", "teamImage", "team_image",
+        ))
         teams[team_id] = {
             "sports_gamer_league_id": LEAGUE_ID,
             "sports_gamer_team_id": team_id,
             "team_name": team_name,
-            "team_logo_url": text(first(global_team, "teamLogo", "team_logo", "logo", "logoUrl")),
+            "team_logo_url": league_logo if has_league_logo_column else global_logo,
             "captain_player_id": integer(first(row, "teamCaptainID", "captainPlayerID", "captainID")) or "",
             "assistant_1_player_id": integer(first(row, "teamAssistantCaptainID", "assistantCaptainID", "assistant1PlayerID")) or "",
             "assistant_2_player_id": integer(first(row, "teamAssistantCaptainID2", "assistantCaptainID2", "assistant2PlayerID")) or "",
