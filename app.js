@@ -20686,6 +20686,19 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       footer.replaceChildren(footerInner);
     }
 
+    if (!footerInner.querySelector(".directory-footer__swnworks")) {
+      const swnworksLink = document.createElement("a");
+      swnworksLink.className = "directory-footer__swnworks";
+      swnworksLink.href = "https://swnworks.se/";
+      swnworksLink.target = "_blank";
+      swnworksLink.rel = "noopener noreferrer";
+      swnworksLink.setAttribute("aria-label", "Teknik och utveckling av SWNWORKS");
+      swnworksLink.innerHTML = `<span>TEKNIK & UTVECKLING AV</span><b>SWNWORKS</b><span aria-hidden="true">↗</span>`;
+      const existingSupportLink = footerInner.querySelector(".directory-footer__support");
+      if (existingSupportLink) footerInner.insertBefore(swnworksLink, existingSupportLink);
+      else footerInner.append(swnworksLink);
+    }
+
     if (!footerInner.querySelector(".directory-footer__support")) {
       const supportLink = document.createElement("a");
       supportLink.className = "directory-footer__support";
