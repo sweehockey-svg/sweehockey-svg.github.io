@@ -10,7 +10,7 @@ const BASE = "https://stats.swehockey.se";
 const ALLOWED_COMPETITION_SOURCE_IDS = ["21043","21044"] as const;
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v16";
+const PARSER_VERSION = "game-sync-v17";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -1131,8 +1131,19 @@ async function syncEvents(game:any, eventId:string, htmlItem:any, roster:any[]) 
       (b.ordinal ?? -1) - (a.ordinal ?? -1)
     )[0] || null;
   if (lastGoal) {
-    update.home_score = lastGoal.home_score;
-    update.away_score = lastGoal.away_score;
+    const hasOfficialFinalScore =
+      game.status === "final" &&
+      game.home_score != null &&
+      game.away_score != null;
+    const eventScoreDiffersFromFinal =
+      hasOfficialFinalScore &&
+      (Number(game.home_score) !== Number(lastGoal.home_score) ||
+       Number(game.away_score) !== Number(lastGoal.away_score));
+
+    if (!eventScoreDiffersFromFinal) {
+      update.home_score = lastGoal.home_score;
+      update.away_score = lastGoal.away_score;
+    }
   }
   if (latestEvent) {
     update.period = latestEvent.period;
