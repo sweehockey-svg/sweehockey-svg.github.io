@@ -1,21 +1,30 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.117.1";
 
-const CORS={
-  "Access-Control-Allow-Origin":"https://www.svenskehockey.se",
-  "Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods":"POST, OPTIONS",
-  "Vary":"Origin"
-};
-const json=(body:any,status=200)=>new Response(JSON.stringify(body),{
-  status,
-  headers:{...CORS,"Content-Type":"application/json","Cache-Control":"no-store"}
-});
+const ALLOWED_ORIGINS=new Set([
+  "https://www.svenskehockey.se",
+  "https://swnworks.se"
+]);
+
+function corsHeaders(req:Request){
+  const origin=req.headers.get("Origin")||"";
+  return {
+    "Access-Control-Allow-Origin":ALLOWED_ORIGINS.has(origin)?origin:"https://swnworks.se",
+    "Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods":"POST, OPTIONS",
+    "Vary":"Origin"
+  };
+}
 const clean=(v:any,max=160)=>String(v??"").replace(/\s+/g," ").trim().slice(0,max);
 const normalizeEmail=(v:any)=>clean(v,254).toLowerCase();
 const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 Deno.serve(async(req:Request)=>{
+  const CORS=corsHeaders(req);
+  const json=(body:any,status=200)=>new Response(JSON.stringify(body),{
+    status,
+    headers:{...CORS,"Content-Type":"application/json","Cache-Control":"no-store"}
+  });
   if(req.method==="OPTIONS") return new Response(null,{status:204,headers:CORS});
   if(req.method!=="POST") return json({error:"method_not_allowed"},405);
 
