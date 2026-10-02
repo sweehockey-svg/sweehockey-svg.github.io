@@ -79,7 +79,9 @@ where sports_gamer_league_id=527
 on conflict (sports_gamer_league_id,sports_gamer_team_id)
 do update set
   team_name=excluded.team_name,
-  team_logo_url=coalesce(excluded.team_logo_url,public.sportsgamer_league_teams_current.team_logo_url),
+  -- NULL is meaningful here: the current league entry has no logo.
+  -- Do not preserve a stale logo from an older team identity.
+  team_logo_url=excluded.team_logo_url,
   captain_player_id=excluded.captain_player_id,
   assistant_1_player_id=excluded.assistant_1_player_id,
   assistant_2_player_id=excluded.assistant_2_player_id,
