@@ -2963,7 +2963,7 @@ function SEH_initPlayer() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-09-05-v12878-no-qualifier-merits";
+    const APP_BUILD = "2026-10-03-v12879-scandinavian-player-profiles";
     const config = window.EHOCKEY_CONFIG || {};
     const elements = {
       backLink: document.querySelector("#backLink"),
@@ -3442,16 +3442,26 @@ function SEH_initPlayer() {
 
     async function fetchPlayerSlugDirectory() {
       if (!playerSlugDirectoryPromise) {
+        // Själva /Spelare-listan fortsätter använda den Sverige-filtrerade
+        // app_player_directory_cache. Profilrouting får däremot slå upp hela
+        // den skandinaviska profilkatalogen så svenska, norska och danska
+        // spelare kan öppnas från lag, historik och delade profil-URL:er.
         playerSlugDirectoryPromise = fetchAllJson(
-          "app_player_directory_cache",
+          "app_account_player_directory_cache",
           new URLSearchParams({
-            select: "player_key,display_gamertag"
+            select: "player_key,display_gamertag,player_country"
           }),
           1000
-        ).catch((error) => {
-          playerSlugDirectoryPromise = null;
-          throw error;
-        });
+        )
+          .then((rows) => rows.filter((row) =>
+            ["SE", "SWE", "NO", "NOR", "DK", "DEN"].includes(
+              String(row.player_country || "").trim().toUpperCase()
+            )
+          ))
+          .catch((error) => {
+            playerSlugDirectoryPromise = null;
+            throw error;
+          });
       }
 
       return playerSlugDirectoryPromise;
