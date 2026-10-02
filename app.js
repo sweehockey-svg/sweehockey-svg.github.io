@@ -16829,14 +16829,35 @@ function SEH_initShop() {
         item.querySelector('[data-application-search]').oninput=event=>{
           clearTimeout(timer);const query=event.target.value.trim(),version=++sequence;
           const select=item.querySelector('[data-application-player]');select.replaceChildren(new Option('Välj spelarkort',''));
-          if(query.length<2)return;
+          const statusEl=item.querySelector('[data-application-status]');
+          if(query.length<2){if(statusEl)statusEl.textContent='';return;}
           timer=setTimeout(async()=>{
-            const result=await sb.from('app_account_player_directory_cache').select('player_key,display_gamertag,player_country').in('player_country',['SE','NO','DK']).ilike('display_gamertag',`%${query.replace(/[%_\\]/g,'')}%`).limit(30);
+            const needle=query.toLocaleLowerCase('sv-SE');
+            let players=faDirectory
+              .filter((player)=>['SE','NO','DK'].includes(faClean(player.player_country).toUpperCase()))
+              .filter((player)=>faClean(player.display_gamertag).toLocaleLowerCase('sv-SE').includes(needle))
+              .slice(0,30);
+
+            // Fallback if the admin directory has not finished loading for some reason.
+            if(!players.length&&!faDirectory.length){
+              const result=await sb
+                .from('app_account_player_directory_cache')
+                .select('player_key,display_gamertag,player_country,latest_team')
+                .in('player_country',['SE','NO','DK'])
+                .ilike('display_gamertag',`%${query.replace(/[%_\\]/g,'')}%`)
+                .limit(30);
+              if(version!==sequence||!item.isConnected)return;
+              if(result.error){if(statusEl)statusEl.textContent=result.error.message;return;}
+              players=result.data||[];
+            }
+
             if(version!==sequence||!item.isConnected)return;
-            if(result.error){item.querySelector('[data-application-status]').textContent=result.error.message;return;}
-            for(const player of result.data||[])select.add(new Option(`${player.display_gamertag} (${player.player_key})`,player.player_key));
-            item.querySelector('[data-application-status]').textContent=result.data?.length?'Välj rätt kort i listan.':'Inga spelarkort hittades.';
-          },250);
+            for(const player of players){
+              const meta=[faClean(player.player_country).toUpperCase(),faClean(player.latest_team)].filter(Boolean).join(' · ');
+              select.add(new Option(`${player.display_gamertag}${meta?` · ${meta}`:''}`,player.player_key));
+            }
+            if(statusEl)statusEl.textContent=players.length?'Välj rätt kort i listan.':'Inga spelarkort hittades.';
+          },120);
         };
         host.append(item);continue;
       }
