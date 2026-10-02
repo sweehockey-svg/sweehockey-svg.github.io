@@ -8,7 +8,7 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "seh_ecl27_shared_source_v4";
+  const CACHE_KEY = "seh_ecl27_shared_source_v5";
   const EMPTY = Object.freeze({
     build:"supabase-loading",updated:"Hämtar ECL27-data…",aliases:{},
     springTeams:[],newTeams:[],moveEvents:[],posterMemberships:[],freeAgentEvents:[],
