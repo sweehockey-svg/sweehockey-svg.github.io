@@ -152,6 +152,16 @@ def first(row: dict[str, Any], *names: str) -> Any:
     return None
 
 
+def present_value(row: dict[str, Any], *names: str) -> tuple[Any, bool]:
+    """Return a value together with whether that field exists in this source row."""
+    low = lower_map(row)
+    for name in names:
+        key = name.lower()
+        if key in low:
+            return low[key], True
+    return None, False
+
+
 def table_inventory(connection: Any) -> dict[str, list[str]]:
     db = select(connection, "select database() as db")[0]["db"]
     rows = select(
@@ -947,6 +957,16 @@ def main() -> int:
                 if tid:
                     team_meta[tid] = row
 
+        # Current league registration is the canonical team identity for Fantasy.
+        # A SportsGamer team ID can be reused after a rename, while the global
+        # team table may still carry the previous name/logo.
+        registered_team_meta: dict[tuple[int, int], dict[str, Any]] = {}
+        for row in registered_team_rows:
+            league_id = integer(first(row, "__leagueID", "leagueID", "league_id"))
+            team_id = integer(first(row, "__teamID", "teamID", "team_id"))
+            if league_id > 0 and team_id > 0:
+                registered_team_meta[(league_id, team_id)] = row
+
         team_output_rows: list[dict[str, Any]] = []
         for registered in registered_team_rows:
             team_id = integer(first(registered, "__teamID", "teamID", "team_id"))
@@ -954,15 +974,24 @@ def main() -> int:
             team = team_meta.get(team_id, {})
 
             team_name = str(
-                first(team, "teamName", "name", "team_name")
-                or first(registered, "teamName", "team_name")
+                first(registered, "teamName", "name", "team_name")
+                or first(team, "teamName", "name", "team_name")
                 or f"Team {team_id}"
             ).strip()
-            logo = str(
-                first(team, "teamLogo", "teamLogoUrl", "logo", "logoUrl", "image", "imageUrl")
-                or first(registered, "teamLogo", "teamLogoUrl", "logo", "logoUrl")
-                or ""
-            ).strip()
+            league_logo, league_logo_present = present_value(
+                registered,
+                "teamLogo", "team_logo", "teamLogoUrl", "logo", "logoUrl",
+                "teamImage", "team_image", "image", "imageUrl",
+            )
+            logo = (
+                str(league_logo or "").strip()
+                if league_logo_present
+                else str(
+                    first(team, "teamLogo", "team_logo", "teamLogoUrl", "logo", "logoUrl",
+                          "teamImage", "team_image", "image", "imageUrl")
+                    or ""
+                ).strip()
+            )
             registered_at = date_text(
                 first(
                     registered,
@@ -1047,6 +1076,7 @@ def main() -> int:
             league_id = integer(first(roster, "__leagueID", "leagueID", "league_id"))
             player = player_meta.get(player_id, {})
             team = team_meta.get(team_id, {})
+            registered = registered_team_meta.get((league_id, team_id), {})
 
             tag = str(
                 first(player, "psntag", "psnTag", "gamertag", "gamerTag", "playerName", "username", "name")
@@ -1055,8 +1085,9 @@ def main() -> int:
             ).strip()
 
             team_name = str(
-                first(team, "teamName", "name", "team_name")
+                first(registered, "teamName", "name", "team_name")
                 or first(roster, "teamName", "team_name")
+                or first(team, "teamName", "name", "team_name")
                 or f"Team {team_id}"
             ).strip()
 
@@ -1097,11 +1128,21 @@ def main() -> int:
             if not primary and slots:
                 primary = slots[0]
 
-            logo = str(
-                first(team, "teamLogo", "teamLogoUrl", "logo", "logoUrl", "image", "imageUrl")
-                or first(roster, "teamLogo", "teamLogoUrl", "logo", "logoUrl")
-                or ""
-            ).strip()
+            league_logo, league_logo_present = present_value(
+                registered,
+                "teamLogo", "team_logo", "teamLogoUrl", "logo", "logoUrl",
+                "teamImage", "team_image", "image", "imageUrl",
+            )
+            logo = (
+                str(league_logo or "").strip()
+                if league_logo_present
+                else str(
+                    first(roster, "teamLogo", "team_logo", "teamLogoUrl", "logo", "logoUrl")
+                    or first(team, "teamLogo", "team_logo", "teamLogoUrl", "logo", "logoUrl",
+                             "teamImage", "team_image", "image", "imageUrl")
+                    or ""
+                ).strip()
+            )
 
             output_rows.append({
                 "source_league_id": league_id,
