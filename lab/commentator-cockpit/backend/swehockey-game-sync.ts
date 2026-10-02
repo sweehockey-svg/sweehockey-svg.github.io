@@ -10,7 +10,7 @@ const BASE = "https://stats.swehockey.se";
 const ALLOWED_COMPETITION_SOURCE_IDS = ["21043","21044"] as const;
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v15";
+const PARSER_VERSION = "game-sync-v16";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -1271,6 +1271,15 @@ function parseOppPctSegment(segment:string,seconds:number|null) {
   return candidates[0] || null;
 }
 
+function reportPlayerDisplayName(raw:string) {
+  const value=clean(raw);
+  const match=value.match(/^([^,]+),\s*(.+)$/);
+  if(!match) return value;
+  const surname=match[1].toLocaleLowerCase("sv-SE")
+    .replace(/(^|[\s-])([a-zåäö])/g,(_:string,sep:string,ch:string)=>sep+ch.toLocaleUpperCase("sv-SE"));
+  return clean(match[2]+" "+surname);
+}
+
 function parseOfficialSpecialTail(line:string, stats:any) {
   const compact=clean(line).replace(/\s+/g,"");
   const prefix=[
@@ -1320,7 +1329,103 @@ async function syncOfficialSpecialTeams(game:any,eventId:string,homeName:string,
 
   const parsedPdf=await pdf(Buffer.from(pdfItem.bytes));
   const lines=(parsedPdf.text || "").replace(/\r/g,"").split("\n").map(clean).filter(Boolean);
-  const gameTotalsIndex=lines.findIndex((line:string)=>line==="Game Totals");
+  const gameWinningShotsIndex=lines.findIndex((line:string)=>/^Game Winning Shots$/i.test(line));
+  let gameWinningShot:any=null;
+  if(gameWinningShotsIndex>=0){
+    const gwsLine=lines.slice(gameWinningShotsIndex+1,gameWinningShotsIndex+12)
+      .find((line:string)=>/^Goal.+GWS\d+/i.test(line));
+    const gwsMatch=gwsLine?.match(/^Goal(.+?)(\d+)\s*-\s*(\d+)GWS(\d+)\s+(.+)$/i);
+    if(gwsMatch){
+      const homeScore=Number(gwsMatch[2]);
+      const awayScore=Number(gwsMatch[3]);
+      const jersey=Number(gwsMatch[4]);
+      const playerName=reportPlayerDisplayName(gwsMatch[5]);
+      const winnerTeamId=homeScore>awayScore ? game.home_team_id :
+                         awayScore>homeScore ? game.away_team_id : null;
+      if(winnerTeamId){
+        const sourceEventKey="official-gws:"+eventId;
+        const now=new Date().toISOString();
+        const sourceHash=await sha256(gwsLine || sourceEventKey);
+        const { data:savedGws,error:gwsError }=await admin.from("game_events")
+          .upsert({
+            game_id:game.id,
+            source_event_key:sourceEventKey,
+            ordinal:0,
+            period:5,
+            event_seconds:3901,
+            clock_display:"SO",
+            event_type:"shootout_winner",
+            team_id:winnerTeamId,
+            strength:"GWS",
+            home_score:homeScore,
+            away_score:awayScore,
+            description:"#"+jersey+" "+playerName+" · avgörande straff",
+            is_active:true,
+            source_hash:sourceHash,
+            source_fragment:{
+              parser:PARSER_VERSION,
+              source:"OfficialGameReport",
+              report_section:"Game Winning Shots",
+              raw:gwsLine,
+              jersey_number:jersey,
+              source_name:gwsMatch[5]
+            },
+            last_seen_at:now,
+            updated_at:now
+          },{onConflict:"game_id,source_event_key"})
+          .select("id")
+          .single();
+        if(gwsError) throw gwsError;
+
+        const { data:rosterPlayer,error:rosterPlayerError }=await admin.from("team_rosters")
+          .select("player_id,source_name")
+          .eq("competition_id",game.competition_id)
+          .eq("team_id",winnerTeamId)
+          .eq("jersey_number",jersey)
+          .eq("is_active",true)
+          .limit(1)
+          .maybeSingle();
+        if(rosterPlayerError) throw rosterPlayerError;
+
+        if(savedGws?.id){
+          const { error:deleteGwsPlayersError }=await admin.from("game_event_players")
+            .delete()
+            .eq("event_id",savedGws.id);
+          if(deleteGwsPlayersError) throw deleteGwsPlayersError;
+          const { error:insertGwsPlayerError }=await admin.from("game_event_players").insert({
+            event_id:savedGws.id,
+            player_id:rosterPlayer?.player_id || null,
+            team_id:winnerTeamId,
+            source_name:rosterPlayer?.source_name || playerName,
+            jersey_number:jersey,
+            role:"shootout_winner",
+            sort_order:0,
+            source_fragment:{ source:"OfficialGameReport",raw:gwsLine }
+          });
+          if(insertGwsPlayerError) throw insertGwsPlayerError;
+        }
+
+        const { error:scoreUpdateError }=await admin.from("games").update({
+          home_score:homeScore,
+          away_score:awayScore,
+          status:"final",
+          source_updated_at:now,
+          updated_at:now
+        }).eq("id",game.id);
+        if(scoreUpdateError) throw scoreUpdateError;
+
+        gameWinningShot={
+          team_id:winnerTeamId,
+          jersey_number:jersey,
+          player_name:playerName,
+          home_score:homeScore,
+          away_score:awayScore
+        };
+      }
+    }
+  }
+
+    const gameTotalsIndex=lines.findIndex((line:string)=>line==="Game Totals");
   const periodIndex=lines.findIndex((line:string,i:number)=>i>gameTotalsIndex && /^1st period$/i.test(line));
   const totalLines=gameTotalsIndex>=0
     ? lines.slice(gameTotalsIndex+1,periodIndex>gameTotalsIndex?periodIndex:undefined)
@@ -1363,7 +1468,7 @@ async function syncOfficialSpecialTeams(game:any,eventId:string,homeName:string,
     parsed.push({team:teamName,...special});
   }
 
-  return {available:true,updated,pages:parsedPdf.numpages,teams:parsed};
+  return {available:true,updated,pages:parsedPdf.numpages,teams:parsed,game_winning_shot:gameWinningShot};
 }
 
 async function syncFinalGameComplete(game:any) {
