@@ -2963,7 +2963,7 @@ function SEH_initPlayer() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-10-03-v12879-scandinavian-player-profiles";
+    const APP_BUILD = "2026-10-03-v12880-approved-profile-avatar";
     const config = window.EHOCKEY_CONFIG || {};
     const elements = {
       backLink: document.querySelector("#backLink"),
@@ -6385,8 +6385,21 @@ function SEH_initPlayer() {
         if (!row) return;
 
         if (row.image_url && elements.playerAvatar) {
-          elements.playerAvatar.src = row.image_url;
-          elements.playerAvatar.onerror = () => { elements.playerAvatar.onerror = null; };
+          const approvedImage = elements.playerAvatar.querySelector("img");
+          if (approvedImage) {
+            approvedImage.dataset.approvedProfileImage = "1";
+            approvedImage.src = row.image_url;
+          } else {
+            const fallbackName = String(
+              document.querySelector("#playerName")?.textContent || "Spelare"
+            ).trim();
+            setAvatar({
+              name: fallbackName,
+              image: "",
+              externalUrl: "",
+              approvedImageUrl: row.image_url
+            });
+          }
         }
 
         const hasContent = [row.presentation,row.positions_text,row.contact,row.twitch_url,row.x_url,row.instagram_url,row.availability_status,row.team_status].some((value)=>String(value||'').trim());
