@@ -3152,10 +3152,46 @@ function SEH_initPlayer() {
     }
 
     function localPlayerImageUrl(row) {
+      const approvedImage = String(
+        row?.approvedImageUrl || row?.approved_image_url || ""
+      ).trim();
+      if (/^https?:\/\//i.test(approvedImage)) return approvedImage;
+
       const sportsGamerId = String(row.externalUrl || "")
         .match(/\/players\/(\d+)/i)?.[1];
       const localImage = normalizeLocalPortraitPath(row.image);
       return SEH_playerImageUrl(sportsGamerId, localImage);
+    }
+
+    async function hydrateApprovedPlayerImages(players = []) {
+      const targets = (players || []).filter((player) => player?.playerKey);
+      const keys = [...new Set(targets.map((player) => String(player.playerKey).trim()).filter(Boolean))];
+      if (!keys.length) return players;
+
+      const approved = new Map();
+      for (let offset = 0; offset < keys.length; offset += 50) {
+        const chunk = keys.slice(offset, offset + 50);
+        const params = new URLSearchParams({
+          select: "player_key,image_url",
+          player_key: `in.(${chunk.join(",")})`,
+          limit: String(chunk.length)
+        });
+        try {
+          const rows = await fetchJson("v_ehockey_player_self_profiles_public", params);
+          for (const row of rows) {
+            const url = String(row?.image_url || "").trim();
+            if (row?.player_key && url) approved.set(String(row.player_key), url);
+          }
+        } catch (error) {
+          console.warn(`${APP_BUILD}: kunde inte hämta adminpublicerade spelarbilder.`, error);
+          return players;
+        }
+      }
+
+      for (const player of targets) {
+        player.approvedImageUrl = approved.get(String(player.playerKey)) || "";
+      }
+      return players;
     }
   
     function countryFlag(code) {
@@ -11247,6 +11283,7 @@ function SEH_initTeam() {
           allTimePlayers,
           unlinkedTeamPlayers
         );
+        await hydrateApprovedPlayerImages(state.allTimePlayers);
         state.playerCounts = mergeUnlinkedPlayerCounts(
           playerCounts,
           unlinkedTeamPlayers
