@@ -1323,6 +1323,7 @@
     state.opponentId = preferredOpponent.id;
 
     await refreshSelectedTeamJerseys();
+    await prepareAdminRosterSeasonForTeam();
     setDefaultLineup();
     if (state.template === "team-presentation") setDefaultPresentationRoster();
     await hydratePlayerPortraits(state.teamId);
@@ -1401,6 +1402,7 @@
       rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
       playerKeysByName = new Map();
       applyDirectRosterRows(rosterRows);
+      await prepareAdminRosterSeasonForTeam();
       setDefaultLineup();
       await hydratePlayerPortraits(state.teamId);
       syncForm();
@@ -3099,6 +3101,7 @@
           state.opponentId = scl27TeamDirectory.find(team => team.id !== preferred.id)?.id || preferred.id;
         }
         await refreshSelectedTeamJerseys();
+        await prepareAdminRosterSeasonForTeam();
         setDefaultLineup();
         setDefaultPresentationRoster();
         await hydratePlayerPortraits(state.teamId);
@@ -3126,6 +3129,7 @@
 
         presentationReturnState = null;
         await refreshSelectedTeamJerseys();
+        await prepareAdminRosterSeasonForTeam();
         setDefaultLineup();
         await hydratePlayerPortraits(state.teamId);
       } else {
@@ -3141,6 +3145,7 @@
     state.teamId = event.target.value;
     ensureDifferentTeams("team");
     await refreshSelectedTeamJerseys();
+    await prepareAdminRosterSeasonForTeam();
     setDefaultLineup();
     if (state.template === "team-presentation") setDefaultPresentationRoster();
     await hydratePlayerPortraits(state.teamId);
