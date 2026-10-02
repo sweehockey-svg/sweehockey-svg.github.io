@@ -26,6 +26,10 @@
   let playerMetaByName = new Map();
   let scl27TeamDirectory = [];
   let scl27RostersByTeamId = new Map();
+  let adminRosterHistoryCache = new Map();
+  let adminRosterOverrideByTeamId = new Map();
+  let adminRosterUiState = { teamKey:"", loading:false, error:"" };
+  let adminRosterLoadToken = 0;
   let presentationReturnState = null;
   let dataSource = "testdata";
 
@@ -75,6 +79,7 @@
     background:"arena",
     showPattern:true,
     lineupStyle:"cards",
+    rosterSeason:"current",
     streamPlatform:"none",
     streamChannel:"",
     playerName:"eSWAHN",
@@ -213,6 +218,9 @@
   }
 
   function usesScl27Teams() {
+    if (access.mode === "captain") {
+      return Boolean(scl27TeamDirectory.length);
+    }
     return Boolean(
       scl27TeamDirectory.length &&
       (
@@ -597,9 +605,337 @@
     };
   }
 
-  function rosterFor(teamId) {
+  function currentRosterFor(teamId) {
     if (scl27RostersByTeamId.has(teamId)) return scl27RostersByTeamId.get(teamId) || [];
     return rostersByTeamId.get(teamId) || [];
+  }
+
+  function rosterFor(teamId) {
+    if (
+      access.mode !== "captain" &&
+      state.rosterSeason !== "current" &&
+      adminRosterOverrideByTeamId.has(teamId)
+    ) {
+      return adminRosterOverrideByTeamId.get(teamId) || [];
+    }
+    return currentRosterFor(teamId);
+  }
+
+  function historySeasonKey(row) {
+    const leagueId = Number(row?.league_id) || 0;
+    if (leagueId > 0) return "league:" + leagueId;
+    return "label:" + normalize(row?.season_label || row?.competition_code || "okand");
+  }
+
+  function historySeasonLabel(row) {
+    const raw = String(row?.season_label || "")
+      .replace(/[\u{1F1E6}-\u{1F1FF}]{2}/gu,"")
+      .replace(/\s+/g," ")
+      .trim();
+
+    if (raw) {
+      if (
+        /^\d+(?:\.\d+)?(?:\s+Challenger)?$/i.test(raw) &&
+        String(row?.competition_code || "").toUpperCase() === "SEC"
+      ) {
+        return "SEC " + raw;
+      }
+      return raw;
+    }
+
+    const competition = String(
+      row?.competition_code || row?.competition_name || "Säsong"
+    ).trim();
+    const leagueId = Number(row?.league_id) || 0;
+    return leagueId ? competition + " · " + leagueId : competition;
+  }
+
+  function historyRowDateValue(row) {
+    const value = String(row?.chronology_date || "").trim();
+    const parsed = value
+      ? Date.parse(value + (value.length <= 10 ? "T00:00:00" : ""))
+      : NaN;
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function dedupeHistoricalRosterRows(rows) {
+    const byPlayer = new Map();
+
+    for (const row of Array.isArray(rows) ? rows : []) {
+      const name = String(row?.display_gamertag || "").trim();
+      if (!name) continue;
+      const key = normalize(name);
+      const current = byPlayer.get(key);
+      if (!current || historyRowDateValue(row) > historyRowDateValue(current)) {
+        byPlayer.set(key,row);
+      }
+    }
+
+    return [...byPlayer.values()].sort((a,b) =>
+      String(a.display_gamertag || "").localeCompare(
+        String(b.display_gamertag || ""),
+        "sv",
+        {sensitivity:"base"}
+      )
+    );
+  }
+
+  function buildAdminRosterHistory(rows) {
+    const seasons = new Map();
+
+    for (const row of Array.isArray(rows) ? rows : []) {
+      const player = String(row?.display_gamertag || "").trim();
+      if (!player) continue;
+
+      const key = historySeasonKey(row);
+      if (!seasons.has(key)) {
+        seasons.set(key,{
+          key,
+          leagueId:Number(row?.league_id) || 0,
+          rows:[],
+          labelCounts:new Map(),
+          date:0
+        });
+      }
+
+      const season = seasons.get(key);
+      season.rows.push(row);
+      const label = historySeasonLabel(row);
+      season.labelCounts.set(label,(season.labelCounts.get(label) || 0) + 1);
+      season.date = Math.max(season.date,historyRowDateValue(row));
+    }
+
+    const seasonList = [...seasons.values()].map(season => {
+      const label = [...season.labelCounts.entries()]
+        .sort((a,b) => b[1] - a[1] || b[0].length - a[0].length)[0]?.[0]
+        || "Säsong";
+      const playerRows = dedupeHistoricalRosterRows(season.rows);
+      return {
+        key:season.key,
+        leagueId:season.leagueId,
+        label,
+        date:season.date,
+        rows:playerRows,
+        playerCount:playerRows.length
+      };
+    }).sort((a,b) =>
+      b.date - a.date ||
+      b.leagueId - a.leagueId ||
+      a.label.localeCompare(b.label,"sv")
+    );
+
+    return {
+      allRows:dedupeHistoricalRosterRows(rows),
+      seasons:seasonList
+    };
+  }
+
+  function applyHistoricalRosterMetadata(rows) {
+    for (const row of Array.isArray(rows) ? rows : []) {
+      const player = String(row?.display_gamertag || "").trim();
+      if (!player) continue;
+
+      const normalized = normalize(player);
+      const key = String(row?.player_key || "").trim();
+      if (key) playerKeysByName.set(normalized,key);
+
+      const portrait = portraitUrlFromRow(row);
+      if (portrait && portrait !== defaultPlayerImageUrl()) {
+        playerPortraits.set(normalized,portrait);
+      }
+
+      playerMetaByName.set(normalized,{
+        primaryPosition:String(row?.primary_position || "").trim().toUpperCase(),
+        countryCode:String(row?.player_country || "").trim().toUpperCase()
+      });
+    }
+  }
+
+  async function loadAdminRosterHistory(team) {
+    const teamKey = normalize(team?.name);
+    if (!teamKey) return {allRows:[],seasons:[]};
+    if (adminRosterHistoryCache.has(teamKey)) {
+      return adminRosterHistoryCache.get(teamKey);
+    }
+
+    const sportsGamerTeamId =
+      Number(team?.sportsGamerTeamId || team?.teamId) || null;
+
+    const rows = await getRpcRows(
+      "seh_match_graphics_team_roster_history",
+      {
+        p_team_name:String(team?.name || "").trim() || null,
+        p_sports_gamer_team_id:sportsGamerTeamId
+      }
+    );
+
+    const model = buildAdminRosterHistory(rows);
+    adminRosterHistoryCache.set(teamKey,model);
+    return model;
+  }
+
+  function applyAdminRosterSelection(teamId,model) {
+    adminRosterOverrideByTeamId.delete(teamId);
+
+    if (access.mode === "captain" || state.rosterSeason === "current") {
+      return currentRosterFor(teamId);
+    }
+
+    let rows = [];
+    if (state.rosterSeason === "all") {
+      rows = model?.allRows || [];
+    } else {
+      rows = model?.seasons?.find(
+        season => season.key === state.rosterSeason
+      )?.rows || [];
+    }
+
+    if (!rows.length) {
+      state.rosterSeason = "current";
+      return currentRosterFor(teamId);
+    }
+
+    applyHistoricalRosterMetadata(rows);
+
+    const players = rows
+      .map(row => String(row?.display_gamertag || "").trim())
+      .filter(Boolean)
+      .sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
+
+    adminRosterOverrideByTeamId.set(teamId,players);
+    return players;
+  }
+
+  function syncAdminRosterSeasonControls() {
+    const section = $("#rosterSeasonSection");
+    const select = $("#rosterSeasonSelect");
+    const hint = $("#rosterSeasonHint");
+    if (!section || !select) return;
+
+    const isCaptain = access.mode === "captain";
+    section.hidden = isCaptain;
+
+    if (isCaptain) {
+      state.rosterSeason = "current";
+      if (hint) hint.textContent = "KAPTEN · AKTUELL SCL";
+      return;
+    }
+
+    const team = teamById(state.teamId);
+    const teamKey = normalize(team?.name);
+    const model = adminRosterHistoryCache.get(teamKey);
+    const currentCount = currentRosterFor(state.teamId).length;
+    const currentLabel = scl27RostersByTeamId.has(state.teamId)
+      ? "Aktuell SCL 27-roster"
+      : "Aktuell ECL 27-roster";
+
+    const options = [{
+      value:"current",
+      label:currentLabel + (currentCount ? " (" + currentCount + ")" : "")
+    }];
+
+    if (model) {
+      options.push({
+        value:"all",
+        label:"Alla säsonger" +
+          (model.allRows.length ? " (" + model.allRows.length + ")" : "")
+      });
+
+      for (const season of model.seasons) {
+        options.push({
+          value:season.key,
+          label:season.label +
+            (season.playerCount ? " (" + season.playerCount + ")" : "")
+        });
+      }
+    }
+
+    const validValues = new Set(options.map(option => option.value));
+    const selected = validValues.has(state.rosterSeason)
+      ? state.rosterSeason
+      : "current";
+
+    select.innerHTML = options.map(option =>
+      '<option value="' + esc(option.value) + '"' +
+      (option.value === selected ? ' selected' : '') +
+      '>' + esc(option.label) + '</option>'
+    ).join("");
+
+    select.disabled =
+      adminRosterUiState.loading &&
+      adminRosterUiState.teamKey === teamKey;
+
+    if (hint) {
+      if (
+        adminRosterUiState.loading &&
+        adminRosterUiState.teamKey === teamKey
+      ) {
+        hint.textContent = "HÄMTAR HISTORIK…";
+      } else if (
+        adminRosterUiState.error &&
+        adminRosterUiState.teamKey === teamKey
+      ) {
+        hint.textContent = "HISTORIK KUNDE INTE HÄMTAS";
+      } else {
+        hint.textContent = state.rosterSeason === "current"
+          ? "AKTUELL TRUPP"
+          : (
+              state.rosterSeason === "all"
+                ? "ALLA SÄSONGER"
+                : "VALD SÄSONG"
+            );
+      }
+    }
+  }
+
+  async function prepareAdminRosterSeasonForTeam({reset=false} = {}) {
+    if (access.mode === "captain") {
+      state.rosterSeason = "current";
+      adminRosterOverrideByTeamId.clear();
+      syncAdminRosterSeasonControls();
+      return;
+    }
+
+    if (reset) state.rosterSeason = "current";
+
+    const team = teamById(state.teamId);
+    const teamKey = normalize(team?.name);
+    if (!teamKey) return;
+
+    const token = ++adminRosterLoadToken;
+    adminRosterUiState = {teamKey,loading:true,error:""};
+    syncAdminRosterSeasonControls();
+
+    try {
+      const model = await loadAdminRosterHistory(team);
+      if (token !== adminRosterLoadToken) return;
+
+      if (
+        state.rosterSeason !== "current" &&
+        state.rosterSeason !== "all" &&
+        !model.seasons.some(season => season.key === state.rosterSeason)
+      ) {
+        state.rosterSeason = "current";
+      }
+
+      applyAdminRosterSelection(state.teamId,model);
+      adminRosterUiState = {teamKey,loading:false,error:""};
+    } catch (error) {
+      if (token !== adminRosterLoadToken) return;
+      console.warn(
+        "[Match Graphics] kunde inte hämta historiska lagtrupper",
+        error
+      );
+      state.rosterSeason = "current";
+      adminRosterOverrideByTeamId.delete(state.teamId);
+      adminRosterUiState = {
+        teamKey,
+        loading:false,
+        error:String(error?.message || error || "")
+      };
+    }
+
+    syncAdminRosterSeasonControls();
   }
 
   function rosterPlayerCount() {
@@ -702,6 +1038,8 @@
     const select = $("#teamSelect");
     const badge = $("#accessBadge");
     if (access.mode === "captain" && access.teamName) {
+      state.rosterSeason = "current";
+      adminRosterOverrideByTeamId.clear();
       const directory = activeTeamDirectory();
       const locked = directory.find(team => normalize(team.name) === normalize(access.teamName))
         || teamDirectory.find(team => normalize(team.name) === normalize(access.teamName))
@@ -2421,10 +2759,24 @@
     $("#previewSize").textContent = FORMATS[state.format].label;
     const team = teamById(state.teamId);
     const rosterCount = rosterFor(state.teamId).length;
+    const sourceLabel =
+      access.mode !== "captain" && state.rosterSeason !== "current"
+        ? (
+            state.rosterSeason === "all"
+              ? "Alla säsonger"
+              : (
+                  adminRosterHistoryCache.get(normalize(team.name))?.seasons
+                    ?.find(season => season.key === state.rosterSeason)?.label
+                  || "Vald säsong"
+                )
+          )
+        : "";
+
     $("#ownTeamHint").textContent =
       team.name +
       (team.division ? " · " + team.division : "") +
-      " · " + rosterCount + " spelare";
+      " · " + rosterCount + " spelare" +
+      (sourceLabel ? " · " + sourceLabel : "");
   }
 
   function fillTeamSelect(select, selected) {
@@ -2526,6 +2878,7 @@
       const preview = button.querySelector(".background-thumb");
       if (preview) preview.style.backgroundImage = 'url("' + backgroundUrl(id) + '")';
     });
+    syncAdminRosterSeasonControls();
     syncLineupSelects();
     POSITIONS.forEach(pos => {
       const input = $('[data-lineup-number="' + pos + '"]');
@@ -2543,7 +2896,7 @@
     else state.teamId = replacement.id;
   }
 
-  function reset() {
+  async function reset() {
     const preferred = teamDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen")) || teamDirectory[0];
     state.teamId = preferred?.id || "";
     state.opponentId = teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
@@ -2561,12 +2914,15 @@
     state.background = "arena";
     state.showPattern = true;
     state.lineupStyle = "cards";
+    state.rosterSeason = "current";
+    adminRosterOverrideByTeamId.clear();
     state.lineupNumbers = {...EMPTY_NUMBERS};
     state.presentationPlayers = Array(12).fill("");
     state.presentationNumbers = Array(12).fill("");
     state.streamPlatform = "none";
     state.streamChannel = "";
     applyAccessMode();
+    await prepareAdminRosterSeasonForTeam({reset:true});
     setDefaultLineup();
     syncForm();
     render();
@@ -2860,6 +3216,27 @@
     syncForm();
     render();
   });
+
+  const rosterSeasonSelect = $("#rosterSeasonSelect");
+  if (rosterSeasonSelect) {
+    rosterSeasonSelect.addEventListener("change",async event => {
+      if (access.mode === "captain") return;
+
+      state.rosterSeason = String(event.target.value || "current");
+      const team = teamById(state.teamId);
+      const model = adminRosterHistoryCache.get(normalize(team?.name));
+      applyAdminRosterSelection(state.teamId,model);
+
+      setDefaultLineup();
+      if (state.template === "team-presentation") {
+        setDefaultPresentationRoster();
+      }
+      await hydratePlayerPortraits(state.teamId);
+
+      syncForm();
+      render();
+    });
+  }
 
   $("#lineupStyleSelect").addEventListener("change",async event => {
     state.lineupStyle = ["jerseys","portraits"].includes(event.target.value)
