@@ -8,6 +8,14 @@
   <title>Commentator Cockpit · Hockeyettan</title>
   <script>
     (() => {
+      const target = new URL("https://swnworks.se/commentator-cockpit/hockeyettan/");
+      target.search = window.location.search;
+      target.hash = window.location.hash;
+      window.location.replace(target.toString());
+    })();
+  </script>
+  <script>
+    (() => {
       try {
         document.documentElement.dataset.theme =
           localStorage.getItem("commentator-cockpit-theme") === "light" ? "light" : "dark";
