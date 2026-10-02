@@ -4518,3 +4518,54 @@ body[data-fantasy-league="neutral"] .fantasy-hero__copy h1{
   .fantasy-account-button__label--desktop{display:none}
   .fantasy-account-button__label--mobile{display:inline}
 }
+
+
+/* 2026-10-03 — SWNWORKS credit in Fantasy footer */
+.fantasy-footer{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;
+  gap:20px;
+}
+.fantasy-footer__competition{
+  justify-self:start;
+}
+.fantasy-footer__swnworks{
+  justify-self:center;
+  color:#607f93 !important;
+  font-size:.58rem;
+  font-weight:900 !important;
+  letter-spacing:.075em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  transition:color .18s ease;
+}
+.fantasy-footer__swnworks:hover,
+.fantasy-footer__swnworks:focus-visible{
+  color:#d8b552 !important;
+  outline:none;
+}
+.fantasy-footer__powered{
+  justify-self:end;
+}
+@media(max-width:720px){
+  .fantasy-footer{
+    grid-template-columns:1fr auto;
+    row-gap:12px;
+  }
+  .fantasy-footer__competition{
+    grid-column:1;
+    grid-row:1;
+  }
+  .fantasy-footer__powered{
+    grid-column:2;
+    grid-row:1;
+  }
+  .fantasy-footer__swnworks{
+    grid-column:1 / -1;
+    grid-row:2;
+    justify-self:center;
+    white-space:normal;
+    text-align:center;
+  }
+}
