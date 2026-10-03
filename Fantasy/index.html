@@ -12,7 +12,7 @@
   <title>eHockey Fantasy Liga</title>
 
   <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20261003-leaderboard-v2">
+  <link rel="stylesheet" href="style.css?v=20261003-persistent-nav-v1">
 </head>
 <body>
   <div class="beta-ribbon">
@@ -30,12 +30,11 @@
       </span>
     </a>
 
-    <nav class="fantasy-site-header__center" aria-label="Fantasy">
-      <span data-i18n="nav_build">BYGG</span>
-      <i></i>
-      <span data-i18n="nav_compete">TÄVLA</span>
-      <i></i>
-      <span data-i18n="nav_climb">KLÄTTRA</span>
+    <nav class="fantasy-site-header__center" aria-label="Fantasy huvudmeny">
+      <button type="button" class="is-active" data-tab="team" data-i18n="my_team">Mitt lag</button>
+      <button type="button" data-tab="players" data-i18n="players">Spelare</button>
+      <button type="button" data-tab="leaderboard" data-i18n="leaderboard">Topplista</button>
+      <button type="button" data-tab="rules" data-i18n="rules">Regler</button>
     </nav>
 
     <div class="fantasy-site-header__actions">
@@ -522,6 +521,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="app.js?v=20261003-swnworks-footer-v1"></script>
+  <script src="app.js?v=20261003-persistent-nav-v1"></script>
 </body>
 </html>
