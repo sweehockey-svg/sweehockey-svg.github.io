@@ -179,3 +179,41 @@ select cron.schedule(
   );
   $$
 );
+
+
+-- Suomi-sarja 2026/27.
+-- Base JSON data every 30 minutes; match/live collector every minute.
+-- The live collector only targets Suomi-sarja teams with active commentator access,
+-- while final-match backfills can be triggered explicitly.
+
+select cron.schedule(
+  'finhockey-base-sync',
+  '12,42 * * * *',
+  $$
+  select net.http_post(
+    url := 'https://pqaymcvlwsruxvekvvtl.supabase.co/functions/v1/finhockey-sync',
+    headers := jsonb_build_object(
+      'Content-Type','application/json',
+      'x-sync-token',(select decrypted_secret from vault.decrypted_secrets where name='swehockey_sync_token' limit 1)
+    ),
+    body := jsonb_build_object('reason','scheduled-base-sync-suomi-sarja','at',now()),
+    timeout_milliseconds := 30000
+  );
+  $$
+);
+
+select cron.schedule(
+  'finhockey-game-sync',
+  '* * * * *',
+  $$
+  select net.http_post(
+    url := 'https://pqaymcvlwsruxvekvvtl.supabase.co/functions/v1/finhockey-game-sync',
+    headers := jsonb_build_object(
+      'Content-Type','application/json',
+      'x-sync-token',(select decrypted_secret from vault.decrypted_secrets where name='swehockey_sync_token' limit 1)
+    ),
+    body := jsonb_build_object('reason','scheduled-game-sync-suomi-sarja','at',now()),
+    timeout_milliseconds := 30000
+  );
+  $$
+);
