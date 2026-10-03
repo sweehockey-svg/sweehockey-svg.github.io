@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#02030a">
+  <meta name="description" content="Officiell Svensk eHockey-merch för lag, spelare och fans.">
+  <link rel="canonical" href="https://www.svenskehockey.se/shop/">
+  <title>Shop – Svensk eHockey</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/seh-icon-192.png?v=20260817-pwa1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/seh-apple-touch-icon.png?v=20260817-pwa1">
+  <link rel="stylesheet" href="/styles.css?v=20261003-shop-direct-v1">
+  <style>
+    body.shop-standalone-page {
+      background: #050707;
+    }
+
+    .shop-standalone-page .seh-header__tools {
+      justify-content: flex-end;
+    }
+
+    .shop-standalone-back {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 15px;
+      border: 1px solid rgba(255,255,255,.16);
+      color: #f4f1e9;
+      font-size: .65rem;
+      font-weight: 900;
+      letter-spacing: .04em;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .shop-standalone-back:hover,
+    .shop-standalone-back:focus-visible {
+      border-color: #ffd000;
+      color: #ffd000;
+      outline: none;
+    }
+
+    .shop-standalone-page .spreadshop-frame {
+      min-height: 0;
+      overflow: visible;
+    }
+
+    .shop-standalone-page #spreadshop {
+      width: 100%;
+      min-height: 760px;
+      background: #050707;
+    }
+
+    .shop-direct-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 15px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      color: rgba(244,241,233,.72);
+      background: rgba(255,255,255,.015);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .shop-direct-note a {
+      color: #ffd000;
+      font-weight: 900;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .shop-direct-note a:hover,
+    .shop-direct-note a:focus-visible {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    @media (max-width: 920px) {
+      .shop-standalone-page .seh-header__tools {
+        display: none;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shop-direct-note {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body class="directory-page shop-page shop-standalone-page">
+  <header class="seh-header">
+    <div class="seh-header__inner">
+      <a class="seh-brand seh-brand--logo-only" href="/#/" aria-label="Svensk eHockey – startsida">
+        <img src="/assets/SeHlogga.png" alt="" width="150" height="46">
+      </a>
+
+      <div class="seh-current" aria-label="Aktuell sida">
+        <span>AKTUELL VY</span>
+        <strong>Shop</strong>
+      </div>
+
+      <button
+        class="seh-menu-button"
+        id="shopMenuButton"
+        type="button"
+        aria-expanded="false"
+        aria-controls="shopNavigation"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+        <b class="sr-only">Öppna meny</b>
+      </button>
+
+      <nav id="shopNavigation" class="seh-nav" aria-label="Huvudnavigation">
+        <a href="/#/">Hem</a>
+        <a href="/#/nyheter">Nyheter</a>
+        <a href="/#/spelare">Spelare</a>
+        <a href="/#/rekord">Rekord</a>
+        <a href="/#/laghistoria">Laghistoria</a>
+        <a href="/#/ecl">Tävlingar</a>
+        <a class="seh-nav-team-builds" href="/#/sasong/ecl27winter">Lagbygge</a>
+        <a class="seh-nav-fantasy" href="/Fantasy/?competition=SCL2027">Fantasy</a>
+        <a href="/#/free-agents">Free Agents</a>
+        <a class="is-active" href="/shop/" aria-current="page">Shop</a>
+        <a class="seh-nav-sec" href="/SEC/">SEC</a>
+      </nav>
+
+      <div class="seh-header__tools">
+        <a class="shop-standalone-back" href="/#/">TILL SVENSK eHOCKEY</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="shop-page-shell">
+    <section class="shop-page-hero shop-page-hero--reference">
+      <div class="shop-title-block">
+        <p class="directory-kicker">SVENSK eHOCKEY</p>
+        <h1>SHOP</h1>
+        <div class="shop-title-accent" aria-hidden="true"></div>
+        <p class="shop-page-lead">Officiell Svensk eHockey-merch.</p>
+        <p class="shop-page-summary">
+          Här hittar du officiella produkter för lag, spelare och fans.
+          Alla köp stödjer Svensk eHockey.
+        </p>
+      </div>
+
+      <div class="shop-info-panel shop-info-panel--reference">
+        <div class="shop-info-stack">
+          <article class="shop-info-card shop-info-card--reference">
+            <div class="shop-card-index">01</div>
+            <div class="shop-card-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64">
+                <path d="M18 31c-5-7-2-16 6-18 4-1 8 1 10 5 2-4 6-6 10-5 8 2 11 11 6 18-5 7-16 15-16 15S23 38 18 31Z"/>
+                <path d="M12 36v12l9 8M56 36v12l-9 8M12 36c5 0 9 3 12 8M56 36c-5 0-9 3-12 8"/>
+              </svg>
+            </div>
+            <div class="shop-card-divider" aria-hidden="true"></div>
+            <div class="shop-card-copy">
+              <h2>Utan vinstsyfte</h2>
+              <p>Shoppen drivs utan vinstsyfte. 20 kr per såld produkt går till Svensk eHockey och används för drift och underhåll.</p>
+            </div>
+          </article>
+
+          <article class="shop-info-card shop-info-card--reference">
+            <div class="shop-card-index">02</div>
+            <div class="shop-card-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64">
+                <path d="M22 13 32 18 42 13 53 20 47 31 42 28v23H22V28l-5 3-6-11 11-7Z"/>
+                <path d="M27 19h10"/>
+              </svg>
+            </div>
+            <div class="shop-card-divider" aria-hidden="true"></div>
+            <div class="shop-card-copy">
+              <h2>Lag & personliga produkter</h2>
+              <p>Vill du lägga till eller ta bort produkter för ditt lag eller dina personliga produkter? Kontakta oss.</p>
+            </div>
+          </article>
+
+          <article class="shop-info-card shop-info-card--reference">
+            <div class="shop-card-index">03</div>
+            <div class="shop-card-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64">
+                <path d="M14 48 46 16l8 8-32 32H14v-8Z"/>
+                <path d="M39 13 51 25M17 41l6 6"/>
+                <path d="M12 20 24 8l8 8-12 12M44 36l12 12-8 8-12-12"/>
+              </svg>
+            </div>
+            <div class="shop-card-divider" aria-hidden="true"></div>
+            <div class="shop-card-copy">
+              <h2>Personlig design</h2>
+              <p>Vi kan även ta fram en personlig design åt dig. Detta är en betaltjänst och priset beror på designens omfattning och komplexitet.</p>
+            </div>
+          </article>
+
+          <article class="shop-info-card shop-info-card--reference">
+            <div class="shop-card-index">04</div>
+            <div class="shop-card-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64">
+                <path d="M14 18 31 9l19 10-18 10-18-11Z"/>
+                <path d="M14 18v24l18 11V29M50 19v16"/>
+                <path d="M44 44a10 10 0 1 0 3-7"/>
+                <path d="m44 35 5 2-1-6"/>
+              </svg>
+            </div>
+            <div class="shop-card-divider" aria-hidden="true"></div>
+            <div class="shop-card-copy">
+              <h2>Beställning & reklamation</h2>
+              <p>Shoppen och beställningarna hanteras av Spreadshirt. Frågor om order, leverans, retur och reklamation hanteras därför av Spreadshirt.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="shop-contact-bar">
+          <div class="shop-contact-left">
+            <span class="shop-contact-icon" aria-hidden="true">✉</span>
+            <strong>KONTAKT</strong>
+            <a href="mailto:svenskehockey@gmail.com">svenskehockey@gmail.com</a>
+          </div>
+
+          <a class="shop-open-button"
+             href="https://svenskehockey.myspreadshop.se/"
+             target="_blank"
+             rel="noopener noreferrer">
+            ÖPPNA SHOPPEN SEPARAT
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="spreadshop-frame" aria-label="Svensk eHockey Shop">
+      <div class="shop-direct-note">
+        <span>Shoppen körs direkt på svenskehockey.se. Beställning och betalning hanteras säkert av Spreadshirt.</span>
+        <a href="https://svenskehockey.myspreadshop.se/" target="_blank" rel="noopener noreferrer">Öppna separat ↗</a>
+      </div>
+
+      <div id="spreadshopStatus" class="spreadshop-status">Laddar shoppen…</div>
+
+      <div id="spreadshop">
+        <a href="https://svenskehockey.myspreadshop.se/" target="_blank" rel="noopener noreferrer">
+          Svensk eHockey Shop
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="directory-footer">
+    <div>
+      <strong>SVENSK eHOCKEY</strong>
+      <span>© 2026 Svensk eHockey</span>
+    </div>
+  </footer>
+
+  <script>
+    window.spread_shop_config = {
+      shopName: "svenskehockey",
+      prefix: "https://svenskehockey.myspreadshop.se",
+      baseId: "spreadshop",
+      locale: "sv_SE",
+      startToken: "all",
+      usePushState: false,
+      updateMetadata: false
+    };
+  </script>
+  <script src="https://svenskehockey.myspreadshop.net/js/shopclient.nocache.js?seh=20261003-direct-v1"></script>
+  <script>
+    (function () {
+      const button = document.getElementById("shopMenuButton");
+      const nav = document.getElementById("shopNavigation");
+      const status = document.getElementById("spreadshopStatus");
+
+      button?.addEventListener("click", function () {
+        const open = button.getAttribute("aria-expanded") === "true";
+        button.setAttribute("aria-expanded", String(!open));
+        nav?.classList.toggle("is-open", !open);
+      });
+
+      nav?.addEventListener("click", function () {
+        button?.setAttribute("aria-expanded", "false");
+        nav.classList.remove("is-open");
+      });
+
+      window.setTimeout(function () {
+        if (status) status.hidden = true;
+      }, 1200);
+    })();
+  </script>
+</body>
+</html>
