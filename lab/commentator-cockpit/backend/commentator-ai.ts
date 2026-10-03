@@ -207,7 +207,7 @@ Deno.serve(async(req:Request)=>{
 
   const context={
     data_policy:{
-      official_stats:"All hockey facts below are database records imported from Swehockey.",
+      official_stats:"All hockey facts below are database records imported from the competition's verified official statistics source.",
       private_notes:"Private commentator notes are intentionally excluded from this AI request."
     },
     mode,
@@ -393,7 +393,7 @@ Deno.serve(async(req:Request)=>{
     ok:true,
     model:MODEL,
     generated_at:new Date().toISOString(),
-    data_scope:"official_swehockey_only",
+    data_scope:"official_source_only",
     brief
   });
 });
