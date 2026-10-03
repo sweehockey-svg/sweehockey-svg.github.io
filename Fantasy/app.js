@@ -2666,7 +2666,12 @@
   document.addEventListener("click", (event) => {
     const tab = event.target.closest("[data-tab]");
     if (tab) {
-      switchTab(tab.dataset.tab);
+      const tabName = clean(tab.dataset.tab);
+      switchTab(tabName);
+      const panel = document.querySelector('[data-panel="' + tabName + '"]');
+      window.requestAnimationFrame(() => {
+        panel?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
       return;
     }
 
