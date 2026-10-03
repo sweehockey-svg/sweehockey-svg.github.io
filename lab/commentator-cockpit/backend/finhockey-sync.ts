@@ -214,8 +214,8 @@ Deno.serve(async(req:Request)=>{
             birth_date:birth,
             nationality_code:null,
             primary_position:rolePosition(p.RoleAbbrv||p.Position),
-            height_cm:intOrNull(p.Height),
-            weight_kg:intOrNull(p.Weight),
+            height_cm:(intOrNull(p.Height)||0)>0?intOrNull(p.Height):null,
+            weight_kg:(intOrNull(p.Weight)||0)>0?intOrNull(p.Weight):null,
             updated_at:now
           });
         }
