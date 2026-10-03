@@ -6,13 +6,22 @@ import { DateTime } from "npm:luxon@3.5.0";
 
 const BASE = "https://stats.swehockey.se";
 const COMPETITIONS = new Map([
-  ["21043",{name:"Hockeyettan Norra",group:"Norra"}],
-  ["21044",{name:"Hockeyettan Södra",group:"Södra"}]
+  ["21043",{name:"Hockeyettan Norra",league:"Hockeyettan",group:"Norra"}],
+  ["21044",{name:"Hockeyettan Södra",league:"Hockeyettan",group:"Södra"}],
+  ["21088",{name:"HockeyTvåan Herr Region Väst A",league:"HockeyTvåan",group:"Väst A"}],
+  ["21089",{name:"HockeyTvåan Herr Region Väst B",league:"HockeyTvåan",group:"Väst B"}],
+  ["21090",{name:"HockeyTvåan Herr Region Väst C",league:"HockeyTvåan",group:"Väst C"}],
+  ["21213",{name:"HockeyTvåan Herr Syd A",league:"HockeyTvåan",group:"Syd A"}],
+  ["21214",{name:"HockeyTvåan Herr Syd B",league:"HockeyTvåan",group:"Syd B"}],
+  ["21505",{name:"HockeyTvåan Herr Östra",league:"HockeyTvåan",group:"Östra"}],
+  ["21319",{name:"HockeyTvåan Herr Region Norr A",league:"HockeyTvåan",group:"Norr A"}],
+  ["21320",{name:"HockeyTvåan Herr Region Norr B",league:"HockeyTvåan",group:"Norr B"}],
+  ["21321",{name:"HockeyTvåan Herr Region Norr C",league:"HockeyTvåan",group:"Norr C"}]
 ]);
 const ZONE = "Europe/Stockholm";
 const SOURCE = "swehockey";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
-const PARSER_VERSION = "base-sync-v6";
+const PARSER_VERSION = "base-sync-v7";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -471,7 +480,7 @@ Deno.serve(async (req: Request) => {
         source: SOURCE,
         source_competition_id: COMPETITION_ID,
         name: meta.name,
-        league_name: "Hockeyettan",
+        league_name: meta.league,
         season_label: "2026/27",
         group_name: meta.group,
         country_code: "SWE",
@@ -482,7 +491,7 @@ Deno.serve(async (req: Request) => {
     } else {
       const upd = await admin.from("competitions").update({
         name: meta.name,
-        league_name: "Hockeyettan",
+        league_name: meta.league,
         season_label: "2026/27",
         group_name: meta.group,
         country_code: "SWE",
