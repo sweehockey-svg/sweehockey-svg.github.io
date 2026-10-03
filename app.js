@@ -18804,7 +18804,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
 
           <a
             class="${route.active === "shop" ? "is-active" : ""}"
-            href="#/shop"
+            href="/shop/"
           >
             Shop
           </a>
@@ -20764,6 +20764,13 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
   async function render() {
     const token = ++renderToken;
     const route = parseRoute();
+
+    // Shoppen ligger på en egen riktig sida så Spreadshops hash-navigation
+    // och kundvagn kan fungera utan att krocka med Svensk eHockey-SPA:n.
+    if (route.key === "shop") {
+      window.location.replace("/shop/");
+      return;
+    }
 
     try { window.SEH_adminPlayerAutoRefreshCleanup?.(); } catch (_) {}
     window.SEH_adminPlayerAutoRefreshCleanup = null;
