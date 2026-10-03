@@ -254,10 +254,22 @@ async function syncPlayerGameStats(game:any,summary:any,goalies:any,lookup:any){
       });
     }
   }
+  const playerRowMap=new Map<string,any>();
+  for(const row of playerRows){
+    const key=row.player_id
+      ? row.team_id+"|player|"+row.player_id
+      : row.team_id+"|source|"+norm(row.source_name)+"|"+String(row.jersey_number??-1);
+    const previous=playerRowMap.get(key);
+    if(!previous || Number(row.points||0)>Number(previous.points||0) || Number(row.toi_seconds||0)>Number(previous.toi_seconds||0)){
+      playerRowMap.set(key,row);
+    }
+  }
+  const dedupedPlayerRows=[...playerRowMap.values()];
+
   const delPlayers=await admin.from("player_game_stats").delete().eq("game_id",game.id);
   if(delPlayers.error) throw delPlayers.error;
-  if(playerRows.length){
-    const ins=await admin.from("player_game_stats").insert(playerRows);
+  if(dedupedPlayerRows.length){
+    const ins=await admin.from("player_game_stats").insert(dedupedPlayerRows);
     if(ins.error) throw ins.error;
   }
 
@@ -283,13 +295,25 @@ async function syncPlayerGameStats(game:any,summary:any,goalies:any,lookup:any){
       source_updated_at:now,updated_at:now
     });
   }
+  const goalieRowMap=new Map<string,any>();
+  for(const row of goalieRows){
+    const key=row.player_id
+      ? row.team_id+"|player|"+row.player_id
+      : row.team_id+"|source|"+norm(row.source_name)+"|"+String(row.jersey_number??-1);
+    const previous=goalieRowMap.get(key);
+    if(!previous || Number(row.minutes_played_seconds||0)>Number(previous.minutes_played_seconds||0)){
+      goalieRowMap.set(key,row);
+    }
+  }
+  const dedupedGoalieRows=[...goalieRowMap.values()];
+
   const delGoalies=await admin.from("goalie_game_stats").delete().eq("game_id",game.id);
   if(delGoalies.error) throw delGoalies.error;
-  if(goalieRows.length){
-    const ins=await admin.from("goalie_game_stats").insert(goalieRows);
+  if(dedupedGoalieRows.length){
+    const ins=await admin.from("goalie_game_stats").insert(dedupedGoalieRows);
     if(ins.error) throw ins.error;
   }
-  return {skaters:playerRows.length,goalies:goalieRows.length};
+  return {skaters:dedupedPlayerRows.length,goalies:dedupedGoalieRows.length};
 }
 
 async function syncEventsAndTeamStats(game:any,reportPayload:any,lookup:any){
