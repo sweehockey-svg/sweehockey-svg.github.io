@@ -296,6 +296,276 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
+  <script>
+    window.EHOCKEY_CONFIG = {
+      supabaseUrl: "https://oujqnvrczdavqbqaavuh.supabase.co",
+      supabasePublishableKey: "sb_publishable_-4cV-I1xCAAZrgdcGCljrQ_T7T0YC5z"
+    };
+  </script>
+  <script src="/global-search-v1.js?v=20260920-v6"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      const cfg = window.EHOCKEY_CONFIG || {};
+      const client = window.supabase?.createClient?.(
+        cfg.supabaseUrl,
+        cfg.supabasePublishableKey
+      );
+
+      const root = document.querySelector(".seh-account");
+      const button = document.getElementById("sehAccountButton");
+      const panel = document.getElementById("sehAccountPanel");
+      const avatar = document.getElementById("sehAccountAvatar");
+      const fallback = document.getElementById("sehAccountAvatarFallback");
+      const eyebrow = document.getElementById("sehAccountEyebrow");
+      const label = document.getElementById("sehAccountLabel");
+      const panelName = document.getElementById("sehAccountPanelName");
+      const panelMeta = document.getElementById("sehAccountPanelMeta");
+      const playerCard = document.getElementById("sehAccountPlayerCard");
+      const profile = document.getElementById("sehAccountProfile");
+      const connect = document.getElementById("sehAccountConnect");
+      const writerLink = document.getElementById("sehAccountWriter");
+      const adminLink = document.getElementById("sehAccountAdmin");
+      const logout = document.getElementById("sehAccountLogout");
+      const pendingBadge = document.getElementById("shopAdminPending");
+
+      let session = null;
+      let writer = null;
+      let playerAccount = null;
+
+      function rpcRow(data) {
+        return Array.isArray(data) ? (data[0] || null) : (data || null);
+      }
+
+      function isDiscord(user) {
+        const providers = Array.isArray(user?.app_metadata?.providers)
+          ? user.app_metadata.providers
+          : [];
+        return user?.app_metadata?.provider === "discord" || providers.includes("discord");
+      }
+
+      function discordName(user) {
+        return String(
+          user?.user_metadata?.global_name ||
+          user?.user_metadata?.full_name ||
+          user?.user_metadata?.name ||
+          user?.user_metadata?.preferred_username ||
+          user?.email ||
+          "Discord-användare"
+        ).trim();
+      }
+
+      function discordAvatar(user) {
+        return String(
+          user?.user_metadata?.avatar_url ||
+          user?.user_metadata?.picture ||
+          ""
+        ).trim();
+      }
+
+      async function readAccess() {
+        if (!client || !session?.user) {
+          writer = null;
+          playerAccount = null;
+          return;
+        }
+
+        const writerPromise = client.rpc("seh_current_writer");
+        const accountPromise = isDiscord(session.user)
+          ? client.rpc("seh_get_my_player_account")
+          : Promise.resolve({ data: null, error: null });
+
+        const results = await Promise.allSettled([writerPromise, accountPromise]);
+        const writerResult = results[0];
+        const accountResult = results[1];
+
+        if (writerResult.status === "fulfilled" && !writerResult.value.error) {
+          writer = rpcRow(writerResult.value.data);
+        } else {
+          writer = null;
+        }
+
+        if (accountResult.status === "fulfilled" && !accountResult.value.error) {
+          const row = rpcRow(accountResult.value.data) || {};
+          playerAccount = {
+            status: String(row.status || "unlinked"),
+            playerKey: String(row.player_key || "").trim(),
+            playerName: String(row.player_name || "").trim(),
+            discordUsername: String(row.discord_username || discordName(session.user)).trim()
+          };
+        } else {
+          playerAccount = null;
+        }
+      }
+
+      async function refreshPending(isAdmin) {
+        if (!pendingBadge || !client || !isAdmin) {
+          if (pendingBadge) pendingBadge.hidden = true;
+          return;
+        }
+
+        try {
+          const result = await client.rpc("seh_admin_pending_counts");
+          if (result.error) throw result.error;
+          const row = rpcRow(result.data) || {};
+          const total = Math.max(0, Number(row.total) || 0);
+          pendingBadge.textContent = total > 99 ? "99+" : String(total);
+          pendingBadge.setAttribute("aria-label", total + " väntande adminärenden");
+          pendingBadge.hidden = false;
+        } catch (_) {
+          pendingBadge.hidden = true;
+        }
+      }
+
+      function paint() {
+        const user = session?.user || null;
+        const loggedIn = Boolean(user && !user.is_anonymous);
+        const discord = loggedIn && isDiscord(user);
+        const role = String(writer?.role || "").toLowerCase();
+        const isWriter = Boolean(writer?.writer_id);
+        const isAdmin = isWriter && role === "admin";
+        const approvedKey = playerAccount?.status === "approved"
+          ? String(playerAccount.playerKey || "")
+          : "";
+        const name = String(playerAccount?.playerName || "").trim();
+        const dName = discordName(user);
+        const avatarUrl = discord ? discordAvatar(user) : "";
+
+        if (root) root.dataset.state = !loggedIn ? "logged-out" : discord ? "discord" : isAdmin ? "admin" : isWriter ? "writer" : "account";
+
+        if (avatar) {
+          avatar.src = avatarUrl || "";
+          avatar.hidden = !avatarUrl;
+        }
+        if (fallback) {
+          fallback.hidden = Boolean(avatarUrl);
+          fallback.textContent = !loggedIn
+            ? "D"
+            : discord
+              ? (dName.slice(0, 1).toUpperCase() || "D")
+              : isAdmin
+                ? "A"
+                : isWriter
+                  ? "S"
+                  : "K";
+        }
+
+        if (eyebrow) eyebrow.textContent = !loggedIn ? "DISCORD" : discord ? "MITT KONTO" : isAdmin ? "ADMIN" : isWriter ? "SKRIBENT" : "KONTO";
+        if (label) label.textContent = !loggedIn ? "LOGGA IN" : discord ? (name || dName || "MIN PROFIL") : isAdmin ? "ADMIN" : isWriter ? "SKRIBENT" : "KONTO";
+
+        if (panelName) panelName.textContent = !loggedIn ? "Mitt konto" : discord ? (name || dName || "Discord-konto") : isAdmin ? "Admin" : isWriter ? "Skribent" : "Inloggad";
+        if (panelMeta) {
+          panelMeta.textContent = discord
+            ? ("Discord: " + dName + (approvedKey ? " · Spelarprofil kopplad" : ""))
+            : isAdmin
+              ? "Administratörskonto"
+              : isWriter
+                ? "Skribentkonto"
+                : "";
+        }
+
+        if (playerCard) {
+          playerCard.hidden = !(discord && approvedKey);
+          if (approvedKey) playerCard.href = "/#/spelare/" + encodeURIComponent(approvedKey);
+        }
+        if (profile) profile.hidden = !(discord && approvedKey);
+        if (connect) connect.hidden = !(discord && !approvedKey);
+        if (writerLink) writerLink.hidden = !isWriter;
+        if (adminLink) adminLink.hidden = !isAdmin;
+        if (logout) logout.hidden = !loggedIn;
+
+        if (button) {
+          button.setAttribute("aria-label", loggedIn ? "Öppna kontomeny" : "Logga in med Discord");
+          if (!loggedIn) button.setAttribute("aria-expanded", "false");
+        }
+
+        if (!loggedIn && panel) panel.hidden = true;
+        refreshPending(isAdmin);
+      }
+
+      async function refreshAuth() {
+        if (!client) {
+          paint();
+          return;
+        }
+
+        try {
+          const result = await client.auth.getSession();
+          session = result.data?.session || null;
+          await readAccess();
+        } catch (_) {
+          session = null;
+          writer = null;
+          playerAccount = null;
+        }
+
+        paint();
+      }
+
+      button?.addEventListener("click", async function () {
+        const loggedIn = Boolean(session?.user && !session.user.is_anonymous);
+
+        if (!loggedIn) {
+          if (!client) return;
+          button.disabled = true;
+          try {
+            await client.auth.signInWithOAuth({
+              provider: "discord",
+              options: { redirectTo: window.location.origin + "/shop/" }
+            });
+          } finally {
+            button.disabled = false;
+          }
+          return;
+        }
+
+        const open = button.getAttribute("aria-expanded") === "true";
+        button.setAttribute("aria-expanded", String(!open));
+        if (panel) panel.hidden = open;
+      });
+
+      logout?.addEventListener("click", async function () {
+        if (!client) return;
+        logout.disabled = true;
+        try {
+          await client.auth.signOut();
+          session = null;
+          writer = null;
+          playerAccount = null;
+          if (panel) panel.hidden = true;
+          paint();
+        } finally {
+          logout.disabled = false;
+        }
+      });
+
+      document.addEventListener("click", function (event) {
+        if (!panel || panel.hidden || root?.contains(event.target)) return;
+        panel.hidden = true;
+        button?.setAttribute("aria-expanded", "false");
+      });
+
+      client?.auth.onAuthStateChange(function (_event, nextSession) {
+        window.setTimeout(async function () {
+          session = nextSession || null;
+          await readAccess();
+          paint();
+        }, 0);
+      });
+
+      document.addEventListener("click", function (event) {
+        const link = event.target.closest("#sehGlobalSearch a[href^='#/']");
+        if (!link) return;
+        event.preventDefault();
+        window.location.href = "/" + link.getAttribute("href");
+      }, true);
+
+      refreshAuth();
+    })();
+  </script>
+
   <script>
     window.spread_shop_config = {
       shopName: "svenskehockey",
