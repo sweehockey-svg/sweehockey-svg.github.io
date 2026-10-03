@@ -7,10 +7,16 @@ import pdf from "npm:pdf-parse@1.1.1";
 import { Buffer } from "node:buffer";
 
 const BASE = "https://stats.swehockey.se";
-const ALLOWED_COMPETITION_SOURCE_IDS = ["21043","21044"] as const;
+const ALLOWED_COMPETITION_SOURCE_IDS = [
+  "21043","21044",
+  "21088","21089","21090",
+  "21213","21214",
+  "21505",
+  "21319","21320","21321"
+] as const;
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v17";
+const PARSER_VERSION = "game-sync-v18";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -579,7 +585,7 @@ function parsePlayerSummaryText(text:string, game:any, homeName:string, awayName
       mode="goalies"; continue;
     }
     if (line === "Player Summary" || line.startsWith("Referee") || line.startsWith("Linesman") ||
-        /^\d{4}-\d{2}-\d{2}/.test(line) || line.startsWith("Hockeyettan") ||
+        /^\d{4}-\d{2}-\d{2}/.test(line) || /^Hockey(?:ettan|Tvåan)/i.test(line) ||
         line.startsWith("Group No.") || line.startsWith("Game No.")) {
       continue;
     }
@@ -1885,7 +1891,7 @@ Deno.serve(async (req:Request) => {
     const teamById = new Map((targetTeams || []).map((team:any)=>[team.id,team]));
 
     if (!competitionIds.length) {
-      throw new Error("No active Hockeyettan competitions found.");
+      throw new Error("No active supported competitions found.");
     }
 
     const { data:memberships, error:membershipError } = await admin.from("team_rosters")
@@ -1915,7 +1921,7 @@ Deno.serve(async (req:Request) => {
         results.push({
           team_id:teamId,
           team_name:team.canonical_name,
-          error:"team_not_in_active_hockeyettan_competition"
+          error:"team_not_in_active_supported_competition"
         });
         continue;
       }
