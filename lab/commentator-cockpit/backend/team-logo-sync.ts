@@ -33,13 +33,45 @@ function normalizeName(value:string) {
 
 function baseClubName(value:string) {
   return normalizeName(value)
-    .replace(/\b(?:hockeyklubb|ishockey|hockey|hk|hc)\b/g," ")
+    .replace(/\b(?:ishockeyforening|ishockeyforening|hockeyforening|hockeyklubb|ishockey|hockey|club|ungdom|ishf|hk|hc|ik)\b/g," ")
     .replace(/\s+/g," ")
     .trim();
 }
 
 function looksYouthOrWomen(value:string) {
-  return /\b(?:u1[6-9]|u20|j1[8-9]|j20|women|dam|junior|2)\b/i.test(value);
+  return /\b(?:u\d{2}|j\d{2}|women|dam|junior)\b/i.test(value);
+}
+
+function queryVariants(teamName:string) {
+  const raw=clean(teamName);
+  const variants=[
+    raw,
+    raw.replace(/\bIshockeyförening\b/gi,"").replace(/\bIshF\b/gi,"").replace(/\bUngdom\b/gi,"").trim(),
+    raw.replace(/\bIshockeyklubb\b/gi,"").replace(/\bHockeyförening\b/gi,"").replace(/\bHockey Club\b/gi,"").trim(),
+    raw.replace(/\bHockey\b/gi,"").replace(/\bHC\b/gi,"").replace(/\bHK\b/gi,"").trim(),
+    baseClubName(raw)
+  ];
+  const aliases:Record<string,string[]>={
+    "Hockeyalliansen 74":["HA74","HA 74"],
+    "Lögdeå Nordmaling Hockey":["LN91","LN 91","Lögdeå/Nordmaling"],
+    "HC Lidköping Red Roosters":["Lidköping HC","HC Lidköping"],
+    "Kumla Hockey":["Kumla HC","Kumla HC Black Bulls"],
+    "Alfta Hockey":["Alfta GIF"],
+    "Hammarby Hockey":["Hammarby IF","Hammarby IF Hockey"],
+    "Skövde Hockey Club":["Skövde HC","Skövde IK"],
+    "Solstad Hockey":["Solstad HC"],
+    "Smedjebackens HC":["Smedjebacken HC"],
+    "Mälarö Hockeyförening":["Mälarö Hockey"],
+    "Helsingborg HC Ungdom":["Helsingborg HC"],
+    "IFK Tumba IK":["IFK Tumba","Tumba Hockey"],
+    "Spånga IS IK":["Spånga IS"],
+    "Tegs SK Hockey":["Tegs SK"],
+    "Nynäshamns IF HC":["Nynäshamns IF"],
+    "Segeltorps IF Ishockeyförening":["Segeltorps IF"],
+    "Jonstorps IF IshF":["Jonstorps IF"]
+  };
+  variants.push(...(aliases[raw] || []));
+  return [...new Set(variants.map(clean).filter((value)=>value.length>=2))];
 }
 
 function scoreCandidate(teamName:string,candidate:any) {
@@ -49,18 +81,26 @@ function scoreCandidate(teamName:string,candidate:any) {
   const resultBase=baseClubName(candidate?.name || "");
   let score=0;
 
-  if(result===target) score+=120;
-  else if(resultBase===targetBase) score+=95;
-  else if(result.includes(target)||target.includes(result)) score+=55;
+  if(result===target) score+=200;
+  else if(resultBase && resultBase===targetBase) score+=140;
+  else if(result.includes(target)||target.includes(result)) score+=80;
+  else {
+    const targetTokens=new Set(targetBase.split(" ").filter(Boolean));
+    const resultTokens=new Set(resultBase.split(" ").filter(Boolean));
+    const intersection=[...targetTokens].filter((token)=>resultTokens.has(token)).length;
+    const union=new Set([...targetTokens,...resultTokens]).size;
+    const similarity=union ? intersection/union : 0;
+    score+=Math.round(similarity*100);
+  }
 
   const league=clean(candidate?.leagueName || candidate?.league || "");
-  if(/^HockeyTvåan$/i.test(league)) score+=45;
-  else if(/Division 2/i.test(league)) score+=30;
-  else if(/Not Active/i.test(league)) score-=20;
+  if(/^HockeyTvåan$/i.test(league)) score+=60;
+  else if(/Division 2/i.test(league)) score+=40;
+  else if(/Not Active/i.test(league)) score-=10;
 
   if(clean(candidate?.nationalityName)==="Sweden") score+=15;
-  if(looksYouthOrWomen((candidate?.slug || "")+" "+(candidate?.league || "")+" "+(candidate?.leagueName || ""))) score-=90;
-  if(!candidate?.logo) score-=200;
+  if(looksYouthOrWomen((candidate?.name || "")+" "+(candidate?.league || "")+" "+(candidate?.leagueName || ""))) score-=160;
+  if(!candidate?.logo) score-=250;
 
   return score;
 }
@@ -85,22 +125,31 @@ function slugify(value:string) {
 }
 
 async function findEliteProspectsTeam(teamName:string) {
-  const url=EP_SEARCH+"?q="+encodeURIComponent(teamName)+"&collection=teams";
-  const response=await fetch(url,{
-    headers:{"User-Agent":"SWNWORKS-Commentator-Cockpit/1.0"},
-    signal:AbortSignal.timeout(10000)
-  });
-  if(!response.ok) throw new Error("EP search "+response.status);
-  const payload=await response.json();
-  const results=payload?.data?.results || [];
-  const ranked=results
+  const candidateMap=new Map<string,any>();
+  for(const query of queryVariants(teamName)) {
+    const url=EP_SEARCH+"?q="+encodeURIComponent(query)+"&collection=teams";
+    const response=await fetch(url,{
+      headers:{"User-Agent":"SWNWORKS-Commentator-Cockpit/1.0"},
+      signal:AbortSignal.timeout(10000)
+    });
+    if(!response.ok) continue;
+    const payload=await response.json();
+    for(const candidate of payload?.data?.results || []) {
+      if(candidate?.id && !candidateMap.has(String(candidate.id))) {
+        candidateMap.set(String(candidate.id),candidate);
+      }
+    }
+    if(candidateMap.size>=8) break;
+  }
+
+  const ranked=[...candidateMap.values()]
     .map((candidate:any)=>({candidate,score:scoreCandidate(teamName,candidate)}))
     .sort((a:any,b:any)=>b.score-a.score);
   const best=ranked[0] || null;
   if(!best || best.score<70) {
-    return {match:null,score:best?.score ?? null,candidates:ranked.slice(0,3)};
+    return {match:null,score:best?.score ?? null,candidates:ranked.slice(0,5)};
   }
-  return {match:best.candidate,score:best.score,candidates:ranked.slice(0,3)};
+  return {match:best.candidate,score:best.score,candidates:ranked.slice(0,5)};
 }
 
 async function hockeyTvaanTeamIds() {
