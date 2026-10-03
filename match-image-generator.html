@@ -62,15 +62,15 @@
         <div class="control-section" id="matchControlSection">
           <div class="section-title"><strong id="matchSectionTitle">Match</strong><span id="dataStatus">Hämtar aktuellt lagbygge…</span></div>
           <div class="field-grid">
-            <div class="field full" id="teamField">
-              <label for="teamSelect">DITT LAG</label>
-              <select id="teamSelect"></select>
-            </div>
             <div class="field full" id="rosterSeasonSection" hidden>
-              <label for="rosterSeasonSelect">SPELARPOOL / SÄSONG <span class="field-optional" id="rosterSeasonHint">ALLA SÄSONGER</span></label>
+              <label for="rosterSeasonSelect">SÄSONG <span class="field-optional" id="rosterSeasonHint">AKTUELL SCL</span></label>
               <select id="rosterSeasonSelect">
-                <option value="all">Alla säsonger</option>
+                <option value="current">SCL 27 · aktuell</option>
               </select>
+            </div>
+            <div class="field full" id="teamField">
+              <label for="teamSelect">LAG I VALD SÄSONG</label>
+              <select id="teamSelect"></select>
             </div>
             <div class="field full" id="opponentField">
               <label for="opponentSelect">MOTSTÅNDARE</label>
@@ -224,6 +224,6 @@
   <script src="ecl27-team-builds-v2.js?v=shared-model-1"></script>
   <script src="ecl27-current-roster-snapshot.js?v=20260921-1"></script>
   <script src="match-graphics-player-stats-snapshot.js?v=20260922-1"></script>
-  <script src="match-image-generator.js?v=104-admin-season-pool-fix"></script>
+  <script src="match-image-generator.js?v=105-season-first-admin"></script>
 </body>
 </html>
