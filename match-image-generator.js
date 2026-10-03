@@ -27,6 +27,9 @@
   let playerMetaByName = new Map();
   let scl27TeamDirectory = [];
   let scl27RostersByTeamId = new Map();
+  let adminSeasonHistoryCache = new Map();
+  let adminSeasonLoadState = {teamId:"",loading:false,error:""};
+  let adminSeasonLoadToken = 0;
   let presentationReturnState = null;
   let dataSource = "testdata";
 
@@ -77,6 +80,7 @@
     showPattern:true,
     teamVisual:"jersey",
     lineupStyle:"portraits",
+    rosterSeason:access.mode === "admin" ? "all" : "current",
     streamPlatform:"none",
     streamChannel:"",
     playerName:"eSWAHN",
@@ -598,16 +602,280 @@
     };
   }
 
+  function adminHistoryTeamId(teamId) {
+    const raw = String(teamId || "");
+    return raw.startsWith("history-") ? raw : "history-" + raw;
+  }
+
+  function adminAllTimeRosterFor(teamId) {
+    const raw = String(teamId || "");
+    const historyId = adminHistoryTeamId(raw);
+    return rostersByTeamId.get(historyId) || rostersByTeamId.get(raw) || [];
+  }
+
+  function adminCurrentSclRosterFor(teamId) {
+    const historyTeam = teamDirectory.find(team => team.id === adminHistoryTeamId(teamId))
+      || teamDirectory.find(team => team.id === String(teamId || ""))
+      || null;
+    if (!historyTeam) return [];
+
+    const sclTeam = scl27TeamDirectory.find(team =>
+      normalize(team.name) === normalize(historyTeam.name)
+    );
+    if (!sclTeam) return [];
+    return scl27RostersByTeamId.get(sclTeam.id) || [];
+  }
+
+  function adminSeasonRosterFor(teamId,seasonKey) {
+    const historyId = adminHistoryTeamId(teamId);
+    const model = adminSeasonHistoryCache.get(historyId);
+    if (!model) return [];
+    return model.seasons.find(season => season.key === seasonKey)?.players || [];
+  }
+
   function rosterFor(teamId) {
-    // Admin works against the all-time history directory. Resolve both the
-    // synthetic history-* id and any accidental raw numeric id to that roster.
     if (access.mode === "admin") {
-      const raw = String(teamId || "");
-      const historyId = raw.startsWith("history-") ? raw : "history-" + raw;
-      return rostersByTeamId.get(historyId) || rostersByTeamId.get(raw) || [];
+      if (state.rosterSeason === "current") {
+        return adminCurrentSclRosterFor(teamId);
+      }
+      if (state.rosterSeason && state.rosterSeason !== "all") {
+        return adminSeasonRosterFor(teamId,state.rosterSeason);
+      }
+      return adminAllTimeRosterFor(teamId);
     }
-    if (scl27RostersByTeamId.has(teamId)) return scl27RostersByTeamId.get(teamId) || [];
+
+    if (scl27RostersByTeamId.has(teamId)) {
+      return scl27RostersByTeamId.get(teamId) || [];
+    }
     return rostersByTeamId.get(teamId) || [];
+  }
+
+  function historySeasonLabel(row) {
+    const raw = String(row?.season_label || "")
+      .replace(/[\u{1F1E6}-\u{1F1FF}]{2}/gu,"")
+      .replace(/\s+/g," ")
+      .trim();
+
+    if (raw) {
+      if (
+        /^\d+(?:\.\d+)?(?:\s+Challenger)?$/i.test(raw) &&
+        String(row?.competition_code || "").toUpperCase() === "SEC"
+      ) {
+        return "SEC " + raw;
+      }
+      return raw;
+    }
+
+    const code = String(
+      row?.competition_code || row?.competition_name || "Säsong"
+    ).trim();
+    const leagueId = Number(row?.league_id) || 0;
+    return leagueId ? code + " · " + leagueId : code;
+  }
+
+  function historyRowTime(row) {
+    const raw = String(row?.chronology_date || "").trim();
+    const parsed = raw
+      ? Date.parse(raw + (raw.length <= 10 ? "T00:00:00" : ""))
+      : NaN;
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function buildAdminSeasonHistory(rows) {
+    const grouped = new Map();
+
+    for (const row of Array.isArray(rows) ? rows : []) {
+      const player = String(row?.display_gamertag || "").trim();
+      if (!player) continue;
+
+      const leagueId = Number(row?.league_id) || 0;
+      const key = leagueId > 0
+        ? "league:" + leagueId
+        : "label:" + normalize(row?.season_label || row?.competition_code || "okand");
+
+      if (!grouped.has(key)) {
+        grouped.set(key,{
+          key,
+          leagueId,
+          labels:new Map(),
+          latest:0,
+          players:new Map(),
+          rows:new Map()
+        });
+      }
+
+      const season = grouped.get(key);
+      const label = historySeasonLabel(row);
+      season.labels.set(label,(season.labels.get(label) || 0) + 1);
+      season.latest = Math.max(season.latest,historyRowTime(row));
+
+      const normalized = normalize(player);
+      const previous = season.rows.get(normalized);
+      if (!previous || historyRowTime(row) >= historyRowTime(previous)) {
+        season.rows.set(normalized,row);
+        season.players.set(normalized,player);
+      }
+    }
+
+    return {
+      seasons:[...grouped.values()].map(season => {
+        const label = [...season.labels.entries()]
+          .sort((a,b) => b[1]-a[1] || b[0].length-a[0].length)[0]?.[0]
+          || "Säsong";
+        const rowList = [...season.rows.values()];
+        const players = [...season.players.values()]
+          .sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
+        return {
+          key:season.key,
+          leagueId:season.leagueId,
+          label,
+          latest:season.latest,
+          players,
+          rows:rowList
+        };
+      }).sort((a,b) =>
+        b.latest-a.latest ||
+        b.leagueId-a.leagueId ||
+        a.label.localeCompare(b.label,"sv")
+      )
+    };
+  }
+
+  function applyHistoricalSeasonMetadata(rows) {
+    for (const row of Array.isArray(rows) ? rows : []) {
+      const player = String(row?.display_gamertag || "").trim();
+      if (!player) continue;
+
+      const normalized = normalize(player);
+      const key = String(row?.player_key || "").trim();
+      if (key) playerKeysByName.set(normalized,key);
+
+      if (row?.primary_position || row?.player_image || row?.sports_gamer_player_url) {
+        playerPortraits.set(normalized,portraitUrlFromRow(row));
+        playerMetaByName.set(normalized,{
+          primaryPosition:String(row?.primary_position || "").trim().toUpperCase(),
+          countryCode:String(row?.player_country || "").trim().toUpperCase()
+        });
+      }
+    }
+  }
+
+  async function ensureAdminSeasonHistory(teamId = state.teamId) {
+    if (access.mode !== "admin") return null;
+
+    const historyId = adminHistoryTeamId(teamId);
+    if (adminSeasonHistoryCache.has(historyId)) {
+      return adminSeasonHistoryCache.get(historyId);
+    }
+
+    const team = teamDirectory.find(item => item.id === historyId)
+      || teamDirectory.find(item => item.id === String(teamId || ""));
+    if (!team) return null;
+
+    const token = ++adminSeasonLoadToken;
+    adminSeasonLoadState = {teamId:historyId,loading:true,error:""};
+    syncRosterSeasonControl();
+
+    try {
+      const rows = await getRpcRows(
+        "seh_match_graphics_team_roster_history",
+        {
+          p_team_name:team.name || null,
+          p_sports_gamer_team_id:null
+        }
+      );
+
+      const model = buildAdminSeasonHistory(rows);
+      adminSeasonHistoryCache.set(historyId,model);
+
+      for (const season of model.seasons) {
+        applyHistoricalSeasonMetadata(season.rows);
+      }
+
+      if (token === adminSeasonLoadToken) {
+        adminSeasonLoadState = {teamId:historyId,loading:false,error:""};
+      }
+      return model;
+    } catch (error) {
+      if (token === adminSeasonLoadToken) {
+        adminSeasonLoadState = {
+          teamId:historyId,
+          loading:false,
+          error:String(error?.message || error || "")
+        };
+      }
+      console.warn("[Match Graphics] kunde inte hämta lagets säsongsrosters",error);
+      return null;
+    } finally {
+      if (token === adminSeasonLoadToken) syncRosterSeasonControl();
+    }
+  }
+
+  function syncRosterSeasonControl() {
+    const field = $("#rosterSeasonSection");
+    const select = $("#rosterSeasonSelect");
+    const hint = $("#rosterSeasonHint");
+    if (!field || !select) return;
+
+    if (access.mode !== "admin") {
+      field.hidden = true;
+      state.rosterSeason = "current";
+      return;
+    }
+
+    field.hidden = false;
+
+    const historyId = adminHistoryTeamId(state.teamId);
+    const model = adminSeasonHistoryCache.get(historyId);
+    const allPlayers = adminAllTimeRosterFor(historyId);
+    const currentSclPlayers = adminCurrentSclRosterFor(historyId);
+
+    const options = [{
+      value:"all",
+      label:"Alla säsonger" + (allPlayers.length ? " (" + allPlayers.length + ")" : "")
+    }];
+
+    if (currentSclPlayers.length) {
+      options.push({
+        value:"current",
+        label:"Aktuell SCL 27-roster (" + currentSclPlayers.length + ")"
+      });
+    }
+
+    if (model) {
+      for (const season of model.seasons) {
+        if (currentSclPlayers.length && season.leagueId === 527) continue;
+        options.push({
+          value:season.key,
+          label:season.label + " (" + season.players.length + ")"
+        });
+      }
+    }
+
+    const valid = new Set(options.map(option => option.value));
+    if (!valid.has(state.rosterSeason)) state.rosterSeason = "all";
+
+    select.innerHTML = options.map(option =>
+      '<option value="' + esc(option.value) + '"' +
+      (option.value === state.rosterSeason ? ' selected' : '') +
+      '>' + esc(option.label) + '</option>'
+    ).join("");
+
+    const loading =
+      adminSeasonLoadState.loading &&
+      adminSeasonLoadState.teamId === historyId;
+    select.disabled = loading;
+
+    if (hint) {
+      if (loading) hint.textContent = "HÄMTAR…";
+      else if (
+        adminSeasonLoadState.error &&
+        adminSeasonLoadState.teamId === historyId
+      ) hint.textContent = "KUNDE INTE HÄMTA";
+      else if (state.rosterSeason === "all") hint.textContent = "ALLA SÄSONGER";
+      else if (state.rosterSeason === "current") hint.textContent = "AKTUELL SCL";
+      else hint.textContent = "VALD SÄSONG";
+    }
   }
 
   function rosterPlayerCount() {
