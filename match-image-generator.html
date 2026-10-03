@@ -66,6 +66,12 @@
               <label for="teamSelect">DITT LAG</label>
               <select id="teamSelect"></select>
             </div>
+            <div class="field full" id="rosterSeasonSection" hidden>
+              <label for="rosterSeasonSelect">SPELARPOOL / SÄSONG <span class="field-optional" id="rosterSeasonHint">ALLA SÄSONGER</span></label>
+              <select id="rosterSeasonSelect">
+                <option value="all">Alla säsonger</option>
+              </select>
+            </div>
             <div class="field full" id="opponentField">
               <label for="opponentSelect">MOTSTÅNDARE</label>
               <select id="opponentSelect"></select>
@@ -196,7 +202,7 @@
           <button id="resetButton" class="ghost" type="button">Återställ testdata</button>
         </div>
 
-        <p class="generator-note"><strong>Adminläge:</strong> matchmallarna använder ECL 27-lagbygget. Team Presentation använder registrerade SCL 27-lag och låter dig välja upp till 13 spelare från lagets aktuella SCL-roster.</p>
+        <p class="generator-note"><strong>Adminläge:</strong> välj spelare från alla säsonger, en specifik historisk säsong eller aktuell SCL 27-roster när laget deltar där. <strong>Kaptenläge:</strong> eget lag och spelarval är låsta till aktuell SCL-roster.</p>
       </aside>
 
       <section class="preview-panel">
@@ -218,6 +224,6 @@
   <script src="ecl27-team-builds-v2.js?v=shared-model-1"></script>
   <script src="ecl27-current-roster-snapshot.js?v=20260921-1"></script>
   <script src="match-graphics-player-stats-snapshot.js?v=20260922-1"></script>
-  <script src="match-image-generator.js?v=102"></script>
+  <script src="match-image-generator.js?v=103-admin-season-pool"></script>
 </body>
 </html>
