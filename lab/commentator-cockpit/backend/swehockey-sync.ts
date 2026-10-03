@@ -21,7 +21,7 @@ const COMPETITIONS = new Map([
 const ZONE = "Europe/Stockholm";
 const SOURCE = "swehockey";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
-const PARSER_VERSION = "base-sync-v7";
+const PARSER_VERSION = "base-sync-v8";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -413,19 +413,23 @@ Deno.serve(async (req: Request) => {
       }).filter(Boolean) as any[];
 
     const fullScheduleRows = scheduleTables.find(rows =>
-      rows.some(r => r.cells.includes("Date") && r.cells.includes("Time") && r.cells.includes("Game") && r.cells.includes("Venue"))
+      rows.some(r =>
+        r.cells.includes("Date") &&
+        r.cells.includes("Game") &&
+        r.cells.includes("Venue")
+      )
     ) || [];
     const scheduleHeader = fullScheduleRows.findIndex(r =>
-      r.cells.includes("Date") && r.cells.includes("Time") && r.cells.includes("Game")
+      r.cells.includes("Date") && r.cells.includes("Game")
     );
     const futureGames:any[] = [];
     let scheduleDate = "";
     for (const r of fullScheduleRows.slice(Math.max(0, scheduleHeader + 1))) {
-      const explicitDate = r.cells.find((c:string) => /^\d{4}-\d{2}-\d{2}$/.test(c));
-      if (explicitDate) scheduleDate = explicitDate;
+      const dateMatch = r.cells.map((c:string)=>c.match(/\d{4}-\d{2}-\d{2}/)?.[0] || "").find(Boolean);
+      if (dateMatch) scheduleDate = dateMatch;
       if (!scheduleDate) continue;
 
-      const time = r.cells.find((c:string) => /^\d{2}:\d{2}$/.test(c));
+      const time = r.cells.map((c:string)=>c.match(/\b\d{2}:\d{2}\b/)?.[0] || "").find(Boolean);
       const gameIndex = r.cells.findIndex((c:string) => c.includes(" - "));
       if (!time || gameIndex < 0) continue;
 
