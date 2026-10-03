@@ -312,7 +312,7 @@ Deno.serve(async(req:Request)=>{
         minutes_played_seconds:intOrNull(g.GoalieTimeOnIce),goals_against:ga,saves,
         shots_against:saves!=null&&ga!=null?saves+ga:null,
         save_pct:numberOrNull(g.GoalieSavesPercNum??g.GoalieSavesPerc),
-        gaa:numberOrNull(g.GoalieGA60MinNum??g.GoalieGA60Min),
+        gaa:(intOrNull(g.GoalieTimeOnIce)||0)>0 ? numberOrNull(g.GoalieGA60MinNum??g.GoalieGA60Min) : null,
         shutouts:intOrNull(g.GoalieZeroGames),wins:intOrNull(g.GoalieWinGames),losses:intOrNull(g.GoalieLossGames),
         source_fragment:{source:SOURCE,external_player_id:g.PlayerID,raw:g,parser:PARSER_VERSION},
         source_updated_at:now,updated_at:now
