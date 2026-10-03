@@ -134,7 +134,9 @@ end
 $$;
 
 begin;
-delete from public.ehockey_player_history_cache_v25;
+-- This is a complete, safety-checked replacement. TRUNCATE releases the old
+-- heap immediately instead of leaving ~90k dead rows behind on every full sync.
+truncate table public.ehockey_player_history_cache_v25;
 insert into public.ehockey_player_history_cache_v25
 select *
 from swedish_player_history_cache_next;
@@ -145,8 +147,7 @@ refresh materialized view concurrently
   public.v_ehockey_team_all_time_players_chronological;
 refresh materialized view concurrently
   public.v_ehockey_swedish_player_directory_base_v20;
-select public.refresh_app_player_directory_cache();
-select public.refresh_app_player_ranking_cache();
+select public.refresh_app_player_caches_after_manual_update();
 select public.refresh_app_team_latest_leadership_cache();
 select pg_advisory_unlock(hashtext('seh_refresh_player_history_cache_v25'));
 
