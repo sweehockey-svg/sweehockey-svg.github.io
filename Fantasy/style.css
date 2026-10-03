@@ -452,7 +452,7 @@ a{color:inherit}
 }
 
 .fantasy-tabs{
-  display:grid;
+  display:none;
   grid-template-columns:repeat(4,1fr);
   gap:7px;
   margin:0 0 14px;
@@ -1046,6 +1046,7 @@ a{color:inherit}
   .fantasy-site-header{grid-template-columns:1fr auto}
   .fantasy-site-header__center{display:none}
   .fantasy-tabs{
+    display:grid;
     position:sticky;
     top:82px;
     z-index:44;
