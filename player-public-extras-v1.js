@@ -16,6 +16,7 @@
   let token=0;
   let timer=0;
   let loadedRoute='';
+  const playerKeyCache=new Map();
 
   function cfg(){return window.SEH_CONFIG||window.EHOCKEY_CONFIG||window.APP_CONFIG||window.config||{};}
   function getClient(){
@@ -42,10 +43,16 @@
     if(/^[a-f0-9]{40,}$/i.test(value))return value;
     const name=String(document.querySelector('#playerName')?.textContent||'').trim();
     if(!name)return '';
-    const sb=getClient();if(!sb)return '';
-    const r=await sb.from('app_player_directory_cache').select('player_key,display_gamertag').eq('display_gamertag',name).limit(5);
-    if(r.error)throw r.error;
-    return String(r.data?.[0]?.player_key||'').trim();
+    const cacheKey=`${String(location.hash||'')}|${name.toLocaleLowerCase('sv-SE')}`;
+    if(playerKeyCache.has(cacheKey))return playerKeyCache.get(cacheKey);
+    const promise=(async()=>{
+      const sb=getClient();if(!sb)return '';
+      const r=await sb.from('app_player_directory_cache').select('player_key,display_gamertag').eq('display_gamertag',name).limit(5);
+      if(r.error)throw r.error;
+      return String(r.data?.[0]?.player_key||'').trim();
+    })();
+    playerKeyCache.set(cacheKey,promise);
+    try{return await promise;}catch(error){playerKeyCache.delete(cacheKey);throw error;}
   }
   function overview(){
     const route=document.querySelector('#spaRouteView[data-route="player"]');
@@ -173,7 +180,7 @@
   function schedule(delay=80){clearTimeout(timer);timer=setTimeout(()=>{ensureHosts();load();},delay);}
   const observer=new MutationObserver(()=>{if(routeIsPlayer())schedule(80);});
   observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','data-route','class']});
-  window.addEventListener('hashchange',()=>{token+=1;loadedRoute='';schedule(80);});
+  window.addEventListener('hashchange',()=>{token+=1;loadedRoute='';playerKeyCache.clear();schedule(80);});
   window.addEventListener('seh-team-aliases-ready',()=>{if(routeIsPlayer()){loadedRoute='';schedule(20);}});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>schedule(100),{once:true});else schedule(100);
 })();
