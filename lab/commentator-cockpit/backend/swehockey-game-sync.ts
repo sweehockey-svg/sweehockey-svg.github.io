@@ -16,7 +16,7 @@ const ALLOWED_COMPETITION_SOURCE_IDS = [
 ] as const;
 const SOURCE = "swehockey";
 const ZONE = "Europe/Stockholm";
-const PARSER_VERSION = "game-sync-v18";
+const PARSER_VERSION = "game-sync-v19";
 const UA = "HockeyCommentator/0.1 (+https://www.svenskehockey.se/lab/commentator-cockpit/)";
 
 const admin = createClient(
@@ -636,15 +636,12 @@ async function syncPlayerSummary(
   try {
     pdfItem=await fetchBinary(`/Game/Reports/PlayerSummary/${eventId}`);
   } catch (error) {
-    if (mode === "live") {
-      return {
-        available:false,
-        mode,
-        reason:"not_published",
-        message:String((error as any)?.message || error)
-      };
-    }
-    throw error;
+    return {
+      available:false,
+      mode,
+      reason:"not_published",
+      message:String((error as any)?.message || error)
+    };
   }
 
   await logBinaryFetch(pdfItem,"player_summary_pdf",eventId);
@@ -1338,7 +1335,16 @@ async function syncOfficialSpecialTeams(game:any,eventId:string,homeName:string,
   if(statsError) throw statsError;
   if((statsRows || []).length < 2) return {available:false,reason:"missing_team_stats"};
 
-  const pdfItem=await fetchBinary(`/Game/Reports/OfficialGameReport/${eventId}`);
+  let pdfItem:any;
+  try {
+    pdfItem=await fetchBinary(`/Game/Reports/OfficialGameReport/${eventId}`);
+  } catch (error) {
+    return {
+      available:false,
+      reason:"not_published",
+      message:String((error as any)?.message || error)
+    };
+  }
   await logBinaryFetch(pdfItem,"official_game_report_pdf",eventId);
   if(!pdfItem.contentType.includes("pdf") || !pdfItem.bytes.length){
     return {available:false,reason:"missing_pdf"};
