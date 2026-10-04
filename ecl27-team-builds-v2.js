@@ -132,12 +132,21 @@
     const defs = baseTeamDefs.map((team) => ({...team}));
     const byExact = new Map(defs.map((team) => [norm(team.name),team]));
     const byMatch = new Map(defs.map((team) => [teamMatchKey(team.name),team]));
+    const byLocalTeamId = new Map(
+      defs
+        .filter((team) => Number(team.teamId) > 0)
+        .map((team) => [Number(team.teamId),team])
+    );
 
     for (const official of DATA.officialSclTeams || []) {
       const officialName = String(official.name || "").trim();
       if (!officialName) continue;
 
-      let target = byExact.get(norm(officialName)) || byMatch.get(teamMatchKey(officialName)) || null;
+      let target =
+        byLocalTeamId.get(Number(official.localTeamId) || 0) ||
+        byExact.get(norm(officialName)) ||
+        byMatch.get(teamMatchKey(officialName)) ||
+        null;
       if (!target) {
         target = {
           name:officialName,
@@ -154,6 +163,7 @@
 
       target.officialScl = true;
       target.officialName = officialName;
+      target.localTeamId = Number(official.localTeamId) || Number(target.teamId) || null;
       target.sportsGamerTeamId = Number(official.sportsGamerTeamId) || null;
       target.sportsGamerLeagueId = Number(official.sportsGamerLeagueId) || Number(DATA.sclLeagueId) || 527;
       target.officialRoster = Array.isArray(official.players) ? [...official.players] : [];
