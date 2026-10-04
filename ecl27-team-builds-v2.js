@@ -560,12 +560,15 @@
   }
 
   function renderTeamHeader(team,logo,status) {
+    const displayName = team.officialScl && team.officialName
+      ? String(team.officialName)
+      : String(team.name || "");
     const url = teamUrl(team.name);
-    const logoInner = logo ? `<img src="${logo}" alt="${esc(team.name)}">` : `<span>${esc(initials(team.name))}</span>`;
+    const logoInner = logo ? `<img src="${logo}" alt="${esc(displayName)}">` : `<span>${esc(initials(displayName))}</span>`;
     const logoMarkup = url ? `<a class="ecl27v2-logo" href="${esc(url)}">${logoInner}</a>` : `<div class="ecl27v2-logo">${logoInner}</div>`;
-    const nameMarkup = url ? `<h3><a href="${esc(url)}">${esc(team.name)}</a></h3>` : `<h3>${esc(team.name)}</h3>`;
+    const nameMarkup = url ? `<h3><a href="${esc(url)}">${esc(displayName)}</a></h3>` : `<h3>${esc(displayName)}</h3>`;
     const source = team.officialScl
-      ? `SCL 27 · OFFICIELLT ANMÄLT${team.officialName && norm(team.officialName) !== norm(team.name) ? ` · ${team.officialName}` : ""}`
+      ? "SCL 27 · OFFICIELLT ANMÄLT"
       : team.kind === "new"
         ? "NYTT PROJEKT"
         : `ECL 26 SPRING · ${team.division}${team.springName && team.springName !== team.name ? ` · ${team.springName}` : ""}`;
