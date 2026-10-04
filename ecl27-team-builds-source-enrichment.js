@@ -8,7 +8,7 @@
 (function () {
   "use strict";
 
-  const CACHE_KEY = "seh_ecl27_shared_source_v5";
+  const CACHE_KEY = "seh_ecl27_shared_source_v6";
   const EMPTY = Object.freeze({
     build:"supabase-loading",updated:"Hämtar ECL27-data…",aliases:{},
     springTeams:[],newTeams:[],moveEvents:[],posterMemberships:[],freeAgentEvents:[],
@@ -46,9 +46,22 @@
 
   function dateOnly(value) { return String(value || "").slice(0,10); }
 
+  function parseIdList(value) {
+    if (Array.isArray(value)) return value.map(String);
+    if (value == null || value === "") return [];
+    if (typeof value === "string") {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) return parsed.map(String);
+      } catch (_) {}
+      return value.replace(/[{}]/g,"").split(",").map(item => item.trim()).filter(Boolean);
+    }
+    return [];
+  }
+
   async function loadOfficialSclTeams() {
     const leagueId = 527;
-    const [teamRows,rosterRows] = await Promise.all([
+    const [teamRows,rosterRows,localTeams] = await Promise.all([
       get(
         "sportsgamer_league_teams_current",
         "select=sports_gamer_league_id,sports_gamer_team_id,team_name,team_logo_url,registered_at,source_updated_at" +
@@ -58,8 +71,27 @@
         "sportsgamer_league_roster_current",
         "select=sports_gamer_league_id,sports_gamer_team_id,sports_gamer_player_id,display_gamertag,source_updated_at" +
           "&sports_gamer_league_id=eq.527&is_available=eq.true&order=sports_gamer_team_id.asc,display_gamertag.asc"
+      ),
+      get(
+        "v_local_team_list",
+        "select=team_id,current_name,sports_gamer_team_ids&limit=5000"
       )
     ]);
+
+    const localBySportsGamerId = new Map();
+    for (const row of localTeams || []) {
+      const localId = Number(row.team_id);
+      if (!(localId > 0)) continue;
+      for (const sgId of parseIdList(row.sports_gamer_team_ids)) {
+        const numeric = Number(sgId);
+        if (numeric > 0 && !localBySportsGamerId.has(numeric)) {
+          localBySportsGamerId.set(numeric,{
+            localTeamId:localId,
+            localTeamName:String(row.current_name || "").trim()
+          });
+        }
+      }
+    }
 
     const byTeam = new Map();
     let updatedAt = "";
@@ -69,8 +101,11 @@
       const name = String(row.team_name || "").trim();
       if (!Number.isFinite(id) || id <= 0 || !name) continue;
 
+      const local = localBySportsGamerId.get(id) || null;
       byTeam.set(id,{
         name,
+        localTeamId:Number(local?.localTeamId) || null,
+        localTeamName:String(local?.localTeamName || ""),
         sportsGamerTeamId:id,
         sportsGamerLeagueId:Number(row.sports_gamer_league_id) || leagueId,
         logoUrl:String(row.team_logo_url || "").trim(),
