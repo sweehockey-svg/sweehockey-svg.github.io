@@ -2235,6 +2235,22 @@
     const footerHeight = showStats ? 76 : 48;
     const imageBottom = y + height - footerHeight;
     const imageHeight = Math.max(1,imageBottom - y - 4);
+    const portraitX = x + 4;
+    const portraitY = y + 4;
+    const portraitW = width - 8;
+    const portraitH = imageHeight;
+    const portraitCrop = playerPortraitCrops.get(normalize(cleanName)) || null;
+    const portraitClipId = clipId + "-image";
+    const portraitMarkup = portraitCrop
+      ? '<g clip-path="url(#' + portraitClipId + ')">' +
+          '<svg x="' + portraitX + '" y="' + portraitY + '" width="' + portraitW + '" height="' + portraitH + '" viewBox="' +
+            portraitCrop.x.toFixed(2) + ' ' + portraitCrop.y.toFixed(2) + ' ' +
+            portraitCrop.width.toFixed(2) + ' ' + portraitCrop.height.toFixed(2) +
+            '" preserveAspectRatio="xMidYMin slice" overflow="visible">' +
+            '<image href="' + esc(portrait) + '" x="0" y="0" width="' + portraitCrop.naturalW + '" height="' + portraitCrop.naturalH + '" preserveAspectRatio="none"/>' +
+          '</svg>' +
+        '</g>'
+      : '<image href="' + esc(portrait) + '" x="' + (showStats ? (x-34) : portraitX) + '" y="' + (showStats ? (y-2) : portraitY) + '" width="' + (showStats ? (width+68) : portraitW) + '" height="' + (showStats ? (imageHeight*1.30) : portraitH) + '" preserveAspectRatio="xMidYMin meet" clip-path="url(#' + clipId + ')"/>';
     const posBadgeWidth = pos.length > 1 ? 42 : 34;
     const badgeFontSize = showStats && width >= 320 ? 12 : 11;
     const statSize = width >= 320 ? 12 : width >= 250 ? 11 : 9;
@@ -2244,10 +2260,13 @@
 
     return [
       '<g>',
-      '<defs><clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18"/></clipPath></defs>',
+      '<defs>' +
+        '<clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18"/></clipPath>' +
+        '<clipPath id="' + portraitClipId + '"><rect x="' + portraitX + '" y="' + portraitY + '" width="' + portraitW + '" height="' + portraitH + '"/></clipPath>' +
+      '</defs>',
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="#0a0f15" stroke="#ffffff" stroke-opacity=".14"/>',
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="18" fill="' + team.primary + '" opacity=".22"/>',
-      '<image href="' + esc(portrait) + '" x="' + (showStats ? (x-34) : (x+4)) + '" y="' + (showStats ? (y-2) : (y+4)) + '" width="' + (showStats ? (width+68) : (width-8)) + '" height="' + (showStats ? (imageHeight*1.30) : imageHeight) + '" preserveAspectRatio="xMidYMin meet" clip-path="url(#' + clipId + ')"/>',
+      portraitMarkup,
       '<rect x="' + (x+10) + '" y="' + (y+10) + '" width="' + posBadgeWidth + '" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>',
       '<text x="' + (x+10+posBadgeWidth/2) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" letter-spacing=".8" font-family="Arial,Helvetica,sans-serif">' + esc(pos) + '</text>',
       playerFlagSvg(cleanName,flagX,y+12,flagW,flagH),
