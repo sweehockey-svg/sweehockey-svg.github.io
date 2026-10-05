@@ -2849,13 +2849,15 @@
     const portraitH = height - footerH - portraitTop + 5;
     const portraitCrop = playerPortraitCrops.get(normalize(cleanName)) || null;
     const portraitMarkup = portraitCrop
-      ? '<svg x="' + portraitX + '" y="' + portraitY + '" width="' + portraitW + '" height="' + portraitH + '" viewBox="' +
-          portraitCrop.x.toFixed(2) + ' ' + portraitCrop.y.toFixed(2) + ' ' +
-          portraitCrop.width.toFixed(2) + ' ' + portraitCrop.height.toFixed(2) +
-          '" preserveAspectRatio="xMidYMin slice" overflow="hidden">' +
-          '<image href="' + esc(portrait) + '" x="0" y="0" width="' + portraitCrop.naturalW + '" height="' + portraitCrop.naturalH + '" preserveAspectRatio="none"/>' +
-        '</svg>'
-      : '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + portraitY + '" width="' + (width-8) + '" height="' + portraitH + '" preserveAspectRatio="xMidYMin meet" clip-path="url(#' + clipId + ')"/>';
+      ? '<g clip-path="url(#' + clipId + '-portrait)">' +
+          '<svg x="' + portraitX + '" y="' + portraitY + '" width="' + portraitW + '" height="' + portraitH + '" viewBox="' +
+            portraitCrop.x.toFixed(2) + ' ' + portraitCrop.y.toFixed(2) + ' ' +
+            portraitCrop.width.toFixed(2) + ' ' + portraitCrop.height.toFixed(2) +
+            '" preserveAspectRatio="xMidYMin slice" overflow="visible">' +
+            '<image href="' + esc(portrait) + '" x="0" y="0" width="' + portraitCrop.naturalW + '" height="' + portraitCrop.naturalH + '" preserveAspectRatio="none"/>' +
+          '</svg>' +
+        '</g>'
+      : '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + portraitY + '" width="' + (width-8) + '" height="' + portraitH + '" preserveAspectRatio="xMidYMin meet" clip-path="url(#' + clipId + '-portrait)"/>';
     const badgeW = Math.max(32,Math.min(40,Math.round(width*.23)));
     const badgeH = Math.max(20,Math.min(24,Math.round(height*.12)));
     const badgeFont = Math.max(9,Math.min(11,Math.round(width*.06)));
@@ -2875,7 +2877,10 @@
       : "";
     return [
       '<g>',
-      '<defs><clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16"/></clipPath></defs>',
+      '<defs>' +
+        '<clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16"/></clipPath>' +
+        '<clipPath id="' + clipId + '-portrait"><rect x="' + portraitX + '" y="' + portraitY + '" width="' + portraitW + '" height="' + portraitH + '"/></clipPath>' +
+      '</defs>',
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16" fill="#07101a" fill-opacity=".94" stroke="#b8ddff" stroke-opacity=".18"/>',
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16" fill="' + team.primary + '" opacity=".18"/>',
       portraitMarkup,
