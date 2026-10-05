@@ -3233,13 +3233,34 @@
     setTimeout(() => URL.revokeObjectURL(url),1200);
   }
 
-  function exportSvg() {
-    const own = teamById(state.teamId);
-    const opponent = teamById(state.opponentId);
-    const filename = state.template === "team-presentation"
-      ? "seh-" + safeFilePart(own.name) + "-team-presentation-" + state.format + ".svg"
-      : "seh-" + safeFilePart(own.name) + "-vs-" + safeFilePart(opponent.name) + "-" + state.format + ".svg";
-    downloadBlob(new Blob([buildMatchSvg()],{type:"image/svg+xml;charset=utf-8"}),filename);
+  async function exportSvg() {
+    const button = $("#svgButton");
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = "Skapar SVG…";
+
+    try {
+      const own = teamById(state.teamId);
+      const opponent = teamById(state.opponentId);
+      const filename = state.template === "team-presentation"
+        ? "seh-" + safeFilePart(own.name) + "-team-presentation-" + state.format + ".svg"
+        : "seh-" + safeFilePart(own.name) + "-vs-" + safeFilePart(opponent.name) + "-" + state.format + ".svg";
+
+      // Make the download portable: player portraits, logos, backgrounds and
+      // other raster assets are embedded as data URLs instead of pointing back
+      // to the web site. This lets the SVG open from disk and in editors.
+      const inlined = await inlineSvgImages(buildMatchSvg());
+      downloadBlob(
+        new Blob([inlined],{type:"image/svg+xml;charset=utf-8"}),
+        filename
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Kunde inte skapa den redigerbara SVG-filen. Prova PNG om du bara behöver en färdig bild.");
+    } finally {
+      button.disabled = false;
+      button.textContent = original;
+    }
   }
 
   function fileToDataUrl(blob) {
@@ -3300,9 +3321,16 @@
       const dataUrl = await fetchImageDataUrl(href);
       if (dataUrl) {
         image.setAttribute("href",dataUrl);
+        image.setAttributeNS("http://www.w3.org/1999/xlink","xlink:href",dataUrl);
         return;
       }
-      replaceMissingLeagueLogo(image,doc);
+
+      // Never leave a remote/local URL behind in a downloaded SVG. A missing
+      // league logo becomes a text badge; other unavailable images are removed
+      // rather than turning into broken-image icons when the file is opened.
+      if (!replaceMissingLeagueLogo(image,doc)) {
+        image.remove();
+      }
     }));
     return new XMLSerializer().serializeToString(doc.documentElement);
   }
@@ -3337,7 +3365,7 @@
         : "seh-" + safeFilePart(own.name) + "-vs-" + safeFilePart(opponent.name) + "-" + state.format + ".png");
     } catch (error) {
       console.error(error);
-      alert("Kunde inte skapa PNG. SVG-exporten fungerar fortfarande.");
+      alert("Kunde inte skapa PNG. Du kan fortfarande prova SVG · redigerbar.");
     } finally {
       button.disabled = false;
       button.textContent = original;
