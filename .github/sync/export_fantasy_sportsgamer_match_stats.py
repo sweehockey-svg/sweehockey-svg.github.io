@@ -501,7 +501,29 @@ def main() -> int:
         for match_id in match_ids:
             raw = raw_matches.get(match_id, {})
             teams = participant_teams.get(match_id, [])
-            started = first(raw, "startTime", "matchDate", "dateTime", "datetime", "date", "scheduledTime")
+            # SportsGamer stores NHL match dates and times in separate
+            # matchDate / matchTime fields (UTC). Using matchDate alone silently
+            # assigns 00:00 UTC and excludes games from the correct Fantasy
+            # period, whose first lock is at 16:00 UTC / 18:00 Stockholm.
+            match_date = first(raw, "matchDate")
+            match_time = first(raw, "matchTime")
+            if match_date is not None and match_time is not None:
+                date_text = (
+                    match_date.date().isoformat()
+                    if isinstance(match_date, datetime)
+                    else str(match_date).strip().split(" ")[0]
+                )
+                time_text = str(match_time).strip()
+                try:
+                    started = datetime.fromisoformat(f"{date_text}T{time_text}")
+                except ValueError as exc:
+                    raise RuntimeError(
+                        f"Invalid SportsGamer matchDate/matchTime for match {match_id}: "
+                        f"{date_text} / {time_text}"
+                    ) from exc
+            else:
+                started = first(raw, "startTime", "dateTime", "datetime", "date", "scheduledTime")
+
             if isinstance(started, datetime):
                 if started.tzinfo is None:
                     started = started.replace(tzinfo=timezone.utc)
