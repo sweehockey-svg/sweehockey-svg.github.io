@@ -15845,10 +15845,47 @@ function SEH_initShop() {
       return ['Elite','Pro','Lite','Core','Neo'].filter((level) => source.includes(level.toLowerCase()));
     };
     const playerImage = (row) => {
+      const approved = clean(row.approved_image_url || row.image_url);
+      if (approved) return approved;
       if (!clean(row.player_image) && !clean(row.sports_gamer_player_url)) return 'players/1DEFAULTBILDID.png';
       const match = clean(row.sports_gamer_player_url).match(/\/players\/(\d+)/i);
       return SEH_playerImageUrl(match?.[1] || '', clean(row.player_image));
     };
+
+    async function hydrateApprovedFaImages(rows) {
+      const source = Array.isArray(rows) ? rows : [];
+      if (!source.length) return source;
+
+      try {
+        const { data, error } = await sb
+          .from('v_ehockey_player_self_profiles_public')
+          .select('player_key,sports_gamer_player_id,image_url')
+          .not('image_url','is',null)
+          .limit(5000);
+        if (error) throw error;
+
+        const byKey = new Map();
+        const bySportsGamerId = new Map();
+        for (const profile of data || []) {
+          const url = clean(profile?.image_url);
+          if (!url) continue;
+          const key = clean(profile?.player_key);
+          const sgId = clean(profile?.sports_gamer_player_id).replace(/\D/g,'');
+          if (key) byKey.set(key,url);
+          if (sgId) bySportsGamerId.set(sgId,url);
+        }
+
+        return source.map((row) => {
+          const key = clean(row?.player_key);
+          const sgId = clean(row?.sports_gamer_player_url).match(/\/players\/(\d+)/i)?.[1] || '';
+          const approved = byKey.get(key) || bySportsGamerId.get(sgId) || '';
+          return approved ? { ...row, approved_image_url: approved } : row;
+        });
+      } catch (error) {
+        console.warn('Kunde inte hämta godkända spelarporträtt för Free Agents:', error);
+        return source;
+      }
+    }
     const dateText = (value) => {
       const date = value ? new Date(`${String(value).slice(0,10)}T12:00:00`) : null;
       return (!date || Number.isNaN(date.getTime())) ? '–' : new Intl.DateTimeFormat('sv-SE',{day:'numeric',month:'short',year:'numeric'}).format(date);
@@ -16029,7 +16066,8 @@ function SEH_initShop() {
         const decorated=window.SEH_currentPlayerStatus?.decorateRows
           ? await window.SEH_currentPlayerStatus.decorateRows(swedish)
           : swedish;
-        state.noTeamRows=decorated
+        const decoratedWithApprovedImages = await hydrateApprovedFaImages(decorated);
+        state.noTeamRows=decoratedWithApprovedImages
           .filter((row)=>clean(row.current_status)==='no_team')
           .map((row)=>{
             const ranking=SEH_findPlayerRanking(
@@ -16071,6 +16109,7 @@ function SEH_initShop() {
             console.warn('Kunde inte kontrollera aktuell lagstatus för Free Agents:',error);
           }
         }
+        rows = await hydrateApprovedFaImages(rows);
         state.rows=rows
           .filter((row)=>!row.player_key || clean(row.current_status)!=='team')
           .map((row)=>({...row,_listingType:'free_agent'}));
