@@ -27,8 +27,18 @@ create temporary table scl27_roster_stage (
   captain_role text
 ) on commit drop;
 
+create temporary table scl_fcl_conflict_stage (
+  sports_gamer_player_id bigint,
+  display_gamertag text,
+  scl_team_id bigint,
+  scl_team_name text,
+  fcl_team_id bigint,
+  fcl_team_name text
+) on commit drop;
+
 \copy scl27_team_stage from '/tmp/scl27_official_teams.csv' with (format csv, header true, null '');
 \copy scl27_roster_stage from '/tmp/scl27_official_roster.csv' with (format csv, header true, null '');
+\copy scl_fcl_conflict_stage from '/tmp/scl_fcl_roster_conflicts.csv' with (format csv, header true, null '');
 
 select 1 / case when count(*) >= 1 then 1 else 0 end as teams_must_exist
 from scl27_team_stage;
@@ -137,6 +147,41 @@ do update set
   source_updated_at=now(),
   updated_at=now();
 
+delete from public.ehockey_scl_fcl_roster_conflicts;
+
+insert into public.ehockey_scl_fcl_roster_conflicts (
+  sports_gamer_player_id,
+  display_gamertag,
+  scl_team_id,
+  scl_team_name,
+  fcl_team_id,
+  fcl_team_name,
+  detected_at,
+  updated_at
+)
+select
+  sports_gamer_player_id,
+  nullif(trim(display_gamertag),''),
+  scl_team_id,
+  nullif(trim(scl_team_name),''),
+  fcl_team_id,
+  nullif(trim(fcl_team_name),''),
+  now(),
+  now()
+from scl_fcl_conflict_stage
+where sports_gamer_player_id is not null
+  and scl_team_id is not null
+  and fcl_team_id is not null
+on conflict (sports_gamer_player_id)
+do update set
+  display_gamertag=excluded.display_gamertag,
+  scl_team_id=excluded.scl_team_id,
+  scl_team_name=excluded.scl_team_name,
+  fcl_team_id=excluded.fcl_team_id,
+  fcl_team_name=excluded.fcl_team_name,
+  detected_at=excluded.detected_at,
+  updated_at=now();
+
 select public.seh_sync_scl27_official_teams();
 
 -- Laghistoriken läser materialiserade snapshots. Uppdatera dem i
@@ -154,4 +199,6 @@ select
    where sports_gamer_league_id=527 and is_available) as teams,
   (select count(*)
    from public.sportsgamer_league_roster_current
-   where sports_gamer_league_id=527 and is_available) as roster_players;
+   where sports_gamer_league_id=527 and is_available) as roster_players,
+  (select count(*)
+   from public.ehockey_scl_fcl_roster_conflicts) as scl_fcl_conflicts;
