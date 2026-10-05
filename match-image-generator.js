@@ -659,7 +659,14 @@
     const names = rosterFor(teamId).filter(Boolean);
     const missing = names.filter(name => {
       const normalized = normalize(name);
-      return !playerPortraits.has(normalized) || !playerMetaByName.has(normalized);
+      const currentPortrait = String(playerPortraits.get(normalized) || "");
+      return (
+        !playerPortraits.has(normalized) ||
+        !playerMetaByName.has(normalized) ||
+        !currentPortrait ||
+        currentPortrait === defaultPlayerImageUrl() ||
+        /1DEFAULTBILDID\.png(?:$|[?#])/i.test(currentPortrait)
+      );
     });
 
     if (missing.length) {
@@ -667,7 +674,19 @@
         const normalized = normalize(name);
         try {
           const playerKey = playerKeysByName.get(normalized) || "";
-          const filter = playerKey
+          const sgKey = String(playerKey).match(/^SG:(\d+)$/i)?.[1] || "";
+          const approvedFilter = sgKey
+            ? "sports_gamer_player_id=eq." + encodeURIComponent(sgKey)
+            : playerKey
+              ? "player_key=eq." + encodeURIComponent(playerKey)
+              : "display_gamertag=eq." + encodeURIComponent(name);
+          const approvedRows = await getPublicRows(
+            "v_ehockey_player_self_profiles_public",
+            "select=player_key,display_gamertag,sports_gamer_player_id,image_url&" + approvedFilter + "&image_url=not.is.null&limit=1"
+          );
+          const approvedUrl = String(approvedRows?.[0]?.image_url || "").trim();
+
+          const filter = playerKey && !sgKey
             ? "player_key=eq." + encodeURIComponent(playerKey)
             : "display_gamertag=eq." + encodeURIComponent(name);
           const rows = await getPublicRows(
@@ -675,7 +694,7 @@
             "select=player_key,display_gamertag,player_image,sports_gamer_player_url,primary_position,player_country&" + filter + "&limit=1"
           );
           const row = Array.isArray(rows) ? rows[0] : null;
-          playerPortraits.set(normalized,portraitUrlFromRow(row));
+          playerPortraits.set(normalized,approvedUrl || portraitUrlFromRow(row));
           playerMetaByName.set(normalized,{
             primaryPosition:String(row?.primary_position || "").trim().toUpperCase(),
             countryCode:String(row?.player_country || "").trim().toUpperCase()
@@ -1299,7 +1318,7 @@
   }
 
   async function loadScl27PresentationData() {
-    const [teamRowsRaw,playerRowsRaw] = await Promise.all([
+    const [teamRowsRaw,playerRowsRaw,approvedRowsRaw] = await Promise.all([
       getPublicRows(
         "ehockey_fantasy_team_pool",
         "select=sports_gamer_team_id,team_name,team_logo_url,source_league_id,is_available,source_snapshot&competition_id=eq.2&source_league_id=eq.527&is_available=eq.true&order=team_name.asc"
@@ -1307,11 +1326,26 @@
       getPublicRows(
         "ehockey_fantasy_player_pool",
         "select=player_key,sports_gamer_player_id,display_gamertag,real_team_id,real_team_name,primary_position,country_code,player_image,is_available&competition_id=eq.2&is_available=eq.true&order=real_team_name.asc,display_gamertag.asc"
+      ),
+      getPublicRows(
+        "v_ehockey_player_self_profiles_public",
+        "select=player_key,display_gamertag,sports_gamer_player_id,image_url&image_url=not.is.null&limit=5000"
       )
     ]);
 
     const teamRows = Array.isArray(teamRowsRaw) ? teamRowsRaw : [];
     const playerRows = Array.isArray(playerRowsRaw) ? playerRowsRaw : [];
+    const approvedRows = Array.isArray(approvedRowsRaw) ? approvedRowsRaw : [];
+    const approvedBySportsGamerId = new Map();
+    const approvedByName = new Map();
+    for (const row of approvedRows) {
+      const url = String(row?.image_url || "").trim();
+      if (!url) continue;
+      const sgId = String(row?.sports_gamer_player_id || "").trim();
+      const nameKey = normalize(row?.display_gamertag);
+      if (sgId) approvedBySportsGamerId.set(sgId,url);
+      if (nameKey) approvedByName.set(nameKey,url);
+    }
     scl27TeamDirectory = teamRows
       .filter(row => Number(row?.sports_gamer_team_id) > 0 && String(row?.team_name || "").trim())
       .map(buildScl27PresentationTeam);
@@ -1332,7 +1366,11 @@
       const normalized = normalize(player);
       const key = String(row?.player_key || "").trim();
       if (key) playerKeysByName.set(normalized,key);
-      playerPortraits.set(normalized,portraitUrlFromSclPoolRow(row));
+      const approvedPortrait =
+        approvedBySportsGamerId.get(String(row?.sports_gamer_player_id || "").trim()) ||
+        approvedByName.get(normalized) ||
+        "";
+      playerPortraits.set(normalized,approvedPortrait || portraitUrlFromSclPoolRow(row));
       playerMetaByName.set(normalized,{
         primaryPosition:String(row?.primary_position || "").trim().toUpperCase(),
         countryCode:String(row?.country_code || "").trim().toUpperCase()
