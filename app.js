@@ -222,7 +222,7 @@ function SEH_initHistory(options = {}) {
   return (() => {
     "use strict";
   
-    const APP_BUILD = "2026-09-12-v13021-ithl-lgel-competitions";
+    const APP_BUILD = "2026-10-05-v13022-current-scl-team-names";
     const PAGE_SIZE = 1000;
   
     const state = {
@@ -646,7 +646,7 @@ function SEH_initHistory(options = {}) {
     }
   
     async function fetchTeams() {
-      return fetchAllPages(
+      const teams = await fetchAllPages(
         "v_local_team_list",
         {
           select: [
@@ -667,6 +667,54 @@ function SEH_initHistory(options = {}) {
         },
         normalizeTeam
       );
+
+      // SCL 27 is a current official Swedish competition. Some SportsGamer
+      // team IDs belong to clubs that changed name after their last ECL import
+      // (for example vNexs Vipers -> INVICTUS AEGIS). Keep the historical
+      // identity/team_id, but show the official current SCL name and logo.
+      try {
+        const params = new URLSearchParams({
+          select: "sports_gamer_team_id,team_name,team_logo_url,registered_at",
+          sports_gamer_league_id: "eq.527",
+          is_available: "eq.true",
+          limit: "100"
+        });
+        const sclTeams = await fetchJson("sportsgamer_league_teams_current", params);
+        const bySportsGamerId = new Map(
+          sclTeams.map((row) => [String(row.sports_gamer_team_id || ""), row])
+        );
+
+        for (const team of teams) {
+          const match = team.sportsGamerIds
+            .map((value) => bySportsGamerId.get(String(value)))
+            .find(Boolean);
+          if (!match) continue;
+
+          const officialName = cleanText(match.team_name);
+          const previousName = cleanText(team.currentName);
+          if (officialName && officialName.toLocaleLowerCase("sv-SE") !== previousName.toLocaleLowerCase("sv-SE")) {
+            team.historicalNames = [...new Set([
+              ...team.historicalNames,
+              previousName
+            ].filter(Boolean))];
+            team.currentName = officialName;
+          }
+
+          const sportsGamerId = String(match.sports_gamer_team_id || "").trim();
+          if (sportsGamerId && !team.sportsGamerIds.includes(sportsGamerId)) {
+            team.sportsGamerIds.push(sportsGamerId);
+          }
+          if (cleanText(match.team_logo_url)) team.logoUrl = cleanText(match.team_logo_url);
+          if (sportsGamerId) {
+            team.profileUrl = `https://sportsgamer.gg/leagues/527/teams/${encodeURIComponent(sportsGamerId)}`;
+            team.currentSclSportsGamerTeamId = sportsGamerId;
+          }
+        }
+      } catch (error) {
+        console.warn(`${APP_BUILD}: kunde inte lägga på aktuella SCL 27-lagnamn; använder lagregistrets namn.`, error);
+      }
+
+      return teams;
     }
   
     async function fetchTournaments() {
@@ -6987,7 +7035,7 @@ function SEH_initTeam() {
   (() => {
     "use strict";
   
-    const APP_BUILD = "2026-10-03-v1286-approved-player-images";
+    const APP_BUILD = "2026-10-05-v1287-current-scl-history";
     const config = window.EHOCKEY_CONFIG || {};
   
     console.info("eHockey Master team build:", APP_BUILD);
@@ -8351,7 +8399,56 @@ function SEH_initTeam() {
       });
   
       const rows = await fetchJson("v_local_team_list", params);
-      return rows[0] ? normalizeTeam(rows[0]) : null;
+      if (!rows[0]) return null;
+
+      const team = normalizeTeam(rows[0]);
+
+      try {
+        const sportsGamerIds = team.sportsGamerIds
+          .map((value) => String(value || "").trim())
+          .filter(Boolean);
+
+        if (sportsGamerIds.length) {
+          const sclParams = new URLSearchParams({
+            select: "sports_gamer_team_id,team_name,team_logo_url,registered_at",
+            sports_gamer_league_id: "eq.527",
+            sports_gamer_team_id: `in.(${sportsGamerIds.join(",")})`,
+            is_available: "eq.true",
+            limit: "1"
+          });
+          const sclRows = await fetchJson("sportsgamer_league_teams_current", sclParams);
+          const current = sclRows[0] || null;
+
+          if (current) {
+            const officialName = String(current.team_name || "").trim();
+            const previousName = String(team.currentName || "").trim();
+
+            if (officialName && officialName.toLocaleLowerCase("sv-SE") !== previousName.toLocaleLowerCase("sv-SE")) {
+              team.historicalNames = [...new Set([
+                ...team.historicalNames,
+                previousName
+              ].filter(Boolean))];
+              team.currentName = officialName;
+            }
+
+            const sportsGamerId = String(current.sports_gamer_team_id || "").trim();
+            if (sportsGamerId && !team.sportsGamerIds.includes(sportsGamerId)) {
+              team.sportsGamerIds.push(sportsGamerId);
+            }
+            if (String(current.team_logo_url || "").trim()) {
+              team.logoUrl = String(current.team_logo_url || "").trim();
+            }
+            if (sportsGamerId) {
+              team.profileUrl = `https://sportsgamer.gg/leagues/527/teams/${encodeURIComponent(sportsGamerId)}`;
+              team.currentSclSportsGamerTeamId = sportsGamerId;
+            }
+          }
+        }
+      } catch (error) {
+        console.warn(`${APP_BUILD}: kunde inte hämta aktuellt SCL 27-lagnamn; använder lagregistrets namn.`, error);
+      }
+
+      return team;
     }
   
     let teamLeagueDisplayNameMapPromise = null;
