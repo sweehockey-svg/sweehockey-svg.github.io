@@ -25,6 +25,10 @@
   let playerKeysByName = new Map();
   let playerPortraits = new Map();
   let playerMetaByName = new Map();
+  // Normalized alpha bounds for transparent player portraits. This lets cards
+  // frame the actual player instead of the full 1200x1600 source canvas.
+  let playerPortraitCrops = new Map();
+  const portraitCropByUrl = new Map();
   let scl27TeamDirectory = [];
   let scl27RostersByTeamId = new Map();
   let adminSeasonCatalog = [];
@@ -561,37 +565,130 @@
     return playerPortraits.get(normalize(name)) || defaultPlayerImageUrl();
   }
 
+  function analyzePortraitAlphaBounds(url) {
+    const source = String(url || "").trim();
+    if (!source || source === defaultPlayerImageUrl()) return Promise.resolve(null);
+    if (portraitCropByUrl.has(source)) return portraitCropByUrl.get(source);
+
+    const task = new Promise(resolve => {
+      const image = new Image();
+      if (/^https?:\/\//i.test(source)) image.crossOrigin = "anonymous";
+
+      image.onload = () => {
+        try {
+          const naturalW = Math.max(1,image.naturalWidth || image.width || 1);
+          const naturalH = Math.max(1,image.naturalHeight || image.height || 1);
+          const maxSide = 420;
+          const scale = Math.min(1,maxSide / Math.max(naturalW,naturalH));
+          const sampleW = Math.max(1,Math.round(naturalW*scale));
+          const sampleH = Math.max(1,Math.round(naturalH*scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = sampleW;
+          canvas.height = sampleH;
+          const ctx = canvas.getContext("2d",{willReadFrequently:true});
+          if (!ctx) return resolve(null);
+
+          ctx.clearRect(0,0,sampleW,sampleH);
+          ctx.drawImage(image,0,0,sampleW,sampleH);
+          const pixels = ctx.getImageData(0,0,sampleW,sampleH).data;
+
+          let minX = sampleW;
+          let minY = sampleH;
+          let maxX = -1;
+          let maxY = -1;
+          const alphaThreshold = 24;
+
+          for (let y=0;y<sampleH;y++) {
+            for (let x=0;x<sampleW;x++) {
+              const alpha = pixels[(y*sampleW+x)*4+3];
+              if (alpha <= alphaThreshold) continue;
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+
+          if (maxX < minX || maxY < minY) return resolve(null);
+
+          // Small padding keeps hair/shoulders from touching the card edge while
+          // still removing the large transparent margins found in some portraits.
+          const contentW = maxX-minX+1;
+          const contentH = maxY-minY+1;
+          const padX = Math.max(2,Math.round(contentW*.055));
+          const padTop = Math.max(1,Math.round(contentH*.018));
+          const padBottom = Math.max(2,Math.round(contentH*.035));
+          minX = Math.max(0,minX-padX);
+          maxX = Math.min(sampleW-1,maxX+padX);
+          minY = Math.max(0,minY-padTop);
+          maxY = Math.min(sampleH-1,maxY+padBottom);
+
+          resolve({
+            naturalW,
+            naturalH,
+            x:minX/sampleW*naturalW,
+            y:minY/sampleH*naturalH,
+            width:(maxX-minX+1)/sampleW*naturalW,
+            height:(maxY-minY+1)/sampleH*naturalH
+          });
+        } catch (error) {
+          // Cross-origin portraits without CORS support simply use the old
+          // framing rather than breaking the whole graphic.
+          resolve(null);
+        }
+      };
+      image.onerror = () => resolve(null);
+      image.src = source;
+    });
+
+    portraitCropByUrl.set(source,task);
+    return task;
+  }
+
+  async function hydratePortraitCrops(names) {
+    await Promise.all((Array.isArray(names) ? names : []).map(async name => {
+      const normalized = normalize(name);
+      if (!normalized || playerPortraitCrops.has(normalized)) return;
+      const url = portraitUrlForPlayer(name);
+      const crop = await analyzePortraitAlphaBounds(url);
+      if (crop) playerPortraitCrops.set(normalized,crop);
+    }));
+  }
+
   async function hydratePlayerPortraits(teamId) {
     const names = rosterFor(teamId).filter(Boolean);
     const missing = names.filter(name => {
       const normalized = normalize(name);
       return !playerPortraits.has(normalized) || !playerMetaByName.has(normalized);
     });
-    if (!missing.length) return;
 
-    await Promise.all(missing.map(async name => {
-      const normalized = normalize(name);
-      try {
-        const playerKey = playerKeysByName.get(normalized) || "";
-        const filter = playerKey
-          ? "player_key=eq." + encodeURIComponent(playerKey)
-          : "display_gamertag=eq." + encodeURIComponent(name);
-        const rows = await getPublicRows(
-          "app_player_directory_cache",
-          "select=player_key,display_gamertag,player_image,sports_gamer_player_url,primary_position,player_country&" + filter + "&limit=1"
-        );
-        const row = Array.isArray(rows) ? rows[0] : null;
-        playerPortraits.set(normalized,portraitUrlFromRow(row));
-        playerMetaByName.set(normalized,{
-          primaryPosition:String(row?.primary_position || "").trim().toUpperCase(),
-          countryCode:String(row?.player_country || "").trim().toUpperCase()
-        });
-      } catch (error) {
-        console.warn("[Match Graphics] kunde inte hämta spelarporträtt för",name,error);
-        playerPortraits.set(normalized,defaultPlayerImageUrl());
-        playerMetaByName.set(normalized,{primaryPosition:"",countryCode:""});
-      }
-    }));
+    if (missing.length) {
+      await Promise.all(missing.map(async name => {
+        const normalized = normalize(name);
+        try {
+          const playerKey = playerKeysByName.get(normalized) || "";
+          const filter = playerKey
+            ? "player_key=eq." + encodeURIComponent(playerKey)
+            : "display_gamertag=eq." + encodeURIComponent(name);
+          const rows = await getPublicRows(
+            "app_player_directory_cache",
+            "select=player_key,display_gamertag,player_image,sports_gamer_player_url,primary_position,player_country&" + filter + "&limit=1"
+          );
+          const row = Array.isArray(rows) ? rows[0] : null;
+          playerPortraits.set(normalized,portraitUrlFromRow(row));
+          playerMetaByName.set(normalized,{
+            primaryPosition:String(row?.primary_position || "").trim().toUpperCase(),
+            countryCode:String(row?.player_country || "").trim().toUpperCase()
+          });
+        } catch (error) {
+          console.warn("[Match Graphics] kunde inte hämta spelarporträtt för",name,error);
+          playerPortraits.set(normalized,defaultPlayerImageUrl());
+          playerMetaByName.set(normalized,{primaryPosition:"",countryCode:""});
+        }
+      }));
+    }
+
+    await hydratePortraitCrops(names);
   }
 
   function buildDynamicTeam(row,index) {
@@ -2746,14 +2843,19 @@
     const footerH = Math.max(30,Math.round(height*.17));
     const portraitInsetX = Math.max(5,Math.round(width*.045));
     const portraitTop = Math.max(4,Math.round(height*.025));
-    // Team Presentation: crop closer on the player, but keep the portrait locked to the top.
-    const portraitZoom = 1.30;
-    const portraitBaseW = width - portraitInsetX*2;
-    const portraitBaseH = height - footerH - portraitTop + 5;
-    const portraitW = portraitBaseW * portraitZoom;
-    const portraitH = portraitBaseH * portraitZoom;
-    const portraitX = x + (width - portraitW)/2;
+    const portraitX = x + portraitInsetX;
     const portraitY = y + portraitTop;
+    const portraitW = width - portraitInsetX*2;
+    const portraitH = height - footerH - portraitTop + 5;
+    const portraitCrop = playerPortraitCrops.get(normalize(cleanName)) || null;
+    const portraitMarkup = portraitCrop
+      ? '<svg x="' + portraitX + '" y="' + portraitY + '" width="' + portraitW + '" height="' + portraitH + '" viewBox="' +
+          portraitCrop.x.toFixed(2) + ' ' + portraitCrop.y.toFixed(2) + ' ' +
+          portraitCrop.width.toFixed(2) + ' ' + portraitCrop.height.toFixed(2) +
+          '" preserveAspectRatio="xMidYMin slice" overflow="hidden" clip-path="url(#' + clipId + ')">' +
+          '<image href="' + esc(portrait) + '" x="0" y="0" width="' + portraitCrop.naturalW + '" height="' + portraitCrop.naturalH + '" preserveAspectRatio="none"/>' +
+        '</svg>'
+      : '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + portraitY + '" width="' + (width-8) + '" height="' + portraitH + '" preserveAspectRatio="xMidYMin meet" clip-path="url(#' + clipId + ')"/>';
     const badgeW = Math.max(32,Math.min(40,Math.round(width*.23)));
     const badgeH = Math.max(20,Math.min(24,Math.round(height*.12)));
     const badgeFont = Math.max(9,Math.min(11,Math.round(width*.06)));
@@ -2776,7 +2878,7 @@
       '<defs><clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16"/></clipPath></defs>',
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16" fill="#07101a" fill-opacity=".94" stroke="#b8ddff" stroke-opacity=".18"/>',
       '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="' + height + '" rx="16" fill="' + team.primary + '" opacity=".18"/>',
-      '<image href="' + esc(portrait) + '" x="' + portraitX + '" y="' + portraitY + '" width="' + portraitW + '" height="' + portraitH + '" preserveAspectRatio="xMidYMin meet" clip-path="url(#' + clipId + ')"/>',
+      portraitMarkup,
       badge,
       playerFlagSvg(cleanName,flagX,y+9,flagW,flagH),
       numberBadge,
