@@ -103,7 +103,7 @@
     const visibleText = safeCount > 99 ? "99+" : String(safeCount);
     const details = breakdown || {};
     const title = safeCount > 0
-      ? `${safeCount} väntande adminärenden · ${details.links || 0} kopplingar · ${details.fa || 0} Free Agent · ${details.profiles || 0} profilärenden`
+      ? `${safeCount} väntande adminärenden · ${details.links || 0} kopplingar · ${details.fa || 0} Free Agent · ${details.profiles || 0} profilärenden · ${details.roster || 0} SCL/FCL`
       : "Inga väntande adminärenden";
 
     ensureAdminNavBadges();
@@ -124,7 +124,8 @@
       breakdown: {
         links: Math.max(0, Number(details.links) || 0),
         fa: Math.max(0, Number(details.fa) || 0),
-        profiles: Math.max(0, Number(details.profiles) || 0)
+        profiles: Math.max(0, Number(details.profiles) || 0),
+        roster: Math.max(0, Number(details.roster) || 0)
       },
       updatedAt: Date.now()
     };
@@ -208,16 +209,23 @@
       const sessionResult = await supabase.auth.getSession();
       if (sessionResult.error || !sessionResult.data.session) return;
 
-      const { data, error } = await supabase.rpc("seh_admin_pending_counts");
-      if (error) throw error;
+      const [pendingResult, conflictResult] = await Promise.all([
+        supabase.rpc("seh_admin_pending_counts"),
+        supabase.rpc("seh_admin_scl_fcl_conflicts")
+      ]);
+      if (pendingResult.error) throw pendingResult.error;
 
-      const row = Array.isArray(data) ? data[0] : data;
+      const row = Array.isArray(pendingResult.data) ? pendingResult.data[0] : pendingResult.data;
+      const rosterConflicts = conflictResult.error
+        ? 0
+        : (Array.isArray(conflictResult.data) ? conflictResult.data.length : 0);
       const breakdown = {
         links: Number(row?.links) || 0,
         fa: Number(row?.fa) || 0,
-        profiles: Number(row?.profiles) || 0
+        profiles: Number(row?.profiles) || 0,
+        roster: rosterConflicts
       };
-      publishAdminBadgeCount(Number(row?.total) || 0, breakdown);
+      publishAdminBadgeCount((Number(row?.total) || 0) + rosterConflicts, breakdown);
     } catch (error) {
       console.warn("Kunde inte läsa väntande adminärenden till navigeringen", error);
     } finally {
@@ -405,6 +413,138 @@
     return response.data || {};
   }
 
+  async function fetchSclFclConflicts() {
+    const supabase = getClient();
+    if (!supabase) return [];
+
+    const result = await supabase.rpc("seh_admin_scl_fcl_conflicts");
+    if (result.error) throw result.error;
+    return Array.isArray(result.data) ? result.data : [];
+  }
+
+  function ensureSclFclConflictCard() {
+    let card = document.getElementById("sclFclConflictCard");
+    if (card) return card;
+
+    const anchor = document.getElementById("scl27TeamsSyncCard");
+    if (!anchor) return null;
+
+    card = document.createElement("article");
+    card.id = "sclFclConflictCard";
+    card.className = "admin-card admin-home-card";
+    card.hidden = true;
+    card.style.borderColor = "rgba(255,82,82,.7)";
+    card.style.background = "linear-gradient(180deg,rgba(82,13,13,.22),rgba(28,8,8,.15))";
+
+    const kicker = document.createElement("p");
+    kicker.className = "writer-panel-kicker";
+    kicker.textContent = "SCL / FCL-KONTROLL";
+    kicker.style.color = "#ff6b6b";
+
+    const heading = document.createElement("h2");
+    heading.textContent = "Dubbelregistrerade spelare";
+
+    const intro = document.createElement("p");
+    intro.dataset.conflictIntro = "true";
+
+    const list = document.createElement("div");
+    list.dataset.conflictList = "true";
+    list.style.display = "grid";
+    list.style.gap = "8px";
+    list.style.marginTop = "12px";
+
+    card.append(kicker, heading, intro, list);
+    anchor.insertAdjacentElement("afterend", card);
+    return card;
+  }
+
+  function renderSclFclConflicts(rows) {
+    const card = ensureSclFclConflictCard();
+    if (!card) return;
+
+    const conflicts = Array.isArray(rows) ? rows : [];
+    card.hidden = conflicts.length === 0;
+
+    const intro = card.querySelector("[data-conflict-intro]");
+    const list = card.querySelector("[data-conflict-list]");
+    if (!intro || !list) return;
+
+    list.replaceChildren();
+    if (!conflicts.length) {
+      intro.textContent = "";
+      return;
+    }
+
+    intro.textContent = conflicts.length === 1
+      ? "1 spelare finns registrerad i både SCL 27 och FCL."
+      : conflicts.length + " spelare finns registrerade i både SCL 27 och FCL.";
+
+    conflicts.forEach(function (row) {
+      const item = document.createElement("div");
+      item.style.padding = "10px 12px";
+      item.style.border = "1px solid rgba(255,107,107,.35)";
+      item.style.borderRadius = "10px";
+      item.style.background = "rgba(0,0,0,.18)";
+
+      const name = document.createElement("strong");
+      name.textContent = String(row?.display_gamertag || ("Player " + (row?.sports_gamer_player_id || "")));
+
+      const detail = document.createElement("div");
+      detail.style.marginTop = "3px";
+      detail.style.fontSize = "12px";
+      detail.style.opacity = ".82";
+      detail.textContent =
+        "SCL: " + String(row?.scl_team_name || row?.scl_team_id || "–") +
+        " · FCL: " + String(row?.fcl_team_name || row?.fcl_team_id || "–");
+
+      item.append(name, detail);
+      list.append(item);
+    });
+  }
+
+  async function refreshSclFclConflictAlert(showPopup) {
+    try {
+      const rows = await fetchSclFclConflicts();
+      renderSclFclConflicts(rows);
+
+      const signature = rows
+        .map(function (row) {
+          return [
+            row?.sports_gamer_player_id || "",
+            row?.scl_team_id || "",
+            row?.fcl_team_id || ""
+          ].join(":");
+        })
+        .sort()
+        .join("|");
+      const storageKey = "seh_scl_fcl_conflict_alert_signature";
+
+      if (!rows.length) {
+        sessionStorage.removeItem(storageKey);
+      } else if (showPopup && sessionStorage.getItem(storageKey) !== signature) {
+        sessionStorage.setItem(storageKey, signature);
+        const lines = rows.slice(0, 12).map(function (row) {
+          const name = String(row?.display_gamertag || ("Player " + (row?.sports_gamer_player_id || "")));
+          const scl = String(row?.scl_team_name || row?.scl_team_id || "–");
+          const fcl = String(row?.fcl_team_name || row?.fcl_team_id || "–");
+          return "• " + name + " — SCL: " + scl + " / FCL: " + fcl;
+        });
+        const more = rows.length > 12 ? "\n+" + (rows.length - 12) + " till" : "";
+        window.alert(
+          "VARNING: Spelare registrerade i både SCL och FCL\n\n" +
+          lines.join("\n") +
+          more
+        );
+      }
+
+      refreshAdminNavBadge();
+      return rows;
+    } catch (error) {
+      console.warn("Kunde inte kontrollera SCL/FCL-dubbelregistreringar", error);
+      return [];
+    }
+  }
+
   async function refreshScl(continuePolling) {
     if (!sclRequestId() || !sclStatusElement()) return;
     window.clearTimeout(sclPollTimer);
@@ -428,7 +568,12 @@
           setSclStatus("Statuskontrollen stoppades efter 50 minuter. Tryck Kontrollera status för en manuell kontroll.", "error", data.run_url || "");
         }
       }
-      if (done) stopPolling(SCL_STARTED_KEY);
+      if (done) {
+        stopPolling(SCL_STARTED_KEY);
+        if (data.conclusion === "success") {
+          await refreshSclFclConflictAlert(true);
+        }
+      }
     } catch (error) {
       stopPolling(SCL_STARTED_KEY);
       setSclStatus("Fel: " + (error?.message || error), "error");
@@ -444,7 +589,7 @@
     card.innerHTML = [
       '<p class="writer-panel-kicker">SCL 27</p>',
       '<h2>Lag & trupper</h2>',
-      '<p>Hämtar officiellt anmälda lag, kaptener och registrerade trupper direkt från SportsGamer liga 527. Uppdaterar SCL 27-data, Lagbygge och Svenska lag-registret. Fantasy används inte i den här synken.</p>',
+      '<p>Hämtar officiellt anmälda lag, kaptener och registrerade trupper direkt från SportsGamer liga 527. Kontrollerar samtidigt om någon spelare finns registrerad i både SCL 27 och FCL (liga 529). Uppdaterar SCL 27-data, Lagbygge och Svenska lag-registret.</p>',
       '<div class="admin-actions">',
       '<button id="startScl27TeamsSync" type="button">Synka SCL 27-lag</button>',
       '<button id="refreshScl27TeamsSync" class="writer-secondary" type="button" disabled>Kontrollera status</button>',
@@ -485,6 +630,7 @@
     });
 
     setSclBusy(false);
+    refreshSclFclConflictAlert(false);
     if (sclRequestId()) refreshScl(pollingIsFresh(SCL_STARTED_KEY));
   }
 
