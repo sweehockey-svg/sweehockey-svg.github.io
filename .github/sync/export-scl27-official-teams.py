@@ -301,11 +301,11 @@ def load_cross_league_conflicts(connection: Any) -> list[dict[str, Any]]:
     )
 
     player_ids = sorted({integer(first(row, "__playerID")) for row in rows} - {0})
-    team_ids = sorted({
+    team_ids = sorted(({
         integer(first(row, "__sclTeamID")) for row in rows
     } | {
         integer(first(row, "__fclTeamID")) for row in rows
-    } - {0})
+    }) - {0})
 
     players: dict[int, dict[str, Any]] = {}
     player_columns = inventory.get("nhlgamer_players", [])
