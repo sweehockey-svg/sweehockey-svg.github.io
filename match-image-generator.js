@@ -1419,6 +1419,7 @@
     state.teamId = preferred?.id || "";
     state.opponentId = openingDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
     setDefaultLineup();
+    if (state.template === "team-presentation") setDefaultPresentationRoster();
     await hydratePlayerPortraits(state.teamId);
     syncForm();
     render();
@@ -1500,6 +1501,7 @@
       playerKeysByName = new Map();
       applyDirectRosterRows(rosterRows);
       setDefaultLineup();
+      if (state.template === "team-presentation") setDefaultPresentationRoster();
       await hydratePlayerPortraits(state.teamId);
       syncForm();
       render();
