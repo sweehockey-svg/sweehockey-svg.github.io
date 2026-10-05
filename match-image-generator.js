@@ -1319,10 +1319,14 @@
   }
 
   async function loadScl27PresentationData() {
-    const [teamRowsRaw,playerRowsRaw,approvedRowsRaw] = await Promise.all([
+    const [teamRowsRaw,currentTeamRowsRaw,playerRowsRaw,approvedRowsRaw] = await Promise.all([
       getPublicRows(
         "ehockey_fantasy_team_pool",
         "select=sports_gamer_team_id,team_name,team_logo_url,source_league_id,is_available,source_snapshot&competition_id=eq.2&source_league_id=eq.527&is_available=eq.true&order=team_name.asc"
+      ),
+      getPublicRows(
+        "sportsgamer_league_teams_current",
+        "select=sports_gamer_team_id,team_name,team_logo_url,source_updated_at&sports_gamer_league_id=eq.527&is_available=eq.true&order=team_name.asc"
       ),
       getPublicRows(
         "ehockey_fantasy_player_pool",
@@ -1334,7 +1338,22 @@
       )
     ]);
 
-    const teamRows = Array.isArray(teamRowsRaw) ? teamRowsRaw : [];
+    const baseTeamRows = Array.isArray(teamRowsRaw) ? teamRowsRaw : [];
+    const currentTeamRows = Array.isArray(currentTeamRowsRaw) ? currentTeamRowsRaw : [];
+    const currentById = new Map(
+      currentTeamRows.map(row => [Number(row?.sports_gamer_team_id) || 0,row])
+    );
+    // Name/logo always come from the live SCL source. Fantasy keeps the source
+    // snapshot for jersey palette fallback, but must never make Match Graphics
+    // show yesterday's badge after a team updates SportsGamer.
+    const teamRows = baseTeamRows.map(row => {
+      const current = currentById.get(Number(row?.sports_gamer_team_id) || 0);
+      return current ? {
+        ...row,
+        team_name:String(current.team_name || row.team_name || "").trim(),
+        team_logo_url:String(current.team_logo_url || row.team_logo_url || "").trim()
+      } : row;
+    });
     const playerRows = Array.isArray(playerRowsRaw) ? playerRowsRaw : [];
     const approvedRows = Array.isArray(approvedRowsRaw) ? approvedRowsRaw : [];
     const approvedBySportsGamerId = new Map();
