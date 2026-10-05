@@ -2744,9 +2744,13 @@
     const footerH = Math.max(30,Math.round(height*.17));
     const portraitInsetX = Math.max(5,Math.round(width*.045));
     const portraitTop = Math.max(4,Math.round(height*.025));
-    const portraitW = width - portraitInsetX*2;
-    const portraitH = height - footerH - portraitTop + 5;
-    const portraitX = x + portraitInsetX;
+    // Team Presentation: crop closer on the player, but keep the portrait locked to the top.
+    const portraitZoom = 1.30;
+    const portraitBaseW = width - portraitInsetX*2;
+    const portraitBaseH = height - footerH - portraitTop + 5;
+    const portraitW = portraitBaseW * portraitZoom;
+    const portraitH = portraitBaseH * portraitZoom;
+    const portraitX = x + (width - portraitW)/2;
     const portraitY = y + portraitTop;
     const badgeW = Math.max(32,Math.min(40,Math.round(width*.23)));
     const badgeH = Math.max(20,Math.min(24,Math.round(height*.12)));
