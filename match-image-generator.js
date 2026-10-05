@@ -694,10 +694,11 @@
             "select=player_key,display_gamertag,player_image,sports_gamer_player_url,primary_position,player_country&" + filter + "&limit=1"
           );
           const row = Array.isArray(rows) ? rows[0] : null;
+          const existingMeta = playerMetaByName.get(normalized) || {};
           playerPortraits.set(normalized,approvedUrl || portraitUrlFromRow(row));
           playerMetaByName.set(normalized,{
-            primaryPosition:String(row?.primary_position || "").trim().toUpperCase(),
-            countryCode:String(row?.player_country || "").trim().toUpperCase()
+            primaryPosition:String(row?.primary_position || existingMeta.primaryPosition || "").trim().toUpperCase(),
+            countryCode:String(row?.player_country || existingMeta.countryCode || "").trim().toUpperCase()
           });
         } catch (error) {
           console.warn("[Match Graphics] kunde inte hämta spelarporträtt för",name,error);
