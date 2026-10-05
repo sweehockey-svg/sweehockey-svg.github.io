@@ -2852,7 +2852,7 @@
       ? '<svg x="' + portraitX + '" y="' + portraitY + '" width="' + portraitW + '" height="' + portraitH + '" viewBox="' +
           portraitCrop.x.toFixed(2) + ' ' + portraitCrop.y.toFixed(2) + ' ' +
           portraitCrop.width.toFixed(2) + ' ' + portraitCrop.height.toFixed(2) +
-          '" preserveAspectRatio="xMidYMin meet" overflow="hidden">' +
+          '" preserveAspectRatio="xMidYMin slice" overflow="hidden">' +
           '<image href="' + esc(portrait) + '" x="0" y="0" width="' + portraitCrop.naturalW + '" height="' + portraitCrop.naturalH + '" preserveAspectRatio="none"/>' +
         '</svg>'
       : '<image href="' + esc(portrait) + '" x="' + (x+4) + '" y="' + portraitY + '" width="' + (width-8) + '" height="' + portraitH + '" preserveAspectRatio="xMidYMin meet" clip-path="url(#' + clipId + ')"/>';
