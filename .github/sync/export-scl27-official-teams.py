@@ -19,8 +19,10 @@ import pymysql
 
 
 LEAGUE_ID = 527
+FCL_LEAGUE_ID = 529
 TEAM_OUT = Path("/tmp/scl27_official_teams.csv")
 ROSTER_OUT = Path("/tmp/scl27_official_roster.csv")
+CONFLICT_OUT = Path("/tmp/scl_fcl_roster_conflicts.csv")
 POSITION_BY_ID = {1: "LW", 2: "C", 3: "RW", 4: "LD", 5: "RD", 6: "G"}
 
 
@@ -269,11 +271,112 @@ def load_source_rows(connection: Any) -> tuple[list[dict[str, Any]], list[dict[s
     return team_rows, roster_rows, global_teams, players
 
 
+def load_cross_league_conflicts(connection: Any) -> list[dict[str, Any]]:
+    """Find players registered in both SCL 27 (527) and FCL (529).
+
+    This intentionally mirrors the admin SQL check against nhlgamer_leagueRosters:
+    a player is a conflict when the same playerID appears in both leagues.
+    """
+    diagnostic_stage("scl_fcl_conflicts")
+    inventory = table_inventory(connection)
+    roster_columns = inventory.get("nhlgamer_leagueRosters", [])
+    roster_league = column_name(roster_columns, "leagueID", "league_id")
+    roster_team = column_name(roster_columns, "teamID", "team_id")
+    roster_player = column_name(roster_columns, "playerID", "player_id")
+    if not roster_league or not roster_team or not roster_player:
+        print("Warning: cannot run SCL/FCL duplicate check; leagueRosters direct identifiers are missing.")
+        return []
+
+    rows = select(
+        connection,
+        "select "
+        f"{safe_identifier(roster_player)} as __playerID, "
+        f"max(case when {safe_identifier(roster_league)}=%s then {safe_identifier(roster_team)} end) as __sclTeamID, "
+        f"max(case when {safe_identifier(roster_league)}=%s then {safe_identifier(roster_team)} end) as __fclTeamID "
+        "from `nhlgamer_leagueRosters` "
+        f"where {safe_identifier(roster_league)} in (%s,%s) "
+        f"group by {safe_identifier(roster_player)} "
+        f"having count(distinct {safe_identifier(roster_league)})=2",
+        (LEAGUE_ID, FCL_LEAGUE_ID, LEAGUE_ID, FCL_LEAGUE_ID),
+    )
+
+    player_ids = sorted({integer(first(row, "__playerID")) for row in rows} - {0})
+    team_ids = sorted({
+        integer(first(row, "__sclTeamID")) for row in rows
+    } | {
+        integer(first(row, "__fclTeamID")) for row in rows
+    } - {0})
+
+    players: dict[int, dict[str, Any]] = {}
+    player_columns = inventory.get("nhlgamer_players", [])
+    player_id_column = column_name(player_columns, "playerID", "player_id", "id")
+    if player_ids and player_id_column:
+        for row in fetch_by_ids(connection, "nhlgamer_players", player_id_column, player_ids):
+            players[integer(first(row, "playerID", "player_id", "id"))] = row
+
+    global_teams: dict[int, dict[str, Any]] = {}
+    global_team_columns = inventory.get("nhlgamer_teams", [])
+    global_team_id = column_name(global_team_columns, "teamID", "team_id", "id")
+    if team_ids and global_team_id:
+        for row in fetch_by_ids(connection, "nhlgamer_teams", global_team_id, team_ids):
+            global_teams[integer(first(row, "teamID", "team_id", "id"))] = row
+
+    league_names: dict[tuple[int, int], str] = {}
+    team_columns = inventory.get("nhlgamer_leagueTeams", [])
+    league_column = column_name(team_columns, "leagueID", "league_id")
+    team_column = column_name(team_columns, "teamID", "team_id")
+    if league_column and team_column:
+        league_rows = select(
+            connection,
+            "select * from `nhlgamer_leagueTeams` "
+            f"where {safe_identifier(league_column)} in (%s,%s)",
+            (LEAGUE_ID, FCL_LEAGUE_ID),
+        )
+        for row in league_rows:
+            league_id = integer(first(row, "leagueID", "league_id"))
+            team_id = integer(first(row, "teamID", "team_id"))
+            if not league_id or not team_id:
+                continue
+            name = text(first(row, "teamName", "team_name", "name"))
+            if name:
+                league_names[(league_id, team_id)] = name
+
+    result: list[dict[str, Any]] = []
+    for row in rows:
+        player_id = integer(first(row, "__playerID"))
+        scl_team_id = integer(first(row, "__sclTeamID"))
+        fcl_team_id = integer(first(row, "__fclTeamID"))
+        player = players.get(player_id, {})
+        display = (
+            text(first(player, "psntag", "gamertag", "EAID", "playerName", "username"))
+            or f"Player {player_id}"
+        )
+
+        def team_name(league_id: int, team_id: int) -> str:
+            league_name = league_names.get((league_id, team_id), "")
+            if league_name:
+                return league_name
+            global_team = global_teams.get(team_id, {})
+            return text(first(global_team, "teamName", "team_name", "name")) or f"Team {team_id}"
+
+        result.append({
+            "sports_gamer_player_id": player_id,
+            "display_gamertag": display,
+            "scl_team_id": scl_team_id,
+            "scl_team_name": team_name(LEAGUE_ID, scl_team_id),
+            "fcl_team_id": fcl_team_id,
+            "fcl_team_name": team_name(FCL_LEAGUE_ID, fcl_team_id),
+        })
+
+    return sorted(result, key=lambda item: (item["display_gamertag"].casefold(), item["sports_gamer_player_id"]))
+
+
 def main() -> int:
     diagnostic_stage("connect")
     connection = connect()
     try:
         team_rows, roster_rows, global_teams, players = load_source_rows(connection)
+        conflicts = load_cross_league_conflicts(connection)
     finally:
         connection.close()
 
@@ -343,11 +446,24 @@ def main() -> int:
         writer.writeheader()
         writer.writerows(sorted(roster.values(), key=lambda item: (item["sports_gamer_team_id"], item["display_gamertag"].casefold())))
 
+    conflict_fields = ["sports_gamer_player_id", "display_gamertag", "scl_team_id", "scl_team_name", "fcl_team_id", "fcl_team_name"]
+    with CONFLICT_OUT.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=conflict_fields)
+        writer.writeheader()
+        writer.writerows(conflicts)
+
     output = os.environ.get("GITHUB_OUTPUT")
     if output:
         with open(output, "a", encoding="utf-8") as handle:
-            handle.write(f"team_count={len(teams)}\nplayer_count={len(roster)}\nleague_id={LEAGUE_ID}\ndiagnostic_stage=complete\n")
+            handle.write(
+                f"team_count={len(teams)}\n"
+                f"player_count={len(roster)}\n"
+                f"conflict_count={len(conflicts)}\n"
+                f"league_id={LEAGUE_ID}\n"
+                "diagnostic_stage=complete\n"
+            )
     print(f"Exported {len(teams)} teams and {len(roster)} roster players for league {LEAGUE_ID}.")
+    print(f"SCL/FCL duplicate roster check found {len(conflicts)} player(s).")
     return 0
 
 
