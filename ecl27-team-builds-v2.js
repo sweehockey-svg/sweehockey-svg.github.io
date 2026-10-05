@@ -1089,6 +1089,9 @@
     const fallback = "players/1DEFAULTBILDID.png";
     if (!row) return fallback;
 
+    const approved = String(row.approved_image_url || row.approvedImageUrl || "").trim();
+    if (/^https?:\/\//i.test(approved)) return approved;
+
     const id = sportsGamerId(row.sports_gamer_player_url);
     if (id) {
       const file = `${id}.png`;
@@ -1236,6 +1239,38 @@
           }
         }
       }
+    }
+
+    try {
+      const {data:approvedRows,error:approvedError} = await client
+        .from("v_ehockey_player_self_profiles_public")
+        .select("display_gamertag,sports_gamer_player_id,image_url")
+        .in("display_gamertag",names)
+        .not("image_url","is",null);
+
+      if (approvedError) {
+        console.warn("[ECL27] kunde inte hämta adminpublicerade spelarbilder",approvedError);
+      } else {
+        const byName = new Map();
+        const bySportsGamerId = new Map();
+        for (const approvedRow of approvedRows || []) {
+          const url = String(approvedRow?.image_url || "").trim();
+          if (!url) continue;
+          const nameKey = norm(approvedRow?.display_gamertag);
+          const sgId = String(approvedRow?.sports_gamer_player_id || "").trim();
+          if (nameKey) byName.set(nameKey,url);
+          if (sgId) bySportsGamerId.set(sgId,url);
+        }
+        for (const row of rows) {
+          const sgId = sportsGamerId(row?.sports_gamer_player_url);
+          row.approved_image_url =
+            bySportsGamerId.get(sgId) ||
+            byName.get(norm(row?.display_gamertag)) ||
+            "";
+        }
+      }
+    } catch (approvedError) {
+      console.warn("[ECL27] kunde inte koppla adminpublicerade spelarbilder",approvedError);
     }
 
     return rows;
