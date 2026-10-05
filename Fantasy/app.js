@@ -928,8 +928,10 @@
   }
 
   function playerPortraitUrls(player) {
+    const approved = clean(player?.approved_image_url || player?.approvedImageUrl);
     const id = clean(player?.sports_gamer_player_id).replace(/\D/g, "");
     const fallback = "../players/1DEFAULTBILDID.png";
+    if (/^https?:\/\//i.test(approved)) return { src: approved, original: "", fallback };
     if (!id) return { src: fallback, original: "", fallback };
     return {
       src: "../web-images/players/" + encodeURIComponent(id + ".png") + ".webp",
@@ -2316,6 +2318,32 @@
     if (poolResult.error) throw poolResult.error;
 
     state.pool = (poolResult.data || []).filter((player) => fantasyCountryAllowed(player.country_code));
+
+    const sportsGamerIds = [...new Set(
+      state.pool
+        .map((player) => clean(player?.sports_gamer_player_id).replace(/\D/g,""))
+        .filter(Boolean)
+    )];
+    if (sportsGamerIds.length) {
+      const approvedResult = await sb
+        .from("v_ehockey_player_self_profiles_public")
+        .select("sports_gamer_player_id,image_url")
+        .in("sports_gamer_player_id",sportsGamerIds)
+        .not("image_url","is",null);
+      if (approvedResult.error) {
+        console.warn("Fantasy: kunde inte hämta godkända spelarporträtt",approvedResult.error);
+      } else {
+        const approvedById = new Map(
+          (approvedResult.data || [])
+            .map((row) => [clean(row?.sports_gamer_player_id),clean(row?.image_url)])
+            .filter(([,url]) => url)
+        );
+        for (const player of state.pool) {
+          player.approved_image_url =
+            approvedById.get(clean(player?.sports_gamer_player_id).replace(/\D/g,"")) || "";
+        }
+      }
+    }
 
     const [leaderboardResult, insightsResult] = await Promise.allSettled([
       loadLeaderboard(),
