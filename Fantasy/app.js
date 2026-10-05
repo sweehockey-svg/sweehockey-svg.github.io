@@ -1427,7 +1427,7 @@
           </div>
           <div class="fantasy-slot__details">${savedStatMarkup(savedScore)}</div>`
         : (state.entry
-          ? '<div class="fantasy-slot__score fantasy-slot__score--pending"><span>' + escapeHtml(seasonLabel()) + '</span><small>${escapeHtml(t("awaiting_real_matches"))}</small></div>'
+          ? '<div class="fantasy-slot__score fantasy-slot__score--pending"><span>' + escapeHtml(seasonLabel()) + '</span><small>' + escapeHtml(t("awaiting_real_matches")) + '</small></div>'
           : "");
 
       slotEl.classList.add("is-filled");
