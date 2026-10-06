@@ -240,10 +240,14 @@
     const statuses = new Map();
 
     for (const row of rows || []) {
+      const rawPlayerKey = clean(row?.player_key);
+      const rawSubjectKey = clean(row?.subject_key);
       const playerKey =
-        clean(row?.player_key) ||
-        identity?.byKey?.get(clean(row?.subject_key)) ||
-        canonicalRosterPlayerKey(row?.display_gamertag, identity);
+        identity?.byKey?.get(rawPlayerKey) ||
+        identity?.byKey?.get(rawSubjectKey) ||
+        canonicalRosterPlayerKey(row?.display_gamertag, identity) ||
+        rawPlayerKey ||
+        rawSubjectKey;
       const teamName = clean(row?.team_name);
       if (!playerKey || !teamName) continue;
 
@@ -259,6 +263,40 @@
         competitionName: clean(competition?.display_name),
         phase: clean(competition?.phase),
         source: 'team_build',
+        routeHash: clean(competition?.route_hash)
+      });
+    }
+
+    return statuses;
+  }
+
+  function statusesFromOfficialSclRoster(rows, identity, competition) {
+    const statuses = new Map();
+
+    for (const row of rows || []) {
+      const rawPlayerKey = clean(row?.player_key);
+      const sportsGamerPlayerId = clean(row?.sports_gamer_player_id);
+      const playerKey =
+        identity?.byKey?.get(rawPlayerKey) ||
+        identity?.byKey?.get(sportsGamerPlayerId ? 'SG:' + sportsGamerPlayerId : '') ||
+        identity?.byKey?.get(sportsGamerPlayerId) ||
+        canonicalRosterPlayerKey(row?.display_gamertag, identity) ||
+        rawPlayerKey;
+      const teamName = clean(row?.real_team_name);
+      if (!playerKey || !teamName) continue;
+
+      statuses.set(playerKey, {
+        kind: 'team',
+        playerKey,
+        teamName,
+        teamId: Number(row?.real_team_id) || null,
+        teamProjectId: null,
+        logoName: clean(row?.team_logo_url),
+        division: '',
+        competitionKey: clean(competition?.competition_key),
+        competitionName: 'SCL 27',
+        phase: clean(competition?.phase),
+        source: 'scl_current_roster',
         routeHash: clean(competition?.route_hash)
       });
     }
@@ -293,15 +331,36 @@
       clean(competition.phase).toLowerCase() === 'building' &&
       clean(source.competitionKey).toLowerCase() === 'ecl27winter'
     ) {
-      const rosterResult = await sb
-        .from('v_ecl27_current_roster_v1')
-        .select('subject_key,player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name,roster_source');
+      const [rosterResult, officialSclResult] = await Promise.all([
+        sb
+          .from('v_ecl27_current_roster_v1')
+          .select('subject_key,player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name,roster_source'),
+        sb
+          .from('ehockey_fantasy_player_pool')
+          .select('player_key,sports_gamer_player_id,display_gamertag,real_team_id,real_team_name,team_logo_url')
+          .eq('competition_id', 2)
+          .eq('source_league_id', 527)
+          .eq('is_available', true)
+      ]);
+
+      const statuses = new Map();
 
       if (!rosterResult.error && Array.isArray(rosterResult.data)) {
-        return {
-          competition,
-          statuses: statusesFromRosterRows(rosterResult.data, identity, competition)
-        };
+        for (const [playerKey, status] of statusesFromRosterRows(rosterResult.data, identity, competition)) {
+          statuses.set(playerKey, status);
+        }
+      }
+
+      // SCL 27:s registrerade roster är den färskaste källan till "aktuellt lag".
+      // Den får därför skriva över äldre ECL-byggdata för spelare som finns i båda.
+      if (!officialSclResult.error && Array.isArray(officialSclResult.data)) {
+        for (const [playerKey, status] of statusesFromOfficialSclRoster(officialSclResult.data, identity, competition)) {
+          statuses.set(playerKey, status);
+        }
+      }
+
+      if (statuses.size) {
+        return { competition, statuses };
       }
 
       const snapshot = await waitForEcl27CurrentRoster();
@@ -312,7 +371,7 @@
         };
       }
 
-      throw rosterResult.error || new Error('ECL 27 current roster is unavailable.');
+      throw rosterResult.error || officialSclResult.error || new Error('ECL 27 current roster is unavailable.');
     }
 
     const [events, projects] = await Promise.all([
