@@ -258,6 +258,259 @@
     adminStatus('Den redigerade spelarbilden är publicerad på spelarprofilen.', 'success');
   }
 
+  function directAdminStatus(section, text, tone = '') {
+    const node = section?.querySelector('#playerImageDirectStatus');
+    if (!node) return;
+    node.textContent = text || '';
+    if (tone) node.dataset.tone = tone;
+    else node.removeAttribute('data-tone');
+  }
+
+  async function publishDirectPlayerImage(sb, section, player, file) {
+    validateImage(file);
+    if (!player?.player_key) throw new Error('Välj en spelare först.');
+
+    const button = section.querySelector('[data-direct-publish]');
+    if (button) button.disabled = true;
+    directAdminStatus(section, 'Laddar upp och publicerar spelarbilden…', 'working');
+
+    const safeKey = clean(player.player_key).replace(/[^a-z0-9_-]/gi, '_') || 'player';
+    const finalPath = `published/${safeKey}/${Date.now()}.${extensionFor(file)}`;
+    const upload = await sb.storage.from(BUCKET_PUBLIC).upload(finalPath, file, {
+      cacheControl: '31536000',
+      upsert: false,
+      contentType: file.type
+    });
+    if (upload.error) {
+      if (button) button.disabled = false;
+      throw upload.error;
+    }
+
+    const publicUrl = sb.storage.from(BUCKET_PUBLIC).getPublicUrl(finalPath).data.publicUrl;
+    const publish = await sb.rpc('seh_admin_publish_player_image_direct', {
+      p_player_key: player.player_key,
+      p_final_path: finalPath,
+      p_public_url: publicUrl
+    });
+    if (publish.error) {
+      try { await sb.storage.from(BUCKET_PUBLIC).remove([finalPath]); } catch (_) {}
+      if (button) button.disabled = false;
+      throw publish.error;
+    }
+
+    const selectedPreview = section.querySelector('[data-direct-selected-preview]');
+    if (selectedPreview) {
+      selectedPreview.src = publicUrl;
+      selectedPreview.hidden = false;
+    }
+    const fileInput = section.querySelector('[data-direct-file]');
+    if (fileInput) fileInput.value = '';
+    const filePreview = section.querySelector('[data-direct-file-preview]');
+    if (filePreview) {
+      filePreview.hidden = true;
+      filePreview.removeAttribute('src');
+    }
+    if (button) button.disabled = true;
+    directAdminStatus(section, `${player.display_gamertag || 'Spelaren'} har fått den nya bilden publicerad.`, 'success');
+  }
+
+  function ensureDirectAdminUpload(panel, sb) {
+    let section = panel.querySelector('#playerImageDirectUpload');
+    if (section) return section;
+
+    section = document.createElement('section');
+    section.id = 'playerImageDirectUpload';
+    section.className = 'player-image-admin-direct';
+    section.innerHTML = `
+      <div class="player-image-admin-direct__head">
+        <div>
+          <span>PUBLICERA SPELARBILD MANUELLT</span>
+          <h3>Välj spelare och ladda upp färdig bild</h3>
+        </div>
+        <small>ADMIN</small>
+      </div>
+      <p class="player-image-admin-direct__help">För färdigredigerade bilder som inte kommer via spelarens egen bildkö. Bilden blir publik direkt och används på spelarprofil, Free Agents, Fantasy, lagbygge och Match Graphics.</p>
+      <div class="player-image-admin-direct__search">
+        <label>
+          <span>Spelare</span>
+          <input type="search" data-direct-search autocomplete="off" placeholder="Sök gamertag eller SportsGamer-ID…">
+        </label>
+        <div class="player-image-admin-direct__results" data-direct-results hidden></div>
+      </div>
+      <div class="player-image-admin-direct__selected" data-direct-selected hidden>
+        <img data-direct-selected-preview alt="" hidden>
+        <div>
+          <small>VALD SPELARE</small>
+          <strong data-direct-selected-name></strong>
+          <span data-direct-selected-meta></span>
+        </div>
+        <button type="button" class="writer-secondary" data-direct-change>Byt spelare</button>
+      </div>
+      <div class="player-image-admin-direct__upload">
+        <label class="my-profile-file">
+          <input type="file" data-direct-file accept="image/jpeg,image/png,image/webp">
+          <span>Välj färdig bild</span>
+        </label>
+        <img data-direct-file-preview class="player-image-admin-direct__preview" alt="Förhandsvisning av ny spelarbild" hidden>
+      </div>
+      <div class="player-image-admin-direct__actions">
+        <button type="button" data-direct-publish disabled>Publicera bild</button>
+        <p id="playerImageDirectStatus" class="admin-status" role="status"></p>
+      </div>`;
+
+    const queue = panel.querySelector('#playerImageAdminQueue');
+    const regular = panel.querySelector('#profileAdminRequests');
+    panel.insertBefore(section, queue || regular || null);
+
+    const search = section.querySelector('[data-direct-search]');
+    const results = section.querySelector('[data-direct-results]');
+    const selectedBox = section.querySelector('[data-direct-selected]');
+    const selectedName = section.querySelector('[data-direct-selected-name]');
+    const selectedMeta = section.querySelector('[data-direct-selected-meta]');
+    const selectedPreview = section.querySelector('[data-direct-selected-preview]');
+    const fileInput = section.querySelector('[data-direct-file]');
+    const filePreview = section.querySelector('[data-direct-file-preview]');
+    const publishButton = section.querySelector('[data-direct-publish]');
+    let selectedPlayer = null;
+    let searchTimer = 0;
+    let fileObjectUrl = '';
+
+    const updatePublishState = () => {
+      publishButton.disabled = !(selectedPlayer?.player_key && fileInput?.files?.[0]);
+    };
+
+    const clearResults = () => {
+      results.replaceChildren();
+      results.hidden = true;
+    };
+
+    const choosePlayer = (player) => {
+      selectedPlayer = player;
+      selectedBox.hidden = false;
+      selectedName.textContent = player.display_gamertag || player.player_key || 'Okänd spelare';
+      selectedMeta.textContent = [
+        clean(player.player_country).toUpperCase(),
+        player.sports_gamer_player_id ? `SG #${player.sports_gamer_player_id}` : ''
+      ].filter(Boolean).join(' · ');
+      const currentUrl = clean(player.image_url);
+      if (currentUrl) {
+        selectedPreview.src = currentUrl;
+        selectedPreview.alt = `Nuvarande bild för ${selectedName.textContent}`;
+        selectedPreview.hidden = false;
+      } else {
+        selectedPreview.hidden = true;
+        selectedPreview.removeAttribute('src');
+      }
+      search.value = player.display_gamertag || '';
+      clearResults();
+      directAdminStatus(section, currentUrl ? 'Spelaren har redan en publicerad bild. En ny uppladdning ersätter den.' : '');
+      updatePublishState();
+    };
+
+    const runSearch = async () => {
+      const query = clean(search.value);
+      if (query.length < 2) {
+        clearResults();
+        return;
+      }
+
+      results.hidden = false;
+      results.innerHTML = '<span class="player-image-admin-direct__loading">Söker…</span>';
+      const response = await sb.rpc('seh_admin_search_players', { p_query: query });
+      if (response.error) throw response.error;
+      const rows = Array.isArray(response.data) ? response.data : [];
+
+      results.replaceChildren();
+      if (!rows.length) {
+        const empty = document.createElement('span');
+        empty.className = 'player-image-admin-direct__loading';
+        empty.textContent = 'Ingen spelare hittades.';
+        results.append(empty);
+        return;
+      }
+
+      rows.forEach((player) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'player-image-admin-direct__result';
+        const meta = [
+          clean(player.player_country).toUpperCase(),
+          player.sports_gamer_player_id ? `SG #${player.sports_gamer_player_id}` : '',
+          clean(player.image_url) ? 'Har bild' : 'Ingen publicerad bild'
+        ].filter(Boolean).join(' · ');
+        button.innerHTML = `<strong>${esc(player.display_gamertag || player.player_key)}</strong><small>${esc(meta)}</small>`;
+        button.addEventListener('click', () => choosePlayer(player));
+        results.append(button);
+      });
+    };
+
+    search.addEventListener('input', () => {
+      selectedPlayer = null;
+      selectedBox.hidden = true;
+      updatePublishState();
+      window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(() => {
+        runSearch().catch((error) => {
+          clearResults();
+          directAdminStatus(section, 'Fel vid spelarsökning: ' + (error?.message || error), 'error');
+        });
+      }, 220);
+    });
+
+    section.querySelector('[data-direct-change]')?.addEventListener('click', () => {
+      selectedPlayer = null;
+      selectedBox.hidden = true;
+      search.value = '';
+      search.focus();
+      updatePublishState();
+      directAdminStatus(section, '');
+    });
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0] || null;
+      if (fileObjectUrl) {
+        URL.revokeObjectURL(fileObjectUrl);
+        fileObjectUrl = '';
+      }
+      if (!file) {
+        filePreview.hidden = true;
+        filePreview.removeAttribute('src');
+        updatePublishState();
+        return;
+      }
+      try {
+        validateImage(file);
+        fileObjectUrl = URL.createObjectURL(file);
+        filePreview.src = fileObjectUrl;
+        filePreview.hidden = false;
+        directAdminStatus(section, '');
+      } catch (error) {
+        fileInput.value = '';
+        filePreview.hidden = true;
+        directAdminStatus(section, 'Fel: ' + (error?.message || error), 'error');
+      }
+      updatePublishState();
+    });
+
+    publishButton.addEventListener('click', () => {
+      const file = fileInput.files?.[0] || null;
+      if (!selectedPlayer) {
+        directAdminStatus(section, 'Välj en spelare först.', 'error');
+        return;
+      }
+      if (!file) {
+        directAdminStatus(section, 'Välj en färdig bild först.', 'error');
+        return;
+      }
+      publishDirectPlayerImage(sb, section, selectedPlayer, file).catch((error) => {
+        publishButton.disabled = false;
+        directAdminStatus(section, 'Fel: ' + (error?.message || error), 'error');
+      });
+    });
+
+    return section;
+  }
+
   function updateAdminCounts(imageCount) {
     const safeCount = Number.isFinite(Number(imageCount)) ? Number(imageCount) : 0;
     window.SEH_playerImagePendingCount = safeCount;
@@ -288,6 +541,7 @@
     adminBusy = true;
     try {
       if (!await currentWriterIsAdmin(sb)) return;
+      ensureDirectAdminUpload(panel, sb);
       const result = await sb.rpc('seh_admin_list_player_image_requests');
       if (result.error) throw result.error;
       const rows = Array.isArray(result.data) ? result.data : [];
