@@ -552,10 +552,16 @@
     if (!module && !panel) return;
     const sb = client();
     if (!sb) return;
+
+    // Render the manual uploader as soon as Spelarhantering exists.
+    // The search/publish RPCs still enforce admin permission server-side.
+    // Do not leave an empty placeholder just because the writer-role lookup
+    // has not resolved yet.
+    ensureDirectAdminUpload(module || panel, sb);
+
     adminBusy = true;
     try {
       if (!await currentWriterIsAdmin(sb)) return;
-      ensureDirectAdminUpload(module || panel, sb);
       if (!panel) return;
       const result = await sb.rpc('seh_admin_list_player_image_requests');
       if (result.error) throw result.error;
