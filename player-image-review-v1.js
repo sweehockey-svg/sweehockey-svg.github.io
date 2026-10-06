@@ -315,12 +315,14 @@
   }
 
   function ensureDirectAdminUpload(panel, sb) {
-    let section = panel.querySelector('#playerImageDirectUpload');
-    if (section) return section;
+    let section = document.getElementById('playerImageDirectUpload') || panel?.querySelector?.('#playerImageDirectUpload');
+    if (section?.dataset.directPlayerImageReady === '1') return section;
 
-    section = document.createElement('section');
-    section.id = 'playerImageDirectUpload';
-    section.className = 'player-image-admin-direct';
+    if (!section) {
+      section = document.createElement('section');
+      section.id = 'playerImageDirectUpload';
+      section.className = 'player-image-admin-direct';
+    }
     section.innerHTML = `
       <div class="player-image-admin-direct__head">
         <div>
@@ -358,16 +360,20 @@
         <p id="playerImageDirectStatus" class="admin-status" role="status"></p>
       </div>`;
 
-    const module = panel.closest('.admin-player-module') || panel;
-    const livebar = module.querySelector('.admin-player-livebar');
-    const firstSectionHead = module.querySelector('.admin-player-section-head');
-    if (livebar) {
-      livebar.insertAdjacentElement('afterend', section);
-    } else if (firstSectionHead) {
-      module.insertBefore(section, firstSectionHead);
-    } else {
-      module.insertBefore(section, module.firstChild);
+    const module = panel?.closest?.('.admin-player-module') || document.querySelector('.admin-player-module') || panel;
+    if (!section.isConnected && module) {
+      const livebar = module.querySelector('.admin-player-livebar');
+      const firstSectionHead = module.querySelector('.admin-player-section-head');
+      if (livebar) {
+        livebar.insertAdjacentElement('afterend', section);
+      } else if (firstSectionHead) {
+        module.insertBefore(section, firstSectionHead);
+      } else {
+        module.insertBefore(section, module.firstChild);
+      }
     }
+
+    section.dataset.directPlayerImageReady = '1';
 
     const search = section.querySelector('[data-direct-search]');
     const results = section.querySelector('[data-direct-results]');
@@ -541,14 +547,16 @@
 
   async function renderAdminQueue(force = false) {
     if (adminBusy && !force) return;
+    const module = document.querySelector('.admin-player-module');
     const panel = document.querySelector('[data-admin-queue="profiles"]');
-    if (!panel) return;
+    if (!module && !panel) return;
     const sb = client();
     if (!sb) return;
     adminBusy = true;
     try {
       if (!await currentWriterIsAdmin(sb)) return;
-      ensureDirectAdminUpload(panel, sb);
+      ensureDirectAdminUpload(module || panel, sb);
+      if (!panel) return;
       const result = await sb.rpc('seh_admin_list_player_image_requests');
       if (result.error) throw result.error;
       const rows = Array.isArray(result.data) ? result.data : [];
