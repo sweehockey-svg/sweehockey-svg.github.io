@@ -1210,7 +1210,7 @@
   }
 
   async function loadScl27PresentationData() {
-    const [teamRowsRaw,playerRowsRaw] = await Promise.all([
+    const [teamRowsRaw,playerRowsRaw,currentLeagueTeamsRaw] = await Promise.all([
       getPublicRows(
         "ehockey_fantasy_team_pool",
         "select=sports_gamer_team_id,team_name,team_logo_url,source_league_id,is_available,source_snapshot&competition_id=eq.2&source_league_id=eq.527&is_available=eq.true&order=team_name.asc"
@@ -1218,14 +1218,32 @@
       getPublicRows(
         "ehockey_fantasy_player_pool",
         "select=player_key,sports_gamer_player_id,display_gamertag,real_team_id,real_team_name,primary_position,country_code,player_image,is_available&competition_id=eq.2&is_available=eq.true&order=real_team_name.asc,display_gamertag.asc"
+      ),
+      getPublicRows(
+        "v_broadcast_teams_public",
+        "select=sports_gamer_team_id,team_name_in_league,team_logo_in_league&sports_gamer_league_id=eq.527&statistics_stage=eq.regular"
       )
     ]);
 
     const teamRows = Array.isArray(teamRowsRaw) ? teamRowsRaw : [];
     const playerRows = Array.isArray(playerRowsRaw) ? playerRowsRaw : [];
+    const currentLeagueTeams = Array.isArray(currentLeagueTeamsRaw) ? currentLeagueTeamsRaw : [];
+    const currentLeagueTeamById = new Map(
+      currentLeagueTeams
+        .filter(row => Number(row?.sports_gamer_team_id) > 0)
+        .map(row => [Number(row.sports_gamer_team_id),row])
+    );
+
     scl27TeamDirectory = teamRows
       .filter(row => Number(row?.sports_gamer_team_id) > 0 && String(row?.team_name || "").trim())
-      .map(buildScl27PresentationTeam);
+      .map((row,index) => {
+        const current = currentLeagueTeamById.get(Number(row?.sports_gamer_team_id));
+        return buildScl27PresentationTeam({
+          ...row,
+          team_name:String(current?.team_name_in_league || row?.team_name || "").trim(),
+          team_logo_url:String(current?.team_logo_in_league || row?.team_logo_url || "").trim()
+        },index);
+      });
 
     scl27RostersByTeamId = new Map(scl27TeamDirectory.map(team => [team.id,[]]));
     const bySportsGamerId = new Map(
