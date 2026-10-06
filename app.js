@@ -2461,21 +2461,42 @@ function SEH_initPlayers() {
       // aktivt lagbygge/pågående turnering -> lag,
       // aktiv FA-lista -> Free Agent,
       // annars -> inget aktuellt lag.
-      const rows = await fetchPages("app_player_directory_cache", {
-        select: [
-          "player_key", "display_gamertag", "player_country", "player_image",
-          "sports_gamer_player_url", "primary_position", "latest_season",
-          "latest_team", "last_appearance_date", "tournament_count",
-          "competitions", "divisions", "filter_divisions", "club_names",
-          "club_count", "total_skater_games", "total_goals", "total_assists",
-          "total_points", "total_goalie_games", "total_goalie_saves",
-          "total_goalie_shots_against", "total_goalie_save_percentage",
-          "career_games", "player_type"
-        ].join(","),
-        order: "display_gamertag.asc"
-      });
+      const [rows, approvedRows] = await Promise.all([
+        fetchPages("app_player_directory_cache", {
+          select: [
+            "player_key", "display_gamertag", "player_country", "player_image",
+            "sports_gamer_player_url", "primary_position", "latest_season",
+            "latest_team", "last_appearance_date", "tournament_count",
+            "competitions", "divisions", "filter_divisions", "club_names",
+            "club_count", "total_skater_games", "total_goals", "total_assists",
+            "total_points", "total_goalie_games", "total_goalie_saves",
+            "total_goalie_shots_against", "total_goalie_save_percentage",
+            "career_games", "player_type"
+          ].join(","),
+          order: "display_gamertag.asc"
+        }),
+        fetchPages("v_ehockey_player_self_profiles_public", {
+          select: "player_key,image_url",
+          image_url: "not.is.null",
+          order: "player_key.asc"
+        }).catch((error) => {
+          console.warn(`${APP_BUILD}: kunde inte hämta publicerade spelarporträtt till spelarlistan.`, error);
+          return [];
+        })
+      ]);
 
-      const historicalRows = await replaceNationalTeamLatest(rows);
+      const approvedByKey = new Map(
+        approvedRows
+          .filter((row) => clean(row?.player_key) && clean(row?.image_url))
+          .map((row) => [clean(row.player_key), clean(row.image_url)])
+      );
+
+      const withApprovedImages = rows.map((row) => ({
+        ...row,
+        approved_image_url: approvedByKey.get(clean(row.player_key)) || ""
+      }));
+
+      const historicalRows = await replaceNationalTeamLatest(withApprovedImages);
       if (window.SEH_currentPlayerStatus?.decorateRows) {
         return window.SEH_currentPlayerStatus.decorateRows(historicalRows);
       }
@@ -2534,7 +2555,7 @@ function SEH_initPlayers() {
         sportsGamerId,
         name: clean(row.display_gamertag) || "Okänd spelare",
         country: clean(row.player_country).toUpperCase(),
-        image: SEH_playerImageUrl(sportsGamerId, clean(row.player_image)),
+        image: clean(row.approved_image_url) || SEH_playerImageUrl(sportsGamerId, clean(row.player_image)),
         role,
         games: number(row.career_games),
         skaterGames,
