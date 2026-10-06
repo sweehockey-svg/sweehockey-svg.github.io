@@ -1829,9 +1829,7 @@
     return [
       '<g>',
       '<defs><clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '"/></clipPath></defs>',
-      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '" fill="#ffffff"/>',
       '<image href="' + esc(flagHref) + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#' + clipId + ')"/>',
-      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '" fill="none" stroke="#ffffff" stroke-opacity=".30" stroke-width="1"/>',
       '</g>'
     ].join("");
   }
