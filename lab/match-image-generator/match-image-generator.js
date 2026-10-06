@@ -1807,95 +1807,14 @@
       .slice(0,2);
   }
 
+  const REAL_FLAG_CODES = new Set(["SE","FI","NO","DK","DE","AT","CH","CZ","SK","LV","EE","PL","RU","CA"]);
+
   function playerFlagSvg(name,x,y,w=30,h=20) {
     const code = playerCountryCode(name);
     if (!code) return "";
 
     const rx = Math.max(2,Math.min(4,h*.18));
-    const border = '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '" fill="none" stroke="#ffffff" stroke-opacity=".30" stroke-width="1"/>';
-    const rect = (xx,yy,ww,hh,fill) => '<rect x="' + xx + '" y="' + yy + '" width="' + ww + '" height="' + hh + '" fill="' + fill + '"/>';
-    const clipId = "flag-" + code + "-" + Math.round(x) + "-" + Math.round(y);
-    let body = "";
-
-    if (code === "SE") {
-      body = rect(x,y,w,h,"#006AA7") +
-        rect(x+w*.31,y,w*.13,h,"#FECC00") +
-        rect(x,y+h*.42,w,h*.16,"#FECC00");
-    } else if (code === "FI") {
-      body = rect(x,y,w,h,"#ffffff") +
-        rect(x+w*.29,y,w*.14,h,"#003580") +
-        rect(x,y+h*.42,w,h*.16,"#003580");
-    } else if (code === "NO") {
-      body = rect(x,y,w,h,"#BA0C2F") +
-        rect(x+w*.28,y,w*.18,h,"#ffffff") +
-        rect(x,y+h*.38,w,h*.24,"#ffffff") +
-        rect(x+w*.32,y,w*.10,h,"#00205B") +
-        rect(x,y+h*.43,w,h*.14,"#00205B");
-    } else if (code === "DK") {
-      body = rect(x,y,w,h,"#C60C30") +
-        rect(x+w*.31,y,w*.12,h,"#ffffff") +
-        rect(x,y+h*.43,w,h*.14,"#ffffff");
-    } else if (code === "DE") {
-      body = rect(x,y,w,h/3,"#000000") +
-        rect(x,y+h/3,w,h/3,"#DD0000") +
-        rect(x,y+h*2/3,w,h/3,"#FFCE00");
-    } else if (code === "AT") {
-      body = rect(x,y,w,h/3,"#ED2939") +
-        rect(x,y+h/3,w,h/3,"#ffffff") +
-        rect(x,y+h*2/3,w,h/3,"#ED2939");
-    } else if (code === "CH") {
-      body = rect(x,y,w,h,"#D52B1E") +
-        rect(x+w*.43,y+h*.20,w*.14,h*.60,"#ffffff") +
-        rect(x+w*.28,y+h*.38,w*.44,h*.24,"#ffffff");
-    } else if (code === "CZ") {
-      body = rect(x,y,w,h/2,"#ffffff") +
-        rect(x,y+h/2,w,h/2,"#D7141A") +
-        '<path d="M ' + x + ' ' + y + ' L ' + (x+w*.46) + ' ' + (y+h/2) + ' L ' + x + ' ' + (y+h) + ' Z" fill="#11457E"/>';
-    } else if (code === "SK") {
-      body = rect(x,y,w,h/3,"#ffffff") +
-        rect(x,y+h/3,w,h/3,"#0B4EA2") +
-        rect(x,y+h*2/3,w,h/3,"#EE1C25");
-    } else if (code === "LV") {
-      body = rect(x,y,w,h,"#9E3039") +
-        rect(x,y+h*.40,w,h*.20,"#ffffff");
-    } else if (code === "EE") {
-      body = rect(x,y,w,h/3,"#4891D9") +
-        rect(x,y+h/3,w,h/3,"#000000") +
-        rect(x,y+h*2/3,w,h/3,"#ffffff");
-    } else if (code === "PL") {
-      body = rect(x,y,w,h/2,"#ffffff") +
-        rect(x,y+h/2,w,h/2,"#DC143C");
-    } else if (code === "CA") {
-      body = rect(x,y,w,h,"#ffffff") +
-        rect(x,y,w*.24,h,"#D80621") +
-        rect(x+w*.76,y,w*.24,h,"#D80621") +
-        '<path d="M ' + (x+w*.50) + ' ' + (y+h*.12) +
-        ' L ' + (x+w*.45) + ' ' + (y+h*.30) +
-        ' L ' + (x+w*.37) + ' ' + (y+h*.25) +
-        ' L ' + (x+w*.40) + ' ' + (y+h*.40) +
-        ' L ' + (x+w*.29) + ' ' + (y+h*.36) +
-        ' L ' + (x+w*.35) + ' ' + (y+h*.50) +
-        ' L ' + (x+w*.25) + ' ' + (y+h*.54) +
-        ' L ' + (x+w*.43) + ' ' + (y+h*.64) +
-        ' L ' + (x+w*.40) + ' ' + (y+h*.79) +
-        ' L ' + (x+w*.47) + ' ' + (y+h*.75) +
-        ' L ' + (x+w*.47) + ' ' + (y+h*.91) +
-        ' L ' + (x+w*.53) + ' ' + (y+h*.91) +
-        ' L ' + (x+w*.53) + ' ' + (y+h*.75) +
-        ' L ' + (x+w*.60) + ' ' + (y+h*.79) +
-        ' L ' + (x+w*.57) + ' ' + (y+h*.64) +
-        ' L ' + (x+w*.75) + ' ' + (y+h*.54) +
-        ' L ' + (x+w*.65) + ' ' + (y+h*.50) +
-        ' L ' + (x+w*.71) + ' ' + (y+h*.36) +
-        ' L ' + (x+w*.60) + ' ' + (y+h*.40) +
-        ' L ' + (x+w*.63) + ' ' + (y+h*.25) +
-        ' L ' + (x+w*.55) + ' ' + (y+h*.30) +
-        ' Z" fill="#D80621"/>';
-    } else if (code === "RU") {
-      body = rect(x,y,w,h/3,"#ffffff") +
-        rect(x,y+h/3,w,h/3,"#0039A6") +
-        rect(x,y+h*2/3,w,h/3,"#D52B1E");
-    } else {
+    if (!REAL_FLAG_CODES.has(code)) {
       return [
         '<g>',
         '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".24"/>',
@@ -1904,11 +1823,15 @@
       ].join("");
     }
 
+    const flagHref = assetPrefix + "flags/" + code.toLowerCase() + ".svg";
+    const clipId = "flag-" + code + "-" + Math.round(x) + "-" + Math.round(y);
+
     return [
       '<g>',
       '<defs><clipPath id="' + clipId + '"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '"/></clipPath></defs>',
-      '<g clip-path="url(#' + clipId + ')">' + body + '</g>',
-      border,
+      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '" fill="#ffffff"/>',
+      '<image href="' + esc(flagHref) + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#' + clipId + ')"/>',
+      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '" fill="none" stroke="#ffffff" stroke-opacity=".30" stroke-width="1"/>',
       '</g>'
     ].join("");
   }
