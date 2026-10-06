@@ -555,9 +555,9 @@
       setSclStatus(
         done
           ? (data.conclusion === "success"
-              ? "Klart – SCL 27-lag och registrerade trupper är synkade direkt från SportsGamer."
+              ? "Klart – SCL 27-lag, trupper, tabell och spelarstatistik är uppdaterade. Fantasy-poängen är omräknade från samma synkkörning."
               : "SCL 27-synkningen misslyckades.")
-          : (data.state === "queued" ? "SCL 27-synkningen väntar på att starta…" : "SCL 27-lag och trupper uppdateras…"),
+          : (data.state === "queued" ? "SCL 27-synkningen väntar på att starta…" : "SCL 27-lag, trupper, statistik och Fantasy uppdateras…"),
         done && data.conclusion === "success" ? "success" : done ? "error" : "working",
         data.run_url || ""
       );
@@ -588,10 +588,10 @@
     card.id = "scl27TeamsSyncCard";
     card.innerHTML = [
       '<p class="writer-panel-kicker">SCL 27</p>',
-      '<h2>Lag & trupper</h2>',
-      '<p>Hämtar officiellt anmälda lag, kaptener och registrerade trupper direkt från SportsGamer liga 527. Kontrollerar samtidigt om någon spelare finns registrerad i både SCL 27 och FCL (liga 529). Uppdaterar SCL 27-data, Lagbygge och Svenska lag-registret.</p>',
+      '<h2>Gemensam SCL-synk</h2>',
+      '<p>En körning hämtar lag, kaptener, trupper, tabell, spelarstatistik och matcher från SportsGamer liga 527 och räknar om Fantasy-poängen. Samma uppdaterade data används av SCL, Lagbygge, Graphics Studio och Broadcast Studio. Kontrollerar även dubbelregistrering i FCL (liga 529).</p>',
       '<div class="admin-actions">',
-      '<button id="startScl27TeamsSync" type="button">Synka SCL 27-lag</button>',
+      '<button id="startScl27TeamsSync" type="button">Synka all SCL 27-data</button>',
       '<button id="refreshScl27TeamsSync" class="writer-secondary" type="button" disabled>Kontrollera status</button>',
       '</div>',
       '<p id="scl27TeamsSyncStatus" class="admin-status" role="status" aria-live="polite"></p>'

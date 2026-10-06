@@ -22,6 +22,9 @@ on:
       - '.github/sync/export-broadcast-league-team-stats.py'
       - '.github/sync/import-broadcast-league-roster.psql'
       - '.github/sync/import-broadcast-league-team-stats.psql'
+      - '.github/workflows/sync-fantasy-sportsgamer.yml'
+      - '.github/workflows/sync-scl27-official-teams.yml'
+      - '.github/sync/prepare-scl-stat-player-ids.py'
 
 permissions:
   contents: read
@@ -35,10 +38,12 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
+      has_other_leagues: ${{ steps.matrix.outputs.has_other_leagues }}
+      include_scl: ${{ steps.matrix.outputs.include_scl }}
     steps:
       - id: matrix
         env:
-          REQUESTED: ${{ inputs.league_ids || '523,524,525,526,527,529' }}
+          REQUESTED: ${{ inputs.league_ids || (github.event_name == 'push' && '527') || '523,524,525,526,527,529' }}
         run: |
           python - <<'PY'
           import json, os
@@ -56,11 +61,26 @@ jobs:
           if not ids:
               raise SystemExit("No league ids selected")
           with open(os.environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as fh:
-              fh.write("matrix="+json.dumps(ids,separators=(",",":"))+"\n")
+              other=[value for value in ids if value != 527]
+              fh.write("matrix="+json.dumps(other or [523],separators=(",",":"))+"\n")
+              fh.write("has_other_leagues="+str(bool(other)).lower()+"\n")
+              fh.write("include_scl="+str(527 in ids).lower()+"\n")
           PY
+
+  scl:
+    needs: prepare
+    if: needs.prepare.outputs.include_scl == 'true'
+    uses: ./.github/workflows/sync-fantasy-sportsgamer.yml
+    with:
+      request_id: ${{ inputs.request_id || '' }}
+      competition_code: SCL2027
+      league_ids: '527'
+      trigger_type: manual
+    secrets: inherit
 
   sync:
     needs: prepare
+    if: needs.prepare.outputs.has_other_leagues == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:

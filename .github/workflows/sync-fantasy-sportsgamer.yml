@@ -2,6 +2,24 @@ name: Sync eHockey Fantasy SportsGamer match data
 run-name: ${{ inputs.competition_code || 'Fantasy' }} · SportsGamer · ${{ inputs.request_id || github.event_name }}
 
 on:
+  workflow_call:
+    inputs:
+      request_id:
+        type: string
+        required: false
+        default: ''
+      competition_code:
+        type: string
+        required: false
+        default: SCL2027
+      league_ids:
+        type: string
+        required: false
+        default: '527'
+      trigger_type:
+        type: string
+        required: false
+        default: manual
   workflow_dispatch:
     inputs:
       request_id:
@@ -34,7 +52,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     env:
       PGCONNECT_TIMEOUT: 20
       PGTCP_USER_TIMEOUT: 30000
@@ -42,6 +60,13 @@ jobs:
       PGKEEPALIVES_IDLE: 30
       PGKEEPALIVES_INTERVAL: 10
       PGKEEPALIVES_COUNT: 3
+      DB_HOST: ${{ secrets.SVENSK_DB_HOST }}
+      DB_PORT: ${{ secrets.SVENSK_DB_PORT }}
+      DB_NAME: ${{ secrets.SVENSK_DB_NAME }}
+      DB_USER: ${{ secrets.SVENSK_DB_USER }}
+      DB_PASSWORD: ${{ secrets.SVENSK_DB_PASSWORD }}
+      SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+      SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
       FANTASY_PRICE_HISTORY_MAX_LEAGUE_ID: 511
       FANTASY_PRICE_HISTORY_LABEL: "ECL '26: Spring"
       FANTASY_PRICE_CONFIDENCE_GAMES: 30
@@ -71,7 +96,7 @@ jobs:
           set -euo pipefail
           : "${PGURL:?Missing SUPABASE_DB_URL secret}"
 
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_REQUEST_ID" ]; then
+          if [ -n "$INPUT_REQUEST_ID" ] && [ "$INPUT_REQUEST_ID" != "manual" ]; then
             request_id="$INPUT_REQUEST_ID"
           else
             request_id="${EVENT_NAME}-${GITHUB_RUN_ID}"
@@ -99,6 +124,9 @@ jobs:
           echo "TRIGGER_TYPE=$trigger_type" >> "$GITHUB_ENV"
           echo "LEAGUE_IDS=$league_ids" >> "$GITHUB_ENV"
           echo "PRIMARY_LEAGUE_ID=$primary_league_id" >> "$GITHUB_ENV"
+          if [ "$competition_code" = "SCL2027" ] && [ "$league_ids" = "527" ]; then
+            echo "scl_unified=true" >> "$GITHUB_OUTPUT"
+          fi
 
           echo "Event: $EVENT_NAME"
           echo "Competition: $competition_code"
@@ -155,6 +183,36 @@ jobs:
           ssh-keyscan -p "${SSH_PORT:-22}" "$SSH_HOST" >> ~/.ssh/known_hosts
           ssh -fN -i ~/.ssh/svensk_db_tunnel_key -p "${SSH_PORT:-22}"             -L "${SSH_LOCAL_DB_PORT:-3307}:${SSH_REMOTE_DB_HOST:-127.0.0.1}:${SSH_REMOTE_DB_PORT:-3306}"             "$SSH_USER@$SSH_HOST"
 
+      - name: Read official SCL teams, captains and roster
+        if: steps.gate.outputs.scl_unified == 'true'
+        id: scl_roster
+        run: python .github/sync/export-scl27-official-teams.py
+
+      - name: Import shared SCL teams and roster
+        if: steps.gate.outputs.scl_unified == 'true'
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          timeout --foreground --kill-after=30s 10m \
+            psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-scl27-official-teams.psql
+
+      - name: Read SCL standings from SportsGamer
+        if: steps.gate.outputs.scl_unified == 'true'
+        id: scl_standings
+        env:
+          LEAGUE_ID: '527'
+        run: python .github/sync/export-broadcast-league-team-stats.py
+
+      - name: Import shared SCL standings
+        if: steps.gate.outputs.scl_unified == 'true'
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          timeout --foreground --kill-after=30s 10m \
+            psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-broadcast-league-team-stats.psql
+
       - name: Read current SportsGamer roster
         if: steps.gate.outputs.should_run == 'true'
         id: roster
@@ -198,6 +256,29 @@ jobs:
           SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
           LEAGUE_IDS: ${{ steps.gate.outputs.league_ids }}
         run: python .github/sync/export_fantasy_sportsgamer_match_stats.py
+
+      - name: Prepare shared SCL statistics player IDs
+        if: steps.gate.outputs.scl_unified == 'true'
+        run: python .github/sync/prepare-scl-stat-player-ids.py
+
+      - name: Read SCL player statistics
+        if: steps.gate.outputs.scl_unified == 'true'
+        id: scl_player_stats
+        env:
+          PLAYER_IDS_FILE: /tmp/scl_stat_player_ids.csv
+          EXPORT_FILE: /tmp/swedish_player_stats.csv
+          MIN_PLAYER_COUNT: '1'
+          LEAGUE_IDS: '527'
+        run: python .github/sync/export_current_swedish_player_stats.py
+
+      - name: Import shared SCL player statistics
+        if: steps.gate.outputs.scl_unified == 'true'
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          timeout --foreground --kill-after=30s 10m \
+            psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-current-swedish-player-stats.psql
 
       - name: Import match-level Fantasy data
         if: steps.gate.outputs.should_run == 'true' && steps.export.outputs.has_match_data == 'true'
@@ -276,6 +357,9 @@ jobs:
             echo "- Match source: **${{ steps.export.outputs.match_source || 'participant fallback' }}**"
             echo ""
             echo "SportsGamer access is READ ONLY."
-            echo "This Fantasy workflow only updates Fantasy data; SCL 27 core team/roster sync is handled separately."
+            echo "- Shared SCL import: **${{ steps.gate.outputs.scl_unified || 'false' }}**"
+            echo "- SCL teams: **${{ steps.scl_roster.outputs.team_count || 0 }}**"
+            echo "- SCL standings rows: **${{ steps.scl_standings.outputs.team_stat_row_count || 0 }}**"
+            echo "SCL uses one coordinated import for core data, Graphics/Broadcast statistics and Fantasy scoring. No extra application tables are created."
             echo "Result: **${{ job.status }}**"
           } >> "$GITHUB_STEP_SUMMARY"
