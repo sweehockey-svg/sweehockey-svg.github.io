@@ -555,6 +555,7 @@
     adminBusy = true;
     try {
       if (!await currentWriterIsAdmin(sb)) return;
+      ensureDirectAdminUpload(module || panel, sb);
       if (!panel) return;
       const result = await sb.rpc('seh_admin_list_player_image_requests');
       if (result.error) throw result.error;
