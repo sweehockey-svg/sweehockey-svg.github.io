@@ -358,9 +358,16 @@
         <p id="playerImageDirectStatus" class="admin-status" role="status"></p>
       </div>`;
 
-    const queue = panel.querySelector('#playerImageAdminQueue');
-    const regular = panel.querySelector('#profileAdminRequests');
-    panel.insertBefore(section, queue || regular || null);
+    const module = panel.closest('.admin-player-module') || panel;
+    const livebar = module.querySelector('.admin-player-livebar');
+    const firstSectionHead = module.querySelector('.admin-player-section-head');
+    if (livebar) {
+      livebar.insertAdjacentElement('afterend', section);
+    } else if (firstSectionHead) {
+      module.insertBefore(section, firstSectionHead);
+    } else {
+      module.insertBefore(section, module.firstChild);
+    }
 
     const search = section.querySelector('[data-direct-search]');
     const results = section.querySelector('[data-direct-results]');
