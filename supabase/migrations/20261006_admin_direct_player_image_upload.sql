@@ -7,18 +7,18 @@ set search_path = ''
 as $$
 declare
   v_role text;
-  v_query text := pg_catalog.lower(pg_catalog.btrim(pg_catalog.coalesce(p_query,'')));
+  v_query text := pg_catalog.lower(pg_catalog.btrim(coalesce(p_query,'')));
   v_result jsonb;
 begin
   select w.role into v_role
   from public.seh_current_writer() w
   limit 1;
 
-  if pg_catalog.lower(pg_catalog.coalesce(v_role,'')) <> 'admin' then
+  if pg_catalog.lower(coalesce(v_role,'')) <> 'admin' then
     raise exception 'Adminbehörighet krävs.';
   end if;
 
-  select pg_catalog.coalesce(
+  select coalesce(
     pg_catalog.jsonb_agg(
       pg_catalog.jsonb_build_object(
         'player_key', x.player_key,
@@ -39,7 +39,7 @@ begin
       d.display_gamertag,
       d.player_country,
       d.sports_gamer_player_url,
-      pg_catalog.substring(d.sports_gamer_player_url, '/players/([0-9]+)') as sports_gamer_player_id,
+      substring(d.sports_gamer_player_url, '/players/([0-9]+)') as sports_gamer_player_id,
       p.image_url,
       case
         when v_query <> '' and pg_catalog.lower(d.display_gamertag) = v_query then 1
@@ -48,11 +48,11 @@ begin
     from public.app_account_player_directory_cache d
     left join public.ehockey_player_self_profiles p
       on p.player_key = d.player_key
-    where pg_catalog.nullif(pg_catalog.btrim(d.player_key),'') is not null
+    where nullif(pg_catalog.btrim(d.player_key),'') is not null
       and (
         v_query = ''
         or pg_catalog.lower(d.display_gamertag) like '%' || v_query || '%'
-        or pg_catalog.coalesce(pg_catalog.substring(d.sports_gamer_player_url, '/players/([0-9]+)'), '') = v_query
+        or coalesce(substring(d.sports_gamer_player_url, '/players/([0-9]+)'), '') = v_query
       )
     order by
       case
@@ -80,16 +80,16 @@ as $$
 declare
   v_admin uuid := auth.uid();
   v_role text;
-  v_key text := pg_catalog.btrim(pg_catalog.coalesce(p_player_key,''));
-  v_path text := pg_catalog.btrim(pg_catalog.coalesce(p_final_path,''));
-  v_url text := pg_catalog.btrim(pg_catalog.coalesce(p_public_url,''));
+  v_key text := pg_catalog.btrim(coalesce(p_player_key,''));
+  v_path text := pg_catalog.btrim(coalesce(p_final_path,''));
+  v_url text := pg_catalog.btrim(coalesce(p_public_url,''));
   v_name text;
 begin
   select w.role into v_role
   from public.seh_current_writer() w
   limit 1;
 
-  if pg_catalog.lower(pg_catalog.coalesce(v_role,'')) <> 'admin' then
+  if pg_catalog.lower(coalesce(v_role,'')) <> 'admin' then
     raise exception 'Adminbehörighet krävs.';
   end if;
 
