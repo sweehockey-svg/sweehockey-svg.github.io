@@ -1325,8 +1325,8 @@
         "select=sports_gamer_team_id,team_name,team_logo_url,source_league_id,is_available,source_snapshot&competition_id=eq.2&source_league_id=eq.527&is_available=eq.true&order=team_name.asc"
       ),
       getPublicRows(
-        "sportsgamer_league_teams_current",
-        "select=sports_gamer_team_id,team_name,team_logo_url,source_updated_at&sports_gamer_league_id=eq.527&is_available=eq.true&order=team_name.asc"
+        "v_broadcast_teams_public",
+        "select=sports_gamer_team_id,team_name_in_league,team_logo_in_league&sports_gamer_league_id=eq.527&statistics_stage=eq.regular&order=team_name_in_league.asc"
       ),
       getPublicRows(
         "ehockey_fantasy_player_pool",
@@ -1343,15 +1343,15 @@
     const currentById = new Map(
       currentTeamRows.map(row => [Number(row?.sports_gamer_team_id) || 0,row])
     );
-    // Name/logo always come from the live SCL source. Fantasy keeps the source
-    // snapshot for jersey palette fallback, but must never make Match Graphics
-    // show yesterday's badge after a team updates SportsGamer.
+    // Name/logo come from the current SCL 27 league view. The generic
+    // sportsgamer_league_teams_current table can keep an old global logo when
+    // a team has changed identity, which is exactly what happened to INVICTUS AEGIS.
     const teamRows = baseTeamRows.map(row => {
       const current = currentById.get(Number(row?.sports_gamer_team_id) || 0);
       return current ? {
         ...row,
-        team_name:String(current.team_name || row.team_name || "").trim(),
-        team_logo_url:String(current.team_logo_url || row.team_logo_url || "").trim()
+        team_name:String(current.team_name_in_league || row.team_name || "").trim(),
+        team_logo_url:String(current.team_logo_in_league || row.team_logo_url || "").trim()
       } : row;
     });
     const playerRows = Array.isArray(playerRowsRaw) ? playerRowsRaw : [];
