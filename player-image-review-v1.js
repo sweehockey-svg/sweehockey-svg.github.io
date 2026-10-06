@@ -14,7 +14,9 @@
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
   function client() {
-    return typeof window.sehGetAuthClient === 'function' ? window.sehGetAuthClient() : null;
+    if (typeof window.SEH_getAuthClient === 'function') return window.SEH_getAuthClient();
+    if (typeof window.sehGetAuthClient === 'function') return window.sehGetAuthClient();
+    return null;
   }
 
   function setStatus(root, text, tone = '') {
