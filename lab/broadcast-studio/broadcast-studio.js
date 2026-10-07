@@ -29,7 +29,7 @@
   const OBS_MODE = new URLSearchParams(location.search).get("obs") === "1";
   const VIEWER_MODE = new URLSearchParams(location.search).get("viewer") === "1";
   const PREVIEW_MODE = new URLSearchParams(location.search).get('preview')==='1';
-  let publicNoMatch=false;
+  let publicNoMatch=true;
   const idleScene=document.createElement('div');
   idleScene.className='scene idle';
   idleScene.innerHTML='<div class="idle-content"><span>SVENSK eHOCKEY · MATCH-TV</span><h1>Ingen match<br>just nu</h1><p>Vi är tillbaka med fler matcher. Håll utkik i vår Discord.</p></div>';

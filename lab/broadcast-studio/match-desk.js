@@ -3,7 +3,7 @@
   if(new URLSearchParams(location.search).get('obs')==='1')return;
   const preview=new URLSearchParams(location.search).get('preview')==='1';
   const key='seh-match-desk-sv-v1'+(preview?'-preview':'');
-  let matches=[],active='',noMatch=false;
+  let matches=[],active='',noMatch=true;
   try{const saved=JSON.parse(localStorage.getItem(key)||'{}');matches=Array.isArray(saved.matches)?saved.matches:[];}catch{}
   const desk=document.createElement('div');desk.className='match-desk block';
   desk.innerHTML='<h3>MATCHBEVAKNING</h3><p>Ställ in lag, resultat och grafik ovan. Spara sedan matchen här. Endast vald stream spelas.</p><label>MATCHNAMN<input id="deskName" placeholder="T.ex. Västerås – Burchurs"></label><label>TWITCH-KANALER · EN PER RAD<textarea id="deskStreams" rows="3" placeholder="hemmalagets_kanal\nbortalagets_kanal"></textarea></label><div class="desk-actions"><button id="deskSave">Spara som ny match</button><button id="deskUpdate">Uppdatera vald match</button><button id="deskIdle">Ingen match just nu</button></div><p id="deskMessage" role="status"></p><div id="deskMatches"></div><small>Listan sparas i den här webbläsaren. Resultat för övriga matcher uppdateras manuellt. Byte skickas till Match-TV.</small>';
