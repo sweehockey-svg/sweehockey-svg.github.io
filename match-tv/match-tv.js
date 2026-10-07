@@ -1,5 +1,11 @@
 (() => {
   'use strict';
+  if(new URLSearchParams(location.search).get('embed')==='1'&&window.parent!==window){
+    document.body.classList.add('tv-embedded');
+    document.getElementById('chatConnect').addEventListener('click',event=>{
+      event.preventDefault();window.parent.postMessage({type:'seh-tv-open-account'},location.origin);
+    });
+  }
   const frame=document.getElementById('broadcast'),audio=document.getElementById('audio'),status=document.getElementById('status'),text=document.getElementById('statusText'),error=document.getElementById('error');
   let muted=true;
   const sendAudio=()=>frame.contentWindow?.postMessage({type:'seh-tv-audio',muted},location.origin);

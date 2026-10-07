@@ -7994,6 +7994,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
   }
   function route(){
     const h=location.hash||'#/';
+    if(h==='#/match-tv') return {tab:'home',title:'Match-TV',kind:'match-tv'};
     if(h.startsWith('#/free-agents')) return {tab:'home',title:'Free Agents',kind:'free-agents'};
     if(h.startsWith('#/rekord')||h.startsWith('#/rekordboken')) return {tab:'home',title:'Rekordboken',kind:'records'};
     if(isSec()) return {tab:'sec',title:'SEC',kind:'sec'};
@@ -9170,6 +9171,13 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     let home=document.getElementById('seh-app-home');if(home)return;
     home=document.createElement('section');home.id='seh-app-home';home.innerHTML=`<div class="seh-app-page"><div class="seh-kicker">SVENSK eHOCKEY / APP</div><h1>All svensk eHockey.<br>En app.</h1><p class="lead">Snabbvägar till det viktigaste på Svensk eHockey – Fantasy, nyheter, spelare, lag, SEC, ECL och shoppen.</p><div class="seh-card-grid"><a class="seh-card gold" href="${ROOT}Fantasy/?competition=SCL2027" data-load><div><div class="ico">${icons.star}</div><strong>SCL 2027 Fantasy</strong><span>Bygg din SCL-sexa · 90 CR · deadline 5 okt 18:00.</span></div></a><a class="seh-card gold" href="${ROOT}#/nyheter" data-load><div><div class="ico">${icons.news}</div><strong>Senaste nytt</strong><span>Artiklar, uppdateringar och det senaste från svensk eHockey.</span></div></a><a class="seh-card" href="${ROOT}#/spelare" data-load><div><div class="ico">${icons.players}</div><strong>Spelare</strong><span>Sök profiler, historik och statistik.</span></div></a><a class="seh-card" href="${ROOT}#/laghistoria" data-load><div><div class="ico">${icons.teams}</div><strong>Svenska lag</strong><span>Klubbar, historik och tidigare spelartrupper.</span></div></a><a class="seh-card" href="${ROOT}#/rekord" data-load><div><div class="ico">${icons.star}</div><strong>Rekordboken</strong><span>All-time-rekord för svenska spelare och lag.</span></div></a><a class="seh-card gold" href="${SEC_ROOT}" data-load><div><div class="ico">${icons.sec}</div><strong>SEC</strong><span>Svenska eHockey Cupen – turneringar och statistik.</span></div></a><a class="seh-card" href="${ROOT}#/shop" data-load><div><div class="ico">${icons.shop}</div><strong>Shop</strong><span>Svensk eHockey-design och personliga lagprodukter.</span></div></a><a class="seh-card gold" id="seh-ecl-card" href="${ROOT}${ECL_ROUTE}" data-load><div><div class="ico">${icons.ecl}</div><strong>Tävlingar</strong><span>Säsongsarkiv med matcher, lag, byten och svensk spelarstatistik.</span></div></a></div><div class="seh-section-title"><h2>Din app</h2><small id="seh-fav-count"></small></div><div class="seh-list seh-home-app-grid"><button class="seh-list-item" id="seh-home-favs"><span class="bullet">${icons.heart}</span><span><strong>Favoriter</strong><span>Spelare, lag och artiklar du sparat.</span></span></button><div class="seh-list-item seh-home-notify-card"><span class="bullet">${icons.bell}</span><span><strong>Pushnotiser</strong><span>Nyheter och SEC.</span></span><button class="seh-switch" id="seh-notify-toggle" aria-label="Pushnotiser"></button></div><div class="seh-list-item seh-home-app-wide seh-home-about-card"><span class="bullet">i</span><span><strong>Om Svensk eHockey</strong><span>Statistik och information om svenska spelare, lag och eHockey.</span></span></div></div><p class="seh-note">Favoriter sparas lokalt på den här mobilen. Ingen inloggning krävs.</p></div>`;
     home.querySelector('.seh-card-grid').insertAdjacentHTML('beforeend',`<a class="seh-card gold" href="${ROOT}#/sasong/ecl27winter" data-load><div><div class="ico">${icons.teams}</div><strong>Lagbygge</strong><span>Aktuella svenska lagbyggen, trupper, IN/UT och vilka lag som söker spelare.</span></div></a><button type="button" class="seh-card" id="seh-home-fa" style="text-align:left;font:inherit"><div><div class="ico">${icons.players}</div><strong>Free Agents</strong><span>Söker ditt lag spelare? Se vilka som är tillgängliga och hitta förstärkningar.</span></div></button>`);
+    home.querySelector('.seh-card-grid').insertAdjacentHTML('afterbegin',`<button type="button" class="seh-card gold wide" id="seh-home-match-tv" style="text-align:left;font:inherit"><div><div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="13" rx="2"/><path d="m10 9 5 3-5 3zM8 21h8"/></svg></div><strong>Match-TV</strong><span>Se matcherna med studiografik och chatta med andra tittare.</span></div></button>`);
+    home.querySelector('#seh-home-match-tv').onclick=()=>{
+      closeOverlays();
+      if(isSec()){nativeNavigate(ROOT+'?webapp=1#/match-tv');return;}
+      if(location.hash!=='#/match-tv')history.pushState({sehMatchTv:true},'', '#/match-tv');
+      refresh();
+    };
     home.querySelector('.seh-home-app-grid').insertAdjacentHTML('afterbegin',`<button type="button" class="seh-list-item" id="seh-home-profile"><span class="bullet">${icons.user}</span><span><strong>Min profil</strong><span>Din spelarkoppling och dina uppgifter.</span></span></button>`);
     home.querySelector('.seh-home-app-grid').insertAdjacentHTML('beforeend',`<button type="button" class="seh-list-item seh-home-app-wide" id="seh-home-privacy"><span class="bullet">i</span><span><strong>Integritet & konto</strong><span>Dina uppgifter, spelarbild och appkonto.</span></span></button>`);
     home.querySelector('#seh-home-profile').onclick=()=>{closeOverlays();sehV760OpenAccount();};
@@ -17823,7 +17831,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
   function setContentModeClasses(){
     if(!document.body)return;
     const r=route();
-    const known=['home','news','players','teams','records','shop','sec','ecl','ecl-season','article','player','team'];
+    const known=['home','news','players','teams','records','shop','sec','ecl','ecl-season','article','player','team','match-tv'];
     document.body.classList.add('seh-content-mode');
     known.forEach(k=>document.body.classList.remove('seh-route-'+k));
     document.body.classList.remove('seh-top-level','seh-detail-page');
@@ -17843,7 +17851,20 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     const moreOpen=document.getElementById('seh-app-more')?.classList.contains('show')||document.getElementById('seh-app-favorites')?.classList.contains('show');
     document.querySelectorAll('#seh-native-bottom [data-tab]').forEach(a=>a.classList.toggle('on',competitionsOpen?a.dataset.tab==='competitions':moreOpen?a.dataset.tab==='home':a.dataset.tab===(r.tab==='more'?'home':r.tab)));
   }
-  function refreshHome(){const home=document.getElementById('seh-app-home');if(home)home.classList.toggle('show',route().kind==='home'&&!document.getElementById('seh-app-directory')?.classList.contains('show')&&!document.getElementById('seh-app-competitions')?.classList.contains('show')&&!document.getElementById('seh-app-more')?.classList.contains('show')&&!document.getElementById('seh-app-favorites')?.classList.contains('show'));updateFavCount();renderNotifyToggle();}
+  function refreshMatchTv(){
+    let view=document.getElementById('seh-app-match-tv');
+    if(route().kind!=='match-tv'){view?.remove();return;}
+    if(view)return;
+    view=document.createElement('section');view.id='seh-app-match-tv';view.setAttribute('aria-label','Match-TV');
+    view.style.cssText='position:fixed;z-index:2147482750;left:0;right:0;top:var(--seh-native-top);bottom:var(--seh-native-bottom);background:#060f18';
+    const frame=document.createElement('iframe');frame.title='Match-TV med video och chatt';frame.src='/match-tv/?embed=1';frame.allow='autoplay; fullscreen';frame.allowFullscreen=true;frame.style.cssText='width:100%;height:100%;border:0;display:block';
+    view.append(frame);document.body.append(view);
+  }
+  window.addEventListener('message',event=>{
+    const frame=document.querySelector('#seh-app-match-tv iframe');
+    if(event.origin===location.origin&&frame&&event.source===frame.contentWindow&&event.data?.type==='seh-tv-open-account')sehV760OpenAccount();
+  });
+  function refreshHome(){refreshMatchTv();const home=document.getElementById('seh-app-home');if(home)home.classList.toggle('show',route().kind==='home'&&!document.getElementById('seh-app-directory')?.classList.contains('show')&&!document.getElementById('seh-app-competitions')?.classList.contains('show')&&!document.getElementById('seh-app-more')?.classList.contains('show')&&!document.getElementById('seh-app-favorites')?.classList.contains('show'));updateFavCount();renderNotifyToggle();}
   function updateOnline(){document.getElementById('seh-offline-banner')?.classList.toggle('show',navigator.onLine===false);}
   function visible(el){if(!el)return false;const r=el.getBoundingClientRect(),s=getComputedStyle(el);return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'&&s.opacity!=='0';}
   function handleConsent(){
