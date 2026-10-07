@@ -8634,6 +8634,208 @@ function SEH_initTeam() {
       return rows.map(normalizeAllTimePlayer);
     }
 
+    async function fetchCurrentSclTeamPlayers(teamId) {
+      /*
+       * Lagprofilen ska visa hela lagets aktuella SCL-trupp, inte bara
+       * svenska spelare som råkar finnas i den svenska snabb-synken.
+       * SCL 27:s live-data kompletterar historiken och hoppas över om den
+       * vanliga historikvyn redan innehåller riktiga statistikvärden.
+       */
+      try {
+        const rosterParams = new URLSearchParams({
+          select: "player_key,display_gamertag,team_name,division,team_id",
+          team_id: `eq.${teamId}`,
+          limit: "100"
+        });
+        const roster = await fetchJson("v_ecl27_current_roster_public", rosterParams);
+        if (!roster.length) return [];
+
+        const competitionParams = new URLSearchParams({
+          select: "id",
+          code: "eq.SCL2027",
+          limit: "1"
+        });
+        const competitions = await fetchJson("ehockey_fantasy_competitions", competitionParams);
+        const competitionId = number(competitions?.[0]?.id);
+        if (!competitionId) return [];
+
+        const poolParams = new URLSearchParams({
+          select: "id,player_key,sports_gamer_player_id,display_gamertag,real_team_name,primary_position,player_image,country_code,is_available",
+          competition_id: `eq.${competitionId}`,
+          limit: "500"
+        });
+        const poolRows = await fetchJson("ehockey_fantasy_player_pool", poolParams);
+
+        const rosterTeamNames = new Set(
+          roster.map((row) => teamNameKey(row.team_name)).filter(Boolean)
+        );
+        const rosterNames = new Set(
+          roster.map((row) => teamNameKey(row.display_gamertag)).filter(Boolean)
+        );
+        const teamPool = poolRows.filter((row) =>
+          rosterTeamNames.has(teamNameKey(row.real_team_name)) &&
+          rosterNames.has(teamNameKey(row.display_gamertag))
+        );
+
+        const poolIds = teamPool.map((row) => number(row.id)).filter(Boolean);
+        let statRows = [];
+        if (poolIds.length) {
+          const statsParams = new URLSearchParams({
+            select: "pool_player_id,skater_games,goals,assists,goalie_games,goalie_wins,goalie_saves,goalie_goals_allowed,goalie_shutouts,raw_stats,imported_at",
+            pool_player_id: `in.(${poolIds.join(",")})`,
+            limit: "1000"
+          });
+          statRows = await fetchJson("ehockey_fantasy_match_player_stats", statsParams);
+        }
+
+        const historyParams = new URLSearchParams({
+          select: "player_key,display_gamertag,total_skater_games,total_goalie_games",
+          team_id: `eq.${teamId}`,
+          league_id: "eq.527",
+          limit: "100"
+        });
+        const currentHistory = await fetchJson(
+          "v_ehockey_player_tournaments_chronological",
+          historyParams
+        );
+
+        const historyByKey = new Map();
+        const historyByName = new Map();
+        currentHistory.forEach((row) => {
+          if (row.player_key) historyByKey.set(String(row.player_key), row);
+          historyByName.set(teamNameKey(row.display_gamertag), row);
+        });
+
+        const poolByName = new Map(
+          teamPool.map((row) => [teamNameKey(row.display_gamertag), row])
+        );
+
+        const statsByPool = new Map();
+        statRows.forEach((row) => {
+          const poolId = number(row.pool_player_id);
+          if (!poolId) return;
+          if (!statsByPool.has(poolId)) {
+            statsByPool.set(poolId, {
+              skaterGames: 0,
+              goals: 0,
+              assists: 0,
+              plusMinus: 0,
+              penaltyMinutes: 0,
+              goalieGames: 0,
+              goalieWins: 0,
+              goalieSaves: 0,
+              goalieGoalsAllowed: 0,
+              goalieShutouts: 0,
+              lastImportedAt: ""
+            });
+          }
+          const stats = statsByPool.get(poolId);
+          const rawSkater = row.raw_stats?.skater || {};
+          stats.skaterGames += number(row.skater_games);
+          stats.goals += number(row.goals);
+          stats.assists += number(row.assists);
+          stats.plusMinus += number(rawSkater.plusMinus);
+          stats.penaltyMinutes += number(rawSkater.penaltyMinutes);
+          stats.goalieGames += number(row.goalie_games);
+          stats.goalieWins += number(row.goalie_wins);
+          stats.goalieSaves += number(row.goalie_saves);
+          stats.goalieGoalsAllowed += number(row.goalie_goals_allowed);
+          stats.goalieShutouts += number(row.goalie_shutouts);
+          const importedAt = String(row.imported_at || "");
+          if (importedAt > stats.lastImportedAt) stats.lastImportedAt = importedAt;
+        });
+
+        return roster.map((rosterPlayer) => {
+          const nameKey = teamNameKey(rosterPlayer.display_gamertag);
+          const pool = poolByName.get(nameKey) || {};
+          const stats = statsByPool.get(number(pool.id)) || {
+            skaterGames: 0,
+            goals: 0,
+            assists: 0,
+            plusMinus: 0,
+            penaltyMinutes: 0,
+            goalieGames: 0,
+            goalieWins: 0,
+            goalieSaves: 0,
+            goalieGoalsAllowed: 0,
+            goalieShutouts: 0,
+            lastImportedAt: ""
+          };
+          const historyRow =
+            (rosterPlayer.player_key && historyByKey.get(String(rosterPlayer.player_key))) ||
+            historyByName.get(nameKey) ||
+            null;
+          const historyHasStats = Boolean(
+            historyRow &&
+            (number(historyRow.total_skater_games) > 0 ||
+             number(historyRow.total_goalie_games) > 0)
+          );
+          const sportsGamerId = String(pool.sports_gamer_player_id || "").replace(/\D/g, "");
+          const goalieShots = stats.goalieSaves + stats.goalieGoalsAllowed;
+          const playerType =
+            stats.goalieGames > 0 && stats.skaterGames > 0
+              ? "hybrid"
+              : stats.goalieGames > 0 || String(pool.primary_position || "").toUpperCase() === "G"
+                ? "goalie"
+                : "skater";
+
+          return {
+            playerKey:
+              rosterPlayer.player_key ||
+              pool.player_key ||
+              (sportsGamerId ? `SG:${sportsGamerId}` : `GT:${nameKey}`),
+            displayGamertag:
+              pool.display_gamertag ||
+              rosterPlayer.display_gamertag ||
+              "Okänd spelare",
+            playerCountry: String(pool.country_code || "").trim().toUpperCase(),
+            playerImage: pool.player_image || "",
+            sportsGamerPlayerUrl: sportsGamerId
+              ? `https://sportsgamer.gg/players/${sportsGamerId}`
+              : "",
+            primaryPosition: pool.primary_position || "",
+            latestSeason: "SCL 27",
+            latestDivision: rosterPlayer.division || "",
+            tournamentCount: 1,
+            competitionCount: 1,
+            competitions: ["SCL"],
+            divisions: [],
+            totalSkaterGames: stats.skaterGames,
+            totalGoals: stats.goals,
+            totalAssists: stats.assists,
+            totalPoints: stats.goals + stats.assists,
+            totalPlusMinus: stats.plusMinus,
+            totalPenaltyMinutes: stats.penaltyMinutes,
+            totalGoalieGames: stats.goalieGames,
+            totalGoalieWins: stats.goalieWins,
+            totalGoalieLosses: 0,
+            totalGoalieOvertimeLosses: 0,
+            totalGoalieSaves: stats.goalieSaves,
+            totalGoalieShotsAgainst: goalieShots,
+            totalGoalieGoalsAllowed: stats.goalieGoalsAllowed,
+            totalGoalieSavePercentage: goalieShots
+              ? stats.goalieSaves / goalieShots
+              : null,
+            totalGoalieGoalsAgainstAverage: stats.goalieGames
+              ? stats.goalieGoalsAllowed / stats.goalieGames
+              : null,
+            totalGoalieShutouts: stats.goalieShutouts,
+            careerGames: Math.max(stats.skaterGames, stats.goalieGames),
+            playerType,
+            lastAppearanceDate: stats.lastImportedAt || "",
+            scl27InHistory: Boolean(historyRow),
+            scl27HistoryHasStats: historyHasStats
+          };
+        });
+      } catch (error) {
+        console.warn(
+          `${APP_BUILD}: aktuell SCL-trupp kunde inte komplettera lagets all-time-lista.`,
+          error
+        );
+        return [];
+      }
+    }
+
     async function fetchLatestLeadership(teamId) {
       const params = new URLSearchParams({
         select: "*",
@@ -8880,6 +9082,81 @@ function SEH_initTeam() {
       return [...merged.values()].sort(comparePlayers);
     }
   
+    function mergeCurrentSclPlayers(players, currentSclPlayers) {
+      const merged = new Map(
+        players.map((player) => [String(player.playerKey || ""), player])
+      );
+      const byName = new Map(
+        players.map((player) => [teamNameKey(player.displayGamertag), player])
+      );
+
+      (currentSclPlayers || []).forEach((live) => {
+        const liveKey = String(live.playerKey || "");
+        const nameKey = teamNameKey(live.displayGamertag);
+        const current = merged.get(liveKey) || byName.get(nameKey);
+
+        if (!current) {
+          merged.set(liveKey || `GT:${nameKey}`, live);
+          byName.set(nameKey, live);
+          return;
+        }
+
+        const useLiveStats = !live.scl27HistoryHasStats;
+        if (useLiveStats) {
+          current.totalSkaterGames += number(live.totalSkaterGames);
+          current.totalGoals += number(live.totalGoals);
+          current.totalAssists += number(live.totalAssists);
+          current.totalPoints += number(live.totalPoints);
+          current.totalPlusMinus += number(live.totalPlusMinus);
+          current.totalPenaltyMinutes += number(live.totalPenaltyMinutes);
+          current.totalGoalieGames += number(live.totalGoalieGames);
+          current.totalGoalieWins += number(live.totalGoalieWins);
+          current.totalGoalieLosses += number(live.totalGoalieLosses);
+          current.totalGoalieOvertimeLosses += number(live.totalGoalieOvertimeLosses);
+          current.totalGoalieSaves += number(live.totalGoalieSaves);
+          current.totalGoalieShotsAgainst += number(live.totalGoalieShotsAgainst);
+          current.totalGoalieGoalsAllowed += number(live.totalGoalieGoalsAllowed);
+          current.totalGoalieShutouts += number(live.totalGoalieShutouts);
+          current.careerGames += number(live.careerGames);
+        }
+
+        if (!live.scl27InHistory) {
+          current.tournamentCount += 1;
+        }
+
+        current.competitions = uniqueValues([
+          ...(current.competitions || []),
+          "SCL"
+        ]);
+        current.competitionCount = current.competitions.length;
+        current.latestSeason = "SCL 27";
+        current.playerCountry = live.playerCountry || current.playerCountry;
+        current.playerImage = current.playerImage || live.playerImage;
+        current.sportsGamerPlayerUrl =
+          current.sportsGamerPlayerUrl || live.sportsGamerPlayerUrl;
+        current.primaryPosition = live.primaryPosition || current.primaryPosition;
+        current.lastAppearanceDate =
+          live.lastAppearanceDate || current.lastAppearanceDate;
+
+        if (current.totalGoalieShotsAgainst > 0) {
+          current.totalGoalieSavePercentage =
+            current.totalGoalieSaves / current.totalGoalieShotsAgainst;
+        }
+        if (current.totalGoalieGames > 0) {
+          current.totalGoalieGoalsAgainstAverage =
+            current.totalGoalieGoalsAllowed / current.totalGoalieGames;
+        }
+        current.playerType =
+          current.totalGoalieGames > 0 && current.totalSkaterGames > 0
+            ? "hybrid"
+            : current.totalGoalieGames > 0
+              ? "goalie"
+              : "skater";
+      });
+
+      return [...merged.values()].sort(comparePlayers);
+    }
+
     function mergeUnlinkedPlayerCounts(playerCounts, rows) {
       const keysByLeague = new Map();
       rows.forEach((row) => {
@@ -11440,13 +11717,15 @@ function SEH_initTeam() {
           allTimePlayers,
           playerCounts,
           unlinkedTeamPlayers,
-          latestLeadership
+          latestLeadership,
+          currentSclPlayers
         ] = await Promise.all([
           fetchTournaments(team),
           fetchAllTimePlayers(teamId),
           fetchPlayerCounts(team),
           fetchUnlinkedTeamPlayers(team),
-          fetchLatestLeadership(teamId)
+          fetchLatestLeadership(teamId),
+          fetchCurrentSclTeamPlayers(teamId)
         ]);
   
         const canonicalTournamentNames = uniqueValues(
@@ -11469,9 +11748,12 @@ function SEH_initTeam() {
             : team.sportsGamerIds
         };
         state.tournaments = tournaments;
-        state.allTimePlayers = mergeAllTimePlayers(
-          allTimePlayers,
-          unlinkedTeamPlayers
+        state.allTimePlayers = mergeCurrentSclPlayers(
+          mergeAllTimePlayers(
+            allTimePlayers,
+            unlinkedTeamPlayers
+          ),
+          currentSclPlayers
         );
         await hydrateApprovedPlayerImages(state.allTimePlayers);
         state.playerCounts = mergeUnlinkedPlayerCounts(
