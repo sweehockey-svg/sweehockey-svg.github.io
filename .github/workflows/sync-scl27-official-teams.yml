@@ -1,7 +1,14 @@
 name: Sync all SCL 27 data
-run-name: SCL 27 unified data · ${{ inputs.request_id || 'manual' }}
+run-name: SCL 27 unified data · ${{ inputs.request_id || github.event_name }}
 
 on:
+  schedule:
+    # Match evenings, followed by midnight/night/morning on the next day.
+    # Native timezone support keeps these times correct across DST changes.
+    - cron: '0 21-23 * * 0-4'
+      timezone: Europe/Stockholm
+    - cron: '0 0,2,9 * * 1-5'
+      timezone: Europe/Stockholm
   workflow_dispatch:
     inputs:
       request_id:
@@ -19,8 +26,8 @@ jobs:
   sync:
     uses: ./.github/workflows/sync-fantasy-sportsgamer.yml
     with:
-      request_id: ${{ inputs.request_id }}
+      request_id: ${{ inputs.request_id || '' }}
       competition_code: SCL2027
       league_ids: '527'
-      trigger_type: manual
+      trigger_type: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
     secrets: inherit
