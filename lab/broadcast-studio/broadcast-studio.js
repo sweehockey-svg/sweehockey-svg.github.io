@@ -832,11 +832,13 @@
    video.onerror=()=>setStatus(tx("videoError"));
 
    if((meta.kind==="twitch"||/\.m3u8(?:$|[?#])/i.test(url))&&window.Hls?.isSupported()){
-     hls=new Hls({lowLatencyMode:false,capLevelToPlayerSize:OBS_MODE_LOCAL,backBufferLength:10,maxBufferLength:12,maxMaxBufferLength:20,liveSyncDurationCount:3,liveMaxLatencyDurationCount:8,highBufferWatchdogPeriod:2,nudgeOffset:.1,nudgeMaxRetry:10});
+     // Keep director and public playback near the same live target. Independent
+     // players may still differ slightly, but must not accumulate stale footage.
+     hls=new Hls({lowLatencyMode:true,capLevelToPlayerSize:false,backBufferLength:10,maxBufferLength:12,maxMaxBufferLength:20,liveSyncDurationCount:3,liveMaxLatencyDurationCount:5,maxLiveSyncPlaybackRate:1.1,liveSyncOnStallIncrease:0,highBufferWatchdogPeriod:2,nudgeOffset:.1,nudgeMaxRetry:10});
      hls.loadSource(url);hls.attachMedia(video);
      hls.on(Hls.Events.MANIFEST_PARSED,()=>{
        let qualityLabel="";
-       if(OBS_MODE_LOCAL&&Array.isArray(hls.levels)&&hls.levels.length){
+       if(Array.isArray(hls.levels)&&hls.levels.length){
          const candidates=hls.levels.map((level,index)=>({index,height:Number(level.height||0),width:Number(level.width||0),bitrate:Number(level.bitrate||0)}))
            .filter(x=>x.height>0&&x.height<=720&&(!x.width||x.width<=1280));
          const chosen=(candidates.length?candidates:hls.levels.map((level,index)=>({index,height:Number(level.height||0),width:Number(level.width||0),bitrate:Number(level.bitrate||0)})))
@@ -855,10 +857,16 @@
        const recoverLive=()=>{
          if(!hls||!video||video.hidden||!playbackActive())return;
          const now=Date.now(),current=Number(video.currentTime||0);
+         const live=Number(hls.liveSyncPosition);
+         // A stream can keep playing while falling behind after buffering or a
+         // background tab. Recover that drift too, not only a complete stall.
+         if(!video.seeking&&Number.isFinite(live)&&live>0&&live-current>4){
+           try{video.currentTime=live;lastVideoTime=live;lastVideoProgressAt=now;tryDirectPlay();}catch(e){console.warn("[SEH HLS] live catch-up",e)}
+           return;
+         }
          if(current>lastVideoTime+.08){lastVideoTime=current;lastVideoProgressAt=now;return}
          if(!lastVideoProgressAt)lastVideoProgressAt=now;
          if(now-lastVideoProgressAt<4500)return;
-         const live=Number(hls.liveSyncPosition);
          setStatus(tx("twitchRecovering"));
          try{
            if(Number.isFinite(live)&&live>0&&Math.abs(live-current)>1.5)video.currentTime=Math.max(0,live-1);
