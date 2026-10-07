@@ -724,15 +724,38 @@
  const tx=window.__sehBroadcastTx||((key)=>key);
  const OBS_MODE_LOCAL=new URLSearchParams(location.search).get("obs")==="1";
  const VIEWER_MODE_LOCAL=new URLSearchParams(location.search).get("viewer")==="1";
+ const DIRECTOR_MODE=!OBS_MODE_LOCAL&&!VIEWER_MODE_LOCAL;
  let viewerMuted=true;
  const $id=id=>document.getElementById(id);
  const source=$id("videoSource"),twitchInput=$id("twitchChannel"),hlsInput=$id("hlsUrl"),btn=$id("loadTwitch"),
        layer=$id("twitchLayer"),host=$id("twitchPlayer"),video=$id("directVideo"),status=$id("streamStatus"),
        show=$id("showTwitch"),mute=$id("muteTwitch"),screen=$id("screen");
+ const playbackActive=()=>DIRECTOR_MODE||screen?.classList.contains("live-mode");
+ let monitorStatus=null;
+ if(DIRECTOR_MODE){
+   const shell=document.querySelector('.preview-shell');
+   if(shell){
+     const pair=document.createElement('div');pair.className='director-monitors';shell.before(pair);pair.append(shell);
+     const monitor=document.createElement('section');monitor.className='feed-monitor';
+     monitor.innerHTML='<h3>MATCHFEED · UTAN GRAFIK</h3><canvas width="640" height="360" aria-label="Vald matchstream, oberoende av grafikscen"></canvas><p role="status">Ladda en stream nedan för att följa matchen.</p><small>Visas bara i studion · fortsätter vid scenbyte · ljud av som standard</small>';
+     pair.prepend(monitor);monitorStatus=monitor.querySelector('p');
+     const canvas=monitor.querySelector('canvas'),ctx=canvas.getContext('2d');
+     setInterval(()=>{
+       if(document.hidden)return;
+       ctx.fillStyle='#030b12';ctx.fillRect(0,0,640,360);
+       if(video&&!video.hidden&&video.readyState>=2&&video.videoWidth){
+         const scale=Math.min(640/video.videoWidth,360/video.videoHeight),w=video.videoWidth*scale,h=video.videoHeight*scale;
+         ctx.drawImage(video,(640-w)/2,(360-h)/2,w,h);
+       }
+     },100);
+     const scaleBox=shell.querySelector('.preview-scale');
+     new ResizeObserver(()=>{const width=shell.clientWidth-20;scaleBox.style.setProperty('--director-scale',String(Math.max(.1,width/1280)));}).observe(shell);
+   }
+ }
  let mountedKey="",hls=null,directPlaying=false,activeTwitchChannel="",pendingTwitchChannel="",liveWatchTimer=0,lastVideoTime=0,lastVideoProgressAt=0;
 
  const parseTwitch=raw=>{let v=String(raw||"").trim();if(!v)return "";try{if(/^https?:\/\//i.test(v)){const u=new URL(v);return u.pathname.split("/").filter(Boolean)[0]||""}}catch(e){}return v.replace(/^@/,"").replace(/^www\.twitch\.tv\//i,"").replace(/^twitch\.tv\//i,"").split(/[/?#]/)[0].trim()};
- const setStatus=(t,ok=false)=>{if(VIEWER_MODE_LOCAL)parent.postMessage({type:'seh-tv-status',text:t,playing:ok},location.origin);if(OBS_MODE_LOCAL){document.documentElement.dataset.playback=t;console.info("[SEH Video]",t)}if(status){status.classList.toggle("ready",ok);const x=status.querySelector("span");if(x)x.textContent=t}};
+ const setStatus=(t,ok=false)=>{if(monitorStatus)monitorStatus.textContent=t;if(VIEWER_MODE_LOCAL)parent.postMessage({type:'seh-tv-status',text:t,playing:ok},location.origin);if(OBS_MODE_LOCAL){document.documentElement.dataset.playback=t;console.info("[SEH Video]",t)}if(status){status.classList.toggle("ready",ok);const x=status.querySelector("span");if(x)x.textContent=t}};
  const obsBoot=()=>{};
  const obsPlaying=()=>{};
 
@@ -755,6 +778,7 @@
    if(!channel){destroy();setStatus(tx("invalidTwitch"));return false}
    if(channel===pendingTwitchChannel)return true;
    if(channel===activeTwitchChannel&&video&&!video.hidden&&(hls||video.currentSrc))return true;
+   if(mountedKey)destroy();
    lastTwitchRaw=raw;
    pendingTwitchChannel=channel;
    const seq=++twitchResolveSeq;
@@ -778,7 +802,7 @@
      if(ok)activeTwitchChannel=channel;
      if(ok&&data.expiresAt){
        const ms=Math.max(300000,Math.min(7200000,(Number(data.expiresAt)*1000-Date.now())-300000));
-       twitchResolveTimer=setTimeout(()=>{if(lastTwitchRaw&&screen?.classList.contains("live-mode"))resolveTwitchHls(lastTwitchRaw,muted)},ms);
+       twitchResolveTimer=setTimeout(()=>{if(lastTwitchRaw&&playbackActive())resolveTwitchHls(lastTwitchRaw,muted)},ms);
      }
      return ok;
    }catch(e){
@@ -791,7 +815,7 @@
  const mountTwitch=(raw,muted=true)=>{void resolveTwitchHls(raw,muted);return true;};
 
  const tryDirectPlay=()=>{
-   if(!video||!screen?.classList.contains("live-mode")||layer?.classList.contains("is-hidden"))return;
+   if(!video||!playbackActive()||(!DIRECTOR_MODE&&layer?.classList.contains("is-hidden")))return;
    const p=video.play();if(p&&typeof p.catch==="function")p.catch(()=>{});
  };
 
@@ -803,7 +827,7 @@
    video.autoplay=true;video.playsInline=true;video.preload="auto";video.controls=VIEWER_MODE_LOCAL;
    video.muted=VIEWER_MODE_LOCAL?viewerMuted:!!muted;
    const onPlaying=()=>{directPlaying=true;lastVideoTime=video.currentTime||0;lastVideoProgressAt=Date.now();obsPlaying();setStatus((meta.label||tx("directVideo"))+" "+tx("playing"),true)};
-   const onPause=()=>{directPlaying=false;if(screen?.classList.contains("live-mode"))setTimeout(tryDirectPlay,150)};
+   const onPause=()=>{directPlaying=false;if(playbackActive())setTimeout(tryDirectPlay,150)};
    video.onplaying=onPlaying;video.onpause=onPause;video.onstalled=()=>setStatus(tx("directVideo")+" "+tx("buffering"));video.onwaiting=()=>setStatus(tx("directVideo")+" "+tx("buffering"));
    video.onerror=()=>setStatus(tx("videoError"));
 
@@ -829,7 +853,7 @@
      });
      if(meta.kind==="twitch"){
        const recoverLive=()=>{
-         if(!hls||!video||video.hidden||!screen?.classList.contains("live-mode"))return;
+         if(!hls||!video||video.hidden||!playbackActive())return;
          const now=Date.now(),current=Number(video.currentTime||0);
          if(current>lastVideoTime+.08){lastVideoTime=current;lastVideoProgressAt=now;return}
          if(!lastVideoProgressAt)lastVideoProgressAt=now;
@@ -890,7 +914,8 @@
    syncSourceUi();
    const enabled=s.scene==="live"&&s.twitchShow!==false;
    layer?.classList.toggle("is-hidden",!enabled);
-   if(!enabled){destroy();if(VIEWER_MODE_LOCAL)setStatus(s.scene==='nextmatch'?'Nästa match · '+(s.publicNextMatch?.date||'')+' kl. '+(s.publicNextMatch?.time||''):s.scene==='idle'?'Ingen match just nu':'Studiosändning · väntar på matchvideo');return}
+   if(!enabled&&!DIRECTOR_MODE){destroy();if(VIEWER_MODE_LOCAL)setStatus(s.scene==='nextmatch'?'Nästa match · '+(s.publicNextMatch?.date||'')+' kl. '+(s.publicNextMatch?.time||''):s.scene==='idle'?'Ingen match just nu':'Studiosändning · väntar på matchvideo');return}
+   if(DIRECTOR_MODE&&!String((s.videoSource==='direct'?s.hlsUrl:s.twitchChannel)||'').trim()){destroy();setStatus('Ingen stream laddad');return;}
    if((s.videoSource||"twitch")==="direct")mountDirect(s.hlsUrl,s.twitchMute!==false,{label:tx("directVideo"),kind:"direct"});
    else mountTwitch(s.twitchChannel,s.twitchMute!==false);
  };
@@ -903,7 +928,7 @@
 
  btn?.addEventListener("click",e=>{e.preventDefault();loadFromControls()});
  [twitchInput,hlsInput].forEach(el=>el?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadFromControls()}}));
- source?.addEventListener("change",()=>{syncSourceUi();window.__sehPublishBroadcastState?.();if(screen?.classList.contains("live-mode"))loadFromControls()});
+ source?.addEventListener("change",()=>{syncSourceUi();window.__sehPublishBroadcastState?.();if(playbackActive())loadFromControls()});
  show?.addEventListener("change",()=>{layer?.classList.toggle("is-hidden",!show.checked);window.__sehPublishBroadcastState?.();if(show.checked)loadFromControls()});
  mute?.addEventListener("change",()=>{if(video&&!video.hidden)video.muted=mute.checked;window.__sehPublishBroadcastState?.()});
 
@@ -920,7 +945,7 @@
  if(window.__sehTwitchState)apply(window.__sehTwitchState);
  syncSourceUi();
 
- const syncLiveMode=()=>screen?.classList.toggle("live-mode",!!screen?.querySelector(".scene.live.active"));
+ const syncLiveMode=()=>{const live=!!screen?.querySelector(".scene.live.active");screen?.classList.toggle("live-mode",live);if(DIRECTOR_MODE)layer?.classList.toggle('is-hidden',!live||show?.checked===false);};
  screen?.querySelectorAll(".scene").forEach(s=>new MutationObserver(syncLiveMode).observe(s,{attributes:true,attributeFilter:["class"]}));
  syncLiveMode();
 })();
