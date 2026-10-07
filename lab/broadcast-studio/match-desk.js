@@ -34,10 +34,10 @@
       const row=document.createElement('div');row.className='desk-match'+(active===m.id?' selected':'');
       const title=document.createElement('strong');title.textContent=m.name+' · '+(m.state.hs||0)+'–'+(m.state.as||0);row.append(title);
       const choose=document.createElement('button');choose.textContent=active===m.id?'Vald match':'Välj match';choose.onclick=()=>{
-        remember();active=m.id;get('deskName').value=m.name;get('deskStreams').value=m.streams.join('\n');window.__sehStudioRestore(m.state);persist();render();get('deskMessage').textContent='Visar '+m.name;
+        remember();active=m.id;get('deskName').value=m.name;get('deskStreams').value=m.streams.join('\n');m.state={...m.state,matchName:m.name};window.__sehStudioRestore(m.state);persist();render();get('deskMessage').textContent='Visar '+m.name;
       };row.append(choose);
       m.streams.forEach(channel=>{const btn=document.createElement('button');btn.textContent='Visa '+channel;btn.onclick=()=>{
-        remember();active=m.id;get('deskName').value=m.name;get('deskStreams').value=m.streams.join('\n');m.state={...m.state,videoSource:'twitch',twitchChannel:channel,twitchShow:true,scene:'live'};window.__sehStudioRestore(m.state);persist();render();get('deskMessage').textContent='Byter till '+channel+' – videon kan behöva några sekunder.';
+        remember();active=m.id;get('deskName').value=m.name;get('deskStreams').value=m.streams.join('\n');m.state={...m.state,matchName:m.name,videoSource:'twitch',twitchChannel:channel,twitchShow:true,scene:'live'};window.__sehStudioRestore(m.state);persist();render();get('deskMessage').textContent='Byter till '+channel+' – videon kan behöva några sekunder.';
       };row.append(btn);});
       const remove=document.createElement('button');remove.type='button';remove.className='desk-remove';remove.textContent='Ta bort';remove.setAttribute('aria-label','Ta bort matchen '+m.name);
       remove.onclick=()=>{
@@ -57,7 +57,7 @@
     let m=update?matches.find(m=>m.id===active):null;
     if(update&&!m)return;
     if(!m){m={id:crypto.randomUUID()};matches.push(m);}
-    Object.assign(m,{name,streams,state:window.__sehStudioSnapshot()});active=m.id;persist();render();get('deskMessage').textContent='Sparat '+name;
+    Object.assign(m,{name,streams,state:{...window.__sehStudioSnapshot(),matchName:name}});active=m.id;window.__sehStudioRestore(m.state);persist();render();get('deskMessage').textContent='Sparat '+name;
   };
   get('deskSave').onclick=()=>save(false);get('deskUpdate').onclick=()=>save(true);
   const updateIdle=()=>{get('deskIdle').setAttribute('aria-pressed',String(noMatch));get('deskIdle').textContent=noMatch?'Ingen match just nu · PÅ – klicka för att visa preview':'Ingen match just nu · AV';};
