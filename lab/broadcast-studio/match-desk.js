@@ -38,7 +38,15 @@
       };row.append(choose);
       m.streams.forEach(channel=>{const btn=document.createElement('button');btn.textContent='Visa '+channel;btn.onclick=()=>{
         remember();active=m.id;get('deskName').value=m.name;get('deskStreams').value=m.streams.join('\n');m.state={...m.state,videoSource:'twitch',twitchChannel:channel,twitchShow:true,scene:'live'};window.__sehStudioRestore(m.state);persist();render();get('deskMessage').textContent='Byter till '+channel+' – videon kan behöva några sekunder.';
-      };row.append(btn);});get('deskMatches').append(row);
+      };row.append(btn);});
+      const remove=document.createElement('button');remove.type='button';remove.className='desk-remove';remove.textContent='Ta bort';remove.setAttribute('aria-label','Ta bort matchen '+m.name);
+      remove.onclick=()=>{
+        if(!window.confirm('Ta bort den sparade matchen ”'+m.name+'”? Detta tar bara bort matchen från din bevakningslista.'))return;
+        const wasActive=active===m.id;
+        matches=matches.filter(match=>match.id!==m.id);
+        if(wasActive){active='';get('deskName').value='';get('deskStreams').value='';noMatch=true;window.__sehStudioIdle(true);updateIdle();}
+        persist();render();get('deskMessage').textContent='Tog bort '+m.name+(wasActive?'. Match-TV visar Ingen match just nu. Preview är kvar.':'.');
+      };row.append(remove);get('deskMatches').append(row);
     });get('deskUpdate').disabled=!active;
   };
   const save=update=>{
