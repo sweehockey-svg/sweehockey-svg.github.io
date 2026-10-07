@@ -8,7 +8,20 @@
   const desk=document.createElement('div');desk.className='match-desk block';
   desk.innerHTML='<h3>MATCHBEVAKNING</h3><p>Ställ in lag, resultat och grafik ovan. Spara sedan matchen här. Endast vald stream spelas.</p><label>MATCHNAMN<input id="deskName" placeholder="T.ex. Västerås – Burchurs"></label><label>TWITCH-KANALER · EN PER RAD<textarea id="deskStreams" rows="3" placeholder="hemmalagets_kanal\nbortalagets_kanal"></textarea></label><div class="desk-actions"><button id="deskSave">Spara som ny match</button><button id="deskUpdate">Uppdatera vald match</button><button id="deskIdle">Ingen match just nu</button></div><p id="deskMessage" role="status"></p><div id="deskMatches"></div><small>Listan sparas i den här webbläsaren. Resultat för övriga matcher uppdateras manuellt. Byte skickas till Match-TV.</small>';
   document.querySelector('.stream-dock')?.prepend(desk);
+  const nextControls=document.createElement('div');nextControls.className='next-controls';
+  nextControls.innerHTML='<h3>NÄSTA MATCH · ENDAST MATCH-TV</h3><label>HEMMALAG<select id="nextHome"></select></label><label>BORTALAG<select id="nextAway"></select></label><label>DATUM<input id="nextDate" type="date" required></label><label>STARTTID · SVENSK TID<input id="nextTime" type="time" required></label><button id="deskNext">Visa Nästa match på Match-TV</button><p>Preview fortsätter vara fritt att ändra. Detta startar inte sändningen automatiskt.</p>';
+  desk.querySelector('.desk-actions').after(nextControls);
   const get=id=>document.getElementById(id);
+  const fillTeams=()=>['Home','Away'].forEach(side=>{const select=get('next'+side),value=select.value||get(side.toLowerCase()).value;select.replaceChildren(...[...get(side.toLowerCase()).options].map(o=>new Option(o.text,o.value)));select.value=value;});
+  nextControls.addEventListener('focusin',e=>{if(e.target.tagName==='SELECT')fillTeams();});
+  fillTeams();
+  get('deskNext').onclick=()=>{
+    fillTeams();
+    if(!get('nextDate').value||!get('nextTime').value){get('deskMessage').textContent='Välj datum och starttid först.';return;}
+    if(!get('nextHome').value||!get('nextAway').value||get('nextHome').value===get('nextAway').value){get('deskMessage').textContent='Välj två olika lag.';return;}
+    const next={home:get('nextHome').value,away:get('nextAway').value,date:get('nextDate').value,time:get('nextTime').value};
+    window.__sehStudioNext(next);noMatch=true;updateIdle();get('deskIdle').textContent='Nästa match · PÅ – klicka för att visa preview';get('deskMessage').textContent='Match-TV visar nästa match '+next.date+' kl. '+next.time+'. Preview påverkas inte.';
+  };
   const persist=()=>{try{localStorage.setItem(key,JSON.stringify({matches}));}catch{get('deskMessage').textContent='Webbläsaren kunde inte spara matchlistan.';}};
   const remember=()=>{const m=matches.find(m=>m.id===active);if(m)m.state=window.__sehStudioSnapshot();};
   const render=()=>{
