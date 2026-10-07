@@ -12,7 +12,7 @@ on:
       league_ids:
         description: SportsGamer league IDs, comma-separated
         required: false
-        default: '523,524,525,526,527,529'
+        default: '523,524,525,526,527,529,532'
         type: string
   push:
     branches: [main]
@@ -43,11 +43,11 @@ jobs:
     steps:
       - id: matrix
         env:
-          REQUESTED: ${{ inputs.league_ids || (github.event_name == 'push' && '527') || '523,524,525,526,527,529' }}
+          REQUESTED: ${{ inputs.league_ids || (github.event_name == 'push' && '527,532') || '523,524,525,526,527,529,532' }}
         run: |
           python - <<'PY'
           import json, os
-          allowed={523,524,525,526,527,529}
+          allowed={523,524,525,526,527,529,532}
           raw=os.environ.get("REQUESTED","")
           ids=[]
           for part in raw.replace(";",",").replace(" ",",").split(","):
