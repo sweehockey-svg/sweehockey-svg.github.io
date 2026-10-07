@@ -27,6 +27,7 @@
   const seriesBestOf = bo => LOCALE === "fi" ? "PARAS " + bo + ":STÄ" : LOCALE === "de" ? "BEST-OF-" + bo : LOCALE === "sv" ? "BÄST AV " + bo : "BEST OF " + bo;
   const REMOTE_CHANNEL = ({sv:"sec21-bronze-test",en:"broadcast-en",fi:"broadcast-fi",de:"broadcast-de"}[LOCALE] || "sec21-bronze-test");
   const OBS_MODE = new URLSearchParams(location.search).get("obs") === "1";
+  const VIEWER_MODE = new URLSearchParams(location.search).get("viewer") === "1";
   if (OBS_MODE) {
     const fitObsPreview = () => document.documentElement.style.setProperty("--obs-preview-scale", String(Math.min(window.innerWidth / 1280, window.innerHeight / 720)));
     fitObsPreview();
@@ -577,11 +578,12 @@
   function applyRemoteState(s){if(!s||typeof s!=="object")return;remoteApplying=true;const incomingLeague=Number(s.leagueId||activeLeagueId);if(COMPETITIONS[incomingLeague]&&incomingLeague!==activeLeagueId){activeLeagueId=incomingLeague;if($("#tournament"))$("#tournament").value=String(activeLeagueId);applyCompetitionChrome(false);loadTournamentData();}setTheme(s.backgroundPackage||s.theme||"broadcast");setGraphicsPackage(s.graphicsPackage||"standard");if($("#videoSource")&&s.videoSource!==undefined)$("#videoSource").value=s.videoSource||"twitch";if($("#hlsUrl")&&s.hlsUrl!==undefined)$("#hlsUrl").value=s.hlsUrl||"";if($("#twitchChannel")&&s.twitchChannel!==undefined)$("#twitchChannel").value=s.twitchChannel||"";if($("#showTwitch")&&s.twitchShow!==undefined)$("#showTwitch").checked=!!s.twitchShow;if($("#muteTwitch")&&s.twitchMute!==undefined)$("#muteTwitch").checked=!!s.twitchMute;if($("#showLiveTeamStrip")&&s.liveTeamStripShow!==undefined)$("#showLiveTeamStrip").checked=!!s.liveTeamStripShow;if($("#showLiveCommentators")&&s.liveCommentatorsShow!==undefined)$("#showLiveCommentators").checked=!!s.liveCommentatorsShow;$("#screen")?.classList.toggle("live-team-strip-off",$("#showLiveTeamStrip")?.checked===false);$("#screen")?.classList.toggle("live-commentators-off",!$("#showLiveCommentators")?.checked);window.__sehTwitchState=s;["home","away"].forEach(id=>{if(s[id]!==undefined&&$("#"+id)){const el=$("#"+id),v=String(s[id]);if(v&&![...el.options].some(o=>o.value===v))el.add(new Option(tx("team"),v));el.value=v;}});["hs","as","headline","subline","commentator1","commentator2","person","role","seriesFormat","seriesRound","seriesHome","seriesAway"].forEach(id=>{if(s[id]!==undefined&&$("#"+id))$("#"+id).value=s[id];});if($("#seriesShowResults")&&s.seriesShowResults!==undefined)$("#seriesShowResults").checked=!!s.seriesShowResults;if(Array.isArray(s.seriesResults))s.seriesResults.slice(0,7).forEach((v,i)=>{const el=$("#seriesR"+(i+1));if(el)el.value=v||"";});if(s.lineups){["home","away"].forEach(side=>{if(!s.lineups[side])return;const key=side+":"+String(selectedTeam(side).sports_gamer_team_id);const next={};SLOTS.forEach(slot=>next[slot]=String(s.lineups[side][slot]||""));lineups.set(key,next);});}applyScene(s.scene,s.lineupSide);window.dispatchEvent(new CustomEvent("seh:twitch-state",{detail:s}));renderMatch();renderSeries();renderLineup();renderStats();renderTable();renderTeamCompare();renderScorers();renderFormGuide();renderOffense();renderDefenseLeaders();renderGoalieLeaders();renderRoad();renderLeaders();renderRoleMatchups();remoteApplying=false;}
   async function remoteRequest(method,body){const cfg=window.EHOCKEY_CONFIG||{};if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)return;const key=String(cfg.supabasePublishableKey),headers={apikey:key,Accept:"application/json","Content-Type":"application/json"};if(/^eyJ[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$/.test(key))headers.Authorization="Bearer "+key;const url=String(cfg.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/broadcast_studio_state?channel=eq."+encodeURIComponent(REMOTE_CHANNEL);const res=await fetch(url,{method,headers,body:body?JSON.stringify(body):undefined,cache:"no-store"});if(!res.ok)throw new Error("Broadcast state HTTP "+res.status);return method==="GET"?res.json():null;}
   function publishState(){if(OBS_MODE||remoteApplying)return;clearTimeout(remoteTimer);remoteTimer=setTimeout(()=>remoteRequest("PATCH",{state:studioState(),updated_at:new Date().toISOString()}).catch(console.error),120);} window.__sehPublishBroadcastState=publishState;
-  async function pullState(){try{const rows=await remoteRequest("GET");if(rows&&rows[0]&&rows[0].state&&Object.keys(rows[0].state).length)applyRemoteState(rows[0].state);}catch(e){console.error("Broadcast remote:",e);}}
+  let stateRequestPending=false,lastRemoteState='';
+  async function pullState(){if(stateRequestPending)return;stateRequestPending=true;try{const rows=await remoteRequest("GET");if(rows&&rows[0]&&rows[0].state&&Object.keys(rows[0].state).length){const signature=JSON.stringify(rows[0].state);if(signature!==lastRemoteState){lastRemoteState=signature;applyRemoteState(rows[0].state);}}}catch(e){console.error("Broadcast remote:",e);if(VIEWER_MODE)parent.postMessage({type:'seh-tv-status',text:'Kontakten med studion är tillfälligt bruten. Försöker igen.'},location.origin);}finally{stateRequestPending=false;}}
   if(OBS_MODE){
-    const obsPoll=()=>{void pullState();};
+    const obsPoll=()=>{if(!VIEWER_MODE||!document.hidden)void pullState();};
     obsPoll();
-    setInterval(obsPoll,1000);
+    setInterval(obsPoll,VIEWER_MODE?10000:1000);
     document.addEventListener("visibilitychange",obsPoll);
     window.addEventListener("focus",obsPoll);
     window.addEventListener("pageshow",obsPoll);
@@ -698,6 +700,8 @@
 (()=>{
  const tx=window.__sehBroadcastTx||((key)=>key);
  const OBS_MODE_LOCAL=new URLSearchParams(location.search).get("obs")==="1";
+ const VIEWER_MODE_LOCAL=new URLSearchParams(location.search).get("viewer")==="1";
+ let viewerMuted=true;
  const $id=id=>document.getElementById(id);
  const source=$id("videoSource"),twitchInput=$id("twitchChannel"),hlsInput=$id("hlsUrl"),btn=$id("loadTwitch"),
        layer=$id("twitchLayer"),host=$id("twitchPlayer"),video=$id("directVideo"),status=$id("streamStatus"),
@@ -705,7 +709,7 @@
  let mountedKey="",hls=null,directPlaying=false,activeTwitchChannel="",pendingTwitchChannel="",liveWatchTimer=0,lastVideoTime=0,lastVideoProgressAt=0;
 
  const parseTwitch=raw=>{let v=String(raw||"").trim();if(!v)return "";try{if(/^https?:\/\//i.test(v)){const u=new URL(v);return u.pathname.split("/").filter(Boolean)[0]||""}}catch(e){}return v.replace(/^@/,"").replace(/^www\.twitch\.tv\//i,"").replace(/^twitch\.tv\//i,"").split(/[/?#]/)[0].trim()};
- const setStatus=(t,ok=false)=>{if(OBS_MODE_LOCAL){document.documentElement.dataset.playback=t;console.info("[SEH Video]",t)}if(status){status.classList.toggle("ready",ok);const x=status.querySelector("span");if(x)x.textContent=t}};
+ const setStatus=(t,ok=false)=>{if(VIEWER_MODE_LOCAL)parent.postMessage({type:'seh-tv-status',text:t,playing:ok},location.origin);if(OBS_MODE_LOCAL){document.documentElement.dataset.playback=t;console.info("[SEH Video]",t)}if(status){status.classList.toggle("ready",ok);const x=status.querySelector("span");if(x)x.textContent=t}};
  const obsBoot=()=>{};
  const obsPlaying=()=>{};
 
@@ -739,6 +743,8 @@
      const res=await fetch(base+"/functions/v1/seh-twitch-resolve?channel="+encodeURIComponent(channel),{cache:"no-store"});
      const data=await res.json().catch(()=>({}));
      if(seq!==twitchResolveSeq)return false;
+     pendingTwitchChannel='';
+     if(VIEWER_MODE_LOCAL&&(!res.ok||!data.hlsUrl))twitchResolveTimer=setTimeout(()=>{if(screen?.classList.contains('live-mode'))void resolveTwitchHls(raw,viewerMuted);},30000);
      if(!res.ok||!data?.hlsUrl){
        setStatus(data?.detail?("TWITCH RESOLVER · "+String(data.detail).slice(0,90)):tx("twitchFetchFail"));
        return false;
@@ -771,8 +777,8 @@
    const key=(meta.kind||"direct")+":"+url;if(key===mountedKey&&video&&!video.hidden)return true;
    destroy();obsBoot();
    video.hidden=false;
-   video.autoplay=true;video.playsInline=true;video.preload="auto";video.controls=false;
-   video.muted=!!muted;
+   video.autoplay=true;video.playsInline=true;video.preload="auto";video.controls=VIEWER_MODE_LOCAL;
+   video.muted=VIEWER_MODE_LOCAL?viewerMuted:!!muted;
    const onPlaying=()=>{directPlaying=true;lastVideoTime=video.currentTime||0;lastVideoProgressAt=Date.now();obsPlaying();setStatus((meta.label||tx("directVideo"))+" "+tx("playing"),true)};
    const onPause=()=>{directPlaying=false;if(screen?.classList.contains("live-mode"))setTimeout(tryDirectPlay,150)};
    video.onplaying=onPlaying;video.onpause=onPause;video.onstalled=()=>setStatus(tx("directVideo")+" "+tx("buffering"));video.onwaiting=()=>setStatus(tx("directVideo")+" "+tx("buffering"));
@@ -861,7 +867,7 @@
    syncSourceUi();
    const enabled=s.scene==="live"&&s.twitchShow!==false;
    layer?.classList.toggle("is-hidden",!enabled);
-   if(!enabled){destroy();return}
+   if(!enabled){destroy();if(VIEWER_MODE_LOCAL)setStatus('Studiosändning · väntar på matchvideo');return}
    if((s.videoSource||"twitch")==="direct")mountDirect(s.hlsUrl,s.twitchMute!==false,{label:tx("directVideo"),kind:"direct"});
    else mountTwitch(s.twitchChannel,s.twitchMute!==false);
  };
@@ -879,6 +885,15 @@
  mute?.addEventListener("change",()=>{if(video&&!video.hidden)video.muted=mute.checked;window.__sehPublishBroadcastState?.()});
 
  window.addEventListener("seh:twitch-state",e=>apply(e.detail));
+ if(VIEWER_MODE_LOCAL){
+   window.addEventListener('message',e=>{
+     if(e.origin!==location.origin||e.source!==parent||e.data?.type!=='seh-tv-audio')return;
+     viewerMuted=!!e.data.muted;
+     if(video){video.muted=viewerMuted;if(video.currentSrc&&screen?.classList.contains('live-mode'))void video.play().catch(()=>setStatus('Tryck på videon för att starta uppspelningen'));}
+   });
+   if(video)video.controls=true;
+   parent.postMessage({type:'seh-tv-status',text:'Ansluter till studion…'},location.origin);
+ }
  if(window.__sehTwitchState)apply(window.__sehTwitchState);
  syncSourceUi();
 

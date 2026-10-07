@@ -19233,6 +19233,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           >
             Fantasy
           </a>
+          <a href="match-tv/">Match-TV</a>
 
           <a
             class="${route.active === "freeAgents" ? "is-active" : ""}"
