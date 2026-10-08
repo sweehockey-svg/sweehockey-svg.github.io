@@ -21,6 +21,7 @@
   const LANGUAGE_FLAGS = { sv:"🇸🇪", en:"🇬🇧", fi:"🇫🇮", de:"🇩🇪" };
   const I18N = {
     sv: {
+      position_forwards:"Forwards", position_defense:"Backar",
       sort_upper:"SORTERA EFTER", sort_owned:"Ägs av flest", sort_captain:"Kapten hos flest", sort_points:"Flest poäng", sort_value:"Poäng per CR", sort_price_high:"Pris: högst först", sort_price_low:"Pris: lägst först",
       nav_build:"BYGG", nav_compete:"TÄVLA", nav_climb:"KLÄTTRA", league:"LIGA", language:"SPRÅK",
       choose_fantasy_league:"Välj Fantasy-liga", choose_language:"Välj språk", powered_by:"DRIVS AV",
@@ -114,6 +115,7 @@
       goalie_games_only:"endast målvaktsmatcher räknas", skater_games_only:"endast utespelarmatcher räknas"
     },
     en: {
+      position_forwards:"Forwards", position_defense:"Defensemen",
       sort_upper:"SORT BY", sort_owned:"Most owned", sort_captain:"Most captained", sort_points:"Most points", sort_value:"Points per CR", sort_price_high:"Price: highest first", sort_price_low:"Price: lowest first",
       nav_build:"BUILD", nav_compete:"COMPETE", nav_climb:"CLIMB", league:"LEAGUE", language:"LANGUAGE",
       choose_fantasy_league:"Choose Fantasy league", choose_language:"Choose language", powered_by:"POWERED BY",
@@ -207,6 +209,7 @@
       goalie_games_only:"only goalie games count", skater_games_only:"only skater games count"
     },
     fi: {
+      position_forwards:"Hyökkääjät", position_defense:"Puolustajat",
       sort_upper:"JÄRJESTÄ", sort_owned:"Eniten omistettu", sort_captain:"Eniten kapteenina", sort_points:"Eniten pisteitä", sort_value:"Pisteet / CR", sort_price_high:"Hinta: korkein ensin", sort_price_low:"Hinta: matalin ensin",
       nav_build:"RAKENNA", nav_compete:"KILPAILE", nav_climb:"NOUSE", league:"LIIGA", language:"KIELI",
       choose_fantasy_league:"Valitse Fantasy-liiga", choose_language:"Valitse kieli", powered_by:"PALVELUN TARJOAA",
@@ -300,6 +303,7 @@
       goalie_games_only:"vain maalivahtina pelatut ottelut lasketaan", skater_games_only:"vain kenttäpelaajana pelatut ottelut lasketaan"
     },
     de: {
+      position_forwards:"Stürmer", position_defense:"Verteidiger",
       sort_upper:"SORTIEREN NACH", sort_owned:"Meistbesessen", sort_captain:"Meistgewählte Kapitäne", sort_points:"Meiste Punkte", sort_value:"Punkte pro CR", sort_price_high:"Preis: absteigend", sort_price_low:"Preis: aufsteigend",
       nav_build:"BAUEN", nav_compete:"SPIELEN", nav_climb:"STEIGEN", league:"LIGA", language:"SPRACHE",
       choose_fantasy_league:"Fantasy-Liga wählen", choose_language:"Sprache wählen", powered_by:"BETRIEBEN VON",
@@ -1486,7 +1490,9 @@
     return state.pool
       .filter((player) => player.is_available !== false)
       .filter((player) => {
-        if (position !== "ALL" && !eligibleSlots(player).includes(position)) return false;
+        const positions = position === "FORWARDS" ? ["LW", "C", "RW"]
+          : position === "DEFENSE" ? ["LD", "RD"] : [position];
+        if (position !== "ALL" && !positions.some((slot) => eligibleSlots(player).includes(slot))) return false;
         if (!query) return true;
 
         return [
