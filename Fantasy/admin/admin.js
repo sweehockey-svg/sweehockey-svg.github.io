@@ -628,36 +628,54 @@
     }
   }
 
+  function entryRosterMarkup(players, locked) {
+    return players.map((p) => `
+      <article class="fa-roster-player">
+        <span>${esc(p.slot || (p.used_slots || []).join(" / "))}${p.is_captain ? " · KAPTEN" : ""}</span>
+        <strong>${esc(p.display_gamertag)}</strong>
+        <small>${esc(p.real_team_name || "–")} · ${fmt(p.locked_price)} CR</small>
+        <b>${fmt(locked ? p.team_points : p.fantasy_points, 2)} P</b>
+        <small>${locked ? "Bidrag till lagtotalen" : "Spelarpoäng hittills – räknas inte retroaktivt"}${locked && num(p.captain_bonus_points) ? " · +" + fmt(p.captain_bonus_points, 2) + " P kaptensbonus ingår" : ""}</small>
+      </article>
+    `).join("");
+  }
+
+  function renderAdminEntry(adminData, lockedData, upcoming = false) {
+    const entry = adminData?.entry || {};
+    const locked = !upcoming;
+    const players = locked
+      ? (Array.isArray(lockedData?.roster) ? lockedData.roster : [])
+      : (Array.isArray(adminData?.players) ? adminData.players : []);
+    const former = locked && Array.isArray(lockedData?.former_players) ? lockedData.former_players : [];
+    $("entryDialogContent").innerHTML = `
+      <span class="fa-kicker">${locked ? "LÅST FANTASY-LAG" : "KOMMANDE UPPSTÄLLNING"}${lockedData?.round && locked ? " · " + esc(lockedData.round.name) : ""}</span>
+      <h2>${esc(entry.team_name || "Namnlöst lag")}</h2>
+      <p>${esc(entry.owner_name || "Okänd")} · #${esc(entry.current_rank || "–")}${locked ? " · " + fmt(lockedData?.entry?.total_points ?? entry.total_points, 2) + " P totalt" : ""}</p>
+      <div class="fa-actions">
+        <button type="button" id="entryShowLocked" aria-pressed="${locked}">Låst uppställning</button>
+        <button type="button" id="entryShowUpcoming" aria-pressed="${upcoming}">Kommande uppställning</button>
+      </div>
+      <p>${locked ? "Samma låsta uppställning och poängbidrag som i den allmänna vyn." : "Sparade byten inför nästa deadline. Spelarpoängen nedan är statistik hittills, inte intjänade poäng för den kommande uppställningen."}</p>
+      <div class="fa-roster">${entryRosterMarkup(players, locked) || '<div class="fa-empty">Ingen låst uppställning ännu.</div>'}</div>
+      ${former.length ? '<h3>Tidigare spelare · poängen ingår i totalen</h3><div class="fa-roster">' + entryRosterMarkup(former, true) + '</div>' : ""}
+      ${locked && num(lockedData?.transfer_penalty_points) ? '<p>Bytesavdrag: −' + fmt(lockedData.transfer_penalty_points, 2) + ' P</p>' : ""}
+    `;
+    $("entryShowLocked").addEventListener("click", () => renderAdminEntry(adminData, lockedData, false));
+    $("entryShowUpcoming").addEventListener("click", () => renderAdminEntry(adminData, lockedData, true));
+  }
+
   async function openEntry(entryId) {
     const dialog = $("entryDialog");
     $("entryDialogContent").innerHTML = '<div class="fa-empty">Hämtar laguppställning…</div>';
     dialog.showModal();
-
     try {
-      const { data, error } = await sb.rpc("seh_fantasy_admin_entry_roster", {
-        p_entry_id: Number(entryId)
+      const admin = await sb.rpc("seh_fantasy_admin_entry_roster", { p_entry_id: Number(entryId) });
+      if (admin.error) throw admin.error;
+      const result = await sb.rpc("seh_fantasy_public_entry_roster", {
+        p_entry_id: Number(entryId), p_code: activeCompetitionCode()
       });
-
-      if (error) throw error;
-      const entry = data?.entry || {};
-      const players = Array.isArray(data?.players) ? data.players : [];
-      const spend = players.reduce((sum, p) => sum + num(p.locked_price), 0);
-
-      $("entryDialogContent").innerHTML = `
-        <span class="fa-kicker">FANTASY-LAG</span>
-        <h2>${esc(entry.team_name || "Namnlöst lag")}</h2>
-        <p>${esc(entry.owner_name || "Okänd")} · #${esc(entry.current_rank || "–")} · ${fmt(entry.total_points, num(entry.total_points) % 1 ? 1 : 0)} P · ${fmt(spend, spend % 1 ? 1 : 0)} CR</p>
-        <div class="fa-roster">
-          ${players.map((p) => `
-            <article class="fa-roster-player">
-              <span>${esc(p.slot)}${p.is_captain ? " · KAPTEN" : ""}</span>
-              <strong>${esc(p.display_gamertag)}</strong>
-              <small>${esc(p.real_team_name || "–")} · ${fmt(p.locked_price)} CR</small>
-              <b>${fmt(p.fantasy_points, num(p.fantasy_points) % 1 ? 1 : 0)} P</b>
-            </article>
-          `).join("")}
-        </div>
-      `;
+      if (result.error) throw result.error;
+      renderAdminEntry(admin.data, Array.isArray(result.data) ? result.data[0] : result.data);
     } catch (error) {
       $("entryDialogContent").innerHTML = '<div class="fa-empty">Fel: ' + esc(error?.message || error) + "</div>";
     }
