@@ -21,6 +21,7 @@
   const LANGUAGE_FLAGS = { sv:"🇸🇪", en:"🇬🇧", fi:"🇫🇮", de:"🇩🇪" };
   const I18N = {
     sv: {
+      sort_upper:"SORTERA EFTER", sort_owned:"Ägs av flest", sort_captain:"Kapten hos flest", sort_points:"Flest poäng", sort_value:"Poäng per CR", sort_price_high:"Pris: högst först", sort_price_low:"Pris: lägst först",
       nav_build:"BYGG", nav_compete:"TÄVLA", nav_climb:"KLÄTTRA", league:"LIGA", language:"SPRÅK",
       choose_fantasy_league:"Välj Fantasy-liga", choose_language:"Välj språk", powered_by:"DRIVS AV",
       login_discord:"Logga in med Discord", see_rules:"Se regler", players_upper:"SPELARE", budget_upper:"BUDGET",
@@ -113,6 +114,7 @@
       goalie_games_only:"endast målvaktsmatcher räknas", skater_games_only:"endast utespelarmatcher räknas"
     },
     en: {
+      sort_upper:"SORT BY", sort_owned:"Most owned", sort_captain:"Most captained", sort_points:"Most points", sort_value:"Points per CR", sort_price_high:"Price: highest first", sort_price_low:"Price: lowest first",
       nav_build:"BUILD", nav_compete:"COMPETE", nav_climb:"CLIMB", league:"LEAGUE", language:"LANGUAGE",
       choose_fantasy_league:"Choose Fantasy league", choose_language:"Choose language", powered_by:"POWERED BY",
       login_discord:"Log in with Discord", see_rules:"View rules", players_upper:"PLAYERS", budget_upper:"BUDGET",
@@ -205,6 +207,7 @@
       goalie_games_only:"only goalie games count", skater_games_only:"only skater games count"
     },
     fi: {
+      sort_upper:"JÄRJESTÄ", sort_owned:"Eniten omistettu", sort_captain:"Eniten kapteenina", sort_points:"Eniten pisteitä", sort_value:"Pisteet / CR", sort_price_high:"Hinta: korkein ensin", sort_price_low:"Hinta: matalin ensin",
       nav_build:"RAKENNA", nav_compete:"KILPAILE", nav_climb:"NOUSE", league:"LIIGA", language:"KIELI",
       choose_fantasy_league:"Valitse Fantasy-liiga", choose_language:"Valitse kieli", powered_by:"PALVELUN TARJOAA",
       login_discord:"Kirjaudu Discordilla", see_rules:"Katso säännöt", players_upper:"PELAAJAT", budget_upper:"BUDJETTI",
@@ -297,6 +300,7 @@
       goalie_games_only:"vain maalivahtina pelatut ottelut lasketaan", skater_games_only:"vain kenttäpelaajana pelatut ottelut lasketaan"
     },
     de: {
+      sort_upper:"SORTIEREN NACH", sort_owned:"Meistbesessen", sort_captain:"Meistgewählte Kapitäne", sort_points:"Meiste Punkte", sort_value:"Punkte pro CR", sort_price_high:"Preis: absteigend", sort_price_low:"Preis: aufsteigend",
       nav_build:"BAUEN", nav_compete:"SPIELEN", nav_climb:"STEIGEN", league:"LIGA", language:"SPRACHE",
       choose_fantasy_league:"Fantasy-Liga wählen", choose_language:"Sprache wählen", powered_by:"BETRIEBEN VON",
       login_discord:"Mit Discord anmelden", see_rules:"Regeln ansehen", players_upper:"SPIELER", budget_upper:"BUDGET",
@@ -484,6 +488,7 @@
     transferState: null,
     insights: null,
     ownership: new Map(),
+    poolScores: new Map(),
     activeTab: "team",
     pendingPlacementPlayerId: null,
     pickerSlot: null,
@@ -1604,6 +1609,22 @@
     }).join("") || '<div class="fantasy-empty">' + escapeHtml(t("no_players_match")) + '</div>';
   }
 
+  function sortPoolPlayers(rows, sort) {
+    const points = (p) => number(state.poolScores.get(Number(p.id)));
+    const value = (p) => number(p.price) > 0 ? points(p) / number(p.price) : 0;
+    const owned = (p, key) => state.insights?.ownership_visible ? number(ownershipFor(p.id)?.[key]) : 0;
+    return [...rows].sort((a, b) => {
+      let difference = 0;
+      if (sort === "owned") difference = owned(b, "ownership_pct") - owned(a, "ownership_pct");
+      else if (sort === "captain") difference = owned(b, "captain_pct") - owned(a, "captain_pct");
+      else if (sort === "points") difference = points(b) - points(a);
+      else if (sort === "value") difference = value(b) - value(a);
+      else if (sort === "price_low") difference = number(a.price) - number(b.price);
+      else difference = number(b.price) - number(a.price);
+      return difference || clean(a.display_gamertag).localeCompare(clean(b.display_gamertag), "sv") || number(a.id) - number(b.id);
+    });
+  }
+
   function renderPlayers() {
     const host = $("playersGrid");
     if (!host) return;
@@ -1613,7 +1634,7 @@
       return;
     }
 
-    const rows = filteredPlayers("playersSearch", "playersPosition");
+    const rows = sortPoolPlayers(filteredPlayers("playersSearch", "playersPosition"), $("playersSort")?.value || "price_high");
 
     host.innerHTML = rows.map((player) => `
       <article class="fantasy-player-card">
@@ -1634,7 +1655,7 @@
         </div>
         <footer>
           <span>${escapeHtml(ownershipText(player.id))}</span>
-          <span>${escapeHtml(eligibleSlots(player).join(" / "))}</span>
+          <span>${formatPoints(state.poolScores.get(Number(player.id)) || 0)} P · ${format(number(player.price) > 0 ? number(state.poolScores.get(Number(player.id))) / number(player.price) : 0, 2)} P/CR</span>
         </footer>
         <button class="fantasy-player-card__detail" type="button" data-player-detail="${player.id}">${escapeHtml(t("show_form_stats"))}</button>
       </article>
@@ -2319,6 +2340,19 @@
 
     state.pool = (poolResult.data || []).filter((player) => fantasyCountryAllowed(player.country_code));
 
+    state.poolScores.clear();
+    // Fetch public season totals for the whole pool, not only my selected players.
+    for (let offset = 0; ; offset += 1000) {
+      const scores = await sb.from("ehockey_fantasy_player_scores")
+        .select("pool_player_id,fantasy_points")
+        .eq("competition_id", state.competition.id).eq("phase", "total")
+        .order("pool_player_id", { ascending: true }).range(offset, offset + 999);
+      if (scores.error) throw scores.error;
+      for (const row of scores.data || []) state.poolScores.set(Number(row.pool_player_id), number(row.fantasy_points));
+      if ((scores.data || []).length < 1000) break;
+    }
+
+
     const sportsGamerIds = [...new Set(
       state.pool
         .map((player) => clean(player?.sports_gamer_player_id).replace(/\D/g,""))
@@ -2792,6 +2826,7 @@
   $("marketPosition")?.addEventListener("change", renderMarket);
   $("playersSearch")?.addEventListener("input", renderPlayers);
   $("playersPosition")?.addEventListener("change", renderPlayers);
+  $("playersSort")?.addEventListener("change", renderPlayers);
   $("competitionSelect")?.addEventListener("change", (event) => {
     const code = clean(event.target?.value);
     if (!code) return;
