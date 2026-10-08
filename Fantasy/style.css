@@ -797,7 +797,7 @@ a{color:inherit}
 }
 .fantasy-market__filters,.fantasy-players-filters{
   display:grid;
-  grid-template-columns:1fr 160px;
+  grid-template-columns:minmax(0,1fr) 160px 210px;
   gap:8px;
   padding:10px;
   border-bottom:1px solid #132d41;
