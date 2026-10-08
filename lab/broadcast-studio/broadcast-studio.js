@@ -731,6 +731,15 @@
  const source=$id("videoSource"),twitchInput=$id("twitchChannel"),hlsInput=$id("hlsUrl"),btn=$id("loadTwitch"),
        layer=$id("twitchLayer"),host=$id("twitchPlayer"),video=$id("directVideo"),status=$id("streamStatus"),
        show=$id("showTwitch"),mute=$id("muteTwitch"),screen=$id("screen");
+
+ // Match audio follows visible match video; commentary uses its own audio path.
+ let matchAudioVisible=!!screen?.querySelector('.scene.live.active')&&show?.checked!==false;
+ function syncMatchAudio(){
+   if(!video)return;
+   const requestedMuted=VIEWER_MODE_LOCAL?viewerMuted:mute?.checked!==false;
+   video.muted=!matchAudioVisible||requestedMuted;
+ }
+ window.__sehSyncMatchAudio=syncMatchAudio;
  const playbackActive=()=>DIRECTOR_MODE||screen?.classList.contains("live-mode");
  let monitorStatus=null;
  if(DIRECTOR_MODE){
@@ -827,7 +836,7 @@
    destroy();obsBoot();
    video.hidden=false;
    video.autoplay=true;video.playsInline=true;video.preload="auto";video.controls=VIEWER_MODE_LOCAL;
-   video.muted=VIEWER_MODE_LOCAL?viewerMuted:!!muted;
+   syncMatchAudio();
    const onPlaying=()=>{directPlaying=true;lastVideoTime=video.currentTime||0;lastVideoProgressAt=Date.now();obsPlaying();setStatus((meta.label||tx("directVideo"))+" "+tx("playing"),true)};
    const onPause=()=>{directPlaying=false;if(playbackActive())setTimeout(tryDirectPlay,150)};
    video.onplaying=onPlaying;video.onpause=onPause;video.onstalled=()=>setStatus(tx("directVideo")+" "+tx("buffering"));video.onwaiting=()=>setStatus(tx("directVideo")+" "+tx("buffering"));
@@ -925,6 +934,7 @@
    if(hlsInput&&s.hlsUrl!==undefined)hlsInput.value=s.hlsUrl||"";
    syncSourceUi();
    const enabled=s.scene==="live"&&s.twitchShow!==false;
+   matchAudioVisible=enabled;syncMatchAudio();
    layer?.classList.toggle("is-hidden",!enabled);
    if(!enabled&&!DIRECTOR_MODE){destroy();if(VIEWER_MODE_LOCAL)setStatus(s.scene==='nextmatch'?'Nästa match · '+(s.publicNextMatch?.date||'')+' kl. '+(s.publicNextMatch?.time||''):s.scene==='idle'?'Ingen match just nu':'Studiosändning · väntar på matchvideo');return}
    if(DIRECTOR_MODE&&!String((s.videoSource==='direct'?s.hlsUrl:s.twitchChannel)||'').trim()){destroy();setStatus('Ingen stream laddad');return;}
@@ -941,15 +951,15 @@
  btn?.addEventListener("click",e=>{e.preventDefault();loadFromControls()});
  [twitchInput,hlsInput].forEach(el=>el?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadFromControls()}}));
  source?.addEventListener("change",()=>{syncSourceUi();window.__sehPublishBroadcastState?.();if(playbackActive())loadFromControls()});
- show?.addEventListener("change",()=>{layer?.classList.toggle("is-hidden",!show.checked);window.__sehPublishBroadcastState?.();if(show.checked)loadFromControls()});
- mute?.addEventListener("change",()=>{if(video&&!video.hidden)video.muted=mute.checked;window.__sehPublishBroadcastState?.()});
+ show?.addEventListener("change",()=>{matchAudioVisible=!!screen?.querySelector(".scene.live.active")&&show.checked;syncMatchAudio();layer?.classList.toggle("is-hidden",!show.checked);window.__sehPublishBroadcastState?.();if(show.checked)loadFromControls()});
+ mute?.addEventListener("change",()=>{if(video&&!video.hidden)syncMatchAudio();window.__sehPublishBroadcastState?.()});
 
  window.addEventListener("seh:twitch-state",e=>apply(e.detail));
  if(VIEWER_MODE_LOCAL){
    window.addEventListener('message',e=>{
      if(e.origin!==location.origin||e.source!==parent||e.data?.type!=='seh-tv-audio')return;
      viewerMuted=!!e.data.muted;
-     if(video){video.muted=viewerMuted;if(video.currentSrc&&screen?.classList.contains('live-mode'))void video.play().catch(()=>setStatus('Tryck på videon för att starta uppspelningen'));}
+     if(video){syncMatchAudio();if(video.currentSrc&&screen?.classList.contains('live-mode'))void video.play().catch(()=>setStatus('Tryck på videon för att starta uppspelningen'));}
    });
    if(video)video.controls=true;
    parent.postMessage({type:'seh-tv-status',text:'Ansluter till studion…'},location.origin);
