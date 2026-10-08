@@ -12,7 +12,7 @@
   <title>eHockey Fantasy Liga</title>
 
   <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/seh-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20261003-persistent-nav-v2">
+  <link rel="stylesheet" href="style.css?v=20261008-player-sort-v1">
 </head>
 <body>
   <div class="beta-ribbon">
@@ -357,6 +357,17 @@
             <option>G</option>
           </select>
         </label>
+        <label class="fantasy-filter">
+          <span data-i18n="sort_upper">SORTERA EFTER</span>
+          <select id="playersSort">
+            <option value="price_high" data-i18n="sort_price_high">Pris: högst först</option>
+            <option value="price_low" data-i18n="sort_price_low">Pris: lägst först</option>
+            <option value="owned" data-i18n="sort_owned">Ägs av flest</option>
+            <option value="captain" data-i18n="sort_captain">Kapten hos flest</option>
+            <option value="points" data-i18n="sort_points">Flest poäng</option>
+            <option value="value" data-i18n="sort_value">Poäng per CR</option>
+          </select>
+        </label>
       </div>
 
       <div id="playersGrid" class="fantasy-players-grid"></div>
@@ -521,6 +532,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script>
   <script src="../config.js?v=20260812-filter-source-styles1"></script>
-  <script src="app.js?v=20261005-pending-score-fix-v1"></script>
+  <script src="app.js?v=20261008-player-sort-v1"></script>
 </body>
 </html>
