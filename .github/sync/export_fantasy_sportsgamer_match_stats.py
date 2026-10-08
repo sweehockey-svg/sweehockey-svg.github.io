@@ -265,6 +265,34 @@ def json_safe(row: dict[str, Any]) -> str:
     return json.dumps(row, ensure_ascii=False, default=str, separators=(",", ":"))
 
 
+def reported_match_start(raw: dict[str, Any], scheduled: datetime) -> datetime:
+    """Correct an impossible future fixture date on an already reported game.
+
+    Keep valid fixture dates, including late reports. A gap over 24 hours
+    avoids treating small clock/time-zone differences as rescheduled games.
+    SportsGamer reportDate/reportTime are UTC, just like matchDate/matchTime.
+    """
+    report_date = first(raw, "reportDate")
+    report_time = first(raw, "reportTime")
+    if report_date is None or report_time is None:
+        return scheduled
+    date_text = str(report_date).strip().split(" ")[0]
+    # MySQL TIME may stringify as 3:28:15 rather than 03:28:15.
+    time_text = str(report_time).strip()
+    if re.fullmatch(r"\d{1,2}:\d{2}:\d{2}(?:\.\d+)?", time_text):
+        time_text = time_text.zfill(8)
+    try:
+        reported = datetime.fromisoformat(f"{date_text}T{time_text}")
+    except ValueError:
+        return scheduled
+    if reported.tzinfo is None:
+        reported = reported.replace(tzinfo=timezone.utc)
+    scheduled_utc = scheduled.replace(tzinfo=timezone.utc) if scheduled.tzinfo is None else scheduled
+    if (scheduled_utc - reported).total_seconds() > 86400:
+        return reported
+    return scheduled
+
+
 def calculate_points(row: dict[str, Any]) -> float:
     role = row["scoring_role"]
     if role == "G":
@@ -527,6 +555,7 @@ def main() -> int:
             if isinstance(started, datetime):
                 if started.tzinfo is None:
                     started = started.replace(tzinfo=timezone.utc)
+                started = reported_match_start(raw, started)
                 started = started.isoformat()
 
             match_rows.append({
