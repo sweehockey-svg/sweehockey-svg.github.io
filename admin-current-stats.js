@@ -4,6 +4,10 @@
   const STORAGE_KEY = "seh_current_player_stats_sync_request_id";
   const SCL_STORAGE_KEY = "seh_scl27_official_teams_sync_request_id";
   const STARTED_KEY = "seh_current_player_stats_sync_started_at";
+  const WV_STORAGE_KEY = "seh_wv_sync_request_id";
+  const WV_STARTED_KEY = "seh_wv_sync_started_at";
+  let wvPollTimer = null;
+  function wvRequestId() { return sessionStorage.getItem(WV_STORAGE_KEY) || ""; }
   const SCL_STARTED_KEY = "seh_scl27_official_teams_sync_started_at";
   const STATUS_POLL_MS = 15000;
   const STATUS_POLL_MAX_MS = 50 * 60 * 1000;
@@ -548,6 +552,7 @@
   async function refreshScl(continuePolling) {
     if (!sclRequestId() || !sclStatusElement()) return;
     window.clearTimeout(sclPollTimer);
+    window.clearTimeout(wvPollTimer);
     setSclBusy(true);
     try {
       const data = await invokeScl("status");
@@ -634,6 +639,150 @@
     if (sclRequestId()) refreshScl(pollingIsFresh(SCL_STARTED_KEY));
   }
 
+  function wvStatusElement() {
+    return document.getElementById("wvTeamsSyncStatus");
+  }
+
+  function setWvStatus(message, tone, runUrl) {
+    const status = wvStatusElement();
+    if (!status) return;
+    status.textContent = message;
+    status.dataset.tone = tone || "";
+    if (runUrl) {
+      const link = document.createElement("a");
+      link.href = runUrl;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = " Visa körlogg";
+      status.append(link);
+    }
+  }
+
+  function setWvBusy(isBusy) {
+    const start = document.getElementById("startWv27TeamsSync");
+    const refresh = document.getElementById("refreshWv27TeamsSync");
+    if (start) start.disabled = isBusy;
+    if (refresh) refresh.disabled = isBusy || !wvRequestId();
+  }
+
+  async function invokeWv(action) {
+    const supabase = getClient();
+    if (!supabase) throw new Error("Supabase är inte initierat.");
+
+    const sessionResult = await supabase.auth.getSession();
+    if (sessionResult.error) throw sessionResult.error;
+    if (!sessionResult.data.session) throw new Error("Du måste logga in igen.");
+
+    const response = await supabase.functions.invoke("seh-admin-sync", {
+      body: {
+        action,
+        job: "broadcast_league_rosters",
+        league_ids: [532],
+        request_id: wvRequestId()
+      }
+    });
+
+    if (response.error) {
+      let message = response.error.message || "Synktjänsten svarade med ett fel.";
+      try {
+        const details = await response.error.context?.json();
+        if (details?.error) message = details.error;
+      } catch (_) {}
+      throw new Error(message);
+    }
+    if (response.data?.error) throw new Error(response.data.error);
+    return response.data || {};
+  }
+
+
+  async function refreshWv(continuePolling) {
+    if (!wvRequestId() || !wvStatusElement()) return;
+    window.clearTimeout(wvPollTimer);
+    setWvBusy(true);
+    try {
+      const data = await invokeWv("status");
+      const done = data.state === "completed";
+      setWvStatus(
+        done
+          ? (data.conclusion === "success"
+              ? "Klart – WV 4 Nations-lag, trupper, tabell och spelarstatistik är uppdaterade. "
+              : "WV 4 Nations-synkningen misslyckades.")
+          : (data.state === "queued" ? "WV 4 Nations-synkningen väntar på att starta…" : "WV 4 Nations-lag, trupper, tabell och spelarstatistik uppdateras…"),
+        done && data.conclusion === "success" ? "success" : done ? "error" : "working",
+        data.run_url || ""
+      );
+      if (continuePolling && !done) {
+        if (pollingIsFresh(WV_STARTED_KEY)) {
+          wvPollTimer = window.setTimeout(function () { refreshWv(true); }, STATUS_POLL_MS);
+        } else {
+          setWvStatus("Statuskontrollen stoppades efter 50 minuter. Tryck Kontrollera status för en manuell kontroll.", "error", data.run_url || "");
+        }
+      }
+      if (done) {
+        stopPolling(WV_STARTED_KEY);
+        if (data.conclusion === "success") {
+          
+        }
+      }
+    } catch (error) {
+      stopPolling(WV_STARTED_KEY);
+      setWvStatus("Fel: " + (error?.message || error), "error");
+    } finally {
+      setWvBusy(false);
+    }
+  }
+
+  function buildWvCard() {
+    const card = document.createElement("article");
+    card.className = "admin-card admin-home-card";
+    card.id = "wvTeamsSyncCard";
+    card.innerHTML = [
+      '<p class="writer-panel-kicker">WV 4 Nations</p>',
+      '<h2>Gemensam WV-synk</h2>',
+      '<p>En körning hämtar alla länders lag, trupper, tabell och spelarstatistik från SportsGamer liga 532. Uppdaterade data används av Graphics Studio och Broadcast Studio.</p>',
+      '<div class="admin-actions">',
+      '<button id="startWv27TeamsSync" type="button">Synka all WV 4 Nations-data</button>',
+      '<button id="refreshWv27TeamsSync" class="writer-secondary" type="button" disabled>Kontrollera status</button>',
+      '</div>',
+      '<p id="wvTeamsSyncStatus" class="admin-status" role="status" aria-live="polite"></p>'
+    ].join("");
+    return card;
+  }
+
+  function mountWvCard() {
+    if (!isAdminHome() || document.getElementById("wvTeamsSyncCard")) return;
+    const grid = document.querySelector("#adminDashboard .admin-grid");
+    const playerSyncCard = document.getElementById("scl27TeamsSyncCard");
+    if (!grid || !playerSyncCard) return;
+
+    const card = buildWvCard();
+    playerSyncCard.insertAdjacentElement("afterend", card);
+
+    document.getElementById("startWv27TeamsSync")?.addEventListener("click", async function () {
+      const id = makeId();
+      sessionStorage.setItem(WV_STORAGE_KEY, id);
+      sessionStorage.setItem(WV_STARTED_KEY, String(Date.now()));
+      setWvBusy(true);
+      setWvStatus("Startar WV 4 Nations-synkningen…", "working");
+      try {
+        await invokeWv("start");
+        await refreshWv(true);
+      } catch (error) {
+        stopPolling(WV_STARTED_KEY);
+        setWvStatus("Fel: " + (error?.message || error), "error");
+        setWvBusy(false);
+      }
+    });
+
+    document.getElementById("refreshWv27TeamsSync")?.addEventListener("click", function () {
+      refreshWv(false);
+    });
+
+    setWvBusy(false);
+    if (wvRequestId()) refreshWv(pollingIsFresh(WV_STARTED_KEY));
+  }
+
+
   function buildCard() {
     const card = document.createElement("article");
     card.className = "admin-card admin-home-card";
@@ -688,6 +837,7 @@
     mountDownloadStats();
     mountDownloadStats(true);
     mountSclCard();
+    mountWvCard();
     if (!isAdminHome()) return;
     if (document.getElementById("currentStatsSyncCard")) return;
 
