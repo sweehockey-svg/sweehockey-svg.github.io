@@ -1,3 +1,4 @@
+# Includes WV 4 Nations 2026 (532) for Graphics Studio.
 name: Sync Broadcast Studio league data
 run-name: Broadcast data · ${{ inputs.request_id || github.event_name }}
 
