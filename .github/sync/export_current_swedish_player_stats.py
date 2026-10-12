@@ -90,7 +90,21 @@ def resolve_leagues(connection: Any) -> list[int]:
             row for row in recent
             if CURRENT_NAME_RE.search(str(row.get("leagueName") or ""))
         ]
-        SELECTED_META = recognised or recent
+        # A regional league can still be running when newer leagues have been
+        # created elsewhere. Include its newest active season outside the global
+        # ID window (WECL 5 is 523 while the newest league is already 532).
+        regional_latest: dict[str, dict[str, Any]] = {}
+        for row in active:
+            name = str(row.get("leagueName") or "")
+            match = re.search(r"\b(SCL|FCL|WECL|ROECL|CSCL|NACL)\b|German Championship League", name, re.I)
+            if match:
+                family = match.group(0).upper()
+                if family not in regional_latest or base.integer(row.get("leagueID")) > base.integer(regional_latest[family].get("leagueID")):
+                    regional_latest[family] = row
+        by_id = {base.integer(row.get("leagueID")): row for row in (recognised or recent)}
+        for row in regional_latest.values():
+            by_id[base.integer(row.get("leagueID"))] = row
+        SELECTED_META = list(by_id.values())
         SELECTED_IDS = sorted({base.integer(row.get("leagueID")) for row in SELECTED_META})
 
     if not SELECTED_IDS:

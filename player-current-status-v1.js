@@ -41,13 +41,14 @@
     return /(?:^|\/)sec(?:\/|$)/.test(path);
   }
 
-  async function fetchAll(sb, table, select, orderColumn = '') {
+  async function fetchAll(sb, table, select, orderColumn = '', filter = null) {
     const rows = [];
     const pageSize = 1000;
     let from = 0;
 
     for (;;) {
       let query = sb.from(table).select(select);
+      if (filter) query = filter(query);
       if (orderColumn) query = query.order(orderColumn, { ascending: false });
       const result = await query.range(from, from + pageSize - 1);
       if (result.error) throw result.error;
@@ -448,6 +449,51 @@
       const competitions = [];
       const identity = await loadPlayerIdentityMap(sb);
       const activeFreeAgents = await loadActiveFreeAgentKeys(sb, identity);
+
+      // Registered players in ongoing regional leagues take precedence over
+      // next season's team builds. National teams are separate from club status.
+      try {
+      const [officialRoster, officialTeams] = await Promise.all([
+        fetchAll(sb, 'sportsgamer_league_roster_current',
+          'sports_gamer_league_id,sports_gamer_team_id,sports_gamer_player_id,display_gamertag,is_available'),
+        fetchAll(sb, 'sportsgamer_league_teams_current',
+          'sports_gamer_league_id,sports_gamer_team_id,team_name,team_logo_url', '', q => q.eq('is_available', true))
+      ]);
+      const leagueIds = [...new Set(officialTeams.map(row => Number(row.sports_gamer_league_id)))];
+      const leagueRows = leagueIds.length ? await fetchAll(sb, 'sportsgamer_team_player_stats',
+        'sports_gamer_league_id,official_league_name,active_league,sports_gamer_team_id,sports_gamer_player_id,display_gamertag,listed_in_roster', '', q => q.in('sports_gamer_league_id', leagueIds).eq('active_league', 1)) : [];
+      const clubLeagues = new Map(leagueRows.filter(row =>
+        /\b(SCL|FCL|GCL|WECL|ECL|ROECL|CSCL|NACL)\b|CHAMPIONSHIP\s+LEAGUE/i.test(row.official_league_name || '')
+      ).map(row => [Number(row.sports_gamer_league_id), clean(row.official_league_name)]));
+      const teamsByLeague = new Map(officialTeams.map(row =>
+        [row.sports_gamer_league_id + ':' + row.sports_gamer_team_id, row]));
+      // The statistics import also carries the source's current registration.
+      // Include it when the separate broadcast roster has not caught up yet.
+      const registered = new Set(officialRoster.map(row => row.sports_gamer_league_id + ':' + row.sports_gamer_player_id));
+      for (const row of leagueRows) {
+        if (Number(row.listed_in_roster) !== 1 || registered.has(row.sports_gamer_league_id + ':' + row.sports_gamer_player_id)) continue;
+        officialRoster.push(row);
+      }
+      officialRoster.sort((a, b) => Number(b.sports_gamer_league_id) - Number(a.sports_gamer_league_id));
+      for (const row of officialRoster) {
+        if (row.is_available === false) continue;
+        const leagueId = Number(row.sports_gamer_league_id);
+        if (!clubLeagues.has(leagueId)) continue;
+        const key = identity.byKey.get('SG:' + clean(row.sports_gamer_player_id)) ||
+          canonicalRosterPlayerKey(row.display_gamertag, identity);
+        const team = teamsByLeague.get(row.sports_gamer_league_id + ':' + row.sports_gamer_team_id);
+        if (!key || !team || statuses.has(key)) continue;
+        statuses.set(key, {
+          kind: 'team', playerKey: key, teamName: clean(team.team_name),
+          teamId: Number(row.sports_gamer_team_id), teamProjectId: null,
+          logoName: clean(team.team_logo_url), division: '',
+          competitionKey: 'sportsgamer:' + leagueId, competitionName: clubLeagues.get(leagueId),
+          phase: 'regular', source: 'tournament', routeHash: ''
+        });
+      }
+      } catch (error) {
+        console.warn('[Svensk eHockey] Regionala aktuella lag kunde inte laddas', error);
+      }
 
       for (const source of SOURCES) {
         const result = await loadSource(sb, source, identity);
