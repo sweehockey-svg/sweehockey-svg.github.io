@@ -24,6 +24,7 @@ const server=http.createServer((req,res)=>{
   await page.addInitScript(()=>{
    const slots=['LW','C','RW','LD','RD','G'];
    localStorage.setItem('sb-fantasy-preview-auth-token',JSON.stringify({user:{id:'local-user',app_metadata:{provider:'discord'}}}));
+   localStorage.setItem('fixture-unavailable-baseline','true');
    localStorage.setItem('seh-fantasy-local-team',JSON.stringify(slots.map((slot,i)=>({slot,pool_player_id:i===0?7:i+1,is_captain:i===0,locked_price:10}))));
   });
   await page.goto('http://127.0.0.1:'+server.address().port+'/Fantasy/?competition=LOCAL&lang=sv');
@@ -38,6 +39,14 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.evaluate(()=>window.fixtureSavedPicks.find(p=>p.slot==='LW').pool_player_id),1);
   assert.equal(await page.evaluate(()=>window.fixtureSavedPicks.find(p=>p.slot==='LW').is_captain),true);
   assert.equal(await page.locator('#formerPlayersSection').isVisible(),false);
+  // Unavailable teammates retained from the baseline must not disable editing.
+  await page.locator('[data-swap="LW"]').click();
+  await page.locator('#playerPickerDialog').waitFor({state:'visible'});
+  await page.locator('#playerPickerDialog [data-pick-player="7"]').click();
+  assert.equal(await page.locator('#saveTeam').isEnabled(),true);
+  await page.locator('#saveTeam').click();
+  await page.waitForFunction(()=>window.fixtureSaves===2);
+  assert.equal(await page.evaluate(()=>window.fixtureSavedPicks.find(p=>p.slot==='LW').pool_player_id),7);
   assert.deepEqual(errors,[]);
   console.log('Pending-transfer UI passed: active player label, deadline explanation, undo restores roster/captain, button hides after restore, no browser errors.');
  }finally{await browser?.close();await new Promise(r=>server.close(r));}

@@ -10,6 +10,7 @@
   const positions=['LW','C','RW','LD','RD','G'];
   const competition={id:1,code:'LOCAL',competition_code:'ECL',name:'Lokal testliga',season_label:'Lokal testliga',status:'open',budget:90,max_players_per_real_team:2,captain_multiplier:1.5,transfers_enabled:true,lock_at:null,settings:{beta_mode:true,beta_source:'Påhittade testdata',brand_logo:'/assets/test.svg'}};
   const pool=Array.from({length:12},(_,i)=>({id:i+1,competition_id:1,display_gamertag:'Testspelare '+(i+1),primary_position:positions[i%6],eligible_slots:[positions[i%6]],real_team_id:i%3+1,real_team_name:['Testlaget Blå','Testlaget Gul','Testlaget Vit'][i%3],country_code:'SE',price:i<6?10:15,is_available:true}));
+  if(localStorage.getItem('fixture-unavailable-baseline')){pool[0].is_available=false;pool[2].is_available=false;}
   const saved=()=>JSON.parse(localStorage.getItem(teamKey)||'null');
   const baseline=positions.map((slot,i)=>({slot,pool_player_id:i+1,is_captain:i===0,locked_price:10}));
   const entry=()=>saved()?{id:1,competition_id:1,user_id:user.id,total_points:0,team_name:'Mitt testlag'}:null;

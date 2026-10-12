@@ -1028,6 +1028,13 @@
     return state.pool.find((row) => Number(row.id) === Number(id)) || null;
   }
 
+  function canRetainBaselinePlayer(player, slot) {
+    const info = state.transferState;
+    return Boolean(player && new Date(info?.target_round?.lock_at).getTime() > Date.now() &&
+      (info?.baseline_roster || []).some((row) =>
+        Number(row.pool_player_id) === Number(player.id) && row.slot === slot));
+  }
+
   function usedBudget() {
     return [...state.picks.values()].reduce((sum, pick) => sum + number(pick.player.price), 0);
   }
@@ -1358,12 +1365,12 @@
     const saveButton = $("saveTeam");
     const unavailableSlots = new Set(
       [...state.picks.entries()]
-        .filter(([, pick]) => pick.player?.is_available === false)
+        .filter(([slot, pick]) => pick.player?.is_available === false && !canRetainBaselinePlayer(pick.player, slot))
         .map(([slot]) => slot)
     );
     const invalidSlots = new Set(
       [...state.picks.entries()]
-        .filter(([slot, pick]) => pick.player?.is_available === false || !eligibleSlots(pick.player).includes(slot))
+        .filter(([slot, pick]) => (pick.player?.is_available === false && !canRetainBaselinePlayer(pick.player, slot)) || !eligibleSlots(pick.player).includes(slot))
         .map(([slot]) => slot)
     );
     const savedRosterIsCurrent = draftMatchesSavedRoster() && invalidSlots.size === 0;
@@ -2851,7 +2858,7 @@
       const picks = new Map();
       for (const row of baseline) {
         const player = playerById(row.pool_player_id);
-        if (!player || player.is_available === false || !eligibleSlots(player).includes(row.slot)) throw new Error(t('restore_unavailable'));
+        if (!player || !canRetainBaselinePlayer(player, row.slot) || !eligibleSlots(player).includes(row.slot)) throw new Error(t('restore_unavailable'));
         picks.set(row.slot,{player,isCaptain:Boolean(row.is_captain),lockedPrice:row.locked_price});
       }
       if (picks.size !== 6) throw new Error(t('restore_unavailable'));

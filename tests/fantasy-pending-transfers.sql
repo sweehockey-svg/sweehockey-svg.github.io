@@ -73,6 +73,22 @@ begin
  end loop;
  if not found then raise exception 'No second-slot fixture';end if;
  if (result->'transfer'->>'count')::int<>2 or (result->'transfer'->>'penalty_points')::numeric<>10 then raise exception 'Paid transfer cost incorrect';end if;
+ -- Removal from the market must not block undo or editing another saved transfer.
+ update ehockey_fantasy_player_pool set is_available=false
+ where id in (select (b->>'pool_player_id')::bigint from jsonb_array_elements(base) b);
+ result:=seh_fantasy_save_my_team(c.code,'',draft_b);
+ if (result->'transfer'->>'count')::int<>1 or (result->'transfer'->>'penalty_points')::numeric<>0
+ then raise exception 'Editing replacement with retained unavailable teammates failed';end if;
+ -- A newly unavailable player outside the baseline cannot be bought.
+ update ehockey_fantasy_player_pool set is_available=false where id=first_player;
+ found:=false;
+ begin
+  perform seh_fantasy_save_my_team(c.code,'',draft_a);
+ exception when others then
+  if sqlerrm not like '%inte tillgänglig%' then raise;end if;
+  found:=true;
+ end;
+ if not found then raise exception 'New unavailable selection was accepted';end if;
  perform seh_fantasy_save_my_team(c.code,'',base);
  if (select free_transfers from ehockey_fantasy_entry_transfer_state where entry_id=e.id)<>1 then raise exception 'Free transfer not refunded';end if;
  if (select coalesce(sum(penalty_points),0) from ehockey_fantasy_transfer_events where entry_id=e.id and target_round_id=target)<>0 then raise exception 'Penalty not refunded';end if;
