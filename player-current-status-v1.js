@@ -460,7 +460,7 @@
           'sports_gamer_league_id,sports_gamer_team_id,team_name,team_logo_url', '', q => q.eq('is_available', true))
       ]);
       const leagueIds = [...new Set(officialTeams.map(row => Number(row.sports_gamer_league_id)))];
-      const leagueRows = leagueIds.length ? await fetchAll(sb, 'sportsgamer_team_player_stats',
+      const leagueRows = leagueIds.length ? await fetchAll(sb, 'v_seh_current_regional_club_registrations',
         'sports_gamer_league_id,official_league_name,active_league,sports_gamer_team_id,sports_gamer_player_id,display_gamertag,listed_in_roster', '', q => q.in('sports_gamer_league_id', leagueIds).eq('active_league', 1)) : [];
       const clubLeagues = new Map(leagueRows.filter(row =>
         /\b(SCL|FCL|GCL|WECL|ECL|ROECL|CSCL|NACL)\b|CHAMPIONSHIP\s+LEAGUE/i.test(row.official_league_name || '')

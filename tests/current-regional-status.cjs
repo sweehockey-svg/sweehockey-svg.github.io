@@ -7,7 +7,7 @@ const rows={
  seh_app_competition_states:[],
  sportsgamer_league_roster_current:leagues.filter(id=>id!==529).map(id=>({sports_gamer_league_id:id,sports_gamer_team_id:id,sports_gamer_player_id:id,is_available:id!==524})),
  sportsgamer_league_teams_current:leagues.map(id=>({sports_gamer_league_id:id,sports_gamer_team_id:id,team_name:'Team'+id,is_available:true})),
- sportsgamer_team_player_stats:leagues.map((id,i)=>({sports_gamer_league_id:id,sports_gamer_team_id:id,sports_gamer_player_id:id,display_gamertag:'Player'+id,official_league_name:['WECL 5','German Championship League 13','SCL 2027','FCL 2027','WV 4 Nations 2026'][i],active_league:1,listed_in_roster:1}))
+ v_seh_current_regional_club_registrations:leagues.map((id,i)=>({sports_gamer_league_id:id,sports_gamer_team_id:id,sports_gamer_player_id:id,display_gamertag:'Player'+id,official_league_name:['WECL 5','German Championship League 13','SCL 2027','FCL 2027','WV 4 Nations 2026'][i],active_league:1,listed_in_roster:1}))
 };
 function query(table){let filters=[],start=0,end=999;const q={select(){return q},eq(k,v){filters.push(r=>r[k]===v);return q},in(k,v){filters.push(r=>v.includes(r[k]));return q},order(){return q},range(a,b){start=a;end=b;return q},limit(){return q},then(resolve,reject){return Promise.resolve({data:(rows[table]||[]).filter(r=>filters.every(f=>f(r))).slice(start,end+1),error:null}).then(resolve,reject)}};return q;}
 const context={window:{SEH_CONFIG:{supabaseUrl:'https://test.invalid',supabasePublishableKey:'test'},supabase:{createClient:()=>({from:query})},dispatchEvent(){}},location:{pathname:'/'},CustomEvent:class{},console};
