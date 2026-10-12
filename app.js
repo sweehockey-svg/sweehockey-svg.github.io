@@ -2375,7 +2375,7 @@ function SEH_initPlayers() {
     }
 
     function isWorldCupSeason(value) {
-      return /world\s*cup/i.test(clean(value));
+      return /world\s*cup|\b4\s*nations\b/i.test(clean(value));
     }
 
     async function replaceNationalTeamLatest(rows) {
@@ -5465,7 +5465,7 @@ function SEH_initPlayer() {
           const matchLabel = matches === 1 ? "landskamp" : "landskamper";
           const countryLabel = countryCode === "SE" ? "Sverige" : phrase;
           const tournamentDetail = tournaments > 0
-            ? ` under ${tournaments === 1 ? "en" : formatInteger(tournaments, "0")} World Cup-${tournaments === 1 ? "turnering" : "turneringar"}`
+            ? ` under ${tournaments === 1 ? "en" : formatInteger(tournaments, "0")} landslags${tournaments === 1 ? "turnering" : "turneringar"}`
             : "";
 
           items.push({

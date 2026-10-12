@@ -48,7 +48,7 @@ SELECTED_META: list[dict[str, Any]] = []
 # Keep automatic discovery focused on competitions the Svensk eHockey site
 # actually presents.  Explicit LEAGUE_IDS always overrides this filter.
 CURRENT_NAME_RE = re.compile(
-    r"\b(ECL|SCL|SEC|FCL|GCL|WECL|ROECL)\b|WORLD\s*CUP|CHAMPIONSHIP\s+LEAGUE",
+    r"\b(ECL|SCL|SEC|FCL|GCL|WECL|ROECL)\b|WORLD\s*CUP|\b4\s*NATIONS\b|CHAMPIONSHIP\s+LEAGUE",
     re.I,
 )
 
