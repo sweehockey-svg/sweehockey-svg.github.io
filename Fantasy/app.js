@@ -411,6 +411,14 @@
     return SUPPORTED_LANGUAGES.includes(browser) ? browser : "sv";
   }
 
+  const pendingTransferText = {
+    sv:{period_roster_history:'Periodlag och historik',pending_transfer_note:'Sparade ändringar gäller från {deadline}. Du kan ändra eller ångra dem fram till dess. Kostnaden räknas på det slutliga laget.',restore_pending_team:'Ångra sparade ändringar',active_outgoing:'Spelar kvar i pågående period · planerat byte vid nästa deadline',former_player_status:'Tidigare spelare',restore_unavailable:'Den tidigare uppställningen innehåller en spelare som inte längre är valbar. Ändra laget med Byt i stället.',deadline_passed:'Deadline har passerat. Uppdatera sidan.'},
+    en:{period_roster_history:'Period roster and history',pending_transfer_note:'Saved changes apply from {deadline}. You can edit or undo them until then. The final roster determines the transfer cost.',restore_pending_team:'Undo saved changes',active_outgoing:'Still playing in the current period · transfer planned for the next deadline',former_player_status:'Former player',restore_unavailable:'The previous roster contains a player who is no longer eligible. Use Swap to edit the roster instead.',deadline_passed:'The deadline has passed. Refresh the page.'},
+    fi:{period_roster_history:'Jakson kokoonpano ja historia',pending_transfer_note:'Tallennetut muutokset tulevat voimaan {deadline}. Voit muuttaa tai perua ne siihen asti. Lopullinen kokoonpano määrittää vaihtojen hinnan.',restore_pending_team:'Peru tallennetut muutokset',active_outgoing:'Pelaa vielä nykyisellä jaksolla · vaihto seuraavalla määräajalla',former_player_status:'Entinen pelaaja',restore_unavailable:'Aiemmassa kokoonpanossa on pelaaja, jota ei voi enää valita. Muokkaa kokoonpanoa Vaihda-painikkeella.',deadline_passed:'Määräaika on päättynyt. Päivitä sivu.'},
+    de:{period_roster_history:'Periodenaufstellung und Verlauf',pending_transfer_note:'Gespeicherte Änderungen gelten ab {deadline}. Bis dahin kannst du sie ändern oder rückgängig machen. Die endgültige Aufstellung bestimmt die Transferkosten.',restore_pending_team:'Gespeicherte Änderungen rückgängig machen',active_outgoing:'Spielt noch in der aktuellen Periode · Transfer zur nächsten Deadline geplant',former_player_status:'Ehemaliger Spieler',restore_unavailable:'Die vorherige Aufstellung enthält einen nicht mehr wählbaren Spieler. Bearbeite die Aufstellung mit Tauschen.',deadline_passed:'Die Deadline ist abgelaufen. Lade die Seite neu.'}
+  };
+  for (const [lang, texts] of Object.entries(pendingTransferText)) Object.assign(I18N[lang], texts);
+
   function t(key, vars = {}) {
     const lang = (typeof state !== "undefined" && state?.language) || initialLanguage();
     let text = I18N[lang]?.[key] ?? I18N.sv[key] ?? key;
@@ -703,6 +711,7 @@
     $("periodHubDeadline").textContent = formatDeadline(period.lock_at);
   }
 
+  let pendingRestoreInProgress = false;
   function renderTransferStatus() {
     const panel = $("transferPanel");
     if (!panel) return;
@@ -728,6 +737,13 @@
     $("transferFree").textContent = unlimited ? "∞" : String(free);
     $("transferNext").textContent = unlimited || free > 0 ? "0 P" : "−" + format(extraCost) + " P";
     $("transferDeadline").textContent = target?.lock_at ? formatDeadline(target.lock_at) : t("not_set");
+    const editable = Boolean(target) && new Date(target.lock_at).getTime() > Date.now();
+    const hasPending = Boolean(info?.pending_changes) && editable;
+    $("pendingTransferNote").hidden = !hasPending;
+    $("pendingTransferNote").textContent = t('pending_transfer_note',{deadline:formatDeadline(target?.lock_at)});
+    $("restorePendingTeam").hidden = !hasPending;
+    $("restorePendingTeam").textContent = t('restore_pending_team');
+    $("restorePendingTeam").disabled = !editable || pendingRestoreInProgress;
 
     $("transferDetail").textContent = unlimited
       ? t("preseason_transfer_detail")
@@ -1552,6 +1568,7 @@
               '<span class="fantasy-player-name">' + escapeHtml(name) + '</span>',
             '</strong>',
             '<small>' + escapeHtml(team) + ' · ' + escapeHtml(slot) + ' · ' + number(row.games) + ' matcher</small>',
+            '<small>' + escapeHtml(t(row.is_current ? 'active_outgoing' : 'former_player_status')) + '</small>',
             '<div class="fantasy-former-player__rounds">',
               roundMarkup || '<span class="fantasy-former-player__round">Ingen matchpoäng registrerad</span>',
             '</div>',
@@ -2489,7 +2506,8 @@
       : [];
 
     for (const row of breakdownRows) {
-      if (row?.is_current === false) {
+      const selected = savedRows.some(pick => Number(pick.pool_player_id) === Number(row.pool_player_id) && pick.slot === row.slot);
+      if (!selected) {
         state.formerPlayers.push(row);
         continue;
       }
@@ -2821,6 +2839,39 @@
     state.pendingPlacementPlayerId = null;
   });
   $("saveTeam")?.addEventListener("click", saveTeam);
+  $("restorePendingTeam")?.addEventListener("click", async () => {
+    if (pendingRestoreInProgress) return;
+    pendingRestoreInProgress = true;
+    const button = $("restorePendingTeam");button.disabled = true;
+    try {
+      await loadTransferState();
+      const info = state.transferState;
+      if (!info?.pending_changes || new Date(info.target_round?.lock_at).getTime() <= Date.now()) throw new Error(t('deadline_passed'));
+      const baseline = info.baseline_roster || [];
+      const picks = new Map();
+      for (const row of baseline) {
+        const player = playerById(row.pool_player_id);
+        if (!player || player.is_available === false || !eligibleSlots(player).includes(row.slot)) throw new Error(t('restore_unavailable'));
+        picks.set(row.slot,{player,isCaptain:Boolean(row.is_captain),lockedPrice:row.locked_price});
+      }
+      if (picks.size !== 6) throw new Error(t('restore_unavailable'));
+      state.picks = picks;renderLineup();
+      await saveTeam();
+    } catch (error) {setStatus('saveStatus',error.message,'error');}
+    finally {pendingRestoreInProgress = false;renderTransferStatus();}
+  });
+  // Keep deadlines current in open tabs without discarding an unsaved draft.
+  setInterval(async () => {
+    if (document.hidden || !state.session?.user || !state.competition || pendingRestoreInProgress) return;
+    const previous = state.transferState?.target_round?.id;
+    try {
+      await loadTransferState();
+      if (previous !== state.transferState?.target_round?.id) {
+        if (draftMatchesSavedRoster()) await loadMyEntry();
+        await loadInsights();renderPeriodHub();
+      }
+    } catch (error) {console.warn('Fantasy deadline refresh:',error.message);}
+  },60000);
   $("logoutButton")?.addEventListener("click", logout);
 
   $("accountButton")?.addEventListener("click", async () => {
