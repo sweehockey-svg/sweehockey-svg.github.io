@@ -10289,6 +10289,62 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
   const ZERO_PLAYER_PNG_FALLBACK = 'https://sweehockey-svg.github.io/players/1DEFAULTBILDID.png';
   const ZERO_PLAYER_WEBP_BASE = 'https://sweehockey-svg.github.io/web-images/players/';
   const sehRemovedPortraitIds=new Set();
+  let sehApprovedPortraits=new Map(),sehApprovedPortraitPromise=null,sehApprovedPortraitChecked=0;
+  const sehPortraitIdentity=value=>String(value||'').trim().toLocaleLowerCase('sv-SE');
+  function sehApprovedPortraitFor(row){
+    const id=String(row?.sports_gamer_player_id||row?.sportsGamerId||'')||String(row?.sports_gamer_player_url||'').match(/\/players\/(\d+)/i)?.[1]||'';
+    return sehApprovedPortraits.get('key:'+sehPortraitIdentity(row?.player_key||row?.key))
+      ||sehApprovedPortraits.get('id:'+id)
+      ||sehApprovedPortraits.get('name:'+sehPortraitIdentity(row?.display_gamertag||row?.name))||'';
+  }
+  function sehApplyApprovedPortraitRows(rows){
+    const map=new Map();
+    for(const row of rows){
+      const url=String(row.image_url||'').trim();if(!/^https:\/\//i.test(url))continue;
+      const key=sehPortraitIdentity(row.player_key),name=sehPortraitIdentity(row.display_gamertag),id=String(row.sports_gamer_player_id||'');
+      if(key)map.set('key:'+key,url);if(name)map.set('name:'+name,url);if(id)map.set('id:'+id,url);
+    }
+    sehApprovedPortraits=map;
+  }
+  function sehRefreshApprovedPortraits(){
+    if(sehApprovedPortraitPromise)return sehApprovedPortraitPromise;
+    if(Date.now()-sehApprovedPortraitChecked<30000)return Promise.resolve();
+    sehApprovedPortraitChecked=Date.now();
+    sehApprovedPortraitPromise=(async()=>{
+      const rows=[];
+      for(let offset=0;;offset+=1000){
+        const batch=await sehTeamDirectRest('v_ehockey_player_self_profiles_public',{
+          select:'player_key,display_gamertag,sports_gamer_player_id,image_url',image_url:'not.is.null',order:'player_key.asc',limit:'1000',offset:String(offset)});
+        rows.push(...batch);if(batch.length<1000)break;
+      }
+      sehApplyApprovedPortraitRows(rows);
+      for(const row of sehZeroPlayer.all||[]){
+        if(row.sehOriginalPhoto===undefined)row.sehOriginalPhoto=row.photo;
+        row.photo=sehApprovedPortraitFor(row)||row.sehOriginalPhoto;
+      }
+      if(route().kind==='players'&&sehZeroPlayer.shell?.isConnected)zeroApplyLocalPlayerControls();
+      if(route().kind==='player'){
+        const data=sehReadFastProfileNav(),photo=sehApprovedPortraitFor(data);
+        const player=(sehZeroPlayer.all||[]).find(row=>row.key===data?.key||sehPortraitIdentity(row.name)===sehPortraitIdentity(data?.name));
+        document.querySelectorAll('.seh-player-native-portrait > img:not(.seh-player-native-bglogo),.seh-player-hero-photo').forEach(img=>{
+          if(photo){
+            img.dataset.sehApprovedPortraitFallback=player?.sehOriginalPhoto||data?.sehOriginalPhoto||(data?.photo!==photo&&data?.photo)||ZERO_PLAYER_PNG_FALLBACK;
+            if(img.getAttribute('src')!==photo){img.src=photo;delete img.dataset.sehPngFallback;}
+          }else if(img.dataset.sehApprovedPortraitFallback){
+            img.src=img.dataset.sehApprovedPortraitFallback;delete img.dataset.sehApprovedPortraitFallback;
+          }
+        });
+      }
+    })().catch(error=>console.warn('[Svensk eHockey] Godkända spelarbilder kunde inte hämtas',error))
+      .finally(()=>{sehApprovedPortraitPromise=null;});
+    return sehApprovedPortraitPromise;
+  }
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden){sehApprovedPortraitChecked=0;sehRefreshApprovedPortraits();}
+  });
+  setInterval(()=>{
+    if(!document.hidden&&['players','player'].includes(route().kind))sehRefreshApprovedPortraits();
+  },30000);
 
   function sehWebAppPlayerImage(value='', fallbackCandidate=''){
     const candidates=[value,fallbackCandidate];
@@ -10417,7 +10473,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
   function zeroPlayerPhotoFromRow(row){
     const url=String(row.sports_gamer_player_url||'');
     const match=url.match(/\/players\/(\d+)(?:\/|$|[?#])/i);
-    return sehWebAppPlayerImage(row.player_image||'',match?.[1]||'');
+    return sehApprovedPortraitFor(row)||sehWebAppPlayerImage(row.player_image||'',match?.[1]||'');
   }
 
   function applyZeroPlayerPngFallback(img){
@@ -10532,6 +10588,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
       role,
       position:role==='goalie'?'MÅLVAKT':'UTESPELARE',
       photo:zeroPlayerPhotoFromRow(row),
+      sehOriginalPhoto:sehWebAppPlayerImage(row.player_image||'',String(row.sports_gamer_player_url||'').match(/\/players\/(\d+)/i)?.[1]||''),
       clubs,
       games,
       totalPoints,
@@ -10623,6 +10680,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
   }
 
   function loadZeroPlayerDirectory(){
+    sehRefreshApprovedPortraits();
     if(Array.isArray(sehZeroPlayer.all)&&sehZeroPlayer.all.length>0){
       if(!sehZeroPlayer.directoryFullyLoaded)zeroLoadRemainingPlayerDirectory();
       return Promise.resolve(sehZeroPlayer.all);
@@ -10795,7 +10853,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
     const rank=zeroRankingForName(row.name);
     return {
       href:String(row.href||''),key:String(row.key||routeKey),name:String(row.name||''),
-      position:String(row.position||''),photo:String(row.photo||''),latestTeam:String(latestTeam||''),
+      position:String(row.position||''),photo:sehApprovedPortraitFor(row)||String(row.photo||''),latestTeam:String(latestTeam||''),
       latestSeason:String(row.latestSeason||''),history:String(row.history||''),games:Number(row.games)||0,
       rankNo:Number(rank?.overall_rank)||0,rankPoints:Number(rank?.ranking_points)||0,
       teamLogo:String(teamLogo||''),savedAt:Date.now()
@@ -10815,7 +10873,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
         const routeLower=String(routeKey||'').trim().toLocaleLowerCase('sv-SE');
         const hrefKeyRaw=(String(pending.href||'').match(/#\/spelare\/([^/?#]+)/i)||[])[1]||'';
         let hrefKey='';try{hrefKey=decodeURIComponent(hrefKeyRaw);}catch(_){hrefKey=hrefKeyRaw;}
-        if(age<=120000 && (!routeLower || hrefKey.trim().toLocaleLowerCase('sv-SE')===routeLower))return pending;
+        if(age<=120000 && (!routeLower || hrefKey.trim().toLocaleLowerCase('sv-SE')===routeLower))return {...pending,photo:sehApprovedPortraitFor(pending)||pending.photo};
       }
     }catch(_){}
 
@@ -10832,7 +10890,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
           const matches=!routeKey || (expected&&expected===routeLower) || (hrefKey&&hrefKey.trim().toLocaleLowerCase('sv-SE')===routeLower);
           // Direkt efter ett klick är detta med säkerhet den spelare användaren valde.
           // Tillåt därför den sparade kortdatan även om webbens route-slug och canonical player_key skiljer sig.
-          if(matches || age<10000)return data;
+          if(matches || age<10000)return {...data,photo:sehApprovedPortraitFor(data)||data.photo};
         }
       }
     }catch(_){}
@@ -19192,6 +19250,7 @@ body.seh-content-mode .seh-player-native-numbers{display:grid!important;grid-tem
 
   function ensureAll(){unlockScrolling();ensureStyle();ensureTop();ensureBottom();ensureHome();ensureDirectory();ensureCompetitions();ensureMore();ensureFavorites();ensureLoader();sehEnsureRouteTransitionStage();if(window.__SEH_DESKTOP_DEV__||!['players','teams','player','team'].includes(route().kind))sehPrimeStoredRouteVisual();ensurePull();ensureOffline();installPullToRefresh();interceptLinks();sehInitializePushNotifications();}
   function refresh(){if(!document.body)return;ensureAll();setContentModeClasses();ensureNativeContentHead();applyAggressiveAppContent();ensureSecSubnav();ensureSecOverviewApp();if(route().kind==='player')showFastPlayerProfilePreview();adaptAppContent();installAdaptiveObserver();sehV760RefreshFeatures();closeOverlaysIfRouteChanged();refreshTop();refreshBottom();refreshHome();handleConsent();updateOnline();sehFinishRouteVisualTransition(false);sehCaptureRouteVisual();sehLastVisualKind=route().kind;
+    if(['players','player','team','favorites'].includes(route().kind))sehRefreshApprovedPortraits();
 
     // Results on Spelare/Lag load asynchronously. Two cheap one-shot follow-ups
     // catch them without bringing back the old 1.2-second full-page polling.
