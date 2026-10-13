@@ -5,6 +5,14 @@ import sharp from "sharp";
 const root = process.cwd();
 const jobs = [
   {
+    source: path.join(root, "assets", "player-portraits"),
+    output: path.join(root, "web-images", "player-portraits"),
+    height: 700,
+    width: null,
+    quality: 82,
+    alphaQuality: 92
+  },
+  {
     source: path.join(root, "players"),
     output: path.join(root, "web-images", "players"),
     height: 700,

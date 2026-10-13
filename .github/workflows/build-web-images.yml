@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "players/**"
+      - "assets/player-portraits/**"
       - "teamlogos/**"
       - "scripts/build-web-images.mjs"
       - "scripts/build-social-previews.mjs"
