@@ -1,5 +1,7 @@
 /* Generated from the files in /players. Update this list when portraits are added. */
 window.SEH_PLAYER_IMAGE_FILES = Object.freeze([
+  "6493.png",
+  "4013.png",
   "11761.png",
   "14209.png",
   "16128.png",
