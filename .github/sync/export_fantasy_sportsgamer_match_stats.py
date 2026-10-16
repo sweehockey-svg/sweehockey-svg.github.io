@@ -542,6 +542,11 @@ def main() -> int:
                     else str(match_date).strip().split(" ")[0]
                 )
                 time_text = str(match_time).strip()
+                # MySQL TIME may arrive as timedelta text, e.g. 2:30:00.
+                # ISO parsing requires a zero-padded hour; keep validation below.
+                time_parts = time_text.split(":", 1)
+                if len(time_parts) == 2:
+                    time_text = time_parts[0].zfill(2) + ":" + time_parts[1]
                 try:
                     started = datetime.fromisoformat(f"{date_text}T{time_text}")
                 except ValueError as exc:
