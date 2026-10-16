@@ -26,6 +26,8 @@ on:
       - '.github/workflows/sync-fantasy-sportsgamer.yml'
       - '.github/workflows/sync-scl27-official-teams.yml'
       - '.github/sync/prepare-scl-stat-player-ids.py'
+      - '.github/sync/export_fantasy_sportsgamer_match_stats.py'
+      - '.github/sync/import-broadcast-match-stats.psql'
 
 permissions:
   contents: read
