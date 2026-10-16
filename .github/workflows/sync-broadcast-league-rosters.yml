@@ -44,7 +44,7 @@ jobs:
     steps:
       - id: matrix
         env:
-          REQUESTED: ${{ inputs.league_ids || (github.event_name == 'push' && '527,532') || '523,524,525,526,527,529,532' }}
+          REQUESTED: ${{ inputs.league_ids || (github.event_name == 'push' && '529,532') || '523,524,525,526,527,529,532' }}
         run: |
           python - <<'PY'
           import json, os
@@ -180,6 +180,21 @@ jobs:
           set -euo pipefail
           timeout --foreground --kill-after=30s 10m \
             psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-current-swedish-player-stats.psql
+
+      - name: Read WV and FCL match-level statistics
+        if: matrix.league_id == 529 || matrix.league_id == 532
+        env:
+          LEAGUE_IDS: ${{ matrix.league_id }}
+        run: python .github/sync/export_fantasy_sportsgamer_match_stats.py
+
+      - name: Import sporting matches without Fantasy scoring
+        if: matrix.league_id == 529 || matrix.league_id == 532
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          timeout --foreground --kill-after=30s 10m \
+            psql "$PGURL" -v ON_ERROR_STOP=1 -f .github/sync/import-broadcast-match-stats.psql
 
       - name: Verify Broadcast Studio rows
         env:

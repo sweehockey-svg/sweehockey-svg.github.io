@@ -1,0 +1,73 @@
+\set ON_ERROR_STOP on
+
+begin;
+set local statement_timeout = '15min';
+set local lock_timeout = '30s';
+
+create temporary table fantasy_matches_stage (
+  source_league_id bigint,
+  source_match_id bigint,
+  match_type text,
+  started_at timestamptz,
+  team1_id bigint,
+  team2_id bigint,
+  team1_score integer,
+  team2_score integer,
+  raw_match jsonb
+) on commit drop;
+
+create temporary table fantasy_match_player_stats_stage (
+  source_league_id bigint,
+  source_match_id bigint,
+  source_team_id bigint,
+  source_player_id bigint,
+  match_type text,
+  played_position text,
+  scoring_role text,
+  skater_games integer,
+  goals integer,
+  assists integer,
+  game_winning_goals integer,
+  blocked_shots integer,
+  goalie_games integer,
+  goalie_wins integer,
+  goalie_saves integer,
+  goalie_goals_allowed integer,
+  goalie_shutouts integer,
+  goalie_goals integer,
+  goalie_assists integer,
+  fantasy_points numeric(12,2),
+  raw_stats jsonb
+) on commit drop;
+
+\copy fantasy_matches_stage from '/tmp/fantasy_matches.csv' with (format csv, header true, null '');
+\copy fantasy_match_player_stats_stage from '/tmp/fantasy_match_player_stats.csv' with (format csv, header true, null '');
+
+
+-- Empty tournaments are valid. Reject any unexpected league or duplicate key.
+select 1 / case when not exists(
+ select 1 from fantasy_matches_stage where source_league_id not in(529,532)
+ union all select 1 from fantasy_match_player_stats_stage where source_league_id not in(529,532))
+ and (select count(*)=count(distinct(source_league_id,source_match_id)) from fantasy_matches_stage)
+ and (select count(*)=count(distinct(source_league_id,source_match_id,source_team_id,source_player_id)) from fantasy_match_player_stats_stage)
+ then 1 else 0 end as valid_match_snapshot;
+insert into graphics_private.sports_matches(source_league_id,source_match_id,started_at,team1_id,team2_id)
+select source_league_id,source_match_id,started_at,team1_id,team2_id from fantasy_matches_stage
+on conflict(source_league_id,source_match_id) do update set
+ started_at=coalesce(excluded.started_at,graphics_private.sports_matches.started_at),
+ team1_id=excluded.team1_id,team2_id=excluded.team2_id,imported_at=now();
+insert into graphics_private.sports_player_matches
+(source_league_id,source_match_id,source_team_id,source_player_id,played_position,
+ skater_games,goalie_games,goals,assists,blocked_shots,goalie_saves,goalie_goals_allowed,raw_stats)
+select source_league_id,source_match_id,source_team_id,source_player_id,played_position,
+ skater_games,goalie_games,goals,assists,blocked_shots,goalie_saves,goalie_goals_allowed,
+ jsonb_build_object('skater',jsonb_build_object('takeaways',raw_stats->'skater'->'takeaways','interceptions',raw_stats->'skater'->'interceptions'))
+from fantasy_match_player_stats_stage
+on conflict(source_league_id,source_match_id,source_team_id,source_player_id) do update set
+ played_position=excluded.played_position,skater_games=excluded.skater_games,goalie_games=excluded.goalie_games,
+ goals=excluded.goals,assists=excluded.assists,blocked_shots=excluded.blocked_shots,
+ goalie_saves=excluded.goalie_saves,goalie_goals_allowed=excluded.goalie_goals_allowed,
+ raw_stats=excluded.raw_stats,imported_at=now();
+select count(*) as imported_matches from fantasy_matches_stage;
+select count(*) as imported_player_rows from fantasy_match_player_stats_stage;
+commit;
