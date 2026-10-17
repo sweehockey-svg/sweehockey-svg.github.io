@@ -11,7 +11,12 @@ assert(ctx.matchStatsText('therozz94','G').includes('SV% 79.4'),'Fractional save
 for(const [mode,name,stats] of [['gt',false,false],['gt_name',true,false],['gt_stats',false,true],['gt_stats_name',true,true]]){
  ctx.state.lineupTextMode=mode;const svg=card();assert(svg.includes('Mathiasgamer_07'));
  assert.equal(svg.includes('MATHIAS VÅGAN'),name,mode);assert.equal(svg.includes('SCL 27 · GP'),stats,mode);
- if(name){const match=svg.match(/textLength="([\d.]+)"[^>]*data-player-name-width="([\d.]+)"/);assert(match);assert(Number(match[1])<=Number(match[2]));}
+ if(name){
+ const footer=svg.match(/<rect x="0" y="([\d.]+)" width="286" height="[\d.]+" fill="#05080c"/);
+ const label=svg.match(/<text x="12" y="([\d.]+)"[^>]*font-size="([\d.]+)"[^>]*data-player-name-width=/);
+ assert(footer&&label);
+ assert(Number(label[1])-Number(label[2])*1.2-Number(footer[1])>=8,'Accented letters need headroom below the separator');
+ const match=svg.match(/textLength="([\d.]+)"[^>]*data-player-name-width="([\d.]+)"/);assert(match);assert(Number(match[1])<=Number(match[2]));}
  assert(svg.includes('#41'));assert.equal(svg.includes('data-lineup-number-placement="footer"'),!name,mode);assert(!/NaN|undefined/.test(svg));
 }
 ctx.state.showLineupNumbers=false;assert(!card().includes('#41'));
