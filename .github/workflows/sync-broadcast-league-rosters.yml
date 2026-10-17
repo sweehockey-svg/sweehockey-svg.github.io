@@ -1,4 +1,4 @@
-# Includes WV 4 Nations 2026 (532) for Graphics Studio.
+# Permanent import is SCL-only. Other leagues use fetch-graphics-data.yml (no database import).
 name: Sync Broadcast Studio league data
 run-name: Broadcast data · ${{ inputs.request_id || github.event_name }}
 
@@ -11,9 +11,9 @@ on:
         default: manual
         type: string
       league_ids:
-        description: SportsGamer league IDs, comma-separated
+        description: Permanent SCL import only (527). Use temporary Graphics/Broadcast fetch for other leagues.
         required: false
-        default: '523,524,525,526,527,529,532'
+        default: '527'
         type: string
   push:
     branches: [main]
@@ -46,11 +46,11 @@ jobs:
     steps:
       - id: matrix
         env:
-          REQUESTED: ${{ inputs.league_ids || (github.event_name == 'push' && '529,532') || '523,524,525,526,527,529,532' }}
+          REQUESTED: ${{ inputs.league_ids || '527' }}
         run: |
           python - <<'PY'
           import json, os
-          allowed={523,524,525,526,527,529,532}
+          allowed={527}
           raw=os.environ.get("REQUESTED","")
           ids=[]
           for part in raw.replace(";",",").replace(" ",",").split(","):
@@ -58,7 +58,7 @@ jobs:
                   continue
               value=int(part)
               if value not in allowed:
-                  raise SystemExit(f"Unsupported league id: {value}")
+                  raise SystemExit(f"Permanent broad import disabled for league {value}; use the temporary Graphics/Broadcast SportsGamer fetch.")
               if value not in ids:
                   ids.append(value)
           if not ids:
