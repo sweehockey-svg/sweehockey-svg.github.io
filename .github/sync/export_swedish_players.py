@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import pymysql
+from player_storage_scope import is_scandinavian, qualifies, played_player_query, profile_filter
 
 
 QUERY = r"""
@@ -29,15 +30,6 @@ select
   nullif(trim(playerImage), '') as player_image,
   preferredPositionID as preferred_position_id
 from nhlgamer_players
-where playerID is not null
-  and playerID > 0
-  and (
-    upper(trim(coalesce(nationality, ''))) in
-      ('SE', 'SWE', 'SWEDEN', 'SVERIGE', 'SWEDISH', 'SVENSK')
-    or upper(trim(coalesce(country, ''))) in
-      ('SE', 'SWE', 'SWEDEN', 'SVERIGE', 'SWEDISH', 'SVENSK')
-  )
-order by playerID
 """
 
 FIELDS = (
@@ -84,10 +76,16 @@ def main() -> int:
         read_timeout=120,
         write_timeout=30,
         autocommit=True,
+        init_command="SET SESSION TRANSACTION READ ONLY",
     )
     try:
         with connection.cursor() as cursor:
-            cursor.execute(QUERY)
+            cursor.execute(*played_player_query())
+            played_ids={int(row["player_id"]) for row in cursor.fetchall()}
+            if not played_ids:
+                raise RuntimeError("Safety stop: no SEC/SCL playing history found")
+            condition,params=profile_filter(played_ids)
+            cursor.execute(QUERY+condition,params)
             rows = cursor.fetchall()
     finally:
         connection.close()
@@ -102,6 +100,8 @@ def main() -> int:
         player_id = int(row["player_id"])
         if player_id <= 0 or player_id in seen:
             raise RuntimeError(f"Safety stop: invalid or duplicate player_id {player_id}.")
+        if not qualifies(row,played_ids):
+            raise RuntimeError(f"Out-of-scope profile {player_id}")
         seen.add(player_id)
 
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -111,7 +111,12 @@ def main() -> int:
         for row in rows:
             writer.writerow({field: "" if row[field] is None else row[field] for field in FIELDS})
 
-    print(f"Exported {len(rows)} Swedish SportsGamer profiles.")
+    scope_output=Path(os.environ.get("SCOPE_EXPORT_FILE","/tmp/player_storage_scope.csv"))
+    with scope_output.open("w",encoding="utf-8",newline="") as handle:
+        writer=csv.writer(handle)
+        writer.writerow(["player_id","is_scandinavian","has_swedish_tournament"])
+        writer.writerows((row["player_id"],str(is_scandinavian(row)).lower(),str(int(row["player_id"]) in played_ids).lower()) for row in rows)
+    print(f"Exported {len(rows)} permanent profiles: Scandinavia or SEC/SCL playing history.")
     github_output = os.environ.get("GITHUB_OUTPUT")
     if github_output:
         with open(github_output, "a", encoding="utf-8") as handle:

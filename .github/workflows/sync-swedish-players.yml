@@ -1,7 +1,14 @@
-name: Sync Swedish SportsGamer players
-run-name: Svenska spelare · ${{ inputs.request_id || 'manual' }}
+name: Sync permanent SportsGamer player registry
+run-name: Skandinaviska och SEC/SCL-spelare · ${{ inputs.request_id || 'manual' }}
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/sync/player_storage_scope.py"
+      - ".github/sync/export_swedish_players.py"
+      - ".github/sync/import-swedish-players.psql"
+      - ".github/sync/sync-swedish-player-registry.sql"
   workflow_dispatch:
     inputs:
       request_id:

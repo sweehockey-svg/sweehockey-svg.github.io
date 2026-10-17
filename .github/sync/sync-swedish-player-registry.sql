@@ -20,29 +20,14 @@ begin;
 set local statement_timeout = '10min';
 
 /*
-  Sakerhetsvakt: staging far inte vara tom och varje rad maste ha SE i minst
-  ett av SportsGamer-falten. Fel CSV avbryter hela transaktionen med 1/0.
+  Safety: every staged profile must have verified Scandinavian or SEC/SCL scope.
+  Nationality is still resolved separately; tournament participation never means SE.
 */
-select 1 / case
-  when count(*) > 0
-   and count(*) filter (
-     where coalesce(
-       case
-         when upper(btrim(nationality)) in
-           ('SE', 'SWE', 'SWEDEN', 'SVERIGE', 'SWEDISH', 'SVENSK')
-           then 'SE'
-         else public.ehockey_normalize_country_code(nationality)
-       end,
-       case
-         when upper(btrim(country)) in
-           ('SE', 'SWE', 'SWEDEN', 'SVERIGE', 'SWEDISH', 'SVENSK')
-           then 'SE'
-         else public.ehockey_normalize_country_code(country)
-       end
-     ) = 'SE'
-   ) = count(*)
-  then 1 else 0
-end as safety_check_must_equal_1
+select 1 / case when count(*)>0 and not exists(
+ select 1 from private.sportsgamer_player_master_import source
+ left join private.sportsgamer_storage_scope scope on scope.player_id=source.player_id
+ where not coalesce(scope.is_current_scope and (scope.is_scandinavian or scope.has_swedish_tournament),false)
+) then 1 else 0 end as safety_check_must_equal_1
 from private.sportsgamer_player_master_import;
 
 /* Kom ihag exakt vilka profiler som saknades fore synkningen. */

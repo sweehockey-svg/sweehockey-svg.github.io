@@ -12,4 +12,23 @@ select 1 / case
 end as safety_check_must_equal_1
 from private.sportsgamer_player_master_import;
 
+create temporary table player_storage_scope_stage(
+ player_id bigint primary key,is_scandinavian boolean not null,has_swedish_tournament boolean not null,
+ check (player_id>0 and (is_scandinavian or has_swedish_tournament))
+) on commit drop;
+\copy player_storage_scope_stage (player_id,is_scandinavian,has_swedish_tournament) from '/tmp/player_storage_scope.csv' with (format csv,header true)
+select 1/case when not exists(
+ select player_id from private.sportsgamer_player_master_import
+ except select player_id from player_storage_scope_stage
+) and not exists(
+ select player_id from player_storage_scope_stage
+ except select player_id from private.sportsgamer_player_master_import
+) then 1 else 0 end as matching_scope_and_profiles;
+update private.sportsgamer_storage_scope set is_current_scope=false;
+insert into private.sportsgamer_storage_scope(player_id,is_scandinavian,has_swedish_tournament,is_current_scope,verified_at)
+select player_id,is_scandinavian,has_swedish_tournament,true,now() from player_storage_scope_stage
+on conflict(player_id) do update set
+ is_scandinavian=excluded.is_scandinavian,
+ has_swedish_tournament=excluded.has_swedish_tournament,
+ is_current_scope=true,verified_at=now();
 commit;
