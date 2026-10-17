@@ -12,7 +12,7 @@ for(const [mode,name,stats] of [['gt',false,false],['gt_name',true,false],['gt_s
  ctx.state.lineupTextMode=mode;const svg=card();assert(svg.includes('Mathiasgamer_07'));
  assert.equal(svg.includes('MATHIAS VÅGAN'),name,mode);assert.equal(svg.includes('SCL 27 · GP'),stats,mode);
  if(name){const match=svg.match(/textLength="([\d.]+)"[^>]*data-player-name-width="([\d.]+)"/);assert(match);assert(Number(match[1])<=Number(match[2]));}
- assert(svg.includes('#41'));assert(!/NaN|undefined/.test(svg));
+ assert(svg.includes('#41'));assert.equal(svg.includes('data-lineup-number-placement="footer"'),!name,mode);assert(!/NaN|undefined/.test(svg));
 }
 ctx.state.showLineupNumbers=false;assert(!card().includes('#41'));
 ctx.state.showLineupNumbers=true;ctx.state.lineupNumbers.LW='99';ctx.state.lineupNames.LW='<Custom Name>';assert(card().includes('#99'));assert(card().includes('&lt;CUSTOM NAME>'));

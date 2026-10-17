@@ -2256,7 +2256,8 @@
     const fullNameWidth=Math.max(20,width-24-(number?56:0));
     const fittedFullName=fitCardText(fullName.toUpperCase(),fullNameWidth,20);
     const fittedStats=fitCardText(statText,width-24,statSize);
-    const flagX = number&&!fullName ? (x+width-50-flagW-7) : (x+width-flagW-10);
+    const fittedGamertag=fitCardText(cleanName,width-24-(number&&!fullName?56:0),nameSize);
+    const flagX = x+width-flagW-10;
 
     return [
       '<g>',
@@ -2270,14 +2271,13 @@
       '<rect x="' + (x+10) + '" y="' + (y+10) + '" width="' + posBadgeWidth + '" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>',
       '<text x="' + (x+10+posBadgeWidth/2) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" letter-spacing=".8" font-family="Arial,Helvetica,sans-serif">' + esc(pos) + '</text>',
       playerFlagSvg(cleanName,flagX,y+12,flagW,flagH),
-      number&&!fullName ? '<rect x="' + (x+width-50) + '" y="' + (y+10) + '" width="40" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>' : '',
-      number&&!fullName ? '<text x="' + (x+width-30) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
       '<rect x="' + x + '" y="' + (y+height-footerHeight) + '" width="' + width + '" height="' + footerHeight + '" fill="#05080c" fill-opacity=".94" clip-path="url(#' + clipId + ')"/>',
       showStats ? '<rect x="' + x + '" y="' + (y+height-footerHeight) + '" width="' + width + '" height="3" fill="' + team.accent + '" fill-opacity=".78" clip-path="url(#' + clipId + ')"/>' : '',
       fullName ? '<text x="' + (x+12) + '" y="' + (y+height-footerHeight+23) + '" fill="#ffffff" font-size="' + fittedFullName.size + '" textLength="' + fittedFullName.width + '" lengthAdjust="spacingAndGlyphs" data-player-name-width="' + fullNameWidth + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(fullName.toUpperCase()) + '</text>' : '',
       fullName&&number ? '<text x="' + (x+width-12) + '" y="' + (y+height-footerHeight+23) + '" text-anchor="end" fill="#ffffff" font-size="19" font-weight="900" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
       statText ? '<text x="' + (x+12) + '" y="' + (y+height-43) + '" fill="#ffffff" fill-opacity=".58" font-size="' + fittedStats.size + '" textLength="' + fittedStats.width + '" lengthAdjust="spacingAndGlyphs" font-weight="850" font-family="Arial,Helvetica,sans-serif" letter-spacing=".35">' + esc(statText) + '</text>' : '',
-      '<text x="' + (x+12) + '" y="' + (y+height-17) + '" fill="#ffffff" font-size="' + nameSize + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanName) + '</text>',
+      '<text x="' + (x+12) + '" y="' + (y+height-17) + '" fill="#ffffff" font-size="' + fittedGamertag.size + '" textLength="' + fittedGamertag.width + '" lengthAdjust="spacingAndGlyphs" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanName) + '</text>',
+      number&&!fullName ? '<text data-lineup-number-placement="footer" x="' + (x+width-12) + '" y="' + (y+height-17) + '" text-anchor="end" fill="#ffffff" font-size="19" font-weight="900" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
       '</g>'
     ].join("");
   }
