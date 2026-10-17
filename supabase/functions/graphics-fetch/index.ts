@@ -1,5 +1,6 @@
 import {createClient} from 'npm:@supabase/supabase-js@2.112.2';
 import {unzipSync} from 'npm:fflate@0.8.2';
+import {issueTicket} from './tickets.ts';
 
 const workflow='fetch-graphics-data.yml';
 const allowedLeagues=new Set([520,523,524,525,526,527,529,532]);
@@ -78,7 +79,8 @@ Deno.serve(async req=>{
    cache.set(id,data);
   }
   if(!Number.isFinite(Date.parse(data.expires_at))||Date.parse(data.expires_at)<=Date.now()){cache.delete(id);return json({error:'Resultatet har gått ut. Hämta igen.'},410,origin);}
-  return json({state:'completed',request_id:id,data},200,origin);
+  const broadcast_ticket=await issueTicket(id,data.league_id,data.expires_at,Deno.env.get('GITHUB_SYNC_TOKEN'));
+  return json({state:'completed',request_id:id,data,broadcast_ticket},200,origin);
  }catch(error){
   const message=error instanceof Error?error.message:'';
   if(message==='UNAUTHORIZED')return json({error:'Logga in igen.'},401,origin);
