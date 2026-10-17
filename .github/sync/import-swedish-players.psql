@@ -29,6 +29,6 @@ insert into private.sportsgamer_storage_scope(player_id,is_scandinavian,has_swed
 select player_id,is_scandinavian,has_swedish_tournament,true,now() from player_storage_scope_stage
 on conflict(player_id) do update set
  is_scandinavian=excluded.is_scandinavian,
- has_swedish_tournament=excluded.has_swedish_tournament,
+ has_swedish_tournament=private.sportsgamer_storage_scope.has_swedish_tournament or excluded.has_swedish_tournament,
  is_current_scope=true,verified_at=now();
 commit;

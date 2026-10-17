@@ -52,7 +52,7 @@ jobs:
         run: |
           set -euo pipefail
           : "${PGURL:?Missing SUPABASE_DB_URL secret}"
-          timeout --foreground --kill-after=30s 5m psql "$PGURL" -v ON_ERROR_STOP=1 -c "\\copy (select distinct r.sports_gamer_player_id from public.v_ehockey_player_registry r join private.sportsgamer_storage_scope s on s.player_id=r.sports_gamer_player_id where s.is_current_scope and (r.country_code in ('SE','NO','DK') or s.has_swedish_tournament) and r.sports_gamer_player_id is not null order by r.sports_gamer_player_id) to '/tmp/swedish_player_ids.csv' with (format csv, header true)"
+          timeout --foreground --kill-after=30s 5m psql "$PGURL" -v ON_ERROR_STOP=1 -c "\\copy (select distinct r.sports_gamer_player_id from public.v_ehockey_player_registry r left join private.sportsgamer_storage_scope s on s.player_id=r.sports_gamer_player_id where (r.country_code in ('SE','NO','DK') or coalesce(s.has_swedish_tournament,false)) and r.sports_gamer_player_id is not null order by r.sports_gamer_player_id) to '/tmp/swedish_player_ids.csv' with (format csv, header true)"
 
       - name: Open read-only SSH tunnel to SportsGamer
         env:

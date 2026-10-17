@@ -2,7 +2,7 @@
 
 Permanent cohort: SE/NO/DK nationality, plus any nationality with actual SEC/SCL playing history. Match participation or skater/goalie games qualify; a roster registration or graphics request alone does not.
 
-The source export is read-only. `private.sportsgamer_storage_scope` records eligibility and verification time. The central nationality resolver and locked manual decisions remain unchanged. Statistics jobs select resolved SE/NO/DK players or verified SEC/SCL participants. Other existing records are retained, not deleted.
+The source export is read-only. `private.sportsgamer_storage_scope` records eligibility and verification time. The central nationality resolver and locked manual decisions remain unchanged. Statistics jobs select all resolved SE/NO/DK players (including existing profiles absent from the latest source export), or verified SEC/SCL participants. Verified playing history is retained across subsequent source snapshots. Other existing records are retained, not deleted.
 
 ## Transition status
 
