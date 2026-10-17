@@ -133,7 +133,8 @@
     const season=current?"SCL 27":matchStatsSeasonLabel||"ECL";
     if(pos==="G"){
       const gp=Number(row.goalie_games),sv=row.save_percentage==null?NaN:Number(row.save_percentage);
-      return gp>0&&Number.isFinite(sv)?season+" · GP "+gp+" · SV% "+sv.toFixed(1):"";
+      const percent=current&&sv<=1?sv*100:sv;
+      return gp>0&&Number.isFinite(percent)?season+" · GP "+gp+" · SV% "+(Math.round(percent*10)/10).toFixed(1):"";
     }
     const gp=Number(row.skater_games);
     if(!(gp>0)||row.goals==null||row.assists==null||row.points==null)return "";
@@ -2246,6 +2247,15 @@
     const statSize = width >= 320 ? 12 : width >= 250 ? 11 : 9;
     const flagW = width >= 250 ? 34 : 28;
     const flagH = width >= 250 ? 22 : 18;
+    function fitCardText(label,available,maxSize){
+      let measured=String(label).length*maxSize*.75;
+      try{const ctx=document.createElement("canvas").getContext("2d");ctx.font="900 "+maxSize+"px Arial";measured=ctx.measureText(String(label)).width;}catch(_){}
+      const size=Math.min(maxSize,maxSize*available/Math.max(1,measured));
+      return {size,width:Math.min(available,measured*size/maxSize)};
+    }
+    const fullNameWidth=Math.max(20,width-24-(number?56:0));
+    const fittedFullName=fitCardText(fullName.toUpperCase(),fullNameWidth,20);
+    const fittedStats=fitCardText(statText,width-24,statSize);
     const flagX = number&&!fullName ? (x+width-50-flagW-7) : (x+width-flagW-10);
 
     return [
@@ -2264,9 +2274,9 @@
       number&&!fullName ? '<text x="' + (x+width-30) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
       '<rect x="' + x + '" y="' + (y+height-footerHeight) + '" width="' + width + '" height="' + footerHeight + '" fill="#05080c" fill-opacity=".94" clip-path="url(#' + clipId + ')"/>',
       showStats ? '<rect x="' + x + '" y="' + (y+height-footerHeight) + '" width="' + width + '" height="3" fill="' + team.accent + '" fill-opacity=".78" clip-path="url(#' + clipId + ')"/>' : '',
-      fullName ? '<text x="' + (x+12) + '" y="' + (y+height-footerHeight+23) + '" fill="#ffffff" font-size="' + Math.min(21,(width-24-(number?46:0))/Math.max(1,fullName.length)*1.65) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(fullName.toUpperCase()) + '</text>' : '',
+      fullName ? '<text x="' + (x+12) + '" y="' + (y+height-footerHeight+23) + '" fill="#ffffff" font-size="' + fittedFullName.size + '" textLength="' + fittedFullName.width + '" lengthAdjust="spacingAndGlyphs" data-player-name-width="' + fullNameWidth + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(fullName.toUpperCase()) + '</text>' : '',
       fullName&&number ? '<text x="' + (x+width-12) + '" y="' + (y+height-footerHeight+23) + '" text-anchor="end" fill="#ffffff" font-size="19" font-weight="900" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
-      statText ? '<text x="' + (x+12) + '" y="' + (y+height-43) + '" fill="#ffffff" fill-opacity=".58" font-size="' + Math.min(statSize,(width-24)/Math.max(1,statText.length)*1.65) + '" font-weight="850" font-family="Arial,Helvetica,sans-serif" letter-spacing=".35">' + esc(statText) + '</text>' : '',
+      statText ? '<text x="' + (x+12) + '" y="' + (y+height-43) + '" fill="#ffffff" fill-opacity=".58" font-size="' + fittedStats.size + '" textLength="' + fittedStats.width + '" lengthAdjust="spacingAndGlyphs" font-weight="850" font-family="Arial,Helvetica,sans-serif" letter-spacing=".35">' + esc(statText) + '</text>' : '',
       '<text x="' + (x+12) + '" y="' + (y+height-17) + '" fill="#ffffff" font-size="' + nameSize + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanName) + '</text>',
       '</g>'
     ].join("");
