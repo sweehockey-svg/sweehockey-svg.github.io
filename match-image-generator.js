@@ -87,6 +87,9 @@
     showPattern:true,
     teamVisual:"jersey",
     lineupStyle:"portraits",
+    lineupTextMode:"gt_stats",
+    showLineupNumbers:true,
+    lineupNames:{...EMPTY_LINEUP},
     rosterSeason:"current",
     streamPlatform:"none",
     streamChannel:"",
@@ -112,22 +115,38 @@
       .map(row => [normalize(row.player_name),row])
   );
 
+  const detailSnapshot=window.SEH_MATCH_GRAPHICS_PLAYER_DETAILS||{};
+  const currentLineupDetails=new Map((detailSnapshot.rows||[]).map(row=>[normalize(row.display_gamertag),row]));
+  function currentStatsContext(){
+    return state.league==="SCL"&&String(state.leagueSeason).trim()==="27"&&(!state.rosterSeason||state.rosterSeason==="current");
+  }
+  function lineupProfile(name){return currentLineupDetails.get(normalize(name))||null;}
+  function lineupNumber(pos,name){
+    const manual=cleanText(state.lineupNumbers[pos],2);
+    if(manual)return manual;
+    const number=lineupProfile(name)?.player_number;
+    return number!=null&&/^\d{1,2}$/.test(String(number))?String(number):"";
+  }
   function matchStatsText(name,pos) {
-    const row = matchStatsByName.get(normalize(name));
-    if (!row) return "";
-    const season = matchStatsSeasonLabel || "ECL";
-    if (pos === "G") {
-      const gp = Number(row.goalie_games) || 0;
-      const sv = Number(row.save_percentage);
-      if (!gp || !Number.isFinite(sv)) return "";
-      return season + " · GP " + gp + " · SV% " + sv.toFixed(1);
+    const current=currentStatsContext(),row=current?lineupProfile(name):matchStatsByName.get(normalize(name));
+    if(!row)return "";
+    const season=current?"SCL 27":matchStatsSeasonLabel||"ECL";
+    if(pos==="G"){
+      const gp=Number(row.goalie_games),sv=row.save_percentage==null?NaN:Number(row.save_percentage);
+      return gp>0&&Number.isFinite(sv)?season+" · GP "+gp+" · SV% "+sv.toFixed(1):"";
     }
-    const gp = Number(row.skater_games) || 0;
-    if (!gp) return "";
-    const g = Number(row.goals) || 0;
-    const a = Number(row.assists) || 0;
-    const p = Number(row.points) || 0;
-    return season + " · GP " + gp + " · G " + g + " · A " + a + " · P " + p;
+    const gp=Number(row.skater_games);
+    if(!(gp>0)||row.goals==null||row.assists==null||row.points==null)return "";
+    return season+" · GP "+gp+" · G "+Number(row.goals)+" · A "+Number(row.assists)+" · P "+Number(row.points);
+  }
+  async function hydrateCurrentLineupStats(){
+    try{
+      const rows=await getPublicRows("v_broadcast_players_public","select=display_gamertag,sports_gamer_player_id,player_number,regular_skater_games,regular_goals,regular_assists,regular_points,regular_goalie_games,regular_goalie_save_percentage&sports_gamer_league_id=eq.527");
+      for(const row of rows||[]){
+        const key=normalize(row.display_gamertag),old=currentLineupDetails.get(key)||{};
+        currentLineupDetails.set(key,{...old,...row,skater_games:row.regular_skater_games,goals:row.regular_goals,assists:row.regular_assists,points:row.regular_points,goalie_games:row.regular_goalie_games,save_percentage:row.regular_goalie_save_percentage});
+      }
+    }catch(error){console.warn("[Match Graphics] using saved SCL 27 statistics",error);}
   }
 
   const manifestEntries = Object.entries(window.SEH_TEAM_LOGO_FILES || {});
@@ -1077,6 +1096,7 @@
     });
     state.lineup = next;
     state.lineupNumbers = {...EMPTY_NUMBERS};
+    state.lineupNames = {...EMPTY_LINEUP};
   }
 
   function setDefaultPresentationRoster() {
@@ -1338,6 +1358,7 @@
       )
     ]);
 
+    await hydrateCurrentLineupStats();
     const baseTeamRows = Array.isArray(teamRowsRaw) ? teamRowsRaw : [];
     const currentTeamRows = Array.isArray(currentTeamRowsRaw) ? currentTeamRowsRaw : [];
     const currentById = new Map(
@@ -1641,6 +1662,7 @@
       state.opponentId = teamDirectory[1]?.id || teamDirectory[0].id;
       state.lineup = {...EMPTY_LINEUP};
       state.lineupNumbers = {...EMPTY_NUMBERS};
+    state.lineupNames = {...EMPTY_LINEUP};
       syncForm();
       render();
       if (status) status.textContent = "ECL 27-lag kunde inte laddas · visar testlag";
@@ -2193,12 +2215,14 @@
 
   function portraitCard(pos, name, x, y, width, height, team, variant, showStats = false) {
     const cleanName = cleanText(name,20) || "PLAYER";
-    const number = cleanText(state.lineupNumbers[pos],2);
+    const mode=state.lineupTextMode||"gt_stats",withStats=mode==="gt_stats"||mode==="gt_stats_name",withName=mode==="gt_name"||mode==="gt_stats_name";
+    const fullName=withName?cleanText(state.lineupNames[pos]||lineupProfile(name)?.player_name||"",64):"";
+    const number=state.showLineupNumbers?lineupNumber(pos,name):"";
     const portrait = portraitUrlForPlayer(cleanName) || defaultPlayerImageUrl();
     const clipId = "portrait-" + pos + "-" + normalize(cleanName).replace(/\s+/g,"-");
     const nameSize = showStats && width >= 320 ? 20 : width >= 220 ? 18 : width >= 160 ? 15 : 13;
-    const statText = showStats ? matchStatsText(cleanName,pos) : "";
-    const footerHeight = showStats ? 76 : 48;
+    const statText = withStats ? matchStatsText(name,pos) : "";
+    const footerHeight = 48+(statText?24:0)+(fullName?28:0);
     const imageBottom = y + height - footerHeight;
     const imageHeight = Math.max(1,imageBottom - y - 4);
     const portraitX = x + 4;
@@ -2222,7 +2246,7 @@
     const statSize = width >= 320 ? 12 : width >= 250 ? 11 : 9;
     const flagW = width >= 250 ? 34 : 28;
     const flagH = width >= 250 ? 22 : 18;
-    const flagX = number ? (x+width-50-flagW-7) : (x+width-flagW-10);
+    const flagX = number&&!fullName ? (x+width-50-flagW-7) : (x+width-flagW-10);
 
     return [
       '<g>',
@@ -2236,11 +2260,13 @@
       '<rect x="' + (x+10) + '" y="' + (y+10) + '" width="' + posBadgeWidth + '" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>',
       '<text x="' + (x+10+posBadgeWidth/2) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" letter-spacing=".8" font-family="Arial,Helvetica,sans-serif">' + esc(pos) + '</text>',
       playerFlagSvg(cleanName,flagX,y+12,flagW,flagH),
-      number ? '<rect x="' + (x+width-50) + '" y="' + (y+10) + '" width="40" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>' : '',
-      number ? '<text x="' + (x+width-30) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
+      number&&!fullName ? '<rect x="' + (x+width-50) + '" y="' + (y+10) + '" width="40" height="24" rx="12" fill="#05080c" fill-opacity=".88" stroke="#ffffff" stroke-opacity=".16"/>' : '',
+      number&&!fullName ? '<text x="' + (x+width-30) + '" y="' + (y+27) + '" text-anchor="middle" fill="#ffffff" font-size="' + badgeFontSize + '" font-weight="1000" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
       '<rect x="' + x + '" y="' + (y+height-footerHeight) + '" width="' + width + '" height="' + footerHeight + '" fill="#05080c" fill-opacity=".94" clip-path="url(#' + clipId + ')"/>',
       showStats ? '<rect x="' + x + '" y="' + (y+height-footerHeight) + '" width="' + width + '" height="3" fill="' + team.accent + '" fill-opacity=".78" clip-path="url(#' + clipId + ')"/>' : '',
-      statText ? '<text x="' + (x+12) + '" y="' + (y+height-45) + '" fill="#ffffff" fill-opacity=".58" font-size="' + statSize + '" font-weight="850" font-family="Arial,Helvetica,sans-serif" letter-spacing=".35">' + esc(statText) + '</text>' : '',
+      fullName ? '<text x="' + (x+12) + '" y="' + (y+height-footerHeight+23) + '" fill="#ffffff" font-size="' + Math.min(21,(width-24-(number?46:0))/Math.max(1,fullName.length)*1.65) + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(fullName.toUpperCase()) + '</text>' : '',
+      fullName&&number ? '<text x="' + (x+width-12) + '" y="' + (y+height-footerHeight+23) + '" text-anchor="end" fill="#ffffff" font-size="19" font-weight="900" font-family="Arial,Helvetica,sans-serif">#' + esc(number) + '</text>' : '',
+      statText ? '<text x="' + (x+12) + '" y="' + (y+height-43) + '" fill="#ffffff" fill-opacity=".58" font-size="' + Math.min(statSize,(width-24)/Math.max(1,statText.length)*1.65) + '" font-weight="850" font-family="Arial,Helvetica,sans-serif" letter-spacing=".35">' + esc(statText) + '</text>' : '',
       '<text x="' + (x+12) + '" y="' + (y+height-17) + '" fill="#ffffff" font-size="' + nameSize + '" font-weight="900" font-family="Arial,Helvetica,sans-serif">' + esc(cleanName) + '</text>',
       '</g>'
     ].join("");
@@ -3080,6 +3106,10 @@
       }
       select.innerHTML = lineupOptions(pos);
       select.disabled = !roster.length;
+      const nameInput=$('[data-lineup-name="'+pos+'"]');
+      if(nameInput){nameInput.value=state.lineupNames[pos]||"";nameInput.placeholder=lineupProfile(state.lineup[pos])?.player_name||"Spelarnamn · valfritt";}
+      const numberInput=$('[data-lineup-number="'+pos+'"]');
+      if(numberInput){numberInput.value=state.lineupNumbers[pos]||"";numberInput.placeholder=lineupNumber(pos,state.lineup[pos])?("#"+lineupNumber(pos,state.lineup[pos])):"#";}
     });
   }
 
@@ -3119,6 +3149,8 @@
     $("#dateInput").value = state.date;
     $("#timeInput").value = state.time;
     $("#lineupStyleSelect").value = state.lineupStyle;
+    $("#lineupTextModeSelect").value=state.lineupTextMode;
+    $("#showLineupNumbers").checked=state.showLineupNumbers;
     $("#patternToggle").checked = state.showPattern !== false;
     $("#teamVisualSelect").value = state.teamVisual || "jersey";
     $("#patternControl").hidden = false;
@@ -3172,8 +3204,11 @@
     state.showPattern = true;
     state.teamVisual = "jersey";
     state.lineupStyle = "portraits";
+    state.lineupTextMode="gt_stats";
+    state.showLineupNumbers=true;
     state.rosterSeason = "current";
     state.lineupNumbers = {...EMPTY_NUMBERS};
+    state.lineupNames = {...EMPTY_LINEUP};
     state.presentationPlayers = Array(12).fill("");
     state.presentationNumbers = Array(12).fill("");
     state.streamPlatform = "none";
@@ -3529,6 +3564,13 @@
     render();
   });
 
+  $("#lineupTextModeSelect").addEventListener("change",event=>{
+    state.lineupTextMode=["gt","gt_name","gt_stats","gt_stats_name"].includes(event.target.value)?event.target.value:"gt";render();
+  });
+  $("#showLineupNumbers").addEventListener("change",event=>{state.showLineupNumbers=event.target.checked;render();});
+  $$("[data-lineup-name]").forEach(input=>input.addEventListener("input",event=>{
+    state.lineupNames[event.target.dataset.lineupName]=event.target.value;render();
+  }));
   $("#streamPlatformSelect").addEventListener("change",event => {
     state.streamPlatform = ["twitch","youtube","kick","other"].includes(event.target.value)
       ? event.target.value
@@ -3550,10 +3592,12 @@
         for (const other of POSITIONS) {
           if (other !== pos && normalize(state.lineup[other]) === normalize(player)) {
             state.lineup[other] = "";
+            state.lineupNames[other]="";state.lineupNumbers[other]="";
           }
         }
       }
       state.lineup[pos] = player;
+      state.lineupNames[pos]="";state.lineupNumbers[pos]="";
       syncLineupSelects();
       render();
     });

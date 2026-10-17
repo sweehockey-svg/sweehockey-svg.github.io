@@ -165,13 +165,24 @@
               <option value="portraits">Spelarbilder</option>
             </select>
           </div>
+          <div class="field full" style="margin-bottom:10px">
+            <label for="lineupTextModeSelect">TEXT PÅ SPELARKORT · SPELARBILDER</label>
+            <select id="lineupTextModeSelect">
+              <option value="gt">GT</option>
+              <option value="gt_name">GT + spelarnamn</option>
+              <option value="gt_stats" selected>GT + statistik</option>
+              <option value="gt_stats_name">GT + statistik + spelarnamn</option>
+            </select>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><input id="showLineupNumbers" type="checkbox" checked style="width:auto"> Visa tröjnummer</label>
+          <small>Spelarnamn och nummer hämtas från spelarprofilen när de finns. Fälten nedan kan ändras för just bilden.</small>
           <div class="lineup-grid">
-            <div class="lineup-field"><label for="lwInput">LW</label><div class="lineup-pick-row"><select id="lwInput" data-lineup="LW"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="LW" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="LW tröjnummer"></div></div>
-            <div class="lineup-field"><label for="cInput">C</label><div class="lineup-pick-row"><select id="cInput" data-lineup="C"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="C" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="C tröjnummer"></div></div>
-            <div class="lineup-field"><label for="rwInput">RW</label><div class="lineup-pick-row"><select id="rwInput" data-lineup="RW"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="RW" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="RW tröjnummer"></div></div>
-            <div class="lineup-field"><label for="ldInput">LD</label><div class="lineup-pick-row"><select id="ldInput" data-lineup="LD"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="LD" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="LD tröjnummer"></div></div>
-            <div class="lineup-field"><label for="rdInput">RD</label><div class="lineup-pick-row"><select id="rdInput" data-lineup="RD"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="RD" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="RD tröjnummer"></div></div>
-            <div class="lineup-field"><label for="gInput">G</label><div class="lineup-pick-row"><select id="gInput" data-lineup="G"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="G" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="G tröjnummer"></div></div>
+            <div class="lineup-field"><label for="lwInput">LW</label><div class="lineup-pick-row"><select id="lwInput" data-lineup="LW"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="LW" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="LW tröjnummer"></div><input data-lineup-name="LW" type="text" maxlength="64" placeholder="Spelarnamn · valfritt" aria-label="LW spelarnamn" style="width:100%;margin-top:6px"></div>
+            <div class="lineup-field"><label for="cInput">C</label><div class="lineup-pick-row"><select id="cInput" data-lineup="C"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="C" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="C tröjnummer"></div><input data-lineup-name="C" type="text" maxlength="64" placeholder="Spelarnamn · valfritt" aria-label="C spelarnamn" style="width:100%;margin-top:6px"></div>
+            <div class="lineup-field"><label for="rwInput">RW</label><div class="lineup-pick-row"><select id="rwInput" data-lineup="RW"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="RW" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="RW tröjnummer"></div><input data-lineup-name="RW" type="text" maxlength="64" placeholder="Spelarnamn · valfritt" aria-label="RW spelarnamn" style="width:100%;margin-top:6px"></div>
+            <div class="lineup-field"><label for="ldInput">LD</label><div class="lineup-pick-row"><select id="ldInput" data-lineup="LD"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="LD" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="LD tröjnummer"></div><input data-lineup-name="LD" type="text" maxlength="64" placeholder="Spelarnamn · valfritt" aria-label="LD spelarnamn" style="width:100%;margin-top:6px"></div>
+            <div class="lineup-field"><label for="rdInput">RD</label><div class="lineup-pick-row"><select id="rdInput" data-lineup="RD"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="RD" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="RD tröjnummer"></div><input data-lineup-name="RD" type="text" maxlength="64" placeholder="Spelarnamn · valfritt" aria-label="RD spelarnamn" style="width:100%;margin-top:6px"></div>
+            <div class="lineup-field"><label for="gInput">G</label><div class="lineup-pick-row"><select id="gInput" data-lineup="G"><option value="">— Välj spelare —</option></select><input class="lineup-number" data-lineup-number="G" type="text" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="#" aria-label="G tröjnummer"></div><input data-lineup-name="G" type="text" maxlength="64" placeholder="Spelarnamn · valfritt" aria-label="G spelarnamn" style="width:100%;margin-top:6px"></div>
           </div>
         </div>
 
@@ -223,6 +234,7 @@
   <script src="ecl27-team-builds-v2.js?v=shared-model-1"></script>
   <script src="ecl27-current-roster-snapshot.js?v=20260921-1"></script>
   <script src="match-graphics-player-stats-snapshot.js?v=20260922-1"></script>
-  <script src="match-image-generator.js?v=119-clean-country-flags"></script>
+  <script src="match-graphics-player-details.js?v=20261017-all-nationalities"></script>
+  <script src="match-image-generator.js?v=120-player-details"></script>
 </body>
 </html>
