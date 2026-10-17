@@ -3088,19 +3088,12 @@
 
   function lineupOptions(position) {
     const players = rosterFor(state.teamId);
-    const selectedElsewhere = new Set(
-      POSITIONS.filter(pos => pos !== position)
-        .map(pos => state.lineup[pos])
-        .filter(Boolean)
-        .map(normalize)
-    );
     const current = state.lineup[position] || "";
     return [
       '<option value="">— Välj spelare —</option>',
       ...players.map(player =>
         '<option value="' + esc(player) + '"' +
         (normalize(player) === normalize(current) ? ' selected' : '') +
-        (selectedElsewhere.has(normalize(player)) ? ' disabled' : '') +
         '>' + esc(player) + '</option>'
       )
     ].join("");
@@ -3598,14 +3591,6 @@
     select.addEventListener("change",event => {
       const pos = event.target.dataset.lineup;
       const player = event.target.value;
-      if (player) {
-        for (const other of POSITIONS) {
-          if (other !== pos && normalize(state.lineup[other]) === normalize(player)) {
-            state.lineup[other] = "";
-            state.lineupNames[other]="";state.lineupNumbers[other]="";
-          }
-        }
-      }
       state.lineup[pos] = player;
       state.lineupNames[pos]="";state.lineupNumbers[pos]="";
       syncLineupSelects();

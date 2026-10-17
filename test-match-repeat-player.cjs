@@ -1,0 +1,13 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const src=fs.readFileSync(__dirname+'/match-image-generator.js','utf8');
+const handlers={},state={teamId:1,lineup:{LW:'Same',C:'Other'},lineupNames:{LW:'Keep name'},lineupNumbers:{LW:'41'}};
+const selects=['LW','C','RW','LD','RD','G'].map(pos=>({addEventListener:(event,handler)=>handlers[pos]=handler}));
+const ctx={state,rosterFor:()=>['Same','Other'],normalize:s=>String(s).toLowerCase(),esc:String,$$:()=>selects,syncLineupSelects(){},render(){}};
+vm.createContext(ctx);
+vm.runInContext(src.slice(src.indexOf('  function lineupOptions('),src.indexOf('  function syncLineupSelects(')),ctx);
+assert(!ctx.lineupOptions('C').includes('disabled'));
+vm.runInContext(src.slice(src.indexOf('  $$("[data-lineup]").forEach'),src.indexOf('  $$("[data-lineup-number]").forEach')),ctx);
+handlers.C({target:{dataset:{lineup:'C'},value:'Same'}});
+assert.equal(state.lineup.C,'Same');assert.equal(state.lineup.LW,'Same');
+assert.equal(state.lineupNames.LW,'Keep name');assert.equal(state.lineupNumbers.LW,'41');
+console.log('Same player can occupy multiple Starting Six slots without disabling options or clearing earlier slots and overrides.');
