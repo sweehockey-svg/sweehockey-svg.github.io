@@ -6,6 +6,8 @@ The source export is read-only. `private.sportsgamer_storage_scope` records elig
 
 ## Transition status
 
+Read-only consumer/writer audit completed on 18 October 2026: see [player-storage-migration-audit.md](player-storage-migration-audit.md). It documents the shared Broadcast/OBS, roster and merit dependencies and includes a non-destructive verification script. No compatibility imports were disabled by the audit.
+
 Graphics Studio now has an on-demand provider: the admin-only `graphics-fetch` Edge Function dispatches `fetch-graphics-data.yml`. That workflow uses read-only source exports and uploads only an allowlisted JSON result, never calling a Supabase importer. Results expire after one hour; GitHub artifacts have one-day retention (the minimum), and browser reuse is memory-only for fifteen minutes. The result contains public graphics fields, not account/contact fields or source credentials. Supported leagues are explicitly allowlisted and periods are bounded to 366 inclusive days.
 
 The refresh button and weekly-team autofill use this provider. Initial loading keeps the compatibility views available. Switching leagues or changing the selected period while a request is pending cannot apply the old request to the new selection. Missing or incomplete match data does not replace the current weekly selections. Signed-in production UI tests on 17 October 2026 passed for SCL (148 players, 52 period matches, six selected positions) and FCL (586 players, 170 period matches, six selected positions), using 11–15 October inclusive. Non-Swedish participants and their period statistics were included. The initial WV source-only test also passed: 96 players and complete period coverage.
