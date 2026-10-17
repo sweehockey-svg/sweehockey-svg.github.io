@@ -6,7 +6,11 @@ The source export is read-only. `private.sportsgamer_storage_scope` records elig
 
 ## Transition status
 
-The current WV/FCL/Broadcast imports are still compatibility paths. Do not stop them until a non-persistent graphics data provider has been connected and tested. They currently write broader league data and therefore are not yet compliant with the final boundary.
+Graphics Studio now has an on-demand provider: the admin-only `graphics-fetch` Edge Function dispatches `fetch-graphics-data.yml`. That workflow uses read-only source exports and uploads only an allowlisted JSON result, never calling a Supabase importer. Results expire after one hour; GitHub artifacts have one-day retention (the minimum), and browser reuse is memory-only for fifteen minutes. The result contains public graphics fields, not account/contact fields or source credentials. Supported leagues are explicitly allowlisted and periods are bounded to 366 inclusive days.
+
+The refresh button and weekly-team autofill use this provider. Initial loading keeps the compatibility views available. Switching leagues or changing the selected period while a request is pending cannot apply the old request to the new selection. Missing or incomplete match data does not replace the current weekly selections. Signed-in production UI tests on 17 October 2026 passed for SCL (148 players, 52 period matches, six selected positions) and FCL (586 players, 170 period matches, six selected positions), using 11–15 October inclusive. Non-Swedish participants and their period statistics were included. The initial WV source-only test also passed: 96 players and complete period coverage.
+
+The current WV/FCL/Broadcast imports are still compatibility paths for initial loading and other consumers. Do not stop them until those consumers have been migrated and tested separately. They currently write broader league data and therefore are not yet compliant with the final boundary. The new graphics job does not invoke them.
 
 The SQL/SSH credentials are currently available inside GitHub Actions, not a proven live SQL service. The existing `graphics-schedule` Edge Function reads public SportsGamer HTML, not their database. A replacement for league players, standings and weekly match statistics must be read-only, server-side and bounded to approved query types; browser clients must never receive database credentials or submit SQL. Cache results temporarily, with explicit expiry and no permanent player upserts. Preserve manual choices and last-known usable results on source failure.
 
