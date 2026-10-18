@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Export Swedish player statistics only for current/recent SportsGamer leagues.
+"""Export Swedish player statistics for the permanent cohort in all active SportsGamer leagues.
 
 This is a lightweight wrapper around export_swedish_player_stats.py.  It keeps
 all of the established row-building logic, but filters league-bound source
 queries before data is read from SportsGamer.
 
 LEAGUE_IDS may contain a comma-separated explicit list.  When omitted, the
-wrapper selects recent active leagues automatically.
+wrapper selects every active league automatically.
 """
 
 from __future__ import annotations
@@ -41,16 +41,8 @@ def parse_ids(raw: str) -> list[int]:
 
 
 REQUESTED_IDS = parse_ids(os.environ.get("LEAGUE_IDS", ""))
-RECENT_WINDOW = max(1, int(os.environ.get("CURRENT_LEAGUE_WINDOW", "8")))
 SELECTED_IDS: list[int] = []
 SELECTED_META: list[dict[str, Any]] = []
-
-# Keep automatic discovery focused on competitions the Svensk eHockey site
-# actually presents.  Explicit LEAGUE_IDS always overrides this filter.
-CURRENT_NAME_RE = re.compile(
-    r"\b(ECL|SCL|SEC|FCL|GCL|WECL|ROECL)\b|WORLD\s*CUP|\b4\s*NATIONS\b|CHAMPIONSHIP\s+LEAGUE",
-    re.I,
-)
 
 
 def resolve_leagues(connection: Any) -> list[int]:
@@ -81,31 +73,10 @@ def resolve_leagues(connection: Any) -> list[int]:
         if not active:
             raise RuntimeError("No active SportsGamer leagues were found")
 
-        max_id = max(base.integer(row.get("leagueID")) for row in active)
-        recent = [
-            row for row in active
-            if base.integer(row.get("leagueID")) >= max_id - RECENT_WINDOW
-        ]
-        recognised = [
-            row for row in recent
-            if CURRENT_NAME_RE.search(str(row.get("leagueName") or ""))
-        ]
-        # A regional league can still be running when newer leagues have been
-        # created elsewhere. Include its newest active season outside the global
-        # ID window (WECL 5 is 523 while the newest league is already 532).
-        regional_latest: dict[str, dict[str, Any]] = {}
-        for row in active:
-            name = str(row.get("leagueName") or "")
-            match = re.search(r"\b(SCL|FCL|WECL|ROECL|CSCL|NACL)\b|German Championship League", name, re.I)
-            if match:
-                family = match.group(0).upper()
-                if family not in regional_latest or base.integer(row.get("leagueID")) > base.integer(regional_latest[family].get("leagueID")):
-                    regional_latest[family] = row
-        by_id = {base.integer(row.get("leagueID")): row for row in (recognised or recent)}
-        for row in regional_latest.values():
-            by_id[base.integer(row.get("leagueID"))] = row
-        SELECTED_META = list(by_id.values())
-        SELECTED_IDS = sorted({base.integer(row.get("leagueID")) for row in SELECTED_META})
+        # Every active competition is included, irrespective of name or ID age.
+        # Player IDs remain restricted by the permanent cohort export.
+        SELECTED_META = active
+        SELECTED_IDS = sorted({base.integer(row.get("leagueID")) for row in active})
 
     if not SELECTED_IDS:
         raise RuntimeError("Current league selection is empty")
