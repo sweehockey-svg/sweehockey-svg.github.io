@@ -146,6 +146,15 @@ def stage(value: Any) -> str:
     return "regular" if str(value or "").strip().lower() == "regular" else "playoff"
 
 
+def goalie_rates(saves: Any, goals_allowed: Any, games: Any) -> tuple[float | None, float | None]:
+    saves, goals_allowed, games = number(saves), number(goals_allowed), number(games)
+    # SportsGamer's shotsAgainst can be unset even when saves and GA exist.
+    # Use the same denominator as its public goalie table.
+    shots = saves + goals_allowed
+    return (round(saves / shots, 4) if games > 0 and shots > 0 else None,
+            round(goals_allowed / games, 4) if games > 0 else None)
+
+
 def position_fields(position_id: Any) -> tuple[Any, Any, Any]:
     pid = integer(position_id)
     label = POSITION.get(pid)
@@ -295,10 +304,9 @@ def main() -> int:
         row.update(skater)
         row.update(goalie)
         for group in ("regular", "playoff"):
-            saves = number(row.get(f"{group}_goalie_saves")); shots = number(row.get(f"{group}_goalie_shots_against"))
+            saves = number(row.get(f"{group}_goalie_saves"))
             goals_allowed = number(row.get(f"{group}_goalie_goals_allowed")); games = number(row.get(f"{group}_goalie_games"))
-            row[f"{group}_goalie_save_percentage"] = round(saves / shots, 4) if shots else None
-            row[f"{group}_goalie_goals_against_average"] = round(goals_allowed / games, 4) if games else None
+            row[f"{group}_goalie_save_percentage"], row[f"{group}_goalie_goals_against_average"] = goalie_rates(saves, goals_allowed, games)
         rows.append(row)
 
     current_ids = {integer(row.get("playerID")) for row in players}
