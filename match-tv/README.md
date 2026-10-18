@@ -4,13 +4,17 @@ Publik adress: `/match-tv/`. Menyn på huvudsidan länkar hit.
 
 ## Sända
 
-1. Öppna `/lab/broadcast-studio/SV/` i kontrollrummet.
+1. Öppna `https://swnworks.se/broadcast-studio/SV/` i kontrollrummet.
 2. Välj lag, scen och grafiken som ska visas.
 3. Lägg in spelarens Twitch-kanal, ladda videon och välj LIVE-scenen.
 4. Kontrollera `/match-tv/` i en separat flik. Tittaren väljer själv ljud.
 
-Match-TV återanvänder SV-studions befintliga sändningskanal. OBS-vyn fungerar
-fortfarande som tidigare. Ingen ny datakopia eller behörighetsändring görs.
+Match-TV bäddar in samma kanoniska SWNWORKS-vy som OBS, med `obs=1&viewer=1`.
+Den äldre kopian under `/lab/broadcast-studio/` används inte. Samma signerade
+SportsGamer-underlag och valda laguppställning följer sändningen, även för
+spelare utanför det permanenta registret. Ingen ny datakopia importeras.
+Ljud och statusmeddelanden kontrollerar både exakt ursprung och iframe-fönster;
+ingen joker används för meddelanden mellan domänerna.
 
 Publika vyer läser sändningsläget var tionde sekund när fliken är synlig.
 Oförändrat läge renderas inte om och samtidiga läsanrop förhindras.
