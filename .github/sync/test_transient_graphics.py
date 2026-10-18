@@ -1,5 +1,5 @@
 import unittest
-from build_transient_graphics import build,weekly_candidates,period
+from build_transient_graphics import build,weekly_candidates,period,public_matches
 
 class TransientTests(unittest.TestCase):
  def test_privacy_and_types(self):
@@ -22,5 +22,13 @@ class TransientTests(unittest.TestCase):
   for a,b in [('2026-10-15','2026-10-14'),('2020-01-01','2026-10-15')]:
    with self.assertRaises(ValueError):period(a,b)
   with self.assertRaises(ValueError):build(999,'2026-10-11','2026-10-15',[],[],[],[],[])
+ def test_fresh_match_export(self):
+  teams=[{'sports_gamer_team_id':'1','team_name_in_league':'Home'},{'sports_gamer_team_id':'2','team_name_in_league':'Away'}]
+  match=dict(source_league_id='527',source_match_id='7',started_at='2026-10-15T19:00:00+00:00',team1_id='1',team2_id='2',team1_score='3',team2_score='2',match_type='regular',raw_match='{"row":{"overtime":1,"contact":"PRIVATE"}}')
+  rows=public_matches([match,match,{**match,'source_match_id':'8','team1_score':''}],teams,527)
+  self.assertEqual(len(rows),1);self.assertEqual(rows[0]['home'],'Home');self.assertEqual(rows[0]['awayScore'],2)
+  self.assertTrue(rows[0]['overtime']);self.assertEqual(rows[0]['stage'],'regular');self.assertNotIn('raw_match',rows[0])
+  self.assertNotIn('PRIVATE',str(rows))
+  with self.assertRaises(ValueError):public_matches([{**match,'source_league_id':'532'}],teams,527)
 
 if __name__=='__main__':unittest.main()

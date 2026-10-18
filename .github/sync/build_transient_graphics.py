@@ -54,6 +54,22 @@ def weekly_candidates(matches,rows,league,start,end):
   p['saves']+=saves or 0;p['goals_allowed']+=allowed or 0
  complete=all(len(coverage[(match,int(m[key]))])>=6 for match,m in chosen.items() for key in ('team1_id','team2_id'))
  return dict(supported=True,start=start,end=end,matches=len(chosen),complete=complete,candidates=list(groups.values()))
+def public_matches(matches,teams,league):
+ names={int(t['sports_gamer_team_id']):t.get('team_name_in_league') or '' for t in teams}
+ result=[];seen=set()
+ for m in matches:
+  if int(m['source_league_id'])!=league:raise ValueError('Mixed match leagues')
+  mid=number(m.get('source_match_id'));home=number(m.get('team1_id'));away=number(m.get('team2_id'))
+  hs=number(m.get('team1_score'));as_=number(m.get('team2_score'));stamp=m.get('started_at')
+  if not mid or mid in seen or not home or not away or hs is None or as_ is None or not stamp:continue
+  parsed=datetime.fromisoformat(stamp.replace('Z','+00:00'))
+  if parsed.tzinfo is None:raise ValueError('Missing source timezone')
+  raw=json.loads(m.get('raw_match') or '{}').get('row') or {}
+  overtime=next((raw[k] for k in ('overtime','wentToOvertime','went_to_overtime') if raw.get(k) is not None),False)
+  seen.add(mid)
+  result.append(dict(id=mid,date=stamp,homeId=home,awayId=away,home=names.get(home) or str(home),away=names.get(away) or str(away),homeScore=hs,awayScore=as_,stage='playoffs' if str(m.get('match_type')).lower()=='playoffs' else 'regular',overtime=str(overtime).strip().lower() in ('1','true','yes')))
+ return result
+
 def build(league,start,end,teams,roster,stats,matches,match_players):
  if league not in ALLOWED:raise ValueError('Unsupported league')
  safe_teams=[public_fields(t,TEAM_FIELDS) for t in teams]
@@ -68,7 +84,7 @@ def build(league,start,end,teams,roster,stats,matches,match_players):
   p=public_fields(row,fields);p['is_current_roster']=key in registered;players.append(p)
  if any(t['sports_gamer_league_id']!=league for t in safe_teams) or any(p['sports_gamer_league_id']!=league for p in players):raise ValueError('Mixed output leagues')
  now=datetime.now(timezone.utc)
- return dict(schema_version=1,league_id=league,source='sportsgamer-read-only',fetched_at=now.isoformat(),expires_at=(now+timedelta(hours=1)).isoformat(),teams=safe_teams,players=players,weekly=weekly_candidates(matches,match_players,league,start,end))
+ return dict(schema_version=1,league_id=league,source='sportsgamer-read-only',fetched_at=now.isoformat(),expires_at=(now+timedelta(hours=1)).isoformat(),teams=safe_teams,players=players,matches=public_matches(matches,teams,league),weekly=weekly_candidates(matches,match_players,league,start,end))
 def main():
  league=int(os.environ.get('LEAGUE_ID','532'));today=datetime.now(ZoneInfo('Europe/Stockholm')).date()
  start=os.environ.get('PERIOD_START') or (today-timedelta(days=6)).isoformat();end=os.environ.get('PERIOD_END') or today.isoformat()
