@@ -43,6 +43,15 @@ create temporary table scl_fcl_conflict_stage (
 select 1 / case when count(*) >= 1 then 1 else 0 end as teams_must_exist
 from scl27_team_stage;
 
+\ir permanent-player-scope.psql
+
+delete from scl27_roster_stage s
+where not exists(select 1 from permanent_player_scope_stage p
+                 where p.sports_gamer_player_id=s.sports_gamer_player_id);
+delete from scl_fcl_conflict_stage s
+where not exists(select 1 from permanent_player_scope_stage p
+                 where p.sports_gamer_player_id=s.sports_gamer_player_id);
+
 select 1 / case
   when count(*) = count(distinct (sports_gamer_league_id,sports_gamer_team_id))
   then 1 else 0 end as teams_must_be_unique

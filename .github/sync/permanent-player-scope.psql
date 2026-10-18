@@ -1,0 +1,75 @@
+-- Permanent storage only. A roster registration or retained portrait is not evidence.
+-- Run inside the importing transaction; no public objects or privileges are created.
+create temporary table permanent_player_scope_stage (
+  sports_gamer_player_id bigint primary key
+) on commit drop;
+
+insert into permanent_player_scope_stage
+select player_id from private.sportsgamer_storage_scope
+where is_scandinavian or has_swedish_tournament
+union
+select i.external_player_id::bigint
+from public.ehockey_player_nationality n
+join public.ehockey_player_identities i on i.player_id=n.player_id
+where n.country_code in ('SE','NO','DK')
+  and i.source_code='SPORTSGAMER' and i.external_player_id~'^[1-9][0-9]*$'
+union
+select sports_gamer_player_id from public.sportsgamer_nordic_players
+where country_code in ('SE','NO','DK')
+union
+select sports_gamer_player_id from public.player_country_overrides
+where country_code in ('SE','NO','DK')
+union
+select sports_gamer_player_id from public.sportsgamer_team_player_stats
+where upper(official_league_name)~'^(SEC|SCL)([^A-Z]|$)'
+  and coalesce(regular_skater_games,0)+coalesce(playoff_skater_games,0)
+    +coalesce(regular_goalie_games,0)+coalesce(playoff_goalie_games,0)
+    +coalesce(participant_regular_games,0)+coalesce(participant_playoff_games,0)>0
+union
+select p.sports_gamer_player_id
+from public.sec_detail_players p
+join public.sec_detail_player_stats s on s.player_id=p.id
+where p.sports_gamer_player_id>0
+  and coalesce(s.total_skater_games,0)+coalesce(s.total_goalie_games,0)>0
+union
+select substring(sports_gamer_player_url,'/players/([0-9]+)')::bigint
+from public.seh_recordbook_scl_match_players_cache_v1
+where detailed_matches>0 and sports_gamer_player_url~'/players/[0-9]+'
+union
+select source_player_id from public.ehockey_fantasy_match_player_stats
+where source_league_id in (520,527)
+  and coalesce(skater_games,0)+coalesce(goalie_games,0)>0;
+
+-- Follow verified central identity/merge links, including legacy SEC identities
+-- which have no SportsGamer ID on the old SEC source record itself.
+insert into permanent_player_scope_stage
+with recursive seeds as (
+  select i.player_id as id from public.ehockey_player_identities i
+  join permanent_player_scope_stage eligible
+    on i.external_player_id=eligible.sports_gamer_player_id::text
+  where i.source_code='SPORTSGAMER'
+  union
+  select player_id from public.ehockey_player_nationality
+  where country_code in ('SE','NO','DK')
+  union
+  select i.player_id from public.sec_detail_players p
+  join public.sec_detail_player_stats s on s.player_id=p.id
+  join public.ehockey_player_identities i
+    on i.source_code='SEC'
+   and i.identity_key='SEC:'||p.external_source||':'||p.external_player_id
+  where coalesce(s.total_skater_games,0)+coalesce(s.total_goalie_games,0)>0
+), verified_core(id) as (
+  select id from seeds
+  union
+  select case when p.id=c.id then p.merged_into_player_id else p.id end
+  from verified_core c join public.ehockey_players p
+    on p.id=c.id or p.merged_into_player_id=c.id
+  where p.merged_into_player_id is not null
+)
+select distinct alias.external_player_id::bigint
+from public.ehockey_player_identities alias
+join verified_core c on c.id=alias.player_id
+where alias.source_code='SPORTSGAMER'
+  and alias.external_player_id~'^[1-9][0-9]*$'
+on conflict do nothing;
+analyze permanent_player_scope_stage;

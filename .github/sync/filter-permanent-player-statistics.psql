@@ -1,0 +1,28 @@
+-- Call with \set player_stats_stage <trusted local staging table name>.
+\ir permanent-player-scope.psql
+
+-- Incoming, actually played SEC/SCL statistics can establish new eligibility.
+-- Roster membership and zero-game rows never do.
+insert into permanent_player_scope_stage
+select distinct sports_gamer_player_id from :"player_stats_stage"
+where upper(official_league_name)~'^(SEC|SCL)([^A-Z]|$)'
+  and coalesce(regular_skater_games,0)+coalesce(playoff_skater_games,0)
+    +coalesce(regular_goalie_games,0)+coalesce(playoff_goalie_games,0)
+    +coalesce(participant_regular_games,0)+coalesce(participant_playoff_games,0)>0
+on conflict do nothing;
+
+insert into private.sportsgamer_storage_scope
+  (player_id,is_scandinavian,has_swedish_tournament,is_current_scope,verified_at)
+select distinct sports_gamer_player_id,false,true,true,now()
+from :"player_stats_stage"
+where upper(official_league_name)~'^(SEC|SCL)([^A-Z]|$)'
+  and coalesce(regular_skater_games,0)+coalesce(playoff_skater_games,0)
+    +coalesce(regular_goalie_games,0)+coalesce(playoff_goalie_games,0)
+    +coalesce(participant_regular_games,0)+coalesce(participant_playoff_games,0)>0
+on conflict(player_id) do update
+set has_swedish_tournament=true,verified_at=now();
+
+delete from :"player_stats_stage" s
+where not exists(select 1 from permanent_player_scope_stage p
+                 where p.sports_gamer_player_id=s.sports_gamer_player_id);
+\unset player_stats_stage

@@ -14,6 +14,9 @@ select 1 / case when count(*) >= 1000 and count(*) = count(distinct (sports_game
   as safety_check_must_equal_1
 from swedish_player_stats_stage;
 
+\set player_stats_stage swedish_player_stats_stage
+\ir filter-permanent-player-statistics.psql
+
 create temporary table swedish_player_stats_before on commit preserve rows as
 select stage.sports_gamer_league_id, stage.sports_gamer_team_id, stage.sports_gamer_player_id,
        (existing.sports_gamer_player_id is not null) as existed
@@ -50,4 +53,3 @@ select count(*) filter (where not existed) as new_rows,
        count(*) filter (where existed) as updated_rows,
        count(distinct sports_gamer_player_id) as swedish_players_with_rows
 from swedish_player_stats_before;
-
