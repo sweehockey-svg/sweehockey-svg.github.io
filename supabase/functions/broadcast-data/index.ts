@@ -31,6 +31,8 @@ async function read(claims){
   const files=unzipSync(bytes,{filter:f=>f.name==='result.json'&&f.originalSize<=12000000});
   if(!files['result.json'])throw Error('Invalid result');
   const data=JSON.parse(new TextDecoder().decode(files['result.json'])),parts=claims.id.split('_');
+  // Graphics remain short-lived; a signed broadcast snapshot lasts up to eight hours.
+  data.expires_at=data.broadcast_expires_at||data.expires_at;
   if(data.schema_version!==1||data.league_id!==claims.league||data.weekly?.start!==parts[2]||data.weekly?.end!==parts[3]||Math.floor(Date.parse(data.expires_at)/1000)!==claims.exp||!Array.isArray(data.teams)||!Array.isArray(data.players)||data.teams.length>10000||data.players.length>20000)throw Error('Invalid result');
   if([...data.teams,...data.players].some(p=>Number(p.sports_gamer_league_id)!==claims.league||!(Number(p.sports_gamer_team_id)>0)))throw Error('Mixed leagues');
   const clean={schema_version:1,league_id:data.league_id,fetched_at:data.fetched_at,expires_at:data.expires_at,teams:data.teams.map(t=>pick(t,teamFields)),players:data.players.map(p=>pick(p,playerFields))};

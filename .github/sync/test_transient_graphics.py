@@ -7,6 +7,10 @@ class TransientTests(unittest.TestCase):
   player={'sports_gamer_league_id':'532','sports_gamer_team_id':'1','sports_gamer_player_id':'7','display_gamertag':'GT','player_city':'PRIVATE','sports_gamer_user_id':'123','psn_tag':'PRIVATE','regular_points':'5'}
   result=build(532,'2026-10-11','2026-10-15',[team],[],[player],[],[])
   self.assertEqual(result['players'][0]['regular_points'],5)
+  from datetime import datetime
+  fetched=datetime.fromisoformat(result['fetched_at'])
+  self.assertEqual((datetime.fromisoformat(result['expires_at'])-fetched).total_seconds(),3600)
+  self.assertEqual((datetime.fromisoformat(result['broadcast_expires_at'])-fetched).total_seconds(),8*3600)
   for key in ['player_city','sports_gamer_user_id','psn_tag']:self.assertNotIn(key,result['players'][0])
   self.assertNotIn('city_in_league',result['teams'][0])
  def test_period_final_day_and_dedup(self):

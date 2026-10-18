@@ -21,5 +21,19 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
  assert.equal(body.data.players[0].regular_points,31);assert(!JSON.stringify(body).includes('private'));assert(!body.data.weekly);assert(!body.data.players[0].sports_gamer_user_id);
  assert.equal((await t.request({ticket:token})).status,200);assert.equal(t.calls(),3,'Cache should avoid another GitHub download');
  const wrong=setup({...data,league_id:529});assert.equal((await wrong.request({ticket:token})).status,502);
+ const broadcastExpiry=new Date(clock()+8*3600000).toISOString();
+ const longToken=await issueTicket(id,532,broadcastExpiry,secret);
+ const longReader=setup({...data,broadcast_expires_at:broadcastExpiry});
+ try{
+  Date.now=()=>clock()+5*3600000;
+  assert(await verifyTicket(longToken,secret),'Broadcast ticket must work after five hours');
+  const fiveHours=await longReader.request({ticket:longToken});assert.equal(fiveHours.status,200);
+  assert.equal((await fiveHours.json()).data.expires_at,broadcastExpiry,'OBS gets the broadcast expiry, not the one-hour graphics expiry');
+  Date.now=()=>clock()+8*3600000+1000;
+  assert.equal(await verifyTicket(longToken,secret),null);
+  assert.equal((await longReader.request({ticket:longToken})).status,401);
+ }finally{Date.now=clock;}
+ await assert.rejects(issueTicket(id,532,new Date(clock()+9*3600000).toISOString(),secret),/scope/);
+ assert.equal(fs.readFileSync(__dirname+'/graphics-fetch/tickets.ts','utf8'),fs.readFileSync(__dirname+'/broadcast-data/tickets.ts','utf8'),'Issuer and reader must use identical lifetime rules');
  console.log('Broadcast tickets and reader: signature, scope, expiry, anonymous signed read, no dispatch, public allowlist and memory cache passed.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

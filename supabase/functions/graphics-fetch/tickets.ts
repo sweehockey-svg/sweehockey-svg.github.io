@@ -6,7 +6,7 @@ const decode=text=>Uint8Array.from(atob(text.replaceAll('-','+').replaceAll('_',
 const message=body=>encoder.encode('swn-broadcast-data-v1\0'+body);
 const key=secret=>crypto.subtle.importKey('raw',encoder.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign','verify']);
 function valid(c){
- return c?.v===1&&allowedLeagues.has(c.league)&&/^[a-f0-9]{8}_\d{3}_\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}_[a-f0-9]{16}$/.test(c.id)&&Number(c.id.split('_')[1])===c.league&&Number.isInteger(c.exp)&&c.exp>Date.now()/1000&&c.exp<=Date.now()/1000+3660;
+ return c?.v===1&&allowedLeagues.has(c.league)&&/^[a-f0-9]{8}_\d{3}_\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}_[a-f0-9]{16}$/.test(c.id)&&Number(c.id.split('_')[1])===c.league&&Number.isInteger(c.exp)&&c.exp>Date.now()/1000&&c.exp<=Date.now()/1000+8*3600+60;
 }
 export async function issueTicket(id,league,expiresAt,secret){
  if(!secret)throw Error('Missing signing key');

@@ -84,7 +84,7 @@ def build(league,start,end,teams,roster,stats,matches,match_players):
   p=public_fields(row,fields);p['is_current_roster']=key in registered;players.append(p)
  if any(t['sports_gamer_league_id']!=league for t in safe_teams) or any(p['sports_gamer_league_id']!=league for p in players):raise ValueError('Mixed output leagues')
  now=datetime.now(timezone.utc)
- return dict(schema_version=1,league_id=league,source='sportsgamer-read-only',fetched_at=now.isoformat(),expires_at=(now+timedelta(hours=1)).isoformat(),teams=safe_teams,players=players,matches=public_matches(matches,teams,league),weekly=weekly_candidates(matches,match_players,league,start,end))
+ return dict(schema_version=1,league_id=league,source='sportsgamer-read-only',fetched_at=now.isoformat(),expires_at=(now+timedelta(hours=1)).isoformat(),broadcast_expires_at=(now+timedelta(hours=8)).isoformat(),teams=safe_teams,players=players,matches=public_matches(matches,teams,league),weekly=weekly_candidates(matches,match_players,league,start,end))
 def main():
  league=int(os.environ.get('LEAGUE_ID','532'));today=datetime.now(ZoneInfo('Europe/Stockholm')).date()
  start=os.environ.get('PERIOD_START') or (today-timedelta(days=6)).isoformat();end=os.environ.get('PERIOD_END') or today.isoformat()

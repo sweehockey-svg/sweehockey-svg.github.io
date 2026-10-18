@@ -79,7 +79,7 @@ Deno.serve(async req=>{
    cache.set(id,data);
   }
   if(!Number.isFinite(Date.parse(data.expires_at))||Date.parse(data.expires_at)<=Date.now()){cache.delete(id);return json({error:'Resultatet har gått ut. Hämta igen.'},410,origin);}
-  const broadcast_ticket=await issueTicket(id,data.league_id,data.expires_at,Deno.env.get('GITHUB_SYNC_TOKEN'));
+  const broadcast_ticket=await issueTicket(id,data.league_id,data.broadcast_expires_at||data.expires_at,Deno.env.get('GITHUB_SYNC_TOKEN'));
   return json({state:'completed',request_id:id,data,broadcast_ticket},200,origin);
  }catch(error){
   const message=error instanceof Error?error.message:'';
