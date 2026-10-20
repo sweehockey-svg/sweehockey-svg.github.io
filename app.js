@@ -16413,9 +16413,8 @@ function SEH_initShop() {
           }
         }
         rows = await hydrateApprovedFaImages(rows);
-        state.rows=rows
-          .filter((row)=>!row.player_key || clean(row.current_status)!=='team')
-          .map((row)=>({...row,_listingType:'free_agent'}));
+        // Active approved listings remain visible even with a tournament registration.
+        state.rows=rows.map((row)=>({...row,_listingType:'free_agent'}));
         updateOverview(); applyFilters();
       } catch(error) {
         console.error('Kunde inte hämta Free Agents:',error);
