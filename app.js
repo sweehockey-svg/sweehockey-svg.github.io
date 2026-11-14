@@ -14755,6 +14755,23 @@ function SEH_initShop() {
       </div>
     </div>`
   );
+  if (Date.now() < Date.parse("2026-12-05T00:00:00+01:00")) {
+    const earlyRegistrationOpen = Date.now() < Date.parse("2026-11-25T00:00:00+01:00");
+    templates.home = templates.home.replace('<section class="home-quicklinks"', `
+      <section class="home-ecl-registration" aria-labelledby="homeEclRegistrationTitle">
+        <div>
+          <p class="directory-kicker">NHL 27 · 6 MOT 6</p>
+          <h2 id="homeEclRegistrationTitle">ECL ’27: Winter – laganmälan öppen</h2>
+          <p><strong>Elite, Pro och kval:</strong> ${earlyRegistrationOpen ? "24 november kl. 23.59" : "Anmälan stängd"}<br>
+          <strong>Lite, Core och Neo:</strong> 4 december kl. 23.59</p>
+        </div>
+        <div class="home-ecl-registration__links">
+          <a class="portal-button portal-button--primary" href="https://sportsgamer.gg/leagues/535/registration">Anmäl laget hos SportsGamer ↗</a>
+          <a href="https://sportsgamer.gg/community/topic/7895-ecl-%E2%80%9927-winter-%E2%80%94-information-key-dates/">Divisioner, spelschema och viktiga datum ↗</a>
+        </div>
+      </section>
+      <section class="home-quicklinks"`);
+  }
   templates.records = `
     <main class="directory-shell seh-recordbook-shell" id="sehRecordbookRoot">
       <section class="seh-recordbook-hero">
