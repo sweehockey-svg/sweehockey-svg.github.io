@@ -275,7 +275,18 @@
     .home-ecl-registration__links { display:grid; justify-items:start; gap:8px; max-width:100%; }
     .home-ecl-registration__links>a:not(.portal-button) { color:#f3db8b; text-decoration:underline; }
   </style>
-  <script src="app.js?v=20261114-ecl-registration"></script>
+  <style>
+    .winter-rosters { margin-block: 22px; }
+    .winter-rosters > p a,.winter-roster-source { color: #f3db8b; text-decoration: underline; }
+    .winter-roster-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:10px; align-items:start; }
+    .winter-roster-team { border:1px solid #294051; border-radius:8px; background:#0b1720; padding:12px 14px; min-width:0; }
+    .winter-roster-team summary { cursor:pointer; overflow-wrap:anywhere; }
+    .winter-roster-team summary span { display:block; margin-top:3px; color:#abc1d0; font-size:.84rem; }
+    .winter-roster-team ul { padding-inline-start:1.2em; margin:10px 0; overflow-wrap:anywhere; }
+    .winter-roster-team li { margin-block:4px; }
+    .winter-roster-source { display:inline-block; font-size:.85rem; margin-top:6px; }
+  </style>
+  <script src="app.js?v=20261114-ecl-winter-rosters"></script>
   <script src="global-search-v1.js?v=20260920-v6"></script>
   <script src="recordbook-v1.js?v=20260920-three-status-v1"></script>
   <script src="player-public-extras-v1.js?v=20261003-no-repeat-lookup-v1"></script>

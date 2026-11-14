@@ -2981,6 +2981,40 @@ function SEH_playerProfileUrl(playerKey, gamertag, fromTeam = null) {
   return `#/spelare/${encodeURIComponent(routeValue)}${queryString ? `?${queryString}` : ""}`;
 }
 
+let sehWinterRosterRequest;
+function SEH_fetchWinterRosters() {
+  if (!sehWinterRosterRequest) {
+    sehWinterRosterRequest = fetch("ecl27-winter-rosters.json", { cache: "no-cache" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Truppfilen kunde inte hämtas.");
+        const snapshot = await response.json();
+        if (snapshot.leagueId !== 535 || !Array.isArray(snapshot.teams)) throw new Error("Fel truppkälla.");
+        return snapshot;
+      }).catch((error) => {
+        sehWinterRosterRequest = undefined;
+        throw error;
+      });
+  }
+  return sehWinterRosterRequest;
+}
+
+async function SEH_addWinterTeamLink(container, sportsGamerUrl) {
+  const id = Number(/\/players\/(\d+)\/?$/.exec(sportsGamerUrl)?.[1]);
+  if (!id) return;
+  const currentProfile = container.firstElementChild;
+  try {
+    const { teams } = await SEH_fetchWinterRosters();
+    if (!container.isConnected || container.firstElementChild !== currentProfile) return;
+    const matches = teams.filter((team) => team.players.some((player) => player.id === id));
+    if (matches.length !== 1) return;
+    const link = document.createElement("a");
+    link.className = "profile-action-link";
+    link.href = `#/sasong/ecl27winter?section=teams&teamId=${matches[0].id}`;
+    link.textContent = `ECL ’27 Winter: ${matches[0].name} →`;
+    container.append(link);
+  } catch { /* The regular profile remains available without Winter data. */ }
+}
+
 function SEH_teamProfileUrl(teamId) {
   const id = Number(teamId);
   return Number.isInteger(id) && id > 0
@@ -6513,6 +6547,7 @@ function SEH_initPlayer() {
         link.rel = "noopener noreferrer";
         link.textContent = "Öppna SportsGamer-profil ↗";
         elements.playerLinks.append(link);
+        void SEH_addWinterTeamLink(elements.playerLinks, latest.externalUrl);
       }
   
       const skaterGames = sum(rows, "skaterGames");
@@ -6800,6 +6835,7 @@ function SEH_initPlayer() {
         link.rel = "noopener noreferrer";
         link.textContent = "Öppna SportsGamer-profil ↗";
         elements.playerLinks.append(link);
+        void SEH_addWinterTeamLink(elements.playerLinks, profile.externalUrl);
       }
   
       elements.tournamentCount.textContent =
@@ -14767,6 +14803,7 @@ function SEH_initShop() {
         </div>
         <div class="home-ecl-registration__links">
           <a class="portal-button portal-button--primary" href="https://sportsgamer.gg/leagues/535/registration">Anmäl laget hos SportsGamer ↗</a>
+          <a href="#/sasong/ecl27winter?section=teams">Se anmälda lag och trupper →</a>
           <a href="https://sportsgamer.gg/community/topic/7895-ecl-%E2%80%9927-winter-%E2%80%94-information-key-dates/">Divisioner, spelschema och viktiga datum ↗</a>
         </div>
       </section>
@@ -18829,7 +18866,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       id: "ecl27winter", title: "ECL ’27: Winter", archiveLabel: "2026/27", archiveEra: "current",
       databaseLabel: "ECL 27 Winter", countryCode: "SE",
       divisions: [{ id: "elite", label: "Elite" }, { id: "pro", label: "Pro" }, { id: "lite", label: "Lite" }, { id: "core", label: "Core" }, { id: "neo", label: "Neo" }],
-      sections: ["overview"], status: "upcoming"
+      sections: ["overview", "teams"], status: "upcoming", registrationRosters: true
     }
   };
 
@@ -20851,6 +20888,87 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     }
   }
 
+  async function loadWinterRegistrationRosters(panel, initialTeamId) {
+    const status = panel.querySelector("[role=status]");
+    const list = panel.querySelector(".winter-roster-list");
+    const filter = panel.querySelector("select");
+    const search = panel.querySelector("input");
+    const divisions = { 540: "Elite", 541: "Pro", 542: "Lite", 543: "Core", 544: "Neo" };
+    let snapshot;
+    try {
+      snapshot = await SEH_fetchWinterRosters();
+    } catch {
+      status.textContent = "Kunde inte läsa trupperna. Använd SportsGamer-länken ovan.";
+      return;
+    }
+    if (!panel.isConnected) return;
+
+    const profiles = new Map();
+    function render() {
+      const term = search.value.trim().toLocaleLowerCase("sv");
+      const teams = snapshot.teams.filter((team) =>
+        (filter.value === "all" || String(team.requestedDivision) === filter.value) &&
+        (!term || [team.name, ...team.players.map((player) => player.name)]
+          .some((name) => name.toLocaleLowerCase("sv").includes(term))));
+      const checked = new Date(snapshot.checkedAt).toLocaleDateString("sv-SE", { timeZone: "Europe/Stockholm" });
+      status.textContent = `${teams.length} av ${snapshot.teams.length} lag · Hämtat ${checked}`;
+      list.innerHTML = teams.length ? teams.map((team) => `
+        <details class="winter-roster-team" data-winter-team="${Number(team.id)}">
+          <summary><strong>${escapeHtml(team.name)}</strong>
+            <span>${escapeHtml(divisions[team.requestedDivision] || "Ej angiven")} · ${team.players.length} registrerade</span></summary>
+          <ul>${team.players.map((player) => {
+            const profile = profiles.get(Number(player.id));
+            const url = profile ? SEH_playerProfileUrl(profile.player_key, profile.display_gamertag)
+              : `https://sportsgamer.gg/players/${Number(player.id)}`;
+            return `<li><a href="${escapeHtml(url)}"${profile ? "" : ' target="_blank" rel="noopener"'}>${escapeHtml(player.name)}</a></li>`;
+          }).join("")}</ul>
+          <a class="winter-roster-source" href="https://sportsgamer.gg/leagues/535/teams/${Number(team.id)}" target="_blank" rel="noopener">Lagtrupp på SportsGamer ↗</a>
+        </details>`).join("") : "<p>Inga lag matchar filtret.</p>";
+    }
+    filter.addEventListener("change", render);
+    search.addEventListener("input", render);
+    render();
+    const initialTeam = list.querySelector(`[data-winter-team="${Number(initialTeamId)}"]`);
+    if (initialTeam) {
+      initialTeam.open = true;
+      initialTeam.scrollIntoView({ block: "center" });
+    }
+
+    const ids = [...new Set(snapshot.teams.flatMap((team) => team.players.map((player) => Number(player.id))))]
+      .filter((id) => Number.isSafeInteger(id) && id > 0);
+    for (let start = 0; start < ids.length && panel.isConnected; start += 45) {
+      const urls = ids.slice(start, start + 45).map((id) => `https://sportsgamer.gg/players/${id}`);
+      try {
+        const rows = await seasonFetchAll("app_account_player_directory_cache", {
+          select: "player_key,display_gamertag,sports_gamer_player_url",
+          sports_gamer_player_url: `in.(${urls.join(",")})`
+        });
+        const matches = new Map();
+        for (const row of rows) {
+          const id = Number(/\/players\/(\d+)$/.exec(row.sports_gamer_player_url)?.[1]);
+          if (!matches.has(id)) matches.set(id, new Map());
+          matches.get(id).set(row.player_key, row);
+        }
+        for (const [id, choices] of matches) {
+          if (choices.size === 1) profiles.set(id, choices.values().next().value);
+        }
+      } catch (error) {
+        console.warn("Winter: behåller SportsGamer-länkarna.", error);
+      }
+    }
+    if (panel.isConnected && profiles.size) {
+      // Uppdatera bara länkarna så öppna trupper och tangentbordsfokus ligger kvar.
+      for (const link of list.querySelectorAll('li a[target="_blank"]')) {
+        const id = Number(link.pathname.split("/").pop());
+        const profile = profiles.get(id);
+        if (!profile) continue;
+        link.href = SEH_playerProfileUrl(profile.player_key, profile.display_gamertag);
+        link.removeAttribute("target");
+        link.removeAttribute("rel");
+      }
+    }
+  }
+
   function initializeSeasonView(view, route) {
     const seasonId =
       normalizeSeasonId(route.params.seasonId);
@@ -20894,7 +21012,9 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       const availableLabels = seasonSectionLabels(season);
       seasonHeroStatus.textContent = season.leagueIds?.length
         ? `${availableLabels.join(", ")} finns tillgängligt för ${competitionName} den här säsongen.`
-        : `Säsongen är ännu inte igång. När ${competitionName}-data finns aktiveras tillgängliga vyer här.`;
+        : season.registrationRosters
+          ? "Anmälan är öppen. Se registrerade lag och spelare under Lag."
+          : `Säsongen är ännu inte igång. När ${competitionName}-data finns aktiveras tillgängliga vyer här.`;
     }
 
     if (teamsLink) {
@@ -20996,6 +21116,35 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       }
 
       loadSeasonDashboard(view, season, selectedSection);
+    } else if (season.registrationRosters) {
+      if (overview) {
+        overview.hidden = selectedSection !== "overview";
+        overview.innerHTML = `
+          <p class="directory-kicker">ECL · ANMÄLAN</p>
+          <h2>${escapeHtml(season.title)}</h2>
+          <p>Se vilka lag och spelare som är registrerade för Winter. Ansökt division kan ändras efter anmälan och kval.</p>
+          <div class="season-upcoming-actions-v12840">
+            <a href="${seasonSectionRoute(seasonId, "teams")}">Visa anmälda lag och trupper →</a>
+            <a href="https://sportsgamer.gg/leagues/535/registration" target="_blank" rel="noopener">Anmäl laget på SportsGamer ↗</a>
+          </div>`;
+      }
+      if (panels && selectedSection === "teams") {
+        panels.hidden = false;
+        panels.className = "winter-rosters";
+        panels.id = "teams";
+        panels.innerHTML = `
+          <p class="directory-kicker">ECL ’27 WINTER · ANMÄLAN</p>
+          <h2>Anmälda lag och trupper</h2>
+          <p>Ansökt division är preliminär. Trupperna visar bara spelare som är registrerade för Winter, inte tidigare säsonger.
+            <a href="https://sportsgamer.gg/leagues/535/teams" target="_blank" rel="noopener">Källa: SportsGamer ↗</a></p>
+          <div class="season-team-controls">
+            <label><span>ANSÖKT DIVISION</span><select><option value="all">Alla divisioner</option>
+              ${season.divisions.map((item, index) => `<option value="${540 + index}">${escapeHtml(item.label)}</option>`).join("")}</select></label>
+            <label><span>SÖK</span><input type="search" placeholder="Lag eller spelare…"></label>
+          </div>
+          <p role="status">Hämtar trupper…</p><div class="winter-roster-list"></div>`;
+        loadWinterRegistrationRosters(panels, route.query.get("teamId"));
+      } else if (panels) panels.hidden = true;
     } else {
       if (overview) {
         overview.innerHTML = `
