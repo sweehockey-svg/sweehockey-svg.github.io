@@ -34,6 +34,20 @@ vm.runInContext(body + `
   assert.equal(result[0].players, invictus.players);
   assert.equal(result[0].club, swedish);
   assert.equal(SEH_winterSwedishTeams(all, [swedish, { ...swedish, team_id: 3 }]).length, 0);
+  const refuse = snapshot.teams.find((team) => team.id === 4523 && team.players.some((player) => player.id === 4596));
+  assert.ok(refuse);
+  const jeppe = { player_key: "jeppe-profile", player_country: "SE", sports_gamer_player_url: "https://sportsgamer.gg/players/4596", team_external_id: 6987, team_name_in_tournament: "MRAZIX", division: "Pro", league_id: 508 };
+  const threeStars = { ...jeppe, team_external_id: 5979, team_name_in_tournament: "Three Stars" };
+  const move = { player_id: 4596, transfer_date: "2026-04-21", to_team_id: 6987 };
+  const moves = SEH_winterTransferRows(snapshot, [jeppe, threeStars], [move]);
+  assert.equal(moves.length, 1);
+  assert.equal(moves[0].from_team, "MRAZIX");
+  assert.equal(moves[0].to_team, "Refuse Too Lose");
+  assert.equal(moves[0].to_division, "Lite");
+  assert.equal(moves[0].transfer_date, undefined);
+  assert.equal(SEH_winterTransferRows(snapshot, [jeppe, threeStars], []).length, 0);
+  assert.equal(SEH_winterTransferRows(snapshot, [{ ...jeppe, team_external_id: 4523 }], []).length, 0);
+  assert.equal(SEH_winterTransferRows(snapshot, [{ ...jeppe, player_country: "FI" }], []).length, 0);
 `, context);
 
 const routeParser = app.slice(app.indexOf("  function normalizeSeasonId("), app.indexOf("  function headerHtml("));

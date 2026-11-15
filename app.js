@@ -3050,6 +3050,42 @@ function SEH_winterSwedishTeams(snapshot, localTeams) {
   });
 }
 
+function SEH_winterTransferRows(snapshot, springRows, springMoves) {
+  const current = SEH_winterPlayerTeams(snapshot);
+  const history = new Map();
+  for (const row of springRows) {
+    const id = Number(/\/players\/(\d+)\/?$/.exec(row.sports_gamer_player_url)?.[1]);
+    const teamId = Number(row.team_external_id);
+    if (!current.get(id) || row.player_country !== "SE" || !teamId || !row.team_name_in_tournament) continue;
+    if (!history.has(id)) history.set(id, new Map());
+    history.get(id).set(teamId, row);
+  }
+  const latest = new Map();
+  for (const move of springMoves) {
+    const id = Number(move.player_id);
+    if (!history.has(id) || !move.transfer_date) continue;
+    const prior = latest.get(id);
+    const destination = Number(move.to_team_id);
+    if (!prior || move.transfer_date > prior.date) latest.set(id, { date: move.transfer_date, id: destination });
+    else if (move.transfer_date === prior.date && destination !== prior.id) latest.set(id, { date: prior.date, id: 0 });
+  }
+  return [...history].flatMap(([id, teams]) => {
+    const winter = current.get(id);
+    const movement = latest.get(id);
+    const spring = movement ? teams.get(movement.id) : teams.size === 1 ? teams.values().next().value : null;
+    if (!spring || Number(spring.team_external_id) === Number(winter.id)) return [];
+    const player = winter.players.find((entry) => Number(entry.id) === id);
+    return [{
+      player_name: player.name, player_id: spring.player_key || id, nationality: "SE",
+      from_team: spring.team_name_in_tournament, from_division: spring.division,
+      to_team: winter.name, to_division: SEH_WINTER_DIVISIONS[winter.requestedDivision],
+      from_url: `https://sportsgamer.gg/leagues/${Number(spring.league_id)}/teams/${Number(spring.team_external_id)}`,
+      to_url: `https://sportsgamer.gg/leagues/535/teams/${Number(winter.id)}`,
+      registration_comparison: true
+    }];
+  }).sort((a, b) => a.player_name.localeCompare(b.player_name, "sv"));
+}
+
 function SEH_winterPlayerTeams(snapshot) {
   const matches = new Map();
   for (const team of snapshot?.teams || []) {
@@ -19829,6 +19865,9 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       ToTeamID: row.to_team_id,
       ToLeagueID: row.to_league_id,
       toTeamLogo: row.to_team_logo,
+      FromUrl: row.from_url,
+      ToUrl: row.to_url,
+      registrationComparison: row.registration_comparison,
       playerImage: row.player_image,
       GroupGames26Winter: row.previous_group_games,
       TotalGames26Winter: row.previous_total_games,
@@ -20361,10 +20400,11 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       const name = seasonText(row[from ? "From" : "To"], from ? "Free Agent" : "Okänt lag");
       const division = seasonText(row[from ? "FromDiv" : "ToDiv"], "");
       const logo = seasonText(row[from ? "fromTeamLogo" : "toTeamLogo"], "");
-      const href = teamHref(row[from ? "FromTeamID" : "ToTeamID"], row[from ? "FromLeagueID" : "ToLeagueID"]);
+      const sourceUrl = row[from ? "FromUrl" : "ToUrl"];
+      const href = sourceUrl || teamHref(row[from ? "FromTeamID" : "ToTeamID"], row[from ? "FromLeagueID" : "ToLeagueID"]);
       const content = `<div class="season-transfer-team-logo" data-season-transfer-logo data-team-name="${escapeHtml(name)}" data-logo-url="${escapeHtml(logo)}"></div><div><small>${from ? "FRÅN" : "TILL"}</small><strong>${escapeHtml(name)}</strong><span>${escapeHtml(division)}</span></div>`;
       return href
-        ? `<a class="season-transfer-team" href="${escapeHtml(href)}">${content}</a>`
+        ? `<a class="season-transfer-team" href="${escapeHtml(href)}"${sourceUrl ? ' target="_blank" rel="noopener"' : ""}>${content}</a>`
         : `<div class="season-transfer-team is-unlinked">${content}</div>`;
     };
     const activateLogos = () => {
@@ -20386,7 +20426,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           <div class="season-transfer-player">
             <a href="${escapeHtml(SEH_playerProfileUrl(row.playerID, row.Player))}">
               <img src="${escapeHtml(SEH_playerImageUrl(row.playerID))}" alt="${escapeHtml(seasonText(row.Player))}" loading="lazy">
-              <div><h4>${escapeHtml(seasonText(row.Player))}</h4><time>${escapeHtml(seasonDate(row.Date))}</time>${row.Role ? `<span>${escapeHtml(row.Role)}</span>` : ""}</div>
+              <div><h4>${escapeHtml(seasonText(row.Player))}</h4>${row.registrationComparison ? "<span>Inför Winter · registrerad</span>" : `<time>${escapeHtml(seasonDate(row.Date))}</time>`}${row.Role ? `<span>${escapeHtml(row.Role)}</span>` : ""}</div>
             </a>
           </div>
           <div class="season-transfer-move">
@@ -20399,6 +20439,19 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     };
     search.addEventListener("input", render);
     render();
+  }
+
+  function seasonTeamCardHeader(name, logo, division, badges, subtitle) {
+    const logoAttributes = `data-season-team-logo data-team-name="${escapeHtml(name)}" data-logo-url="${escapeHtml(logo || "")}"`;
+    return `<div class="season-team-card__watermark" ${logoAttributes} aria-hidden="true"></div>
+      <header class="season-team-card__header">
+        <div class="season-team-card__logo" ${logoAttributes}></div>
+        <div class="season-team-card__identity">
+          <div class="season-team-card__eyebrow"><span class="season-team-division">${escapeHtml(division)}</span>${badges}</div>
+          <h4>${escapeHtml(name)}</h4>
+          <p>${escapeHtml(subtitle)}</p>
+        </div>
+      </header>`;
   }
 
   function initializeSeasonTeams(view, rows, options = {}) {
@@ -20538,19 +20591,10 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           : `<div class="season-team-card__summary season-team-card__summary--muted"><p><strong>Topp svensk:</strong> Ingen svensk spelare kopplad ännu</p><p><strong>Status:</strong> ${escapeHtml(playoff)}</p></div>`;
         return `<article class="season-team-card">
           <a class="season-team-card__link" href="${escapeHtml(href)}"${external ? ` target="_blank" rel="noopener noreferrer"` : ""}>
-            <div class="season-team-card__watermark" data-season-team-logo data-team-name="${escapeHtml(seasonTeamName(row))}" data-logo-url="${escapeHtml(seasonText(row.logo_url, ""))}" aria-hidden="true"></div>
-            <header class="season-team-card__header">
-              <div class="season-team-card__logo" data-season-team-logo data-team-name="${escapeHtml(seasonTeamName(row))}" data-logo-url="${escapeHtml(seasonText(row.logo_url, ""))}"></div>
-              <div class="season-team-card__identity">
-                <div class="season-team-card__eyebrow">
-                  <span class="season-team-division">${escapeHtml(seasonDivision(row))}</span>
-                  ${groupLabel ? `<span class="season-team-group">Grupp ${escapeHtml(groupLabel)}</span>` : ""}
-                  <span class="season-team-status-badge ${playoffClass}">${escapeHtml(playoff)}</span>
-                </div>
-                <h4>${escapeHtml(seasonTeamName(row))}</h4>
-                <p>${row.table_position ? `Tabellplacering ${escapeHtml(placementLabel)}` : "Tabellplacering saknas"}</p>
-              </div>
-            </header>
+            ${seasonTeamCardHeader(seasonTeamName(row), row.logo_url, seasonDivision(row),
+              `${groupLabel ? `<span class="season-team-group">Grupp ${escapeHtml(groupLabel)}</span>` : ""}
+              <span class="season-team-status-badge ${playoffClass}">${escapeHtml(playoff)}</span>`,
+              row.table_position ? `Tabellplacering ${placementLabel}` : "Tabellplacering saknas")}
             <div class="season-team-highlights">
               <div><span>POÄNG</span><strong>${seasonNumber(row.table_points)}</strong></div>
               <div><span>PLACERING</span><strong>${escapeHtml(placementLabel)}</strong></div>
@@ -20922,7 +20966,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
         });
         if (!matches.length && season.registrationRosters) {
           status.textContent = "Inga svenska Winter-matcher finns publicerade ännu.";
-          content.querySelector("#matches").hidden = true;
+          initializeSeasonMatches(view, { matcher: { all: [] } });
           return;
         }
         if (!matches.length) throw new Error("Inga matcher hittades i Supabase för säsongen.");
@@ -20934,9 +20978,26 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           season_id: `eq.${season.id}`,
           order: "transfer_date.desc"
         });
-        if (!transfers.length && season.registrationRosters) {
-          status.textContent = "Inga bekräftade svenska spelarbyten har publicerats för Winter ännu.";
-          content.querySelector("#transfers").hidden = true;
+        if (season.registrationRosters) {
+          const [snapshot, springRows, springMoves] = await Promise.all([
+            SEH_fetchWinterRosters(),
+            seasonFetchLeagueSet("v_ehockey_player_tournaments_web_v14", seasons.ecl26spring.leagueIds, {
+              select: "player_key,player_country,sports_gamer_player_url,team_external_id,team_name_in_tournament,division,league_id",
+              player_country: "eq.SE"
+            }),
+            seasonFetchAll("ehockey_season_transfers_v1", {
+              select: "transfer_date,player_id,to_team_id",
+              season_id: "eq.ecl26spring",
+              nationality: "eq.SE",
+              order: "transfer_date.desc,player_id,to_team_id"
+            })
+          ]);
+          if (!view.isConnected) return;
+          const datedNames = new Set(transfers.map((row) => String(row.player_name || "").trim().toLowerCase()));
+          const inferred = SEH_winterTransferRows(snapshot, springRows, springMoves)
+            .filter((row) => !datedNames.has(row.player_name.trim().toLowerCase()));
+          initializeSeasonTransfers(view, { overgangar: seasonSupabaseTransferRows([...transfers, ...inferred]) });
+          status.textContent = "Spring-lag jämförda med registrerade Winter-trupper hos SportsGamer.";
           return;
         }
         if (!transfers.length) throw new Error("Inga spelarbyten hittades i Supabase för säsongen.");
@@ -21009,6 +21070,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
   async function loadWinterRegistrationRosters(panel, initialTeamId) {
     const status = panel.querySelector("[role=status]");
     const list = panel.querySelector(".winter-roster-list");
+    const summary = panel.querySelector("#seasonTeamSummary");
     const filter = panel.querySelector("#seasonTeamDivision");
     const sort = panel.querySelector("#seasonTeamSort");
     const search = panel.querySelector("#seasonTeamSearch");
@@ -21046,21 +21108,30 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
         });
       const checked = new Date(snapshot.checkedAt).toLocaleDateString("sv-SE", { timeZone: "Europe/Stockholm" });
       status.textContent = `${teams.length} av ${swedishTeams.length} svenska lag · Hämtat ${checked}`;
+      summary.innerHTML = `
+        <article><span>VISAR LAG</span><strong>${teams.length}</strong></article>
+        <article><span>REGISTRERADE SPELARE</span><strong>${new Set(teams.flatMap((team) => team.players.map((player) => Number(player.id)))).size}</strong></article>
+        <article><span>ANSÖKTA DIVISIONER</span><strong>${new Set(teams.map((team) => divisions[team.requestedDivision]).filter(Boolean)).size}</strong></article>`;
       list.innerHTML = teams.length ? teams.map((team) => `
-        <details class="winter-roster-team" data-winter-team="${Number(team.id)}">
-          <summary><span class="season-team-card__header">
-            <span class="season-team-card__logo" data-season-team-logo data-team-name="${escapeHtml(team.name)}" data-logo-url="${escapeHtml(team.club.logo_url || "")}"></span>
-            <span class="season-team-card__identity"><strong>${escapeHtml(team.name)}</strong>
-            <small>${escapeHtml(divisions[team.requestedDivision] || "Ej angiven")} · ${team.players.length} registrerade</small></span>
-          </span></summary>
-          <ul>${team.players.map((player) => {
+        <article class="season-team-card"><div class="season-team-card__link">
+          ${seasonTeamCardHeader(team.name, team.club.logo_url, divisions[team.requestedDivision] || "Ej angiven",
+            '<span class="season-team-status-badge is-positive">Anmält</span>', "Ansökt division är preliminär")}
+          <div class="season-team-highlights">
+            <div><span>REGISTRERADE</span><strong>${team.players.length}</strong></div>
+            <div><span>POÄNG</span><strong>–</strong></div>
+            <div><span>PLACERING</span><strong>–</strong></div>
+          </div>
+          <details class="winter-roster-team" data-winter-team="${Number(team.id)}">
+            <summary>Visa Winter-trupp</summary>
+            <ul>${team.players.map((player) => {
             const profile = profiles.get(Number(player.id));
             const url = profile ? SEH_playerProfileUrl(profile.player_key, profile.display_gamertag)
               : `https://sportsgamer.gg/players/${Number(player.id)}`;
             return `<li><a href="${escapeHtml(url)}"${profile ? "" : ' target="_blank" rel="noopener"'}>${escapeHtml(player.name)}</a></li>`;
           }).join("")}</ul>
-          <a class="winter-roster-source" href="https://sportsgamer.gg/leagues/535/teams/${Number(team.id)}" target="_blank" rel="noopener">Lagtrupp på SportsGamer ↗</a>
-        </details>`).join("") : `<p>${swedishTeams.length ? "Inga lag matchar filtret." : "Inga anmälda lag är ännu identifierade som svenska i lagregistret."}</p>`;
+            <a class="winter-roster-source" href="https://sportsgamer.gg/leagues/535/teams/${Number(team.id)}" target="_blank" rel="noopener">Lagtrupp på SportsGamer ↗</a>
+          </details>
+        </div></article>`).join("") : `<p class="season-empty">${swedishTeams.length ? "Inga lag matchar filtret." : "Inga anmälda lag är ännu identifierade som svenska i lagregistret."}</p>`;
       for (const logo of list.querySelectorAll("[data-season-team-logo]")) {
         SEH_renderTeamLogo(logo, [logo.dataset.logoUrl], logo.dataset.teamName);
       }
@@ -21233,7 +21304,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
             <div class="season-match-list" id="seasonMatchList"></div>
           </section>
           <section class="season-data-section" id="transfers" data-season-section="transfers">
-            <div class="season-data-heading"><div><span>BYTEN</span><h3>Svenska ECL-byten</h3><p>Här visas svenska spelare som bytt ECL-lag inför eller under säsongen. Varje kort visar spelare, datum, tidigare lag och nytt lag.</p></div></div>
+            <div class="season-data-heading"><div><span>BYTEN</span><h3>Svenska ECL-byten</h3><p>${season.registrationRosters ? "Svenska spelare som är registrerade för ett nytt lag i Winter. Där datum saknas visas bytet som inför Winter." : "Här visas svenska spelare som bytt ECL-lag inför eller under säsongen. Varje kort visar spelare, datum, tidigare lag och nytt lag."}</p></div></div>
             <div class="season-transfer-toolbar"><div><span>ÖVERGÅNGAR</span><h4>Svenska spelare som bytt lag</h4></div><label><span>SÖK</span><input id="seasonTransferSearch" type="search" placeholder="Sök spelare eller lag…"></label></div>
             <div class="season-summary-bar" id="seasonTransferSummary"></div>
             <div class="season-transfer-list" id="seasonTransferList"></div>
@@ -21249,7 +21320,8 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
               <label><span>SORTERA</span><select id="seasonTeamSort"><option value="division">Division + namn</option><option value="name">Namn A–Ö</option><option value="players">Flest registrerade</option></select></label>
               <label class="season-team-controls__search"><span>SÖK</span><input id="seasonTeamSearch" type="search" placeholder="Sök lag eller spelare…"></label>
             </div>
-            <p role="status">Hämtar svenska trupper…</p><div class="winter-roster-list season-team-list"></div>
+            <p role="status">Hämtar svenska trupper…</p><div class="season-summary-bar" id="seasonTeamSummary"></div>
+            <div class="winter-roster-list season-team-list"></div>
           </section>` : `
           <section class="season-data-section" id="teams" data-season-section="teams">
             <div class="season-data-heading"><div><span>LAG</span><h3>Svenska eHockey-lag</h3><p>Här samlas svenska lag i ${escapeHtml(season.title)} med division, tabellplacering, poäng och aktuell slutspelsstatus.</p></div></div>
