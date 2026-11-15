@@ -32,7 +32,7 @@
     [0,80,220,500,1000,1800,3000].forEach((delay) => {
       window.setTimeout(() => {
         if (ecl27RendererReady) return;
-        mountSourceState("loading", "Laddar svenska lagbyggen…", "Hämtar Spring-trupper och bekräftade ECL 27-rörelser från Svensk eHockey.");
+        mountSourceState("loading", "Laddar svenska lagbyggen…", "Förbereder lagbyggena inför ECL ’27 Winter.");
       }, delay);
     });
   }
@@ -52,17 +52,16 @@
     ecl27RendererReady = true;
     document.querySelector('#ecl27TeamBuildsV2[data-ecl27-loading="loading"]')?.remove();
 
-    if (!DATA || DATA.build === "supabase-loading" || DATA.build === "supabase-error") {
-      console.error("[ECL27] source model unavailable");
-      [0,100,350,800].forEach((delay) => window.setTimeout(() => {
-        mountSourceState("error", "Kunde inte hämta lagbyggen", "Försök ladda om sidan. Ingen tom 0-lagsmodell visas som riktig data.");
-      }, delay));
-      return;
-    }
+    const buildsUnavailable = !DATA || !Array.isArray(DATA.springTeams) || !Array.isArray(DATA.newTeams) ||
+      DATA.build === "supabase-loading" || DATA.build === "supabase-error";
+    // SCL is archived. Its registered lineup must not replace a Winter work-in-progress.
+    DATA = buildsUnavailable
+      ? { build:"winter-registration-only", springTeams:[], newTeams:[], events:[], aliases:{} }
+      : { ...DATA, officialSclTeams:[] };
 
   const TEAM_QUERY_PARAM = "ecl27lag";
   const DIVISION_ORDER = Object.freeze({Elite:0,Pro:1,Lite:2,Core:3,Neo:4,Nytt:5});
-  const state = {search:"",division:"all",status:"all"};
+  const state = {search:"",division:"all",status:"all",unregistered:null};
   const $ = (selector, root=document) => root.querySelector(selector);
   const numberFormat = new Intl.NumberFormat("sv-SE");
   let directoryClient = null;
@@ -999,6 +998,7 @@
 
   function filteredTeams() {
     return sortedTeams().filter((team) => {
+      if (!state.unregistered?.includes(team)) return false;
       const status = statusFor(team);
       if (state.division !== "all" && team.division !== state.division) return false;
       if (state.status === "official-scl" && !team.officialScl) return false;
@@ -1018,10 +1018,10 @@
     const host = $("#ecl27v2Grid");
     if (!host) return;
     const teams = filteredTeams();
-    host.innerHTML = teams.map(renderTeamCard).join("");
+    host.innerHTML = teams.map(renderTeamCard).join("") || '<p>Inga lagbyggen matchar filtret.</p>';
     applyTeamPowerToDom(host);
     const result = $("#ecl27v2Result");
-    if (result) result.textContent = `${teams.length} av ${model.teams.length} lag/projekt`;
+    if (result) result.textContent = `${teams.length} av ${state.unregistered?.length || 0} lag/projekt`;
   }
 
   function springBasePlayers(team) {
@@ -1383,6 +1383,7 @@
     style.id = "ecl27TeamBuildsV2Style";
     style.textContent = `
       .ecl27v2{margin:28px 0 44px;color:#f5f1e8;scroll-margin-top:90px}.ecl27v2 *{box-sizing:border-box}.ecl27v2 a{color:inherit;text-decoration:none}.ecl27v2 a:hover,.ecl27v2 a:focus-visible{color:#f0d58b;text-decoration:underline;text-underline-offset:2px}
+      .ecl27v2 [hidden]{display:none!important}.winter-build-team-heading{display:flex;align-items:center;gap:12px}.winter-build-team-heading h4,#winterBuildMoves h4{margin:0;font-size:1.1rem}.winter-build-team-heading p,#winterBuildMoves p{margin:5px 0;color:#9fb0c0;font-size:.88rem}.winter-build-logo{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px}.winter-build-logo img{width:100%;height:100%;object-fit:contain}.winter-build-team-heading+details{margin-top:13px;padding-top:10px;border-top:1px solid #203549}.winter-build-team-heading+details summary{cursor:pointer;color:#f0d58b}.winter-build-team-heading+details ul{padding-inline-start:1.2rem}.winter-build-agents{display:flex;flex-wrap:wrap;gap:10px;padding:14px}.winter-build-agents a{border:1px solid #203549;border-radius:8px;padding:6px 10px}#winterBuildMoves time{color:#f0d58b;font-size:.8rem}
       .ecl27v2-hero{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:28px;padding:32px;border:1px solid rgba(214,177,95,.3);border-radius:22px;background:linear-gradient(135deg,#030b14,#071426);box-shadow:0 24px 60px rgba(0,0,0,.22)}.ecl27v2-hero h2{margin:4px 0 12px;font-size:clamp(36px,4vw,64px);line-height:.95;letter-spacing:-.04em}.ecl27v2-hero>div>p:last-of-type{max-width:850px;color:#aebdca;line-height:1.6}
       .ecl27v2-stamp{align-self:center;padding:18px;border:1px solid rgba(214,177,95,.25);border-radius:15px;background:rgba(0,0,0,.22)}.ecl27v2-stamp span,.ecl27v2-stamp small{display:block;color:#7890a4;font-size:10px;font-weight:900;letter-spacing:.1em}.ecl27v2-stamp strong{display:block;margin:6px 0 8px;color:#f0d58b;font-size:18px}
       .ecl27v2-overview{display:grid;grid-template-columns:repeat(5,1fr);margin:14px 0 20px;border:1px solid #172839;border-radius:16px;overflow:hidden;background:#030a12}.ecl27v2-overview>div{padding:18px 20px;border-right:1px solid #172839}.ecl27v2-overview>div:last-child{border-right:0}.ecl27v2-overview span{display:block;color:#57e6dc;font-size:9px;font-weight:950;letter-spacing:.12em}.ecl27v2-overview strong{display:block;margin:5px 0 2px;color:#ffd900;font-size:30px}.ecl27v2-overview small{color:#70869a;font-size:10px}
@@ -1711,34 +1712,135 @@
     document.head.appendChild(style);
   }
 
-  function renderListSection(section) {
-    // The SPA keeps this module alive when navigating between routes.
-    // A newly mounted list view must therefore start with clean filters,
-    // otherwise an old search can stay active behind an empty new input.
+  function unregisteredBuilds(teams, registrations) {
+    const localIds = new Set(registrations.map(team => Number(team.club.team_id)));
+    const names = new Set(registrations.map(team => norm(team.name)));
+    return teams.filter(team => !localIds.has(Number(teamId(team.name))) && !names.has(norm(team.name))
+      && (team.kind === "new" || team.recruitment || team.timeline.length));
+  }
+
+  function renderRegisteredWinterCard(team, open) {
+    const id = Number(team.id);
+    const division = SEH_WINTER_DIVISIONS[team.requestedDivision];
+    return `<article class="ecl27v2-card">
+      <div class="winter-build-team-heading"><span class="winter-build-logo" data-winter-logo="${esc(team.name)}" data-logo-url="${esc(team.club.logo_url)}"></span>
+        <div><h4>${esc(team.name)}</h4><p>${division ? `Ansökt: <strong>${esc(division)}</strong> · preliminär` : "Ansökt division ej angiven"}</p></div></div>
+      <details data-winter-roster="${id}"${open ? " open" : ""}>
+        <summary>${team.players.length} registrerade · visa trupp</summary>
+        ${team.players.length ? `<ul>${team.players.map(player => `<li><a href="https://sportsgamer.gg/players/${Number(player.id)}" target="_blank" rel="noopener">${esc(player.name)}</a></li>`).join("")}</ul>` : "<p>Inga registrerade spelare än.</p>"}
+        <a href="https://sportsgamer.gg/leagues/535/teams/${id}" target="_blank" rel="noopener">Lagtrupp på SportsGamer ↗</a>
+      </details>
+    </article>`;
+  }
+
+  function hydrateWinterMoves(section) {
+    const feed = $("#winterBuildMoves", section);
+    void Promise.resolve().then(() => window.SEH_loadWinterTransfers()).then(rows => {
+      if (!feed.isConnected) return;
+      const verified = rows.filter(row => /^\d{4}-\d{2}-\d{2}$/.test(row.Date || "")
+        && ["SE","SWE","SWEDEN","SVERIGE"].includes(String(row.nationality || "").trim().toUpperCase()))
+        .slice(0, 8);
+      feed.innerHTML = verified.length ? verified.map(row => `<article class="ecl27v2-card">
+        <time datetime="${esc(row.Date)}">${esc(formatDate(row.Date))}</time>
+        <h4><a href="${esc(window.SEH_playerProfileUrl(row.playerID, row.Player))}">${esc(row.Player)}</a></h4>
+        <p>${esc(row.From)} <span aria-label="till">→</span> ${esc(row.To)}</p></article>`).join("")
+        : "<p>Inga daterade Winter-byten har publicerats ännu.</p>";
+    }).catch(() => { if (feed.isConnected) feed.textContent = "Kunde inte hämta Winter-byten."; });
+  }
+
+  function hydrateFreeAgents(section) {
+    const panel = $("#winterBuildFreeAgents", section);
+    const client = getDirectoryClient();
+    if (!client) { panel.textContent = "Öppna Free Agents för hela listan."; return; }
+    void (async () => {
+      try {
+        const {data,error} = await client.from("v_ehockey_free_agents_public")
+          .select("player_key,display_gamertag").order("fa_date", {ascending:false}).limit(6);
+        if (error) throw error;
+        if (!panel.isConnected) return;
+        const listed = (data || []).filter(row => row.display_gamertag);
+        panel.innerHTML = listed.length ? listed.map(row => `<a href="${esc(window.SEH_playerProfileUrl(row.player_key,row.display_gamertag))}">${esc(row.display_gamertag)}</a>`).join("")
+          : "<p>Inga aktiva Free Agent-annonser just nu.</p>";
+      } catch { if (panel.isConnected) panel.textContent = "Kunde inte hämta annonserna här. Öppna Free Agents för hela listan."; }
+    })();
+  }
+
+  function renderListSection(section, wantedSlug) {
     state.search = "";
     state.division = "all";
     state.status = "all";
+    state.unregistered = null;
 
-    const springCount = DATA.springTeams.length;
-    const newCount = DATA.newTeams.length;
-    const officialCount = model.teams.filter((team) => team.officialScl).length;
-    const knownNow = model.teams.reduce((sum,team) => sum + team.playersNow.length,0);
-    const movementCount = model.teams.reduce((sum,team) => sum + team.timeline.length,0);
+    section.innerHTML = `<header class="ecl27v2-hero"><div><p class="directory-kicker">ECL ’27 WINTER</p><h2>Svenska lagbyggen</h2><p>Följ vilka svenska lag som har anmält sig och vilka spelare de har registrerat inför Winter.</p></div>
+      <div class="ecl27v2-stamp"><span>ANMÄLAN</span><strong>ECL ’27 Winter</strong><small><a href="https://sportsgamer.gg/leagues/535/registration" target="_blank" rel="noopener">Officiell anmälan på SportsGamer ↗</a></small></div></header>
+      <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">SPORTSGAMER</p><h3>Anmälda svenska lag</h3></div><span id="winterBuildCount" role="status">Hämtar trupper…</span></div>
+        <div class="ecl27v2-toolbar"><label>SÖK<input id="winterBuildSearch" type="search" placeholder="Lag eller spelare…"></label><label>ANSÖKT DIVISION<select id="winterBuildDivision"><option value="all">Alla divisioner</option>${Object.entries(SEH_WINTER_DIVISIONS).map(([id,division]) => `<option value="${id}">${esc(division)}</option>`).join("")}</select></label></div>
+        <div id="winterBuildRegistered" class="ecl27v2-grid"></div>
+      </section>
+      <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">VERIFIERADE WINTER-BYTEN</p><h3>Senaste byten</h3></div><a href="#/sasong/ecl27winter?section=transfers">Alla byten →</a></div><div id="winterBuildMoves" class="ecl27v2-grid">Hämtar byten…</div></section>
+      <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">SPELARE SOM SÖKER LAG</p><h3>Free Agents</h3></div><a href="#/free-agents">Alla Free Agents →</a></div><div id="winterBuildFreeAgents" class="winter-build-agents">Hämtar annonser…</div></section>
+      <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">ARBETSMATERIAL · EJ ANMÄLDA ÄNNU</p><h3>Lag som bygger vidare</h3></div><span id="ecl27v2Result" role="status">Kontrollerar anmälningar…</span></div>
+        <div class="ecl27v2-toolbar" id="winterBuildProjectFilters" hidden><label>SÖK<input id="ecl27v2Search" type="search" placeholder="Lag eller spelare…"></label><label>TIDIGARE NIVÅ<select id="ecl27v2Division"><option value="all">Alla nivåer</option><option>Elite</option><option>Pro</option><option>Lite</option><option>Core</option><option>Neo</option><option value="Nytt">Nya projekt</option></select></label></div>
+        <div id="ecl27v2Grid" class="ecl27v2-grid"></div>
+      </section>
+      <aside class="ecl27v2-method"><strong>Registrering är inte ett lagbyte</strong>Trupperna visar registrerade spelare. Byten visas separat. Pågående lagbyggen är en arbetsbild, inte officiella trupper. <a href="#/sasong/ecl26spring">ECL ’26 Spring →</a> · <a href="https://sportsgamer.gg/leagues/527" target="_blank" rel="noopener">SCL 27 hos SportsGamer ↗</a></aside>`;
 
-    section.innerHTML = `<header class="ecl27v2-hero"><div><p class="directory-kicker">SILLY SEASON · SVERIGE</p><h2>ECL 27 – Svenska lagbyggen</h2><p>Arbetsbilden börjar i ECL ’26 Spring-truppen och uppdateras med bekräftade IN/UT, lagposter och Free Agents. Lag som nu är registrerade till SCL 27 hämtas direkt från SportsGamer och deras registrerade SCL-trupp skriver över arbetsbilden för aktuell trupp.</p></div><div class="ecl27v2-stamp"><span>SENAST UPPDATERAD</span><strong>${esc(DATA.updated)}</strong><small>SCL 27 start 5 okt · ${officialCount} officiellt anmälda lag</small></div></header>
-      <div class="ecl27v2-overview"><div><span>SPRING-LAG</span><strong>${springCount}</strong><small>Elite → Neo</small></div><div><span>NYA PROJEKT</span><strong>${newCount}</strong><small>manuellt följda lagbyggen</small></div><div><span>OFFICIELLA SCL-LAG</span><strong>${officialCount}</strong><small>SportsGamer liga ${Number(DATA.sclLeagueId) || 527}</small></div><div><span>KÄNDA SPELARE NU</span><strong>${knownNow}</strong><small>officiell SCL-trupp har företräde</small></div><div><span>RÖRELSER</span><strong>${movementCount}</strong><small>IN / UT / FA, härledda byten inkluderade</small></div></div>
-      <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">SENASTE</p><h3>Transferflödet</h3></div><span>Bekräftade rörelser + Free Agents</span></div><div class="ecl27v2-feed">${renderLatestFeed()}</div></section>
-      <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">LAG FÖR LAG</p><h3>Svenska lagbyggen just nu</h3></div><span id="ecl27v2Result">${model.teams.length} lag/projekt</span></div><div class="ecl27v2-toolbar"><label>SÖK<input id="ecl27v2Search" type="search" placeholder="Lag eller spelare…"></label><label>SPRING-NIVÅ<select id="ecl27v2Division"><option value="all">Alla nivåer</option><option>Elite</option><option>Pro</option><option>Lite</option><option>Core</option><option>Neo</option><option value="Nytt">Nya projekt</option></select></label><label>STATUS<select id="ecl27v2Status"><option value="all">Alla statusar</option><option value="official-scl">Endast officiella SCL-lag</option><option value="ready">Ser färdigt ut</option><option value="building">På god väg</option><option value="thin">Tunt / bygger</option><option value="rebuild">Kraftigt ombyggt / tidigt</option></select></label></div><div id="ecl27v2Grid" class="ecl27v2-grid"></div></section>
-      <aside class="ecl27v2-method"><strong>Lagbygge + officiell SCL-registrering</strong>Lag märkta OFFICIELLT SCL-LAG är registrerade i SportsGamer liga ${Number(DATA.sclLeagueId) || 527}. För dessa lag används den registrerade SCL-truppen som aktuell trupp och skriver över den manuella arbetsbilden. Övriga lag fortsätter byggas från Spring-bas och bekräftade IN/UT-händelser.</aside>`;
+    const search = $("#ecl27v2Search", section);
+    const division = $("#ecl27v2Division", section);
+    search.addEventListener("input", () => { state.search = search.value.trim(); renderGrid(); });
+    division.addEventListener("change", () => { state.division = division.value; renderGrid(); });
+    bindCardNavigation($("#ecl27v2Grid", section));
+    hydrateWinterMoves(section);
+    hydrateFreeAgents(section);
 
-    const search = $("#ecl27v2Search");
-    const division = $("#ecl27v2Division");
-    const status = $("#ecl27v2Status");
-    search?.addEventListener("input",() => {state.search=search.value.trim();renderGrid();});
-    division?.addEventListener("change",() => {state.division=division.value;renderGrid();});
-    status?.addEventListener("change",() => {state.status=status.value;renderGrid();});
-    bindCardNavigation($("#ecl27v2Grid"));
-    renderGrid();
+    const registered = $("#winterBuildRegistered", section);
+    const count = $("#winterBuildCount", section);
+    const projectCount = $("#ecl27v2Result", section);
+    const teamSearch = $("#winterBuildSearch", section);
+    const appliedDivision = $("#winterBuildDivision", section);
+    void Promise.resolve().then(() => window.SEH_loadSwedishWinterRegistrations()).then(({snapshot,swedishTeams}) => {
+      if (!section.isConnected) return;
+      const wantedTeam = wantedSlug ? model.teams.find(team => slug(team.name) === wantedSlug) : null;
+      const selected = wantedSlug && swedishTeams.find(team =>
+        slug(team.name) === wantedSlug || (wantedTeam && Number(teamId(wantedTeam.name)) === Number(team.club.team_id)));
+      state.unregistered = unregisteredBuilds(model.teams, swedishTeams);
+      if (!selected && wantedTeam && state.unregistered.includes(wantedTeam)) {
+        section.innerHTML = renderTeamDetail(wantedTeam);
+        hydrateDetailRoster(wantedTeam, section);
+        hydrateTeamPower(section);
+        document.title = `${wantedTeam.name} – ECL 27 lagbygge | Svensk eHockey`;
+        return;
+      }
+
+      const checked = new Date(snapshot.checkedAt).toLocaleString("sv-SE", {timeZone:"Europe/Stockholm",dateStyle:"short",timeStyle:"short"});
+      const renderRegistered = (openId) => {
+        const term = norm(teamSearch.value);
+        const teams = swedishTeams.filter(team =>
+          (appliedDivision.value === "all" || String(team.requestedDivision) === appliedDivision.value)
+          && (!term || [team.name,...team.players.map(player => player.name)].some(name => norm(name).includes(term))))
+          .sort((a,b) => (Number(a.requestedDivision) || 999) - (Number(b.requestedDivision) || 999) || a.name.localeCompare(b.name,"sv"));
+        count.textContent = `${teams.length} av ${swedishTeams.length} svenska lag · hämtat ${checked}`;
+        registered.innerHTML = teams.length ? teams.map(team => renderRegisteredWinterCard(team, Number(team.id) === openId)).join("")
+          : "<p>Inga anmälda svenska lag matchar filtret.</p>";
+        for (const logo of registered.querySelectorAll("[data-winter-logo]")) {
+          window.SEH_renderTeamLogo(logo, [logo.dataset.logoUrl], logo.dataset.winterLogo);
+        }
+      };
+      teamSearch.addEventListener("input", () => renderRegistered());
+      appliedDivision.addEventListener("change", () => renderRegistered());
+      renderRegistered(selected ? Number(selected.id) : undefined);
+      if (selected) registered.querySelector(`[data-winter-roster="${Number(selected.id)}"]`)?.scrollIntoView({block:"center"});
+      if (buildsUnavailable) projectCount.textContent = "Lagbyggena kunde inte hämtas.";
+      else {
+        $("#winterBuildProjectFilters", section).hidden = false;
+        renderGrid();
+        hydrateTeamPower(section);
+      }
+    }).catch(() => {
+      if (!section.isConnected) return;
+      count.textContent = "Kunde inte hämta anmälningar. Ladda om för att försöka igen.";
+      projectCount.textContent = "Visas när anmälningarna har kunnat kontrolleras.";
+    });
   }
 
   function mount() {
@@ -1756,18 +1858,7 @@
     section.dataset.build = DATA.build;
     host.append(section);
 
-    const wantedSlug = requestedTeamSlug();
-    const wantedTeam = wantedSlug ? model.teams.find((team) => slug(team.name) === wantedSlug) : null;
-    if (wantedTeam) {
-      section.innerHTML = renderTeamDetail(wantedTeam);
-      hydrateDetailRoster(wantedTeam,section);
-      hydrateTeamPower(section);
-      document.title = `${wantedTeam.name} – ECL 27 lagbygge | Svensk eHockey`;
-    } else {
-      if (wantedSlug) history.replaceState(null,"",seasonListUrl());
-      renderListSection(section);
-      hydrateTeamPower(section);
-    }
+    renderListSection(section, requestedTeamSlug());
 
     return true;
   }

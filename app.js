@@ -20968,11 +20968,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
         initializeSeasonMatches(view, { matcher: { all: seasonSupabaseMatchRows(matches) } });
         status.textContent = `${matches.length} svenska matcher hämtade från Supabase`;
       } else if (selectedSection === "transfers") {
-        const transfers = await seasonFetchAll("ehockey_season_transfers_v1", {
-          select: "transfer_key,transfer_date,player_name,player_id,user_id,nationality,player_role,from_team,from_division,from_team_id,from_league_id,from_team_logo,to_team,to_division,to_team_id,to_league_id,to_team_logo,player_image,previous_group_games,previous_total_games,previous_playoff_games",
-          season_id: `eq.${season.id}`,
-          order: "transfer_date.desc.nullslast,player_name,transfer_key"
-        });
+        const transfers = await fetchSeasonTransferRows(season.id);
         if (season.registrationRosters) {
           if (!view.isConnected) return;
           initializeSeasonTransfers(view, { overgangar: seasonSupabaseTransferRows(transfers) });
@@ -21052,6 +21048,29 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     }
   }
 
+  function fetchSeasonTransferRows(seasonId) {
+    return seasonFetchAll("ehockey_season_transfers_v1", {
+      select: "transfer_key,transfer_date,player_name,player_id,user_id,nationality,player_role,from_team,from_division,from_team_id,from_league_id,from_team_logo,to_team,to_division,to_team_id,to_league_id,to_team_logo,player_image,previous_group_games,previous_total_games,previous_playoff_games",
+      season_id: `eq.${seasonId}`,
+      order: "transfer_date.desc.nullslast,player_name,transfer_key"
+    });
+  }
+
+  async function fetchSwedishWinterRegistrations() {
+    const snapshot = await SEH_fetchWinterRosters();
+    const ids = [...new Set(snapshot.teams.map(({ id }) => Number(id)))].filter((id) => Number.isSafeInteger(id) && id > 0);
+    const clubs = ids.length ? await seasonFetchAll("v_local_team_list", {
+      select: "team_id,effective_country,sports_gamer_team_ids,logo_url",
+      effective_country: "eq.SE",
+      sports_gamer_team_ids: `ov.{${ids.join(",")}}`,
+      order: "team_id"
+    }) : [];
+    return { snapshot, swedishTeams: SEH_winterSwedishTeams(snapshot, clubs) };
+  }
+
+  window.SEH_loadSwedishWinterRegistrations = fetchSwedishWinterRegistrations;
+  window.SEH_loadWinterTransfers = async () => seasonSupabaseTransferRows(await fetchSeasonTransferRows("ecl27winter"));
+
   async function loadWinterRegistrationRosters(panel, initialTeamId) {
     const status = panel.querySelector("[role=status]");
     const list = panel.querySelector(".winter-roster-list");
@@ -21062,16 +21081,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     const divisions = SEH_WINTER_DIVISIONS;
     let snapshot, swedishTeams;
     try {
-      snapshot = await SEH_fetchWinterRosters();
-      const ids = [...new Set(snapshot.teams.map(({ id }) => Number(id)))]
-        .filter((id) => Number.isSafeInteger(id) && id > 0);
-      const clubs = ids.length ? await seasonFetchAll("v_local_team_list", {
-        select: "team_id,effective_country,sports_gamer_team_ids,logo_url",
-        effective_country: "eq.SE",
-        sports_gamer_team_ids: `ov.{${ids.join(",")}}`,
-        order: "team_id"
-      }) : [];
-      swedishTeams = SEH_winterSwedishTeams(snapshot, clubs);
+      ({ snapshot, swedishTeams } = await fetchSwedishWinterRegistrations());
     } catch {
       status.textContent = "Kunde inte hämta de svenska trupperna. Ladda om för att försöka igen.";
       return;

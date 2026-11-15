@@ -14,6 +14,27 @@ assert.ok(invictus && invictus.players.length);
 assert.equal(new Set(snapshot.teams.map(({ id }) => id)).size, snapshot.teams.length);
 assert.ok(snapshot.teams.every((team) => team.players.every((player) => player.id > 0 && player.name)));
 
+const builds = fs.readFileSync(path.join(root, "ecl27-team-builds-v2.js"), "utf8");
+const buildHelpers = builds.slice(builds.indexOf("  function unregisteredBuilds("), builds.indexOf("  function hydrateWinterMoves("));
+const work = [
+  {name:"Old alias", id:40, kind:"spring", timeline:[{}]},
+  {name:"refuse too lose", id:0, kind:"spring", timeline:[{}]},
+  {name:"New project", id:50, kind:"new", timeline:[]},
+  {name:"Dormant Spring team", id:60, kind:"spring", timeline:[]}
+];
+const teamRegistration = {id:4523, name:"Refuse Too Lose", requestedDivision:542, club:{team_id:40,logo_url:""}, players:[{id:4596,name:"<Jeppe>"}]};
+const buildTestContext = {work, registration:teamRegistration, norm:value=>value.trim().toLowerCase(),
+  teamId:name=>work.find(team=>team.name===name)?.id, esc:value=>String(value).replaceAll("<","&lt;").replaceAll(">","&gt;"),
+  SEH_WINTER_DIVISIONS:{542:"Lite"}};
+const pending = vm.runInNewContext(buildHelpers + "unregisteredBuilds(work,[registration])",buildTestContext);
+assert.equal(pending.length,1);
+assert.equal(pending[0].name,"New project");
+const registeredCard = vm.runInNewContext(buildHelpers + "renderRegisteredWinterCard(registration,true)",buildTestContext);
+assert.match(registeredCard,/Ansökt: <strong>Lite<\/strong> · preliminär/);
+assert.match(registeredCard,/data-winter-roster="4523" open/);
+assert.match(registeredCard,/1 registrerade/);
+assert.match(registeredCard,/\/players\/4596[^>]*>&lt;Jeppe&gt;/);
+
 const player = invictus.players[0];
 const collision = { ...invictus, id: 98765, players: [player] };
 const context = vm.createContext({ snapshot, invictus, player, collision, assert });
