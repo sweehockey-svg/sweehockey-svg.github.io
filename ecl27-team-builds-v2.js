@@ -973,20 +973,18 @@
     </article>`;
   }
 
-  function allLatestMoves() {
-    return model.teams.flatMap((team) => team.timeline.map((row) => ({...row,team:team.name})))
-      .sort((a,b) => String(b.at).localeCompare(String(a.at)) || (b.seq || 0) - (a.seq || 0))
-      .slice(0,12);
-  }
-
-  function renderLatestFeed() {
-    return allLatestMoves().map((row) => `<div class="ecl27v2-feed-row">
+  function renderDiscordMoves() {
+    const rows = (DATA.moveEvents || []).filter(row => /^Discord · användarunderlag · /i.test(row.note || ""))
+      .sort((a,b) => b.at.localeCompare(a.at));
+    if (!rows.length) return "";
+    return `<details class="ecl27v2-panel"><summary><strong>Lagmeddelanden från Discord</strong> · ${rows.length} rörelser</summary>
+      <p>Rapporterade IN och UT. Visas separat från officiella Winter-byten och registrerade trupper.</p>
+      <div class="ecl27v2-feed">${rows.map(row => `<div class="ecl27v2-feed-row">
       <time datetime="${esc(dateOnly(row.at))}">${esc(formatDate(row.at))}</time>
       <b class="${row.type}">${row.type === "in" ? "IN" : "UT"}</b>
       ${playerLink(row.player,"ecl27v2-feed-player")}
       ${teamTextLink(row.team,"ecl27v2-feed-team")}
-      ${renderOtherTeam(row)}
-    </div>`).join("");
+    </div>`).join("")}</div></details>`;
   }
 
   function sortedTeams() {
@@ -1778,6 +1776,7 @@
         <div id="winterBuildRegistered" class="ecl27v2-grid"></div>
       </section>
       <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">VERIFIERADE WINTER-BYTEN</p><h3>Senaste byten</h3></div><a href="#/sasong/ecl27winter?section=transfers">Alla byten →</a></div><div id="winterBuildMoves" class="ecl27v2-grid">Hämtar byten…</div></section>
+      ${renderDiscordMoves()}
       <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">SPELARE SOM SÖKER LAG</p><h3>Free Agents</h3></div><a href="#/free-agents">Alla Free Agents →</a></div><div id="winterBuildFreeAgents" class="winter-build-agents">Hämtar annonser…</div></section>
       <section class="ecl27v2-panel"><div class="ecl27v2-head"><div><p class="directory-kicker">ARBETSMATERIAL · EJ ANMÄLDA ÄNNU</p><h3>Lag som bygger vidare</h3></div><span id="ecl27v2Result" role="status">Kontrollerar anmälningar…</span></div>
         <div class="ecl27v2-toolbar" id="winterBuildProjectFilters" hidden><label>SÖK<input id="ecl27v2Search" type="search" placeholder="Lag eller spelare…"></label><label>TIDIGARE NIVÅ<select id="ecl27v2Division"><option value="all">Alla nivåer</option><option>Elite</option><option>Pro</option><option>Lite</option><option>Core</option><option>Neo</option><option value="Nytt">Nya projekt</option></select></label></div>
