@@ -4962,10 +4962,13 @@ select {
 .season-transfer-full-card:hover { border-color: rgba(255,207,0,.42); }
 .season-transfer-player { display: grid; border-right: 1px solid var(--v2-line); padding: 18px 22px; background: rgba(255,255,255,.018); }
 .season-transfer-player > a { display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: center; gap: 17px; color: var(--v2-ink); text-decoration: none; }
-.season-transfer-player img { width: 92px; height: 126px; object-fit: contain; object-position: center bottom; }
+.season-transfer-portrait { width: 92px; height: 126px; overflow: hidden; }
+.season-transfer-portrait img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+.season-transfer-portrait img:not([src*="1DEFAULTBILDID" i]) { transform: scale(1.9); transform-origin: center 5%; }
 .season-transfer-player h4 { overflow: hidden; margin: 0 0 9px; color: var(--v2-ink); font-size: clamp(23px, 2.3vw, 34px); line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
 .season-transfer-player a:hover h4 { color: var(--v2-yellow); }
 .season-transfer-player time { display: block; color: var(--v2-yellow); font-size: 11px; font-weight: 1000; text-transform: uppercase; }
+.season-transfer-date-missing { display: block; color: var(--v2-muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }
 .season-transfer-player span { display: inline-flex; width: max-content; margin-top: 8px; border: 1px solid var(--v2-line); padding: 4px 7px; color: var(--v2-muted); font-size: 9px; font-weight: 900; text-transform: uppercase; }
 .season-transfer-move { display: grid; grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1fr); align-items: center; gap: 14px; padding: 18px; }
 .season-transfer-team { display: grid; grid-template-columns: 72px minmax(0, 1fr); align-items: center; gap: 13px; min-width: 0; min-height: 112px; border: 1px solid var(--v2-line); padding: 13px; color: var(--v2-ink); text-decoration: none; background: rgba(255,255,255,.022); }

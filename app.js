@@ -20399,8 +20399,8 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
         <article class="season-transfer-full-card">
           <div class="season-transfer-player">
             <a href="${escapeHtml(SEH_playerProfileUrl(row.playerID, row.Player))}">
-              <img src="${escapeHtml(SEH_playerImageUrl(row.playerID))}" alt="${escapeHtml(seasonText(row.Player))}" loading="lazy">
-              <div><h4>${escapeHtml(seasonText(row.Player))}</h4>${row.registrationComparison ? "<span>Inför Winter · registrerad</span>" : `<time>${escapeHtml(seasonDate(row.Date))}</time>`}${row.Role ? `<span>${escapeHtml(row.Role)}</span>` : ""}</div>
+              <div class="season-transfer-portrait"><img src="${escapeHtml(SEH_playerImageUrl(row.playerID))}" alt="" loading="lazy"></div>
+              <div><h4>${escapeHtml(seasonText(row.Player))}</h4>${row.Date ? `<time datetime="${escapeHtml(row.Date)}">${escapeHtml(seasonDate(row.Date))}</time>` : `<small class="season-transfer-date-missing">${row.registrationComparison ? "Inför Winter · datum saknas" : "Datum saknas"}</small>`}${row.Role ? `<span>${escapeHtml(row.Role)}</span>` : ""}</div>
             </a>
           </div>
           <div class="season-transfer-move">
