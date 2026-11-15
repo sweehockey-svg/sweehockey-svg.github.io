@@ -7,11 +7,13 @@
   "use strict";
 
   let ecl27RendererReady = false;
+  const ROUTE_PREFIX = "#/lagbygge";
+  const isBuildsRoute = () => String(location.hash || "").split("?")[0].replace(/\/$/, "") === ROUTE_PREFIX;
 
   function mountSourceState(kind, title, message) {
-    if (!String(location.hash || "").startsWith("#/sasong/ecl27winter")) return false;
-    const overview = document.querySelector("#overview");
-    if (!overview) return false;
+    if (!isBuildsRoute()) return false;
+    const host = document.querySelector("#teamBuildsMount");
+    if (!host) return false;
 
     document.querySelector("#ecl27TeamBuilds")?.remove();
     let section = document.querySelector("#ecl27TeamBuildsV2");
@@ -19,7 +21,7 @@
       section = document.createElement("section");
       section.id = "ecl27TeamBuildsV2";
       section.className = "ecl27v2";
-      overview.insertAdjacentElement("afterend", section);
+      host.append(section);
     }
     section.dataset.ecl27Loading = kind;
     section.innerHTML = `<div style="margin:28px 0 44px;padding:28px 30px;border:1px solid #172839;border-radius:18px;background:#02080e;color:#f5f1e8"><p style="margin:0 0 7px;color:#57e6dc;font-size:10px;font-weight:900;letter-spacing:.12em">${kind === "error" ? "KUNDE INTE HÄMTA DATA" : "HÄMTAR DATA"}</p><h3 style="margin:0 0 8px;font-size:28px">${title}</h3><p style="margin:0;color:#91a4b4">${message}</p></div>`;
@@ -58,7 +60,6 @@
       return;
     }
 
-  const ROUTE_PREFIX = "#/sasong/ecl27winter";
   const TEAM_QUERY_PARAM = "ecl27lag";
   const DIVISION_ORDER = Object.freeze({Elite:0,Pro:1,Lite:2,Core:3,Neo:4,Nytt:5});
   const state = {search:"",division:"all",status:"all"};
@@ -197,22 +198,15 @@
   }
 
   function seasonListUrl() {
-    const url = new URL(window.location.href);
-    url.searchParams.delete(TEAM_QUERY_PARAM);
-    url.hash = ROUTE_PREFIX;
-    return `${url.pathname}${url.search}${url.hash}`;
+    return ROUTE_PREFIX;
   }
 
   function teamBuildUrl(name) {
-    const url = new URL(window.location.href);
-    url.searchParams.set(TEAM_QUERY_PARAM, slug(name));
-    url.hash = ROUTE_PREFIX;
-    return `${url.pathname}${url.search}${url.hash}`;
+    return `${ROUTE_PREFIX}?${new URLSearchParams({ [TEAM_QUERY_PARAM]: slug(name) })}`;
   }
 
   function requestedTeamSlug() {
-    try { return new URL(window.location.href).searchParams.get(TEAM_QUERY_PARAM) || ""; }
-    catch (_) { return ""; }
+    return new URLSearchParams(location.hash.split("?")[1] || "").get(TEAM_QUERY_PARAM) || "";
   }
 
   function dateOnly(at) {
@@ -1748,9 +1742,9 @@
   }
 
   function mount() {
-    if (!String(location.hash || "").startsWith(ROUTE_PREFIX)) return false;
-    const overview = $("#overview");
-    if (!overview) return false;
+    if (!isBuildsRoute()) return false;
+    const host = $("#teamBuildsMount");
+    if (!host) return false;
 
     $("#ecl27TeamBuilds")?.remove();
     $("#ecl27TeamBuildsV2")?.remove();
@@ -1760,7 +1754,7 @@
     section.id = "ecl27TeamBuildsV2";
     section.className = "ecl27v2";
     section.dataset.build = DATA.build;
-    overview.insertAdjacentElement("afterend",section);
+    host.append(section);
 
     const wantedSlug = requestedTeamSlug();
     const wantedTeam = wantedSlug ? model.teams.find((team) => slug(team.name) === wantedSlug) : null;
@@ -1773,21 +1767,6 @@
       if (wantedSlug) history.replaceState(null,"",seasonListUrl());
       renderListSection(section);
       hydrateTeamPower(section);
-    }
-
-    const actions = overview.querySelector(".season-upcoming-actions-v12840");
-    if (actions) {
-      actions.querySelector("[data-ecl-builds-jump]")?.remove();
-      actions.querySelector("[data-ecl27v2-jump]")?.remove();
-      const button = document.createElement("button");
-      button.type = "button";
-      button.dataset.ecl27v2Jump = "true";
-      button.textContent = wantedTeam ? "← Alla lagbyggen" : "Svenska lagbyggen →";
-      button.addEventListener("click",() => {
-        if (wantedTeam) window.location.href = seasonListUrl();
-        else section.scrollIntoView({behavior:"smooth",block:"start"});
-      });
-      actions.prepend(button);
     }
 
     return true;

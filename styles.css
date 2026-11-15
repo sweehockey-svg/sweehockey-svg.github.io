@@ -28311,7 +28311,7 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .directory-hero,
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-hero-v12840,
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-hero,
-  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .ecl27v2-hero {
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="teamBuilds"] #ecl27TeamBuildsV2 .ecl27v2-hero {
     box-sizing: border-box !important;
     min-height: 356px !important;
     height: 356px !important;
@@ -28340,7 +28340,7 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .directory-hero__copy,
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-hero-v12840__copy,
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-hero__copy,
-  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .ecl27v2-hero > div:first-child {
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="teamBuilds"] #ecl27TeamBuildsV2 .ecl27v2-hero > div:first-child {
     min-width: 0 !important;
     align-self: center !important;
     padding: 0 !important;
@@ -28351,7 +28351,7 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .directory-hero h1,
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-hero-v12840 h1,
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-hero__copy h1,
-  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .ecl27v2-hero h2 {
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="teamBuilds"] #ecl27TeamBuildsV2 .ecl27v2-hero h2 {
     max-width: 1040px !important;
     margin: 10px 0 16px !important;
     color: #f4f1e9 !important;
@@ -28369,7 +28369,7 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .directory-hero__copy > p:last-child,
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-hero-v12840__copy > p:not(.directory-kicker),
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-hero__copy > p:not(.directory-kicker),
-  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .ecl27v2-hero > div > p:last-of-type {
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="teamBuilds"] #ecl27TeamBuildsV2 .ecl27v2-hero > div > p:last-of-type {
     max-width: 780px !important;
     margin: 0 !important;
     color: rgba(244,241,233,.68) !important;
@@ -28384,7 +28384,7 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     .ecl-hub-hero-v12840,
     .free-agents-hero
   ) .directory-kicker,
-  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .directory-kicker {
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="teamBuilds"] #ecl27TeamBuildsV2 .directory-kicker {
     margin: 0 0 8px !important;
     color: #43e8e1 !important;
     font-size: 11px !important;
@@ -28398,7 +28398,7 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .history-overview-v124,
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-current-v12840,
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-overview,
-  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .ecl27v2-stamp {
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="teamBuilds"] #ecl27TeamBuildsV2 .ecl27v2-stamp {
     width: 360px !important;
     min-width: 360px !important;
     max-width: 360px !important;
@@ -28470,7 +28470,7 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="history"] .directory-hero__copy,
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="ecl"] .ecl-hub-hero-v12840__copy,
   body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="freeAgents"] .free-agents-hero__copy,
-  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="season"] #ecl27TeamBuildsV2 .ecl27v2-hero > div:first-child {
+  body:not(.seh-native-app):not(.seh-winter-compact) #spaRouteView[data-route="teamBuilds"] #ecl27TeamBuildsV2 .ecl27v2-hero > div:first-child {
     align-self: stretch !important;
     display: flex !important;
     flex-direction: column !important;
@@ -28844,3 +28844,26 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     grid-row: 1;
   }
 }
+#spaRouteView .winter-rosters { margin-block: 22px; }
+#spaRouteView .winter-rosters .season-data-heading a,
+#spaRouteView .winter-roster-source { color: #f3db8b; text-decoration: underline; }
+#spaRouteView .winter-roster-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 285px), 1fr));
+  gap: 12px;
+  align-items: start;
+}
+#spaRouteView .winter-roster-team {
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #2a3033;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #10161a, #0b0f12);
+}
+#spaRouteView .winter-roster-team[open] { border-color: #7d6827; }
+#spaRouteView .winter-roster-team summary { cursor: pointer; overflow-wrap: anywhere; }
+#spaRouteView .winter-roster-team summary::marker { color: #ffd000; }
+#spaRouteView .winter-roster-team summary span { display: block; margin-top: 4px; color: #abc1d0; font-size: .84rem; }
+#spaRouteView .winter-roster-team ul { padding-inline-start: 1.2em; margin: 10px 0; overflow-wrap: anywhere; }
+#spaRouteView .winter-roster-team li { margin-block: 4px; }
+#spaRouteView .winter-roster-source { display: inline-block; font-size: .85rem; margin-top: 6px; }

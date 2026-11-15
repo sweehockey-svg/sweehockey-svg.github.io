@@ -14995,6 +14995,8 @@ function SEH_initShop() {
     <footer class="directory-footer"><div><strong>SVENSK eHOCKEY</strong><span>© 2026 Svensk eHockey</span></div></footer>
   `;
 
+  templates.teamBuilds = '<main class="directory-shell season-shell-v12840" aria-label="Svenska lagbyggen"><div id="teamBuildsMount"></div></main>';
+
   templates.season = `
     <main class="directory-shell season-shell-v12840">
       <section class="season-hero-v12840" aria-labelledby="seasonTitle">
@@ -19258,6 +19260,10 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       };
     }
 
+    if (parts[0] === "lagbygge" && parts.length === 1) {
+      return { ...route, key: "teamBuilds", label: "Lagbygge", active: "teamBuilds" };
+    }
+
     /*
      * Både #/sasong/... och #/season/... accepteras.
      * Den publika adressen vi använder är #/sasong/...
@@ -19351,15 +19357,15 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           </a>
 
           <a
-            class="${route.active === "ecl" && !(route.key === "season" && route.params?.seasonId === "ecl27winter") ? "is-active" : ""}"
+            class="${route.active === "ecl" ? "is-active" : ""}"
             href="#/ecl"
           >
             Tävlingar
           </a>
 
           <a
-            class="seh-nav-team-builds ${route.key === "season" && route.params?.seasonId === "ecl27winter" ? "is-active" : ""}"
-            href="#/sasong/ecl27winter"
+            class="seh-nav-team-builds ${route.active === "teamBuilds" ? "is-active" : ""}"
+            href="#/lagbygge"
           >
             Lagbygge
           </a>
@@ -19614,6 +19620,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
 
     const titles = {
       home: "Svensk eHockey – Hem",
+      teamBuilds: "Svenska lagbyggen – Svensk eHockey",
       news: "Nyheter – Svensk eHockey",
       players: "Spelare – Svensk eHockey",
       freeAgents: "Free Agents – Svensk eHockey",
@@ -20993,7 +21000,9 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       const teams = snapshot.teams.filter((team) =>
         (filter.value === "all" || String(team.requestedDivision) === filter.value) &&
         (!term || [team.name, ...team.players.map((player) => player.name)]
-          .some((name) => name.toLocaleLowerCase("sv").includes(term))));
+          .some((name) => name.toLocaleLowerCase("sv").includes(term))))
+        .sort((a, b) => (Number(a.requestedDivision) || 999) - (Number(b.requestedDivision) || 999)
+          || a.name.localeCompare(b.name, "sv"));
       const checked = new Date(snapshot.checkedAt).toLocaleDateString("sv-SE", { timeZone: "Europe/Stockholm" });
       status.textContent = `${teams.length} av ${snapshot.teams.length} lag · Hämtat ${checked}`;
       list.innerHTML = teams.length ? teams.map((team) => `
@@ -21207,20 +21216,21 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           <p class="directory-kicker">ECL · ANMÄLAN</p>
           <h2>${escapeHtml(season.title)}</h2>
           <p>Se vilka lag och spelare som är registrerade för Winter. Ansökt division kan ändras efter anmälan och kval.</p>
-          <div class="season-upcoming-actions-v12840">
-            <a href="${seasonSectionRoute(seasonId, "teams")}">Visa anmälda lag och trupper →</a>
-            <a href="https://sportsgamer.gg/leagues/535/registration" target="_blank" rel="noopener">Anmäl laget på SportsGamer ↗</a>
+          <div class="season-landing-grid" style="--season-landing-count:3">
+            <a class="season-landing-card" href="${seasonSectionRoute(seasonId, "teams")}"><span>01</span><h3>Lag</h3><p>Anmälda lag, trupper och ansökta divisioner.</p></a>
+            <a class="season-landing-card" href="https://sportsgamer.gg/leagues/535/registration" target="_blank" rel="noopener"><span>02</span><h3>Anmälan</h3><p>Anmäl laget hos SportsGamer.</p></a>
+            <a class="season-landing-card" href="https://sportsgamer.gg/community/topic/7895-ecl-%E2%80%9927-winter-%E2%80%94-information-key-dates/" target="_blank" rel="noopener"><span>03</span><h3>Viktiga datum</h3><p>Spelschema, kval och sista anmälningsdagar.</p></a>
           </div>`;
       }
       if (panels && selectedSection === "teams") {
         panels.hidden = false;
-        panels.className = "winter-rosters";
+        panels.className = "season-data-section winter-rosters";
         panels.id = "teams";
         panels.innerHTML = `
-          <p class="directory-kicker">ECL ’27 WINTER · ANMÄLAN</p>
-          <h2>Anmälda lag och trupper</h2>
-          <p>Ansökt division är preliminär. Trupperna visar bara spelare som är registrerade för Winter, inte tidigare säsonger.
-            <a href="https://sportsgamer.gg/leagues/535/teams" target="_blank" rel="noopener">Källa: SportsGamer ↗</a></p>
+          <header class="season-data-heading"><div><span>ECL ’27 WINTER · ANMÄLAN</span>
+          <h3>Anmälda lag och trupper</h3>
+          <p>Ansökt division är preliminär. Trupperna visar bara spelare som är registrerade för Winter.
+            <a href="https://sportsgamer.gg/leagues/535/teams" target="_blank" rel="noopener">Källa: SportsGamer ↗</a></p></div></header>
           <div class="season-team-controls">
             <label><span>ANSÖKT DIVISION</span><select><option value="all">Alla divisioner</option>
               ${season.divisions.map((item, index) => `<option value="${540 + index}">${escapeHtml(item.label)}</option>`).join("")}</select></label>
@@ -21322,7 +21332,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       )
     );
 
-    if (selectedSection !== "overview") {
+    if (selectedSection !== "overview" && !season.registrationRosters) {
       requestAnimationFrame(() => {
         view
           .querySelector(
@@ -21452,6 +21462,16 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
 
   async function render() {
     const token = ++renderToken;
+    // Preserve old individual Lagbygge links without treating Winter itself as Lagbygge.
+    const url = new URL(location.href);
+    if (/^#\/(?:sasong|season)\/ecl27winter\/?$/i.test(url.hash)
+        && (url.searchParams.has("ecl27lag") || url.searchParams.get("lagbyggen") === "1")) {
+      const team = url.searchParams.get("ecl27lag");
+      url.searchParams.delete("lagbyggen");
+      url.searchParams.delete("ecl27lag");
+      url.hash = team ? `#/lagbygge?ecl27lag=${encodeURIComponent(team)}` : "#/lagbygge";
+      history.replaceState(history.state, "", url);
+    }
     const route = parseRoute();
 
     // Shoppen ligger på en egen riktig sida så Spreadshops hash-navigation
@@ -21534,7 +21554,8 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
 
     if (
       route.key !== "season" ||
-      !route.query.get("section")
+      !route.query.get("section") ||
+      seasons[route.params.seasonId]?.registrationRosters
     ) {
       window.scrollTo({
         top: 0,

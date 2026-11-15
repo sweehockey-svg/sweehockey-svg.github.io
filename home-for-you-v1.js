@@ -16,7 +16,7 @@
 
   const ROOT_ID = 'seh-desktop-for-you';
   const COMPETITION_KEY = 'ecl27winter';
-  const BUILDS_ROUTE = '#/sasong/ecl27winter';
+  const BUILDS_ROUTE = '#/lagbygge';
   const PLAYER_FALLBACK = 'players/1DEFAULTBILDID.png';
   const originalMarkup = new WeakMap();
 

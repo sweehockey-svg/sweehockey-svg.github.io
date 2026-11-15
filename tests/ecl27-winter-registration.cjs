@@ -27,6 +27,16 @@ vm.runInContext(body + `
   assert.match(SEH_winterTeamUrl(invictus), /section=teams&teamId=6709$/);
 `, context);
 
+const routeParser = app.slice(app.indexOf("  function normalizeSeasonId("), app.indexOf("  function headerHtml("));
+const routeFor = (hash) => vm.runInNewContext(routeParser + "parseRoute()", {
+  location: { hash }, decode: decodeURIComponent, URLSearchParams,
+  seasons: { ecl27winter: { title: "ECL ’27: Winter" }, ecl26spring: { title: "ECL ’26: Spring" } }
+});
+assert.equal(routeFor("#/sasong/ecl27winter?section=teams").active, "ecl");
+assert.equal(routeFor("#/sasong/ecl27winter?section=teams&teamId=4523").query.get("teamId"), "4523");
+assert.equal(routeFor("#/sasong/ecl26spring?section=teams").params.seasonId, "ecl26spring");
+assert.equal(routeFor("#/lagbygge?ecl27lag=refuse-too-lose").key, "teamBuilds");
+
 (async () => {
   const newer = { ...snapshot, checkedAt: "2026-12-08T22:00:00Z" };
   const run = (fetch) => vm.runInNewContext(body + "SEH_fetchWinterRosters()", { fetch, AbortController, setTimeout, clearTimeout });
