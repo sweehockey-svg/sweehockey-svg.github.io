@@ -1,0 +1,44 @@
+name: Sync ECL 27 Winter registration
+
+on:
+  schedule:
+    - cron: '37 6,12,18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ecl27-winter-registration
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh public teams and player IDs
+        shell: pwsh
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          $today = [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTimeOffset]::UtcNow, 'Europe/Stockholm').Date
+          if ($env:EVENT_NAME -eq 'schedule' -and $today -ge [datetime]'2026-12-09') { exit 0 }
+          $file = 'ecl27-winter-rosters.json'
+          $tmp = Join-Path $env:RUNNER_TEMP $file
+          ./scripts/fetch-ecl27-winter-rosters.ps1 -Output $tmp
+          $old = Get-Content $file -Raw | ConvertFrom-Json -AsHashtable
+          $new = Get-Content $tmp -Raw | ConvertFrom-Json -AsHashtable
+          if ((ConvertTo-Json -InputObject $old.teams -Depth 7 -Compress) -ceq
+              (ConvertTo-Json -InputObject $new.teams -Depth 7 -Compress)) { exit 0 }
+          Copy-Item -LiteralPath $tmp -Destination $file
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- $file
+          git commit -m 'Refresh ECL 27 Winter registrations'
+          git pull --rebase origin main
+          git push origin HEAD:main
