@@ -9,21 +9,60 @@ create temporary table winter_invite_stage (
 ) on commit drop;
 \copy winter_invite_stage from '/tmp/ecl27_winter_transfers.csv' with (format csv, header true, null '');
 
+-- Captains can register without an invite. Prefer the club they actually played
+-- for in Spring over an older invite. Do not guess when they played for multiple clubs.
+create temporary table winter_captain_spring_club on commit drop as
+with captain_ids as (
+  select player_id from winter_invite_stage where to_league_id=535 and transfer_key like 'winter-captain:%'
+  union
+  select player_id from public.ehockey_season_transfers_v1
+  where season_id='ecl27winter' and to_league_id=535 and transfer_key like 'winter-captain:%'
+), played as (
+  select s.sports_gamer_player_id as player_id,s.sports_gamer_team_id as team_id,
+         s.team_name_in_league as team,s.sports_gamer_league_id as league_id,
+         count(*) over (partition by s.sports_gamer_player_id,s.sports_gamer_team_id) as club_rows
+  from public.sportsgamer_team_player_stats s
+  join captain_ids c on c.player_id=s.sports_gamer_player_id
+  where s.sports_gamer_league_id in (507,508,509,510,511)
+    and greatest(s.participant_regular_games,s.participant_playoff_games,s.regular_skater_games,
+                 s.playoff_skater_games,s.regular_goalie_games,s.playoff_goalie_games)>0
+)
+select player_id,min(team_id) as team_id,min(team) as team,min(league_id) as league_id
+from played group by player_id having count(*)=max(club_rows);
+
+-- Remove only previously generated Winter registration rows proven to be same-club renewals.
+delete from public.ehockey_season_transfers_v1 t
+using winter_captain_spring_club s
+where t.season_id='ecl27winter' and t.to_league_id=535 and t.transfer_key like 'winter-captain:%'
+  and t.player_id=s.player_id and t.to_team_id=s.team_id;
+
 -- The existing season comparison can supply the old team if the invite history starts at Winter.
 -- A first invite with neither source is not claimed to be a club change.
+with candidates as (
+  select i.*,coalesce(s.team_id,i.from_team_id,f.from_team_id) as prior_team_id,
+         coalesce(s.team,i.from_team,f.from_team) as prior_team,
+         case when s.team_id is not null then
+           case s.league_id when 507 then 'Elite' when 508 then 'Pro' when 509 then 'Lite'
+                            when 510 then 'Core' when 511 then 'Neo' end
+           else coalesce(i.from_division,f.from_division) end as prior_division,
+         coalesce(s.league_id,i.from_league_id,f.from_league_id) as prior_league_id,
+         f.to_division as fallback_division
+  from winter_invite_stage i
+  left join winter_captain_spring_club s
+    on i.to_league_id=535 and i.transfer_key like 'winter-captain:%' and s.player_id=i.player_id
+  left join public.ehockey_season_transfers_v1 f
+    on f.season_id='ecl27winter' and f.transfer_key='winter-registration:'||i.player_id||':'||i.to_team_id
+    and i.from_team_id is null
+)
 insert into public.ehockey_season_transfers_v1 as saved (
   season_id,transfer_key,transfer_date,player_id,player_name,nationality,player_role,
   from_team_id,from_team,from_division,from_league_id,to_team_id,to_team,to_division,to_league_id
 )
 select 'ecl27winter',i.transfer_key,i.transfer_date,i.player_id,i.player_name,'SE',i.player_role,
-       coalesce(i.from_team_id,f.from_team_id),coalesce(nullif(i.from_team,'Free Agent'),f.from_team,i.from_team),
-       coalesce(i.from_division,f.from_division),coalesce(i.from_league_id,f.from_league_id),
-       i.to_team_id,i.to_team,coalesce(i.to_division,f.to_division),i.to_league_id
-from winter_invite_stage i
-left join public.ehockey_season_transfers_v1 f
-  on f.season_id='ecl27winter' and f.transfer_key='winter-registration:'||i.player_id||':'||i.to_team_id
-  and i.from_team_id is null
-where coalesce(i.from_team,f.from_team) is not null
+       i.prior_team_id,i.prior_team,i.prior_division,i.prior_league_id,
+       i.to_team_id,i.to_team,coalesce(i.to_division,i.fallback_division),i.to_league_id
+from candidates i
+where i.prior_team is not null and i.prior_team_id <> i.to_team_id
 on conflict (season_id,transfer_key) do update set
   transfer_date=excluded.transfer_date,player_name=excluded.player_name,player_role=excluded.player_role,
   from_team_id=excluded.from_team_id,from_team=excluded.from_team,from_division=excluded.from_division,

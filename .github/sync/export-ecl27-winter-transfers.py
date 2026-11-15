@@ -54,8 +54,7 @@ def build_rows(history, captains, current):
             continue
         earlier = [entry for entry in by_player[player] if str(entry["event_date"])[:10] < day]
         previous = max(earlier, key=lambda entry: (str(entry["event_date"]), entry["leagueID"], entry["teamID"]), default=None)
-        if previous and previous["teamID"] == team:
-            continue
+        # The importer checks the Spring match record before accepting or rejecting this fallback.
         key = f"winter-captain:{player}:{team}:{day}"
         moves[key] = to_csv_row(key, day, row, previous, row["role"])
     return sorted(moves.values(), key=lambda item: (item[1], item[0]))
@@ -71,7 +70,7 @@ def valid_day(value):
 def to_csv_row(key, day, row, previous, role):
     return (
         key, day, row["playerID"], row["player_name"], role,
-        previous["teamID"] if previous else None, previous["teamName"] if previous else ("Free Agent" if role else None),
+        previous["teamID"] if previous else None, previous["teamName"] if previous else None,
         division(previous["leagueID"], previous["leagueName"], previous["requested"]) if previous else None,
         previous["leagueID"] if previous else None,
         row["teamID"], row["teamName"], division(row["leagueID"], row["leagueName"], row["requested"]), row["leagueID"],
