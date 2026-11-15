@@ -13941,10 +13941,11 @@ const SEH_TEAM_LOGO_FILES = (
 const SEH_HAS_TEAM_LOGO_MANIFEST =
   Object.keys(SEH_TEAM_LOGO_FILES).length > 0;
 
-// Historical SportsGamer team logos that are no longer represented by the
-// club's current team name/logo in our local logo archive. These are used as
-// verified fallbacks before initials are shown.
+// Verified SportsGamer logos for teams missing from the local logo archive.
+// These are used as fallbacks before initials are shown.
 const SEH_TEAM_LOGO_REMOTE_OVERRIDES = Object.freeze({
+  "bladerunners hc": "https://sportsgamer.gg/storage/team-logos/481/6768/BladerunnersHCcopy.thumb.png.fce02a41eef4a0649966f22f6382be3c_20251030-042230.png",
+  "penta": "https://sportsgamer.gg/storage/team-logos/535/7108/dcac61dc-49ef-47fa-b3de-3d46c7b5ac49.png",
   "nemesis": "https://sportsgamer.gg/storage/team-logos/171/147/IMG-20220314-WA0000_20220314-142104.png",
   "hc bisons": "https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2019_10/CE821323-0CCE-4C8A-A28D-A39247FDFE0E.thumb.jpeg.af47fb2589046feb52a0a61ec56a3d37.jpeg"
 });
