@@ -1,12 +1,16 @@
 {
   "leagueId": 535,
-  "checkedAt": "2026-11-15T11:20:44.7907746Z",
+  "checkedAt": "2026-11-15T19:05:20.2886472Z",
   "teams": [
     {
       "id": 6768,
       "name": "Bladerunners HC",
       "requestedDivision": 542,
       "players": [
+        {
+          "id": 909,
+          "name": "iSvamp"
+        },
         {
           "id": 2964,
           "name": "Majavannaama50"
@@ -115,6 +119,14 @@
         {
           "id": 2997,
           "name": "X_CoCo_97_X"
+        },
+        {
+          "id": 6163,
+          "name": "Xletsgoat"
+        },
+        {
+          "id": 15059,
+          "name": "FreaX71"
         }
       ]
     },
@@ -124,12 +136,40 @@
       "requestedDivision": 544,
       "players": [
         {
+          "id": 15656,
+          "name": "davidlehm80"
+        },
+        {
           "id": 15682,
           "name": "jrmski_55"
         },
         {
+          "id": 16197,
+          "name": "Slickt111"
+        },
+        {
+          "id": 16207,
+          "name": "Sicherwsw"
+        },
+        {
+          "id": 17362,
+          "name": "Tomy-Lang"
+        },
+        {
+          "id": 17366,
+          "name": "ReCoIlOnSmG"
+        },
+        {
+          "id": 17729,
+          "name": "maushanderl"
+        },
+        {
           "id": 17749,
           "name": "adrian_wpunkt75"
+        },
+        {
+          "id": 18284,
+          "name": "eckdennis"
         }
       ]
     },
@@ -184,6 +224,10 @@
         {
           "id": 3000,
           "name": "Henkkaheinone"
+        },
+        {
+          "id": 4473,
+          "name": "Meemi_"
         },
         {
           "id": 8864,
@@ -265,6 +309,10 @@
         {
           "id": 18502,
           "name": "beenjaminko66"
+        },
+        {
+          "id": 18506,
+          "name": "r4d1m_19"
         }
       ]
     },
@@ -289,12 +337,20 @@
       "requestedDivision": 543,
       "players": [
         {
+          "id": 184,
+          "name": "I_-NR-_I"
+        },
+        {
           "id": 532,
           "name": "X_SHORESY_69_X"
         },
         {
           "id": 5088,
           "name": "jAY-HUNTER87"
+        },
+        {
+          "id": 6047,
+          "name": "Phoenix1986_9"
         },
         {
           "id": 8226,
@@ -398,6 +454,29 @@
       ]
     },
     {
+      "id": 7109,
+      "name": "Niceten Ricecows",
+      "requestedDivision": 544,
+      "players": [
+        {
+          "id": 16220,
+          "name": "kankkismikko"
+        },
+        {
+          "id": 17321,
+          "name": "MrKole97"
+        },
+        {
+          "id": 17904,
+          "name": "Drhuhtinen77"
+        },
+        {
+          "id": 18504,
+          "name": "Tahmatatti22"
+        }
+      ]
+    },
+    {
       "id": 2754,
       "name": "NOSTREETSPORTS",
       "requestedDivision": 540,
@@ -437,8 +516,23 @@
           "name": "FINSeRe"
         },
         {
+          "id": 233,
+          "name": "KingOfApes_"
+        },
+        {
           "id": 456,
           "name": "Beniittto"
+        }
+      ]
+    },
+    {
+      "id": 160,
+      "name": "Pata Hellalla",
+      "requestedDivision": 542,
+      "players": [
+        {
+          "id": 1458,
+          "name": "kultaranne"
         }
       ]
     },
@@ -481,6 +575,53 @@
         {
           "id": 15909,
           "name": "knuzon"
+        },
+        {
+          "id": 15912,
+          "name": "arkkuAsi"
+        }
+      ]
+    },
+    {
+      "id": 6658,
+      "name": "Pullasorsat HC",
+      "requestedDivision": 542,
+      "players": [
+        {
+          "id": 7049,
+          "name": "showeekka"
+        },
+        {
+          "id": 13551,
+          "name": "Sumppiii"
+        },
+        {
+          "id": 13552,
+          "name": "Hplammer9493"
+        },
+        {
+          "id": 13901,
+          "name": "Jezzezz"
+        },
+        {
+          "id": 16027,
+          "name": "l-RIPATTI-l"
+        },
+        {
+          "id": 17371,
+          "name": "LepiMies--"
+        },
+        {
+          "id": 17567,
+          "name": "Dufvan_trappi"
+        },
+        {
+          "id": 18368,
+          "name": "PuhveliLuigi"
+        },
+        {
+          "id": 18409,
+          "name": "HQ_AddiictZ"
         }
       ]
     },
@@ -537,6 +678,10 @@
           "name": "N19H7M3R3begins"
         },
         {
+          "id": 15209,
+          "name": "nigeltje1"
+        },
+        {
           "id": 16571,
           "name": "octo--8"
         }
@@ -577,6 +722,32 @@
       ]
     },
     {
+      "id": 7069,
+      "name": "SSK Academy eSport",
+      "requestedDivision": 542,
+      "players": [
+        {
+          "id": 175,
+          "name": "DUNZA"
+        }
+      ]
+    },
+    {
+      "id": 5869,
+      "name": "SSK Adepts",
+      "requestedDivision": 542,
+      "players": [
+        {
+          "id": 1768,
+          "name": "KaiserHanzo"
+        },
+        {
+          "id": 4833,
+          "name": "Revitty-stiga"
+        }
+      ]
+    },
+    {
       "id": 2755,
       "name": "Taisto",
       "requestedDivision": 542,
@@ -611,6 +782,10 @@
         {
           "id": 17316,
           "name": "qkubixz"
+        },
+        {
+          "id": 17542,
+          "name": "Patr3sk0_2000"
         }
       ]
     },
@@ -700,6 +875,10 @@
           "name": "Janikka-"
         },
         {
+          "id": 1440,
+          "name": "NerazzuriSWE"
+        },
+        {
           "id": 3190,
           "name": "Saviinainen"
         }
@@ -729,6 +908,10 @@
         {
           "id": 16895,
           "name": "JoJuzz01"
+        },
+        {
+          "id": 17526,
+          "name": "Julius2412"
         }
       ]
     }
