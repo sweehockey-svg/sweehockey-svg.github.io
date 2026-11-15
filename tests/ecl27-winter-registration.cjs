@@ -25,6 +25,15 @@ vm.runInContext(body + `
   assert.equal(SEH_winterPlayerTeams({ teams:[invictus, collision] }).get(player.id), null);
   assert.match(SEH_winterLabel(invictus), /Winter · Anmäld · ansökt:/);
   assert.match(SEH_winterTeamUrl(invictus), /section=teams&teamId=6709$/);
+  const swedish = { team_id: 1, effective_country: "SE", sports_gamer_team_ids: ["6709", "6710"] };
+  const foreign = { team_id: 2, effective_country: "FI", sports_gamer_team_ids: [98765] };
+  const all = { teams: [collision, invictus] };
+  const result = SEH_winterSwedishTeams(all, [swedish, swedish, foreign]);
+  assert.equal(result.length, 1);
+  assert.equal(result[0].id, invictus.id);
+  assert.equal(result[0].players, invictus.players);
+  assert.equal(result[0].club, swedish);
+  assert.equal(SEH_winterSwedishTeams(all, [swedish, { ...swedish, team_id: 3 }]).length, 0);
 `, context);
 
 const routeParser = app.slice(app.indexOf("  function normalizeSeasonId("), app.indexOf("  function headerHtml("));

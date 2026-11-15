@@ -28844,7 +28844,6 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
     grid-row: 1;
   }
 }
-#spaRouteView .winter-rosters { margin-block: 22px; }
 #spaRouteView .winter-rosters .season-data-heading a,
 #spaRouteView .winter-roster-source { color: #f3db8b; text-decoration: underline; }
 #spaRouteView .winter-roster-list {
@@ -28863,7 +28862,8 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
 #spaRouteView .winter-roster-team[open] { border-color: #7d6827; }
 #spaRouteView .winter-roster-team summary { cursor: pointer; overflow-wrap: anywhere; }
 #spaRouteView .winter-roster-team summary::marker { color: #ffd000; }
-#spaRouteView .winter-roster-team summary span { display: block; margin-top: 4px; color: #abc1d0; font-size: .84rem; }
+#spaRouteView .winter-roster-team summary .season-team-card__header { display: inline-flex; align-items: center; vertical-align: middle; gap: 12px; }
+#spaRouteView .winter-roster-team summary small { display: block; margin-top: 4px; color: #abc1d0; font-size: .84rem; }
 #spaRouteView .winter-roster-team ul { padding-inline-start: 1.2em; margin: 10px 0; overflow-wrap: anywhere; }
 #spaRouteView .winter-roster-team li { margin-block: 4px; }
 #spaRouteView .winter-roster-source { display: inline-block; font-size: .85rem; margin-top: 6px; }
