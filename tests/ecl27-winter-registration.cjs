@@ -45,6 +45,11 @@ const dated = { ...registration, transfer_key: "official-1", transfer_date: "202
 assert.equal(mapTransfers([registration, dated]).length, 1);
 assert.equal(mapTransfers([registration, dated])[0].Date, dated.transfer_date);
 
+const seasonConfiguration = app.slice(app.indexOf("  async function loadWinterSeasonConfiguration("), app.indexOf("  async function loadWinterOfficialTeamRows("));
+const getWinterConfiguration = (base, rows) => vm.runInNewContext(seasonConfiguration + "loadWinterSeasonConfiguration(base)", {
+  base, seasonFetchAll: async () => rows
+});
+
 const routeParser = app.slice(app.indexOf("  function normalizeSeasonId("), app.indexOf("  function headerHtml("));
 const routeFor = (hash) => vm.runInNewContext(routeParser + "parseRoute()", {
   location: { hash }, decode: decodeURIComponent, URLSearchParams,
@@ -56,6 +61,16 @@ assert.equal(routeFor("#/sasong/ecl26spring?section=teams").params.seasonId, "ec
 assert.equal(routeFor("#/lagbygge?ecl27lag=refuse-too-lose").key, "teamBuilds");
 
 (async () => {
+  const base = { registrationRosters: true, divisions: [{ id: "elite" }, { id: "pro" }, { id: "lite" }] };
+  const division = (id, official_league_name) => ({ sports_gamer_league_id: id, official_league_name });
+  const other = [division(535, "ECL '27 Winter Registration"), division(545, "ECL '27 Winter Pro Qualifier"),
+    division(507, "ECL '26 Spring Elite")];
+  assert.equal(await getWinterConfiguration(base, other), base);
+  const official = await getWinterConfiguration(base, [...other, division(550, "ECL ’27: Winter - Elite"), division(551, "ECL '27 Winter Pro")]);
+  assert.equal(official.registrationRosters, false);
+  assert.equal(official.leagueIds.join(","), "550,551");
+  assert.equal(official.divisionByLeague.get(551), "pro");
+  assert.equal(official.divisions.length, 2);
   const newer = { ...snapshot, checkedAt: "2026-12-08T22:00:00Z" };
   const run = (fetch) => vm.runInNewContext(body + "SEH_fetchWinterRosters()", { fetch, AbortController, setTimeout, clearTimeout });
   const response = (data) => ({ ok: true, json: async () => data });

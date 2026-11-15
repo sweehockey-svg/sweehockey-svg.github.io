@@ -19903,6 +19903,11 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
   }
 
   function seasonRowsWithDivisionFallback(rows, season) {
+    if (season?.divisionByLeague) {
+      return (rows || []).map((row) => ({
+        ...row, division: season.divisionByLeague.get(Number(row.league_id)) || row.division
+      }));
+    }
     if (!season?.divisionFallback) return rows || [];
     return (rows || []).map((row) => (
       row.division || row.division_name
@@ -20933,7 +20938,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           season_id: `eq.${season.id}`,
           order: "played_at.desc"
         });
-        if (!matches.length && season.registrationRosters) {
+        if (!matches.length && (season.registrationRosters || season.winterOfficialRows)) {
           status.textContent = "Inga svenska Winter-matcher finns publicerade ännu.";
           initializeSeasonMatches(view, { matcher: { all: [] } });
           return;
@@ -20959,7 +20964,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
         status.textContent = "Daterade svenska spelarbyten hämtade från Supabase";
       } else if (selectedSection === "teams") {
         const [teams, playerRows] = await Promise.all([
-          seasonFetchLeagueSet("v_ehockey_team_tournaments_web_v14", season.leagueIds, {
+          season.winterOfficialRows ? loadWinterOfficialTeamRows(season) : seasonFetchLeagueSet("v_ehockey_team_tournaments_web_v14", season.leagueIds, {
             select: "team_id,league_id,current_name,name_used_in_tournament,effective_country,division,division_rank,group_name,table_position,regular_season_seed,qualified_for_playoffs,final_placement,games_played,wins,losses,overtime_wins,overtime_losses,table_points,goals_for,goals_against,goal_diff,playoff_games,playoff_wins,playoff_losses,playoff_overtime_wins,playoff_overtime_losses,playoff_goals_for,playoff_goals_against,playoff_round_code,playoff_round,playoff_status_code,playoff_status,playoff_series_played,playoff_series_won,playoff_series_lost,final_team_game_wins,final_opponent_game_wins,has_playoff_result,source_url,sports_gamer_tournament_url,chronology_end_date,end_date",
             effective_country: `eq.${season.countryCode}`
           }),
@@ -21004,6 +21009,11 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
             return rows;
           })()
         ]);
+        if (!playerRows.length && season.winterOfficialRows) {
+          status.textContent = "Ingen svensk spelarstatistik har rapporterats och synkats för Winter ännu.";
+          initializeSeasonStatistics(view, [], [], seasonSupabaseMetricsLegacy([]));
+          return;
+        }
         if (!playerRows.length) throw new Error("Ingen svensk spelarstatistik hittades i Supabase för säsongen.");
         initializeSeasonStatistics(
           view,
@@ -21142,11 +21152,80 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     }
   }
 
-  function initializeSeasonView(view, route) {
+  async function loadWinterSeasonConfiguration(base) {
+    const rows = await seasonFetchAll("sportsgamer_team_tournament_stats", {
+      select: "sports_gamer_league_id,official_league_name,sports_gamer_team_id,team_name_in_league,current_global_team_name,team_logo_in_league,current_global_team_logo,group_name,statistics_stage,games_played,wins,losses,overtime_wins,overtime_losses,table_points,goals_for,goals_against,goal_difference,sports_gamer_team_url",
+      official_league_name: "ilike.*ECL*27*Winter*",
+      order: "sports_gamer_league_id,sports_gamer_team_id,statistics_stage"
+    });
+    const officialName = /^ecl\s*['’‘]?\s*27\s*:?\s*winter\s*[-–—:]?\s*(elite|pro|lite|core|neo)$/i;
+    const leagueRows = rows.filter((row) => Number(row.sports_gamer_league_id) !== 535 && officialName.test(String(row.official_league_name).trim()));
+    const divisionByLeague = new Map(leagueRows.map((row) => [
+      Number(row.sports_gamer_league_id), String(row.official_league_name).trim().match(officialName)[1].toLowerCase()
+    ]));
+    if (!divisionByLeague.size) return base;
+    const divisions = base.divisions.filter((entry) => [...divisionByLeague.values()].includes(entry.id));
+    return { ...base, registrationRosters: false, leagueIds: [...divisionByLeague.keys()], divisions,
+      divisionByLeague, winterOfficialRows: leagueRows };
+  }
+
+  async function loadWinterOfficialTeamRows(season) {
+    const all = season.winterOfficialRows;
+    const ids = [...new Set(all.map((row) => Number(row.sports_gamer_team_id)))].filter((id) => Number.isSafeInteger(id) && id > 0);
+    const clubs = new Map();
+    for (let start = 0; start < ids.length; start += 100) {
+      const rows = await seasonFetchAll("v_local_team_list", {
+        select: "team_id,sports_gamer_team_ids,logo_url",
+        effective_country: "eq.SE", sports_gamer_team_ids: `ov.{${ids.slice(start, start + 100).join(",")}}`,
+        order: "team_id"
+      });
+      for (const club of rows) {
+        for (const id of club.sports_gamer_team_ids || []) {
+          if (!clubs.has(Number(id))) clubs.set(Number(id), club);
+          else if (clubs.get(Number(id))?.team_id !== club.team_id) clubs.set(Number(id), null);
+        }
+      }
+    }
+    const sourceKey = (row) => `${row.sports_gamer_league_id}:${row.sports_gamer_team_id}`;
+    const playoffs = new Map(all.filter((row) => row.statistics_stage === "playoffs").map((row) => [sourceKey(row), row]));
+    const sourceRows = all.flatMap((row) => {
+      const club = clubs.get(Number(row.sports_gamer_team_id));
+      if (!club || row.statistics_stage !== "regular") return [];
+      const p = playoffs.get(sourceKey(row));
+      const leagueId = Number(row.sports_gamer_league_id);
+      return [{ ...row, league_id: leagueId, team_id: club.team_id,
+        name_used_in_tournament: row.team_name_in_league || row.current_global_team_name,
+        logo_url: club.logo_url || row.team_logo_in_league || row.current_global_team_logo,
+        sports_gamer_url: row.sports_gamer_team_url, goal_diff: row.goal_difference,
+        regular_games: row.games_played,
+        playoff_games: p?.games_played, playoff_wins: p?.wins, playoff_losses: p?.losses,
+        playoff_goals_for: p?.goals_for, playoff_goals_against: p?.goals_against }];
+    });
+    try {
+      const official = await seasonFetchLeagueSet("v_ehockey_team_tournaments_web_v14", season.leagueIds, {
+        select: "team_id,league_id,table_position,regular_season_seed,qualified_for_playoffs,playoff_round,playoff_status_code,playoff_status,playoff_best_of,has_playoff_result",
+        effective_country: "eq.SE"
+      });
+      const placements = new Map(official.map((row) => [`${row.league_id}:${row.team_id}`, row]));
+      return sourceRows.map((row) => ({ ...row, ...placements.get(`${row.league_id}:${row.team_id}`) }));
+    } catch (error) {
+      console.warn("Winter: showing SportsGamer results without imported placement", error);
+      return sourceRows;
+    }
+  }
+
+  async function initializeSeasonView(view, route) {
+    const routeHash = location.hash;
     const seasonId =
       normalizeSeasonId(route.params.seasonId);
 
-    const season = seasons[seasonId];
+    const baseSeason = seasons[seasonId];
+    const season = baseSeason.registrationRosters
+      ? await loadWinterSeasonConfiguration(baseSeason).catch((error) => {
+        console.warn("Winter: official division lookup failed", error);
+        return baseSeason;
+      }) : baseSeason;
+    if (!view.isConnected || location.hash !== routeHash) return;
     const competitionName = seasonCompetitionName(season);
 
     const sections = ["overview", "matches", "transfers", "teams", "statistics"];
@@ -21291,7 +21370,6 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           </section>`}
           <section class="season-data-section" id="statistics" data-season-section="statistics">
             <div class="season-data-heading"><div><span>STATISTIK</span><h3>${escapeHtml(season.title)} – svensk statistik</h3><p>Välj spelform, roll och division. Se topp tre svenska spelare och hela topplistan för den valda kategorin.</p></div></div>
-            ${season.registrationRosters ? '<p class="season-empty">Statistik visas när det finns svensk matchstatistik för Winter.</p>' : `
             <div class="season-stats-tabs" aria-label="Statistikfilter">
               <div><span>SPELFORM</span><input id="seasonStatsStage" type="hidden" value="regular"><nav><button class="is-active" type="button" data-season-stats-stage="regular" aria-pressed="true">Grundserie</button><button type="button" data-season-stats-stage="playoff" aria-pressed="false">Slutspel</button></nav></div>
               <div><span>ROLL</span><input id="seasonStatsRole" type="hidden" value="skater"><nav><button class="is-active" type="button" data-season-stats-role="skater" aria-pressed="true">Spelare</button><button type="button" data-season-stats-role="defender" aria-pressed="false">Backar</button><button type="button" data-season-stats-role="goalie" aria-pressed="false">Målvakter</button></nav></div>
@@ -21300,7 +21378,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
             <div class="season-stats-heading"><div id="seasonStatsListTitle"></div><label><span>SÖK</span><input id="seasonStatsSearch" type="search" placeholder="Sök spelare eller lag…"></label></div>
             <div class="season-summary-bar" id="seasonStatsSummary"></div>
             <div class="season-top3" id="seasonStatsTop3"></div>
-            <div class="season-stat-table-host" id="seasonStatsTable"></div>`}
+            <div class="season-stat-table-host" id="seasonStatsTable"></div>
           </section>
         `;
       }
@@ -21311,6 +21389,10 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           section.hidden = section.dataset.seasonSection !== selectedSection;
         });
         if (selectedSection === "teams") loadWinterRegistrationRosters(panels.querySelector("#teams"), route.query.get("teamId"));
+        else {
+          view.querySelector("#seasonDataStatus").textContent = "Winter har ännu ingen importerad matchstatistik.";
+          initializeSeasonStatistics(view, [], [], seasonSupabaseMetricsLegacy([]));
+        }
       } else {
         loadSeasonDashboard(view, season, selectedSection);
       }

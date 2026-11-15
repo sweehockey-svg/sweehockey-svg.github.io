@@ -136,6 +136,7 @@ def ignored(value: Any) -> bool:
 
 
 def main() -> int:
+    winter = os.environ.get("ECL27_WINTER_EXPORT") == "1"
     connection = connect()
     try:
         schema = inventory(connection)
@@ -150,6 +151,11 @@ def main() -> int:
             (LEAGUE_ID,),
         )
         league = league_rows[0] if league_rows else {}
+        if winter:
+            from ecl27_winter_source import division_for_name
+            winter_division = division_for_name(first(league, "leagueName", "league_name"))
+            if LEAGUE_ID == 535 or not winter_division:
+                raise RuntimeError("Refusing to export a non-Winter division as ECL '27 Winter")
 
         team_columns = schema.get("nhlgamer_leagueTeams", [])
         team_league_col = column_name(team_columns, "leagueID", "league_id")
@@ -208,6 +214,7 @@ def main() -> int:
             }
 
     completed_matches = 0
+    winter_matches = []
     for match in matches:
         if ignored(first(match, "matchIgnore", "match_ignore", "ignored")):
             continue
@@ -219,11 +226,19 @@ def main() -> int:
             continue
         if away_id not in teams and home_id not in teams:
             continue
+        if winter and away_score == home_score:
+            continue
 
         raw_type = text(first(match, "matchType", "gameType", "match_type")).lower()
         stage = "playoffs" if raw_type == "playoffs" else "regular"
         overtime = ignored(first(match, "overtime", "wentToOvertime", "went_to_overtime"))
         completed_matches += 1
+        if winter:
+            winter_matches.append((
+                posint(first(match, "matchID", "match_id")), raw_type,
+                first(match, "matchDate", "match_date"), first(match, "matchTime", "match_time"),
+                home_id, away_id, home_score, away_score, overtime,
+            ))
 
         for team_id, gf, ga in (
             (away_id, away_score, home_score),
@@ -323,6 +338,13 @@ def main() -> int:
             }
             rows.append(row)
 
+    if winter:
+        from ecl27_winter_source import write_matches
+        team_meta = {
+            row["sports_gamer_team_id"]: (row["team_name_in_league"] or row["current_global_team_name"], row["group_name"])
+            for row in rows if row["statistics_stage"] == "regular"
+        }
+        write_matches(LEAGUE_ID, winter_division, winter_matches, team_meta)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     with OUT.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=FIELDS)
