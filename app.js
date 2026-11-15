@@ -3653,6 +3653,9 @@ function SEH_initPlayer() {
         return value;
       }
 
+      const legacyPlayerKey = window.SEH_legacyPlayerKey?.(value);
+      if (legacyPlayerKey) return legacyPlayerKey;
+
       const rows = await fetchPlayerSlugDirectory();
       const matches = rows.filter((row) =>
         SEH_playerSlug(row.display_gamertag || row.player_key) === wantedSlug

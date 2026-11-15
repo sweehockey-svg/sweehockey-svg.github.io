@@ -445,6 +445,13 @@ with evidence_summary as (
     updated_at = now()
   where not public.ehockey_player_nationality.is_locked;
 
+-- Keep Svamp's identity link but stop forcing the obsolete display name.
+-- The current PSN ID (or gamertag when absent) comes from the registry.
+update public.player_identity_overrides
+set display_gamertag = null
+where sports_gamer_player_id = 909
+  and lower(btrim(display_gamertag)) = 'svampify';
+
 /* Bevara manuellt bekraftade aktuella gamertags efter masteruppdateringen. */
 update public.ehockey_players player
 set

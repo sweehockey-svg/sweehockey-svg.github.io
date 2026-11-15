@@ -14,12 +14,16 @@
   "use strict";
 
   const CANONICAL_GAMERTAGS = Object.freeze({
-    "isvamp": "Svampify",
-    "svampify": "Svampify",
     "dobby the joker": "DobbyTheJoker_",
     "dobbythejoker": "DobbyTheJoker_",
     "dobbythejoker_": "DobbyTheJoker_"
   });
+
+  // Historical links follow the player, even if their current PSN changes again.
+  const LEGACY_PROFILE_KEYS = new Map([
+    ["isvamp", "4083d188fe2a07b68083fcb2d3186618eaa840d00b115507296db83fbc65b0dc"],
+    ["svampify", "4083d188fe2a07b68083fcb2d3186618eaa840d00b115507296db83fbc65b0dc"]
+  ]);
 
   let approvedProfilesPromise = null;
   let selfProfileEnhancementGeneration = 0;
@@ -294,6 +298,7 @@
   window.SEH_canonicalGamertag = canonicalGamertag;
   window.SEH_cleanPlayerProfileHref = cleanPlayerProfileHref;
   window.SEH_playerSlug = compactPlayerSlug;
+  window.SEH_legacyPlayerKey = (value) => LEGACY_PROFILE_KEYS.get(compactPlayerSlug(value)) || "";
 
   window.SEH_playerProfileUrl = function (playerKey, gamertag, fromTeam = null) {
     const canonical = canonicalGamertag(gamertag);

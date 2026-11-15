@@ -17,8 +17,8 @@ select
   playerID as player_id,
   case when userID is not null and userID > 0 then userID else null end as user_id,
   coalesce(
-    nullif(trim(gamertag), ''),
     nullif(trim(psntag), ''),
+    nullif(trim(gamertag), ''),
     nullif(trim(EAID), ''),
     concat('SportsGamer #', playerID)
   ) as display_gamertag,
