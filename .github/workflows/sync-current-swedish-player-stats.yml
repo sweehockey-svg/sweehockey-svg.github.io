@@ -10,6 +10,8 @@ on:
       - '.github/workflows/sync-current-swedish-player-stats.yml'
       - '.github/sync/ecl27_winter_source.py'
       - '.github/sync/import-ecl27-winter-matches.psql'
+      - '.github/sync/export-ecl27-winter-transfers.py'
+      - '.github/sync/import-ecl27-winter-invites.psql'
   workflow_dispatch:
     inputs:
       request_id:
@@ -101,6 +103,22 @@ jobs:
           set -euo pipefail
           python .github/sync/test_ecl27_winter_source.py
           python .github/sync/ecl27_winter_source.py
+
+      - name: Import dated Swedish Winter transfers from SportsGamer invites
+        if: github.event_name != 'workflow_dispatch' || inputs.winter_only
+        env:
+          DB_HOST: ${{ secrets.SVENSK_DB_HOST }}
+          DB_PORT: ${{ secrets.SVENSK_DB_PORT }}
+          DB_NAME: ${{ secrets.SVENSK_DB_NAME }}
+          DB_USER: ${{ secrets.SVENSK_DB_USER }}
+          DB_PASSWORD: ${{ secrets.SVENSK_DB_PASSWORD }}
+          SSH_HOST: ${{ secrets.SVENSK_SSH_HOST }}
+          SSH_LOCAL_DB_PORT: ${{ secrets.SVENSK_SSH_LOCAL_DB_PORT }}
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          python .github/sync/export-ecl27-winter-transfers.py
+          psql "$PGURL" -X -v ON_ERROR_STOP=1 -f .github/sync/import-ecl27-winter-invites.psql
 
       - name: Sync official Winter teams, standings and matches
         if: steps.winter.outputs.league_ids != ''

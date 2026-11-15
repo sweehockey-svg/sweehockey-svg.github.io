@@ -1,0 +1,39 @@
+\set ON_ERROR_STOP on
+begin;
+set local statement_timeout = '3min';
+create temporary table winter_invite_stage (
+  transfer_key text primary key, transfer_date date not null, player_id bigint not null,
+  player_name text not null, player_role text, from_team_id bigint, from_team text,
+  from_division text, from_league_id bigint, to_team_id bigint not null,
+  to_team text not null, to_division text, to_league_id bigint not null
+) on commit drop;
+\copy winter_invite_stage from '/tmp/ecl27_winter_transfers.csv' with (format csv, header true, null '');
+
+-- The existing season comparison can supply the old team if the invite history starts at Winter.
+-- A first invite with neither source is not claimed to be a club change.
+insert into public.ehockey_season_transfers_v1 as saved (
+  season_id,transfer_key,transfer_date,player_id,player_name,nationality,player_role,
+  from_team_id,from_team,from_division,from_league_id,to_team_id,to_team,to_division,to_league_id
+)
+select 'ecl27winter',i.transfer_key,i.transfer_date,i.player_id,i.player_name,'SE',i.player_role,
+       coalesce(i.from_team_id,f.from_team_id),coalesce(nullif(i.from_team,'Free Agent'),f.from_team,i.from_team),
+       coalesce(i.from_division,f.from_division),coalesce(i.from_league_id,f.from_league_id),
+       i.to_team_id,i.to_team,coalesce(i.to_division,f.to_division),i.to_league_id
+from winter_invite_stage i
+left join public.ehockey_season_transfers_v1 f
+  on f.season_id='ecl27winter' and f.transfer_key='winter-registration:'||i.player_id||':'||i.to_team_id
+  and i.from_team_id is null
+where coalesce(i.from_team,f.from_team) is not null
+on conflict (season_id,transfer_key) do update set
+  transfer_date=excluded.transfer_date,player_name=excluded.player_name,player_role=excluded.player_role,
+  from_team_id=excluded.from_team_id,from_team=excluded.from_team,from_division=excluded.from_division,
+  from_league_id=excluded.from_league_id,to_team=excluded.to_team,to_division=excluded.to_division,
+  to_league_id=excluded.to_league_id,updated_at=now()
+where (saved.transfer_date,saved.player_name,saved.player_role,saved.from_team_id,saved.from_team,
+       saved.from_division,saved.from_league_id,saved.to_team,saved.to_division,saved.to_league_id)
+  is distinct from
+      (excluded.transfer_date,excluded.player_name,excluded.player_role,excluded.from_team_id,excluded.from_team,
+       excluded.from_division,excluded.from_league_id,excluded.to_team,excluded.to_division,excluded.to_league_id);
+select count(*) as dated_winter_rows from public.ehockey_season_transfers_v1
+where season_id='ecl27winter' and transfer_date is not null;
+commit;

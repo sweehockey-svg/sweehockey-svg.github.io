@@ -50,18 +50,23 @@ def write_matches(league_id, division, matches, team_meta):
                              home_name, away_name, hg, ag, "OT" if overtime else ""))
 
 
-def main():
+def connect():
     import pymysql
-    from export_swedish_player_stats import select
 
     via_ssh = bool(os.environ.get("SSH_HOST"))
-    connection = pymysql.connect(
+    return pymysql.connect(
         host="127.0.0.1" if via_ssh else os.environ["DB_HOST"],
         port=int(os.environ.get("SSH_LOCAL_DB_PORT") or 3307) if via_ssh else int(os.environ.get("DB_PORT") or 3306),
         user=os.environ["DB_USER"], password=os.environ["DB_PASSWORD"], database=os.environ["DB_NAME"],
         charset="utf8mb4", cursorclass=pymysql.cursors.DictCursor, connect_timeout=20, read_timeout=120,
         autocommit=True, init_command="SET SESSION TRANSACTION READ ONLY",
     )
+
+
+def main():
+    from export_swedish_player_stats import select
+
+    connection = connect()
     try:
         rows = select(connection, """
             select l.leagueID, l.leagueName,

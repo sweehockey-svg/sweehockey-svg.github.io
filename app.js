@@ -19812,12 +19812,18 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
   }
 
   function seasonSupabaseTransferRows(rows) {
-    const isRegistration = (row) => String(row.transfer_key || "").startsWith("winter-registration:");
-    const moveKey = (row) => [row.player_id, row.from_team_id, row.to_team_id].join(":");
-    const dated = new Set((rows || []).filter((row) => !isRegistration(row) && row.transfer_date && row.player_id && row.from_team_id && row.to_team_id).map(moveKey));
+    const hasPrefix = (row, prefix) => String(row.transfer_key || "").startsWith(prefix);
+    const isRegistration = (row) => hasPrefix(row, "winter-registration:");
+    const isCaptain = (row) => hasPrefix(row, "winter-captain:");
+    const isInvite = (row) => hasPrefix(row, "winter-invite:");
+    const hasSourceLink = (row) => isRegistration(row) || isCaptain(row) || isInvite(row);
+    const moveKey = (row) => [row.player_id, row.to_team_id].join(":");
+    const dated = new Set((rows || []).filter((row) => !isRegistration(row) && row.transfer_date && row.player_id && row.to_team_id).map(moveKey));
+    const invites = new Set((rows || []).filter(isInvite).map(moveKey));
     const sportsGamerTeam = (league, team) => Number(league) > 0 && Number(team) > 0
       ? `https://sportsgamer.gg/leagues/${Number(league)}/teams/${Number(team)}` : "";
-    return (rows || []).filter((row) => !isRegistration(row) || !dated.has(moveKey(row))).map((row) => ({
+    return (rows || []).filter((row) => (!isRegistration(row) || !dated.has(moveKey(row)))
+      && (!isCaptain(row) || !invites.has(moveKey(row)))).map((row) => ({
       Date: row.transfer_date,
       Player: row.player_name,
       playerID: row.player_id,
@@ -19834,8 +19840,10 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       ToTeamID: row.to_team_id,
       ToLeagueID: row.to_league_id,
       toTeamLogo: row.to_team_logo,
-      FromUrl: isRegistration(row) ? sportsGamerTeam(row.from_league_id, row.from_team_id) : "",
-      ToUrl: isRegistration(row) ? sportsGamerTeam(row.to_league_id, row.to_team_id) : "",
+      FromUrl: hasSourceLink(row) ? sportsGamerTeam(row.from_league_id, row.from_team_id) : "",
+      ToUrl: hasSourceLink(row) ? sportsGamerTeam(row.to_league_id, row.to_team_id) : "",
+      dateSource: isInvite(row) ? "Inbjudningsdatum för accepterad SportsGamer-inbjudan"
+        : isCaptain(row) ? "Lagets anmälningsdatum hos SportsGamer" : "",
       registrationComparison: isRegistration(row) && !row.transfer_date,
       playerImage: row.player_image,
       GroupGames26Winter: row.previous_group_games,
@@ -20400,7 +20408,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           <div class="season-transfer-player">
             <a href="${escapeHtml(SEH_playerProfileUrl(row.playerID, row.Player))}">
               <div class="season-transfer-portrait"><img src="${escapeHtml(SEH_playerImageUrl(row.playerID))}" alt="" loading="lazy"></div>
-              <div><h4>${escapeHtml(seasonText(row.Player))}</h4>${row.Date ? `<time datetime="${escapeHtml(row.Date)}">${escapeHtml(seasonDate(row.Date))}</time>` : `<small class="season-transfer-date-missing">${row.registrationComparison ? "Inför Winter · datum saknas" : "Datum saknas"}</small>`}${row.Role ? `<span>${escapeHtml(row.Role)}</span>` : ""}</div>
+              <div><h4>${escapeHtml(seasonText(row.Player))}</h4>${row.Date ? `<time datetime="${escapeHtml(row.Date)}"${row.dateSource ? ` title="${escapeHtml(row.dateSource)}"` : ""}>${escapeHtml(seasonDate(row.Date))}</time>` : `<small class="season-transfer-date-missing">${row.registrationComparison ? "Inför Winter · datum saknas" : "Datum saknas"}</small>`}${row.Role ? `<span>${escapeHtml(row.Role)}</span>` : ""}</div>
             </a>
           </div>
           <div class="season-transfer-move">
@@ -21337,7 +21345,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
             <div class="season-match-list" id="seasonMatchList"></div>
           </section>
           <section class="season-data-section" id="transfers" data-season-section="transfers">
-            <div class="season-data-heading"><div><span>BYTEN</span><h3>Svenska ECL-byten</h3><p>${season.registrationRosters ? "Svenska spelare som är registrerade för ett nytt lag i Winter. Där datum saknas visas bytet som inför Winter." : "Här visas svenska spelare som bytt ECL-lag inför eller under säsongen. Varje kort visar spelare, datum, tidigare lag och nytt lag."}</p></div></div>
+            <div class="season-data-heading"><div><span>BYTEN</span><h3>Svenska ECL-byten</h3><p>${season.id === "ecl27winter" ? "Svenska spelarbyten inför och under Winter. Datumen hämtas från SportsGamer på samma sätt som för Spring; när en daterad källa saknas visas det på kortet." : "Här visas svenska spelare som bytt ECL-lag inför eller under säsongen. Varje kort visar spelare, datum, tidigare lag och nytt lag."}</p></div></div>
             <div class="season-transfer-toolbar"><div><span>ÖVERGÅNGAR</span><h4>Svenska spelare som bytt lag</h4></div><label><span>SÖK</span><input id="seasonTransferSearch" type="search" placeholder="Sök spelare eller lag…"></label></div>
             <div class="season-summary-bar" id="seasonTransferSummary"></div>
             <div class="season-transfer-list" id="seasonTransferList"></div>

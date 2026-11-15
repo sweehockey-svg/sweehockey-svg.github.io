@@ -44,6 +44,12 @@ assert.equal(mapTransfers([registration])[0].ToUrl, "https://sportsgamer.gg/leag
 const dated = { ...registration, transfer_key: "official-1", transfer_date: "2026-11-18" };
 assert.equal(mapTransfers([registration, dated]).length, 1);
 assert.equal(mapTransfers([registration, dated])[0].Date, dated.transfer_date);
+const invite = { ...dated, from_team_id: 5979, transfer_key: "winter-invite:4596:5979:4523:2026-11-18" };
+const captain = { ...dated, transfer_key: "winter-captain:4596:4523:2026-11-15" };
+const imported = mapTransfers([registration, captain, invite]);
+assert.equal(imported.length, 1);
+assert.equal(imported[0].Date, invite.transfer_date);
+assert.match(imported[0].dateSource, /accepterad/);
 
 const seasonConfiguration = app.slice(app.indexOf("  async function loadWinterSeasonConfiguration("), app.indexOf("  async function loadWinterOfficialTeamRows("));
 const getWinterConfiguration = (base, rows) => vm.runInNewContext(seasonConfiguration + "loadWinterSeasonConfiguration(base)", {
