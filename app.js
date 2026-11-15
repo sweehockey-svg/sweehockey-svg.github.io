@@ -3050,42 +3050,6 @@ function SEH_winterSwedishTeams(snapshot, localTeams) {
   });
 }
 
-function SEH_winterTransferRows(snapshot, springRows, springMoves) {
-  const current = SEH_winterPlayerTeams(snapshot);
-  const history = new Map();
-  for (const row of springRows) {
-    const id = Number(/\/players\/(\d+)\/?$/.exec(row.sports_gamer_player_url)?.[1]);
-    const teamId = Number(row.team_external_id);
-    if (!current.get(id) || row.player_country !== "SE" || !teamId || !row.team_name_in_tournament) continue;
-    if (!history.has(id)) history.set(id, new Map());
-    history.get(id).set(teamId, row);
-  }
-  const latest = new Map();
-  for (const move of springMoves) {
-    const id = Number(move.player_id);
-    if (!history.has(id) || !move.transfer_date) continue;
-    const prior = latest.get(id);
-    const destination = Number(move.to_team_id);
-    if (!prior || move.transfer_date > prior.date) latest.set(id, { date: move.transfer_date, id: destination });
-    else if (move.transfer_date === prior.date && destination !== prior.id) latest.set(id, { date: prior.date, id: 0 });
-  }
-  return [...history].flatMap(([id, teams]) => {
-    const winter = current.get(id);
-    const movement = latest.get(id);
-    const spring = movement ? teams.get(movement.id) : teams.size === 1 ? teams.values().next().value : null;
-    if (!spring || Number(spring.team_external_id) === Number(winter.id)) return [];
-    const player = winter.players.find((entry) => Number(entry.id) === id);
-    return [{
-      player_name: player.name, player_id: spring.player_key || id, nationality: "SE",
-      from_team: spring.team_name_in_tournament, from_division: spring.division,
-      to_team: winter.name, to_division: SEH_WINTER_DIVISIONS[winter.requestedDivision],
-      from_url: `https://sportsgamer.gg/leagues/${Number(spring.league_id)}/teams/${Number(spring.team_external_id)}`,
-      to_url: `https://sportsgamer.gg/leagues/535/teams/${Number(winter.id)}`,
-      registration_comparison: true
-    }];
-  }).sort((a, b) => a.player_name.localeCompare(b.player_name, "sv"));
-}
-
 function SEH_winterPlayerTeams(snapshot) {
   const matches = new Map();
   for (const team of snapshot?.teams || []) {
@@ -19848,7 +19812,12 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
   }
 
   function seasonSupabaseTransferRows(rows) {
-    return (rows || []).map((row) => ({
+    const isRegistration = (row) => String(row.transfer_key || "").startsWith("winter-registration:");
+    const moveKey = (row) => [row.player_id, row.from_team_id, row.to_team_id].join(":");
+    const dated = new Set((rows || []).filter((row) => !isRegistration(row) && row.transfer_date && row.player_id && row.from_team_id && row.to_team_id).map(moveKey));
+    const sportsGamerTeam = (league, team) => Number(league) > 0 && Number(team) > 0
+      ? `https://sportsgamer.gg/leagues/${Number(league)}/teams/${Number(team)}` : "";
+    return (rows || []).filter((row) => !isRegistration(row) || !dated.has(moveKey(row))).map((row) => ({
       Date: row.transfer_date,
       Player: row.player_name,
       playerID: row.player_id,
@@ -19865,9 +19834,9 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       ToTeamID: row.to_team_id,
       ToLeagueID: row.to_league_id,
       toTeamLogo: row.to_team_logo,
-      FromUrl: row.from_url,
-      ToUrl: row.to_url,
-      registrationComparison: row.registration_comparison,
+      FromUrl: isRegistration(row) ? sportsGamerTeam(row.from_league_id, row.from_team_id) : "",
+      ToUrl: isRegistration(row) ? sportsGamerTeam(row.to_league_id, row.to_team_id) : "",
+      registrationComparison: isRegistration(row) && !row.transfer_date,
       playerImage: row.player_image,
       GroupGames26Winter: row.previous_group_games,
       TotalGames26Winter: row.previous_total_games,
@@ -20974,30 +20943,15 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
         status.textContent = `${matches.length} svenska matcher hämtade från Supabase`;
       } else if (selectedSection === "transfers") {
         const transfers = await seasonFetchAll("ehockey_season_transfers_v1", {
-          select: "transfer_date,player_name,player_id,user_id,nationality,player_role,from_team,from_division,from_team_id,from_league_id,from_team_logo,to_team,to_division,to_team_id,to_league_id,to_team_logo,player_image,previous_group_games,previous_total_games,previous_playoff_games",
+          select: "transfer_key,transfer_date,player_name,player_id,user_id,nationality,player_role,from_team,from_division,from_team_id,from_league_id,from_team_logo,to_team,to_division,to_team_id,to_league_id,to_team_logo,player_image,previous_group_games,previous_total_games,previous_playoff_games",
           season_id: `eq.${season.id}`,
-          order: "transfer_date.desc"
+          order: "transfer_date.desc.nullslast,player_name,transfer_key"
         });
         if (season.registrationRosters) {
-          const [snapshot, springRows, springMoves] = await Promise.all([
-            SEH_fetchWinterRosters(),
-            seasonFetchLeagueSet("v_ehockey_player_tournaments_web_v14", seasons.ecl26spring.leagueIds, {
-              select: "player_key,player_country,sports_gamer_player_url,team_external_id,team_name_in_tournament,division,league_id",
-              player_country: "eq.SE"
-            }),
-            seasonFetchAll("ehockey_season_transfers_v1", {
-              select: "transfer_date,player_id,to_team_id",
-              season_id: "eq.ecl26spring",
-              nationality: "eq.SE",
-              order: "transfer_date.desc,player_id,to_team_id"
-            })
-          ]);
           if (!view.isConnected) return;
-          const datedNames = new Set(transfers.map((row) => String(row.player_name || "").trim().toLowerCase()));
-          const inferred = SEH_winterTransferRows(snapshot, springRows, springMoves)
-            .filter((row) => !datedNames.has(row.player_name.trim().toLowerCase()));
-          initializeSeasonTransfers(view, { overgangar: seasonSupabaseTransferRows([...transfers, ...inferred]) });
-          status.textContent = "Spring-lag jämförda med registrerade Winter-trupper hos SportsGamer.";
+          initializeSeasonTransfers(view, { overgangar: seasonSupabaseTransferRows(transfers) });
+          status.textContent = transfers.length ? "Svenska Winter-byten hämtade från Supabase."
+            : "Inga svenska Winter-byten har importerats ännu.";
           return;
         }
         if (!transfers.length) throw new Error("Inga spelarbyten hittades i Supabase för säsongen.");

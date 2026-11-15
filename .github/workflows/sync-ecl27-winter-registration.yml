@@ -23,6 +23,7 @@ jobs:
         shell: pwsh
         env:
           EVENT_NAME: ${{ github.event_name }}
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
@@ -33,6 +34,9 @@ jobs:
           ./scripts/fetch-ecl27-winter-rosters.ps1 -Output $tmp
           $old = Get-Content $file -Raw | ConvertFrom-Json -AsHashtable
           $new = Get-Content $tmp -Raw | ConvertFrom-Json -AsHashtable
+          if (!$env:PGURL) { throw 'Missing SUPABASE_DB_URL secret' }
+          $snapshot = ConvertTo-Json -InputObject $new -Depth 7 -Compress
+          psql --dbname=$env:PGURL -X -v ON_ERROR_STOP=1 -v "winter_snapshot=$snapshot" -f scripts/import-ecl27-winter-transfers.sql
           if ((ConvertTo-Json -InputObject $old.teams -Depth 7 -Compress) -ceq
               (ConvertTo-Json -InputObject $new.teams -Depth 7 -Compress)) { exit 0 }
           Copy-Item -LiteralPath $tmp -Destination $file
