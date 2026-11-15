@@ -27386,6 +27386,8 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
    ========================================================= */
 #spaRouteView[data-route="home"] .home-one-screen--refined {
   gap: 14px;
+  grid-template-rows: none;
+  grid-auto-rows: auto;
 }
 
 #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage {
@@ -27608,6 +27610,122 @@ body.admin-player-page #spaRouteView[data-route="admin"] .fa-admin-layout {
 #spaRouteView[data-route="home"] .home-one-screen--refined .home-stage__identity-text p {
   max-width: 430px;
   color: rgba(244,241,233,.48);
+}
+
+.home-ecl-registration {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, .8fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(18px, 3vw, 44px);
+  padding: clamp(20px, 2.6vw, 34px);
+  border: 1px solid rgba(255, 212, 0, .27);
+  border-radius: 14px;
+  background: linear-gradient(110deg, rgba(255, 212, 0, .075), transparent 53%), #080f15;
+}
+
+.home-ecl-registration h2 {
+  margin: .33rem 0;
+  color: #f4f1e9;
+  font-size: clamp(1.65rem, 3vw, 2.6rem);
+  line-height: 1.08;
+}
+
+.home-ecl-registration__organizer {
+  margin: 0;
+  color: #b7c8d4;
+}
+
+.home-ecl-registration__organizer strong {
+  color: #f4f1e9;
+}
+
+.home-ecl-registration__dates {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.home-ecl-registration__dates div {
+  padding: 7px 0 7px 12px;
+  border-left: 2px solid rgba(255, 212, 0, .58);
+}
+
+.home-ecl-registration__dates dt {
+  color: #aebfcc;
+  font-size: .8rem;
+}
+
+.home-ecl-registration__dates dd {
+  margin: 3px 0 0;
+  color: #f4f1e9;
+  font-weight: 750;
+}
+
+.home-ecl-registration__links {
+  display: grid;
+  gap: 10px;
+}
+
+.home-ecl-registration a.home-ecl-registration__primary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 10px 15px;
+  border-radius: 8px;
+  background: #ffd400;
+  color: #111417;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.home-ecl-registration a.home-ecl-registration__primary:hover {
+  background: #ffe45e;
+}
+
+.home-ecl-registration__secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+.home-ecl-registration__secondary a {
+  color: #ccdae4;
+  padding: 4px 0;
+  font-size: .86rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.home-ecl-registration__secondary a:hover {
+  color: #ffd400;
+}
+
+.home-ecl-registration a:focus-visible {
+  outline: 2px solid #43e8e1;
+  outline-offset: 3px;
+}
+
+@media (max-width: 980px) {
+  .home-ecl-registration {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-ecl-registration__links {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 560px) {
+  .home-ecl-registration {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-ecl-registration__links {
+    justify-self: stretch;
+  }
 }
 
 #spaRouteView[data-route="home"] .home-one-screen--refined .home-quicklinks {
