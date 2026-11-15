@@ -99,6 +99,16 @@ jobs:
           set -euo pipefail
           : "${PGURL:?Missing SUPABASE_DB_URL secret}"
 
+          # The import now includes non-Swedish players. Match the registry's
+          # nationality-first resolution before reporting a change to SE.
+          source_swedish_sql="coalesce(
+            case
+              when upper(btrim(s.nationality)) in ('SK', 'SVK', 'SLOVAK', 'SLOVAKIA', 'SLOVENSKO') then 'SK'
+              else public.ehockey_normalize_country_code(s.nationality)
+            end,
+            public.ehockey_normalize_country_code(s.country)
+          ) = 'SE'"
+
           new_profile_count=$(psql "$PGURL" -At -v ON_ERROR_STOP=1 -c "
             select count(*)
             from private.sportsgamer_player_master_import s
@@ -114,8 +124,9 @@ jobs:
               on p.canonical_key = 'SG:' || s.player_id::text
             left join public.ehockey_player_nationality n
               on n.player_id = p.id
-            where n.country_code is distinct from 'SE'
-              and not (coalesce(n.is_locked, false) and n.country_code is distinct from 'SE');
+            where ${source_swedish_sql}
+              and n.country_code is distinct from 'SE'
+              and not coalesce(n.is_locked, false);
           ")
 
           blocked_swedish_count=$(psql "$PGURL" -At -v ON_ERROR_STOP=1 -c "
@@ -125,7 +136,8 @@ jobs:
               on p.canonical_key = 'SG:' || s.player_id::text
             join public.ehockey_player_nationality n
               on n.player_id = p.id
-            where n.is_locked = true
+            where ${source_swedish_sql}
+              and n.is_locked = true
               and n.country_code is distinct from 'SE';
           ")
 
@@ -189,8 +201,9 @@ jobs:
                   on p.canonical_key = 'SG:' || s.player_id::text
                 left join public.ehockey_player_nationality n
                   on n.player_id = p.id
-                where n.country_code is distinct from 'SE'
-                  and not (coalesce(n.is_locked, false) and n.country_code is distinct from 'SE')
+                where ${source_swedish_sql}
+                  and n.country_code is distinct from 'SE'
+                  and not coalesce(n.is_locked, false)
                 order by lower(s.display_gamertag), s.player_id;
               " | while IFS='|' read -r player_id gamertag old_country; do
                 echo "| ${player_id} | ${gamertag} | ${old_country} |"
@@ -216,7 +229,8 @@ jobs:
                   on p.canonical_key = 'SG:' || s.player_id::text
                 join public.ehockey_player_nationality n
                   on n.player_id = p.id
-                where n.is_locked = true
+                where ${source_swedish_sql}
+                  and n.is_locked = true
                   and n.country_code is distinct from 'SE'
                 order by lower(s.display_gamertag), s.player_id;
               " | while IFS='|' read -r player_id gamertag locked_country reason; do
