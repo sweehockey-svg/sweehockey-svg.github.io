@@ -3070,6 +3070,23 @@ function SEH_winterTeamUrl(team) {
   return `#/sasong/ecl27winter?section=teams&teamId=${Number(team.id)}`;
 }
 
+async function SEH_playerProfileClubStatus(playerKey, sportsGamerId) {
+  const id = Number(sportsGamerId);
+  if (Number.isSafeInteger(id) && id > 0) {
+    const snapshot = await SEH_fetchWinterRosters().catch(() => null);
+    const team = SEH_winterPlayerTeams(snapshot).get(id);
+    if (team?.name && Number.isSafeInteger(Number(team.id)) && Number(team.id) > 0) {
+      return {
+        kind: "team",
+        teamName: team.name,
+        href: `https://sportsgamer.gg/leagues/${snapshot.leagueId}/teams/${Number(team.id)}`,
+        label: SEH_winterLabel(team)
+      };
+    }
+  }
+  return playerKey ? window.SEH_currentPlayerStatus?.get?.(playerKey) : null;
+}
+
 async function SEH_addWinterTeamLink(container, sportsGamerUrl) {
   const id = Number(/\/players\/(\d+)\/?$/.exec(sportsGamerUrl)?.[1]);
   if (!id) return;
@@ -4273,11 +4290,16 @@ function SEH_initPlayer() {
       hydratePlayerHeroPalette(displayName);
     }
 
-    async function hydratePlayerCurrentStatus(playerKey) {
-      if (!playerKey || !window.SEH_currentPlayerStatus?.get) return;
+    let currentClubRequest = 0;
+    async function hydratePlayerCurrentStatus(playerKey, sportsGamerId) {
+      const request = ++currentClubRequest;
       try {
-        const status = await window.SEH_currentPlayerStatus.get(playerKey);
-        if (!status) return;
+        const status = await SEH_playerProfileClubStatus(playerKey, sportsGamerId);
+        if (request !== currentClubRequest || !elements.playerCurrentTeam.isConnected) return;
+        if (!status) {
+          elements.playerCurrentTeam.textContent = "Aktuellt lag kunde inte hämtas";
+          return;
+        }
 
         elements.playerCurrentTeam.replaceChildren();
         const statusWrap = elements.playerCurrentTeam.closest(".player-profile-team-v123");
@@ -4286,10 +4308,11 @@ function SEH_initPlayer() {
         statusWrap?.classList.toggle("is-no-team", status.kind === "no_team");
 
         if (status.kind === "team" && status.teamName) {
-          if (status.teamId) {
+          if (status.href || status.teamId) {
             const link = document.createElement("a");
-            link.href = teamUrl(status.teamId);
+            link.href = status.href || teamUrl(status.teamId);
             link.textContent = status.teamName;
+            if (status.label) link.title = status.label;
             elements.playerCurrentTeam.append(link);
           } else {
             elements.playerCurrentTeam.textContent = status.teamName;
@@ -4311,6 +4334,9 @@ function SEH_initPlayer() {
           .forEach((node) => node.replaceChildren());
         setPlayerHeroPalette(DEFAULT_HERO_PALETTE);
       } catch (error) {
+        if (request === currentClubRequest && elements.playerCurrentTeam.isConnected) {
+          elements.playerCurrentTeam.textContent = "Aktuellt lag kunde inte hämtas";
+        }
         console.warn(`${APP_BUILD}: aktuell spelarstatus kunde inte laddas.`, error);
       }
     }
@@ -6650,25 +6676,12 @@ function SEH_initPlayer() {
       const bestOffense = bestOffensiveRow(clubRows.length ? clubRows : rows);
       const bestGoalie = bestGoalieRow(rows);
 
-      elements.playerCurrentTeam.replaceChildren();
-      if (window.SEH_currentPlayerStatus?.get) {
-        elements.playerCurrentTeam.textContent = "Hämtar aktuell status…";
-        [elements.playerCurrentTeamLogo, elements.playerHeroWatermark, elements.playerPortraitWatermark]
-          .filter(Boolean)
-          .forEach((node) => node.replaceChildren());
-        setPlayerHeroPalette(DEFAULT_HERO_PALETTE);
-        void hydratePlayerCurrentStatus(latest.playerKey);
-      } else {
-        if (latestClub.teamId) {
-          const currentTeamLink = document.createElement("a");
-          currentTeamLink.href = teamUrl(latestClub.teamId);
-          currentTeamLink.textContent = latestClub.teamName || "Okänt lag";
-          elements.playerCurrentTeam.append(currentTeamLink);
-        } else {
-          elements.playerCurrentTeam.textContent = latestClub.teamName || "Okänt lag";
-        }
-        renderProfileTeamBrand(latestClub.teamName || "Okänt lag");
-      }
+      elements.playerCurrentTeam.textContent = "Hämtar aktuell status…";
+      [elements.playerCurrentTeamLogo, elements.playerHeroWatermark, elements.playerPortraitWatermark]
+        .filter(Boolean)
+        .forEach((node) => node.replaceChildren());
+      setPlayerHeroPalette(DEFAULT_HERO_PALETTE);
+      void hydratePlayerCurrentStatus(latest.playerKey, latest.sportsGamerPlayerId || sportsGamerIdFromUrl(latest.externalUrl));
       void hydrateProfileRanking(latest.playerKey, currentName);
 
       elements.playerMeta.textContent = [
@@ -6864,11 +6877,7 @@ function SEH_initPlayer() {
         .filter(Boolean)
         .forEach((node) => node.replaceChildren());
       setPlayerHeroPalette(DEFAULT_HERO_PALETTE);
-      if (window.SEH_currentPlayerStatus?.get) {
-        void hydratePlayerCurrentStatus(directoryRow.player_key);
-      } else {
-        elements.playerCurrentTeam.textContent = "Inget aktuellt lag";
-      }
+      void hydratePlayerCurrentStatus(directoryRow.player_key, profile.sportsGamerPlayerId);
       void hydrateProfileRanking(directoryRow.player_key, profile.name);
 
       elements.playerMeta.textContent = [

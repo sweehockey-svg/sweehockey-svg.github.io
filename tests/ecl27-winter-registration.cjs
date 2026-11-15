@@ -67,6 +67,23 @@ assert.equal(routeFor("#/sasong/ecl26spring?section=teams").params.seasonId, "ec
 assert.equal(routeFor("#/lagbygge?ecl27lag=refuse-too-lose").key, "teamBuilds");
 
 (async () => {
+  const fallback = { kind: "team", teamName: "The Last Line" };
+  const resolveClub = (data, id) => {
+    const helpersOnly = helpers.slice(helpers.indexOf("function SEH_winterTeam("));
+    return vm.runInNewContext(constants + helpersOnly + "SEH_playerProfileClubStatus('key', id)", {
+      id, SEH_fetchWinterRosters: () => data ? Promise.resolve(data) : Promise.reject(new Error("offline")),
+      window: { SEH_currentPlayerStatus: { get: async () => fallback } }
+    });
+  };
+  const redhawk = await resolveClub(snapshot, 16103);
+  assert.equal(redhawk.teamName, "PENTA");
+  assert.equal(redhawk.href, "https://sportsgamer.gg/leagues/535/teams/7108");
+  assert.equal(await resolveClub(snapshot, 999999), fallback);
+  assert.equal(await resolveClub(null, 16103), fallback);
+  assert.equal(await resolveClub({ ...snapshot, teams: [...snapshot.teams, {
+    id: 1617, name: "The Last Line", players: [{ id: 16103 }]
+  }] }, 16103), fallback);
+
   const base = { registrationRosters: true, divisions: [{ id: "elite" }, { id: "pro" }, { id: "lite" }] };
   const division = (id, official_league_name) => ({ sports_gamer_league_id: id, official_league_name });
   const other = [division(535, "ECL '27 Winter Registration"), division(545, "ECL '27 Winter Pro Qualifier"),
