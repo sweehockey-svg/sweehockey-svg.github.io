@@ -446,8 +446,9 @@
     card.className = "admin-card admin-home-card";
     card.id = "scl27TeamsSyncCard";
     card.innerHTML = [
-      '<p class="writer-panel-kicker">SCL 27</p>',
-      '<h2>Gemensam SCL-synk</h2>',
+      '<p class="writer-panel-kicker">SCL 27 · AVSLUTAD</p>',
+      '<h2>Manuell SCL 27-synk</h2>',
+      '<p>Turneringen är avslutad. Automatisk synk är avstängd. Kör manuellt om ett resultat eller statistik har rättats.</p>',
       '<p>En körning hämtar lag, kaptener, trupper, tabell, spelarstatistik och matcher från SportsGamer liga 527 och räknar om Fantasy-poängen. Samma uppdaterade data används av SCL, Lagbygge, Graphics Studio och Broadcast Studio.</p>',
       '<div class="admin-actions">',
       '<button id="startScl27TeamsSync" type="button">Synka all SCL 27-data</button>',

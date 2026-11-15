@@ -2,13 +2,7 @@ name: Sync all SCL 27 data
 run-name: SCL 27 unified data · ${{ inputs.request_id || github.event_name }}
 
 on:
-  schedule:
-    # Match evenings, followed by midnight/night/morning on the next day.
-    # Native timezone support keeps these times correct across DST changes.
-    - cron: '0 21-23 * * 0-4'
-      timezone: Europe/Stockholm
-    - cron: '0 0,2,9 * * 1-5'
-      timezone: Europe/Stockholm
+  # SCL 27 is complete. Keep manual corrections available from Admincenter.
   workflow_dispatch:
     inputs:
       request_id:
@@ -29,5 +23,5 @@ jobs:
       request_id: ${{ inputs.request_id || '' }}
       competition_code: SCL2027
       league_ids: '527'
-      trigger_type: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
+      trigger_type: manual
     secrets: inherit
