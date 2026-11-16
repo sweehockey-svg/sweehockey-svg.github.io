@@ -10699,9 +10699,8 @@ ol.writer-preview-article__list > li strong {
 }
 
 /* =========================================================
-   HOME V2 — ONE SCREEN DESKTOP
-   Kompakt startsida utan scroll på normal desktop.
-   Mobil/tablet får naturlig scroll.
+   HOME V2 — KOMPAKT STARTSIDA
+   Innehållet och sidfoten följer sidans normala flöde.
    ========================================================= */
 #spaRouteView[data-route="home"] {
   position: relative;
@@ -10994,20 +10993,6 @@ ol.writer-preview-article__list > li strong {
   margin-top: 0;
   color: rgba(240,213,139,.88) !important;
   font-size: .76rem !important;
-}
-
-@media (min-width: 1101px) and (min-height: 760px) {
-  #spaRouteView[data-route="home"] {
-    height: calc(100vh - 91px);
-    display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
-    overflow: hidden;
-  }
-
-  #spaRouteView[data-route="home"] .home-one-screen {
-    height: 100%;
-    min-height: 0;
-  }
 }
 
 @media (max-height: 860px) and (min-width: 1101px) {
