@@ -19,7 +19,13 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
-      - name: Refresh public teams and player IDs
+      - name: Fetch public teams and player IDs
+        id: snapshot
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/fetch-ecl27-winter-rosters.ps1 -Output (Join-Path $env:RUNNER_TEMP 'ecl27-winter-rosters.json')
+      - name: Refresh public teams and transfers
         shell: pwsh
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -31,7 +37,6 @@ jobs:
           if ($env:EVENT_NAME -eq 'schedule' -and $today -ge [datetime]'2026-12-09') { exit 0 }
           $file = 'ecl27-winter-rosters.json'
           $tmp = Join-Path $env:RUNNER_TEMP $file
-          ./scripts/fetch-ecl27-winter-rosters.ps1 -Output $tmp
           $old = Get-Content $file -Raw | ConvertFrom-Json -AsHashtable
           $new = Get-Content $tmp -Raw | ConvertFrom-Json -AsHashtable
           if (!$env:PGURL) { throw 'Missing SUPABASE_DB_URL secret' }
@@ -46,3 +51,21 @@ jobs:
           git commit -m 'Refresh ECL 27 Winter registrations'
           git pull --rebase origin main
           git push origin HEAD:main
+      - name: Sync Swedish SportsGamer free agents
+        if: ${{ !cancelled() && steps.snapshot.outcome == 'success' }}
+        shell: pwsh
+        env:
+          PGURL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          if (!$env:PGURL) { throw 'Missing SUPABASE_DB_URL secret' }
+          $rosters = Get-Content (Join-Path $env:RUNNER_TEMP 'ecl27-winter-rosters.json') -Raw | ConvertFrom-Json -AsHashtable
+          $snapshot = ConvertTo-Json -Depth 6 -Compress -InputObject @{
+            leagueId = $rosters.leagueId
+            teams = @(foreach ($team in $rosters.teams) {
+              @{ players = @(foreach ($player in $team.players) { @{ id = $player.id } }) }
+            })
+          }
+          $freeAgents = ./scripts/fetch-ecl27-winter-free-agents.ps1
+          psql --dbname=$env:PGURL -X -v ON_ERROR_STOP=1 -v "winter_snapshot=$snapshot" -v "free_agent_snapshot=$freeAgents" -f scripts/sync-ecl27-winter-free-agents.sql
