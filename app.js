@@ -13921,6 +13921,8 @@ function SEH_playerImageUrl(value, fallbackCandidate = "") {
 
     const numericId = raw.match(/^\d+$/)?.[0];
     const localFile = raw.match(/(?:^|\/)([^/?#]+\.png)(?:[?#].*)?$/i)?.[1];
+    const approved = window.SEH_approvedPlayerPortraitUrl?.(numericId || localFile?.match(/^(\d+)\.png$/i)?.[1]);
+    if (approved) return approved;
     const fileName = numericId ? `${numericId}.png` : localFile;
 
     if (fileName && SEH_PLAYER_IMAGE_FILES.has(fileName)) {
@@ -20384,7 +20386,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
         <article class="season-transfer-full-card">
           <div class="season-transfer-player">
             <a href="${escapeHtml(SEH_playerProfileUrl(row.playerID, row.Player))}">
-              <div class="season-transfer-portrait"><img src="${escapeHtml(SEH_playerImageUrl(row.playerID))}" alt="" loading="lazy"></div>
+              <div class="season-transfer-portrait"><img data-seh-portrait-id="${escapeHtml(row.playerID || "")}" src="${escapeHtml(SEH_playerImageUrl(row.playerID))}" alt="" loading="lazy"></div>
               <div><h4>${escapeHtml(seasonText(row.Player))}</h4>${row.Date ? `<time datetime="${escapeHtml(row.Date)}"${row.dateSource ? ` title="${escapeHtml(row.dateSource)}"` : ""}>${escapeHtml(seasonDate(row.Date))}</time>` : `<small class="season-transfer-date-missing">${row.registrationComparison ? "Inför Winter · datum saknas" : "Datum saknas"}</small>`}${row.Role ? `<span>${escapeHtml(row.Role)}</span>` : ""}</div>
             </a>
           </div>
@@ -20778,6 +20780,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           matchShare: matches > 0 ? 100 * gp / matches : seasonNumber(archived?.matchSharePct),
           isDefender: position === "LD" || position === "RD" || Boolean(legacyPlayer(stageName, "defenders", division, row)),
           teamLogo: seasonText(archived?.teamLogo, ""),
+          portraitId: sportsGamerId,
           playerImage: SEH_playerImageUrl(sportsGamerId)
         };
       });
@@ -20853,7 +20856,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
           <div class="season-top3-hero">
             <div class="season-top3-media">
               <div class="season-top3-bg-logo" data-season-stat-logo data-team-name="${escapeHtml(player.team)}" data-logo-url="${escapeHtml(player.teamLogo)}"></div>
-              <img src="${escapeHtml(player.playerImage)}" alt="${escapeHtml(player.name)}" loading="lazy" onerror="this.onerror=null;this.src='players/1DEFAULTBILDID.png'">
+              <img data-seh-portrait-id="${escapeHtml(player.portraitId || "")}" src="${escapeHtml(player.playerImage)}" alt="${escapeHtml(player.name)}" loading="lazy" onerror="this.onerror=null;this.src='players/1DEFAULTBILDID.png'">
             </div>
             <div class="season-top3-content">
               <div class="season-top3-content-logo" data-season-stat-logo data-team-name="${escapeHtml(player.team)}" data-logo-url="${escapeHtml(player.teamLogo)}"></div>
