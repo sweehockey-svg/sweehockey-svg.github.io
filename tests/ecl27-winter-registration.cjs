@@ -46,6 +46,17 @@ vm.runInContext(body + `
   assert.equal(SEH_winterPlayerTeams({ teams:[invictus, collision] }).get(player.id), null);
   assert.match(SEH_winterLabel(invictus), /Winter · Anmäld · ansökt:/);
   assert.match(SEH_winterTeamUrl(invictus), /section=teams&teamId=6709$/);
+  const redhawkCard = { sportsGamerId:16103, currentStatus:"team", currentTeam:"The Last Line",
+    currentTeamId:50, currentTeamLogo:"last-line.png" };
+  const updated = SEH_applyDirectoryWinterClub(redhawkCard,snapshot,SEH_winterPlayerTeams(snapshot));
+  assert.equal(updated.currentTeam,"PENTA");
+  assert.equal(updated.latestTeam,"PENTA");
+  assert.equal(updated.currentTeamLogo,"");
+  assert.equal(updated.currentTeamId,0);
+  assert.equal(updated.currentTeamHref,"https://sportsgamer.gg/leagues/535/teams/7108");
+  const ambiguous = { ...snapshot, teams:[...snapshot.teams,{ ...collision, players:[{ id:16103 }] }] };
+  assert.equal(SEH_applyDirectoryWinterClub(redhawkCard,ambiguous,SEH_winterPlayerTeams(ambiguous)),redhawkCard);
+  assert.equal(SEH_applyDirectoryWinterClub(redhawkCard,null,SEH_winterPlayerTeams(null)),redhawkCard);
   const swedish = { team_id: 1, effective_country: "SE", sports_gamer_team_ids: ["6709", "6710"] };
   const foreign = { team_id: 2, effective_country: "FI", sports_gamer_team_ids: [98765] };
   const all = { teams: [collision, invictus] };

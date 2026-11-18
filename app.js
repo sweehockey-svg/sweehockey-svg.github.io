@@ -2762,8 +2762,8 @@ function SEH_initPlayers() {
       }
 
       const teamNode = link.querySelector(".players-card__team-v122");
-      if (hasCurrentTeam && teamNode && Number(player.currentTeamId) > 0) {
-        const teamHref = SEH_teamProfileUrl(player.currentTeamId);
+      const teamHref = player.currentTeamHref || (player.currentTeamId > 0 ? SEH_teamProfileUrl(player.currentTeamId) : "");
+      if (hasCurrentTeam && teamNode && teamHref) {
         teamNode.classList.add("is-cross-link");
         teamNode.setAttribute("role", "link");
         teamNode.tabIndex = 0;
@@ -2907,13 +2907,7 @@ function SEH_initPlayers() {
           .filter((player) =>
             player.key && ["SE", "SWE"].includes(player.country)
           )
-          .map((player) => {
-            const winterRegistration = memberships.get(Number(player.sportsGamerId));
-            return winterRegistration ? {
-              ...player, winterRegistration, latestSeason: SEH_WINTER_TITLE,
-              latestTeam: winterRegistration.name
-            } : player;
-          });
+          .map((player) => SEH_applyDirectoryWinterClub(player, winter, memberships));
         buildDivisionFilter();
         applyRouteFilters();
         updateOverview();
@@ -3070,19 +3064,40 @@ function SEH_winterTeamUrl(team) {
   return `#/sasong/ecl27winter?section=teams&teamId=${Number(team.id)}`;
 }
 
+function SEH_winterClubStatus(snapshot, team) {
+  if (!snapshot || !team?.name || !Number.isSafeInteger(Number(team.id)) || Number(team.id) < 1) return null;
+  return {
+    kind: "team",
+    teamName: team.name,
+    href: `https://sportsgamer.gg/leagues/${snapshot.leagueId}/teams/${Number(team.id)}`,
+    label: SEH_winterLabel(team)
+  };
+}
+
+function SEH_applyDirectoryWinterClub(player, snapshot, memberships) {
+  const winterRegistration = memberships.get(Number(player.sportsGamerId));
+  const status = SEH_winterClubStatus(snapshot, winterRegistration);
+  if (!status) return player;
+  return {
+    ...player,
+    winterRegistration,
+    latestSeason: SEH_WINTER_TITLE,
+    latestTeam: status.teamName,
+    currentTeam: status.teamName,
+    currentTeamId: 0, // The SportsGamer ID must not reuse the old club's local link.
+    currentTeamLogo: "", // Resolve the new logo by name, never reuse the old one.
+    currentTeamHref: status.href,
+    currentStatus: status.kind,
+    currentStatusSource: "winter-registration"
+  };
+}
+
 async function SEH_playerProfileClubStatus(playerKey, sportsGamerId) {
   const id = Number(sportsGamerId);
   if (Number.isSafeInteger(id) && id > 0) {
     const snapshot = await SEH_fetchWinterRosters().catch(() => null);
-    const team = SEH_winterPlayerTeams(snapshot).get(id);
-    if (team?.name && Number.isSafeInteger(Number(team.id)) && Number(team.id) > 0) {
-      return {
-        kind: "team",
-        teamName: team.name,
-        href: `https://sportsgamer.gg/leagues/${snapshot.leagueId}/teams/${Number(team.id)}`,
-        label: SEH_winterLabel(team)
-      };
-    }
+    const status = SEH_winterClubStatus(snapshot, SEH_winterPlayerTeams(snapshot).get(id));
+    if (status) return status;
   }
   return playerKey ? window.SEH_currentPlayerStatus?.get?.(playerKey) : null;
 }
