@@ -1,15 +1,13 @@
 (() => {
   'use strict';
 
-  const ACTIVE_PHASES = new Set(['building', 'regular', 'playoffs']);
   const CACHE_MS = 60 * 1000;
-  const SOURCES = [
-    {
-      competitionKey: 'ecl27winter',
-      eventsTable: 'ecl27_roster_events',
-      projectsTable: 'ecl27_team_projects'
-    }
-  ];
+  const WINTER = {
+    competition_key: 'ecl27winter',
+    display_name: 'ECL ’27: Winter',
+    phase: 'building',
+    route_hash: '#/lagbygge'
+  };
 
   let client = null;
   let cache = null;
@@ -108,29 +106,13 @@
     return normalizedGamertag(value).replace(/[^a-z0-9åäö]/gi, '');
   }
 
-  function waitForEcl27CurrentRoster(timeoutMs = 5000) {
-    const ready = window.SEH_ECL27_CURRENT_ROSTER_V1;
-    if (ready?.teams?.length) return Promise.resolve(ready);
-
-    return new Promise((resolve) => {
-      let settled = false;
-      const finish = () => {
-        if (settled) return;
-        settled = true;
-        window.removeEventListener('seh-ecl27-current-roster-ready', onReady);
-        resolve(window.SEH_ECL27_CURRENT_ROSTER_V1 || null);
-      };
-      const onReady = () => finish();
-      window.addEventListener('seh-ecl27-current-roster-ready', onReady, { once: true });
-      window.setTimeout(finish, timeoutMs);
-    });
-  }
 
   async function loadPlayerIdentityMap(sb) {
     const rows = await fetchAll(
       sb,
       'app_player_directory_cache',
-      'player_key,display_gamertag,sports_gamer_player_url'
+      'player_key,display_gamertag,sports_gamer_player_url',
+      'player_key'
     );
 
     const byKey = new Map();
@@ -196,7 +178,8 @@
     const rows = await fetchAll(
       sb,
       'v_ehockey_free_agents_public',
-      'player_key,display_gamertag'
+      'player_key,display_gamertag',
+      'player_key'
     );
     const keys = new Set();
     for (const row of rows) {
@@ -206,231 +189,64 @@
     return keys;
   }
 
-  function statusesFromBuildSnapshot(snapshot, identity, competition) {
+  async function loadTeamBuildStatuses(identity) {
     const statuses = new Map();
-
-    for (const team of snapshot?.teams || []) {
-      const teamName = clean(team?.name);
-      if (!teamName) continue;
-
-      for (const playerName of team?.players || []) {
-        const playerKey = canonicalRosterPlayerKey(playerName, identity);
+    // Match the actual Lagbygge page, not the raw Spring baseline.
+    const getVisibleTeams = await window.SEH_ECL27_BUILD_ROSTER_READY;
+    if (!getVisibleTeams) return statuses;
+    for (const team of await getVisibleTeams()) {
+      for (const player of team.playersNow) {
+        const playerKey = canonicalRosterPlayerKey(player, identity);
         if (!playerKey) continue;
-
         statuses.set(playerKey, {
           kind: 'team',
           playerKey,
-          teamName,
-          teamId: Number(team?.teamId) || null,
-          teamProjectId: null,
-          logoName: clean(team?.logoUrl || team?.logoName),
-          division: clean(team?.division),
-          competitionKey: clean(competition?.competition_key),
-          competitionName: clean(competition?.display_name),
-          phase: clean(competition?.phase),
+          teamName: team.name,
+          teamId: team.teamId,
+          logoName: team.logoName,
+          division: team.division,
+          competitionKey: WINTER.competition_key,
+          competitionName: WINTER.display_name,
+          phase: WINTER.phase,
           source: 'team_build',
-          routeHash: clean(competition?.route_hash)
+          href: team.href,
+          routeHash: team.href
         });
       }
     }
-
     return statuses;
   }
 
-  function statusesFromRosterRows(rows, identity, competition) {
+  async function loadWinterStatuses(identity) {
     const statuses = new Map();
-
-    for (const row of rows || []) {
-      const rawPlayerKey = clean(row?.player_key);
-      const rawSubjectKey = clean(row?.subject_key);
-      const playerKey =
-        identity?.byKey?.get(rawPlayerKey) ||
-        identity?.byKey?.get(rawSubjectKey) ||
-        canonicalRosterPlayerKey(row?.display_gamertag, identity) ||
-        rawPlayerKey ||
-        rawSubjectKey;
-      const teamName = clean(row?.team_name);
-      if (!playerKey || !teamName) continue;
-
+    if (typeof window.SEH_fetchWinterRosters !== 'function') return statuses;
+    const snapshot = await window.SEH_fetchWinterRosters();
+    for (const [id, team] of window.SEH_winterPlayerTeams(snapshot)) {
+      const playerKey = identity.byKey.get('SG:' + id);
+      const club = window.SEH_winterClubStatus(snapshot, team);
+      if (!playerKey || !club) continue;
       statuses.set(playerKey, {
-        kind: 'team',
+        ...club,
         playerKey,
-        teamName,
-        teamId: Number(row?.team_id) || null,
-        teamProjectId: Number(row?.team_project_id) || null,
-        logoName: clean(row?.logo_name),
-        division: clean(row?.division),
-        competitionKey: clean(competition?.competition_key),
-        competitionName: clean(competition?.display_name),
-        phase: clean(competition?.phase),
-        source: 'team_build',
-        routeHash: clean(competition?.route_hash)
-      });
-    }
-
-    return statuses;
-  }
-
-  function statusesFromOfficialSclRoster(rows, identity, competition) {
-    const statuses = new Map();
-
-    for (const row of rows || []) {
-      const rawPlayerKey = clean(row?.player_key);
-      const sportsGamerPlayerId = clean(row?.sports_gamer_player_id);
-      const playerKey =
-        identity?.byKey?.get(rawPlayerKey) ||
-        identity?.byKey?.get(sportsGamerPlayerId ? 'SG:' + sportsGamerPlayerId : '') ||
-        identity?.byKey?.get(sportsGamerPlayerId) ||
-        canonicalRosterPlayerKey(row?.display_gamertag, identity) ||
-        rawPlayerKey;
-      const teamName = clean(row?.real_team_name);
-      if (!playerKey || !teamName) continue;
-
-      statuses.set(playerKey, {
-        kind: 'team',
-        playerKey,
-        teamName,
-        teamId: Number(row?.real_team_id) || null,
+        teamId: null,
         teamProjectId: null,
-        logoName: clean(row?.team_logo_url),
+        logoName: clean(team.logoUrl),
         division: '',
-        competitionKey: clean(competition?.competition_key),
-        competitionName: 'SCL 27',
-        phase: clean(competition?.phase),
-        source: 'scl_current_roster',
-        routeHash: clean(competition?.route_hash)
+        competitionKey: WINTER.competition_key,
+        competitionName: WINTER.display_name,
+        phase: WINTER.phase,
+        source: 'winter-registration',
+        routeHash: window.SEH_winterTeamUrl(team)
       });
     }
-
     return statuses;
   }
 
-  function canonicalEventPlayerKey(event, identity) {
-    const rawKey = clean(event?.player_key);
-    const direct = identity?.byKey?.get(rawKey);
-    if (direct) return direct;
-
-    const gt = normalizedGamertag(event?.gamertag);
-    const byName = gt ? identity?.byGamertag?.get(gt) : '';
-    return byName || rawKey;
-  }
-
-  async function loadSource(sb, source, identity) {
-    const stateResult = await sb
-      .from('seh_app_competition_states')
-      .select('competition_key,display_name,phase,route_hash,updated_at')
-      .eq('competition_key', source.competitionKey)
-      .limit(1);
-
-    if (stateResult.error) throw stateResult.error;
-    const competition = stateResult.data?.[0] || null;
-    if (!competition || !ACTIVE_PHASES.has(clean(competition.phase).toLowerCase())) {
-      return { competition, statuses: new Map() };
-    }
-
-    if (
-      clean(competition.phase).toLowerCase() === 'building' &&
-      clean(source.competitionKey).toLowerCase() === 'ecl27winter'
-    ) {
-      const [rosterResult, officialSclResult] = await Promise.all([
-        sb
-          .from('v_ecl27_current_roster_v1')
-          .select('subject_key,player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name,roster_source'),
-        sb
-          .from('ehockey_fantasy_player_pool')
-          .select('player_key,sports_gamer_player_id,display_gamertag,real_team_id,real_team_name,team_logo_url')
-          .eq('competition_id', 2)
-          .eq('source_league_id', 527)
-          .eq('is_available', true)
-      ]);
-
-      const statuses = new Map();
-
-      if (!rosterResult.error && Array.isArray(rosterResult.data)) {
-        for (const [playerKey, status] of statusesFromRosterRows(rosterResult.data, identity, competition)) {
-          statuses.set(playerKey, status);
-        }
-      }
-
-      // SCL 27:s registrerade roster är den färskaste källan till "aktuellt lag".
-      // Den får därför skriva över äldre ECL-byggdata för spelare som finns i båda.
-      if (!officialSclResult.error && Array.isArray(officialSclResult.data)) {
-        for (const [playerKey, status] of statusesFromOfficialSclRoster(officialSclResult.data, identity, competition)) {
-          statuses.set(playerKey, status);
-        }
-      }
-
-      if (statuses.size) {
-        return { competition, statuses };
-      }
-
-      const snapshot = await waitForEcl27CurrentRoster();
-      if (snapshot?.teams?.length) {
-        return {
-          competition,
-          statuses: statusesFromBuildSnapshot(snapshot, identity, competition)
-        };
-      }
-
-      throw rosterResult.error || officialSclResult.error || new Error('ECL 27 current roster is unavailable.');
-    }
-
-    const [events, projects] = await Promise.all([
-      fetchAll(
-        sb,
-        source.eventsTable,
-        'id,occurred_at,team_project_id,event_type,player_key,gamertag,from_team,to_team',
-        'occurred_at'
-      ),
-      fetchAll(
-        sb,
-        source.projectsTable,
-        'id,name,division,source_team_id,logo_name,status'
-      )
-    ]);
-
-    const projectsById = new Map(
-      projects.map(row => [Number(row.id), row]).filter(([id]) => Number.isFinite(id) && id > 0)
-    );
-
-    events.sort((a, b) =>
-      (Date.parse(b.occurred_at || '') || 0) - (Date.parse(a.occurred_at || '') || 0) ||
-      Number(b.id || 0) - Number(a.id || 0)
-    );
-
-    const latestByPlayer = new Map();
-    for (const event of events) {
-      const playerKey = canonicalEventPlayerKey(event, identity);
-      if (!playerKey || latestByPlayer.has(playerKey)) continue;
-      latestByPlayer.set(playerKey, { ...event, canonical_player_key: playerKey });
-    }
-
-    const statuses = new Map();
-    for (const [playerKey, event] of latestByPlayer) {
-      const eventType = clean(event.event_type).toLowerCase();
-      if (eventType !== 'in') continue;
-
-      const project = projectsById.get(Number(event.team_project_id)) || null;
-      const teamName = clean(project?.name || event.to_team);
-      if (!teamName) continue;
-
-      statuses.set(playerKey, {
-        kind: 'team',
-        playerKey,
-        teamName,
-        teamId: Number(project?.source_team_id) || null,
-        teamProjectId: Number(project?.id || event.team_project_id) || null,
-        logoName: clean(project?.logo_name),
-        division: clean(project?.division),
-        competitionKey: clean(competition.competition_key),
-        competitionName: clean(competition.display_name),
-        phase: clean(competition.phase),
-        source: clean(competition.phase).toLowerCase() === 'building' ? 'team_build' : 'tournament',
-        routeHash: clean(competition.route_hash)
-      });
-    }
-
-    return { competition, statuses };
+  function optionalSource(promise, name, fallback) {
+    return promise.catch(error => {
+      console.warn('[Svensk eHockey] Kunde inte läsa ' + name, error);
+      return fallback;
+    });
   }
 
   async function load(force = false) {
@@ -445,65 +261,15 @@
       const sb = getClient();
       if (!sb) throw new Error('Supabase saknas för aktuell spelarstatus.');
 
-      const statuses = new Map();
-      const competitions = [];
       const identity = await loadPlayerIdentityMap(sb);
-      const activeFreeAgents = await loadActiveFreeAgentKeys(sb, identity);
-
-      // Registered players in ongoing regional leagues take precedence over
-      // next season's team builds. National teams are separate from club status.
-      try {
-      const [officialRoster, officialTeams] = await Promise.all([
-        fetchAll(sb, 'sportsgamer_league_roster_current',
-          'sports_gamer_league_id,sports_gamer_team_id,sports_gamer_player_id,display_gamertag,is_available'),
-        fetchAll(sb, 'sportsgamer_league_teams_current',
-          'sports_gamer_league_id,sports_gamer_team_id,team_name,team_logo_url', '', q => q.eq('is_available', true))
+      const [statuses, activeFreeAgents, registered] = await Promise.all([
+        optionalSource(loadTeamBuildStatuses(identity), 'Lagbygge', new Map()),
+        optionalSource(loadActiveFreeAgentKeys(sb, identity), 'Free Agents', new Set()),
+        optionalSource(loadWinterStatuses(identity), 'Winter-anmälningar', new Map())
       ]);
-      const leagueIds = [...new Set(officialTeams.map(row => Number(row.sports_gamer_league_id)))];
-      const leagueRows = leagueIds.length ? await fetchAll(sb, 'v_seh_current_regional_club_registrations',
-        'sports_gamer_league_id,official_league_name,active_league,sports_gamer_team_id,sports_gamer_player_id,display_gamertag,listed_in_roster', '', q => q.in('sports_gamer_league_id', leagueIds).eq('active_league', 1)) : [];
-      const clubLeagues = new Map(leagueRows.filter(row =>
-        /\b(SCL|FCL|GCL|WECL|ECL|ROECL|CSCL|NACL)\b|CHAMPIONSHIP\s+LEAGUE/i.test(row.official_league_name || '')
-      ).map(row => [Number(row.sports_gamer_league_id), clean(row.official_league_name)]));
-      const teamsByLeague = new Map(officialTeams.map(row =>
-        [row.sports_gamer_league_id + ':' + row.sports_gamer_team_id, row]));
-      // The statistics import also carries the source's current registration.
-      // Include it when the separate broadcast roster has not caught up yet.
-      const registered = new Set(officialRoster.map(row => row.sports_gamer_league_id + ':' + row.sports_gamer_player_id));
-      for (const row of leagueRows) {
-        if (Number(row.listed_in_roster) !== 1 || registered.has(row.sports_gamer_league_id + ':' + row.sports_gamer_player_id)) continue;
-        officialRoster.push(row);
-      }
-      officialRoster.sort((a, b) => Number(b.sports_gamer_league_id) - Number(a.sports_gamer_league_id));
-      for (const row of officialRoster) {
-        if (row.is_available === false) continue;
-        const leagueId = Number(row.sports_gamer_league_id);
-        if (!clubLeagues.has(leagueId)) continue;
-        const key = identity.byKey.get('SG:' + clean(row.sports_gamer_player_id)) ||
-          canonicalRosterPlayerKey(row.display_gamertag, identity);
-        const team = teamsByLeague.get(row.sports_gamer_league_id + ':' + row.sports_gamer_team_id);
-        if (!key || !team || statuses.has(key)) continue;
-        statuses.set(key, {
-          kind: 'team', playerKey: key, teamName: clean(team.team_name),
-          teamId: Number(row.sports_gamer_team_id), teamProjectId: null,
-          logoName: clean(team.team_logo_url), division: '',
-          competitionKey: 'sportsgamer:' + leagueId, competitionName: clubLeagues.get(leagueId),
-          phase: 'regular', source: 'tournament', routeHash: ''
-        });
-      }
-      } catch (error) {
-        console.warn('[Svensk eHockey] Regionala aktuella lag kunde inte laddas', error);
-      }
-
-      for (const source of SOURCES) {
-        const result = await loadSource(sb, source, identity);
-        if (result.competition) competitions.push(result.competition);
-
-        // First active source wins if several competition sources are added later.
-        for (const [playerKey, status] of result.statuses) {
-          if (!statuses.has(playerKey)) statuses.set(playerKey, status);
-        }
-      }
+      // A unique official registration wins over the current team build.
+      for (const [playerKey, status] of registered) statuses.set(playerKey, status);
+      const competitions = [WINTER];
 
       cache = { loadedAt: Date.now(), statuses, activeFreeAgents, competitions, secBypass: false };
       window.dispatchEvent(new CustomEvent('seh-current-player-status-ready'));
@@ -558,6 +324,7 @@
         current_team_id: status.teamId,
         current_team_project_id: status.teamProjectId || null,
         current_team_logo: status.logoName,
+        current_team_href: status.href || '',
         current_team_division: status.division,
         current_competition_key: status.competitionKey,
         current_competition_name: status.competitionName,

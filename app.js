@@ -2583,6 +2583,7 @@ function SEH_initPlayers() {
         currentTeam,
         currentTeamId: number(row.current_team_id),
         currentTeamLogo: clean(row.current_team_logo),
+        currentTeamHref: clean(row.current_team_href),
         currentStatus,
         currentStatusSource: clean(row.current_status_source),
         competitions: list(row.competitions),

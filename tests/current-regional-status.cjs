@@ -1,25 +1,58 @@
-const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const source=fs.readFileSync(require('node:path').join(__dirname,'../player-current-status-v1.js'),'utf8');
-const leagues=[523,524,527,529,532];
-const rows={
- app_player_directory_cache:leagues.map((id,i)=>({player_key:'p'+id,display_gamertag:'Player'+id,sports_gamer_player_url:'https://sportsgamer.gg/players/'+id})),
- v_ehockey_free_agents_public:[{player_key:'p529'}],
- seh_app_competition_states:[],
- sportsgamer_league_roster_current:leagues.filter(id=>id!==529).map(id=>({sports_gamer_league_id:id,sports_gamer_team_id:id,sports_gamer_player_id:id,is_available:id!==524})),
- sportsgamer_league_teams_current:leagues.map(id=>({sports_gamer_league_id:id,sports_gamer_team_id:id,team_name:'Team'+id,is_available:true})),
- v_seh_current_regional_club_registrations:leagues.map((id,i)=>({sports_gamer_league_id:id,sports_gamer_team_id:id,sports_gamer_player_id:id,display_gamertag:'Player'+id,official_league_name:['WECL 5','German Championship League 13','SCL 2027','FCL 2027','WV 4 Nations 2026'][i],active_league:1,listed_in_roster:1}))
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
+const app = read('app.js');
+const helpers = app.slice(app.indexOf('function SEH_winterPlayerTeams('), app.indexOf('function SEH_applyDirectoryWinterClub('));
+const rows = {
+  app_player_directory_cache: [1, 2, 3, 4, 5, 6].map(id => ({
+    player_key: 'p' + id, display_gamertag: 'Player' + id,
+    sports_gamer_player_url: 'https://sportsgamer.gg/players/' + id,
+    latest_team: 'Historiskt lag'
+  })),
+  v_ehockey_free_agents_public: [1, 2, 3, 5].map(id => ({ player_key: 'p' + id }))
 };
-function query(table){let filters=[],start=0,end=999;const q={select(){return q},eq(k,v){filters.push(r=>r[k]===v);return q},in(k,v){filters.push(r=>v.includes(r[k]));return q},order(){return q},range(a,b){start=a;end=b;return q},limit(){return q},then(resolve,reject){return Promise.resolve({data:(rows[table]||[]).filter(r=>filters.every(f=>f(r))).slice(start,end+1),error:null}).then(resolve,reject)}};return q;}
-const context={window:{SEH_CONFIG:{supabaseUrl:'https://test.invalid',supabasePublishableKey:'test'},supabase:{createClient:()=>({from:query})},dispatchEvent(){}},location:{pathname:'/'},CustomEvent:class{},console};
-vm.runInNewContext(source,context);
-(async()=>{
- const api=context.window.SEH_currentPlayerStatus;
- assert.equal((await api.get('p529')).teamName,'Team529','FCL statistics registration supplies missing broadcast roster and beats FA');
- assert.equal((await api.get('p523')).teamName,'Team523','WECL is current');
- assert.equal((await api.get('p527')).teamName,'Team527','SCL is current');
- assert.equal((await api.get('p524')).kind,'no_team','Explicit roster removal overrides stale statistics');
- rows.sportsgamer_league_roster_current.find(r=>r.sports_gamer_league_id===524).is_available=true;api.invalidate();
- assert.equal((await api.get('p524')).teamName,'Team524','GCL is current');
- assert.equal((await api.get('p532')).kind,'no_team','National team is not a club');
- console.log('Regional status passed: FCL, SCL, WECL, GCL, roster removal, missing broadcast fallback and national-team exclusion.');
-})().catch(e=>{console.error(e);process.exitCode=1});
+const snapshot = { leagueId: 535, teams: [
+  { id: 101, name: 'Winterlaget', players: [{ id: 1 }, { id: 5 }] },
+  { id: 102, name: 'Andra laget', players: [{ id: 5 }] }
+] };
+const build = { name: 'Aktivt bygge', href: '#/lagbygge?ecl27lag=aktivt-bygge', playersNow: ['Player1', 'Player2'] };
+const calls = new Set();
+function query(table) {
+  calls.add(table);
+  assert.ok(Object.hasOwn(rows, table), 'Unexpected current-club source: ' + table);
+  const q = { select: () => q, order: () => q, range: (start, end) => ({
+    data: rows[table].slice(start, end + 1), error: null
+  }) };
+  return q;
+}
+const context = {
+  window: {
+    SEH_CONFIG: { supabaseUrl: 'https://test.invalid', supabasePublishableKey: 'test' },
+    supabase: { createClient: () => ({ from: query }) },
+    SEH_fetchWinterRosters: async () => snapshot,
+    SEH_ECL27_BUILD_ROSTER_READY: Promise.resolve(async () => [build]),
+    dispatchEvent() {}
+  },
+  SEH_WINTER_TITLE: 'ECL ’27: Winter', SEH_WINTER_DIVISIONS: {},
+  location: { pathname: '/' }, CustomEvent: class {}, console
+};
+vm.runInNewContext(helpers + '\nObject.assign(window, { SEH_winterPlayerTeams, SEH_winterClubStatus, SEH_winterTeamUrl });', context);
+vm.runInNewContext(read('player-current-status-v1.js'), context);
+(async () => {
+  const api = context.window.SEH_currentPlayerStatus;
+  assert.equal((await api.get('p1')).teamName, 'Winterlaget', 'Registration wins over build and Free Agent');
+  assert.equal((await api.get('p2')).teamName, 'Aktivt bygge', 'Visible Lagbygge roster wins over Free Agent');
+  assert.equal((await api.get('p3')).kind, 'free_agent', 'Listed with no current team');
+  assert.equal((await api.get('p4')).kind, 'no_team', 'History is not a current club');
+  assert.equal((await api.get('p5')).kind, 'free_agent', 'Two conflicting registrations do not establish a team');
+  assert.equal((await api.get('p6')).kind, 'no_team', 'No roster or Free Agent membership');
+  const decorated = await api.decorateRows(rows.app_player_directory_cache);
+  assert.equal(decorated[0].current_team_href, 'https://sportsgamer.gg/leagues/535/teams/101');
+  assert.equal(decorated[1].current_team_href, build.href);
+  assert.equal(decorated[3].latest_team, 'Historiskt lag');
+  assert.equal(decorated[3].current_team_name, '');
+  assert.deepEqual([...calls], ['app_player_directory_cache', 'v_ehockey_free_agents_public']);
+  console.log('Current club policy passed: Winter → Lagbygge → Free Agent → no current team.');
+})().catch(error => { console.error(error); process.exitCode = 1; });

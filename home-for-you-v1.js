@@ -297,24 +297,24 @@
   function renderPersonal(host, data) {
     const account = data.account || {};
     const player = data.player || {};
-    const project = data.project || null;
     const phase = String(data.competitionState?.phase || 'building');
     const playerName = String(player.display_gamertag || account.playerName || account.playerKey || 'Din profil').trim();
     const currentStatus = data.currentStatus || null;
     const hasCurrentTeam = currentStatus?.kind === 'team' && String(currentStatus?.teamName || '').trim();
     const teamName = hasCurrentTeam ? String(currentStatus.teamName).trim() : '';
-    const division = String(currentStatus?.division || project?.division || '').trim();
-    const sourceTeamId = hasCurrentTeam ? (Number(currentStatus?.teamId) || Number(project?.source_team_id) || 0) : 0;
-    const currentTeamText = hasCurrentTeam ? teamName : 'Free Agent';
+    const division = String(currentStatus?.division || '').trim();
+    const sourceTeamId = hasCurrentTeam ? Number(currentStatus?.teamId) || 0 : 0;
+    const isFreeAgent = currentStatus?.kind === 'free_agent';
+    const currentTeamText = hasCurrentTeam ? teamName : isFreeAgent ? 'Free Agent' : 'Inget aktuellt lag';
     const currentTeamMeta = hasCurrentTeam
-      ? [division, String(currentStatus?.phase || phase) === 'building' ? 'Aktuellt lagbygge' : 'Pågående turnering'].filter(Boolean).join(' · ')
-      : 'Inte i aktivt lagbygge';
-    const teamLogoPrimary = hasCurrentTeam ? String(currentStatus?.logoName || project?.logo_name || '').trim() : '';
+      ? currentStatus.label || [division, 'Aktuellt lagbygge'].filter(Boolean).join(' · ')
+      : isFreeAgent ? 'På Free Agent-listan' : 'Inte i Winter eller Lagbygge';
+    const teamLogoPrimary = hasCurrentTeam ? String(currentStatus?.logoName || '').trim() : '';
     const profileUrl = playerHref(account.playerKey, playerName);
     const competitionMeta = desktopCompetitionMeta();
 
     const feed = [];
-    if (phase === 'building' && data.recruitment?.text && teamName) {
+    if (phase === 'building' && currentStatus?.source === 'team_build' && data.recruitment?.text && teamName) {
       feed.push({
         marker: '!',
         tone: 'recruit',
@@ -325,15 +325,15 @@
     }
     for (const event of data.events || []) {
       if (feed.length >= 3) break;
-      const copy = eventCopy(event, teamName || String(event?.to_team || event?.from_team || 'ditt lag'));
+      const copy = eventCopy(event, String(event?.to_team || event?.from_team || teamName || 'ditt lag'));
       feed.push({ ...copy, time: relativeTime(event?.occurred_at) });
     }
     if (!feed.length) {
       feed.push({
         marker: '✓',
         tone: '',
-        title: teamName ? teamName + ' är kopplat' : 'Du är Free Agent',
-        text: teamName ? 'Nya IN/UT och rekryteringsposter visas här.' : 'När du går med i ett aktivt lagbygge byts statusen automatiskt.',
+        title: teamName ? teamName + ' är kopplat' : currentTeamText,
+        text: teamName ? 'Nya IN/UT och rekryteringsposter visas här.' : 'Statusen uppdateras när du registreras för Winter eller går med i ett aktivt lagbygge.',
         time: ''
       });
     }
@@ -346,7 +346,7 @@
       '</article>'
     ).join('');
 
-    const teamHref = sourceTeamId ? '#/lag/' + sourceTeamId : '#/free-agents';
+    const teamHref = hasCurrentTeam ? currentStatus.href || (sourceTeamId ? '#/lag/' + sourceTeamId : '#/lagbygge') : '';
 
     host.classList.add('home-stage__identity--for-you');
     host.setAttribute('data-seh-personal', 'ready');
@@ -364,7 +364,7 @@
             '<img src="' + esc(playerImage(player)) + '" alt="' + esc(playerName) + '">' +
           '</a>' +
           '<div class="seh-dfy__identity-copy"><small>DIN SPELARE</small><strong>' + esc(playerName) + '</strong>' +
-            (sourceTeamId
+            (teamHref
               ? '<a class="seh-dfy__clubline" href="' + esc(teamHref) + '"><span class="seh-dfy__identity-team-logo" data-seh-team-logo><img alt="" decoding="async"></span><span>' + esc(currentTeamText) + '</span><b>Lagprofil ↗</b></a>'
               : '<span class="seh-dfy__clubline seh-dfy__clubline--plain seh-dfy__clubline--free-agent"><span>' + esc(currentTeamText) + '</span></span>') +
           '</div>' +
@@ -470,13 +470,7 @@
         : 0;
       const building = String(competitionState.phase || '') === 'building';
 
-      const [projectResult, eventsResult, recruitmentResult, currentStatus] = await Promise.all([
-        currentProjectId
-          ? sb.from('ecl27_team_projects')
-              .select('id,name,division,source_team_id,logo_name,status')
-              .eq('id', currentProjectId)
-              .limit(1)
-          : Promise.resolve({ data: [], error: null }),
+      const [eventsResult, recruitmentResult, currentStatus] = await Promise.all([
         currentProjectId
           ? sb.from('ecl27_roster_events')
               .select('id,occurred_at,team_project_id,event_type,player_key,gamertag,from_team,to_team')
@@ -503,7 +497,6 @@
         account,
         player,
         competitionState,
-        project: projectResult.error ? null : (projectResult.data?.[0] || null),
         currentStatus,
         events: eventsResult.error ? [] : (eventsResult.data || []),
         recruitment: recruitmentResult.error ? null : (recruitmentResult.data?.[0] || null)

@@ -16,6 +16,8 @@ vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../playe
 (async()=>{
  const player=await query('app_player_directory_cache').select('player_key').eq('display_gamertag','eSwahn');
  const status=await context.window.SEH_currentPlayerStatus.get(player.data[0].player_key);
- assert.equal(status?.teamName,'TIKI TALK');assert.equal(status.competitionKey,'sportsgamer:529');
- console.log('Live anonymous status passed: eSwahn → TIKI TALK (FCL 2027).');
+ assert.ok(status);
+ assert.notEqual(status.teamName,'TIKI TALK');
+ assert.ok(['free_agent','no_team'].includes(status.kind));
+ console.log('Live anonymous status passed: FCL is not used as the current club.');
 })().catch(e=>{console.error(e);process.exitCode=1});

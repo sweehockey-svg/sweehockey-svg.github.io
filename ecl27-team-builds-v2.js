@@ -1882,7 +1882,19 @@
   } else {
     scheduleMount();
   }
+  return async () => {
+    if (buildsUnavailable) return [];
+    const { swedishTeams } = await window.SEH_loadSwedishWinterRegistrations();
+    return unregisteredBuilds(model.teams, swedishTeams).map(team => ({
+      name: team.name,
+      teamId: teamId(team.name),
+      logoName: logoUrl(team) || team.logoName || "",
+      division: team.division || "",
+      href: teamBuildUrl(team.name),
+      playersNow: team.playersNow
+    }));
+  };
   }
 
-  startEcl27Renderer();
+  window.SEH_ECL27_BUILD_ROSTER_READY = startEcl27Renderer();
 })();
