@@ -3065,6 +3065,19 @@ function SEH_winterTeamUrl(team) {
   return `#/sasong/ecl27winter?section=teams&teamId=${Number(team.id)}`;
 }
 
+function SEH_winterTeamLogo(team) {
+  const id = Number(team?.id);
+  if (!Number.isSafeInteger(id) || id < 1 || !team?.logoUrl) return "";
+  try {
+    const url = new URL(team.logoUrl);
+    const path = /^\/storage\/team-logos\/\d+\/(\d+)\/[^/]+$/.exec(url.pathname);
+    return url.origin === "https://sportsgamer.gg" && !url.username && !url.password
+      && Number(path?.[1]) === id ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
 function SEH_winterClubStatus(snapshot, team) {
   if (!snapshot || !team?.name || !Number.isSafeInteger(Number(team.id)) || Number(team.id) < 1) return null;
   return {
@@ -13975,6 +13988,8 @@ const SEH_HAS_TEAM_LOGO_MANIFEST =
 // These are used as fallbacks before initials are shown.
 const SEH_TEAM_LOGO_REMOTE_OVERRIDES = Object.freeze({
   "bladerunners hc": "https://sportsgamer.gg/storage/team-logos/481/6768/BladerunnersHCcopy.thumb.png.fce02a41eef4a0649966f22f6382be3c_20251030-042230.png",
+  "havoc hc": "https://sportsgamer.gg/storage/team-logos/535/7080/18F0447E-4BE1-4731-A141-62F3EDA58FD3_20261116-211713.png",
+  "ssk academy esport": "https://sportsgamer.gg/storage/team-logos/535/7069/SSK%20Academy_20261116-213313.png",
   "penta": "https://sportsgamer.gg/storage/team-logos/535/7108/dcac61dc-49ef-47fa-b3de-3d46c7b5ac49.png",
   "nemesis": "https://sportsgamer.gg/storage/team-logos/171/147/IMG-20220314-WA0000_20220314-142104.png",
   "hc bisons": "https://fhr.fra1.cdn.digitaloceanspaces.com/NHLGamer/Community/uploads/monthly_2019_10/CE821323-0CCE-4C8A-A28D-A39247FDFE0E.thumb.jpeg.af47fb2589046feb52a0a61ec56a3d37.jpeg"
@@ -20361,11 +20376,14 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     render();
   }
 
-  function initializeSeasonTransfers(view, legacy) {
+  function initializeSeasonTransfers(view, legacy, registrationSnapshot = null) {
     const host = view.querySelector("#seasonTransferList");
     const search = view.querySelector("#seasonTransferSearch");
     const summary = view.querySelector("#seasonTransferSummary");
     if (!host || !search || !summary) return;
+    const registrationLogos = new Map((registrationSnapshot?.teams || []).map(team => [
+      Number(team.id), SEH_winterTeamLogo(team)
+    ]));
     const transfers = (legacy?.overgangar || [])
       .filter((row) => ["SE", "SWE", "SWEDEN", "SVERIGE"].includes(String(row.nationality || "").trim().toUpperCase()))
       .sort((a, b) => String(b.Date || "").localeCompare(String(a.Date || "")));
@@ -20377,9 +20395,13 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       const name = seasonText(row[from ? "From" : "To"], from ? "Free Agent" : "Okänt lag");
       const division = seasonText(row[from ? "FromDiv" : "ToDiv"], "");
       const logo = seasonText(row[from ? "fromTeamLogo" : "toTeamLogo"], "");
+      const teamId = row[from ? "FromTeamID" : "ToTeamID"];
+      const leagueId = row[from ? "FromLeagueID" : "ToLeagueID"];
+      const registrationLogo = Number(leagueId) === registrationSnapshot?.leagueId
+        ? registrationLogos.get(Number(teamId)) || "" : "";
       const sourceUrl = row[from ? "FromUrl" : "ToUrl"];
-      const href = sourceUrl || teamHref(row[from ? "FromTeamID" : "ToTeamID"], row[from ? "FromLeagueID" : "ToLeagueID"]);
-      const content = `<div class="season-transfer-team-logo" data-season-transfer-logo data-team-name="${escapeHtml(name)}" data-logo-url="${escapeHtml(logo)}"></div><div><small>${from ? "FRÅN" : "TILL"}</small><strong>${escapeHtml(name)}</strong><span>${escapeHtml(division)}</span></div>`;
+      const href = sourceUrl || teamHref(teamId, leagueId);
+      const content = `<div class="season-transfer-team-logo" data-season-transfer-logo data-team-name="${escapeHtml(name)}" data-logo-url="${escapeHtml(logo)}" data-registration-logo="${escapeHtml(registrationLogo)}"></div><div><small>${from ? "FRÅN" : "TILL"}</small><strong>${escapeHtml(name)}</strong><span>${escapeHtml(division)}</span></div>`;
       return href
         ? `<a class="season-transfer-team" href="${escapeHtml(href)}"${sourceUrl ? ' target="_blank" rel="noopener"' : ""}>${content}</a>`
         : `<div class="season-transfer-team is-unlinked">${content}</div>`;
@@ -20388,7 +20410,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
       host.querySelectorAll("[data-season-transfer-logo]").forEach((container) => {
         const name = container.dataset.teamName || "";
         const logo = container.dataset.logoUrl || "";
-        SEH_renderTeamLogo(container, [logo], name, `${name} logotyp`);
+        SEH_renderTeamLogo(container, [container.dataset.registrationLogo, logo], name, `${name} logotyp`);
       });
     };
     const render = () => {
@@ -20951,16 +20973,19 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
         initializeSeasonMatches(view, { matcher: { all: seasonSupabaseMatchRows(matches) } });
         status.textContent = `${matches.length} svenska matcher hämtade från Supabase`;
       } else if (selectedSection === "transfers") {
-        const transfers = await fetchSeasonTransferRows(season.id);
+        const [transfers, registrationSnapshot] = await Promise.all([
+          fetchSeasonTransferRows(season.id),
+          season.id === "ecl27winter" ? SEH_fetchWinterRosters().catch(() => null) : null
+        ]);
         if (season.registrationRosters) {
           if (!view.isConnected) return;
-          initializeSeasonTransfers(view, { overgangar: seasonSupabaseTransferRows(transfers) });
+          initializeSeasonTransfers(view, { overgangar: seasonSupabaseTransferRows(transfers) }, registrationSnapshot);
           status.textContent = transfers.length ? "Svenska Winter-byten hämtade från Supabase."
             : "Inga svenska Winter-byten har importerats ännu.";
           return;
         }
         if (!transfers.length) throw new Error("Inga spelarbyten hittades i Supabase för säsongen.");
-        initializeSeasonTransfers(view, { overgangar: seasonSupabaseTransferRows(transfers) });
+        initializeSeasonTransfers(view, { overgangar: seasonSupabaseTransferRows(transfers) }, registrationSnapshot);
         status.textContent = "Daterade svenska spelarbyten hämtade från Supabase";
       } else if (selectedSection === "teams") {
         const [teams, playerRows] = await Promise.all([

@@ -31,6 +31,8 @@ $teams = foreach ($team in $league.teams) {
         id = $id
         name = [string]$team.name
         requestedDivision = [int]$team.additionalInfo.division
+        # The public list uses /images/no-logo.jpg for clubs without a logo.
+        logoUrl = if ([string]$team.logo -match "^https://sportsgamer\.gg/storage/team-logos/\d+/$id/[^/?#]+$") { [string]$team.logo } else { '' }
         players = $players
     }
 }
