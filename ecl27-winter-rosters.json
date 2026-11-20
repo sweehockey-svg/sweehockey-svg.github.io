@@ -1,6 +1,6 @@
 {
   "leagueId": 535,
-  "checkedAt": "2026-11-19T16:02:05.6686819Z",
+  "checkedAt": "2026-11-20T00:54:45.2507059Z",
   "teams": [
     {
       "id": 4181,
@@ -205,8 +205,20 @@
       "logoUrl": "",
       "players": [
         {
+          "id": 2899,
+          "name": "Dump_n_Chase"
+        },
+        {
+          "id": 14506,
+          "name": "xMilchmann95x"
+        },
+        {
           "id": 16150,
           "name": "belgish"
+        },
+        {
+          "id": 18463,
+          "name": "OI Tom IO6653"
         }
       ]
     },
@@ -214,7 +226,7 @@
       "id": 6238,
       "name": "Conexion",
       "requestedDivision": 541,
-      "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/6238/CNX Logo_20261117-183833.png",
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/6238/Untitled design_20261119-122316.png",
       "players": [
         {
           "id": 1075,
@@ -235,6 +247,22 @@
         {
           "id": 13515,
           "name": "rJakke"
+        }
+      ]
+    },
+    {
+      "id": 762,
+      "name": "CZ  JDOUCI NA SMRT  SK",
+      "requestedDivision": 544,
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/164/762/inbound8641102303920588113_20211216-211629.png",
+      "players": [
+        {
+          "id": 5312,
+          "name": "PRCO-54"
+        },
+        {
+          "id": 18527,
+          "name": "willik1993"
         }
       ]
     },
@@ -303,6 +331,26 @@
         {
           "id": 16474,
           "name": "Zamy39"
+        }
+      ]
+    },
+    {
+      "id": 423,
+      "name": "DEG eSports",
+      "requestedDivision": 542,
+      "logoUrl": "",
+      "players": [
+        {
+          "id": 5944,
+          "name": "MEAZZA1704"
+        },
+        {
+          "id": 5946,
+          "name": "DBerni99999"
+        },
+        {
+          "id": 5995,
+          "name": "PantherOnSkates"
         }
       ]
     },
@@ -463,6 +511,10 @@
         {
           "id": 11335,
           "name": "steve1982ber"
+        },
+        {
+          "id": 11895,
+          "name": "pat_seidl88"
         }
       ]
     },
@@ -487,6 +539,10 @@
         {
           "id": 5932,
           "name": "Simbanho"
+        },
+        {
+          "id": 8720,
+          "name": "s-ultz-i"
         },
         {
           "id": 9176,
@@ -583,6 +639,18 @@
         {
           "id": 4771,
           "name": "egetelli_"
+        }
+      ]
+    },
+    {
+      "id": 7063,
+      "name": "Frostbyte Titans",
+      "requestedDivision": 542,
+      "logoUrl": "",
+      "players": [
+        {
+          "id": 8826,
+          "name": "bondralukas19"
         }
       ]
     },
@@ -799,6 +867,10 @@
         {
           "id": 16615,
           "name": "Zonkji v"
+        },
+        {
+          "id": 17545,
+          "name": "Guggge"
         }
       ]
     },
@@ -815,6 +887,10 @@
         {
           "id": 5442,
           "name": "UnknownLehtis"
+        },
+        {
+          "id": 5575,
+          "name": "hugobrann72"
         },
         {
           "id": 5701,
@@ -978,8 +1054,12 @@
       "id": 4828,
       "name": "HK Poprad Esports",
       "requestedDivision": 541,
-      "logoUrl": "",
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/4828/Logo HK Poprad Esports na čiernom pozadí_20261119-142334.png",
       "players": [
+        {
+          "id": 11995,
+          "name": "Katastrosak"
+        },
         {
           "id": 15328,
           "name": "PlayAgain96"
@@ -1007,6 +1087,14 @@
         {
           "id": 871,
           "name": "GregsonTV"
+        },
+        {
+          "id": 1309,
+          "name": "Hasek-39--"
+        },
+        {
+          "id": 16161,
+          "name": "SWISSELITE1"
         }
       ]
     },
@@ -1061,6 +1149,14 @@
           "name": "Seahyena"
         },
         {
+          "id": 2569,
+          "name": "AG_Jarl"
+        },
+        {
+          "id": 3653,
+          "name": "Copras"
+        },
+        {
           "id": 4691,
           "name": "vaajanen"
         },
@@ -1071,6 +1167,10 @@
         {
           "id": 5707,
           "name": "Miklu19"
+        },
+        {
+          "id": 6984,
+          "name": "elmageo6209"
         },
         {
           "id": 17546,
@@ -1205,8 +1305,16 @@
           "name": "Rpaloluoto"
         },
         {
+          "id": 12274,
+          "name": "Datsyykki13"
+        },
+        {
           "id": 13638,
           "name": "xLeppix"
+        },
+        {
+          "id": 14925,
+          "name": "M8rttii"
         },
         {
           "id": 15041,
@@ -1299,6 +1407,10 @@
         {
           "id": 5457,
           "name": "Lapp1s_"
+        },
+        {
+          "id": 5768,
+          "name": "karjalainensamul"
         },
         {
           "id": 11100,
@@ -1485,6 +1597,10 @@
           "name": "Venum-21-"
         },
         {
+          "id": 10334,
+          "name": "Johnny_Sharkie"
+        },
+        {
           "id": 16648,
           "name": "usa_aktivfresh"
         },
@@ -1587,6 +1703,18 @@
       ]
     },
     {
+      "id": 86,
+      "name": "Murohoki",
+      "requestedDivision": 542,
+      "logoUrl": "",
+      "players": [
+        {
+          "id": 182,
+          "name": "Ubula8"
+        }
+      ]
+    },
+    {
       "id": 582,
       "name": "MYSTERY HC",
       "requestedDivision": 541,
@@ -1595,6 +1723,10 @@
         {
           "id": 1003,
           "name": "miguli36"
+        },
+        {
+          "id": 1491,
+          "name": "Roisto999"
         },
         {
           "id": 4454,
@@ -1691,6 +1823,10 @@
         {
           "id": 16826,
           "name": "Hinexi"
+        },
+        {
+          "id": 18418,
+          "name": "Robenzio"
         }
       ]
     },
@@ -1753,6 +1889,10 @@
           "name": "syvasalmi"
         },
         {
+          "id": 2175,
+          "name": "oranssipoika"
+        },
+        {
           "id": 2399,
           "name": "tilsuu"
         },
@@ -1777,6 +1917,10 @@
           "name": "fano1898"
         },
         {
+          "id": 9880,
+          "name": "Kibeeex"
+        },
+        {
           "id": 11140,
           "name": "NotFlouzn"
         },
@@ -1791,6 +1935,10 @@
         {
           "id": 16103,
           "name": "Redhawk1765"
+        },
+        {
+          "id": 17214,
+          "name": "BigKaxen"
         }
       ]
     },
@@ -1819,6 +1967,42 @@
         {
           "id": 16540,
           "name": "LvExT4ZzYLv6810"
+        }
+      ]
+    },
+    {
+      "id": 7121,
+      "name": "Picinky",
+      "requestedDivision": 543,
+      "logoUrl": "",
+      "players": [
+        {
+          "id": 8637,
+          "name": "HoPla_rudapruda"
+        },
+        {
+          "id": 12457,
+          "name": "pizzaluk"
+        },
+        {
+          "id": 14246,
+          "name": "f4ltyX"
+        },
+        {
+          "id": 17212,
+          "name": "Lukas22rtg"
+        },
+        {
+          "id": 18298,
+          "name": "vaky_9"
+        },
+        {
+          "id": 18328,
+          "name": "HonnyFanny"
+        },
+        {
+          "id": 18528,
+          "name": "Quarter_23"
         }
       ]
     },
@@ -1854,7 +2038,7 @@
       "id": 7100,
       "name": "Project Reboot",
       "requestedDivision": 544,
-      "logoUrl": "",
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/7100/1000040484 (1)_20261119-090914.png",
       "players": [
         {
           "id": 15623,
@@ -1975,6 +2159,26 @@
       ]
     },
     {
+      "id": 4510,
+      "name": "Pulp Odyssey",
+      "requestedDivision": 543,
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/374/4510/_e6cd2e92-9299-4614-b0c8-9b0862b98330_20240328-075117.png",
+      "players": [
+        {
+          "id": 4369,
+          "name": "wobfighter4033"
+        },
+        {
+          "id": 4764,
+          "name": "khassu--"
+        },
+        {
+          "id": 5710,
+          "name": "Kemboi92"
+        }
+      ]
+    },
+    {
       "id": 7118,
       "name": "Purijat",
       "requestedDivision": 542,
@@ -2006,7 +2210,7 @@
       "id": 581,
       "name": "Quantum",
       "requestedDivision": 541,
-      "logoUrl": "",
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/581/file_00000000666c821094668fa41f3264b3_20260929-221544_20261119-114308.png",
       "players": [
         {
           "id": 70,
@@ -2019,6 +2223,10 @@
         {
           "id": 15347,
           "name": "xSnaipperi"
+        },
+        {
+          "id": 16059,
+          "name": "vRootii"
         }
       ]
     },
@@ -2039,6 +2247,10 @@
         {
           "id": 8590,
           "name": "EtuKoppari"
+        },
+        {
+          "id": 16517,
+          "name": "Marja_keitto"
         }
       ]
     },
@@ -2153,12 +2365,20 @@
           "name": "DangerBrooklyn"
         },
         {
+          "id": 3462,
+          "name": "Fire_019"
+        },
+        {
           "id": 4779,
           "name": "Pattila_74"
         },
         {
           "id": 6045,
           "name": "BackStyla"
+        },
+        {
+          "id": 6084,
+          "name": "FloJo009"
         }
       ]
     },
@@ -2187,6 +2407,10 @@
         {
           "id": 6681,
           "name": "Temettti"
+        },
+        {
+          "id": 8502,
+          "name": "Calxm86"
         },
         {
           "id": 8685,
@@ -2251,6 +2475,10 @@
         {
           "id": 3839,
           "name": "Nester_43"
+        },
+        {
+          "id": 16996,
+          "name": "sevakuligin"
         },
         {
           "id": 17660,
@@ -2405,6 +2633,10 @@
           "name": "minokin-"
         },
         {
+          "id": 12146,
+          "name": "SmAyK99"
+        },
+        {
           "id": 16031,
           "name": "Wagge01"
         }
@@ -2443,6 +2675,10 @@
         {
           "id": 16595,
           "name": "nikuy92"
+        },
+        {
+          "id": 17957,
+          "name": "Patsukka"
         }
       ]
     },
@@ -2595,6 +2831,10 @@
         {
           "id": 3668,
           "name": "Viljamsson"
+        },
+        {
+          "id": 7571,
+          "name": "I_LaiTi_I"
         }
       ]
     },
@@ -2727,6 +2967,10 @@
         {
           "id": 772,
           "name": "johtaja_lebi"
+        },
+        {
+          "id": 13605,
+          "name": "SirRaitanen"
         }
       ]
     },
@@ -2751,6 +2995,10 @@
         {
           "id": 4809,
           "name": "NordZman_"
+        },
+        {
+          "id": 7093,
+          "name": "Kussan82"
         },
         {
           "id": 16142,
@@ -2785,6 +3033,10 @@
           "name": "Saviinainen"
         },
         {
+          "id": 4871,
+          "name": "Jokkings"
+        },
+        {
           "id": 7337,
           "name": "Karlzzzon"
         },
@@ -2803,6 +3055,22 @@
         {
           "id": 610,
           "name": "Artuzio"
+        },
+        {
+          "id": 15376,
+          "name": "Jetsu28"
+        }
+      ]
+    },
+    {
+      "id": 6236,
+      "name": "vNexs Wisemen",
+      "requestedDivision": 542,
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/464/6236/vnexs_utan_bg_20250410-123433.png",
+      "players": [
+        {
+          "id": 15061,
+          "name": "Malmenlid"
         }
       ]
     },
