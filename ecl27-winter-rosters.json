@@ -1,6 +1,6 @@
 {
   "leagueId": 535,
-  "checkedAt": "2026-11-21T12:14:57.0739049Z",
+  "checkedAt": "2026-11-21T14:56:19.2401416Z",
   "teams": [
     {
       "id": 4181,
@@ -260,6 +260,31 @@
         {
           "id": 18463,
           "name": "OI Tom IO6653"
+        }
+      ]
+    },
+    {
+      "id": 6854,
+      "name": "Cityboys",
+      "requestedDivision": 541,
+      "captainIds": [
+        12668,
+        14149,
+        15461
+      ],
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/501/6854/Jagrs in Paradise_20260404-125738.png",
+      "players": [
+        {
+          "id": 14149,
+          "name": "ARUR88"
+        },
+        {
+          "id": 14588,
+          "name": "Veljenpoika69"
+        },
+        {
+          "id": 15461,
+          "name": "Maltseviii_"
         }
       ]
     },
@@ -2185,13 +2210,23 @@
       "name": "NOXIUM",
       "requestedDivision": 541,
       "captainIds": [
-        9384
+        9384,
+        16760,
+        14418
       ],
       "logoUrl": "",
       "players": [
         {
           "id": 9384,
           "name": "Edgard_Gchn"
+        },
+        {
+          "id": 14418,
+          "name": "aomyo6195"
+        },
+        {
+          "id": 16760,
+          "name": "Hassegamer_480"
         }
       ]
     },
@@ -3709,6 +3744,26 @@
         {
           "id": 15376,
           "name": "Jetsu28"
+        }
+      ]
+    },
+    {
+      "id": 262,
+      "name": "vNexs I",
+      "requestedDivision": 540,
+      "captainIds": [
+        2522,
+        13290
+      ],
+      "logoUrl": "",
+      "players": [
+        {
+          "id": 2522,
+          "name": "antoniomannen_"
+        },
+        {
+          "id": 8431,
+          "name": "Skumboo"
         }
       ]
     },
