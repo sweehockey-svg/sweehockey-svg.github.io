@@ -1,6 +1,6 @@
 {
   "leagueId": 535,
-  "checkedAt": "2026-11-21T14:56:19.2401416Z",
+  "checkedAt": "2026-11-21T23:35:42.5351704Z",
   "teams": [
     {
       "id": 4181,
@@ -233,6 +233,22 @@
         {
           "id": 16128,
           "name": "oskurii-"
+        }
+      ]
+    },
+    {
+      "id": 684,
+      "name": "Carolus Icemen",
+      "requestedDivision": 543,
+      "captainIds": [
+        2810,
+        3104
+      ],
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/684/1B72F38F-2C67-4162-9C11-6B6D3288BCBC_20261121-185039.png",
+      "players": [
+        {
+          "id": 2810,
+          "name": "mj_slam"
         }
       ]
     },
@@ -2167,6 +2183,10 @@
           "name": "Roisto999"
         },
         {
+          "id": 2534,
+          "name": "Sagee95"
+        },
+        {
           "id": 4454,
           "name": "Eeemill_"
         },
@@ -2202,31 +2222,6 @@
         {
           "id": 15465,
           "name": "Leiskav"
-        }
-      ]
-    },
-    {
-      "id": 6194,
-      "name": "NOXIUM",
-      "requestedDivision": 541,
-      "captainIds": [
-        9384,
-        16760,
-        14418
-      ],
-      "logoUrl": "",
-      "players": [
-        {
-          "id": 9384,
-          "name": "Edgard_Gchn"
-        },
-        {
-          "id": 14418,
-          "name": "aomyo6195"
-        },
-        {
-          "id": 16760,
-          "name": "Hassegamer_480"
         }
       ]
     },
@@ -2990,6 +2985,21 @@
       ]
     },
     {
+      "id": 7102,
+      "name": "Robe Esports",
+      "requestedDivision": 542,
+      "captainIds": [
+        14338
+      ],
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/529/7102/IMG_20250617_123651_831 copy_20261009-133230.png",
+      "players": [
+        {
+          "id": 14338,
+          "name": "Tihizu"
+        }
+      ]
+    },
+    {
       "id": 7025,
       "name": "Rotonto Housut",
       "requestedDivision": 543,
@@ -3003,6 +3013,10 @@
         {
           "id": 12106,
           "name": "x_Repomies"
+        },
+        {
+          "id": 15578,
+          "name": "saimaa_norppa"
         },
         {
           "id": 17301,
@@ -3289,23 +3303,31 @@
       ]
     },
     {
-      "id": 2755,
-      "name": "Taisto",
-      "requestedDivision": 542,
+      "id": 6985,
+      "name": "Starstrucked",
+      "requestedDivision": 540,
       "captainIds": [
-        5798,
-        12269,
-        12718
+        2332,
+        14564,
+        16760
       ],
-      "logoUrl": "https://sportsgamer.gg/storage/team-logos/402/2755/Image 30.10.2024 at 11.24_LE_auto_custom_no_background_20241030-095231.png",
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/501/6985/Starstrucked_20260314-172340.png",
       "players": [
         {
-          "id": 5798,
-          "name": "iNummi"
+          "id": 2180,
+          "name": "IIMotzy"
         },
         {
-          "id": 12269,
-          "name": "paitsioo"
+          "id": 9384,
+          "name": "Edgard_Gchn"
+        },
+        {
+          "id": 14418,
+          "name": "aomyo6195"
+        },
+        {
+          "id": 16760,
+          "name": "Hassegamer_480"
         }
       ]
     },
