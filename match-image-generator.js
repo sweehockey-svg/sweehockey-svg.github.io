@@ -1,4 +1,6 @@
-(() => {
+(async () => {
+  const verifiedAccess = await window.SEH_STUDIO_ACCESS_READY;
+  if (!verifiedAccess) return;
   "use strict";
 
   const $ = selector => document.querySelector(selector);
@@ -15,10 +17,9 @@
   const POSITIONS = ["LW","C","RW","LD","RD","G"];
   const EMPTY_LINEUP = Object.freeze({LW:"",C:"",RW:"",LD:"",RD:"",G:""});
   const EMPTY_NUMBERS = Object.freeze({LW:"",C:"",RW:"",LD:"",RD:"",G:""});
-  const accessQuery = new URLSearchParams(location.search);
   const access = {
-    mode:String(window.SEH_MATCH_GRAPHICS_ACCESS?.mode || accessQuery.get("mode") || "admin").toLowerCase(),
-    teamName:String(window.SEH_MATCH_GRAPHICS_ACCESS?.teamName || accessQuery.get("team") || "").trim()
+    mode:verifiedAccess.mode,
+    teamName:verifiedAccess.teamName
   };
   let teamDirectory = [...JERSEY_PRESETS];
   let rostersByTeamId = new Map();
@@ -29,8 +30,8 @@
   // frame the actual player instead of the full 1200x1600 source canvas.
   let playerPortraitCrops = new Map();
   const portraitCropByUrl = new Map();
-  let scl27TeamDirectory = [];
-  let scl27RostersByTeamId = new Map();
+  let winterTeamDirectory = [];
+  let winterRostersByTeamId = new Map();
   let adminSeasonCatalog = [];
   let adminSeasonTeamDirectory = [];
   let adminSeasonRostersByTeamId = new Map();
@@ -73,13 +74,13 @@
     teamId:"carolus",
     opponentId:"vasteras",
     ownSide:"home",
-    league:"SCL",
-    leagueSeason:"27",
+    league:"ECL",
+    leagueSeason:"27 Winter",
     leagueDivision:"",
     customLeague:"",
-    competition:"SCL 27",
+    competition:"ECL ’27: Winter",
     badge:"MATCHDAY",
-    date:"2026-10-01",
+    date:new Date().toLocaleDateString("sv-SE", {timeZone:"Europe/Stockholm"}),
     time:"20:00",
     format:"square",
     template:"classic",
@@ -115,10 +116,9 @@
       .map(row => [normalize(row.player_name),row])
   );
 
-  const detailSnapshot=window.SEH_MATCH_GRAPHICS_PLAYER_DETAILS||{};
-  const currentLineupDetails=new Map((detailSnapshot.rows||[]).map(row=>[normalize(row.display_gamertag),row]));
+  const currentLineupDetails=new Map();
   function currentStatsContext(){
-    return state.league==="SCL"&&String(state.leagueSeason).trim()==="27"&&(!state.rosterSeason||state.rosterSeason==="current");
+    return state.league==="ECL"&&String(state.leagueSeason).trim()==="27 Winter"&&(!state.rosterSeason||state.rosterSeason==="current");
   }
   function lineupProfile(name){return currentLineupDetails.get(normalize(name))||null;}
   function lineupNumber(pos,name){
@@ -130,7 +130,7 @@
   function matchStatsText(name,pos) {
     const current=currentStatsContext(),row=current?lineupProfile(name):matchStatsByName.get(normalize(name));
     if(!row)return "";
-    const season=current?"SCL 27":matchStatsSeasonLabel||"ECL";
+    const season=current?"ECL ’27: Winter":matchStatsSeasonLabel||"ECL";
     if(pos==="G"){
       const gp=Number(row.goalie_games),sv=row.save_percentage==null?NaN:Number(row.save_percentage);
       const percent=current&&sv<=1?sv*100:sv;
@@ -139,15 +139,6 @@
     const gp=Number(row.skater_games);
     if(!(gp>0)||row.goals==null||row.assists==null||row.points==null)return "";
     return season+" · GP "+gp+" · G "+Number(row.goals)+" · A "+Number(row.assists)+" · P "+Number(row.points);
-  }
-  async function hydrateCurrentLineupStats(){
-    try{
-      const rows=await getPublicRows("v_broadcast_players_public","select=display_gamertag,sports_gamer_player_id,player_number,regular_skater_games,regular_goals,regular_assists,regular_points,regular_goalie_games,regular_goalie_save_percentage&sports_gamer_league_id=eq.527");
-      for(const row of rows||[]){
-        const key=normalize(row.display_gamertag),old=currentLineupDetails.get(key)||{};
-        currentLineupDetails.set(key,{...old,...row,skater_games:row.regular_skater_games,goals:row.regular_goals,assists:row.regular_assists,points:row.regular_points,goalie_games:row.regular_goalie_games,save_percentage:row.regular_goalie_save_percentage});
-      }
-    }catch(error){console.warn("[Match Graphics] using saved SCL 27 statistics",error);}
   }
 
   const manifestEntries = Object.entries(window.SEH_TEAM_LOGO_FILES || {});
@@ -243,21 +234,21 @@
     return "";
   }
 
-  function usesScl27Teams() {
+  function usesWinterTeams() {
     if (access.mode === "admin") return false;
     return Boolean(
-      scl27TeamDirectory.length &&
+      winterTeamDirectory.length &&
       (
         state.template === "team-presentation" ||
-        (state.league === "SCL" && String(state.leagueSeason || "").trim() === "27")
+        (state.league === "ECL" && String(state.leagueSeason || "").trim() === "27 Winter")
       )
     );
   }
 
   function activeTeamDirectory() {
     if (access.mode === "admin") {
-      if (state.rosterSeason === "current" && scl27TeamDirectory.length) {
-        return scl27TeamDirectory;
+      if (state.rosterSeason === "current" && winterTeamDirectory.length) {
+        return winterTeamDirectory;
       }
       if (
         state.rosterSeason !== "all" &&
@@ -268,7 +259,7 @@
       }
       return teamDirectory;
     }
-    return usesScl27Teams() ? scl27TeamDirectory : teamDirectory;
+    return usesWinterTeams() ? winterTeamDirectory : teamDirectory;
   }
 
   function logoUrlForTeam(team) {
@@ -286,14 +277,14 @@
     const active = activeTeamDirectory();
     const team = active.find(item => normalize(item.name) === normalize(teamName))
       || teamDirectory.find(item => normalize(item.name) === normalize(teamName))
-      || scl27TeamDirectory.find(item => normalize(item.name) === normalize(teamName))
+      || winterTeamDirectory.find(item => normalize(item.name) === normalize(teamName))
       || null;
     return logoUrlForTeam(team);
   }
 
   function teamById(id) {
     return adminSeasonTeamDirectory.find(team => team.id === id)
-      || scl27TeamDirectory.find(team => team.id === id)
+      || winterTeamDirectory.find(team => team.id === id)
       || teamDirectory.find(team => team.id === id)
       || activeTeamDirectory()[0]
       || teamDirectory[0]
@@ -770,7 +761,7 @@
   function rosterFor(teamId) {
     if (access.mode === "admin") {
       if (state.rosterSeason === "current") {
-        return scl27RostersByTeamId.get(teamId) || [];
+        return winterRostersByTeamId.get(teamId) || [];
       }
       if (state.rosterSeason !== "all") {
         return adminSeasonRostersByTeamId.get(adminHistoryTeamId(teamId))
@@ -780,8 +771,8 @@
       return adminAllTimeRosterFor(teamId);
     }
 
-    if (scl27RostersByTeamId.has(teamId)) {
-      return scl27RostersByTeamId.get(teamId) || [];
+    if (winterRostersByTeamId.has(teamId)) {
+      return winterRostersByTeamId.get(teamId) || [];
     }
     return rostersByTeamId.get(teamId) || [];
   }
@@ -980,12 +971,12 @@
     field.hidden = false;
 
     const options = [];
-    if (scl27TeamDirectory.length) {
-      const currentPlayers = [...scl27RostersByTeamId.values()]
+    if (winterTeamDirectory.length) {
+      const currentPlayers = [...winterRostersByTeamId.values()]
         .reduce((sum,list) => sum + list.length,0);
       options.push({
         value:"current",
-        label:"SCL 27 · aktuell (" + scl27TeamDirectory.length + " lag · " + currentPlayers + " spelare)"
+        label:"ECL ’27: Winter · aktuell (" + winterTeamDirectory.length + " lag · " + currentPlayers + " spelare)"
       });
     }
 
@@ -995,7 +986,7 @@
     });
 
     for (const season of adminSeasonCatalog) {
-      if (season.leagueId === 527 && scl27TeamDirectory.length) continue;
+      if (season.leagueId === 535 && winterTeamDirectory.length) continue;
       options.push({
         value:season.key,
         label:season.label + " (" + season.teamCount + " lag)"
@@ -1004,7 +995,7 @@
 
     const valid = new Set(options.map(option => option.value));
     if (!valid.has(state.rosterSeason)) {
-      state.rosterSeason = scl27TeamDirectory.length ? "current" : "all";
+      state.rosterSeason = winterTeamDirectory.length ? "current" : "all";
     }
 
     select.innerHTML = options.map(option =>
@@ -1024,7 +1015,7 @@
         adminSeasonLoadState.error &&
         adminSeasonLoadState.seasonKey === state.rosterSeason
       ) hint.textContent = "KUNDE INTE HÄMTA";
-      else if (state.rosterSeason === "current") hint.textContent = "AKTUELL SCL";
+      else if (state.rosterSeason === "current") hint.textContent = "AKTUELL ECL WINTER";
       else if (state.rosterSeason === "all") hint.textContent = "ALLA SÄSONGER";
       else hint.textContent = "HISTORISK SÄSONG";
     }
@@ -1160,13 +1151,13 @@
       const directory = activeTeamDirectory();
       const locked = directory.find(team => normalize(team.name) === normalize(access.teamName))
         || teamDirectory.find(team => normalize(team.name) === normalize(access.teamName))
-        || scl27TeamDirectory.find(team => normalize(team.name) === normalize(access.teamName));
+        || winterTeamDirectory.find(team => normalize(team.name) === normalize(access.teamName));
       if (locked) {
         state.teamId = locked.id;
         state.ownSide = "home";
-        if (state.league !== "SCL" || String(state.leagueSeason || "").trim() !== "27") {
-          state.league = "SCL";
-          state.leagueSeason = "27";
+        if (state.league !== "ECL" || String(state.leagueSeason || "").trim() !== "27 Winter") {
+          state.league = "ECL";
+          state.leagueSeason = "27 Winter";
           state.leagueDivision = "";
           syncCompetitionState();
         }
@@ -1280,7 +1271,7 @@
     return aliases[normalize(name)] || String(name || "").trim();
   }
 
-  function buildScl27PresentationTeam(row,index) {
+  function buildWinterPresentationTeam(row,index) {
     const name = String(row?.team_name || "Okänt lag").trim();
     const preset = JERSEY_PRESETS.find(team => normalize(team.name) === normalize(name));
     const sportsGamerTeamId = Number(row?.sports_gamer_team_id) || 0;
@@ -1304,17 +1295,17 @@
     if (preset) {
       return {
         ...preset,
-        id:"scl27-" + sportsGamerTeamId,
+        id:"winter-" + sportsGamerTeamId,
         name,
         teamId:sportsGamerTeamId,
         sportsGamerTeamId,
         division:"",
         exactLogoUrl,
-        scl27Registered:true
+        winterRegistered:true
       };
     }
     return {
-      id:"scl27-" + sportsGamerTeamId,
+      id:"winter-" + sportsGamerTeamId,
       name,
       code:initials(name),
       primary,accent,trim,pattern,
@@ -1325,7 +1316,7 @@
       logoName:"",
       exactLogoUrl,
       genericJersey:true,
-      scl27Registered:true,
+      winterRegistered:true,
       paletteSource:(sourceHasUsefulPrimary || sourceHasUsefulPair) ? "scl-source" : ""
     };
   }
@@ -1339,108 +1330,48 @@
     return /^https?:\/\//i.test(raw) ? raw : defaultPlayerImageUrl();
   }
 
-  async function loadScl27PresentationData() {
-    const [teamRowsRaw,currentTeamRowsRaw,playerRowsRaw,approvedRowsRaw] = await Promise.all([
-      getPublicRows(
-        "ehockey_fantasy_team_pool",
-        "select=sports_gamer_team_id,team_name,team_logo_url,source_league_id,is_available,source_snapshot&competition_id=eq.2&source_league_id=eq.527&is_available=eq.true&order=team_name.asc"
-      ),
-      getPublicRows(
-        "v_broadcast_teams_public",
-        "select=sports_gamer_team_id,team_name_in_league,team_logo_in_league&sports_gamer_league_id=eq.527&statistics_stage=eq.regular&order=team_name_in_league.asc"
-      ),
-      getPublicRows(
-        "ehockey_fantasy_player_pool",
-        "select=player_key,sports_gamer_player_id,display_gamertag,real_team_id,real_team_name,primary_position,country_code,player_image,is_available&competition_id=eq.2&is_available=eq.true&order=real_team_name.asc,display_gamertag.asc"
-      ),
-      getPublicRows(
-        "v_ehockey_player_self_profiles_public",
-        "select=player_key,display_gamertag,sports_gamer_player_id,image_url&image_url=not.is.null&limit=5000"
-      )
-    ]);
-
-    await hydrateCurrentLineupStats();
-    const baseTeamRows = Array.isArray(teamRowsRaw) ? teamRowsRaw : [];
-    const currentTeamRows = Array.isArray(currentTeamRowsRaw) ? currentTeamRowsRaw : [];
-    const currentById = new Map(
-      currentTeamRows.map(row => [Number(row?.sports_gamer_team_id) || 0,row])
-    );
-    // Name/logo come from the current SCL 27 league view. The generic
-    // sportsgamer_league_teams_current table can keep an old global logo when
-    // a team has changed identity, which is exactly what happened to INVICTUS AEGIS.
-    const teamRows = baseTeamRows.map(row => {
-      const current = currentById.get(Number(row?.sports_gamer_team_id) || 0);
-      return current ? {
-        ...row,
-        team_name:String(current.team_name_in_league || row.team_name || "").trim(),
-        team_logo_url:String(current.team_logo_in_league || row.team_logo_url || "").trim()
-      } : row;
-    });
-    const playerRows = Array.isArray(playerRowsRaw) ? playerRowsRaw : [];
-    const approvedRows = Array.isArray(approvedRowsRaw) ? approvedRowsRaw : [];
-    const approvedBySportsGamerId = new Map();
-    const approvedByName = new Map();
-    for (const row of approvedRows) {
-      const url = String(row?.image_url || "").trim();
-      if (!url) continue;
-      const sgId = String(row?.sports_gamer_player_id || "").trim();
-      const nameKey = normalize(row?.display_gamertag);
-      if (sgId) approvedBySportsGamerId.set(sgId,url);
-      if (nameKey) approvedByName.set(nameKey,url);
+  async function loadWinterPresentationData() {
+    const {teams} = await window.SEH_WINTER_STUDIO.load();
+    const approved = await getPublicRows("v_ehockey_player_self_profiles_public",
+      "select=player_key,display_gamertag,sports_gamer_player_id,image_url&image_url=not.is.null&limit=5000").catch(() => []);
+    const approvedById = new Map(approved.map(p => [Number(p.sports_gamer_player_id),p.image_url]));
+    winterTeamDirectory = teams.map((team,index) => ({
+      ...buildWinterPresentationTeam({sports_gamer_team_id:team.id,team_name:team.name,
+        team_logo_url:team.logoUrl || team.localLogo},index),
+      teamId:team.localTeamId || null,
+      jerseyTeamId:team.localTeamId || null,
+      division:({540:"Elite",541:"Pro",542:"Lite",543:"Core",544:"Neo"})[team.requestedDivision] || ""
+    }));
+    winterRostersByTeamId = new Map();
+    currentLineupDetails.clear(); // No old SCL statistics may be labelled as Winter statistics.
+    for (const team of teams) {
+      const entry = winterTeamDirectory.find(t => t.sportsGamerTeamId === Number(team.id));
+      const players = [];
+      for (const player of team.players) {
+        const name = String(player.name || "").trim();
+        if (!name) continue;
+        players.push(name);
+        const key = normalize(name);
+        if (player.player_key) playerKeysByName.set(key,player.player_key);
+        playerPortraits.set(key,approvedById.get(Number(player.id)) || portraitUrlFromSclPoolRow({
+          sports_gamer_player_id:player.id,player_image:player.player_image
+        }));
+        playerMetaByName.set(key,{primaryPosition:player.primary_position || "",countryCode:player.player_country || ""});
+      }
+      winterRostersByTeamId.set(entry.id,players.sort((a,b) => a.localeCompare(b,"sv")));
     }
-    scl27TeamDirectory = teamRows
-      .filter(row => Number(row?.sports_gamer_team_id) > 0 && String(row?.team_name || "").trim())
-      .map(buildScl27PresentationTeam);
-
-    scl27RostersByTeamId = new Map(scl27TeamDirectory.map(team => [team.id,[]]));
-    const bySportsGamerId = new Map(
-      scl27TeamDirectory.map(team => [Number(team.teamId),team])
-    );
-
-    for (const row of playerRows) {
-      const team = bySportsGamerId.get(Number(row?.real_team_id));
-      const player = String(row?.display_gamertag || "").trim();
-      if (!team || !player) continue;
-      const list = scl27RostersByTeamId.get(team.id) || [];
-      if (!list.some(name => normalize(name) === normalize(player))) list.push(player);
-      scl27RostersByTeamId.set(team.id,list);
-
-      const normalized = normalize(player);
-      const key = String(row?.player_key || "").trim();
-      if (key) playerKeysByName.set(normalized,key);
-      const approvedPortrait =
-        approvedBySportsGamerId.get(String(row?.sports_gamer_player_id || "").trim()) ||
-        approvedByName.get(normalized) ||
-        "";
-      playerPortraits.set(normalized,approvedPortrait || portraitUrlFromSclPoolRow(row));
-      playerMetaByName.set(normalized,{
-        primaryPosition:String(row?.primary_position || "").trim().toUpperCase(),
-        countryCode:String(row?.country_code || "").trim().toUpperCase()
-      });
-    }
-
-    for (const list of scl27RostersByTeamId.values()) {
-      list.sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
-    }
-
-    try {
-      await hydrateSavedJerseySettings(scl27TeamDirectory);
-    } catch (error) {
-      console.warn("[Match Graphics] kunde inte läsa SCL 27-tröjor",error);
-    }
-
-    return scl27TeamDirectory.length;
+    await hydrateSavedJerseySettings(winterTeamDirectory);
+    return winterTeamDirectory.length;
   }
 
-
-  async function syncScl27TeamStylesFromEclDirectory() {
-    if (!scl27TeamDirectory.length || !teamDirectory.length) return;
+  async function syncWinterTeamStylesFromEclDirectory() {
+    if (!winterTeamDirectory.length || !teamDirectory.length) return;
 
     const eclByName = new Map(
       teamDirectory.map(team => [normalize(team.name),team])
     );
 
-    for (const sclTeam of scl27TeamDirectory) {
+    for (const sclTeam of winterTeamDirectory) {
       const canonicalName = scl27CanonicalName(sclTeam.name);
       const source = eclByName.get(normalize(canonicalName));
       if (!source) continue;
@@ -1462,7 +1393,7 @@
     }
 
     try {
-      await hydrateSavedJerseySettings(scl27TeamDirectory);
+      await hydrateSavedJerseySettings(winterTeamDirectory);
     } catch (error) {
       console.warn("[Match Graphics] kunde inte mappa sparade SCL 27-tröjor",error);
     }
@@ -1570,12 +1501,12 @@
     for (const list of rostersByTeamId.values()) list.sort((a,b) => a.localeCompare(b,"sv",{sensitivity:"base"}));
 
     try {
-      await loadScl27PresentationData();
-      await syncScl27TeamStylesFromEclDirectory();
+      await loadWinterPresentationData();
+      await syncWinterTeamStylesFromEclDirectory();
     } catch (error) {
-      console.warn("[Match Graphics] kunde inte läsa aktuell SCL-roster i adminläget",error);
-      scl27TeamDirectory = [];
-      scl27RostersByTeamId = new Map();
+      console.warn("[Match Graphics] kunde inte läsa aktuell Winter-roster i adminläget",error);
+      winterTeamDirectory = [];
+      winterRostersByTeamId = new Map();
     }
 
     try {
@@ -1588,7 +1519,7 @@
     try { await hydrateSavedJerseySettings(teamDirectory); }
     catch (error) { console.warn("[Match Graphics] kunde inte läsa historiska lagtröjor",error); }
 
-    state.rosterSeason = scl27TeamDirectory.length ? "current" : "all";
+    state.rosterSeason = winterTeamDirectory.length ? "current" : "all";
     const openingDirectory = activeTeamDirectory();
     const preferred = openingDirectory.find(team => normalize(team.name) === normalize(access.teamName))
       || openingDirectory.find(team => normalize(team.name) === normalize("Västerås IK"))
@@ -1604,105 +1535,26 @@
     if (status) status.textContent = teamDirectory.length + " historiska lag · " + rosterPlayerCount() + " spelare";
   }
 
-  async function loadLagbyggeData() {
+  async function loadCaptainWinterData() {
     const status = $("#dataStatus");
-    if (status) status.textContent = "Hämtar lagdata…";
-
     try {
-      await loadScl27PresentationData();
-    } catch (error) {
-      console.warn("[Match Graphics] kunde inte läsa SCL 27-lag",error);
-      scl27TeamDirectory = [];
-      scl27RostersByTeamId = new Map();
-    }
-
-    if (status) status.textContent = "Hämtar ECL 27-lag…";
-
-    // Team list is the authoritative first step. Nothing after this point is
-    // allowed to replace a successfully loaded ECL 27 team list with test data.
-    let rows = [];
-    try {
-      const teams = await getPublicRows(
-        "v_ecl27_team_builds_public",
-        "select=id,name,division,source_team_id,logo_name,is_new_project,status&order=division.asc,name.asc"
-      );
-      rows = Array.isArray(teams) ? teams : [];
-      if (!rows.length) throw new Error("ECL 27 innehåller inga lag");
-
-      teamDirectory = rows.map(buildDynamicTeam);
-
-      try {
-        await hydrateSavedJerseySettings(teamDirectory);
-      } catch (error) {
-        console.warn("[Match Graphics] kunde inte läsa sparade lagtröjor",error);
-      }
-
-      await syncScl27TeamStylesFromEclDirectory();
-
-      const activeDirectory = activeTeamDirectory();
-      const preferred = activeDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen"))
-        || activeDirectory[0]
-        || teamDirectory[0];
-      state.teamId = preferred.id;
-      state.opponentId = activeDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
-
-      rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
-      playerKeysByName = new Map();
+      await loadWinterPresentationData();
+      const own = winterTeamDirectory.find(team => normalize(team.name) === normalize(access.teamName));
+      if (!own) throw new Error("Ditt lag finns inte längre i Winter-anmälan.");
+      state.teamId = own.id;
+      state.opponentId = winterTeamDirectory.find(team => team.id !== own.id)?.id || own.id;
       applyAccessMode();
       setDefaultLineup();
-      syncForm();
-      render();
-
-      if (status) status.textContent = teamDirectory.length + " lag · hämtar spelare…";
-    } catch (error) {
-      console.error("[Match Graphics] kunde inte läsa ECL 27-laglistan",error);
-      dataSource = "lokal testdata";
-      rostersByTeamId = new Map(JERSEY_PRESETS.map(team => [team.id,[]]));
-      teamDirectory = [...JERSEY_PRESETS];
-      state.teamId = teamDirectory[0].id;
-      state.opponentId = teamDirectory[1]?.id || teamDirectory[0].id;
-      state.lineup = {...EMPTY_LINEUP};
-      state.lineupNumbers = {...EMPTY_NUMBERS};
-    state.lineupNames = {...EMPTY_LINEUP};
-      syncForm();
-      render();
-      if (status) status.textContent = "ECL 27-lag kunde inte laddas · visar testlag";
-      return;
-    }
-
-    // Roster loading is independent from the team list.
-    try {
-      const rosterRows = Array.isArray(window.SEH_ECL27_ROSTER_SNAPSHOT?.rows)
-        ? window.SEH_ECL27_ROSTER_SNAPSHOT.rows
-        : await getPublicRows("v_ecl27_current_roster_public","select=player_key,display_gamertag,team_project_id,team_name,division,team_id,logo_name&order=team_name.asc,display_gamertag.asc");
-      rostersByTeamId = new Map(teamDirectory.map(team => [team.id,[]]));
-      playerKeysByName = new Map();
-      applyDirectRosterRows(rosterRows);
-      setDefaultLineup();
-      if (state.template === "team-presentation") setDefaultPresentationRoster();
       await hydratePlayerPortraits(state.teamId);
       syncForm();
       render();
-      dataSource = "ECL 27 · team + current roster";
+      dataSource = "ECL ’27: Winter · registrerade trupper";
+      if (status) status.textContent = winterTeamDirectory.length + " registrerade Winter-lag";
     } catch (error) {
-      console.warn("[Match Graphics] laglistan laddad men roster kunde inte hämtas",error);
-      dataSource = "ECL 27 · laglista utan roster";
+      if (status) status.textContent = error.message || "Winter-truppen kunde inte laddas.";
+      $("#pngButton").disabled = true;
+      $("#svgButton").disabled = true;
     }
-
-    // Logo-derived palette is also non-blocking. Exact team identity is already
-    // established by teamDirectory and may never be replaced here.
-    try {
-      await Promise.all([
-        ensureTeamPalette(teamById(state.teamId)),
-        ensureTeamPalette(teamById(state.opponentId))
-      ]);
-      render();
-    } catch (error) {
-      console.warn("[Match Graphics] kunde inte läsa lagfärger",error);
-    }
-
-    const playerCount = rosterPlayerCount();
-    if (status) status.textContent = teamDirectory.length + " lag · " + playerCount + " aktuella spelare";
   }
 
   function esc(value) {
@@ -3070,8 +2922,8 @@
   }
 
   function fillTeamSelect(select, selected) {
-    const directory = access.mode === "captain" && select?.id === "opponentSelect" && scl27TeamDirectory.length
-      ? scl27TeamDirectory
+    const directory = access.mode === "captain" && select?.id === "opponentSelect" && winterTeamDirectory.length
+      ? winterTeamDirectory
       : activeTeamDirectory();
     select.innerHTML = directory.map(team =>
       '<option value="' + esc(team.id) + '"' + (team.id === selected ? ' selected' : '') + '>' +
@@ -3189,17 +3041,18 @@
   }
 
   async function reset() {
-    const preferred = teamDirectory.find(team => normalize(team.name) === normalize("Carolus Icemen")) || teamDirectory[0];
+    const directory = winterTeamDirectory.length ? winterTeamDirectory : teamDirectory;
+    const preferred = directory.find(team => normalize(team.name) === normalize(access.teamName)) || directory[0];
     state.teamId = preferred?.id || "";
-    state.opponentId = teamDirectory.find(team => team.id !== state.teamId)?.id || state.teamId;
+    state.opponentId = directory.find(team => team.id !== state.teamId)?.id || state.teamId;
     state.ownSide = "home";
-    state.league = "SCL";
-    state.leagueSeason = "27";
+    state.league = "ECL";
+    state.leagueSeason = "27 Winter";
     state.leagueDivision = "";
     state.customLeague = "";
     syncCompetitionState();
     state.badge = "MATCHDAY";
-    state.date = "2026-10-01";
+    state.date = new Date().toLocaleDateString("sv-SE", {timeZone:"Europe/Stockholm"});
     state.time = "20:00";
     state.format = "square";
     state.template = "classic";
@@ -3218,7 +3071,7 @@
     state.streamChannel = "";
     applyAccessMode();
     if (access.mode === "admin") {
-      await switchAdminSeason(scl27TeamDirectory.length ? "current" : "all");
+      await switchAdminSeason(winterTeamDirectory.length ? "current" : "all");
       return;
     }
     setDefaultLineup();
@@ -3418,17 +3271,17 @@
         };
         state.template = template;
         state.format = "square";
-        state.league = "SCL";
-        state.leagueSeason = "27";
+        state.league = "ECL";
+        state.leagueSeason = "27 Winter";
         state.leagueDivision = "";
         syncCompetitionState();
 
         if (access.mode !== "admin") {
-          const matching = scl27TeamDirectory.find(team => normalize(team.name) === normalize(currentTeamName));
-          const preferred = matching || scl27TeamDirectory[0];
+          const matching = winterTeamDirectory.find(team => normalize(team.name) === normalize(currentTeamName));
+          const preferred = matching || winterTeamDirectory[0];
           if (preferred) {
             state.teamId = preferred.id;
-            state.opponentId = scl27TeamDirectory.find(team => team.id !== preferred.id)?.id || preferred.id;
+            state.opponentId = winterTeamDirectory.find(team => team.id !== preferred.id)?.id || preferred.id;
           }
         } else {
           await ensureAdminSeasonSnapshot(state.rosterSeason);
@@ -3653,8 +3506,6 @@
     }
   });
 
-  syncForm();
-  render();
   if (access.mode === "admin") {
     loadAdminHistoryData().catch(error => {
       console.error("[Match Graphics] kunde inte läsa laghistoriken",error);
@@ -3662,6 +3513,6 @@
       if (status) status.textContent = "Laghistoriken kunde inte laddas";
     });
   } else {
-    loadLagbyggeData();
+    loadCaptainWinterData();
   }
 })();

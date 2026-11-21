@@ -24,6 +24,10 @@ $teams = foreach ($team in $league.teams) {
         }
     )
     $players = @($players | Group-Object { $_.id } | ForEach-Object { $_.Group[0] })
+    $captainSection = [regex]::Match($html, '(?is)<p>\s*<b>Captains:</b>.*?</p>')
+    $captainIds = @([regex]::Matches($captainSection.Value, '(?i)href="https://sportsgamer\.gg/players/(\d+)"') |
+        ForEach-Object { [long]$_.Groups[1].Value } | Select-Object -Unique)
+    if (!$captainIds.Count -or $captainIds.Count -gt 3) { throw "Unrecognised captain list for team $id" }
     if ($players.Count -ne $team.players.Count) {
         throw "Roster for team $id changed during fetch or could not be read completely; retry"
     }
@@ -31,6 +35,7 @@ $teams = foreach ($team in $league.teams) {
         id = $id
         name = [string]$team.name
         requestedDivision = [int]$team.additionalInfo.division
+        captainIds = $captainIds
         # The public list uses /images/no-logo.jpg for clubs without a logo.
         logoUrl = if ([string]$team.logo -match "^https://sportsgamer\.gg/storage/team-logos/\d+/$id/[^/?#]+$") { [string]$team.logo } else { '' }
         players = $players
