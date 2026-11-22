@@ -1,6 +1,6 @@
 {
   "leagueId": 535,
-  "checkedAt": "2026-11-21T23:35:42.5351704Z",
+  "checkedAt": "2026-11-22T14:53:45.2103252Z",
   "teams": [
     {
       "id": 4181,
@@ -211,6 +211,10 @@
           "name": "Supremski"
         },
         {
+          "id": 3175,
+          "name": "Jonass1551"
+        },
+        {
           "id": 5429,
           "name": "Zuppe_29"
         },
@@ -231,8 +235,41 @@
           "name": "Adaam-2"
         },
         {
+          "id": 15013,
+          "name": "I Braxsiö I"
+        },
+        {
           "id": 16128,
           "name": "oskurii-"
+        }
+      ]
+    },
+    {
+      "id": 4216,
+      "name": "Burchurs HC",
+      "requestedDivision": 542,
+      "captainIds": [
+        3652,
+        5301,
+        511
+      ],
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/509/4216/Gemini_Generated_Image_mfvnrfmfvnrfmfvn_20260421-184416.png",
+      "players": [
+        {
+          "id": 511,
+          "name": "IIFaranII"
+        },
+        {
+          "id": 3652,
+          "name": "D4nzk80"
+        },
+        {
+          "id": 5103,
+          "name": "MrWennerstrom"
+        },
+        {
+          "id": 17341,
+          "name": "Linksutin"
         }
       ]
     },
@@ -291,8 +328,16 @@
       "logoUrl": "https://sportsgamer.gg/storage/team-logos/501/6854/Jagrs in Paradise_20260404-125738.png",
       "players": [
         {
+          "id": 7195,
+          "name": "Fin_S1su"
+        },
+        {
           "id": 14149,
           "name": "ARUR88"
+        },
+        {
+          "id": 14168,
+          "name": "Lolsell"
         },
         {
           "id": 14588,
@@ -664,6 +709,35 @@
       ]
     },
     {
+      "id": 7023,
+      "name": "eHockey Switzerland",
+      "requestedDivision": 541,
+      "captainIds": [
+        8335,
+        12436,
+        8386
+      ],
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/501/7023/eHockey Switzerland Logo_20260325-000633.png",
+      "players": [
+        {
+          "id": 1297,
+          "name": "iG i SnUs"
+        },
+        {
+          "id": 8386,
+          "name": "fano1898"
+        },
+        {
+          "id": 12436,
+          "name": "rieeegz"
+        },
+        {
+          "id": 15008,
+          "name": "HOEFI_24"
+        }
+      ]
+    },
+    {
       "id": 1893,
       "name": "Eisbaeren Gaming",
       "requestedDivision": 542,
@@ -749,7 +823,8 @@
       "requestedDivision": 544,
       "captainIds": [
         1591,
-        16271
+        16271,
+        3303
       ],
       "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/7116/Fanfreluche_logo_fond_transparent_20261118-110617.png",
       "players": [
@@ -760,6 +835,10 @@
         {
           "id": 1591,
           "name": "Virtual_Saku"
+        },
+        {
+          "id": 3303,
+          "name": "Lilk46_"
         },
         {
           "id": 3466,
@@ -877,6 +956,10 @@
       ],
       "logoUrl": "https://sportsgamer.gg/storage/team-logos/490/6899/IMG_0007_20260131-222037.png",
       "players": [
+        {
+          "id": 1072,
+          "name": "TIUINIA"
+        },
         {
           "id": 1959,
           "name": "domii_ngu"
@@ -1376,6 +1459,35 @@
       ]
     },
     {
+      "id": 7123,
+      "name": "Heimoveljet",
+      "requestedDivision": 544,
+      "captainIds": [
+        6749,
+        9315,
+        17828
+      ],
+      "logoUrl": "",
+      "players": [
+        {
+          "id": 6749,
+          "name": "gamerboy6995"
+        },
+        {
+          "id": 9315,
+          "name": "Eetumikael02"
+        },
+        {
+          "id": 17515,
+          "name": "AkuNukalaX"
+        },
+        {
+          "id": 17700,
+          "name": "rural685mars"
+        }
+      ]
+    },
+    {
       "id": 4828,
       "name": "HK Poprad Esports",
       "requestedDivision": 541,
@@ -1690,6 +1802,10 @@
           "name": "xLeppix"
         },
         {
+          "id": 14466,
+          "name": "lesta9966"
+        },
+        {
           "id": 14925,
           "name": "M8rttii"
         },
@@ -1855,6 +1971,10 @@
         {
           "id": 14124,
           "name": "Prrseus"
+        },
+        {
+          "id": 15507,
+          "name": "immuszn"
         },
         {
           "id": 15876,
@@ -2201,6 +2321,23 @@
       ]
     },
     {
+      "id": 4882,
+      "name": "Mythix",
+      "requestedDivision": 540,
+      "captainIds": [
+        7718,
+        3635,
+        3485
+      ],
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/501/4882/Incoach logo oikea_20260313-100959.png",
+      "players": [
+        {
+          "id": 7718,
+          "name": "zMikkeez"
+        }
+      ]
+    },
+    {
       "id": 2754,
       "name": "NOSTREETSPORTS",
       "requestedDivision": 540,
@@ -2376,51 +2513,6 @@
       ]
     },
     {
-      "id": 7108,
-      "name": "PENTA",
-      "requestedDivision": 542,
-      "captainIds": [
-        7652,
-        12436,
-        8386
-      ],
-      "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/7108/dcac61dc-49ef-47fa-b3de-3d46c7b5ac49.png",
-      "players": [
-        {
-          "id": 7652,
-          "name": "Pyro-XIII-"
-        },
-        {
-          "id": 8386,
-          "name": "fano1898"
-        },
-        {
-          "id": 9880,
-          "name": "Kibeeex"
-        },
-        {
-          "id": 11140,
-          "name": "NotFlouzn"
-        },
-        {
-          "id": 12436,
-          "name": "rieeegz"
-        },
-        {
-          "id": 15008,
-          "name": "HOEFI_24"
-        },
-        {
-          "id": 16103,
-          "name": "Redhawk1765"
-        },
-        {
-          "id": 17214,
-          "name": "BigKaxen"
-        }
-      ]
-    },
-    {
       "id": 6183,
       "name": "PHOENIX HC",
       "requestedDivision": 542,
@@ -2526,6 +2618,23 @@
         {
           "id": 17840,
           "name": "Fabzizz"
+        }
+      ]
+    },
+    {
+      "id": 335,
+      "name": "POGGERS",
+      "requestedDivision": 542,
+      "captainIds": [
+        1095,
+        2153,
+        2953
+      ],
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/327/335/Poggers_20231105-102007.png",
+      "players": [
+        {
+          "id": 2953,
+          "name": "Ghettomasi"
         }
       ]
     },
@@ -2850,6 +2959,14 @@
         {
           "id": 11401,
           "name": "antsaj"
+        },
+        {
+          "id": 14620,
+          "name": "HenryPope"
+        },
+        {
+          "id": 18530,
+          "name": "VinceMcMahon"
         }
       ]
     },
@@ -2996,6 +3113,10 @@
         {
           "id": 14338,
           "name": "Tihizu"
+        },
+        {
+          "id": 15048,
+          "name": "Jomppe78"
         }
       ]
     },
@@ -3606,6 +3727,10 @@
           "name": "jaakqoo"
         },
         {
+          "id": 9156,
+          "name": "toomanyville"
+        },
+        {
           "id": 9182,
           "name": "Lotiseva"
         },
@@ -3709,6 +3834,22 @@
       ]
     },
     {
+      "id": 6722,
+      "name": "Unlucky Boys",
+      "requestedDivision": 540,
+      "captainIds": [
+        1335,
+        967
+      ],
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/501/6722/IMG_2027_20260314-160317.png",
+      "players": [
+        {
+          "id": 1335,
+          "name": "jm98II"
+        }
+      ]
+    },
+    {
       "id": 7106,
       "name": "VALOR",
       "requestedDivision": 542,
@@ -3733,6 +3874,10 @@
         {
           "id": 3190,
           "name": "Saviinainen"
+        },
+        {
+          "id": 3309,
+          "name": "Gremlingswe"
         },
         {
           "id": 4871,
@@ -3786,6 +3931,14 @@
         {
           "id": 8431,
           "name": "Skumboo"
+        },
+        {
+          "id": 13838,
+          "name": "borjee__"
+        },
+        {
+          "id": 15036,
+          "name": "Maxboeeee_"
         }
       ]
     },
