@@ -438,7 +438,7 @@
   // Other surfaces (player profiles, For You, web app) must use the same
   // playersNow model instead of trying to reconstruct current membership
   // from only the movement log.
-  window.SEH_ECL27_CURRENT_ROSTER_V1 = {
+  const sharedBuildRoster = {
     competitionKey: 'ecl27winter',
     build: DATA.build || '',
     generatedAt: new Date().toISOString(),
@@ -455,10 +455,6 @@
       players: [...team.playersNow]
     }))
   };
-  window.dispatchEvent(new CustomEvent('seh-ecl27-current-roster-ready', {
-    detail: { build: DATA.build || '' }
-  }));
-  try { window.SEH_currentPlayerStatus?.invalidate?.(); } catch (_) {}
 
   function recruitmentNeeds(team) {
     const text = [
@@ -988,7 +984,7 @@
   }
 
   function sortedTeams() {
-    return [...model.teams].sort((a,b) =>
+    return [...(state.unregistered || [])].sort((a,b) =>
       ((DIVISION_ORDER[a.division] ?? 99) - (DIVISION_ORDER[b.division] ?? 99)) ||
       a.name.localeCompare(b.name,"sv")
     );
@@ -996,7 +992,6 @@
 
   function filteredTeams() {
     return sortedTeams().filter((team) => {
-      if (!state.unregistered?.includes(team)) return false;
       const status = statusFor(team);
       if (state.division !== "all" && team.division !== state.division) return false;
       if (state.status === "official-scl" && !team.officialScl) return false;
@@ -1710,6 +1705,53 @@
     document.head.appendChild(style);
   }
 
+  function reconcileRegisteredBuildPlayers(teams, registrations, identityRows = []) {
+    // Use every registered team, including foreign clubs containing Swedish players.
+    const registeredIds = new Set(registrations.flatMap(team => team.players.map(player => Number(player.id))));
+    const registeredNames = new Set(registrations.flatMap(team => team.players.map(player => playerKey(player.name))));
+    const identities = new Map(identityRows.map(row => [
+      playerKey(row.display_gamertag), sportsGamerId(row.sports_gamer_player_url)
+    ]));
+    return teams.map(team => ({
+      ...team,
+      playersNow: (team.playersNow || []).filter(name => {
+        const key = playerKey(name);
+        const id = identities.get(key);
+        return id ? !registeredIds.has(Number(id)) : !registeredNames.has(key);
+      })
+    }));
+  }
+
+  let currentBuildStateRequest;
+  function loadCurrentBuildState() {
+    if (!currentBuildStateRequest) {
+      currentBuildStateRequest = (async () => {
+        const registration = await window.SEH_loadSwedishWinterRegistrations();
+        const names = [...new Set(model.teams.flatMap(team => team.playersNow))];
+        const identityRows = [];
+        for (let start = 0; start < names.length; start += 60) {
+          identityRows.push(...await fetchDirectoryRows(names.slice(start, start + 60)));
+        }
+        const teams = reconcileRegisteredBuildPlayers(model.teams, registration.snapshot.teams, identityRows);
+        window.SEH_ECL27_CURRENT_ROSTER_V1 = {
+          ...sharedBuildRoster,
+          teams: sharedBuildRoster.teams.map(row => ({
+            ...row, players: teams.find(team => norm(team.name) === norm(row.name))?.playersNow || []
+          }))
+        };
+        window.dispatchEvent(new CustomEvent('seh-ecl27-current-roster-ready', {
+          detail: { build: DATA.build || '' }
+        }));
+        try { window.SEH_currentPlayerStatus?.invalidate?.(); } catch (_) {}
+        return {...registration, teams};
+      })().catch(error => {
+        currentBuildStateRequest = null;
+        throw error;
+      });
+    }
+    return currentBuildStateRequest;
+  }
+
   function unregisteredBuilds(teams, registrations) {
     const localIds = new Set(registrations.map(team => Number(team.club.team_id)));
     const names = new Set(registrations.map(team => norm(team.name)));
@@ -1797,15 +1839,16 @@
     const projectCount = $("#ecl27v2Result", section);
     const teamSearch = $("#winterBuildSearch", section);
     const appliedDivision = $("#winterBuildDivision", section);
-    void Promise.resolve().then(() => window.SEH_loadSwedishWinterRegistrations()).then(({snapshot,swedishTeams}) => {
+    void loadCurrentBuildState().then(({snapshot,swedishTeams,teams:buildTeams}) => {
       if (!section.isConnected) return;
       const wantedTeam = wantedSlug ? model.teams.find(team => slug(team.name) === wantedSlug) : null;
       const selected = wantedSlug && swedishTeams.find(team =>
         slug(team.name) === wantedSlug || (wantedTeam && Number(teamId(wantedTeam.name)) === Number(team.club.team_id)));
-      state.unregistered = unregisteredBuilds(model.teams, swedishTeams);
-      if (!selected && wantedTeam && state.unregistered.includes(wantedTeam)) {
-        section.innerHTML = renderTeamDetail(wantedTeam);
-        hydrateDetailRoster(wantedTeam, section);
+      state.unregistered = unregisteredBuilds(buildTeams, swedishTeams);
+      const pendingTeam = wantedTeam && state.unregistered.find(team => norm(team.name) === norm(wantedTeam.name));
+      if (!selected && pendingTeam) {
+        section.innerHTML = renderTeamDetail(pendingTeam);
+        hydrateDetailRoster(pendingTeam, section);
         hydrateTeamPower(section);
         document.title = `${wantedTeam.name} – ECL 27 lagbygge | Svensk eHockey`;
         return;
@@ -1882,10 +1925,11 @@
   } else {
     scheduleMount();
   }
+  void loadCurrentBuildState().catch(error => console.warn("[ECL27] kunde inte stämma av Winter-trupper",error));
   return async () => {
     if (buildsUnavailable) return [];
-    const { swedishTeams } = await window.SEH_loadSwedishWinterRegistrations();
-    return unregisteredBuilds(model.teams, swedishTeams).map(team => ({
+    const { swedishTeams, teams } = await loadCurrentBuildState();
+    return unregisteredBuilds(teams, swedishTeams).map(team => ({
       name: team.name,
       teamId: teamId(team.name),
       logoName: logoUrl(team) || team.logoName || "",

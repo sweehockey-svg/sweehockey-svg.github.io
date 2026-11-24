@@ -10,6 +10,8 @@ const constants = app.slice(app.indexOf("const SEH_WINTER_TITLE"), app.indexOf("
 const helpers = app.slice(app.indexOf("function SEH_fetchWinterRosters()"), app.indexOf("async function SEH_addWinterTeamLink("));
 const body = constants + helpers;
 const invictus = snapshot.teams.find((team) => team.id === 6709);
+const redhawkTeam = snapshot.teams.find(team=>team.players.some(player=>player.id===16103));
+assert.ok(redhawkTeam);
 assert.ok(invictus && invictus.players.length);
 assert.equal(new Set(snapshot.teams.map(({ id }) => id)).size, snapshot.teams.length);
 assert.ok(snapshot.teams.every((team) => team.players.every((player) => player.id > 0 && player.name)));
@@ -37,7 +39,7 @@ assert.match(registeredCard,/\/players\/4596[^>]*>&lt;Jeppe&gt;/);
 
 const player = invictus.players[0];
 const collision = { ...invictus, id: 98765, players: [player] };
-const context = vm.createContext({ snapshot, invictus, player, collision, assert });
+const context = vm.createContext({ snapshot, invictus, player, collision, assert, redhawkTeam });
 vm.runInContext(body + `
   assert.equal(SEH_winterTeam(snapshot, ["6709", 6709]), invictus);
   assert.equal(SEH_winterTeam(snapshot, [0]), null);
@@ -49,11 +51,11 @@ vm.runInContext(body + `
   const redhawkCard = { sportsGamerId:16103, currentStatus:"team", currentTeam:"The Last Line",
     currentTeamId:50, currentTeamLogo:"last-line.png" };
   const updated = SEH_applyDirectoryWinterClub(redhawkCard,snapshot,SEH_winterPlayerTeams(snapshot));
-  assert.equal(updated.currentTeam,"PENTA");
-  assert.equal(updated.latestTeam,"PENTA");
+  assert.equal(updated.currentTeam,redhawkTeam.name);
+  assert.equal(updated.latestTeam,redhawkTeam.name);
   assert.equal(updated.currentTeamLogo,"");
   assert.equal(updated.currentTeamId,0);
-  assert.equal(updated.currentTeamHref,"https://sportsgamer.gg/leagues/535/teams/7108");
+  assert.equal(updated.currentTeamHref,"https://sportsgamer.gg/leagues/535/teams/"+redhawkTeam.id);
   const ambiguous = { ...snapshot, teams:[...snapshot.teams,{ ...collision, players:[{ id:16103 }] }] };
   assert.equal(SEH_applyDirectoryWinterClub(redhawkCard,ambiguous,SEH_winterPlayerTeams(ambiguous)),redhawkCard);
   assert.equal(SEH_applyDirectoryWinterClub(redhawkCard,null,SEH_winterPlayerTeams(null)),redhawkCard);
@@ -108,8 +110,8 @@ assert.equal(routeFor("#/lagbygge?ecl27lag=refuse-too-lose").key, "teamBuilds");
     });
   };
   const redhawk = await resolveClub(snapshot, 16103);
-  assert.equal(redhawk.teamName, "PENTA");
-  assert.equal(redhawk.href, "https://sportsgamer.gg/leagues/535/teams/7108");
+  assert.equal(redhawk.teamName, redhawkTeam.name);
+  assert.equal(redhawk.href, "https://sportsgamer.gg/leagues/535/teams/"+redhawkTeam.id);
   assert.equal(await resolveClub(snapshot, 999999), fallback);
   assert.equal(await resolveClub(null, 16103), fallback);
   assert.equal(await resolveClub({ ...snapshot, teams: [...snapshot.teams, {
