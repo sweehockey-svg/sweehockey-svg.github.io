@@ -166,7 +166,8 @@
       const source=String(row.source_gamertag || "").trim();
       const display=String(row.display_gamertag || "").trim();
       const sourceKey=source.toLocaleLowerCase("sv-SE").replace(/\s+/g," ");
-      if (sourceKey && display && sourceKey !== display.toLocaleLowerCase("sv-SE").replace(/\s+/g," ")) {
+      // Explicit, confirmed aliases take precedence over older event labels.
+      if (sourceKey && display && !aliases[sourceKey] && sourceKey !== display.toLocaleLowerCase("sv-SE").replace(/\s+/g," ")) {
         aliases[sourceKey]=display;
       }
     }
