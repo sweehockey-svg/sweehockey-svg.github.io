@@ -26,7 +26,7 @@ for(const className of ["ecl27v2-card is-clickable","ecl27v2-watermark","ecl27v2
 assert.match(html,/ECL ’27 WINTER · ANMÄLT/);
 assert.match(html,/Ansökt: <strong>Lite<\/strong> · preliminär/);
 assert.match(html,/data-winter-roster="4523"/);
-assert.match(html,/#\/sasong\/ecl27winter\?section=teams&amp;teamId=4523/);
+assert.match(html,/#\/lagbygge\?ecl27lag=old/);
 assert.match(html,/#\/lag\/40/);
 assert.match(html,/src="official.png"/);
 assert.match(html,/#\/spelare\/4596[^>]*>&lt;Jeppe&gt;/);
@@ -36,4 +36,16 @@ assert.ok(!html.includes("Old roster")&&!html.includes("LAGET SÖKER"));
 assert.match(html,/https:\/\/sportsgamer.gg\/leagues\/535\/teams\/4523/);
 const unknown=context.renderRegisteredWinterCard(registration,false,[]);
 assert.match(unknown,/class="in">–/,"unknown movements are not fabricated zero counts");
+Object.assign(context, {springBasePlayers:()=>[],sportsGamerTeamUrl:()=>"",seasonListUrl:()=>"#/lagbygge",
+  renderDetailRosterCard:(team,name)=>`<div class="roster-test">${esc(name)}</div>`});
+vm.runInContext(block("  function renderTeamDetail(","  function bindCardNavigation("),context);
+const detail=context.renderTeamDetail(model);
+assert.match(detail,/ecl27v2-detail-hero/);
+assert.match(detail,/Registrerad Winter-trupp/);
+assert.match(detail,/ECL ’27 WINTER · ANSÖKT Lite · PRELIMINÄR/);
+assert.match(detail,/data-team-rp-detail="Earlier club name"/);
+assert.match(detail,/roster-test">&lt;Jeppe&gt;/);
+assert.match(detail,/Actual move/);
+assert.ok(!detail.includes("Old roster")&&!detail.includes("Arbetsbild – inte officiell")&&!detail.includes("Nytt projekt</h3>"));
+assert.ok(src.includes("section.innerHTML = renderTeamDetail(winterTeam)"),"registered selection mounts actual detail view");
 console.log("Registered cards share build layout, official roster, provisional division, links and verified historical data.");

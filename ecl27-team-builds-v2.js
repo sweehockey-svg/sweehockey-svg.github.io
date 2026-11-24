@@ -955,7 +955,7 @@
     const status = registered ? {key:"registered",tone:"green",label:"ANMÄLT"} : statusFor(team);
     const logo = registered ? team.winterLogoUrl || logoUrl(team) : logoUrl(team);
     const recent = team.timeline.slice(0,4);
-    const buildUrl = registered ? `#/sasong/ecl27winter?section=teams&teamId=${Number(registered.id)}` : teamBuildUrl(team.name);
+    const buildUrl = teamBuildUrl(team.name);
     const roster = registered
       ? registered.players.map(player => `<a class="ecl27v2-roster-player" href="${esc(window.SEH_playerProfileUrl(player.id,player.name))}">${esc(player.name)}</a>`).join("")
       : team.playersNow.map(name => playerLink(name,"ecl27v2-roster-player")).join("");
@@ -1033,6 +1033,9 @@
   }
 
   function rosterEvidence(team, name) {
+    if (team.winterRegistration) {
+      return {at:"",type:"registered",label:"REGISTRERAD",detail:"ECL ’27 Winter · SportsGamer"};
+    }
     const key = playerKey(name);
     const candidates = [];
 
@@ -1146,12 +1149,14 @@
     const statTwoLabel = isGoalie ? "RÄDDNINGAR" : "POÄNG";
     const statTwoValue = isGoalie ? row?.total_goalie_saves : row?.total_points;
     const latest = [row?.latest_team, compactLatestSeason(row?.latest_season)].filter(Boolean).join(" · ");
-    const teamLogo = logoUrl(team);
+    const teamLogo = team.winterLogoUrl || logoUrl(team);
     const image = localPlayerImage(row);
     const countryCode = normalizeCountryCode(row?.player_country);
     const flag = countryFlagMarkup(countryCode);
 
-    return `<a class="ecl27v2-roster-feature${row ? " is-hydrated" : " is-loading"}" href="${esc(playerUrl(name))}" data-player-card-key="${esc(playerKey(name))}">
+    const registeredPlayer = team.winterRegistration?.players.find(player => player.name === name);
+    const profileUrl = registeredPlayer ? window.SEH_playerProfileUrl(registeredPlayer.id,name) : playerUrl(name);
+    return `<a class="ecl27v2-roster-feature${row ? " is-hydrated" : " is-loading"}" href="${esc(profileUrl)}" data-player-card-key="${esc(playerKey(name))}">
       <div class="ecl27v2-roster-feature__portrait"><img src="${esc(image)}" alt="${esc(name)}" loading="lazy" onerror="this.onerror=null;this.src='players/1DEFAULTBILDID.png'"></div>
       ${teamLogo ? `<img class="ecl27v2-roster-feature__watermark" src="${esc(teamLogo)}" alt="" aria-hidden="true">` : ""}
       <div class="ecl27v2-roster-feature__body">
@@ -1287,16 +1292,17 @@
   }
 
   function renderTeamDetail(team) {
-    const status = statusFor(team);
-    const logo = logoUrl(team);
-    const regularUrl = teamUrl(team.name);
+    const registered = team.winterRegistration;
+    const status = registered ? {key:"registered",tone:"green",label:"ANMÄLT"} : statusFor(team);
+    const logo = team.winterLogoUrl || logoUrl(team);
+    const regularUrl = registered ? (Number(team.localTeamId)>0 ? `#/lag/${Number(team.localTeamId)}` : "") : teamUrl(team.name);
     const basePlayers = springBasePlayers(team);
-    const source = team.officialScl
+    const source = registered ? `ECL ’27 WINTER · ANSÖKT ${team.division} · PRELIMINÄR` : team.officialScl
       ? `SCL 27 · OFFICIELLT ANMÄLT${team.officialName && norm(team.officialName) !== norm(team.name) ? ` · ${team.officialName}` : ""}`
       : team.kind === "new"
         ? "NYTT PROJEKT INFÖR ECL 27"
         : `ECL 26 SPRING · ${team.division}${team.springName && team.springName !== team.name ? ` · ${team.springName}` : ""}`;
-    const sportsGamerUrl = sportsGamerTeamUrl(team);
+    const sportsGamerUrl = registered ? `https://sportsgamer.gg/leagues/535/teams/${Number(registered.id)}` : sportsGamerTeamUrl(team);
 
     return `<div class="ecl27v2-detail">
       <a class="ecl27v2-back" href="${esc(seasonListUrl())}">← Alla svenska lagbyggen</a>
@@ -1306,22 +1312,22 @@
           <p class="directory-kicker">${esc(source)}</p>
           <h2>${esc(team.name)}</h2>
           <div class="ecl27v2-badges"><span>${team.kind === "new" ? "NYTT" : esc(team.division)}</span>${officialSclBadge(team)}<b class="is-${status.tone}">${esc(status.label)}</b></div>
-          <p>${team.officialScl
+          <p>${registered ? "Laget är anmält till ECL ’27 Winter hos SportsGamer. Ansökt division är preliminär. Här visas den registrerade Winter-truppen, lagets historiska Team RP och bekräftade rörelser i underlaget." : team.officialScl
             ? "Laget är officiellt anmält till SCL 27. Den registrerade SportsGamer-truppen används som högsta prioritet för aktuell trupp, medan tidigare IN/UT-historik ligger kvar som kronologi."
             : "Det här är Svensk eHockeys aktuella arbetsbild av lagbygget inför ECL 27, baserad på Spring-truppen och de daterade IN/UT-, lagpost- och ECL-Free Agent-händelser som finns i underlaget."}</p>
           ${regularUrl ? `<a class="ecl27v2-team-profile" href="${esc(regularUrl)}">Öppna ordinarie lagprofil →</a>` : ""}
-          ${sportsGamerUrl ? `<a class="ecl27v2-team-profile" href="${esc(sportsGamerUrl)}" target="_blank" rel="noopener">Öppna SCL-registreringen ↗</a>` : ""}
+          ${sportsGamerUrl ? `<a class="ecl27v2-team-profile" href="${esc(sportsGamerUrl)}" target="_blank" rel="noopener">Öppna ${registered ? "Winter" : "SCL"}-registreringen ↗</a>` : ""}
         </div>
       </header>
 
       <div class="ecl27v2-detail-metrics">
-        <div><span>${team.officialScl ? "REG. SCL" : "KÄNDA NU"}</span><strong>${team.playersNow.length}</strong></div>
-        <div><span>IN</span><strong class="in">${team.inCount}</strong></div>
-        <div><span>UT</span><strong class="out">${team.outCount}</strong></div>
+        <div><span>${registered ? "REGISTRERADE" : team.officialScl ? "REG. SCL" : "KÄNDA NU"}</span><strong>${team.playersNow.length}</strong></div>
+        <div><span>${registered ? "IN · UNDERLAG" : "IN"}</span><strong class="in">${team.inCount ?? "–"}</strong></div>
+        <div><span>${registered ? "UT · UNDERLAG" : "UT"}</span><strong class="out">${team.outCount ?? "–"}</strong></div>
         <div><span>STATUS</span><strong class="status-text">${esc(status.label)}</strong></div>
       </div>
 
-      <section class="ecl27v2-detail-panel ecl27v2-power-detail" data-team-rp-detail="${esc(team.name)}">
+      <section class="ecl27v2-detail-panel ecl27v2-power-detail" data-team-rp-detail="${esc(team.powerLookupName || team.name)}">
         <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">LAGSTYRKA · BETA</p><h3>Team RP</h3></div><span>50% resultat · 25% målskillnad · 15% offensiv · 10% defensiv</span></div>
         <div class="ecl27v2-power-detail-grid">
           <div class="is-primary"><span>TOTAL RP</span><strong data-team-rp-value="score">–</strong><small data-team-rp-value="rank">–</small></div>
@@ -1333,10 +1339,10 @@
       </section>
 
       <section class="ecl27v2-detail-panel ecl27v2-detail-roster-featured">
-        <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">JUST NU</p><h3>${team.officialScl ? "Officiell SCL-trupp" : "Känd trupp"}</h3></div><div class="ecl27v2-roster-status"><b class="is-${status.tone}">${esc(status.label)}</b><span>${team.playersNow.length} spelare</span></div></div>
+        <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">JUST NU</p><h3>${registered ? "Registrerad Winter-trupp" : team.officialScl ? "Officiell SCL-trupp" : "Känd trupp"}</h3></div><div class="ecl27v2-roster-status"><b class="is-${status.tone}">${esc(status.label)}</b><span>${team.playersNow.length} spelare</span></div></div>
         <div id="ecl27v2DetailRosterCards" class="ecl27v2-roster-feature-grid">${team.playersNow.length
           ? team.playersNow.map((name) => renderDetailRosterCard(team,name)).join("")
-          : `<p class="ecl27v2-detail-empty">${team.officialScl ? "Inga spelare är registrerade på SCL-truppen ännu." : "Ingen säker spelare kvar i sammanställningen."}</p>`}</div>
+          : `<p class="ecl27v2-detail-empty">${registered ? "Inga spelare är registrerade på Winter-truppen ännu." : team.officialScl ? "Inga spelare är registrerade på SCL-truppen ännu." : "Ingen säker spelare kvar i sammanställningen."}</p>`}</div>
       </section>
 
       <section class="ecl27v2-detail-panel">
@@ -1349,14 +1355,14 @@
         <div class="ecl27v2-detail-moves">${team.timeline.length ? team.timeline.map(renderMove).join("") : `<p class="ecl27v2-detail-empty">Inga bekräftade IN/UT-rörelser i underlaget.</p>`}</div>
       </section>
 
-      <section class="ecl27v2-detail-panel">
+      ${registered ? "" : `<section class="ecl27v2-detail-panel">
         <div class="ecl27v2-detail-panel-head"><div><p class="directory-kicker">UTGÅNGSPUNKT</p><h3>${team.kind === "spring" ? "ECL ’26 Spring-trupp" : "Nytt projekt"}</h3></div></div>
         ${team.kind === "spring"
           ? `<div class="ecl27v2-detail-base-list">${basePlayers.map((name) => playerLink(name,"ecl27v2-detail-base-player")).join("")}</div>`
           : `<p class="ecl27v2-detail-empty">Laget hade ingen Spring-trupp som bas och byggs därför enbart från senare bekräftade händelser.</p>`}
-      </section>
+      </section>`}
 
-      <aside class="ecl27v2-method"><strong>${team.officialScl ? "Officiell SCL-registrering + lagbyggehistorik" : "Arbetsbild – inte officiell ECL 27-roster"}</strong>${team.officialScl ? "SportsGamer SCL 27-truppen skriver över arbetsbilden för aktuell trupp. Transferhistoriken visas fortfarande för sammanhang." : "En UT-händelse kan inte lämna samma spelare kvar i KÄND TRUPP JUST NU. En senare IN flyttar spelaren till det nya laget. ECL-Free Agents behandlas som UT från senast kända ECL-lag."}</aside>
+      <aside class="ecl27v2-method"><strong>${registered ? "Registrerad Winter-trupp + historiskt underlag" : team.officialScl ? "Officiell SCL-registrering + lagbyggehistorik" : "Arbetsbild – inte officiell ECL 27-roster"}</strong>${registered ? "SportsGamers Winter-registrering bestämmer aktuell trupp. Team RP och rörelser visar historiskt underlag och ändrar inte den registrerade truppen." : team.officialScl ? "SportsGamer SCL 27-truppen skriver över arbetsbilden för aktuell trupp. Transferhistoriken visas fortfarande för sammanhang." : "En UT-händelse kan inte lämna samma spelare kvar i KÄND TRUPP JUST NU. En senare IN flyttar spelaren till det nya laget. ECL-Free Agents behandlas som UT från senast kända ECL-lag."}</aside>
     </div>`;
   }
 
@@ -1867,6 +1873,14 @@
         slug(team.name) === wantedSlug || (wantedTeam && Number(teamId(wantedTeam.name)) === Number(team.club.team_id)));
       state.unregistered = unregisteredBuilds(buildTeams, swedishTeams);
       const pendingTeam = wantedTeam && state.unregistered.find(team => norm(team.name) === norm(wantedTeam.name));
+      if (selected) {
+        const winterTeam = registeredWinterCardModel(selected,buildTeams);
+        section.innerHTML = renderTeamDetail(winterTeam);
+        hydrateDetailRoster(winterTeam, section);
+        hydrateTeamPower(section);
+        document.title = `${selected.name} – ECL ’27 Winter | Svensk eHockey`;
+        return;
+      }
       if (!selected && pendingTeam) {
         section.innerHTML = renderTeamDetail(pendingTeam);
         hydrateDetailRoster(pendingTeam, section);
