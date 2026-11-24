@@ -20376,6 +20376,17 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     render();
   }
 
+  function seasonCurrentTransferTeams(rows, registrationSnapshot) {
+    const registrations = new Map((registrationSnapshot?.teams || []).map(team => [Number(team.id),team]));
+    return (rows || []).map(row => {
+      // Destination names can be stale global SportsGamer names (even an old
+      // national-team name). Match the actual Winter entry, never a text alias.
+      const current = Number(row.ToLeagueID) === Number(registrationSnapshot?.leagueId)
+        ? registrations.get(Number(row.ToTeamID)) : null;
+      return current?.name ? {...row, OriginalTo:row.OriginalTo || row.To, To:current.name} : row;
+    });
+  }
+
   function initializeSeasonTransfers(view, legacy, registrationSnapshot = null) {
     const host = view.querySelector("#seasonTransferList");
     const search = view.querySelector("#seasonTransferSearch");
@@ -20384,7 +20395,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     const registrationLogos = new Map((registrationSnapshot?.teams || []).map(team => [
       Number(team.id), SEH_winterTeamLogo(team)
     ]));
-    const transfers = (legacy?.overgangar || [])
+    const transfers = seasonCurrentTransferTeams(legacy?.overgangar,registrationSnapshot)
       .filter((row) => ["SE", "SWE", "SWEDEN", "SVERIGE"].includes(String(row.nationality || "").trim().toUpperCase()))
       .sort((a, b) => String(b.Date || "").localeCompare(String(a.Date || "")));
     const teamHref = (teamId, leagueId) => seasonNumber(teamId) && seasonNumber(leagueId)
@@ -20416,7 +20427,7 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
     const render = () => {
       const query = search.value.trim().toLocaleLowerCase("sv-SE");
       const rows = transfers.filter((row) =>
-        !query || [row.Player, row.From, row.To, row.FromDiv, row.ToDiv, row.Role, row.Date].join(" ").toLocaleLowerCase("sv-SE").includes(query)
+        !query || [row.Player, row.From, row.To, row.OriginalTo, row.FromDiv, row.ToDiv, row.Role, row.Date].join(" ").toLocaleLowerCase("sv-SE").includes(query)
       );
       const uniquePlayers = new Set(rows.map((row) => String(row.playerID || row.Player || "").trim()).filter(Boolean)).size;
       summary.innerHTML = `<strong>${rows.length}</strong><span>svenska lagbyten · ${uniquePlayers} spelare${query ? " matchar sökningen" : ""}</span>`;
@@ -21077,7 +21088,12 @@ Free Agent-annonsen ligger kvar, men Discord-kontot måste kopplas och godkänna
   }
 
   window.SEH_loadSwedishWinterRegistrations = fetchSwedishWinterRegistrations;
-  window.SEH_loadWinterTransfers = async () => seasonSupabaseTransferRows(await fetchSeasonTransferRows("ecl27winter"));
+  window.SEH_loadWinterTransfers = async () => {
+    const [rows,snapshot] = await Promise.all([
+      fetchSeasonTransferRows("ecl27winter"), SEH_fetchWinterRosters().catch(() => null)
+    ]);
+    return seasonCurrentTransferTeams(seasonSupabaseTransferRows(rows),snapshot);
+  };
 
   async function loadWinterRegistrationRosters(panel, initialTeamId) {
     const status = panel.querySelector("[role=status]");

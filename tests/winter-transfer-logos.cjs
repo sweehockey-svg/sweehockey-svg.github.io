@@ -19,7 +19,7 @@ vm.createContext(context);
 vm.runInContext(read("teamlogos-manifest.js") + "\n" +
   section("function SEH_optimizedTeamLogoPath", "function SEH_teamInitials") +
   section("function SEH_winterTeamLogo", "function SEH_winterClubStatus") +
-  section("  function initializeSeasonTransfers", "  function seasonTeamCardHeader"), context);
+  section("  function seasonCurrentTransferTeams", "  function seasonTeamCardHeader"), context);
 
 const base = "https://sportsgamer.gg/storage/team-logos/535/";
 const academy = { id: 7069, logoUrl: base + "7069/SSK Academy.png" };
@@ -39,3 +39,17 @@ context.initializeSeasonTransfers(view, { overgangar: [{
 assert.match(host.innerHTML, /data-team-name="Historical team" data-logo-url="" data-registration-logo=""/);
 assert.match(host.innerHTML, /data-team-name="Winter team" data-logo-url="" data-registration-logo="https:\/\/sportsgamer\.gg\/storage\/team-logos\/535\/7069\/SSK%20Academy\.png"/);
 console.log("Winter transfer logos: verified fallback URLs, identity match, and no historical override.");
+const snapshot={leagueId:535,teams:[{id:4216,name:"Burchurs HC"},{id:7023,name:"Penta"}]};
+const old={Player:"Anan20",From:"Macho HC",FromTeamID:4216,FromLeagueID:509,To:"Macho HC",ToTeamID:4216,ToLeagueID:535};
+const renamed=context.seasonCurrentTransferTeams([old],snapshot)[0];
+assert.equal(renamed.To,"Burchurs HC");
+assert.equal(renamed.OriginalTo,"Macho HC");
+assert.equal(renamed.From,"Macho HC","historical source team must remain unchanged");
+assert.equal(old.To,"Macho HC","do not mutate imported evidence");
+assert.equal(context.seasonCurrentTransferTeams([{...old,To:"eHockey Switzerland",ToTeamID:7023}],snapshot)[0].To,"Penta");
+assert.equal(context.seasonCurrentTransferTeams([{...old,ToTeamID:999}],snapshot)[0].To,"Macho HC","no text-only alias guessing");
+assert.equal(context.seasonCurrentTransferTeams([{...old,ToLeagueID:509}],snapshot)[0].To,"Macho HC","other seasons retain their names");
+assert.equal(context.seasonCurrentTransferTeams([old],null)[0].To,"Macho HC","missing snapshot retains source");
+context.initializeSeasonTransfers(view,{overgangar:[{...old,nationality:"SE"}]},snapshot);
+assert.match(host.innerHTML,/data-team-name="Burchurs HC"/);
+console.log("Current Winter destination names follow exact registered team IDs; historical names and raw evidence preserved.");
