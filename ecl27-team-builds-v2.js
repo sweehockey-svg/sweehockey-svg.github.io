@@ -552,17 +552,21 @@
     const displayName = team.officialScl && team.officialName
       ? String(team.officialName)
       : String(team.name || "");
-    const url = teamUrl(team.name);
+    const url = team.winterRegistration
+      ? (Number(team.localTeamId)>0 ? `#/lag/${Number(team.localTeamId)}` : "")
+      : teamUrl(team.name);
     const logoInner = logo ? `<img src="${logo}" alt="${esc(displayName)}">` : `<span>${esc(initials(displayName))}</span>`;
     const logoMarkup = url ? `<a class="ecl27v2-logo" href="${esc(url)}">${logoInner}</a>` : `<div class="ecl27v2-logo">${logoInner}</div>`;
     const nameMarkup = url ? `<h3><a href="${esc(url)}">${esc(displayName)}</a></h3>` : `<h3>${esc(displayName)}</h3>`;
-    const source = team.officialScl
+    const source = team.winterRegistration
+      ? "ECL ’27 WINTER · ANMÄLT"
+      : team.officialScl
       ? "SCL 27 · OFFICIELLT ANMÄLT"
       : team.kind === "new"
         ? "NYTT PROJEKT"
         : `ECL 26 SPRING · ${team.division}${team.springName && team.springName !== team.name ? ` · ${team.springName}` : ""}`;
 
-    return `<header>${logoMarkup}<div><p>${esc(source)}</p>${nameMarkup}<div class="ecl27v2-badges"><span>${team.kind === "new" ? "NYTT" : esc(team.division)}</span>${officialSclBadge(team)}<b class="is-${status.tone}">${esc(status.label)}</b></div></div></header>`;
+    return `<header>${logoMarkup}<div><p>${esc(source)}</p>${nameMarkup}<div class="ecl27v2-badges"><span>${team.winterRegistration ? `Ansökt: <strong>${esc(team.division)}</strong> · preliminär` : team.kind === "new" ? "NYTT" : esc(team.division)}</span>${officialSclBadge(team)}<b class="is-${status.tone}">${esc(status.label)}</b></div></div></header>`;
   }
 
   function numeric(value) {
@@ -947,25 +951,31 @@
     catch (error) { console.warn("[ECL27] kunde inte beräkna Team RP",error); }
   }
   function renderTeamCard(team) {
-    const status = statusFor(team);
-    const logo = logoUrl(team);
+    const registered = team.winterRegistration;
+    const status = registered ? {key:"registered",tone:"green",label:"ANMÄLT"} : statusFor(team);
+    const logo = registered ? team.winterLogoUrl || logoUrl(team) : logoUrl(team);
     const recent = team.timeline.slice(0,4);
-    const buildUrl = teamBuildUrl(team.name);
+    const buildUrl = registered ? `#/sasong/ecl27winter?section=teams&teamId=${Number(registered.id)}` : teamBuildUrl(team.name);
+    const roster = registered
+      ? registered.players.map(player => `<a class="ecl27v2-roster-player" href="${esc(window.SEH_playerProfileUrl(player.id,player.name))}">${esc(player.name)}</a>`).join("")
+      : team.playersNow.map(name => playerLink(name,"ecl27v2-roster-player")).join("");
+    const historyTeamName = team.powerLookupName || team.name;
 
-    return `<article class="ecl27v2-card is-clickable" data-status="${status.key}" data-team="${esc(team.name)}" data-build-url="${esc(buildUrl)}" role="link" tabindex="0" aria-label="Öppna ECL 27-lagbygget för ${esc(team.name)}">
+    return `<article class="ecl27v2-card is-clickable" ${registered ? `data-winter-roster="${Number(registered.id)}"` : ""} data-status="${status.key}" data-team="${esc(team.name)}" data-build-url="${esc(buildUrl)}" role="link" tabindex="0" aria-label="${registered ? "Öppna Winter-laget" : "Öppna ECL 27-lagbygget"} för ${esc(team.name)}">
       <div class="ecl27v2-watermark">${logo ? `<img src="${logo}" alt="">` : ""}</div>
       ${renderTeamHeader(team,logo,status)}
       <div class="ecl27v2-metrics">
-        <div><span>${team.officialScl ? "REG. SCL" : "KÄNDA NU"}</span><strong>${team.playersNow.length}</strong></div>
-        <div><span>IN</span><strong class="in">${team.inCount}</strong></div>
-        <div><span>UT</span><strong class="out">${team.outCount}</strong></div>
+        <div><span>${registered ? "REGISTRERADE" : team.officialScl ? "REG. SCL" : "KÄNDA NU"}</span><strong>${team.playersNow.length}</strong></div>
+        <div><span>${registered ? "IN · UNDERLAG" : "IN"}</span><strong class="in">${team.inCount ?? "–"}</strong></div>
+        <div><span>${registered ? "UT · UNDERLAG" : "UT"}</span><strong class="out">${team.outCount ?? "–"}</strong></div>
       </div>
-      ${renderTeamPowerStrip(team)}
-      <section class="ecl27v2-roster"><label>${team.officialScl ? "OFFICIELL SCL-TRUPP" : "KÄND TRUPP JUST NU"}</label><div>${team.playersNow.length ? team.playersNow.map((name) => playerLink(name,"ecl27v2-roster-player")).join("") : `<em>${team.officialScl ? "Inga spelare registrerade ännu." : "Ingen säker spelare kvar i sammanställningen."}</em>`}</div></section>
-      ${renderRecruitment(team)}
+      ${renderTeamPowerStrip({...team,name:historyTeamName})}
+      <section class="ecl27v2-roster"><label>${registered ? "REGISTRERAD WINTER-TRUPP" : team.officialScl ? "OFFICIELL SCL-TRUPP" : "KÄND TRUPP JUST NU"}</label><div>${roster || `<em>${registered || team.officialScl ? "Inga spelare registrerade ännu." : "Ingen säker spelare kvar i sammanställningen."}</em>`}</div></section>
+      ${registered ? "" : renderRecruitment(team)}
       <section class="ecl27v2-moves"><label>SENASTE BEKRÄFTADE RÖRELSER</label>${recent.length ? recent.map(renderMove).join("") : `<p>Inga in/ut-poster i underlaget.</p>`}</section>
       ${team.timeline.length > 4 ? `<details><summary>Visa alla ${team.timeline.length} rörelser</summary><div>${team.timeline.map(renderMove).join("")}</div></details>` : ""}
-      <div class="ecl27v2-card-open" aria-hidden="true">Öppna lagbygget →</div>
+      ${registered ? `<a class="ecl27v2-card-source" href="https://sportsgamer.gg/leagues/535/teams/${Number(registered.id)}" target="_blank" rel="noopener">Lagtrupp på SportsGamer ↗</a>` : ""}
+      <div class="ecl27v2-card-open" aria-hidden="true">${registered ? "Öppna Winter-laget →" : "Öppna lagbygget →"}</div>
     </article>`;
   }
 
@@ -1375,6 +1385,7 @@
     const style = document.createElement("style");
     style.id = "ecl27TeamBuildsV2Style";
     style.textContent = `
+      .ecl27v2-card-source{display:inline-block;margin-top:12px;color:#f0d58b;font-size:9px;font-weight:850}
       .ecl27v2{margin:28px 0 44px;color:#f5f1e8;scroll-margin-top:90px}.ecl27v2 *{box-sizing:border-box}.ecl27v2 a{color:inherit;text-decoration:none}.ecl27v2 a:hover,.ecl27v2 a:focus-visible{color:#f0d58b;text-decoration:underline;text-underline-offset:2px}
       .ecl27v2 [hidden]{display:none!important}.winter-build-team-heading{display:flex;align-items:center;gap:12px}.winter-build-team-heading h4,#winterBuildMoves h4{margin:0;font-size:1.1rem}.winter-build-team-heading p,#winterBuildMoves p{margin:5px 0;color:#9fb0c0;font-size:.88rem}.winter-build-logo{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px}.winter-build-logo img{width:100%;height:100%;object-fit:contain}.winter-build-team-heading+details{margin-top:13px;padding-top:10px;border-top:1px solid #203549}.winter-build-team-heading+details summary{cursor:pointer;color:#f0d58b}.winter-build-team-heading+details ul{padding-inline-start:1.2rem}.winter-build-agents{display:flex;flex-wrap:wrap;gap:10px;padding:14px}.winter-build-agents a{border:1px solid #203549;border-radius:8px;padding:6px 10px}#winterBuildMoves time{color:#f0d58b;font-size:.8rem}
       .ecl27v2-hero{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:28px;padding:32px;border:1px solid rgba(214,177,95,.3);border-radius:22px;background:linear-gradient(135deg,#030b14,#071426);box-shadow:0 24px 60px rgba(0,0,0,.22)}.ecl27v2-hero h2{margin:4px 0 12px;font-size:clamp(36px,4vw,64px);line-height:.95;letter-spacing:-.04em}.ecl27v2-hero>div>p:last-of-type{max-width:850px;color:#aebdca;line-height:1.6}
@@ -1759,18 +1770,28 @@
       && (team.kind === "new" || team.recruitment || team.timeline.length));
   }
 
-  function renderRegisteredWinterCard(team, open) {
-    const id = Number(team.id);
-    const division = SEH_WINTER_DIVISIONS[team.requestedDivision];
-    return `<article class="ecl27v2-card">
-      <div class="winter-build-team-heading"><span class="winter-build-logo" data-winter-logo="${esc(team.name)}" data-logo-url="${esc(team.club.logo_url)}"></span>
-        <div><h4>${esc(team.name)}</h4><p>${division ? `Ansökt: <strong>${esc(division)}</strong> · preliminär` : "Ansökt division ej angiven"}</p></div></div>
-      <details data-winter-roster="${id}"${open ? " open" : ""}>
-        <summary>${team.players.length} registrerade · visa trupp</summary>
-        ${team.players.length ? `<ul>${team.players.map(player => `<li><a href="https://sportsgamer.gg/players/${Number(player.id)}" target="_blank" rel="noopener">${esc(player.name)}</a></li>`).join("")}</ul>` : "<p>Inga registrerade spelare än.</p>"}
-        <a href="https://sportsgamer.gg/leagues/535/teams/${id}" target="_blank" rel="noopener">Lagtrupp på SportsGamer ↗</a>
-      </details>
-    </article>`;
+  function registeredWinterCardModel(team, buildTeams = []) {
+    const matches = buildTeams.filter(build =>
+      Number(teamId(build.name)) === Number(team.club.team_id) || norm(build.name) === norm(team.name));
+    const history = matches.length === 1 ? matches[0] : null;
+    return {
+      name:team.name,
+      localTeamId:team.club.team_id,
+      division:SEH_WINTER_DIVISIONS[team.requestedDivision] || "Ej angiven",
+      winterRegistration:team,
+      winterLogoUrl:team.logoUrl || team.club.logo_url || "",
+      powerLookupName:history?.name || team.name,
+      logoName:history?.logoName || "",
+      kind:"registered",
+      playersNow:team.players.map(player => player.name),
+      timeline:history?.timeline || [],
+      inCount:history?.inCount ?? null,
+      outCount:history?.outCount ?? null
+    };
+  }
+
+  function renderRegisteredWinterCard(team, open, buildTeams = []) {
+    return renderTeamCard(registeredWinterCardModel(team,buildTeams));
   }
 
   function hydrateWinterMoves(section) {
@@ -1862,15 +1883,15 @@
           && (!term || [team.name,...team.players.map(player => player.name)].some(name => norm(name).includes(term))))
           .sort((a,b) => (Number(a.requestedDivision) || 999) - (Number(b.requestedDivision) || 999) || a.name.localeCompare(b.name,"sv"));
         count.textContent = `${teams.length} av ${swedishTeams.length} svenska lag · hämtat ${checked}`;
-        registered.innerHTML = teams.length ? teams.map(team => renderRegisteredWinterCard(team, Number(team.id) === openId)).join("")
+        registered.innerHTML = teams.length ? teams.map(team => renderRegisteredWinterCard(team, Number(team.id) === openId, buildTeams)).join("")
           : "<p>Inga anmälda svenska lag matchar filtret.</p>";
-        for (const logo of registered.querySelectorAll("[data-winter-logo]")) {
-          window.SEH_renderTeamLogo(logo, [logo.dataset.logoUrl], logo.dataset.winterLogo);
-        }
+        applyTeamPowerToDom(registered);
       };
       teamSearch.addEventListener("input", () => renderRegistered());
       appliedDivision.addEventListener("change", () => renderRegistered());
+      bindCardNavigation(registered);
       renderRegistered(selected ? Number(selected.id) : undefined);
+      hydrateTeamPower(registered);
       if (selected) registered.querySelector(`[data-winter-roster="${Number(selected.id)}"]`)?.scrollIntoView({block:"center"});
       if (buildsUnavailable) projectCount.textContent = "Lagbyggena kunde inte hämtas.";
       else {

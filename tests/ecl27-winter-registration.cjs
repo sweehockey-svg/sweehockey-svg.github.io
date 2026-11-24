@@ -31,11 +31,12 @@ const buildTestContext = {work, registration:teamRegistration, norm:value=>value
 const pending = vm.runInNewContext(buildHelpers + "unregisteredBuilds(work,[registration])",buildTestContext);
 assert.equal(pending.length,1);
 assert.equal(pending[0].name,"New project");
+buildTestContext.renderTeamCard = model => model;
 const registeredCard = vm.runInNewContext(buildHelpers + "renderRegisteredWinterCard(registration,true)",buildTestContext);
-assert.match(registeredCard,/Ansökt: <strong>Lite<\/strong> · preliminär/);
-assert.match(registeredCard,/data-winter-roster="4523" open/);
-assert.match(registeredCard,/1 registrerade/);
-assert.match(registeredCard,/\/players\/4596[^>]*>&lt;Jeppe&gt;/);
+assert.equal(registeredCard.division,"Lite");
+assert.equal(registeredCard.winterRegistration.id,4523);
+assert.equal(registeredCard.playersNow.length,1);
+assert.equal(registeredCard.playersNow[0],"<Jeppe>");
 
 const player = invictus.players[0];
 const collision = { ...invictus, id: 98765, players: [player] };
