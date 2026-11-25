@@ -1,6 +1,6 @@
 {
   "leagueId": 535,
-  "checkedAt": "2026-11-25T02:47:55.7459692Z",
+  "checkedAt": "2026-11-25T17:36:54.5397240Z",
   "teams": [
     {
       "id": 4181,
@@ -166,7 +166,7 @@
         14123,
         15563
       ],
-      "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/7129/a3cf59a5-4a3a-44ef-91c1-ce44a43ff349_20261124-134401.png",
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/7129/Hurjapäinen karhu kiekkologolla_20261124-195126.png",
       "players": [
         {
           "id": 14123,
@@ -426,6 +426,37 @@
       ]
     },
     {
+      "id": 7135,
+      "name": "BYsons Academy",
+      "requestedDivision": 544,
+      "captainIds": [
+        18551
+      ],
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/7135/IMG_4173_20261125-124246.png",
+      "players": [
+        {
+          "id": 2359,
+          "name": "ALIKEY13"
+        },
+        {
+          "id": 2812,
+          "name": "sokol_msk"
+        },
+        {
+          "id": 18551,
+          "name": "Hubabuba_17"
+        },
+        {
+          "id": 18552,
+          "name": "Morozik97"
+        },
+        {
+          "id": 18553,
+          "name": "Pakastep1zza"
+        }
+      ]
+    },
+    {
       "id": 684,
       "name": "Carolus Icemen",
       "requestedDivision": 543,
@@ -455,8 +486,16 @@
           "name": "Dump_n_Chase"
         },
         {
-          "id": 14506,
-          "name": "xMilchmann95x"
+          "id": 7504,
+          "name": "Confusion83"
+        },
+        {
+          "id": 15411,
+          "name": "KingRP_87"
+        },
+        {
+          "id": 15642,
+          "name": "DrCrypto014"
         },
         {
           "id": 16150,
@@ -555,6 +594,14 @@
         {
           "id": 5312,
           "name": "PRCO-54"
+        },
+        {
+          "id": 10730,
+          "name": "Cielu77"
+        },
+        {
+          "id": 17364,
+          "name": "TIMC4441"
         },
         {
           "id": 18527,
@@ -679,6 +726,10 @@
           "name": "CCBow-501"
         },
         {
+          "id": 2695,
+          "name": "goalie_breaker"
+        },
+        {
           "id": 17351,
           "name": "Germinator4922"
         }
@@ -722,6 +773,10 @@
         {
           "id": 8930,
           "name": "Official_Fungus"
+        },
+        {
+          "id": 9133,
+          "name": "CPT_DirtyDangler"
         },
         {
           "id": 10333,
@@ -898,6 +953,10 @@
         {
           "id": 5943,
           "name": "Scheibe6"
+        },
+        {
+          "id": 5947,
+          "name": "hufi15"
         },
         {
           "id": 7657,
@@ -1089,6 +1148,10 @@
         {
           "id": 94,
           "name": "JParola"
+        },
+        {
+          "id": 97,
+          "name": "Zundeh"
         },
         {
           "id": 278,
@@ -1473,6 +1536,10 @@
           "name": "I Marre I"
         },
         {
+          "id": 16500,
+          "name": "KFC Melker"
+        },
+        {
           "id": 16551,
           "name": "Shn1pez"
         },
@@ -1483,6 +1550,10 @@
         {
           "id": 17545,
           "name": "Guggge"
+        },
+        {
+          "id": 17708,
+          "name": "JNHL-_-"
         }
       ]
     },
@@ -1733,6 +1804,10 @@
       ],
       "logoUrl": "https://sportsgamer.gg/storage/team-logos/415/952/Screenshot_20241006_205330_Chrome_20241116-191501.png",
       "players": [
+        {
+          "id": 5348,
+          "name": "HangoverAngel"
+        },
         {
           "id": 5468,
           "name": "Kentsu43"
@@ -2020,6 +2095,14 @@
         {
           "id": 16760,
           "name": "Hassegamer_480"
+        },
+        {
+          "id": 17995,
+          "name": "MajuriJamal"
+        },
+        {
+          "id": 18545,
+          "name": "vilppijonas"
         }
       ]
     },
@@ -3008,6 +3091,10 @@
           "name": "ToikkaaZ"
         },
         {
+          "id": 3639,
+          "name": "hoykkis"
+        },
+        {
           "id": 7105,
           "name": "bot_HENE"
         },
@@ -3022,9 +3109,10 @@
       "name": "Noxium",
       "requestedDivision": 541,
       "captainIds": [
-        9384
+        9384,
+        5759
       ],
-      "logoUrl": "",
+      "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/6194/06B6615E-4CC0-41BF-AAE7-6956C1AC012C_20261124-180139.png",
       "players": [
         {
           "id": 5759,
@@ -3070,6 +3158,14 @@
         {
           "id": 18532,
           "name": "SamuPatrik"
+        },
+        {
+          "id": 18548,
+          "name": "Vesaa14"
+        },
+        {
+          "id": 18549,
+          "name": "Stedukaa29"
         }
       ]
     },
@@ -3285,6 +3381,10 @@
         {
           "id": 18538,
           "name": "KALJAKUANO"
+        },
+        {
+          "id": 18542,
+          "name": "SakkeFIN69"
         }
       ]
     },
@@ -4174,6 +4274,10 @@
           "name": "adu83"
         },
         {
+          "id": 8335,
+          "name": "brianabey"
+        },
+        {
           "id": 9824,
           "name": "Brazone91"
         },
@@ -4349,6 +4453,10 @@
           "name": "minokin-"
         },
         {
+          "id": 4474,
+          "name": "AdriF_23"
+        },
+        {
           "id": 12146,
           "name": "SmAyK99"
         },
@@ -4514,6 +4622,10 @@
         {
           "id": 340,
           "name": "jimmiNOhands"
+        },
+        {
+          "id": 349,
+          "name": "Isumppi90I"
         },
         {
           "id": 797,
@@ -4792,8 +4904,16 @@
           "name": "Miseee96"
         },
         {
+          "id": 7268,
+          "name": "Lakritsipiippu"
+        },
+        {
           "id": 8423,
           "name": "xAaro89x"
+        },
+        {
+          "id": 8562,
+          "name": "nuarijamal-_-"
         },
         {
           "id": 13135,
@@ -4882,8 +5002,16 @@
       "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/6722/de391MiF_20261122-142243.png",
       "players": [
         {
+          "id": 967,
+          "name": "Anhel_Kuru"
+        },
+        {
           "id": 1088,
           "name": "benuh_"
+        },
+        {
+          "id": 1168,
+          "name": "MCH_98"
         },
         {
           "id": 1335,
@@ -5114,6 +5242,10 @@
         {
           "id": 7127,
           "name": "aJuti"
+        },
+        {
+          "id": 7174,
+          "name": "Leksakomarov14"
         },
         {
           "id": 16010,
