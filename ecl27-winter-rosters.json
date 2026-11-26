@@ -1,6 +1,6 @@
 {
   "leagueId": 535,
-  "checkedAt": "2026-11-25T17:36:54.5397240Z",
+  "checkedAt": "2026-11-26T01:58:05.0501956Z",
   "teams": [
     {
       "id": 4181,
@@ -62,7 +62,7 @@
         },
         {
           "id": 15719,
-          "name": "Snakii84"
+          "name": "XSnakii84"
         },
         {
           "id": 18544,
@@ -443,6 +443,10 @@
           "name": "sokol_msk"
         },
         {
+          "id": 18080,
+          "name": "ZZ_MadMike_ZZ"
+        },
+        {
           "id": 18551,
           "name": "Hubabuba_17"
         },
@@ -581,6 +585,29 @@
       ]
     },
     {
+      "id": 7057,
+      "name": "Conexion II",
+      "requestedDivision": 543,
+      "captainIds": [
+        15211
+      ],
+      "logoUrl": "",
+      "players": [
+        {
+          "id": 15211,
+          "name": "Dcon2silly"
+        },
+        {
+          "id": 15874,
+          "name": "ZaiiDeN_Roronoa"
+        },
+        {
+          "id": 16601,
+          "name": "Im_Dander"
+        }
+      ]
+    },
+    {
       "id": 762,
       "name": "CZ  JDOUCI NA SMRT  SK",
       "requestedDivision": 544,
@@ -598,6 +625,10 @@
         {
           "id": 10730,
           "name": "Cielu77"
+        },
+        {
+          "id": 16980,
+          "name": "Kocka_88"
         },
         {
           "id": 17364,
@@ -994,6 +1025,10 @@
         {
           "id": 4,
           "name": "KenuFHR"
+        },
+        {
+          "id": 560,
+          "name": "Hansulinho"
         },
         {
           "id": 1188,
@@ -1821,6 +1856,10 @@
           "name": "Sula_olmi"
         },
         {
+          "id": 12935,
+          "name": "Liimatainenn"
+        },
+        {
           "id": 16759,
           "name": "Juurakko04"
         }
@@ -1945,6 +1984,39 @@
         {
           "id": 18488,
           "name": "EZfin2000"
+        }
+      ]
+    },
+    {
+      "id": 5983,
+      "name": "HK Bricks",
+      "requestedDivision": 544,
+      "captainIds": [
+        16060,
+        16758,
+        16744
+      ],
+      "logoUrl": "",
+      "players": [
+        {
+          "id": 16060,
+          "name": "Tedqy_"
+        },
+        {
+          "id": 16758,
+          "name": "Odijs"
+        },
+        {
+          "id": 16763,
+          "name": "Gidoz00"
+        },
+        {
+          "id": 16796,
+          "name": "OkMikel"
+        },
+        {
+          "id": 17954,
+          "name": "RIMANTSS"
         }
       ]
     },
@@ -2216,6 +2288,10 @@
       "logoUrl": "",
       "players": [
         {
+          "id": 5759,
+          "name": "LaxenHD"
+        },
+        {
           "id": 15073,
           "name": "Hescoores"
         },
@@ -2226,6 +2302,10 @@
         {
           "id": 15085,
           "name": "Dan9105"
+        },
+        {
+          "id": 17393,
+          "name": "DE BOHM"
         },
         {
           "id": 17394,
@@ -2404,6 +2484,10 @@
           "name": "Weski_91"
         },
         {
+          "id": 18354,
+          "name": "makebeluri_"
+        },
+        {
           "id": 18359,
           "name": "Jerana99"
         }
@@ -2443,6 +2527,10 @@
         {
           "id": 7525,
           "name": "KinQjuusto"
+        },
+        {
+          "id": 12566,
+          "name": "Kekko788"
         },
         {
           "id": 16625,
@@ -2968,6 +3056,10 @@
           "name": "cherrykicks"
         },
         {
+          "id": 935,
+          "name": "Jean-Claes"
+        },
+        {
           "id": 937,
           "name": "Pedaliv"
         },
@@ -3050,6 +3142,10 @@
           "name": "hodini90"
         },
         {
+          "id": 8248,
+          "name": "nilsson04_"
+        },
+        {
           "id": 10948,
           "name": "Bulten_49"
         },
@@ -3064,6 +3160,10 @@
         {
           "id": 17389,
           "name": "Mackedavid"
+        },
+        {
+          "id": 17397,
+          "name": "Neowise-25"
         },
         {
           "id": 17538,
@@ -3109,15 +3209,10 @@
       "name": "Noxium",
       "requestedDivision": 541,
       "captainIds": [
-        9384,
-        5759
+        9384
       ],
       "logoUrl": "https://sportsgamer.gg/storage/team-logos/535/6194/06B6615E-4CC0-41BF-AAE7-6956C1AC012C_20261124-180139.png",
       "players": [
-        {
-          "id": 5759,
-          "name": "LaxenHD"
-        },
         {
           "id": 9384,
           "name": "Edgard_Gchn"
@@ -3166,6 +3261,10 @@
         {
           "id": 18549,
           "name": "Stedukaa29"
+        },
+        {
+          "id": 18550,
+          "name": "R1ksa__"
         }
       ]
     },
@@ -3568,6 +3667,10 @@
         {
           "id": 17988,
           "name": "Tursas666"
+        },
+        {
+          "id": 18525,
+          "name": "L3O_Hedstrm"
         }
       ]
     },
@@ -4426,6 +4529,10 @@
         {
           "id": 8015,
           "name": "notYxmato"
+        },
+        {
+          "id": 10864,
+          "name": "Jakkez98-"
         },
         {
           "id": 16238,
